@@ -1,0 +1,601 @@
+import { Component, OnInit, inject, effect, signal, computed, untracked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
+import { CellComponent } from './components/cell/cell.component';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { AuthStore } from '../../../core/auth/auth.store';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { AudioService } from '../../../core/services/audio.service';
+import { ToastService } from '../../../core/services/toast.service';
+
+@Component({
+  selector: 'app-minesweeper',
+  standalone: true,
+  imports: [CommonModule, CellComponent],
+  providers: [MinesweeperStore],
+  template: `
+    <div class="flex-grow flex h-[calc(100vh-64px)] p-6 gap-6 transition-colors duration-300">
+      
+      <!-- LEFT: Game Arena (70%) -->
+      <div class="flex-grow flex flex-col items-center relative min-w-0">
+        
+        <!-- Premium Glassmorphism Container -->
+        <div class="w-full h-full flex flex-col backdrop-blur-xl border rounded-3xl p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto"
+             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+          
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6 pb-4 border-b" style="border-color: var(--color-border-card)">
+            <!-- Left: Title & Mode -->
+            <div class="flex items-center space-x-4 flex-1">
+              <h1 class="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent whitespace-nowrap"
+                  style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                {{ i18n.t('app.title')() }}
+                <span class="text-sm ml-2 px-2 py-1 bg-slate-800 text-slate-400 rounded-lg">{{ currentRoomMode() === 'pk_steal' ? 'PK Steal Mode' : (currentRoomMode() === 'pk_speed' ? 'PK Speed Mode' : 'Single Player (Default)') }}</span>
+              </h1>
+            </div>
+            
+            <!-- Center: PK Scoreboard & Timer -->
+            <div class="flex justify-center gap-4 flex-1 items-center">
+              @if (currentRoomMode() !== 'single' && store.status() === 'playing') {
+                <div class="font-mono text-xl font-bold text-yellow-400 bg-slate-800/80 px-4 py-2 rounded-xl border border-yellow-500/30 flex items-center gap-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {{ elapsedTime() }}
+                </div>
+              }
+
+              @for (player of getPlayerScores(); track player.id) {
+                <div class="px-4 py-2 rounded-full border bg-slate-800 flex items-center gap-3 transition-transform"
+                     [class.border-emerald-500]="player.id === playerId"
+                     [class.scale-110]="player.id === playerId"
+                     [class.shadow-lg]="player.id === playerId"
+                     [class.border-slate-600]="player.id !== playerId">
+                  <span class="text-xs font-bold opacity-70">{{ player.id | slice:0:5 }}</span>
+                  <span class="text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Right: Mines -->
+            <div class="flex space-x-6 flex-1 justify-end">
+              <div class="flex flex-col items-center bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 shadow-inner">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Mines</span>
+                <span class="text-2xl font-mono text-emerald-400 font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
+              </div>
+              
+              @if (currentRoomMode() !== 'single') {
+                <button (click)="leaveRoom()" class="px-4 py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Leave
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Game Board (Grid) -->
+          <div class="relative p-4 bg-slate-950/80 rounded-2xl border border-slate-800 shadow-inner flex justify-center flex-grow overflow-auto"
+               [class.animate-gold-pulse]="store.status() === 'finished'">
+            
+            <!-- Waiting Overlay -->
+            @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
+              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm rounded-2xl">
+                @if (getPlayerScores().length < 2) {
+                  <div class="w-12 h-12 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+                  <h2 class="text-2xl font-bold text-white tracking-widest uppercase">Waiting for Challenger...</h2>
+                } @else {
+                  @if (store.host() === playerId) {
+                    <h2 class="text-3xl font-black text-white mb-6 uppercase">Ready for Battle</h2>
+                    <button (click)="store.startGame()" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:scale-105 transition-all">
+                      START PK
+                    </button>
+                  } @else {
+                    <div class="w-12 h-12 border-4 border-slate-600 border-t-yellow-500 rounded-full animate-spin mb-4"></div>
+                    <h2 class="text-2xl font-bold text-white tracking-widest uppercase">Waiting for Host...</h2>
+                  }
+                }
+              </div>
+            }
+            
+            <!-- Starting Overlay -->
+            @if (store.status() === GameStatus.Starting) {
+              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md rounded-2xl">
+                <h2 class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse">
+                  {{ countdownDisplay() }}
+                </h2>
+                <p class="text-white mt-4 font-bold tracking-[0.3em] uppercase opacity-70">Get Ready to Steal!</p>
+              </div>
+            }
+
+            <!-- Victory Overlay -->
+            @if (store.status() === 'finished') {
+              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
+                  {{ i18n.t('minesweeper.victory')() }}
+                </h2>
+                <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse">
+                  {{ i18n.t('minesweeper.cleared')() }}
+                </p>
+              </div>
+            }
+
+            <!-- Frozen Overlay (PK Steal Penalty) -->
+            @if (isFrozen()) {
+              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-900/40 backdrop-blur-sm rounded-2xl pointer-events-none">
+                <h2 class="text-4xl font-black text-red-500 uppercase tracking-widest animate-pulse drop-shadow-md">
+                  FROZEN
+                </h2>
+                <p class="text-red-300 font-bold text-sm mt-2">You stepped on a mine! Wait 3s...</p>
+              </div>
+            }
+
+            <div class="inline-flex flex-col gap-1 relative z-0 m-auto" 
+                 [class.opacity-50]="isFrozen()" 
+                 [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
+              @for (row of store.board(); track $index) {
+                <div class="flex gap-1">
+                  @for (cell of row; track cell.x + '-' + cell.y) {
+                    <app-cell 
+                      [cell]="cell"
+                      (reveal)="handleCellClick(cell.x, cell.y)"
+                      (flag)="store.toggleFlag(cell.x, cell.y)"
+                    ></app-cell>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="mt-6 flex justify-center">
+            <div class="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
+              <button 
+                (click)="isFlagMode = false"
+                [class.bg-slate-700]="!isFlagMode" [class.shadow]="!isFlagMode"
+                class="px-6 py-2 rounded-lg font-bold transition-all duration-200 text-sm"
+              >
+                {{ i18n.t('minesweeper.dig')() }}
+              </button>
+              <button 
+                (click)="isFlagMode = true"
+                [class.bg-red-500]="isFlagMode" [class.bg-opacity-20]="isFlagMode" [class.text-red-400]="isFlagMode" [class.border]="isFlagMode" [class.border-red-500]="isFlagMode"
+                class="px-6 py-2 rounded-lg font-bold transition-all duration-200 border border-transparent text-sm"
+              >
+                {{ i18n.t('minesweeper.flag')() }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Social Lobby Sidebar (30%) -->
+      <div class="w-80 flex-shrink-0 flex flex-col bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+        <!-- Tabs -->
+        <div class="flex border-b border-slate-700">
+          <button (click)="activeTab = 'rooms'" [class.bg-slate-800]="activeTab === 'rooms'" [class.text-white]="activeTab === 'rooms'" [class.text-slate-500]="activeTab !== 'rooms'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest">
+            Arena Rooms
+          </button>
+          <button (click)="activeTab = 'online'" [class.bg-slate-800]="activeTab === 'online'" [class.text-white]="activeTab === 'online'" [class.text-slate-500]="activeTab !== 'online'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest relative">
+            Online
+            <span class="absolute top-2 right-4 bg-emerald-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ wsService.onlinePlayers().length }}</span>
+          </button>
+        </div>
+
+        <!-- Rooms Content -->
+        @if (activeTab === 'rooms') {
+          <div class="p-4 flex-grow overflow-y-auto">
+            <button (click)="createRoom()" class="w-full mb-4 py-3 rounded-xl font-bold border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors flex justify-center items-center gap-2">
+              <span>➕</span> CREATE PK ROOM
+            </button>
+
+            <div class="space-y-6">
+              
+              <!-- Other Active Rooms -->
+              <div>
+                <div class="flex items-center justify-between mb-3 px-1">
+                  <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Active Rooms ({{ otherRooms().length }})</h3>
+                </div>
+                <div class="space-y-3">
+                  @for (room of otherRooms(); track room.id) {
+                    <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-500 transition-colors">
+                      <div class="flex justify-between items-center mb-2">
+                        <span class="font-mono text-sm font-bold text-white">{{ room.id }}</span>
+                        <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
+                              [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
+                              [class.bg-emerald-500]="room.status === 'waiting'" [class.text-black]="room.status === 'waiting'">
+                          {{ room.status }}
+                        </span>
+                      </div>
+                      <div class="flex justify-between items-end">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                          <span>Host: <span class="text-indigo-400 font-bold">{{ room.host }}</span></span>
+                          <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                          <span>Mode: <span class="text-white">{{ room.mode === 'pk_steal' ? 'Steal' : 'Speed' }}</span></span>
+                          <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                          <span>Diff: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-xs text-slate-400">{{ room.players }}/2</span>
+                          @if (room.status === 'waiting' && room.players < 2) {
+                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded shadow hover:bg-purple-500 transition-colors">JOIN</button>
+                          } @else if (room.status === 'waiting' && room.players >= 2) {
+                            <button disabled class="px-3 py-1 bg-slate-600 text-slate-400 text-xs font-bold rounded shadow cursor-not-allowed">FULL</button>
+                          } @else {
+                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-slate-700 text-slate-300 text-xs font-bold rounded shadow hover:bg-slate-600 transition-colors">WATCH</button>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-700 rounded-xl">
+                      No active rooms.<br>Create one to challenge others!
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- My Rooms -->
+              @if (myRooms().length > 0) {
+                <div>
+                  <div class="flex items-center justify-between mb-3 px-1">
+                    <h3 class="text-xs font-black text-emerald-400 uppercase tracking-widest">My Room</h3>
+                  </div>
+                  <div class="space-y-3">
+                    @for (room of myRooms(); track room.id) {
+                      <div class="p-3 bg-emerald-900/20 rounded-xl border border-emerald-500/30">
+                        <div class="flex justify-between items-center mb-2">
+                          <span class="font-mono text-sm font-bold text-white">{{ room.id }} (Host)</span>
+                          <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
+                                [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
+                                [class.bg-emerald-500]="room.status === 'waiting'" [class.text-black]="room.status === 'waiting'">
+                            {{ room.status }}
+                          </span>
+                        </div>
+                        <div class="flex justify-between items-end">
+                          <div class="text-[10px] text-slate-400 uppercase tracking-wider flex flex-col gap-1">
+                            <div>Mode: <span class="text-white">{{ room.mode === 'pk_steal' ? 'Steal' : 'Speed' }}</span></div>
+                            <div>Diff: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-400">{{ room.players }}/2</span>
+                            <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors ml-2">DISMISS</button>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Online Content -->
+        @if (activeTab === 'online') {
+          <div class="p-4 flex-grow overflow-y-auto space-y-2">
+            @for (player of otherOnlinePlayers(); track player.id) {
+              <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                <div class="flex items-center gap-3">
+                  <div class="relative">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                      {{ player.username?.charAt(0)?.toUpperCase() }}
+                    </div>
+                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-800"
+                         [class.bg-emerald-400]="player.status === 'idle'"
+                         [class.bg-yellow-400]="player.status === 'playing'"></div>
+                  </div>
+                  <div>
+                    <div class="text-sm font-bold text-white leading-none">{{ player.username }}</div>
+                    <div class="text-[10px] text-slate-400 uppercase mt-1">{{ player.status }}</div>
+                  </div>
+                </div>
+                <button [disabled]="player.status !== 'idle'" class="text-xs font-bold text-indigo-400 px-2 py-1 hover:bg-indigo-500/20 rounded disabled:opacity-30 transition-colors">
+                  INVITE
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- Create Room Modal Overlay -->
+    @if (isCreateModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-white">Create PK Room</h2>
+            <button (click)="isCreateModalOpen.set(false)" class="text-slate-400 hover:text-white transition-colors">
+              ✕
+            </button>
+          </div>
+          
+          <div class="space-y-6">
+            <!-- Room Name -->
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Room Name</label>
+              <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
+                     class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                     placeholder="Enter room name">
+            </div>
+
+            <!-- PK Mode -->
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Game Mode</label>
+              <div class="grid grid-cols-2 gap-3">
+                <button (click)="newRoomMode.set('pk_steal')" 
+                        [class.bg-emerald-500]="newRoomMode() === 'pk_steal'" [class.text-white]="newRoomMode() === 'pk_steal'"
+                        [class.bg-slate-800]="newRoomMode() !== 'pk_steal'" [class.text-slate-300]="newRoomMode() !== 'pk_steal'"
+                        class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span>⚡</span> <span>Steal Mode</span>
+                  </div>
+                  <div class="text-[10px] font-normal opacity-80 leading-tight">Shared board. Race to flag mines!</div>
+                </button>
+                <button (click)="newRoomMode.set('pk_speed')" 
+                        [class.bg-emerald-500]="newRoomMode() === 'pk_speed'" [class.text-white]="newRoomMode() === 'pk_speed'"
+                        [class.bg-slate-800]="newRoomMode() !== 'pk_speed'" [class.text-slate-300]="newRoomMode() !== 'pk_speed'"
+                        class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left opacity-60 cursor-not-allowed" disabled>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span>🏎️</span> <span>Speed Mode</span>
+                  </div>
+                  <div class="text-[10px] font-normal opacity-80 leading-tight">Coming soon.</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Difficulty</label>
+              <div class="grid grid-cols-3 gap-2">
+                <button (click)="newRoomDifficulty.set('easy')" 
+                        [class.bg-emerald-500]="newRoomDifficulty() === 'easy'" [class.text-white]="newRoomDifficulty() === 'easy'"
+                        [class.bg-slate-800]="newRoomDifficulty() !== 'easy'" [class.text-slate-300]="newRoomDifficulty() !== 'easy'"
+                        class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
+                  <span>Easy</span>
+                  <span class="text-[10px] opacity-70 mt-1 font-normal">9x9 (10)</span>
+                </button>
+                <button (click)="newRoomDifficulty.set('medium')" 
+                        [class.bg-emerald-500]="newRoomDifficulty() === 'medium'" [class.text-white]="newRoomDifficulty() === 'medium'"
+                        [class.bg-slate-800]="newRoomDifficulty() !== 'medium'" [class.text-slate-300]="newRoomDifficulty() !== 'medium'"
+                        class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
+                  <span>Medium</span>
+                  <span class="text-[10px] opacity-70 mt-1 font-normal">16x16 (40)</span>
+                </button>
+                <button (click)="newRoomDifficulty.set('hard')" 
+                        [class.bg-emerald-500]="newRoomDifficulty() === 'hard'" [class.text-white]="newRoomDifficulty() === 'hard'"
+                        [class.bg-slate-800]="newRoomDifficulty() !== 'hard'" [class.text-slate-300]="newRoomDifficulty() !== 'hard'"
+                        class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
+                  <span>Hard</span>
+                  <span class="text-[10px] opacity-70 mt-1 font-normal">30x16 (99)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-4 flex gap-3">
+              <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">
+                Cancel
+              </button>
+              <button (click)="confirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20">
+                Create & Join
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+  `
+})
+export class MinesweeperComponent implements OnInit {
+  store = inject(MinesweeperStore);
+  i18n = inject(I18nService);
+  authStore = inject(AuthStore);
+  wsService = inject(WebSocketService); // For lobby data
+  audio = inject(AudioService);
+  toastService = inject(ToastService);
+  GameStatus = GameStatus; // Expose for template
+  
+  isFlagMode = false;
+  activeTab: 'rooms' | 'online' = 'rooms';
+  playerId = this.authStore.currentUser()?.username || 'Guest';
+  currentRoomMode = signal<string>('single');
+
+  // Derived UI State
+  myRooms = computed(() => this.wsService.activeRooms().filter(r => r.host === this.playerId && r.mode !== 'single'));
+  otherRooms = computed(() => this.wsService.activeRooms().filter(r => r.host !== this.playerId && r.mode !== 'single'));
+  otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter(p => p.id !== this.playerId));
+
+  // Modal State
+  isCreateModalOpen = signal<boolean>(false);
+  newRoomName = signal<string>('');
+  newRoomMode = signal<string>('pk_steal');
+  newRoomDifficulty = signal<string>('medium');
+
+  // React to cooldowns received from the server
+  isFrozen = signal<boolean>(false);
+  private freezeTimer: any;
+  
+  // Countdown Timer for PK Start
+  countdownDisplay = signal<string>('3');
+  private countdownInterval: any;
+
+  // Elapsed Timer for PK Match
+  elapsedTime = signal<string>('00:00');
+  private elapsedInterval: any;
+
+  constructor() {
+    // Watch for countdown and elapsed timer
+    effect(() => {
+      const status = this.store.status();
+      const mode = this.currentRoomMode();
+
+      // Countdown logic
+      if (status === GameStatus.Starting) {
+        this.startCountdown();
+      } else {
+        this.stopCountdown();
+      }
+
+      // Elapsed timer logic
+      if (status === GameStatus.Playing && mode !== 'single') {
+        if (!this.elapsedInterval) {
+          this.elapsedInterval = setInterval(() => {
+            const startAt = this.store.startAt();
+            if (startAt > 0) {
+              const diffMs = Date.now() - startAt;
+              const totalSec = Math.max(0, Math.floor(diffMs / 1000));
+              const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+              const s = (totalSec % 60).toString().padStart(2, '0');
+              this.elapsedTime.set(`${m}:${s}`);
+            }
+          }, 1000);
+        }
+      } else {
+        if (this.elapsedInterval) {
+          clearInterval(this.elapsedInterval);
+          this.elapsedInterval = null;
+        }
+        if (status === GameStatus.Waiting || status === GameStatus.Starting) {
+          this.elapsedTime.set('00:00');
+        }
+      }
+    });
+
+    // Watch for cooldown updates
+    effect(() => {
+      const cooldowns = this.store.cooldowns();
+      const until = cooldowns[this.playerId] || 0;
+      const now = Date.now();
+      
+      if (until > now) {
+        this.isFrozen.set(true);
+        clearTimeout(this.freezeTimer);
+        this.freezeTimer = setTimeout(() => {
+          this.isFrozen.set(false);
+        }, until - now);
+      } else {
+        this.isFrozen.set(false);
+      }
+    });
+
+    // Watch for unexpected disconnects from PK rooms
+    effect(() => {
+      const disconnects = this.wsService.unexpectedDisconnectEvent();
+      // Only react if disconnects > 0 AND we are currently in a PK room
+      // Use untracked so we don't accidentally trigger this when joining a new room
+      if (disconnects > 0 && untracked(() => this.currentRoomMode()) !== 'single') {
+        this.leaveRoom();
+      }
+    });
+  }
+
+  stopCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
+  }
+
+  startCountdown() {
+    this.stopCountdown();
+    this.audio.playClick(); // initial beep
+    
+    this.countdownInterval = setInterval(() => {
+      const remainingMs = this.store.startAt() - Date.now();
+      if (remainingMs <= 0) {
+        this.countdownDisplay.set('GO!');
+        this.audio.playFlag(); // High pitched GO
+        this.stopCountdown();
+      } else {
+        const seconds = Math.ceil(remainingMs / 1000);
+        this.countdownDisplay.set(seconds.toString());
+        this.audio.playClick(); // Tick
+      }
+    }, 1000); // Check every second roughly
+  }
+
+  ngOnInit() {
+    // 1. Connect to Lobby
+    this.wsService.connectLobby(this.playerId, this.playerId);
+    
+    // 2. Connect to local single player game by default
+    this.joinRoom('single_' + this.playerId, 'single');
+  }
+
+  ngOnDestroy() {
+    this.wsService.disconnect();
+  }
+
+  createRoom() {
+    this.newRoomName.set('PK-' + Math.random().toString(36).substring(2, 6).toUpperCase());
+    this.newRoomMode.set('pk_steal');
+    this.isCreateModalOpen.set(true);
+  }
+
+  updateRoomName(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.newRoomName.set(input.value);
+  }
+
+  confirmCreateRoom() {
+    this.isCreateModalOpen.set(false);
+    this.joinRoom(this.newRoomName(), this.newRoomMode(), this.newRoomDifficulty());
+  }
+
+  joinRoom(roomId: string, mode: string, difficulty: string = 'medium') {
+    this.currentRoomMode.set(mode);
+    this.store.joinGame(roomId, this.playerId, mode, difficulty);
+  }
+
+  leaveRoom() {
+    // Reset to single player
+    this.joinRoom('single_' + this.playerId, 'single', 'medium');
+  }
+
+  getDifficultyText(difficulty: string): string {
+    switch(difficulty) {
+      case 'easy': return 'Easy (9x9)';
+      case 'medium': return 'Medium (16x16)';
+      case 'hard': return 'Hard (30x16)';
+      default: return 'Medium (16x16)';
+    }
+  }
+
+  dismissRoom() {
+    this.toastService.confirm({
+      title: 'Dismiss Room',
+      message: 'Are you sure you want to dismiss this room? All players will be kicked out.',
+      confirmText: 'Dismiss',
+      cancelText: 'Cancel',
+      onConfirm: () => {
+        this.wsService.send({ type: 'dismiss_room' });
+        this.toastService.show('Room dismissed successfully', 'success');
+      }
+    });
+  }
+
+  handleCellClick(x: number, y: number) {
+    if (this.isFlagMode) {
+      this.store.toggleFlag(x, y);
+    } else {
+      this.store.revealCell(x, y);
+    }
+  }
+
+  getPlayerScores() {
+    const scores = this.store.scores();
+    const players = Object.keys(scores).map(id => ({ id, score: scores[id] }));
+    
+    // Sort logic: current player first, then others by score (descending)
+    return players.sort((a, b) => {
+      if (a.id === this.playerId) return -1;
+      if (b.id === this.playerId) return 1;
+      return b.score - a.score;
+    });
+  }
+}

@@ -1,0 +1,77 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    /* Default is dark */
+    --color-bg-main: #020617; /* slate-950 */
+    --color-text-main: #f1f5f9; /* slate-100 */
+    --color-bg-card: rgba(15, 23, 42, 0.6); /* slate-900/60 */
+    --color-border-card: rgba(51, 65, 85, 0.5); /* slate-700/50 */
+    --color-accent-from: #60a5fa; /* blue-400 */
+    --color-accent-to: #34d399; /* emerald-400 */
+  }
+
+  .theme-dark {
+    --color-bg-main: #020617;
+    --color-text-main: #f1f5f9;
+    --color-bg-card: rgba(15, 23, 42, 0.6);
+    --color-border-card: rgba(51, 65, 85, 0.5);
+    --color-accent-from: #60a5fa;
+    --color-accent-to: #34d399;
+  }
+
+  .theme-light {
+    --color-bg-main: #f8fafc; /* slate-50 */
+    --color-text-main: #0f172a; /* slate-900 */
+    --color-bg-card: rgba(255, 255, 255, 0.7); /* white/70 */
+    --color-border-card: rgba(203, 213, 225, 0.5); /* slate-300/50 */
+    --color-accent-from: #3b82f6; /* blue-500 */
+    --color-accent-to: #10b981; /* emerald-500 */
+  }
+
+  .theme-cyberpunk {
+    --color-bg-main: #2b003e; /* Deep purple */
+    --color-text-main: #fdf2f8; /* pink-50 */
+    --color-bg-card: rgba(33, 0, 48, 0.8);
+    --color-border-card: rgba(236, 72, 153, 0.5); /* pink-500/50 */
+    --color-accent-from: #ec4899; /* pink-500 */
+    --color-accent-to: #06b6d4; /* cyan-500 */
+  }
+
+  body {
+    background-color: var(--color-bg-main);
+    color: var(--color-text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  @keyframes gold-shine {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+
+  @keyframes gold-pulse {
+    0%, 100% { box-shadow: 0 0 20px 5px rgba(250, 204, 21, 0.4); }
+    50% { box-shadow: 0 0 50px 20px rgba(250, 204, 21, 0.8); }
+  }
+
+  .animate-gold-shine {
+    background: linear-gradient(
+      to right,
+      #ca8a04 20%,
+      #fef08a 40%,
+      #fef08a 60%,
+      #ca8a04 80%
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: gold-shine 3s linear infinite;
+  }
+
+  .animate-gold-pulse {
+    animation: gold-pulse 2s ease-in-out infinite;
+  }
+}

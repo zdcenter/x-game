@@ -1,0 +1,27 @@
+# Node
+node_modules/
+
+# Go
+backend/backend
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Frontend build
+frontend/dist/
+frontend/.angular/
+frontend/out-tsc/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
