@@ -45,15 +45,25 @@ import { ToastService } from '../../../core/services/toast.service';
                 </div>
               }
 
-              @for (player of getPlayerScores(); track player.id) {
-                <div class="px-4 py-2 rounded-full border bg-slate-800 flex items-center gap-3 transition-transform"
-                     [class.border-emerald-500]="player.id === playerId"
-                     [class.scale-110]="player.id === playerId"
-                     [class.shadow-lg]="player.id === playerId"
-                     [class.border-slate-600]="player.id !== playerId">
-                  <span class="text-xs font-bold opacity-70">{{ player.id | slice:0:5 }}</span>
-                  <span class="text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
+              @if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
+                <div class="flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-xl border border-slate-600 shadow-inner">
+                  <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Opponent</span>
+                  <div class="w-32 h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                    <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
+                  </div>
+                  <span class="text-xs font-mono font-bold text-blue-400">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
                 </div>
+              } @else {
+                @for (player of getPlayerScores(); track player.id) {
+                  <div class="px-4 py-2 rounded-full border bg-slate-800 flex items-center gap-3 transition-transform"
+                       [class.border-emerald-500]="player.id === playerId"
+                       [class.scale-110]="player.id === playerId"
+                       [class.shadow-lg]="player.id === playerId"
+                       [class.border-slate-600]="player.id !== playerId">
+                    <span class="text-xs font-bold opacity-70">{{ player.id | slice:0:5 }}</span>
+                    <span class="text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
+                  </div>
+                }
               }
             </div>
 
@@ -112,12 +122,26 @@ import { ToastService } from '../../../core/services/toast.service';
             <!-- Victory Overlay -->
             @if (store.status() === 'finished') {
               <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-                <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
-                  {{ i18n.t('minesweeper.victory')() }}
-                </h2>
-                <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse">
-                  {{ i18n.t('minesweeper.cleared')() }}
-                </p>
+                @if (currentRoomMode() === 'pk_speed') {
+                  @if (hasWonSpeedMode()) {
+                    <h2 class="text-6xl font-black uppercase tracking-widest text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-bounce">
+                      YOU WIN!
+                    </h2>
+                    <p class="mt-4 text-emerald-300 font-bold text-lg animate-pulse">You cleared the board first!</p>
+                  } @else {
+                    <h2 class="text-6xl font-black uppercase tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
+                      DEFEAT!
+                    </h2>
+                    <p class="mt-4 text-red-300 font-bold text-lg animate-pulse">Opponent finished before you.</p>
+                  }
+                } @else {
+                  <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
+                    {{ i18n.t('minesweeper.victory')() }}
+                  </h2>
+                  <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse">
+                    {{ i18n.t('minesweeper.cleared')() }}
+                  </p>
+                }
               </div>
             }
 
@@ -338,11 +362,11 @@ import { ToastService } from '../../../core/services/toast.service';
                 <button (click)="newRoomMode.set('pk_speed')" 
                         [class.bg-emerald-500]="newRoomMode() === 'pk_speed'" [class.text-white]="newRoomMode() === 'pk_speed'"
                         [class.bg-slate-800]="newRoomMode() !== 'pk_speed'" [class.text-slate-300]="newRoomMode() !== 'pk_speed'"
-                        class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left opacity-60 cursor-not-allowed" disabled>
+                        class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left">
                   <div class="flex items-center gap-2 mb-1">
                     <span>🏎️</span> <span>Speed Mode</span>
                   </div>
-                  <div class="text-[10px] font-normal opacity-80 leading-tight">Coming soon.</div>
+                  <div class="text-[10px] font-normal opacity-80 leading-tight">Separate boards. First to clear wins!</div>
                 </button>
               </div>
             </div>
@@ -597,5 +621,10 @@ export class MinesweeperComponent implements OnInit {
       if (b.id === this.playerId) return 1;
       return b.score - a.score;
     });
+  }
+
+  hasWonSpeedMode(): boolean {
+    const scores = this.store.scores();
+    return scores[this.playerId] > 0;
   }
 }

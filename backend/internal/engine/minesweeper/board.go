@@ -102,3 +102,31 @@ func (b *Board) calculateNeighbors() {
 func (b *Board) isValid(x, y int) bool {
 	return x >= 0 && x < b.Width && y >= 0 && y < b.Height
 }
+
+func (b *Board) Clone() *Board {
+	newBoard := &Board{
+		Width:       b.Width,
+		Height:      b.Height,
+		Mines:       b.Mines,
+		Status:      b.Status,
+		RevealedCnt: b.RevealedCnt,
+		StartAt:     b.StartAt,
+		Cells:       make([][]*Cell, b.Height),
+	}
+
+	for y := 0; y < b.Height; y++ {
+		newBoard.Cells[y] = make([]*Cell, b.Width)
+		for x := 0; x < b.Width; x++ {
+			oldCell := b.Cells[y][x]
+			newBoard.Cells[y][x] = &Cell{
+				X:         oldCell.X,
+				Y:         oldCell.Y,
+				IsMine:    oldCell.IsMine,
+				State:     oldCell.State,
+				Neighbors: oldCell.Neighbors,
+				Owner:     oldCell.Owner,
+			}
+		}
+	}
+	return newBoard
+}

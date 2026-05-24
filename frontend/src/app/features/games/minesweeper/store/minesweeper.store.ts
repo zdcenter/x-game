@@ -1,6 +1,7 @@
-import { Injectable, computed, inject, effect } from '@angular/core';
+import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
+import { AuthStore } from '../../../../core/auth/auth.store';
 
 export enum CellState {
   Hidden = 0,
@@ -42,25 +43,61 @@ export enum GameStatus {
 export class MinesweeperStore {
   private ws = inject(WebSocketService);
   private audio = inject(AudioService);
+  private auth = inject(AuthStore);
+  
+  private playerId = computed(() => this.auth.currentUser()?.username || 'Guest');
 
   // Derive all state from the WebSocketService's global gameState
   private rawState = computed(() => this.ws.gameState() || {
     board: { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 },
+    boards: {},
     scores: {},
     cooldowns: {},
-    host: ''
+    host: '',
+    status: GameStatus.Waiting
   });
 
-  readonly board = computed<Cell[][]>(() => this.rawState().board?.cells || []);
-  readonly status = computed<GameStatus>(() => this.rawState().board?.status || GameStatus.Waiting);
+  // For Steal mode it's just rawState().board. For Speed mode it's rawState().boards[playerId]
+  private myBoardData = computed(() => {
+    const s = this.rawState();
+    if (s.boards && s.boards[this.playerId()]) {
+      return s.boards[this.playerId()];
+    }
+    return s.board || { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
+  });
+
+  readonly board = computed<Cell[][]>(() => this.myBoardData().cells || []);
+  readonly status = computed<GameStatus>(() => {
+    const s = this.rawState();
+    // Use top-level status if it exists (Speed Mode), otherwise fallback to board status
+    if (s.boards && s.status) return s.status;
+    return this.myBoardData().status || GameStatus.Waiting;
+  });
   readonly scores = computed<Record<string, number>>(() => this.rawState().scores || {});
   readonly cooldowns = computed<Record<string, number>>(() => this.rawState().cooldowns || {});
-  readonly startAt = computed(() => this.rawState().board?.start_at || 0);
+  readonly startAt = computed(() => this.myBoardData().start_at || 0);
   readonly host = computed<string>(() => (this.rawState() as any).host || '');
+  
+  // Calculate opponent progress for Speed Mode
+  readonly opponentProgress = computed(() => {
+    const s = this.rawState();
+    if (!s.boards) return null;
+    
+    // Find the opponent's board
+    const opponentId = Object.keys(s.boards).find(id => id !== this.playerId());
+    if (!opponentId) return null;
+    
+    const oppBoard = s.boards[opponentId];
+    if (!oppBoard || !oppBoard.width) return null;
+    
+    const totalSafe = (oppBoard.width * oppBoard.height) - oppBoard.mines;
+    const progress = (oppBoard.revealed_cnt / totalSafe) * 100;
+    return Math.min(100, Math.max(0, progress));
+  });
 
-  readonly width = computed(() => this.rawState().board?.width || 16);
-  readonly height = computed(() => this.rawState().board?.height || 16);
-  readonly totalMines = computed(() => this.rawState().board?.mines || 40);
+  readonly width = computed(() => this.myBoardData().width || 16);
+  readonly height = computed(() => this.myBoardData().height || 16);
+  readonly totalMines = computed(() => this.myBoardData().mines || 40);
 
   readonly remainingMines = computed(() => {
     let flagged = 0;

@@ -75,6 +75,13 @@ func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
 		mode = "single" // default
 	}
 
+	var eng engine.GameEngine
+	if mode == "pk_speed" {
+		eng = &minesweeper.SpeedEngine{}
+	} else {
+		eng = &minesweeper.MinesweeperEngine{}
+	}
+
 	r := &Room{
 		ID:         roomID,
 		Host:       "", // Will be set by the first client who joins
@@ -82,7 +89,7 @@ func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
 		Difficulty: difficulty,
 		Status:     "waiting",
 		Clients:    make(map[string]*Client),
-		Engine:     &minesweeper.MinesweeperEngine{},
+		Engine:     eng,
 	}
 	r.Engine.InitGame(map[string]interface{}{"mode": mode, "difficulty": difficulty})
 	Rooms[roomID] = r
@@ -161,14 +168,20 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			if msgType == "start_game" {
 				if clientID == r.Host && r.Status == "waiting" && len(r.Clients) >= 2 {
 					r.Status = "starting"
-					if msEngine, ok := r.Engine.(*minesweeper.MinesweeperEngine); ok {
-						msEngine.SetStarting()
+					// Common interface for both engines
+					type startableEngine interface {
+						SetStarting()
+						StartPlayingAndRevealSafe()
+					}
+					
+					if eng, ok := r.Engine.(startableEngine); ok {
+						eng.SetStarting()
 						go func() {
 							time.Sleep(3 * time.Second)
 							r.mu.Lock()
 							if r.Status == "starting" {
 								r.Status = "playing"
-								msEngine.StartPlayingAndRevealSafe()
+								eng.StartPlayingAndRevealSafe()
 							}
 							r.mu.Unlock()
 							r.BroadcastState()
