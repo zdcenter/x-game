@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { User } from '../auth/auth.store';
 
 export interface UsersResponse {
@@ -19,7 +20,7 @@ export interface ToggleStatusResponse {
 })
 export class AdminService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:3001/api/v1/admin';
+  private readonly baseUrl = environment.apiUrl + '/admin';
 
   getUsers(): Observable<UsersResponse> {
     return this.http.get<UsersResponse>(`${this.baseUrl}/users`);

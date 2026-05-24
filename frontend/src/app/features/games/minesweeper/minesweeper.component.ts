@@ -14,31 +14,33 @@ import { ToastService } from '../../../core/services/toast.service';
   imports: [CommonModule, CellComponent],
   providers: [MinesweeperStore],
   template: `
-    <div class="flex-grow flex h-[calc(100vh-64px)] p-6 gap-6 transition-colors duration-300">
+    <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-2 lg:p-6 gap-4 lg:gap-6 transition-colors duration-300 overflow-y-auto lg:overflow-hidden">
       
       <!-- LEFT: Game Arena (70%) -->
-      <div class="flex-grow flex flex-col items-center relative min-w-0">
+      <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
         
         <!-- Premium Glassmorphism Container -->
-        <div class="w-full h-full flex flex-col backdrop-blur-xl border rounded-3xl p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto"
+        <div class="w-full h-full flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
           
           <!-- Header -->
-          <div class="flex items-center justify-between mb-6 pb-4 border-b" style="border-color: var(--color-border-card)">
+          <div class="flex items-center justify-between mb-4 lg:mb-6 pb-4 border-b" style="border-color: var(--color-border-card)">
             <!-- Left: Title & Mode -->
-            <div class="flex items-center space-x-4 flex-1">
-              <h1 class="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent whitespace-nowrap"
+            <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
+              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent whitespace-nowrap"
                   style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 {{ i18n.t('app.title')() }}
-                <span class="text-sm ml-2 px-2 py-1 bg-slate-800 text-slate-400 rounded-lg">{{ currentRoomMode() === 'pk_steal' ? 'PK Steal Mode' : (currentRoomMode() === 'pk_speed' ? 'PK Speed Mode' : 'Single Player (Default)') }}</span>
+                <span class="text-[10px] lg:text-sm ml-1 lg:ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-slate-800 text-slate-400 rounded-lg">
+                  {{ currentRoomMode() === 'pk_steal' ? 'PK: Steal' : (currentRoomMode() === 'pk_speed' ? 'PK: Speed' : 'Single') }}
+                </span>
               </h1>
             </div>
             
             <!-- Center: PK Scoreboard & Timer -->
-            <div class="flex justify-center gap-4 flex-1 items-center">
+            <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center">
               @if (currentRoomMode() !== 'single' && store.status() === 'playing') {
-                <div class="font-mono text-xl font-bold text-yellow-400 bg-slate-800/80 px-4 py-2 rounded-xl border border-yellow-500/30 flex items-center gap-2 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="font-mono text-sm lg:text-xl font-bold text-yellow-400 bg-slate-800/80 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-yellow-500/30 flex items-center gap-1 lg:gap-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   {{ elapsedTime() }}
@@ -46,40 +48,40 @@ import { ToastService } from '../../../core/services/toast.service';
               }
 
               @if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
-                <div class="flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-xl border border-slate-600 shadow-inner">
-                  <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Opponent</span>
-                  <div class="w-32 h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                <div class="flex items-center gap-1 lg:gap-3 bg-slate-800 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-slate-600 shadow-inner">
+                  <span class="text-[8px] lg:text-xs text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">Opponent</span>
+                  <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
                     <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
                   </div>
-                  <span class="text-xs font-mono font-bold text-blue-400">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
+                  <span class="text-[8px] lg:text-xs font-mono font-bold text-blue-400">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
                 </div>
               } @else {
                 @for (player of getPlayerScores(); track player.id) {
-                  <div class="px-4 py-2 rounded-full border bg-slate-800 flex items-center gap-3 transition-transform"
+                  <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-slate-800 flex items-center gap-1.5 lg:gap-3 transition-transform"
                        [class.border-emerald-500]="player.id === playerId"
                        [class.scale-110]="player.id === playerId"
                        [class.shadow-lg]="player.id === playerId"
                        [class.border-slate-600]="player.id !== playerId">
-                    <span class="text-xs font-bold opacity-70">{{ player.id | slice:0:5 }}</span>
-                    <span class="text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
+                    <span class="text-[8px] lg:text-xs font-bold opacity-70">{{ player.id | slice:0:3 }}</span>
+                    <span class="text-sm lg:text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
                   </div>
                 }
               }
             </div>
 
             <!-- Right: Mines -->
-            <div class="flex space-x-6 flex-1 justify-end">
-              <div class="flex flex-col items-center bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 shadow-inner">
-                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Mines</span>
-                <span class="text-2xl font-mono text-emerald-400 font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
+            <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center">
+              <div class="flex flex-col items-center bg-slate-800/80 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-slate-700 shadow-inner">
+                <span class="text-[8px] lg:text-xs text-slate-400 font-semibold uppercase tracking-wider">Mines</span>
+                <span class="text-sm lg:text-2xl font-mono text-emerald-400 font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
               </div>
               
               @if (currentRoomMode() !== 'single') {
-                <button (click)="leaveRoom()" class="px-4 py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button (click)="leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  Leave
+                  <span class="hidden sm:inline">Leave</span>
                 </button>
               }
             </div>
@@ -195,7 +197,7 @@ import { ToastService } from '../../../core/services/toast.service';
       </div>
 
       <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="w-80 flex-shrink-0 flex flex-col bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-2xl lg:rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] min-h-[400px] lg:min-h-0">
         <!-- Tabs -->
         <div class="flex border-b border-slate-700">
           <button (click)="activeTab = 'rooms'" [class.bg-slate-800]="activeTab === 'rooms'" [class.text-white]="activeTab === 'rooms'" [class.text-slate-500]="activeTab !== 'rooms'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest">

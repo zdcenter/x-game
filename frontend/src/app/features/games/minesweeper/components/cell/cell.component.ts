@@ -13,6 +13,10 @@ import { Cell, CellState } from '../../store/minesweeper.store';
       [ngClass]="cellClass"
       (click)="onLeftClick($event)"
       (contextmenu)="onRightClick($event)"
+      (touchstart)="onTouchStart($event)"
+      (touchend)="onTouchEnd($event)"
+      (touchcancel)="onTouchCancel($event)"
+      (touchmove)="onTouchMove($event)"
     >
       @if (cell.state === CellState.Revealed) {
         @if (cell.neighbors > 0) {
@@ -74,5 +78,44 @@ export class CellComponent {
   onRightClick(event: MouseEvent) {
     event.preventDefault();
     this.flag.emit();
+  }
+
+  private touchTimeout: any;
+  private touchFired = false;
+
+  onTouchStart(event: TouchEvent) {
+    this.touchFired = false;
+    this.touchTimeout = setTimeout(() => {
+      this.touchFired = true;
+      this.flag.emit();
+    }, 400); // 400ms for long press
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout);
+      this.touchTimeout = null;
+    }
+    this.touchFired = true; // Prevent tap action if user is scrolling
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout);
+      this.touchTimeout = null;
+    }
+    if (!this.touchFired) {
+      event.preventDefault(); // Prevent emulated mouse clicks
+      this.reveal.emit();
+    } else {
+      event.preventDefault();
+    }
+  }
+
+  onTouchCancel(event: TouchEvent) {
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout);
+      this.touchTimeout = null;
+    }
   }
 }

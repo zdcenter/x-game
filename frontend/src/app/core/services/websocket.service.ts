@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, effect, untracked } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 export interface WSMessage {
   type: string;
@@ -32,8 +33,7 @@ export class WebSocketService {
       this.socket.close();
     }
 
-    const host = window.location.hostname;
-    const url = `ws://${host}:3001/api/v1/ws/join/${roomId}?playerId=${playerId}&mode=${mode}&difficulty=${difficulty}`;
+    const url = `${environment.wsUrl}/ws/join/${roomId}?playerId=${playerId}&mode=${mode}&difficulty=${difficulty}`;
     this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
@@ -74,9 +74,7 @@ export class WebSocketService {
       this.lobbySocket.close();
     }
 
-    const host = window.location.hostname;
-    // Assume backend is on port 3001 on the same host
-    const url = `ws://${host}:3001/api/v1/ws/lobby?playerId=${playerId}&username=${encodeURIComponent(username)}`;
+    const url = `${environment.wsUrl}/ws/lobby?playerId=${playerId}&username=${encodeURIComponent(username)}`;
     this.lobbySocket = new WebSocket(url);
 
     this.lobbySocket.onopen = () => {
