@@ -43,12 +43,16 @@ func main() {
 	v1.Post("/register", rest.Register)
 	v1.Post("/login", rest.Login)
 
+	v1.Get("/games", rest.GetGames)
+
 	// Admin routes
 	admin := v1.Group("/admin")
 	admin.Use(middleware.Protected())
 	admin.Use(middleware.AdminProtected())
 	admin.Get("/users", rest.GetUsers)
 	admin.Put("/users/:id/status", rest.ToggleUserStatus)
+	admin.Get("/games", rest.GetAdminGames)
+	admin.Put("/games/:id", rest.UpdateGame)
 
 	// WebSocket routes
 	ws.Register(v1.Group("/ws"))

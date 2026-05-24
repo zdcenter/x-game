@@ -7,6 +7,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { GameService, getLocalizedField } from '../../../core/services/game.service';
 
 @Component({
   selector: 'app-minesweeper',
@@ -31,14 +32,40 @@ import { ToastService } from '../../../core/services/toast.service';
                   style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 {{ i18n.t('app.title')() }}
                 <span class="text-[10px] lg:text-sm ml-1 lg:ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-slate-800 text-slate-400 rounded-lg">
-                  {{ currentRoomMode() === 'pk_steal' ? 'PK: Steal' : (currentRoomMode() === 'pk_speed' ? 'PK: Speed' : 'Single') }}
+                  {{ currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')()) }}
                 </span>
               </h1>
+              <button (click)="showRules.set(true)" class="text-slate-400 hover:text-emerald-400 transition-colors p-1 rounded-full hover:bg-slate-800" [title]="i18n.t('game.rules.tooltip')()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
             </div>
             
-            <!-- Center: PK Scoreboard & Timer -->
+            <!-- Center: PK Scoreboard & Timer OR Single Player Difficulty -->
             <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center">
-              @if (currentRoomMode() !== 'single' && store.status() === 'playing') {
+              @if (currentRoomMode() === 'single') {
+                <div class="hidden sm:flex bg-slate-800/80 rounded-xl p-1 border border-slate-700 shadow-inner">
+                  <button (click)="changeSingleDifficulty('easy')" 
+                          [class.bg-emerald-500]="currentDifficulty() === 'easy'" [class.text-slate-900]="currentDifficulty() === 'easy'"
+                          [class.text-slate-400]="currentDifficulty() !== 'easy'"
+                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
+                    {{ i18n.t('game.diff_easy')() }}
+                  </button>
+                  <button (click)="changeSingleDifficulty('medium')" 
+                          [class.bg-emerald-500]="currentDifficulty() === 'medium'" [class.text-slate-900]="currentDifficulty() === 'medium'"
+                          [class.text-slate-400]="currentDifficulty() !== 'medium'"
+                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
+                    {{ i18n.t('game.diff_medium')() }}
+                  </button>
+                  <button (click)="changeSingleDifficulty('hard')" 
+                          [class.bg-emerald-500]="currentDifficulty() === 'hard'" [class.text-slate-900]="currentDifficulty() === 'hard'"
+                          [class.text-slate-400]="currentDifficulty() !== 'hard'"
+                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
+                    {{ i18n.t('game.diff_hard')() }}
+                  </button>
+                </div>
+              } @else if (store.status() === 'playing') {
                 <div class="font-mono text-sm lg:text-xl font-bold text-yellow-400 bg-slate-800/80 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-yellow-500/30 flex items-center gap-1 lg:gap-2 shadow-inner">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -49,7 +76,7 @@ import { ToastService } from '../../../core/services/toast.service';
 
               @if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
                 <div class="flex items-center gap-1 lg:gap-3 bg-slate-800 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-slate-600 shadow-inner">
-                  <span class="text-[8px] lg:text-xs text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">Opponent</span>
+                  <span class="text-[8px] lg:text-xs text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">{{ i18n.t('game.opponent')() }}</span>
                   <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
                     <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
                   </div>
@@ -72,7 +99,7 @@ import { ToastService } from '../../../core/services/toast.service';
             <!-- Right: Mines -->
             <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center">
               <div class="flex flex-col items-center bg-slate-800/80 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-slate-700 shadow-inner">
-                <span class="text-[8px] lg:text-xs text-slate-400 font-semibold uppercase tracking-wider">Mines</span>
+                <span class="text-[8px] lg:text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ i18n.t('minesweeper.mines')() }}</span>
                 <span class="text-sm lg:text-2xl font-mono text-emerald-400 font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
               </div>
               
@@ -81,7 +108,7 @@ import { ToastService } from '../../../core/services/toast.service';
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  <span class="hidden sm:inline">Leave</span>
+                  <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
                 </button>
               }
             </div>
@@ -99,7 +126,7 @@ import { ToastService } from '../../../core/services/toast.service';
                   <h2 class="text-2xl font-bold text-white tracking-widest uppercase">Waiting for Challenger...</h2>
                 } @else {
                   @if (store.host() === playerId) {
-                    <h2 class="text-3xl font-black text-white mb-6 uppercase">Ready for Battle</h2>
+                    <h2 class="text-3xl font-black text-white mb-6 uppercase">{{ i18n.t('game.ready')() }}</h2>
                     <button (click)="store.startGame()" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:scale-105 transition-all">
                       START PK
                     </button>
@@ -140,9 +167,15 @@ import { ToastService } from '../../../core/services/toast.service';
                   <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
                     {{ i18n.t('minesweeper.victory')() }}
                   </h2>
-                  <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse">
+                  <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse mb-6">
                     {{ i18n.t('minesweeper.cleared')() }}
                   </p>
+                }
+                
+                @if (currentRoomMode() === 'single' || store.host() === playerId) {
+                  <button (click)="store.restartGame()" class="mt-8 px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:scale-105 transition-all">
+                    {{ i18n.t('game.restart')() }}
+                  </button>
                 }
               </div>
             }
@@ -151,9 +184,9 @@ import { ToastService } from '../../../core/services/toast.service';
             @if (isFrozen()) {
               <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-900/40 backdrop-blur-sm rounded-2xl pointer-events-none">
                 <h2 class="text-4xl font-black text-red-500 uppercase tracking-widest animate-pulse drop-shadow-md">
-                  FROZEN
+                  {{ i18n.t('game.frozen')() }}
                 </h2>
-                <p class="text-red-300 font-bold text-sm mt-2">You stepped on a mine! Wait 3s...</p>
+                <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
               </div>
             }
 
@@ -173,26 +206,35 @@ import { ToastService } from '../../../core/services/toast.service';
               }
             </div>
           </div>
-
-          <!-- Controls -->
-          <div class="mt-6 flex justify-center">
-            <div class="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
-              <button 
-                (click)="isFlagMode = false"
-                [class.bg-slate-700]="!isFlagMode" [class.shadow]="!isFlagMode"
-                class="px-6 py-2 rounded-lg font-bold transition-all duration-200 text-sm"
-              >
-                {{ i18n.t('minesweeper.dig')() }}
-              </button>
-              <button 
-                (click)="isFlagMode = true"
-                [class.bg-red-500]="isFlagMode" [class.bg-opacity-20]="isFlagMode" [class.text-red-400]="isFlagMode" [class.border]="isFlagMode" [class.border-red-500]="isFlagMode"
-                class="px-6 py-2 rounded-lg font-bold transition-all duration-200 border border-transparent text-sm"
-              >
-                {{ i18n.t('minesweeper.flag')() }}
-              </button>
+          
+          <!-- Rules Modal -->
+          @if (showRules()) {
+            <div class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col max-h-[80vh]">
+                <div class="flex justify-between items-center p-4 border-b border-slate-700">
+                  <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ i18n.t('game.rules.title')() }}
+                  </h3>
+                  <button (click)="showRules.set(false)" class="text-slate-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="p-6 overflow-y-auto font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  {{ gameRules() }}
+                </div>
+                <div class="p-4 border-t border-slate-700 flex justify-end">
+                  <button (click)="showRules.set(false)" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-colors border border-slate-600">
+                    {{ i18n.t('game.rules.got_it')() }}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          }
         </div>
       </div>
 
@@ -201,10 +243,10 @@ import { ToastService } from '../../../core/services/toast.service';
         <!-- Tabs -->
         <div class="flex border-b border-slate-700">
           <button (click)="activeTab = 'rooms'" [class.bg-slate-800]="activeTab === 'rooms'" [class.text-white]="activeTab === 'rooms'" [class.text-slate-500]="activeTab !== 'rooms'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest">
-            Arena Rooms
+            {{ i18n.t('game.arena_rooms')() }}
           </button>
           <button (click)="activeTab = 'online'" [class.bg-slate-800]="activeTab === 'online'" [class.text-white]="activeTab === 'online'" [class.text-slate-500]="activeTab !== 'online'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest relative">
-            Online
+            {{ i18n.t('game.online')() }}
             <span class="absolute top-2 right-4 bg-emerald-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ wsService.onlinePlayers().length }}</span>
           </button>
         </div>
@@ -213,7 +255,7 @@ import { ToastService } from '../../../core/services/toast.service';
         @if (activeTab === 'rooms') {
           <div class="p-4 flex-grow overflow-y-auto">
             <button (click)="createRoom()" class="w-full mb-4 py-3 rounded-xl font-bold border border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors flex justify-center items-center gap-2">
-              <span>➕</span> CREATE PK ROOM
+              <span>➕</span> {{ i18n.t('game.create_pk')() }}
             </button>
 
             <div class="space-y-6">
@@ -221,7 +263,7 @@ import { ToastService } from '../../../core/services/toast.service';
               <!-- Other Active Rooms -->
               <div>
                 <div class="flex items-center justify-between mb-3 px-1">
-                  <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Active Rooms ({{ otherRooms().length }})</h3>
+                  <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ i18n.t('game.active_rooms')() }} ({{ otherRooms().length }})</h3>
                 </div>
                 <div class="space-y-3">
                   @for (room of otherRooms(); track room.id) {
@@ -236,27 +278,27 @@ import { ToastService } from '../../../core/services/toast.service';
                       </div>
                       <div class="flex justify-between items-end">
                         <div class="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                          <span>Host: <span class="text-indigo-400 font-bold">{{ room.host }}</span></span>
+                          <span>{{ i18n.t('game.host')() }}: <span class="text-indigo-400 font-bold">{{ room.host }}</span></span>
                           <span class="w-1 h-1 rounded-full bg-slate-600"></span>
-                          <span>Mode: <span class="text-white">{{ room.mode === 'pk_steal' ? 'Steal' : 'Speed' }}</span></span>
+                          <span>{{ i18n.t('game.mode')() }}: <span class="text-white">{{ room.mode === 'pk_steal' ? i18n.t('game.pk_steal')() : i18n.t('game.pk_speed')() }}</span></span>
                           <span class="w-1 h-1 rounded-full bg-slate-600"></span>
-                          <span>Diff: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></span>
+                          <span>{{ i18n.t('game.diff')() }}: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></span>
                         </div>
                         <div class="flex items-center gap-2">
                           <span class="text-xs text-slate-400">{{ room.players }}/2</span>
                           @if (room.status === 'waiting' && room.players < 2) {
-                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded shadow hover:bg-purple-500 transition-colors">JOIN</button>
+                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded shadow hover:bg-purple-500 transition-colors">{{ i18n.t('game.join')() }}</button>
                           } @else if (room.status === 'waiting' && room.players >= 2) {
-                            <button disabled class="px-3 py-1 bg-slate-600 text-slate-400 text-xs font-bold rounded shadow cursor-not-allowed">FULL</button>
+                            <button disabled class="px-3 py-1 bg-slate-600 text-slate-400 text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.full')() }}</button>
                           } @else {
-                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-slate-700 text-slate-300 text-xs font-bold rounded shadow hover:bg-slate-600 transition-colors">WATCH</button>
+                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-slate-700 text-slate-300 text-xs font-bold rounded shadow hover:bg-slate-600 transition-colors">{{ i18n.t('game.watch')() }}</button>
                           }
                         </div>
                       </div>
                     </div>
                   } @empty {
                     <div class="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-700 rounded-xl">
-                      No active rooms.<br>Create one to challenge others!
+                      {{ i18n.t('game.no_rooms')() }}<br>{{ i18n.t('game.create_one')() }}
                     </div>
                   }
                 </div>
@@ -266,7 +308,7 @@ import { ToastService } from '../../../core/services/toast.service';
               @if (myRooms().length > 0) {
                 <div>
                   <div class="flex items-center justify-between mb-3 px-1">
-                    <h3 class="text-xs font-black text-emerald-400 uppercase tracking-widest">My Room</h3>
+                    <h3 class="text-xs font-black text-emerald-400 uppercase tracking-widest">{{ i18n.t('game.my_room')() }}</h3>
                   </div>
                   <div class="space-y-3">
                     @for (room of myRooms(); track room.id) {
@@ -281,12 +323,12 @@ import { ToastService } from '../../../core/services/toast.service';
                         </div>
                         <div class="flex justify-between items-end">
                           <div class="text-[10px] text-slate-400 uppercase tracking-wider flex flex-col gap-1">
-                            <div>Mode: <span class="text-white">{{ room.mode === 'pk_steal' ? 'Steal' : 'Speed' }}</span></div>
-                            <div>Diff: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></div>
+                            <div>{{ i18n.t('game.mode')() }}: <span class="text-white">{{ room.mode === 'pk_steal' ? i18n.t('game.pk_steal')() : i18n.t('game.pk_speed')() }}</span></div>
+                            <div>{{ i18n.t('game.diff')() }}: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></div>
                           </div>
                           <div class="flex items-center gap-2">
                             <span class="text-xs text-slate-400">{{ room.players }}/2</span>
-                            <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors ml-2">DISMISS</button>
+                            <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors ml-2">{{ i18n.t('game.dismiss')() }}</button>
                           </div>
                         </div>
                       </div>
@@ -333,7 +375,7 @@ import { ToastService } from '../../../core/services/toast.service';
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
         <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white">Create PK Room</h2>
+            <h2 class="text-2xl font-bold text-white">{{ i18n.t('game.create_room_title')() }}</h2>
             <button (click)="isCreateModalOpen.set(false)" class="text-slate-400 hover:text-white transition-colors">
               ✕
             </button>
@@ -342,7 +384,7 @@ import { ToastService } from '../../../core/services/toast.service';
           <div class="space-y-6">
             <!-- Room Name -->
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Room Name</label>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ i18n.t('game.room_name')() }}</label>
               <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
                      class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                      placeholder="Enter room name">
@@ -350,14 +392,14 @@ import { ToastService } from '../../../core/services/toast.service';
 
             <!-- PK Mode -->
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Game Mode</label>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ i18n.t('game.game_mode')() }}</label>
               <div class="grid grid-cols-2 gap-3">
                 <button (click)="newRoomMode.set('pk_steal')" 
                         [class.bg-emerald-500]="newRoomMode() === 'pk_steal'" [class.text-white]="newRoomMode() === 'pk_steal'"
                         [class.bg-slate-800]="newRoomMode() !== 'pk_steal'" [class.text-slate-300]="newRoomMode() !== 'pk_steal'"
                         class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left">
                   <div class="flex items-center gap-2 mb-1">
-                    <span>⚡</span> <span>Steal Mode</span>
+                    <span>⚡</span> <span>{{ i18n.t('game.steal_mode')() }}</span>
                   </div>
                   <div class="text-[10px] font-normal opacity-80 leading-tight">Shared board. Race to flag mines!</div>
                 </button>
@@ -366,7 +408,7 @@ import { ToastService } from '../../../core/services/toast.service';
                         [class.bg-slate-800]="newRoomMode() !== 'pk_speed'" [class.text-slate-300]="newRoomMode() !== 'pk_speed'"
                         class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left">
                   <div class="flex items-center gap-2 mb-1">
-                    <span>🏎️</span> <span>Speed Mode</span>
+                    <span>🏎️</span> <span>{{ i18n.t('game.speed_mode')() }}</span>
                   </div>
                   <div class="text-[10px] font-normal opacity-80 leading-tight">Separate boards. First to clear wins!</div>
                 </button>
@@ -375,27 +417,27 @@ import { ToastService } from '../../../core/services/toast.service';
 
             <!-- Difficulty -->
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Difficulty</label>
+              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ i18n.t('game.difficulty_label')() }}</label>
               <div class="grid grid-cols-3 gap-2">
                 <button (click)="newRoomDifficulty.set('easy')" 
                         [class.bg-emerald-500]="newRoomDifficulty() === 'easy'" [class.text-white]="newRoomDifficulty() === 'easy'"
                         [class.bg-slate-800]="newRoomDifficulty() !== 'easy'" [class.text-slate-300]="newRoomDifficulty() !== 'easy'"
                         class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
-                  <span>Easy</span>
+                  <span>{{ i18n.t('game.diff_easy')() }}</span>
                   <span class="text-[10px] opacity-70 mt-1 font-normal">9x9 (10)</span>
                 </button>
                 <button (click)="newRoomDifficulty.set('medium')" 
                         [class.bg-emerald-500]="newRoomDifficulty() === 'medium'" [class.text-white]="newRoomDifficulty() === 'medium'"
                         [class.bg-slate-800]="newRoomDifficulty() !== 'medium'" [class.text-slate-300]="newRoomDifficulty() !== 'medium'"
                         class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
-                  <span>Medium</span>
+                  <span>{{ i18n.t('game.diff_medium')() }}</span>
                   <span class="text-[10px] opacity-70 mt-1 font-normal">16x16 (40)</span>
                 </button>
                 <button (click)="newRoomDifficulty.set('hard')" 
                         [class.bg-emerald-500]="newRoomDifficulty() === 'hard'" [class.text-white]="newRoomDifficulty() === 'hard'"
                         [class.bg-slate-800]="newRoomDifficulty() !== 'hard'" [class.text-slate-300]="newRoomDifficulty() !== 'hard'"
                         class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
-                  <span>Hard</span>
+                  <span>{{ i18n.t('game.diff_hard')() }}</span>
                   <span class="text-[10px] opacity-70 mt-1 font-normal">30x16 (99)</span>
                 </button>
               </div>
@@ -404,10 +446,10 @@ import { ToastService } from '../../../core/services/toast.service';
             <!-- Action Buttons -->
             <div class="pt-4 flex gap-3">
               <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">
-                Cancel
+                {{ i18n.t('game.cancel')() }}
               </button>
               <button (click)="confirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20">
-                Create & Join
+                {{ i18n.t('game.create')() }} & {{ i18n.t('game.join')() }}
               </button>
             </div>
           </div>
@@ -422,14 +464,18 @@ export class MinesweeperComponent implements OnInit {
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
   wsService = inject(WebSocketService); // For lobby data
-  audio = inject(AudioService);
+  audioService = inject(AudioService);
   toastService = inject(ToastService);
+  gameService = inject(GameService);
   GameStatus = GameStatus; // Expose for template
   
-  isFlagMode = false;
+  showRules = signal(false);
+  gameRules = signal('');
+
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = this.authStore.currentUser()?.username || 'Guest';
   currentRoomMode = signal<string>('single');
+  currentDifficulty = signal<string>('medium');
 
   // Derived UI State
   myRooms = computed(() => this.wsService.activeRooms().filter(r => r.host === this.playerId && r.mode !== 'single'));
@@ -455,6 +501,22 @@ export class MinesweeperComponent implements OnInit {
   private elapsedInterval: any;
 
   constructor() {
+    // Initial loading state
+    effect(() => {
+      if (this.gameRules() === '') {
+        this.gameRules.set(this.i18n.t('game.rules.loading')());
+      }
+    }, { allowSignalWrites: true });
+
+    this.gameService.getGames().subscribe(games => {
+      const ms = games.find(g => g.id === 'minesweeper');
+      if (ms) {
+        this.gameRules.set(getLocalizedField(ms.rules, this.i18n.currentLang()));
+      } else {
+        this.gameRules.set(this.i18n.t('game.rules.not_found')());
+      }
+    });
+
     // Watch for countdown and elapsed timer
     effect(() => {
       const status = this.store.status();
@@ -529,18 +591,18 @@ export class MinesweeperComponent implements OnInit {
 
   startCountdown() {
     this.stopCountdown();
-    this.audio.playClick(); // initial beep
+    this.audioService.playClick(); // initial beep
     
     this.countdownInterval = setInterval(() => {
       const remainingMs = this.store.startAt() - Date.now();
       if (remainingMs <= 0) {
         this.countdownDisplay.set('GO!');
-        this.audio.playFlag(); // High pitched GO
+        this.audioService.playFlag(); // High pitched GO
         this.stopCountdown();
       } else {
         const seconds = Math.ceil(remainingMs / 1000);
         this.countdownDisplay.set(seconds.toString());
-        this.audio.playClick(); // Tick
+        this.audioService.playClick(); // Tick
       }
     }, 1000); // Check every second roughly
   }
@@ -550,7 +612,7 @@ export class MinesweeperComponent implements OnInit {
     this.wsService.connectLobby(this.playerId, this.playerId);
     
     // 2. Connect to local single player game by default
-    this.joinRoom('single_' + this.playerId, 'single');
+    this.changeSingleDifficulty('medium');
   }
 
   ngOnDestroy() {
@@ -575,12 +637,19 @@ export class MinesweeperComponent implements OnInit {
 
   joinRoom(roomId: string, mode: string, difficulty: string = 'medium') {
     this.currentRoomMode.set(mode);
+    this.currentDifficulty.set(difficulty);
     this.store.joinGame(roomId, this.playerId, mode, difficulty);
   }
 
   leaveRoom() {
     // Reset to single player
-    this.joinRoom('single_' + this.playerId, 'single', 'medium');
+    this.changeSingleDifficulty('medium');
+  }
+
+  changeSingleDifficulty(diff: string) {
+    this.currentDifficulty.set(diff);
+    // Use timestamp to ensure a fresh room is created on backend
+    this.joinRoom('single_' + this.playerId + '_' + Date.now(), 'single', diff);
   }
 
   getDifficultyText(difficulty: string): string {
@@ -606,11 +675,7 @@ export class MinesweeperComponent implements OnInit {
   }
 
   handleCellClick(x: number, y: number) {
-    if (this.isFlagMode) {
-      this.store.toggleFlag(x, y);
-    } else {
-      this.store.revealCell(x, y);
-    }
+    this.store.revealCell(x, y);
   }
 
   getPlayerScores() {

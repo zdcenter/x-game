@@ -18,6 +18,7 @@ export class AuthStore {
   readonly token = signal<string | null>(null);
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   constructor() {
     this.loadFromStorage();

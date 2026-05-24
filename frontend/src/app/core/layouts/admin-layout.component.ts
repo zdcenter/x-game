@@ -32,10 +32,9 @@ import { ThemeService } from '../theme/theme.service';
             <span>👥</span>
             <span>{{ i18n.t('admin.menu.users')() }}</span>
           </a>
-          <!-- Future links can go here: Game Settings, Server Logs, etc. -->
-          <a class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent opacity-50 cursor-not-allowed text-sm font-bold tracking-wide">
+          <a routerLink="/admin/games" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-slate-800 transition-colors text-sm font-bold tracking-wide">
             <span>⚙️</span>
-            <span>{{ i18n.t('admin.menu.settings')() }}</span>
+            <span>{{ i18n.t('admin.menu.games')() }}</span>
           </a>
           <a class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent opacity-50 cursor-not-allowed text-sm font-bold tracking-wide">
             <span>📊</span>

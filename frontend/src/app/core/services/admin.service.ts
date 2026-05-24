@@ -26,7 +26,16 @@ export class AdminService {
     return this.http.get<UsersResponse>(`${this.baseUrl}/users`);
   }
 
-  toggleUserStatus(userId: number, newStatus: 'active' | 'banned'): Observable<ToggleStatusResponse> {
-    return this.http.put<ToggleStatusResponse>(`${this.baseUrl}/users/${userId}/status`, { status: newStatus });
+  toggleUserStatus(userId: number, newStatus: 'active' | 'banned'): Observable<{message: string}> {
+    return this.http.put<{message: string}>(`${this.baseUrl}/users/${userId}/status`, { status: newStatus });
+  }
+
+  // Games
+  getGames(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/games`);
+  }
+
+  updateGame(gameId: string, rules: string, isActive: boolean): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/games/${gameId}`, { rules, isActive });
   }
 }

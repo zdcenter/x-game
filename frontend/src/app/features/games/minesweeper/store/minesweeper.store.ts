@@ -131,6 +131,10 @@ export class MinesweeperStore {
     this.ws.send({ type: 'start_game' });
   }
 
+  restartGame() {
+    this.ws.send({ type: 'restart_game' });
+  }
+
   revealCell(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playClick();

@@ -1,0 +1,60 @@
+package rest
+
+import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/pkg/db"
+)
+
+func GetGames(c fiber.Ctx) error {
+	var games []domain.GameConfig
+	// Only fetch active games
+	if err := db.DB.Where("is_active = ?", true).Find(&games).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
+	}
+	return c.JSON(games)
+}
+
+func GetAdminGames(c fiber.Ctx) error {
+	var games []domain.GameConfig
+	// Admin gets all games
+	if err := db.DB.Find(&games).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
+	}
+	return c.JSON(games)
+}
+
+func UpdateGame(c fiber.Ctx) error {
+	id := c.Params("id")
+	var game domain.GameConfig
+	
+	if err := db.DB.First(&game, "id = ?", id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Game not found"})
+	}
+
+	type UpdateRequest struct {
+		Rules    *string `json:"rules"`
+		IsActive *bool   `json:"isActive"`
+	}
+
+	var req UpdateRequest
+	if err := c.Bind().JSON(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
+	}
+
+	updates := map[string]interface{}{}
+	if req.Rules != nil {
+		updates["rules"] = *req.Rules
+	}
+	if req.IsActive != nil {
+		updates["is_active"] = *req.IsActive
+	}
+
+	if err := db.DB.Model(&game).Updates(updates).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update game"})
+	}
+
+	// Fetch updated
+	db.DB.First(&game, "id = ?", id)
+	return c.JSON(game)
+}

@@ -165,7 +165,26 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	var baseMsg map[string]interface{}
 	if err := json.Unmarshal(payload, &baseMsg); err == nil {
 		if msgType, ok := baseMsg["type"].(string); ok {
-			if msgType == "start_game" {
+			if msgType == "restart_game" {
+				if clientID == r.Host && (r.Status == "finished" || r.Mode == "single") {
+					var eng engine.GameEngine
+					if r.Mode == "pk_speed" {
+						eng = &minesweeper.SpeedEngine{}
+					} else {
+						eng = &minesweeper.MinesweeperEngine{}
+					}
+					eng.InitGame(map[string]interface{}{"mode": r.Mode, "difficulty": r.Difficulty})
+					for id := range r.Clients {
+						eng.AddPlayer(id)
+					}
+					r.Engine = eng
+
+					if r.Mode != "single" {
+						r.Status = "waiting"
+					}
+					r.BroadcastState()
+				}
+			} else if msgType == "start_game" {
 				if clientID == r.Host && r.Status == "waiting" && len(r.Clients) >= 2 {
 					r.Status = "starting"
 					// Common interface for both engines

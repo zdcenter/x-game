@@ -52,6 +52,11 @@ import { AuthStore } from '../auth/auth.store';
                 <span class="font-bold tracking-wider" style="color: var(--color-accent-from)">
                   {{ authStore.currentUser()?.username }}
                 </span>
+                @if (authStore.isAdmin()) {
+                  <a routerLink="/admin" class="px-3 py-1.5 text-sm font-bold rounded shadow transition-all hover:scale-105 bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30 uppercase cursor-pointer">
+                    Admin
+                  </a>
+                }
                 <button (click)="logout()" 
                         class="px-3 py-1.5 text-sm font-bold rounded shadow transition-all hover:scale-105 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30">
                   Logout

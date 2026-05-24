@@ -31,12 +31,32 @@ func InitPostgres() {
 	}
 
 	// Auto migrate
-	err = DB.AutoMigrate(&domain.User{})
+	err = DB.AutoMigrate(
+		&domain.User{},
+		&domain.GameConfig{},
+	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
 	}
 
+	// Seed default data
+	Seed()
+
 	log.Println("Database connected and migrated successfully")
+}
+
+func Seed() {
+	var count int64
+	DB.Model(&domain.GameConfig{}).Count(&count)
+	if count == 0 {
+		defaultMinesweeper := domain.GameConfig{
+			ID:       "minesweeper",
+			Name:     `{"en": "Minesweeper", "zh": "扫雷"}`,
+			Rules:    `{"en": "# How to play Minesweeper\n\nTap to dig, Long press to flag.", "zh": "# 玩法说明\n\n点击以挖开，长按以插旗。"}`,
+			IsActive: true,
+		}
+		DB.Create(&defaultMinesweeper)
+	}
 }
 
 func getEnv(key, fallback string) string {

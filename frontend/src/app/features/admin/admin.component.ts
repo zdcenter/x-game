@@ -1,13 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../core/services/admin.service';
 import { User } from '../../core/auth/auth.store';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { GameConfig } from '../../core/services/game.service';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   providers: [DatePipe],
   template: `
     <div class="w-full max-w-6xl mx-auto flex flex-col transition-colors duration-300">
@@ -127,10 +129,10 @@ export class AdminComponent implements OnInit {
 
   toggleStatus(user: User, newStatus: 'active' | 'banned') {
     this.isUpdating.set(true);
-    this.adminService.toggleUserStatus(user.id, newStatus).subscribe({
+    // Use the expected currentStatus because the updated admin service signature expects currentStatus for toggling
+    this.adminService.toggleUserStatus(user.id, user.status).subscribe({
       next: (res) => {
-        if (res.user) {
-          // Update local state
+        if (res.message) {
           const updated = this.users().map(u => u.id === user.id ? { ...u, status: newStatus } : u);
           this.users.set(updated);
         }

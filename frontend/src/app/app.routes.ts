@@ -40,6 +40,10 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
+      },
+      {
+        path: 'games',
+        loadComponent: () => import('./features/admin/admin-games.component').then(m => m.AdminGamesComponent)
       }
     ]
   },
