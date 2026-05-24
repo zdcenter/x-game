@@ -166,7 +166,9 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	if err := json.Unmarshal(payload, &baseMsg); err == nil {
 		if msgType, ok := baseMsg["type"].(string); ok {
 			if msgType == "restart_game" {
-				if clientID == r.Host && (r.Status == "finished" || r.Mode == "single") {
+				log.Printf("Received restart_game from %s, Room Host is %s", clientID, r.Host)
+				if clientID == r.Host {
+					log.Printf("Restarting room %s", r.ID)
 					var eng engine.GameEngine
 					if r.Mode == "pk_speed" {
 						eng = &minesweeper.SpeedEngine{}
@@ -182,8 +184,10 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					if r.Mode != "single" {
 						r.Status = "waiting"
 					}
-					r.BroadcastState()
+					r.BroadcastStateLocked()
+					log.Printf("Room %s restarted successfully", r.ID)
 				}
+				return
 			} else if msgType == "start_game" {
 				if clientID == r.Host && r.Status == "waiting" && len(r.Clients) >= 2 {
 					r.Status = "starting"
