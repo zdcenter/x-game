@@ -724,7 +724,8 @@ export class MinesweeperComponent implements OnInit {
     this.wsService.connectLobby(this.playerId, this.playerId);
     
     // 2. Connect to local single player game by default
-    this.changeSingleDifficulty('medium');
+    const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
+    this.changeSingleDifficulty(savedDiff);
   }
 
   ngOnDestroy() {
@@ -733,7 +734,8 @@ export class MinesweeperComponent implements OnInit {
 
   createRoom() {
     this.newRoomName.set('PK-' + Math.random().toString(36).substring(2, 6).toUpperCase());
-    this.newRoomMode.set('pk_steal');
+    this.newRoomMode.set(localStorage.getItem('minesweeper_pk_mode') || 'pk_steal');
+    this.newRoomDifficulty.set(localStorage.getItem('minesweeper_pk_diff') || 'intermediate');
     this.isCreateModalOpen.set(true);
   }
 
@@ -743,6 +745,8 @@ export class MinesweeperComponent implements OnInit {
   }
 
   confirmCreateRoom() {
+    localStorage.setItem('minesweeper_pk_mode', this.newRoomMode());
+    localStorage.setItem('minesweeper_pk_diff', this.newRoomDifficulty());
     this.isCreateModalOpen.set(false);
     this.joinRoom(this.newRoomName(), this.newRoomMode(), this.newRoomDifficulty());
   }
@@ -801,6 +805,7 @@ export class MinesweeperComponent implements OnInit {
 
   changeSingleDifficulty(diff: string) {
     this.currentDifficulty.set(diff);
+    localStorage.setItem('minesweeper_single_diff', diff);
     // Use timestamp to ensure a fresh room is created on backend
     this.joinRoom('single_' + this.playerId + '_' + Date.now(), 'single', diff);
   }
