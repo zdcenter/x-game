@@ -27,6 +27,9 @@ export class WebSocketService {
   // Triggered when the websocket disconnects unexpectedly
   readonly unexpectedDisconnectEvent = signal<number>(0);
 
+  // Triggered when the room is dismissed
+  readonly roomDismissedEvent = signal<number>(0);
+
   connect(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium') {
     if (this.socket) {
       this.socket.onclose = null;
@@ -46,6 +49,8 @@ export class WebSocketService {
       if (msg.type === 'gameState' && msg.state) {
         msg.state.host = msg.host; // Inject host into the state object for the store
         this.gameState.set(msg.state);
+      } else if (msg.type === 'room_dismissed') {
+        this.roomDismissedEvent.update(v => v + 1);
       }
     };
 

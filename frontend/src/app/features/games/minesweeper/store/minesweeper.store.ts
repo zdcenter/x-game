@@ -175,7 +175,13 @@ export class MinesweeperStore {
   }
 
   leaveGame() {
-    this.ws.disconnect();
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'leave_game' });
+    }
+    // Give it a tiny delay to ensure the message is sent before the connection closes
+    setTimeout(() => {
+      this.ws.disconnect();
+    }, 100);
   }
 
   startGame() {

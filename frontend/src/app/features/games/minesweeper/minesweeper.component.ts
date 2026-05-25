@@ -683,7 +683,14 @@ export class MinesweeperComponent implements OnInit {
       }
     }, { allowSignalWrites: true });
 
-    // Removed unexpectedDisconnectEvent kick-out logic to allow silent auto-reconnects.
+    // Watch for room dismissed events
+    effect(() => {
+      const dismissed = this.wsService.roomDismissedEvent();
+      if (dismissed > 0 && untracked(() => this.currentRoomMode()) !== 'single') {
+        this.toastService.show(this.i18n.t('game.room_dismissed_msg')() || 'The host has dismissed the room.', 'info');
+        this.leaveRoom();
+      }
+    });
   }
 
   stopCountdown() {
@@ -764,11 +771,14 @@ export class MinesweeperComponent implements OnInit {
   }
 
   leaveRoom() {
+    this.store.leaveGame();
     sessionStorage.removeItem('minesweeper_reconnect_room');
     sessionStorage.removeItem('minesweeper_reconnect_mode');
     sessionStorage.removeItem('minesweeper_reconnect_diff');
-    // Reset to single player
-    this.changeSingleDifficulty('intermediate');
+    // Give the leave_game message 100ms to be sent before resetting to single player
+    setTimeout(() => {
+      this.changeSingleDifficulty('intermediate');
+    }, 100);
   }
 
   openDifficultySettings(forMode: 'single' | 'room') {

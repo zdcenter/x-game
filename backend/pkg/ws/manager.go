@@ -240,9 +240,11 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					mu.Unlock()
 					go Lobby.BroadcastLobbyUpdate()
 
-					// Disconnect all clients in this room
+					// Disconnect all clients in this room gracefully
+					msg := []byte(`{"type": "room_dismissed"}`)
 					for _, c := range r.Clients {
-						c.Conn.Close()
+						c.Conn.WriteMessage(websocket.TextMessage, msg)
+						// Frontend will handle disconnection
 					}
 				}
 				return
