@@ -67,6 +67,14 @@ import { AuthStore } from '../auth/auth.store';
                   {{ authStore.currentUser()?.role === 'guest' ? (i18n.currentLang() === 'zh' ? '登录/注册' : 'Sign In') : 'Logout' }}
                 </button>
               </div>
+            } @else {
+              <div class="flex items-center space-x-3 ml-4 border-l pl-4" style="border-color: var(--color-border-card)">
+                <a routerLink="/login" 
+                   class="px-4 py-1.5 text-sm font-bold rounded shadow transition-all hover:scale-105 border hover:bg-slate-800"
+                   style="background-color: var(--color-bg-main); border-color: var(--color-border-card); color: var(--color-text-main)">
+                  {{ i18n.currentLang() === 'zh' ? '登录/注册' : 'Sign In' }}
+                </a>
+              </div>
             }
           </div>
         </div>
