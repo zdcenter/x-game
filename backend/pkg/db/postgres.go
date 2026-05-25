@@ -6,9 +6,11 @@ import (
 	"os"
 
 	"github.com/x-game/backend/internal/domain"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
 
 var DB *gorm.DB
@@ -25,6 +27,10 @@ func InitPostgres() {
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   "gm_",
+			SingularTable: false,
+		},
 	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -58,6 +64,24 @@ func Seed() {
 			IsActive: true,
 		}
 		DB.Create(&defaultMinesweeper)
+	}
+
+	var userCount int64
+	DB.Model(&domain.User{}).Count(&userCount)
+	if userCount == 0 {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		if err == nil {
+			defaultAdmin := domain.User{
+				Username: "admin",
+				Password: string(hashedPassword),
+				Role:     domain.RoleAdmin,
+				Status:   domain.StatusActive,
+			}
+			DB.Create(&defaultAdmin)
+			log.Println("Created default admin user (admin / admin123)")
+		} else {
+			log.Printf("Failed to hash password for default admin: %v", err)
+		}
 	}
 }
 
