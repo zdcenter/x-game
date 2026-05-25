@@ -7,6 +7,8 @@ import { GameConfig, getLocalizedField } from '../../core/services/game.service'
 
 interface AdminGame extends GameConfig {
   parsedRules: { en: string; zh: string };
+  parsedConfig: { penaltySeconds: number };
+  rawConfigText: string;
   activeRuleTab: 'en' | 'zh';
 }
 
@@ -64,7 +66,11 @@ interface AdminGame extends GameConfig {
                           class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono"></textarea>
               }
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-4 flex justify-between items-center">
+              <button (click)="openSettings(game)"
+                      class="px-4 py-2 rounded-xl font-bold text-sm bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:text-[var(--color-accent-to)] transition-colors">
+                ⚙️ Settings
+              </button>
               <button (click)="saveGameRules(game)" [disabled]="isUpdating()"
                       class="px-6 py-2 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] hover:shadow-lg transition-all disabled:opacity-50">
                 {{ i18n.t('admin.games.save')() }}
@@ -77,6 +83,46 @@ interface AdminGame extends GameConfig {
           </div>
         }
       </div>
+
+      <!-- Settings Modal -->
+      @if (selectedGameForSettings()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+          <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 shadow-2xl w-full max-w-md m-4 transform transition-all flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold">{{ getLocalized(selectedGameForSettings()!.name) }} Settings</h3>
+              <button (click)="closeSettings()" class="text-slate-400 hover:text-white transition-colors">✕</button>
+            </div>
+            
+            <div class="flex-grow flex flex-col gap-4">
+              @if (selectedGameForSettings()!.id === 'minesweeper') {
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-bold opacity-80 uppercase tracking-wider">Penalty Duration (Seconds)</label>
+                  <p class="text-xs text-slate-400 mb-2">The duration players are frozen when they step on a mine in PK mode.</p>
+                  <input type="number" [(ngModel)]="selectedGameForSettings()!.parsedConfig.penaltySeconds" 
+                         class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors">
+                </div>
+              } @else {
+                <div class="flex flex-col gap-2">
+                  <label class="text-sm font-bold opacity-80 uppercase tracking-wider">Advanced Config (JSON)</label>
+                  <textarea [(ngModel)]="selectedGameForSettings()!.rawConfigText" rows="6" placeholder="{}"
+                            class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono"></textarea>
+                </div>
+              }
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+              <button (click)="closeSettings()"
+                      class="px-5 py-2 rounded-xl font-bold text-sm bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:text-slate-300 transition-colors">
+                Cancel
+              </button>
+              <button (click)="saveGameSettings(selectedGameForSettings()!)" [disabled]="isUpdating()"
+                      class="px-6 py-2 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] hover:shadow-lg transition-all disabled:opacity-50">
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -87,6 +133,7 @@ export class AdminGamesComponent implements OnInit {
   games = signal<AdminGame[]>([]);
   isUpdating = signal(false);
   errorMsg = signal('');
+  selectedGameForSettings = signal<AdminGame | null>(null);
 
   ngOnInit() {
     this.fetchGames();
@@ -103,7 +150,20 @@ export class AdminGamesComponent implements OnInit {
               parsedRules = { en: p.en || g.rules, zh: p.zh || '' };
             }
           } catch(e) {}
-          return { ...g, parsedRules, activeRuleTab: 'en' as const };
+          
+          let parsedConfig = { penaltySeconds: 3 };
+          let rawConfigText = '{}';
+          try {
+            if (g.config) {
+              rawConfigText = g.config;
+              const c = JSON.parse(g.config);
+              if (c && typeof c === 'object') {
+                parsedConfig = { penaltySeconds: c.penaltySeconds || 3 };
+              }
+            }
+          } catch(e) {}
+
+          return { ...g, parsedRules, parsedConfig, rawConfigText, activeRuleTab: 'en' as const };
         }));
       },
       error: (err) => {
@@ -115,7 +175,7 @@ export class AdminGamesComponent implements OnInit {
   toggleGameStatus(game: AdminGame) {
     this.isUpdating.set(true);
     const newStatus = !game.isActive;
-    this.adminService.updateGame(game.id, game.rules, newStatus).subscribe({
+    this.adminService.updateGame(game.id, game.rules, game.config, newStatus).subscribe({
       next: (res) => {
         const updated = this.games().map(g => g.id === game.id ? { ...g, isActive: newStatus, rules: game.rules } : g);
         this.games.set(updated);
@@ -131,9 +191,9 @@ export class AdminGamesComponent implements OnInit {
   saveGameRules(game: AdminGame) {
     this.isUpdating.set(true);
     const rulesJson = JSON.stringify(game.parsedRules);
-    this.adminService.updateGame(game.id, rulesJson, game.isActive).subscribe({
+    this.adminService.updateGame(game.id, rulesJson, game.config, game.isActive).subscribe({
       next: (res) => {
-        this.errorMsg.set('Saved successfully!');
+        this.errorMsg.set('Rules saved successfully!');
         setTimeout(() => this.errorMsg.set(''), 3000);
         this.isUpdating.set(false);
       },
@@ -143,6 +203,39 @@ export class AdminGamesComponent implements OnInit {
       }
     });
   }
+
+  openSettings(game: AdminGame) {
+    this.selectedGameForSettings.set(game);
+  }
+
+  closeSettings() {
+    this.selectedGameForSettings.set(null);
+  }
+
+  saveGameSettings(game: AdminGame) {
+    this.isUpdating.set(true);
+    let configJson = game.rawConfigText;
+    if (game.id === 'minesweeper') {
+      configJson = JSON.stringify(game.parsedConfig);
+    }
+    
+    // Update local config reference so next saveGameRules doesn't overwrite it with old one
+    game.config = configJson;
+    
+    this.adminService.updateGame(game.id, game.rules, configJson, game.isActive).subscribe({
+      next: (res) => {
+        this.errorMsg.set('Settings saved successfully!');
+        setTimeout(() => this.errorMsg.set(''), 3000);
+        this.isUpdating.set(false);
+        this.closeSettings();
+      },
+      error: (err) => {
+        this.errorMsg.set('Update failed: ' + (err.error?.error || err.message));
+        this.isUpdating.set(false);
+      }
+    });
+  }
+
   getLocalized(field: string): string {
     return getLocalizedField(field, this.i18n.currentLang());
   }

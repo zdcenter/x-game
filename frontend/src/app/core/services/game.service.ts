@@ -7,6 +7,7 @@ export interface GameConfig {
   id: string;
   name: string;
   rules: string;
+  config: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

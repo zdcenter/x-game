@@ -53,6 +53,7 @@ func Seed() {
 			ID:       "minesweeper",
 			Name:     `{"en": "Minesweeper", "zh": "扫雷"}`,
 			Rules:    `{"en": "# How to play Minesweeper\n\nTap to dig, Long press to flag.", "zh": "# 玩法说明\n\n点击以挖开，长按以插旗。"}`,
+			Config:   `{"penaltySeconds": 3}`,
 			IsActive: true,
 		}
 		DB.Create(&defaultMinesweeper)

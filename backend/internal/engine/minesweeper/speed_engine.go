@@ -16,6 +16,7 @@ type SpeedEngine struct {
 	Scores    map[string]int
 	Cooldowns map[string]int64
 	Status    engine.GameState
+	PenaltyMs int64
 }
 
 type PKSpeedStateResponse struct {
@@ -29,6 +30,12 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	width, height, mines := 16, 16, 40
 
 	if opts, ok := options.(map[string]interface{}); ok {
+		if penalty, ok := opts["penaltySeconds"].(int); ok {
+			e.PenaltyMs = int64(penalty * 1000)
+		} else {
+			e.PenaltyMs = 3000
+		}
+
 		if diff, ok := opts["difficulty"].(string); ok {
 			if strings.HasPrefix(diff, "custom_") {
 				parts := strings.Split(diff, "_")
@@ -162,19 +169,18 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	switch action.Type {
 	case "reveal":
 		if cell.IsMine {
-			// Explode and freeze for 3 seconds
 			cell.State = CellExploded
-			e.Cooldowns[playerID] = time.Now().UnixMilli() + 3000
+			e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
 		} else {
 			e.revealCell(board, action.X, action.Y)
 		}
 	case "flag":
 		if cell.IsMine {
 			cell.State = CellFlagged
-			cell.Owner = playerID
+			board.RevealedCnt++ // For speed mode, flagging correctly counts as progress
+			// Add score bonus? Speed mode usually doesn't care about score, just completion
 		} else {
-			// Incorrect flag, freeze for 3 seconds
-			e.Cooldowns[playerID] = time.Now().UnixMilli() + 3000
+			e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
 		}
 	default:
 		return e.Status, errors.New("unknown action type")

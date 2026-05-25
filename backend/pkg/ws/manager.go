@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
 	"github.com/x-game/backend/internal/engine/minesweeper"
+	"github.com/x-game/backend/pkg/db"
 )
 
 type Client struct {
@@ -91,7 +93,22 @@ func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
 		Clients:    make(map[string]*Client),
 		Engine:     eng,
 	}
-	r.Engine.InitGame(map[string]interface{}{"mode": mode, "difficulty": difficulty})
+	
+	// Fetch game config to get penalty seconds
+	penaltySeconds := 3
+	var gameConfig domain.GameConfig
+	if err := db.DB.First(&gameConfig, "id = ?", "minesweeper").Error; err == nil {
+		if gameConfig.Config != "" {
+			var configData map[string]interface{}
+			if err := json.Unmarshal([]byte(gameConfig.Config), &configData); err == nil {
+				if penalty, ok := configData["penaltySeconds"].(float64); ok {
+					penaltySeconds = int(penalty)
+				}
+			}
+		}
+	}
+
+	r.Engine.InitGame(map[string]interface{}{"mode": mode, "difficulty": difficulty, "penaltySeconds": penaltySeconds})
 	Rooms[roomID] = r
 	mu.Unlock() // Unlock before broadcasting
 	

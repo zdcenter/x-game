@@ -15,6 +15,8 @@ type MinesweeperEngine struct {
 	Board     *Board
 	Scores    map[string]int
 	Cooldowns map[string]int64 // Unix milliseconds
+	Mode      string
+	PenaltyMs int64
 }
 
 // Action structure for incoming payloads
@@ -29,6 +31,17 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 	width, height, mines := 16, 16, 40
 
 	if opts, ok := options.(map[string]interface{}); ok {
+		if modeOpt, ok := opts["mode"].(string); ok {
+			e.Mode = modeOpt
+		} else {
+			e.Mode = "single"
+		}
+		if penalty, ok := opts["penaltySeconds"].(int); ok {
+			e.PenaltyMs = int64(penalty * 1000)
+		} else {
+			e.PenaltyMs = 3000
+		}
+
 		if diff, ok := opts["difficulty"].(string); ok {
 			if strings.HasPrefix(diff, "custom_") {
 				parts := strings.Split(diff, "_")
@@ -112,9 +125,16 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 	switch action.Type {
 	case "reveal":
 		if cell.IsMine {
-			// Stepped on a mine! Explode, freeze for 3 seconds, no score.
-			cell.State = CellExploded
-			e.Cooldowns[playerID] = time.Now().UnixMilli() + 3000
+			if e.Mode == "single" {
+				// Single mode: game over immediately
+				cell.State = CellExploded
+				e.Board.Status = engine.StateFinished
+				e.revealAllMines()
+			} else {
+				// PK mode: Explode, freeze for PenaltyMs, no score.
+				cell.State = CellExploded
+				e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
+			}
 		} else {
 			e.revealCell(action.X, action.Y)
 		}
@@ -125,8 +145,14 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 			cell.Owner = playerID
 			e.Scores[playerID]++
 		} else {
-			// Incorrect flag! Freeze for 3 seconds.
-			e.Cooldowns[playerID] = time.Now().UnixMilli() + 3000
+			if e.Mode == "single" {
+				// In standard minesweeper, bad flag usually doesn't do anything or just marks it wrong at the end
+				// But let's apply the penalty if they want, or maybe no penalty in single player?
+				// Let's just ignore incorrect flag in single player (can't flag empty)
+			} else {
+				// Incorrect flag! Freeze for PenaltyMs.
+				e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
+			}
 		}
 	default:
 		return e.Board.Status, errors.New("unknown action type")

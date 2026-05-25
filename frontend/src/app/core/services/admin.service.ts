@@ -35,7 +35,7 @@ export class AdminService {
     return this.http.get<any[]>(`${this.baseUrl}/games`);
   }
 
-  updateGame(gameId: string, rules: string, isActive: boolean): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/games/${gameId}`, { rules, isActive });
+  updateGame(gameId: string, rules: string, config: string, isActive: boolean): Observable<any> {
+    return this.http.put(`${this.baseUrl}/games/${gameId}`, { rules, config, isActive });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, effect, signal, computed, untracked } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
 import { CellComponent } from './components/cell/cell.component';
@@ -9,11 +9,14 @@ import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
 
+import { DragDropModule } from '@angular/cdk/drag-drop';
+
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, CellComponent],
+  imports: [CommonModule, CellComponent, DragDropModule],
   providers: [MinesweeperStore],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-2 lg:p-6 gap-4 lg:gap-6 transition-colors duration-300 overflow-y-auto lg:overflow-hidden">
       
@@ -106,7 +109,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
           </div>
 
           <!-- Game Board (Grid) -->
-          <div class="relative p-4 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-inner flex justify-center flex-grow overflow-auto scrollbar-hide"
+          <div class="relative p-4 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-inner flex justify-center flex-grow overflow-hidden"
                [class.animate-gold-pulse]="store.status() === 'finished'">
             
             <!-- Waiting Overlay -->
@@ -155,12 +158,21 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                     <p class="mt-4 text-red-300 font-bold text-lg animate-pulse">Opponent finished before you.</p>
                   }
                 } @else {
-                  <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
-                    {{ i18n.t('minesweeper.victory')() }}
-                  </h2>
-                  <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse mb-6">
-                    {{ i18n.t('minesweeper.cleared')() }}
-                  </p>
+                  @if (hasLostSingleMode()) {
+                    <h2 class="text-6xl font-black uppercase tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
+                      DEFEAT!
+                    </h2>
+                    <p class="mt-4 text-red-300 font-bold text-lg animate-pulse mb-6">
+                      You stepped on a mine.
+                    </p>
+                  } @else {
+                    <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
+                      {{ i18n.t('minesweeper.victory')() }}
+                    </h2>
+                    <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse mb-6">
+                      {{ i18n.t('minesweeper.cleared')() }}
+                    </p>
+                  }
                 }
                 
                 @if (currentRoomMode() === 'single' || store.host() === playerId) {
@@ -175,15 +187,16 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
             @if (isFrozen()) {
               <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
                 <h2 class="text-4xl font-black text-red-500 uppercase tracking-widest animate-pulse drop-shadow-md">
-                  {{ i18n.t('game.frozen')() }}
+                  {{ frozenCountdownDisplay() }}s
                 </h2>
                 <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
               </div>
             }
 
-            <div class="inline-flex flex-col gap-1 relative z-0 m-auto" 
+            <div class="inline-flex flex-col gap-1 relative z-0 m-auto cursor-grab active:cursor-grabbing will-change-transform" 
                  [class.opacity-50]="isFrozen()" 
-                 [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
+                 [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting"
+                 cdkDrag>
               @for (row of store.board(); track $index) {
                 <div class="flex gap-1">
                   @for (cell of row; track cell.x + '-' + cell.y) {
@@ -554,6 +567,7 @@ export class MinesweeperComponent implements OnInit {
   myRooms = computed(() => this.wsService.activeRooms().filter(r => r.host === this.playerId && r.mode !== 'single'));
   otherRooms = computed(() => this.wsService.activeRooms().filter(r => r.host !== this.playerId && r.mode !== 'single'));
   otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter(p => p.id !== this.playerId));
+  hasLostSingleMode = computed(() => this.currentRoomMode() === 'single' && this.store.board().some(row => row.some(c => c.state === 3))); // CellState.Exploded is 3
 
   // Modal State
   isCreateModalOpen = signal<boolean>(false);
@@ -563,7 +577,9 @@ export class MinesweeperComponent implements OnInit {
 
   // React to cooldowns received from the server
   isFrozen = signal<boolean>(false);
+  frozenCountdownDisplay = signal<number>(0);
   private freezeTimer: any;
+  private freezeInterval: any;
   
   // Countdown Timer for PK Start
   countdownDisplay = signal<string>('3');
@@ -633,16 +649,37 @@ export class MinesweeperComponent implements OnInit {
       const until = cooldowns[this.playerId] || 0;
       const now = Date.now();
       
+      if (this.freezeInterval) {
+        clearInterval(this.freezeInterval);
+        this.freezeInterval = null;
+      }
+      
       if (until > now) {
         this.isFrozen.set(true);
+        this.frozenCountdownDisplay.set(Math.ceil((until - now) / 1000));
+        
+        this.freezeInterval = setInterval(() => {
+          const rem = Math.ceil((until - Date.now()) / 1000);
+          if (rem <= 0) {
+            clearInterval(this.freezeInterval);
+            this.freezeInterval = null;
+          } else {
+            this.frozenCountdownDisplay.set(rem);
+          }
+        }, 100);
+
         clearTimeout(this.freezeTimer);
         this.freezeTimer = setTimeout(() => {
           this.isFrozen.set(false);
-        }, until - now);
+          if (this.freezeInterval) {
+            clearInterval(this.freezeInterval);
+            this.freezeInterval = null;
+          }
+        }, until - Date.now());
       } else {
         this.isFrozen.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
 
     // Watch for unexpected disconnects from PK rooms
     effect(() => {
