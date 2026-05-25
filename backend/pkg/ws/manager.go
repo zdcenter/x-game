@@ -110,9 +110,7 @@ func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
 
 	r.Engine.InitGame(map[string]interface{}{"mode": mode, "difficulty": difficulty, "penaltySeconds": penaltySeconds})
 	Rooms[roomID] = r
-	mu.Unlock() // Unlock before broadcasting
-	
-	Lobby.BroadcastLobbyUpdate() // Notify lobby of new room
+	mu.Unlock()
 	return r
 }
 
