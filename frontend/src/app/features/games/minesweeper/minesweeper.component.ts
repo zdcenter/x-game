@@ -806,8 +806,29 @@ export class MinesweeperComponent implements OnInit {
   changeSingleDifficulty(diff: string) {
     this.currentDifficulty.set(diff);
     localStorage.setItem('minesweeper_single_diff', diff);
-    // Use timestamp to ensure a fresh room is created on backend
-    this.joinRoom('single_' + this.playerId + '_' + Date.now(), 'single', diff);
+    this.currentRoomMode.set('single');
+    
+    let width = 16, height = 16, mines = 40;
+    if (diff.startsWith('custom_')) {
+      const parts = diff.split('_');
+      if (parts.length === 4) {
+        width = parseInt(parts[1], 10) || 16;
+        height = parseInt(parts[2], 10) || 16;
+        mines = parseInt(parts[3], 10) || 40;
+      }
+    } else {
+      switch (diff) {
+        case 'easy': case 'beginner': width = 9; height = 9; mines = 10; break;
+        case 'medium': case 'intermediate': width = 16; height = 16; mines = 40; break;
+        case 'hard': case 'advanced': width = 30; height = 16; mines = 99; break;
+        case 'hard_mode': width = 30; height = 18; mines = 130; break;
+        case 'professional': width = 30; height = 20; mines = 160; break;
+        case 'master': width = 30; height = 22; mines = 190; break;
+        case 'expert': width = 30; height = 24; mines = 230; break;
+      }
+    }
+    
+    this.store.startLocalGame(width, height, mines);
   }
 
   getDifficultyText(difficulty: string): string {

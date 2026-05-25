@@ -2,6 +2,7 @@ import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
+import { LocalMinesweeperEngine } from './minesweeper-engine';
 
 export enum CellState {
   Hidden = 0,
@@ -47,6 +48,11 @@ export class MinesweeperStore {
   
   private playerId = computed(() => this.auth.currentUser()?.username || 'Guest');
 
+  // Local state for single player mode
+  private currentMode = signal<string>('single');
+  private localEngine = signal<LocalMinesweeperEngine | null>(null);
+  private tick = signal(0);
+
   // Derive all state from the WebSocketService's global gameState
   private rawState = computed(() => this.ws.gameState() || {
     board: { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 },
@@ -59,6 +65,22 @@ export class MinesweeperStore {
 
   // For Steal mode it's just rawState().board. For Speed mode it's rawState().boards[playerId]
   private myBoardData = computed(() => {
+    this.tick(); // register dependency to force updates for local mutations
+    if (this.currentMode() === 'single') {
+      const engine = this.localEngine();
+      if (engine) {
+        return {
+          cells: engine.cells,
+          status: engine.status,
+          width: engine.width,
+          height: engine.height,
+          mines: engine.mines,
+          revealed_cnt: engine.revealedCnt,
+          start_at: engine.startAt
+        };
+      }
+    }
+    
     const s = this.rawState();
     if (s.boards && s.boards[this.playerId()]) {
       return s.boards[this.playerId()];
@@ -68,22 +90,38 @@ export class MinesweeperStore {
 
   readonly board = computed<Cell[][]>(() => this.myBoardData().cells || []);
   readonly status = computed<GameStatus>(() => {
+    if (this.currentMode() === 'single') {
+      this.tick();
+      return this.localEngine()?.status || GameStatus.Waiting;
+    }
     const s = this.rawState();
-    // Use top-level status if it exists (Speed Mode), otherwise fallback to board status
     if (s.boards && s.status) return s.status;
     return this.myBoardData().status || GameStatus.Waiting;
   });
-  readonly scores = computed<Record<string, number>>(() => this.rawState().scores || {});
-  readonly cooldowns = computed<Record<string, number>>(() => this.rawState().cooldowns || {});
+  
+  readonly scores = computed<Record<string, number>>(() => {
+    if (this.currentMode() === 'single') return { [this.playerId()]: 0 };
+    return this.rawState().scores || {};
+  });
+  
+  readonly cooldowns = computed<Record<string, number>>(() => {
+    if (this.currentMode() === 'single') return {};
+    return this.rawState().cooldowns || {};
+  });
+  
   readonly startAt = computed(() => this.myBoardData().start_at || 0);
-  readonly host = computed<string>(() => (this.rawState() as any).host || '');
+  
+  readonly host = computed<string>(() => {
+    if (this.currentMode() === 'single') return this.playerId();
+    return (this.rawState() as any).host || '';
+  });
   
   // Calculate opponent progress for Speed Mode
   readonly opponentProgress = computed(() => {
+    if (this.currentMode() === 'single') return null;
     const s = this.rawState();
     if (!s.boards) return null;
     
-    // Find the opponent's board
     const opponentId = Object.keys(s.boards).find(id => id !== this.playerId());
     if (!opponentId) return null;
     
@@ -109,7 +147,6 @@ export class MinesweeperStore {
     return this.totalMines() - flagged;
   });
 
-  // Play audio based on state changes (simplified for MVP)
   constructor() {
     effect(() => {
       const status = this.status();
@@ -119,8 +156,20 @@ export class MinesweeperStore {
     });
   }
 
+  startLocalGame(width: number, height: number, mines: number) {
+    this.currentMode.set('single');
+    this.ws.disconnect(); // Ensure we don't hold a WebSocket for single player
+    this.localEngine.set(new LocalMinesweeperEngine(width, height, mines));
+    this.tick.set(this.tick() + 1);
+  }
+
   joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium') {
-    this.ws.connect(roomId, playerId, mode, difficulty);
+    if (mode === 'single') {
+       this.currentMode.set('single');
+    } else {
+      this.currentMode.set(mode);
+      this.ws.connect(roomId, playerId, mode, difficulty);
+    }
   }
 
   leaveGame() {
@@ -128,23 +177,56 @@ export class MinesweeperStore {
   }
 
   startGame() {
-    this.ws.send({ type: 'start_game' });
+    if (this.currentMode() === 'single') {
+       const engine = this.localEngine();
+       if (engine) {
+          engine.status = GameStatus.Playing;
+          this.tick.set(this.tick() + 1);
+       }
+    } else {
+      this.ws.send({ type: 'start_game' });
+    }
   }
 
   restartGame() {
-    this.ws.send({ type: 'restart_game' });
+    if (this.currentMode() === 'single') {
+       const engine = this.localEngine();
+       if (engine) {
+          this.startLocalGame(engine.width, engine.height, engine.mines);
+       }
+    } else {
+      this.ws.send({ type: 'restart_game' });
+    }
   }
 
   revealCell(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playClick();
-    this.ws.send({ type: 'reveal', x, y });
+    
+    if (this.currentMode() === 'single') {
+      const engine = this.localEngine();
+      if (engine) {
+        engine.revealCell(x, y);
+        this.tick.set(this.tick() + 1);
+      }
+    } else {
+      this.ws.send({ type: 'reveal', x, y });
+    }
   }
 
   toggleFlag(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playFlag();
-    this.ws.send({ type: 'flag', x, y });
+    
+    if (this.currentMode() === 'single') {
+      const engine = this.localEngine();
+      if (engine) {
+        engine.toggleFlag(x, y);
+        this.tick.set(this.tick() + 1);
+      }
+    } else {
+      this.ws.send({ type: 'flag', x, y });
+    }
   }
 }
 
