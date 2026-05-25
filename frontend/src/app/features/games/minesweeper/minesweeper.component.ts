@@ -723,9 +723,18 @@ export class MinesweeperComponent implements OnInit {
     // 1. Connect to Lobby
     this.wsService.connectLobby(this.playerId, this.playerId);
     
-    // 2. Connect to local single player game by default
-    const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
-    this.changeSingleDifficulty(savedDiff);
+    // 2. Check for reconnect
+    const reconnectRoom = sessionStorage.getItem('minesweeper_reconnect_room');
+    const reconnectMode = sessionStorage.getItem('minesweeper_reconnect_mode');
+    const reconnectDiff = sessionStorage.getItem('minesweeper_reconnect_diff');
+    
+    if (reconnectRoom && reconnectMode) {
+      this.joinRoom(reconnectRoom, reconnectMode, reconnectDiff || 'medium');
+    } else {
+      // 3. Connect to local single player game by default
+      const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
+      this.changeSingleDifficulty(savedDiff);
+    }
   }
 
   ngOnDestroy() {
@@ -754,10 +763,18 @@ export class MinesweeperComponent implements OnInit {
   joinRoom(roomId: string, mode: string, difficulty: string = 'medium') {
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
+    if (mode !== 'single') {
+      sessionStorage.setItem('minesweeper_reconnect_room', roomId);
+      sessionStorage.setItem('minesweeper_reconnect_mode', mode);
+      sessionStorage.setItem('minesweeper_reconnect_diff', difficulty);
+    }
     this.store.joinGame(roomId, this.playerId, mode, difficulty);
   }
 
   leaveRoom() {
+    sessionStorage.removeItem('minesweeper_reconnect_room');
+    sessionStorage.removeItem('minesweeper_reconnect_mode');
+    sessionStorage.removeItem('minesweeper_reconnect_diff');
     // Reset to single player
     this.changeSingleDifficulty('intermediate');
   }
