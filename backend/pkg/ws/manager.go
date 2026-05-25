@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -118,8 +119,14 @@ func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
 	return r
 }
 
-func (r *Room) AddClient(client *Client) {
+func (r *Room) AddClient(client *Client) error {
 	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// Reject if game started and player is new
+	if r.Status != "waiting" && !r.Engine.HasPlayer(client.ID) {
+		return fmt.Errorf("game already started")
+	}
 	
 	if len(r.Clients) == 0 {
 		r.Host = client.ID // First player becomes the host
@@ -130,9 +137,9 @@ func (r *Room) AddClient(client *Client) {
 	
 	// Do not auto-start here. Host must click start.
 	
-	r.mu.Unlock()
-	r.BroadcastState()
+	go r.BroadcastStateLocked()
 	go Lobby.BroadcastLobbyUpdate() // Notify lobby player count changed
+	return nil
 }
 
 func (r *Room) RemoveClient(clientID string) {

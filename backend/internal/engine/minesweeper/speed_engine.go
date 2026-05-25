@@ -102,6 +102,11 @@ func (e *SpeedEngine) RemovePlayer(playerID string) {
 	delete(e.Errors, playerID)
 }
 
+func (e *SpeedEngine) HasPlayer(playerID string) bool {
+	_, exists := e.Boards[playerID]
+	return exists
+}
+
 func (e *SpeedEngine) GetState() interface{} {
 	return PKSpeedStateResponse{
 		Boards:    e.Boards,

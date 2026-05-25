@@ -33,8 +33,14 @@ func Register(router fiber.Router) {
 			Conn: c,
 		}
 
-		log.Printf("Player %s joined room %s", playerID, roomID)
-		room.AddClient(client)
+		log.Printf("Player %s attempting to join room %s", playerID, roomID)
+		if err := room.AddClient(client); err != nil {
+			log.Printf("Player %s rejected from room %s: %v", playerID, roomID, err)
+			msg := fmt.Sprintf(`{"type": "error", "message": "%s"}`, err.Error())
+			c.WriteMessage(websocket.TextMessage, []byte(msg))
+			c.Close()
+			return
+		}
 
 		defer func() {
 			room.RemoveClient(client.ID)

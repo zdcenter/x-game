@@ -217,7 +217,21 @@ func (e *MinesweeperEngine) checkWinCondition() {
 		}
 	}
 
-	if e.Board.RevealedCnt == totalSafeCells || processedMines == e.Board.Mines {
+	isFinished := false
+	if e.Mode == "single" {
+		// Single player wins if all safe cells are revealed, or all mines are flagged
+		if e.Board.RevealedCnt == totalSafeCells || processedMines == e.Board.Mines {
+			isFinished = true
+		}
+	} else {
+		// PK Steal Mode MUST NOT end just because all safe cells are revealed.
+		// It should only end when all points are exhausted (all mines processed).
+		if processedMines == e.Board.Mines {
+			isFinished = true
+		}
+	}
+
+	if isFinished {
 		e.Board.Status = engine.StateFinished
 		e.revealAllMines() // Show any remaining hidden mines
 	}
@@ -279,6 +293,11 @@ func (e *MinesweeperEngine) AddPlayer(playerID string) {
 func (e *MinesweeperEngine) RemovePlayer(playerID string) {
 	delete(e.Scores, playerID)
 	delete(e.Errors, playerID)
+}
+
+func (e *MinesweeperEngine) HasPlayer(playerID string) bool {
+	_, exists := e.Scores[playerID]
+	return exists
 }
 
 func (e *MinesweeperEngine) SetStarting() {

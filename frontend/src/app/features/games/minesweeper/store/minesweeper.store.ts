@@ -122,10 +122,9 @@ export class MinesweeperStore {
   readonly opponentErrors = computed<number>(() => {
     if (this.currentMode() === 'single') return 0;
     const s = this.rawState();
-    if (!s.boards && !s.errors) return 0; // fallback if single board
     const errors = s.errors || {};
-    const opponentId = Object.keys(s.scores || {}).find(id => id !== this.playerId()) 
-                    || Object.keys(s.boards || {}).find(id => id !== this.playerId());
+    // For steal mode fallback, if we need it somewhere specific
+    const opponentId = Object.keys(s.scores || {}).find(id => id !== this.playerId());
     if (!opponentId) return 0;
     return errors[opponentId] || 0;
   });
@@ -137,21 +136,25 @@ export class MinesweeperStore {
     return (this.rawState() as any).host || '';
   });
   
-  // Calculate opponent progress for Speed Mode
-  readonly opponentProgress = computed(() => {
-    if (this.currentMode() === 'single') return null;
+  readonly speedOpponents = computed(() => {
+    if (this.currentMode() !== 'pk_speed') return [];
     const s = this.rawState();
-    if (!s.boards) return null;
+    if (!s.boards) return [];
     
-    const opponentId = Object.keys(s.boards).find(id => id !== this.playerId());
-    if (!opponentId) return null;
-    
-    const oppBoard = s.boards[opponentId];
-    if (!oppBoard || !oppBoard.width) return null;
-    
-    const totalSafe = (oppBoard.width * oppBoard.height) - oppBoard.mines;
-    const progress = (oppBoard.revealed_cnt / totalSafe) * 100;
-    return Math.min(100, Math.max(0, progress));
+    const opponents = [];
+    for (const [id, board] of Object.entries(s.boards as Record<string, any>)) {
+      if (id === this.playerId()) continue;
+      if (!board || !board.width) continue;
+      
+      const totalSafe = (board.width * board.height) - board.mines;
+      const progress = (board.revealed_cnt / totalSafe) * 100;
+      opponents.push({
+        id,
+        progress: Math.min(100, Math.max(0, progress)),
+        errors: (s.errors && s.errors[id]) || 0
+      });
+    }
+    return opponents;
   });
 
   readonly width = computed(() => this.myBoardData().width || 16);

@@ -60,17 +60,21 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                     </svg>
                   </button>
                 </div>
-              } @else if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
-                <div class="flex items-center gap-1 lg:gap-3 bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
-                  <span class="text-[8px] lg:text-xs opacity-70 font-bold uppercase tracking-wider hidden sm:inline">{{ i18n.t('game.opponent')() }}</span>
-                  <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
-                    <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
-                  </div>
-                  <span class="text-[8px] lg:text-xs font-mono font-bold text-[var(--color-accent-to)]">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
-                  @if (store.opponentErrors() > 0) {
-                    <span class="text-[8px] lg:text-xs font-bold text-red-400 ml-1 flex items-center gap-1" title="Opponent Mistakes">
-                      💣 {{ store.opponentErrors() }}
-                    </span>
+              } @else if (currentRoomMode() === 'pk_speed' && store.speedOpponents().length > 0) {
+                <div class="flex flex-wrap items-center gap-2 lg:gap-4 justify-center flex-1">
+                  @for (opp of store.speedOpponents(); track opp.id) {
+                    <div class="flex items-center gap-1 lg:gap-2 bg-[var(--color-bg-main)] px-2 lg:px-3 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
+                      <span class="text-[8px] lg:text-xs opacity-70 font-bold max-w-[50px] truncate" [title]="opp.id">{{ opp.id }}</span>
+                      <div class="w-10 lg:w-20 h-1.5 lg:h-2 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
+                        <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="opp.progress + '%'"></div>
+                      </div>
+                      <span class="text-[8px] lg:text-xs font-mono font-bold text-[var(--color-accent-to)]">{{ opp.progress | number:'1.0-0' }}%</span>
+                      @if (opp.errors > 0) {
+                        <span class="text-[8px] lg:text-xs font-bold text-red-400 flex items-center" title="Mistakes">
+                          💣{{ opp.errors }}
+                        </span>
+                      }
+                    </div>
                   }
                 </div>
               } @else {
@@ -129,16 +133,16 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
               <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-2xl text-[var(--color-text-main)]">
                 @if (getPlayerScores().length < 2) {
                   <div class="w-12 h-12 border-4 border-slate-600 border-t-[var(--color-accent-to)] rounded-full animate-spin mb-4"></div>
-                  <h2 class="text-2xl font-bold tracking-widest uppercase">Waiting for Challenger...</h2>
+                  <h2 class="text-2xl font-bold tracking-widest uppercase">{{ i18n.t('game.waiting_challenger')() }}</h2>
                 } @else {
                   @if (store.host() === playerId) {
                     <h2 class="text-3xl font-black mb-6 uppercase">{{ i18n.t('game.ready')() }}</h2>
                     <button (click)="store.startGame()" class="px-8 py-4 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                      START PK
+                      {{ i18n.t('game.start_pk')() }}
                     </button>
                   } @else {
                     <div class="w-12 h-12 border-4 border-slate-600 border-t-[var(--color-accent-from)] rounded-full animate-spin mb-4"></div>
-                    <h2 class="text-2xl font-bold tracking-widest uppercase">Waiting for Host...</h2>
+                    <h2 class="text-2xl font-bold tracking-widest uppercase">{{ i18n.t('game.waiting_host')() }}</h2>
                   }
                 }
               </div>
@@ -150,32 +154,34 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                 <h2 class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse">
                   {{ countdownDisplay() }}
                 </h2>
-                <p class="text-white mt-4 font-bold tracking-[0.3em] uppercase opacity-70">Get Ready to Steal!</p>
+                <p class="text-white mt-4 font-bold tracking-[0.3em] uppercase opacity-70">{{ i18n.t('game.get_ready')() }}</p>
               </div>
             }
 
             <!-- Victory Overlay -->
             @if (store.status() === 'finished') {
-              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm">
+              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-sm transition-colors duration-1000"
+                   [class.bg-[var(--color-overlay)]]="!isDefeat()"
+                   [class.bg-red-950]="isDefeat()" [class.bg-opacity-90]="isDefeat()">
                 @if (currentRoomMode() === 'pk_speed') {
                   @if (hasWonSpeedMode()) {
                     <h2 class="text-6xl font-black uppercase tracking-widest text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-bounce">
-                      YOU WIN!
+                      {{ i18n.t('game.you_win')() }}
                     </h2>
-                    <p class="mt-4 text-emerald-300 font-bold text-lg animate-pulse">You cleared the board first!</p>
+                    <p class="mt-4 text-emerald-300 font-bold text-lg animate-pulse">{{ i18n.t('game.cleared_first')() }}</p>
                   } @else {
                     <h2 class="text-6xl font-black uppercase tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-                      DEFEAT!
+                      {{ i18n.t('game.defeat')() }}
                     </h2>
-                    <p class="mt-4 text-red-300 font-bold text-lg animate-pulse">Opponent finished before you.</p>
+                    <p class="mt-4 text-red-300 font-bold text-lg animate-pulse">{{ i18n.t('game.opponent_finished')() }}</p>
                   }
                 } @else {
                   @if (hasLostSingleMode()) {
                     <h2 class="text-6xl font-black uppercase tracking-widest text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-                      DEFEAT!
+                      {{ i18n.t('game.defeat')() }}
                     </h2>
                     <p class="mt-4 text-red-300 font-bold text-lg animate-pulse mb-6">
-                      You stepped on a mine.
+                      {{ i18n.t('game.stepped_mine')() }}
                     </p>
                   } @else {
                     <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
@@ -301,13 +307,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                           <span>{{ i18n.t('game.diff')() }}: <span class="text-yellow-500">{{ getDifficultyText(room.difficulty || 'medium') }}</span></span>
                         </div>
                         <div class="flex items-center gap-2">
-                          <span class="text-xs text-slate-400">{{ room.players }}/2</span>
-                          @if (room.status === 'waiting' && room.players < 2) {
+                          <span class="text-xs text-slate-400">{{ room.players }} 人</span>
+                          @if (room.status === 'waiting') {
                             <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.join')() }}</button>
-                          } @else if (room.status === 'waiting' && room.players >= 2) {
-                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.full')() }}</button>
                           } @else {
-                            <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-bg-card)] text-inherit text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.watch')() }}</button>
+                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">已开始</button>
                           }
                         </div>
                       </div>
@@ -343,7 +347,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                             <div>{{ i18n.t('game.diff')() }}: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></div>
                           </div>
                           <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-400">{{ room.players }}/2</span>
+                            <span class="text-xs text-slate-400">{{ room.players }} 人</span>
                             <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">进入</button>
                             <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ i18n.t('game.dismiss')() }}</button>
                           </div>
@@ -582,6 +586,20 @@ export class MinesweeperComponent implements OnInit {
   otherRooms = computed(() => this.wsService.activeRooms().filter(r => r.host !== this.playerId && r.mode !== 'single'));
   otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter(p => p.id !== this.playerId));
   hasLostSingleMode = computed(() => this.currentRoomMode() === 'single' && this.store.board().some(row => row.some(c => c.state === 3))); // CellState.Exploded is 3
+
+  isDefeat = computed(() => {
+    if (this.currentRoomMode() === 'single') return this.hasLostSingleMode();
+    if (this.currentRoomMode() === 'pk_speed') return !this.hasWonSpeedMode();
+    if (this.currentRoomMode() === 'pk_steal') {
+      const scores = this.getPlayerScores();
+      if (scores.length > 0) {
+        const topScore = scores[0].score;
+        const myScore = scores.find(s => s.id === this.playerId)?.score || 0;
+        return myScore < topScore;
+      }
+    }
+    return false;
+  });
 
   // Modal State
   isCreateModalOpen = signal<boolean>(false);

@@ -29,4 +29,7 @@ type GameEngine interface {
 
 	// RemovePlayer is called when a player disconnects from the room
 	RemovePlayer(playerID string)
+
+	// HasPlayer checks if a player is already part of the game session
+	HasPlayer(playerID string) bool
 }
