@@ -129,6 +129,9 @@ export class WebSocketService {
       this.socket = null;
       this.isConnected.set(false);
     }
+  }
+
+  disconnectLobby() {
     if (this.lobbySocket) {
       this.lobbySocket.onclose = null;
       this.lobbySocket.close();
