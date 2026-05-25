@@ -15,6 +15,7 @@ type SpeedEngine struct {
 	Boards    map[string]*Board
 	Scores    map[string]int
 	Cooldowns map[string]int64
+	Errors    map[string]int
 	Status    engine.GameState
 	PenaltyMs int64
 }
@@ -23,6 +24,7 @@ type PKSpeedStateResponse struct {
 	Boards    map[string]*Board `json:"boards"`
 	Scores    map[string]int    `json:"scores"`
 	Cooldowns map[string]int64  `json:"cooldowns"`
+	Errors    map[string]int    `json:"errors"`
 	Status    engine.GameState  `json:"status"`
 }
 
@@ -78,6 +80,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Boards = make(map[string]*Board)
 	e.Scores = make(map[string]int)
 	e.Cooldowns = make(map[string]int64)
+	e.Errors = make(map[string]int)
 	e.Status = engine.StateWaiting
 
 	return nil
@@ -89,12 +92,14 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 		e.Boards[playerID] = e.BaseBoard.Clone()
 		e.Boards[playerID].Status = engine.StateWaiting
 		e.Scores[playerID] = 0
+		e.Errors[playerID] = 0
 	}
 }
 
 func (e *SpeedEngine) RemovePlayer(playerID string) {
 	delete(e.Boards, playerID)
 	delete(e.Scores, playerID)
+	delete(e.Errors, playerID)
 }
 
 func (e *SpeedEngine) GetState() interface{} {
@@ -102,6 +107,7 @@ func (e *SpeedEngine) GetState() interface{} {
 		Boards:    e.Boards,
 		Scores:    e.Scores,
 		Cooldowns: e.Cooldowns,
+		Errors:    e.Errors,
 		Status:    e.Status,
 	}
 }
@@ -164,17 +170,21 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	case "reveal":
 		if cell.IsMine {
 			cell.State = CellExploded
-			e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
+			e.Errors[playerID]++
+			penalty := e.PenaltyMs + int64(e.Errors[playerID]-1)*2000
+			e.Cooldowns[playerID] = time.Now().UnixMilli() + penalty
 		} else {
 			e.revealCell(board, action.X, action.Y)
 		}
 	case "flag":
 		if cell.IsMine {
 			cell.State = CellFlagged
-			board.RevealedCnt++ // For speed mode, flagging correctly counts as progress
-			// Add score bonus? Speed mode usually doesn't care about score, just completion
+			// Fix: Do not increment RevealedCnt on flag, otherwise players win early 
+			// because RevealedCnt reaches totalSafeCells before the board is clear.
 		} else {
-			e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
+			e.Errors[playerID]++
+			penalty := e.PenaltyMs + int64(e.Errors[playerID]-1)*2000
+			e.Cooldowns[playerID] = time.Now().UnixMilli() + penalty
 		}
 	default:
 		return e.Status, errors.New("unknown action type")
@@ -217,7 +227,9 @@ func (e *SpeedEngine) checkWinCondition(playerID string) {
 	board := e.Boards[playerID]
 	totalSafeCells := (board.Width * board.Height) - board.Mines
 
-	if board.RevealedCnt == totalSafeCells {
+	// Fix: Use >= as a robust check in case of any flood fill multi-increments,
+	// ensuring the win condition is never skipped.
+	if board.RevealedCnt >= totalSafeCells {
 		e.Status = engine.StateFinished
 		e.Scores[playerID] = 1 // Mark the winner with score 1
 		// Reveal remaining mines for all players to show game over state

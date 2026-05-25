@@ -67,6 +67,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                     <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
                   </div>
                   <span class="text-[8px] lg:text-xs font-mono font-bold text-[var(--color-accent-to)]">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
+                  @if (store.opponentErrors() > 0) {
+                    <span class="text-[8px] lg:text-xs font-bold text-red-400 ml-1 flex items-center gap-1" title="Opponent Mistakes">
+                      💣 {{ store.opponentErrors() }}
+                    </span>
+                  }
                 </div>
               } @else {
                 @for (player of getPlayerScores(); track player.id) {
@@ -77,6 +82,12 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                        [class.border-[var(--color-border-card)]]="player.id !== playerId">
                     <span class="text-[8px] lg:text-xs font-bold opacity-70 max-w-[80px] truncate" [title]="player.id">{{ player.id }}</span>
                     <span class="text-sm lg:text-lg font-black" [class.text-[var(--color-accent-to)]]="player.id === playerId" [class.text-inherit]="player.id !== playerId">{{ player.score }}</span>
+                    @if (player.id !== playerId && store.opponentErrors() > 0) {
+                      <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.opponentErrors() }}</span>
+                    }
+                    @if (player.id === playerId && store.myErrors() > 0) {
+                      <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.myErrors() }}</span>
+                    }
                   </div>
                 }
               }
@@ -333,7 +344,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                           </div>
                           <div class="flex items-center gap-2">
                             <span class="text-xs text-slate-400">{{ room.players }}/2</span>
-                            <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors ml-2">{{ i18n.t('game.dismiss')() }}</button>
+                            <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">进入</button>
+                            <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ i18n.t('game.dismiss')() }}</button>
                           </div>
                         </div>
                       </div>

@@ -15,6 +15,7 @@ type MinesweeperEngine struct {
 	Board     *Board
 	Scores    map[string]int
 	Cooldowns map[string]int64 // Unix milliseconds
+	Errors    map[string]int
 	Mode      string
 	PenaltyMs int64
 }
@@ -82,6 +83,7 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 	e.Board = NewBoard(width, height, mines)
 	e.Scores = make(map[string]int)
 	e.Cooldowns = make(map[string]int64)
+	e.Errors = make(map[string]int)
 
 	// Determine if we should start in waiting mode
 	if opts, ok := options.(map[string]interface{}); ok {
@@ -136,9 +138,11 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 				e.Board.Status = engine.StateFinished
 				e.revealAllMines()
 			} else {
-				// PK mode: Explode, freeze for PenaltyMs, no score.
+				// PK mode: Explode, progressive freeze penalty, no score.
 				cell.State = CellExploded
-				e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
+				e.Errors[playerID]++
+				penalty := e.PenaltyMs + int64(e.Errors[playerID]-1)*2000
+				e.Cooldowns[playerID] = time.Now().UnixMilli() + penalty
 			}
 		} else {
 			e.revealCell(action.X, action.Y)
@@ -155,8 +159,10 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 				// But let's apply the penalty if they want, or maybe no penalty in single player?
 				// Let's just ignore incorrect flag in single player (can't flag empty)
 			} else {
-				// Incorrect flag! Freeze for PenaltyMs.
-				e.Cooldowns[playerID] = time.Now().UnixMilli() + e.PenaltyMs
+				// Incorrect flag! Progressive freeze penalty.
+				e.Errors[playerID]++
+				penalty := e.PenaltyMs + int64(e.Errors[playerID]-1)*2000
+				e.Cooldowns[playerID] = time.Now().UnixMilli() + penalty
 			}
 		}
 	default:
@@ -251,6 +257,7 @@ type PKStateResponse struct {
 	Board     *Board           `json:"board"`
 	Scores    map[string]int   `json:"scores"`
 	Cooldowns map[string]int64 `json:"cooldowns"`
+	Errors    map[string]int   `json:"errors"`
 }
 
 func (e *MinesweeperEngine) GetState() interface{} {
@@ -258,17 +265,20 @@ func (e *MinesweeperEngine) GetState() interface{} {
 		Board:     e.Board,
 		Scores:    e.Scores,
 		Cooldowns: e.Cooldowns,
+		Errors:    e.Errors,
 	}
 }
 
 func (e *MinesweeperEngine) AddPlayer(playerID string) {
 	if _, exists := e.Scores[playerID]; !exists {
 		e.Scores[playerID] = 0
+		e.Errors[playerID] = 0
 	}
 }
 
 func (e *MinesweeperEngine) RemovePlayer(playerID string) {
 	delete(e.Scores, playerID)
+	delete(e.Errors, playerID)
 }
 
 func (e *MinesweeperEngine) SetStarting() {

@@ -31,6 +31,7 @@ export interface GameState {
   };
   scores: { [playerId: string]: number };
   cooldowns: { [playerId: string]: number };
+  errors: { [playerId: string]: number };
 }
 
 export enum GameStatus {
@@ -59,6 +60,7 @@ export class MinesweeperStore {
     boards: {},
     scores: {},
     cooldowns: {},
+    errors: {},
     host: '',
     status: GameStatus.Waiting
   });
@@ -109,6 +111,23 @@ export class MinesweeperStore {
   readonly cooldowns = computed<Record<string, number>>(() => {
     if (this.currentMode() === 'single') return {};
     return this.rawState().cooldowns || {};
+  });
+
+  readonly myErrors = computed<number>(() => {
+    if (this.currentMode() === 'single') return 0;
+    const errors = this.rawState().errors || {};
+    return errors[this.playerId()] || 0;
+  });
+
+  readonly opponentErrors = computed<number>(() => {
+    if (this.currentMode() === 'single') return 0;
+    const s = this.rawState();
+    if (!s.boards && !s.errors) return 0; // fallback if single board
+    const errors = s.errors || {};
+    const opponentId = Object.keys(s.scores || {}).find(id => id !== this.playerId()) 
+                    || Object.keys(s.boards || {}).find(id => id !== this.playerId());
+    if (!opponentId) return 0;
+    return errors[opponentId] || 0;
   });
   
   readonly startAt = computed(() => this.myBoardData().start_at || 0);
