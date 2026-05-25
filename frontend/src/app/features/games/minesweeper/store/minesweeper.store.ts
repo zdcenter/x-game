@@ -187,12 +187,12 @@ export class MinesweeperStore {
     this.tick.set(this.tick() + 1);
   }
 
-  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium') {
+  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
     if (mode === 'single') {
        this.currentMode.set('single');
     } else {
       this.currentMode.set(mode);
-      this.ws.connect(roomId, playerId, mode, difficulty);
+      this.ws.connect(roomId, playerId, mode, difficulty, hostId);
     }
   }
 

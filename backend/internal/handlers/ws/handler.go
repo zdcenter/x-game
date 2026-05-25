@@ -24,10 +24,11 @@ func Register(router fiber.Router) {
 		roomID := c.Params("roomId")
 		mode := c.Query("mode", "single") // "single", "pk_steal", "pk_speed"
 		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"
+		hostId := c.Query("hostId", "") // Used to preserve host on reconnect
 		// For MVP, using a query parameter for playerId, usually this would come from JWT
 		playerID := c.Query("playerId", "anonymous")
 
-		room := wsManager.GetOrCreateRoom(roomID, mode, difficulty)
+		room := wsManager.GetOrCreateRoom(roomID, mode, difficulty, hostId)
 		client := &wsManager.Client{
 			ID:   playerID,
 			Conn: c,

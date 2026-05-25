@@ -308,10 +308,12 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                         </div>
                         <div class="flex items-center gap-2">
                           <span class="text-xs text-slate-400">{{ room.players }} 人</span>
-                          @if (room.status === 'waiting') {
-                            <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.join')() }}</button>
+                          @if (currentRoomId() === room.id) {
+                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.joined')() }}</button>
+                          } @else if (room.status === 'waiting') {
+                            <button (click)="joinRoom(room.id, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.join')() }}</button>
                           } @else {
-                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">已开始</button>
+                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.started')() }}</button>
                           }
                         </div>
                       </div>
@@ -348,7 +350,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                           </div>
                           <div class="flex items-center gap-2">
                             <span class="text-xs text-slate-400">{{ room.players }} 人</span>
-                            <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">进入</button>
+                            @if (currentRoomId() === room.id) {
+                              <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed ml-2">{{ i18n.t('game.joined')() }}</button>
+                            } @else {
+                              <button (click)="joinRoom(room.id, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ i18n.t('game.join')() }}</button>
+                            }
                             <button (click)="dismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ i18n.t('game.dismiss')() }}</button>
                           </div>
                         </div>
@@ -561,6 +567,7 @@ export class MinesweeperComponent implements OnInit {
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = this.authStore.currentUser()?.username || 'Guest';
   currentRoomMode = signal<string>('single');
+  currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('intermediate');
 
   // Difficulty Settings Modal State
@@ -786,25 +793,43 @@ export class MinesweeperComponent implements OnInit {
     localStorage.setItem('minesweeper_pk_mode', this.newRoomMode());
     localStorage.setItem('minesweeper_pk_diff', this.newRoomDifficulty());
     this.isCreateModalOpen.set(false);
-    this.joinRoom(this.newRoomName(), this.newRoomMode(), this.newRoomDifficulty());
+    this.joinRoom(this.newRoomName(), this.newRoomMode(), this.newRoomDifficulty(), this.playerId);
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string = 'medium') {
+  joinRoom(roomId: string, mode: string, difficulty: string = 'medium', hostId?: string) {
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
+    this.currentRoomId.set(roomId);
+    
+    let finalHostId = hostId;
+    if (!finalHostId && mode !== 'single') {
+      const room = this.wsService.activeRooms().find(r => r.id === roomId);
+      if (room) {
+        finalHostId = room.host;
+      } else {
+        finalHostId = sessionStorage.getItem('minesweeper_reconnect_host') || undefined;
+      }
+    }
+
     if (mode !== 'single') {
       sessionStorage.setItem('minesweeper_reconnect_room', roomId);
       sessionStorage.setItem('minesweeper_reconnect_mode', mode);
       sessionStorage.setItem('minesweeper_reconnect_diff', difficulty);
+      if (finalHostId) {
+        sessionStorage.setItem('minesweeper_reconnect_host', finalHostId);
+      }
     }
-    this.store.joinGame(roomId, this.playerId, mode, difficulty);
+    
+    this.store.joinGame(roomId, this.playerId, mode, difficulty, finalHostId);
   }
 
   leaveRoom() {
+    this.currentRoomId.set('');
     this.store.leaveGame();
     sessionStorage.removeItem('minesweeper_reconnect_room');
     sessionStorage.removeItem('minesweeper_reconnect_mode');
     sessionStorage.removeItem('minesweeper_reconnect_diff');
+    sessionStorage.removeItem('minesweeper_reconnect_host');
     // Give the leave_game message 100ms to be sent before resetting to single player
     setTimeout(() => {
       this.changeSingleDifficulty('intermediate');
@@ -897,13 +922,13 @@ export class MinesweeperComponent implements OnInit {
 
   dismissRoom() {
     this.toastService.confirm({
-      title: 'Dismiss Room',
-      message: 'Are you sure you want to dismiss this room? All players will be kicked out.',
-      confirmText: 'Dismiss',
-      cancelText: 'Cancel',
+      title: this.i18n.t('game.dismiss_title')() || 'Dismiss Room',
+      message: this.i18n.t('game.dismiss_msg')() || 'Are you sure you want to dismiss this room? All players will be kicked out.',
+      confirmText: this.i18n.t('game.dismiss_confirm')() || 'Dismiss',
+      cancelText: this.i18n.t('game.cancel')() || 'Cancel',
       onConfirm: () => {
         this.wsService.send({ type: 'dismiss_room' });
-        this.toastService.show('Room dismissed successfully', 'success');
+        this.toastService.show(this.i18n.t('game.dismiss_success')() || 'Room dismissed successfully', 'success');
       }
     });
   }

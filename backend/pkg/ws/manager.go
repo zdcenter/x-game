@@ -70,12 +70,11 @@ func GetActiveRooms() []RoomSnapshot {
 	return snapshots
 }
 
-func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
+func GetOrCreateRoom(roomID, mode, difficulty, hostId string) *Room {
 	mu.Lock()
-	
-	if room, exists := Rooms[roomID]; exists {
+	if r, exists := Rooms[roomID]; exists {
 		mu.Unlock()
-		return room
+		return r
 	}
 
 	if mode == "" {
@@ -91,7 +90,7 @@ func GetOrCreateRoom(roomID string, mode string, difficulty string) *Room {
 
 	r := &Room{
 		ID:         roomID,
-		Host:       "", // Will be set by the first client who joins
+		Host:       hostId, // Explicitly set host here, crucial for preserving host on backend restarts
 		Mode:       mode,
 		Difficulty: difficulty,
 		Status:     "waiting",
@@ -128,8 +127,8 @@ func (r *Room) AddClient(client *Client) error {
 		return fmt.Errorf("game already started")
 	}
 	
-	if len(r.Clients) == 0 {
-		r.Host = client.ID // First player becomes the host
+	if r.Host == "" {
+		r.Host = client.ID // Fallback if hostId was not provided
 	}
 	
 	r.Clients[client.ID] = client

@@ -30,13 +30,13 @@ export class WebSocketService {
   // Triggered when the room is dismissed
   readonly roomDismissedEvent = signal<number>(0);
 
-  connect(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium') {
+  connect(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '') {
     if (this.socket) {
       this.socket.onclose = null;
       this.socket.close();
     }
 
-    const url = `${environment.wsUrl}/ws/join/${roomId}?playerId=${playerId}&mode=${mode}&difficulty=${difficulty}`;
+    const url = `${environment.wsUrl}/ws/join/${roomId}?playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${hostId}`;
     this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
@@ -66,7 +66,7 @@ export class WebSocketService {
       setTimeout(() => {
         if (!this.isConnected()) {
           console.log('Attempting to reconnect Game WS...');
-          this.connect(roomId, playerId, mode, difficulty);
+          this.connect(roomId, playerId, mode, difficulty, hostId);
         }
       }, 2000);
     };
