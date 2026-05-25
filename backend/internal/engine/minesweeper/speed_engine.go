@@ -59,13 +59,13 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 				case "hard", "advanced":
 					width, height, mines = 30, 16, 99
 				case "hard_mode":
-					width, height, mines = 30, 18, 112
+					width, height, mines = 30, 18, 130
 				case "professional":
-					width, height, mines = 30, 20, 126
+					width, height, mines = 30, 20, 160
 				case "master":
-					width, height, mines = 30, 22, 139
+					width, height, mines = 30, 22, 190
 				case "expert":
-					width, height, mines = 30, 24, 158
+					width, height, mines = 30, 24, 230
 				default:
 					width, height, mines = 16, 16, 40
 				}
@@ -74,6 +74,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	}
 
 	e.BaseBoard = NewBoard(width, height, mines)
+	e.BaseBoard.GenerateMines(-1, -1) // PK mode always generates immediately
 	e.Boards = make(map[string]*Board)
 	e.Scores = make(map[string]int)
 	e.Cooldowns = make(map[string]int64)
@@ -117,20 +118,13 @@ func (e *SpeedEngine) StartPlayingAndRevealSafe() {
 	e.Status = engine.StatePlaying
 	now := time.Now().UnixMilli()
 
+	// Find the best safe start point on the base board
+	x, y := e.BaseBoard.FindSafeStartPoint()
+
 	for _, b := range e.Boards {
 		b.Status = engine.StatePlaying
 		b.StartAt = now
-
-		// Find a safe 0-neighbor zone to reveal for each player
-		for y := 0; y < b.Height; y++ {
-			for x := 0; x < b.Width; x++ {
-				if !b.Cells[y][x].IsMine && b.Cells[y][x].Neighbors == 0 {
-					e.revealCell(b, x, y)
-					goto NextBoard
-				}
-			}
-		}
-	NextBoard:
+		e.revealCell(b, x, y)
 	}
 }
 

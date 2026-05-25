@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.xtrader.com:8001/api/v1',
-  wsUrl: 'wss://api.xtrader.com:8001/api/v1'
+  apiUrl: 'https://game-api.xtrader.dev:8443/api/v1',
+  wsUrl: 'wss://game-api.xtrader.dev:8443/api/v1'
 };

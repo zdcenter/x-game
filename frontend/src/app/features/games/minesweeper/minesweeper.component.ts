@@ -8,6 +8,7 @@ import { WebSocketService } from '../../../core/services/websocket.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
+import { marked } from 'marked';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
@@ -228,8 +229,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                     </svg>
                   </button>
                 </div>
-                <div class="p-6 overflow-y-auto font-mono text-sm opacity-80 whitespace-pre-wrap leading-relaxed">
-                  {{ gameRules() }}
+                <div class="p-6 overflow-y-auto text-sm opacity-90 markdown-body leading-relaxed"
+                     [innerHTML]="parsedRulesHTML()">
                 </div>
                 <div class="p-4 border-t border-[var(--color-border-card)] flex justify-end">
                   <button (click)="showRules.set(false)" class="px-6 py-2 bg-[var(--color-bg-card)] hover:opacity-80 rounded-lg font-bold transition-colors border border-[var(--color-border-card)]">
@@ -539,6 +540,7 @@ export class MinesweeperComponent implements OnInit {
   
   showRules = signal(false);
   gameRules = signal('');
+  parsedRulesHTML = computed(() => marked.parse(this.gameRules(), { async: false }) as string);
 
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = this.authStore.currentUser()?.username || 'Guest';
@@ -557,10 +559,10 @@ export class MinesweeperComponent implements OnInit {
     { id: 'beginner', labelKey: 'game.diff_beginner', desc: '9x9 (10)' },
     { id: 'intermediate', labelKey: 'game.diff_intermediate', desc: '16x16 (40)' },
     { id: 'advanced', labelKey: 'game.diff_advanced', desc: '30x16 (99)' },
-    { id: 'hard_mode', labelKey: 'game.diff_hard_mode', desc: '30x18 (112)' },
-    { id: 'professional', labelKey: 'game.diff_professional', desc: '30x20 (126)' },
-    { id: 'master', labelKey: 'game.diff_master', desc: '30x22 (139)' },
-    { id: 'expert', labelKey: 'game.diff_expert', desc: '30x24 (158)' }
+    { id: 'hard_mode', labelKey: 'game.diff_hard_mode', desc: '30x18 (130)' },
+    { id: 'professional', labelKey: 'game.diff_professional', desc: '30x20 (160)' },
+    { id: 'master', labelKey: 'game.diff_master', desc: '30x22 (190)' },
+    { id: 'expert', labelKey: 'game.diff_expert', desc: '30x24 (230)' }
   ];
 
   // Derived UI State

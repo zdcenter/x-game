@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface GameConfig {
   id: string;
   name: string;
+  overview: string;
   rules: string;
   config: string;
   isActive: boolean;

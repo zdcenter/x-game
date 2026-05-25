@@ -37,7 +37,7 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
             <div class="p-6">
               <h2 class="text-2xl font-bold mb-2">{{ getLocalized(game.name) }}</h2>
               <p class="opacity-70 text-sm line-clamp-2">
-                {{ getLocalized(game.rules) }}
+                {{ getLocalized(game.overview) }}
               </p>
               <div class="mt-4 flex flex-wrap gap-2">
                 <span class="px-2 py-1 text-xs font-semibold rounded bg-black/20 border border-emerald-500/50 text-emerald-400">{{ i18n.t('lobby.ready')() }}</span>

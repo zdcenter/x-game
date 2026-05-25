@@ -25,3 +25,6 @@ frontend/out-tsc/
 .vscode/
 .DS_Store
 Thumbs.db
+
+
+deploy/

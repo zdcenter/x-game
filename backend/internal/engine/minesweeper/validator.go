@@ -65,13 +65,13 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 				case "hard", "advanced":
 					width, height, mines = 30, 16, 99
 				case "hard_mode": // mapping iOS '困难'
-					width, height, mines = 30, 18, 112
+					width, height, mines = 30, 18, 130
 				case "professional":
-					width, height, mines = 30, 20, 126
+					width, height, mines = 30, 20, 160
 				case "master":
-					width, height, mines = 30, 22, 139
+					width, height, mines = 30, 22, 190
 				case "expert":
-					width, height, mines = 30, 24, 158
+					width, height, mines = 30, 24, 230
 				default:
 					width, height, mines = 16, 16, 40
 				}
@@ -87,6 +87,7 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 	if opts, ok := options.(map[string]interface{}); ok {
 		if mode, ok := opts["mode"].(string); ok && mode != "single" {
 			e.Board.Status = engine.StateWaiting
+			e.Board.GenerateMines(-1, -1)
 		}
 	}
 
@@ -124,6 +125,10 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 
 	switch action.Type {
 	case "reveal":
+		if !e.Board.IsMinesPlaced && e.Mode == "single" {
+			e.Board.GenerateMines(action.X, action.Y)
+		}
+
 		if cell.IsMine {
 			if e.Mode == "single" {
 				// Single mode: game over immediately
@@ -275,13 +280,7 @@ func (e *MinesweeperEngine) StartPlayingAndRevealSafe() {
 	e.Board.Status = engine.StatePlaying
 	e.Board.StartAt = time.Now().UnixMilli() // Record start time for elapsed timer
 
-	// Find a safe 0-neighbor zone to reveal
-	for y := 0; y < e.Board.Height; y++ {
-		for x := 0; x < e.Board.Width; x++ {
-			if !e.Board.Cells[y][x].IsMine && e.Board.Cells[y][x].Neighbors == 0 {
-				e.revealCell(x, y)
-				return // Only reveal one safe zone
-			}
-		}
-	}
+	// Find the best safe start point and reveal it
+	x, y := e.Board.FindSafeStartPoint()
+	e.revealCell(x, y)
 }

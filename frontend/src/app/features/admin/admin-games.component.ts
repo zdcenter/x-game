@@ -6,10 +6,12 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { GameConfig, getLocalizedField } from '../../core/services/game.service';
 
 interface AdminGame extends GameConfig {
+  parsedOverview: { en: string; zh: string };
   parsedRules: { en: string; zh: string };
   parsedConfig: { penaltySeconds: number };
   rawConfigText: string;
   activeRuleTab: 'en' | 'zh';
+  activeOverviewTab: 'en' | 'zh';
 }
 
 @Component({
@@ -59,11 +61,26 @@ interface AdminGame extends GameConfig {
                 </div>
               </div>
               @if (game.activeRuleTab === 'en') {
-                <textarea [(ngModel)]="game.parsedRules.en" rows="6" placeholder="English Rules (Markdown)"
-                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono"></textarea>
+                <textarea [(ngModel)]="game.parsedRules.en" rows="3" placeholder="English Rules (Markdown)"
+                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono mb-4"></textarea>
               } @else {
-                <textarea [(ngModel)]="game.parsedRules.zh" rows="6" placeholder="Chinese Rules (Markdown)"
-                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono"></textarea>
+                <textarea [(ngModel)]="game.parsedRules.zh" rows="3" placeholder="Chinese Rules (Markdown)"
+                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono mb-4"></textarea>
+              }
+
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold opacity-70 uppercase tracking-wider">Overview</label>
+                <div class="flex space-x-2">
+                  <button (click)="game.activeOverviewTab = 'en'" [class.text-[var(--color-accent-to)]]="game.activeOverviewTab === 'en'" [class.opacity-50]="game.activeOverviewTab !== 'en'" class="text-xs font-bold transition-colors">EN</button>
+                  <button (click)="game.activeOverviewTab = 'zh'" [class.text-[var(--color-accent-to)]]="game.activeOverviewTab === 'zh'" [class.opacity-50]="game.activeOverviewTab !== 'zh'" class="text-xs font-bold transition-colors">ZH</button>
+                </div>
+              </div>
+              @if (game.activeOverviewTab === 'en') {
+                <textarea [(ngModel)]="game.parsedOverview.en" rows="2" placeholder="English Overview"
+                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y"></textarea>
+              } @else {
+                <textarea [(ngModel)]="game.parsedOverview.zh" rows="2" placeholder="Chinese Overview"
+                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y"></textarea>
               }
             </div>
             <div class="mt-4 flex justify-between items-center">
@@ -150,6 +167,14 @@ export class AdminGamesComponent implements OnInit {
               parsedRules = { en: p.en || g.rules, zh: p.zh || '' };
             }
           } catch(e) {}
+
+          let parsedOverview = { en: g.overview || '', zh: '' };
+          try {
+            const p = JSON.parse(g.overview);
+            if (p && typeof p === 'object') {
+              parsedOverview = { en: p.en || g.overview || '', zh: p.zh || '' };
+            }
+          } catch(e) {}
           
           let parsedConfig = { penaltySeconds: 3 };
           let rawConfigText = '{}';
@@ -163,7 +188,7 @@ export class AdminGamesComponent implements OnInit {
             }
           } catch(e) {}
 
-          return { ...g, parsedRules, parsedConfig, rawConfigText, activeRuleTab: 'en' as const };
+          return { ...g, parsedRules, parsedOverview, parsedConfig, rawConfigText, activeRuleTab: 'en' as const, activeOverviewTab: 'en' as const };
         }));
       },
       error: (err) => {
@@ -175,7 +200,7 @@ export class AdminGamesComponent implements OnInit {
   toggleGameStatus(game: AdminGame) {
     this.isUpdating.set(true);
     const newStatus = !game.isActive;
-    this.adminService.updateGame(game.id, game.rules, game.config, newStatus).subscribe({
+    this.adminService.updateGame(game.id, game.overview, game.rules, game.config, newStatus).subscribe({
       next: (res) => {
         const updated = this.games().map(g => g.id === game.id ? { ...g, isActive: newStatus, rules: game.rules } : g);
         this.games.set(updated);
@@ -191,7 +216,8 @@ export class AdminGamesComponent implements OnInit {
   saveGameRules(game: AdminGame) {
     this.isUpdating.set(true);
     const rulesJson = JSON.stringify(game.parsedRules);
-    this.adminService.updateGame(game.id, rulesJson, game.config, game.isActive).subscribe({
+    const overviewJson = JSON.stringify(game.parsedOverview);
+    this.adminService.updateGame(game.id, overviewJson, rulesJson, game.config, game.isActive).subscribe({
       next: (res) => {
         this.errorMsg.set('Rules saved successfully!');
         setTimeout(() => this.errorMsg.set(''), 3000);
@@ -222,7 +248,7 @@ export class AdminGamesComponent implements OnInit {
     // Update local config reference so next saveGameRules doesn't overwrite it with old one
     game.config = configJson;
     
-    this.adminService.updateGame(game.id, game.rules, configJson, game.isActive).subscribe({
+    this.adminService.updateGame(game.id, game.overview, game.rules, configJson, game.isActive).subscribe({
       next: (res) => {
         this.errorMsg.set('Settings saved successfully!');
         setTimeout(() => this.errorMsg.set(''), 3000);

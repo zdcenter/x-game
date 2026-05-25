@@ -33,6 +33,7 @@ func UpdateGame(c fiber.Ctx) error {
 	}
 
 	type UpdateRequest struct {
+		Overview *string `json:"overview"`
 		Rules    *string `json:"rules"`
 		Config   *string `json:"config"`
 		IsActive *bool   `json:"isActive"`
@@ -44,6 +45,9 @@ func UpdateGame(c fiber.Ctx) error {
 	}
 
 	updates := map[string]interface{}{}
+	if req.Overview != nil {
+		updates["overview"] = *req.Overview
+	}
 	if req.Rules != nil {
 		updates["rules"] = *req.Rules
 	}
