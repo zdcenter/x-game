@@ -70,7 +70,9 @@ export class MinesweeperStore {
       const engine = this.localEngine();
       if (engine) {
         return {
-          cells: engine.cells,
+          // Deep clone the cells so that Angular's OnPush change detection sees new object references,
+          // matching the behavior of incoming WebSocket JSON payloads.
+          cells: engine.cells.map(row => row.map(cell => ({ ...cell }))),
           status: engine.status,
           width: engine.width,
           height: engine.height,
