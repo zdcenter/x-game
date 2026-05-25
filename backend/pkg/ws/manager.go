@@ -138,7 +138,6 @@ func (r *Room) AddClient(client *Client) {
 func (r *Room) RemoveClient(clientID string) {
 	r.mu.Lock()
 	delete(r.Clients, clientID)
-	r.Engine.RemovePlayer(clientID)
 	
 	// Destroy room if empty
 	isEmpty := len(r.Clients) == 0
