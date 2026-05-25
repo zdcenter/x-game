@@ -11,6 +11,9 @@
     --color-border-card: rgba(51, 65, 85, 0.5); /* slate-700/50 */
     --color-accent-from: #60a5fa; /* blue-400 */
     --color-accent-to: #34d399; /* emerald-400 */
+    --color-cell-highlight: rgba(255, 255, 255, 0.15);
+    --color-cell-shadow: rgba(0, 0, 0, 0.4);
+    --color-overlay: rgba(0, 0, 0, 0.7);
   }
 
   .theme-dark {
@@ -20,6 +23,9 @@
     --color-border-card: rgba(51, 65, 85, 0.5);
     --color-accent-from: #60a5fa;
     --color-accent-to: #34d399;
+    --color-cell-highlight: rgba(255, 255, 255, 0.15);
+    --color-cell-shadow: rgba(0, 0, 0, 0.4);
+    --color-overlay: rgba(0, 0, 0, 0.7);
   }
 
   .theme-light {
@@ -29,16 +35,12 @@
     --color-border-card: rgba(203, 213, 225, 0.5); /* slate-300/50 */
     --color-accent-from: #3b82f6; /* blue-500 */
     --color-accent-to: #10b981; /* emerald-500 */
+    --color-cell-highlight: rgba(255, 255, 255, 0.8);
+    --color-cell-shadow: rgba(0, 0, 0, 0.2);
+    --color-overlay: rgba(255, 255, 255, 0.7);
   }
 
-  .theme-cyberpunk {
-    --color-bg-main: #2b003e; /* Deep purple */
-    --color-text-main: #fdf2f8; /* pink-50 */
-    --color-bg-card: rgba(33, 0, 48, 0.8);
-    --color-border-card: rgba(236, 72, 153, 0.5); /* pink-500/50 */
-    --color-accent-from: #ec4899; /* pink-500 */
-    --color-accent-to: #06b6d4; /* cyan-500 */
-  }
+
 
   body {
     background-color: var(--color-bg-main);

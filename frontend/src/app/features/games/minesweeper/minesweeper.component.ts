@@ -120,19 +120,19 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
             
             <!-- Waiting Overlay -->
             @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
-              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm rounded-2xl">
+              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-2xl text-[var(--color-text-main)]">
                 @if (getPlayerScores().length < 2) {
-                  <div class="w-12 h-12 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-                  <h2 class="text-2xl font-bold text-white tracking-widest uppercase">Waiting for Challenger...</h2>
+                  <div class="w-12 h-12 border-4 border-slate-600 border-t-[var(--color-accent-to)] rounded-full animate-spin mb-4"></div>
+                  <h2 class="text-2xl font-bold tracking-widest uppercase">Waiting for Challenger...</h2>
                 } @else {
                   @if (store.host() === playerId) {
-                    <h2 class="text-3xl font-black text-white mb-6 uppercase">{{ i18n.t('game.ready')() }}</h2>
-                    <button (click)="store.startGame()" class="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:scale-105 transition-all">
+                    <h2 class="text-3xl font-black mb-6 uppercase">{{ i18n.t('game.ready')() }}</h2>
+                    <button (click)="store.startGame()" class="px-8 py-4 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
                       START PK
                     </button>
                   } @else {
-                    <div class="w-12 h-12 border-4 border-slate-600 border-t-yellow-500 rounded-full animate-spin mb-4"></div>
-                    <h2 class="text-2xl font-bold text-white tracking-widest uppercase">Waiting for Host...</h2>
+                    <div class="w-12 h-12 border-4 border-slate-600 border-t-[var(--color-accent-from)] rounded-full animate-spin mb-4"></div>
+                    <h2 class="text-2xl font-bold tracking-widest uppercase">Waiting for Host...</h2>
                   }
                 }
               </div>
@@ -140,7 +140,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
             
             <!-- Starting Overlay -->
             @if (store.status() === GameStatus.Starting) {
-              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md rounded-2xl">
+              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-md rounded-2xl">
                 <h2 class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse">
                   {{ countdownDisplay() }}
                 </h2>
@@ -150,7 +150,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
 
             <!-- Victory Overlay -->
             @if (store.status() === 'finished') {
-              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm">
                 @if (currentRoomMode() === 'pk_speed') {
                   @if (hasWonSpeedMode()) {
                     <h2 class="text-6xl font-black uppercase tracking-widest text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-bounce">
@@ -173,7 +173,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                 }
                 
                 @if (currentRoomMode() === 'single' || store.host() === playerId) {
-                  <button (click)="store.restartGame()" class="mt-8 px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xl rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:scale-105 transition-all">
+                  <button (click)="store.restartGame()" class="mt-8 px-8 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
                     {{ i18n.t('game.restart')() }}
                   </button>
                 }
@@ -182,7 +182,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
 
             <!-- Frozen Overlay (PK Steal Penalty) -->
             @if (isFrozen()) {
-              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-900/40 backdrop-blur-sm rounded-2xl pointer-events-none">
+              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
                 <h2 class="text-4xl font-black text-red-500 uppercase tracking-widest animate-pulse drop-shadow-md">
                   {{ i18n.t('game.frozen')() }}
                 </h2>
@@ -209,7 +209,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
           
           <!-- Rules Modal -->
           @if (showRules()) {
-            <div class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm text-[var(--color-text-main)]">
               <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh]">
                 <div class="flex justify-between items-center p-4 border-b border-[var(--color-border-card)]">
                   <h3 class="text-xl font-bold text-white flex items-center gap-2">
@@ -224,11 +224,11 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                     </svg>
                   </button>
                 </div>
-                <div class="p-6 overflow-y-auto font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                <div class="p-6 overflow-y-auto font-mono text-sm opacity-80 whitespace-pre-wrap leading-relaxed">
                   {{ gameRules() }}
                 </div>
-                <div class="p-4 border-t border-slate-700 flex justify-end">
-                  <button (click)="showRules.set(false)" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold transition-colors border border-slate-600">
+                <div class="p-4 border-t border-[var(--color-border-card)] flex justify-end">
+                  <button (click)="showRules.set(false)" class="px-6 py-2 bg-[var(--color-bg-card)] hover:opacity-80 rounded-lg font-bold transition-colors border border-[var(--color-border-card)]">
                     {{ i18n.t('game.rules.got_it')() }}
                   </button>
                 </div>
@@ -267,7 +267,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                 </div>
                 <div class="space-y-3">
                   @for (room of otherRooms(); track room.id) {
-                    <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-slate-500 transition-colors">
+                    <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
                       <div class="flex justify-between items-center mb-2">
                         <span class="font-mono text-sm font-bold text-white">{{ room.id }}</span>
                         <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
@@ -277,21 +277,21 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                         </span>
                       </div>
                       <div class="flex justify-between items-end">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                          <span>{{ i18n.t('game.host')() }}: <span class="text-indigo-400 font-bold">{{ room.host }}</span></span>
-                          <span class="w-1 h-1 rounded-full bg-slate-600"></span>
-                          <span>{{ i18n.t('game.mode')() }}: <span class="text-white">{{ room.mode === 'pk_steal' ? i18n.t('game.pk_steal')() : i18n.t('game.pk_speed')() }}</span></span>
-                          <span class="w-1 h-1 rounded-full bg-slate-600"></span>
-                          <span>{{ i18n.t('game.diff')() }}: <span class="text-yellow-400">{{ getDifficultyText(room.difficulty || 'medium') }}</span></span>
+                        <div class="text-[10px] opacity-70 uppercase tracking-wider flex items-center gap-2">
+                          <span>{{ i18n.t('game.host')() }}: <span class="text-[var(--color-accent-from)] font-bold">{{ room.host }}</span></span>
+                          <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                          <span>{{ i18n.t('game.mode')() }}: <span class="text-inherit">{{ room.mode === 'pk_steal' ? i18n.t('game.pk_steal')() : i18n.t('game.pk_speed')() }}</span></span>
+                          <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                          <span>{{ i18n.t('game.diff')() }}: <span class="text-yellow-500">{{ getDifficultyText(room.difficulty || 'medium') }}</span></span>
                         </div>
                         <div class="flex items-center gap-2">
                           <span class="text-xs text-slate-400">{{ room.players }}/2</span>
                           @if (room.status === 'waiting' && room.players < 2) {
-                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded shadow hover:bg-purple-500 transition-colors">{{ i18n.t('game.join')() }}</button>
+                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.join')() }}</button>
                           } @else if (room.status === 'waiting' && room.players >= 2) {
-                            <button disabled class="px-3 py-1 bg-slate-600 text-slate-400 text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.full')() }}</button>
+                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.full')() }}</button>
                           } @else {
-                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-slate-700 text-slate-300 text-xs font-bold rounded shadow hover:bg-slate-600 transition-colors">{{ i18n.t('game.watch')() }}</button>
+                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-[var(--color-bg-card)] text-inherit text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.watch')() }}</button>
                           }
                         </div>
                       </div>
@@ -312,9 +312,9 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                   </div>
                   <div class="space-y-3">
                     @for (room of myRooms(); track room.id) {
-                      <div class="p-3 bg-emerald-900/20 rounded-xl border border-emerald-500/30">
+                      <div class="p-3 bg-[var(--color-bg-card)] rounded-xl border-[2px] border-[var(--color-accent-to)] shadow-sm">
                         <div class="flex justify-between items-center mb-2">
-                          <span class="font-mono text-sm font-bold text-white">{{ room.id }} (Host)</span>
+                          <span class="font-mono text-sm font-bold text-inherit">{{ room.id }} (Host)</span>
                           <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
                                 [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
                                 [class.bg-emerald-500]="room.status === 'waiting'" [class.text-black]="room.status === 'waiting'">
@@ -344,7 +344,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
         @if (activeTab === 'online') {
           <div class="p-4 flex-grow overflow-y-auto space-y-2">
             @for (player of otherOnlinePlayers(); track player.id) {
-              <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div class="flex items-center justify-between p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)]">
                 <div class="flex items-center gap-3">
                   <div class="relative">
                     <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
@@ -355,8 +355,8 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                          [class.bg-yellow-400]="player.status === 'playing'"></div>
                   </div>
                   <div>
-                    <div class="text-sm font-bold text-white leading-none">{{ player.username }}</div>
-                    <div class="text-[10px] text-slate-400 uppercase mt-1">{{ player.status }}</div>
+                    <div class="text-sm font-bold text-inherit leading-none">{{ player.username }}</div>
+                    <div class="text-[10px] opacity-70 uppercase mt-1">{{ player.status }}</div>
                   </div>
                 </div>
                 <button [disabled]="player.status !== 'idle'" class="text-xs font-bold text-indigo-400 px-2 py-1 hover:bg-indigo-500/20 rounded disabled:opacity-30 transition-colors">
@@ -373,10 +373,10 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
     <!-- Create Room Modal Overlay -->
     @if (isCreateModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)]">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white">{{ i18n.t('game.create_room_title')() }}</h2>
-            <button (click)="isCreateModalOpen.set(false)" class="text-slate-400 hover:text-white transition-colors">
+            <h2 class="text-2xl font-bold">{{ i18n.t('game.create_room_title')() }}</h2>
+            <button (click)="isCreateModalOpen.set(false)" class="opacity-50 hover:opacity-100 transition-opacity">
               ✕
             </button>
           </div>
@@ -384,29 +384,29 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
           <div class="space-y-6">
             <!-- Room Name -->
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ i18n.t('game.room_name')() }}</label>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ i18n.t('game.room_name')() }}</label>
               <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
-                     class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                     class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors"
                      placeholder="Enter room name">
             </div>
 
             <!-- PK Mode -->
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ i18n.t('game.game_mode')() }}</label>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ i18n.t('game.game_mode')() }}</label>
               <div class="grid grid-cols-2 gap-3">
                 <button (click)="newRoomMode.set('pk_steal')" 
-                        [class.bg-emerald-500]="newRoomMode() === 'pk_steal'" [class.text-white]="newRoomMode() === 'pk_steal'"
-                        [class.bg-slate-800]="newRoomMode() !== 'pk_steal'" [class.text-slate-300]="newRoomMode() !== 'pk_steal'"
-                        class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left">
+                        [class.bg-[var(--color-accent-to)]]="newRoomMode() === 'pk_steal'" [class.text-[var(--color-bg-main)]]="newRoomMode() === 'pk_steal'"
+                        [class.bg-[var(--color-bg-card)]]="newRoomMode() !== 'pk_steal'" [class.opacity-60]="newRoomMode() !== 'pk_steal'"
+                        class="px-4 py-3 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-left">
                   <div class="flex items-center gap-2 mb-1">
                     <span>⚡</span> <span>{{ i18n.t('game.steal_mode')() }}</span>
                   </div>
                   <div class="text-[10px] font-normal opacity-80 leading-tight">Shared board. Race to flag mines!</div>
                 </button>
                 <button (click)="newRoomMode.set('pk_speed')" 
-                        [class.bg-emerald-500]="newRoomMode() === 'pk_speed'" [class.text-white]="newRoomMode() === 'pk_speed'"
-                        [class.bg-slate-800]="newRoomMode() !== 'pk_speed'" [class.text-slate-300]="newRoomMode() !== 'pk_speed'"
-                        class="px-4 py-3 rounded-xl border border-slate-700 font-bold text-sm transition-all text-left">
+                        [class.bg-[var(--color-accent-to)]]="newRoomMode() === 'pk_speed'" [class.text-[var(--color-bg-main)]]="newRoomMode() === 'pk_speed'"
+                        [class.bg-[var(--color-bg-card)]]="newRoomMode() !== 'pk_speed'" [class.opacity-60]="newRoomMode() !== 'pk_speed'"
+                        class="px-4 py-3 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-left">
                   <div class="flex items-center gap-2 mb-1">
                     <span>🏎️</span> <span>{{ i18n.t('game.speed_mode')() }}</span>
                   </div>
@@ -417,26 +417,26 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
 
             <!-- Difficulty -->
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ i18n.t('game.difficulty_label')() }}</label>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ i18n.t('game.difficulty_label')() }}</label>
               <div class="grid grid-cols-3 gap-2">
                 <button (click)="newRoomDifficulty.set('easy')" 
-                        [class.bg-emerald-500]="newRoomDifficulty() === 'easy'" [class.text-white]="newRoomDifficulty() === 'easy'"
-                        [class.bg-slate-800]="newRoomDifficulty() !== 'easy'" [class.text-slate-300]="newRoomDifficulty() !== 'easy'"
-                        class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
+                        [class.bg-[var(--color-accent-to)]]="newRoomDifficulty() === 'easy'" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === 'easy'"
+                        [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== 'easy'" [class.opacity-60]="newRoomDifficulty() !== 'easy'"
+                        class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center">
                   <span>{{ i18n.t('game.diff_easy')() }}</span>
                   <span class="text-[10px] opacity-70 mt-1 font-normal">9x9 (10)</span>
                 </button>
                 <button (click)="newRoomDifficulty.set('medium')" 
-                        [class.bg-emerald-500]="newRoomDifficulty() === 'medium'" [class.text-white]="newRoomDifficulty() === 'medium'"
-                        [class.bg-slate-800]="newRoomDifficulty() !== 'medium'" [class.text-slate-300]="newRoomDifficulty() !== 'medium'"
-                        class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
+                        [class.bg-[var(--color-accent-to)]]="newRoomDifficulty() === 'medium'" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === 'medium'"
+                        [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== 'medium'" [class.opacity-60]="newRoomDifficulty() !== 'medium'"
+                        class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center">
                   <span>{{ i18n.t('game.diff_medium')() }}</span>
                   <span class="text-[10px] opacity-70 mt-1 font-normal">16x16 (40)</span>
                 </button>
                 <button (click)="newRoomDifficulty.set('hard')" 
-                        [class.bg-emerald-500]="newRoomDifficulty() === 'hard'" [class.text-white]="newRoomDifficulty() === 'hard'"
-                        [class.bg-slate-800]="newRoomDifficulty() !== 'hard'" [class.text-slate-300]="newRoomDifficulty() !== 'hard'"
-                        class="px-3 py-2 rounded-lg border border-slate-700 font-bold text-xs transition-all flex flex-col items-center">
+                        [class.bg-[var(--color-accent-to)]]="newRoomDifficulty() === 'hard'" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === 'hard'"
+                        [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== 'hard'" [class.opacity-60]="newRoomDifficulty() !== 'hard'"
+                        class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center">
                   <span>{{ i18n.t('game.diff_hard')() }}</span>
                   <span class="text-[10px] opacity-70 mt-1 font-normal">30x16 (99)</span>
                 </button>
@@ -445,10 +445,10 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
 
             <!-- Action Buttons -->
             <div class="pt-4 flex gap-3">
-              <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">
+              <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
                 {{ i18n.t('game.cancel')() }}
               </button>
-              <button (click)="confirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20">
+              <button (click)="confirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
                 {{ i18n.t('game.create')() }} & {{ i18n.t('game.join')() }}
               </button>
             </div>

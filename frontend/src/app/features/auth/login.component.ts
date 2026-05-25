@@ -32,15 +32,15 @@ import { I18nService } from '../../core/i18n/i18n.service';
             }
 
             <div>
-              <label class="block text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wider">{{ i18n.t('auth.login.username')() }}</label>
-              <input type="text" [(ngModel)]="username" name="username" required
-                     class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-inner">
+              <label class="block text-sm font-semibold opacity-80 mb-2 uppercase tracking-wider">{{ i18n.t('auth.login.username')() }}</label>
+                <input type="text" [(ngModel)]="username" name="username" required
+                       class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-inner">
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wider">{{ i18n.t('auth.login.password')() }}</label>
-              <input type="password" [(ngModel)]="password" name="password" required
-                     class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all shadow-inner">
+              <label class="block text-sm font-semibold opacity-80 mb-2 uppercase tracking-wider">{{ i18n.t('auth.login.password')() }}</label>
+                <input type="password" [(ngModel)]="password" name="password" required
+                       class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all shadow-inner">
             </div>
 
             <button type="submit" [disabled]="isLoading()"

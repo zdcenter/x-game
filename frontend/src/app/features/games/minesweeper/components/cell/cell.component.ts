@@ -51,7 +51,7 @@ export class CellComponent {
     if (this.cell.state === CellState.Exploded) {
       return 'bg-red-500/20 border border-red-500/50 scale-95';
     }
-    return 'bg-[var(--color-border-card)] border-2 border-t-white/60 border-l-white/60 border-b-black/30 border-r-black/30 shadow-md hover:brightness-110 active:scale-95 cursor-pointer';
+    return 'bg-[var(--color-border-card)] border-[1.5px] border-t-[var(--color-cell-highlight)] border-l-[var(--color-cell-highlight)] border-b-[var(--color-cell-shadow)] border-r-[var(--color-cell-shadow)] shadow-md hover:brightness-110 active:scale-95 cursor-pointer';
   }
 
   get neighborColor(): string {

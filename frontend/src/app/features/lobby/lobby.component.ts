@@ -49,7 +49,7 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
         <!-- Coming Soon Card (Sudoku) -->
         <div class="relative overflow-hidden rounded-3xl border opacity-60 transition-all duration-300 cursor-not-allowed grayscale"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-          <div class="h-48 w-full flex items-center justify-center text-6xl bg-slate-800">
+          <div class="h-48 w-full flex items-center justify-center text-6xl bg-[var(--color-bg-main)]">
             🔢
           </div>
           <div class="p-6">

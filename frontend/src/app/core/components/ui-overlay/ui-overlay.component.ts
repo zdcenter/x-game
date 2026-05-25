@@ -22,12 +22,12 @@ import { ToastService } from '../../services/toast.service';
     <!-- Confirm Dialog -->
     @if (toastService.currentConfirm(); as dialog) {
       <div class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform animate-scale-in">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform animate-scale-in text-[var(--color-text-main)]">
           <div class="p-6">
-            <h3 class="text-lg font-bold text-white mb-2">{{ dialog.title }}</h3>
-            <p class="text-slate-400 text-sm leading-relaxed mb-6">{{ dialog.message }}</p>
+            <h3 class="text-lg font-bold mb-2">{{ dialog.title }}</h3>
+            <p class="opacity-70 text-sm leading-relaxed mb-6">{{ dialog.message }}</p>
             <div class="flex gap-3">
-              <button (click)="cancelConfirm(dialog)" class="flex-1 py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">
+              <button (click)="cancelConfirm(dialog)" class="flex-1 py-2.5 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
                 {{ dialog.cancelText || 'Cancel' }}
               </button>
               <button (click)="acceptConfirm(dialog)" class="flex-1 py-2.5 rounded-xl font-bold bg-red-500 text-white hover:bg-red-400 transition-colors shadow-lg shadow-red-500/20">

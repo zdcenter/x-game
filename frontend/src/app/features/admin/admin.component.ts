@@ -16,12 +16,12 @@ import { GameConfig } from '../../core/services/game.service';
       
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-bold text-white">{{ i18n.t('admin.users.title')() }}</h2>
-          <p class="text-slate-400 text-sm mt-1">{{ i18n.t('admin.users.subtitle')() }}</p>
+          <h2 class="text-2xl font-bold">{{ i18n.t('admin.users.title')() }}</h2>
+          <p class="opacity-70 text-sm mt-1">{{ i18n.t('admin.users.subtitle')() }}</p>
         </div>
-        <div class="flex items-center space-x-3 bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 shadow-inner">
-          <span class="text-xs text-slate-500 font-bold uppercase">{{ i18n.t('admin.users.total')() }}</span>
-          <span class="text-xl font-mono text-white font-bold">{{ users().length }}</span>
+        <div class="flex items-center space-x-3 bg-[var(--color-bg-card)] px-4 py-2 rounded-xl border border-[var(--color-border-card)] shadow-inner">
+          <span class="text-xs opacity-70 font-bold uppercase">{{ i18n.t('admin.users.total')() }}</span>
+          <span class="text-xl font-mono text-inherit font-bold">{{ users().length }}</span>
         </div>
       </div>
 
@@ -33,10 +33,10 @@ import { GameConfig } from '../../core/services/game.service';
         }
 
         <!-- Data Table -->
-        <div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/50 shadow-inner">
+        <div class="overflow-x-auto rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] shadow-inner">
           <table class="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-slate-800/80 text-slate-300 text-sm uppercase tracking-wider border-b border-slate-700">
+              <tr class="bg-[var(--color-bg-main)] opacity-90 text-sm uppercase tracking-wider border-b border-[var(--color-border-card)]">
                 <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.id')() }}</th>
                 <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.username')() }}</th>
                 <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.role')() }}</th>
@@ -44,21 +44,21 @@ import { GameConfig } from '../../core/services/game.service';
                 <th class="px-6 py-4 font-semibold text-right">{{ i18n.t('admin.users.col.actions')() }}</th>
               </tr>
             </thead>
-            <tbody class="text-slate-200">
+            <tbody class="text-inherit">
               @if (isLoading()) {
                 <tr>
-                  <td colspan="5" class="px-6 py-12 text-center text-slate-400 animate-pulse">
+                  <td colspan="5" class="px-6 py-12 text-center opacity-70 animate-pulse">
                     {{ i18n.t('admin.users.loading')() }}
                   </td>
                 </tr>
               } @else {
                 @for (user of users(); track user.id) {
-                  <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                    <td class="px-6 py-4 font-mono text-slate-500">#{{ user.id }}</td>
-                    <td class="px-6 py-4 font-bold text-white">{{ user.username }}</td>
+                  <tr class="border-b border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)] transition-colors">
+                    <td class="px-6 py-4 font-mono opacity-60">#{{ user.id }}</td>
+                    <td class="px-6 py-4 font-bold text-inherit">{{ user.username }}</td>
                     <td class="px-6 py-4">
                       <span class="px-2 py-1 rounded text-xs font-bold uppercase tracking-wider"
-                            [ngClass]="{'bg-purple-500/20 text-purple-400 border border-purple-500/30': user.role === 'admin', 'bg-slate-700 text-slate-400': user.role !== 'admin'}">
+                            [ngClass]="{'bg-[var(--color-accent-from)]/20 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30': user.role === 'admin', 'bg-[var(--color-bg-card)] opacity-70': user.role !== 'admin'}">
                         {{ user.role }}
                       </span>
                     </td>
