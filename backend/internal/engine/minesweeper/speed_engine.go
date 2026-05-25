@@ -3,6 +3,8 @@ package minesweeper
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/x-game/backend/internal/engine"
@@ -28,15 +30,38 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 
 	if opts, ok := options.(map[string]interface{}); ok {
 		if diff, ok := opts["difficulty"].(string); ok {
-			switch diff {
-			case "easy":
-				width, height, mines = 9, 9, 10
-			case "hard":
-				width, height, mines = 30, 16, 99
-			case "medium":
-				fallthrough
-			default:
-				width, height, mines = 16, 16, 40
+			if strings.HasPrefix(diff, "custom_") {
+				parts := strings.Split(diff, "_")
+				if len(parts) == 4 {
+					if w, err := strconv.Atoi(parts[1]); err == nil && w > 0 {
+						width = w
+					}
+					if h, err := strconv.Atoi(parts[2]); err == nil && h > 0 {
+						height = h
+					}
+					if m, err := strconv.Atoi(parts[3]); err == nil && m > 0 {
+						mines = m
+					}
+				}
+			} else {
+				switch diff {
+				case "easy", "beginner":
+					width, height, mines = 9, 9, 10
+				case "medium", "intermediate":
+					width, height, mines = 16, 16, 40
+				case "hard", "advanced":
+					width, height, mines = 30, 16, 99
+				case "hard_mode":
+					width, height, mines = 30, 18, 112
+				case "professional":
+					width, height, mines = 30, 20, 126
+				case "master":
+					width, height, mines = 30, 22, 139
+				case "expert":
+					width, height, mines = 30, 24, 158
+				default:
+					width, height, mines = 16, 16, 40
+				}
 			}
 		}
 	}

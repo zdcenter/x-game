@@ -27,11 +27,13 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
           <!-- Header -->
           <div class="flex items-center justify-between mb-4 lg:mb-6 pb-4 border-b" style="border-color: var(--color-border-card)">
             <!-- Left: Title & Mode -->
+            <!-- Left: Title & Mode -->
             <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
-              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent whitespace-nowrap"
-                  style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                {{ i18n.t('app.title')() }}
-                <span class="text-[10px] lg:text-sm ml-1 lg:ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-main)] opacity-80 border border-[var(--color-border-card)] rounded-lg text-inherit">
+              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap">
+                <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                  {{ i18n.t('app.title')() }}
+                </span>
+                <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
                   {{ currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')()) }}
                 </span>
               </h1>
@@ -42,31 +44,44 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
               </button>
             </div>
             
-            <!-- Center: PK Scoreboard & Timer OR Single Player Difficulty -->
+            <!-- Center: PK Scoreboard OR Single Player Difficulty -->
             <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center">
               @if (currentRoomMode() === 'single') {
-                <div class="hidden sm:flex bg-[var(--color-bg-main)] rounded-xl p-1 border border-[var(--color-border-card)] shadow-inner">
-                  <button (click)="changeSingleDifficulty('easy')" 
-                          [class.bg-[var(--color-accent-to)]]="currentDifficulty() === 'easy'" [class.text-[var(--color-bg-main)]]="currentDifficulty() === 'easy'"
-                          [class.opacity-50]="currentDifficulty() !== 'easy'" [class.hover:opacity-100]="currentDifficulty() !== 'easy'"
-                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
-                    {{ i18n.t('game.diff_easy')() }}
-                  </button>
-                  <button (click)="changeSingleDifficulty('medium')" 
-                          [class.bg-[var(--color-accent-to)]]="currentDifficulty() === 'medium'" [class.text-[var(--color-bg-main)]]="currentDifficulty() === 'medium'"
-                          [class.opacity-50]="currentDifficulty() !== 'medium'" [class.hover:opacity-100]="currentDifficulty() !== 'medium'"
-                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
-                    {{ i18n.t('game.diff_medium')() }}
-                  </button>
-                  <button (click)="changeSingleDifficulty('hard')" 
-                          [class.bg-[var(--color-accent-to)]]="currentDifficulty() === 'hard'" [class.text-[var(--color-bg-main)]]="currentDifficulty() === 'hard'"
-                          [class.opacity-50]="currentDifficulty() !== 'hard'" [class.hover:opacity-100]="currentDifficulty() !== 'hard'"
-                          class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
-                    {{ i18n.t('game.diff_hard')() }}
+                <div class="hidden sm:flex rounded-xl p-1 shadow-inner">
+                  <button (click)="openDifficultySettings('single')" 
+                          class="px-4 py-1.5 rounded-lg border border-[var(--color-border-card)] text-sm font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-2 shadow-sm">
+                    {{ getDifficultyText(currentDifficulty()) }}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
                 </div>
-              } @else if (store.status() === 'playing') {
-                <div class="font-mono text-sm lg:text-xl font-bold text-yellow-400 bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-yellow-500/30 flex items-center gap-1 lg:gap-2 shadow-inner">
+              } @else if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
+                <div class="flex items-center gap-1 lg:gap-3 bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
+                  <span class="text-[8px] lg:text-xs opacity-70 font-bold uppercase tracking-wider hidden sm:inline">{{ i18n.t('game.opponent')() }}</span>
+                  <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
+                    <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
+                  </div>
+                  <span class="text-[8px] lg:text-xs font-mono font-bold text-[var(--color-accent-to)]">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
+                </div>
+              } @else {
+                @for (player of getPlayerScores(); track player.id) {
+                  <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-[var(--color-bg-main)] flex items-center gap-1.5 lg:gap-3 transition-transform"
+                       [class.border-[var(--color-accent-to)]]="player.id === playerId"
+                       [class.scale-110]="player.id === playerId"
+                       [class.shadow-lg]="player.id === playerId"
+                       [class.border-[var(--color-border-card)]]="player.id !== playerId">
+                    <span class="text-[8px] lg:text-xs font-bold opacity-70 max-w-[80px] truncate" [title]="player.id">{{ player.id }}</span>
+                    <span class="text-sm lg:text-lg font-black" [class.text-[var(--color-accent-to)]]="player.id === playerId" [class.text-inherit]="player.id !== playerId">{{ player.score }}</span>
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Right: Timer & Mines -->
+            <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center">
+              @if (store.status() === 'playing') {
+                <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -74,33 +89,9 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                 </div>
               }
 
-              @if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
-                <div class="flex items-center gap-1 lg:gap-3 bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
-                  <span class="text-[8px] lg:text-xs text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">{{ i18n.t('game.opponent')() }}</span>
-                  <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
-                    <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
-                  </div>
-                  <span class="text-[8px] lg:text-xs font-mono font-bold text-blue-400">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
-                </div>
-              } @else {
-                @for (player of getPlayerScores(); track player.id) {
-                  <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-[var(--color-bg-main)] flex items-center gap-1.5 lg:gap-3 transition-transform"
-                       [class.border-emerald-500]="player.id === playerId"
-                       [class.scale-110]="player.id === playerId"
-                       [class.shadow-lg]="player.id === playerId"
-                       [class.border-[var(--color-border-card)]]="player.id !== playerId">
-                    <span class="text-[8px] lg:text-xs font-bold opacity-70">{{ player.id | slice:0:3 }}</span>
-                    <span class="text-sm lg:text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
-                  </div>
-                }
-              }
-            </div>
-
-            <!-- Right: Mines -->
-            <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center">
               <div class="flex flex-col items-center bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
-                <span class="text-[8px] lg:text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ i18n.t('minesweeper.mines')() }}</span>
-                <span class="text-sm lg:text-2xl font-mono text-emerald-400 font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
+                <span class="text-[8px] lg:text-xs opacity-70 font-semibold uppercase tracking-wider">{{ i18n.t('minesweeper.mines')() }}</span>
+                <span class="text-sm lg:text-2xl font-mono text-[var(--color-accent-to)] font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
               </div>
               
               @if (currentRoomMode() !== 'single') {
@@ -287,11 +278,11 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                         <div class="flex items-center gap-2">
                           <span class="text-xs text-slate-400">{{ room.players }}/2</span>
                           @if (room.status === 'waiting' && room.players < 2) {
-                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.join')() }}</button>
+                            <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.join')() }}</button>
                           } @else if (room.status === 'waiting' && room.players >= 2) {
                             <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ i18n.t('game.full')() }}</button>
                           } @else {
-                            <button (click)="joinRoom(room.id, room.mode)" class="px-3 py-1 bg-[var(--color-bg-card)] text-inherit text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.watch')() }}</button>
+                            <button (click)="joinRoom(room.id, room.mode, room.difficulty)" class="px-3 py-1 bg-[var(--color-bg-card)] text-inherit text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ i18n.t('game.watch')() }}</button>
                           }
                         </div>
                       </div>
@@ -418,29 +409,14 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
             <!-- Difficulty -->
             <div>
               <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ i18n.t('game.difficulty_label')() }}</label>
-              <div class="grid grid-cols-3 gap-2">
-                <button (click)="newRoomDifficulty.set('easy')" 
-                        [class.bg-[var(--color-accent-to)]]="newRoomDifficulty() === 'easy'" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === 'easy'"
-                        [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== 'easy'" [class.opacity-60]="newRoomDifficulty() !== 'easy'"
-                        class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center">
-                  <span>{{ i18n.t('game.diff_easy')() }}</span>
-                  <span class="text-[10px] opacity-70 mt-1 font-normal">9x9 (10)</span>
-                </button>
-                <button (click)="newRoomDifficulty.set('medium')" 
-                        [class.bg-[var(--color-accent-to)]]="newRoomDifficulty() === 'medium'" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === 'medium'"
-                        [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== 'medium'" [class.opacity-60]="newRoomDifficulty() !== 'medium'"
-                        class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center">
-                  <span>{{ i18n.t('game.diff_medium')() }}</span>
-                  <span class="text-[10px] opacity-70 mt-1 font-normal">16x16 (40)</span>
-                </button>
-                <button (click)="newRoomDifficulty.set('hard')" 
-                        [class.bg-[var(--color-accent-to)]]="newRoomDifficulty() === 'hard'" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === 'hard'"
-                        [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== 'hard'" [class.opacity-60]="newRoomDifficulty() !== 'hard'"
-                        class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center">
-                  <span>{{ i18n.t('game.diff_hard')() }}</span>
-                  <span class="text-[10px] opacity-70 mt-1 font-normal">30x16 (99)</span>
-                </button>
-              </div>
+              <button (click)="openDifficultySettings('room')" 
+                      class="w-full flex items-center justify-between px-4 py-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl hover:border-[var(--color-accent-to)] transition-colors">
+                <span class="font-bold text-sm">{{ getDifficultyText(newRoomDifficulty()) }}</span>
+                <span class="text-[var(--color-accent-to)] font-bold text-sm flex items-center gap-1">
+                  Change
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </span>
+              </button>
             </div>
 
             <!-- Action Buttons -->
@@ -452,6 +428,85 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
                 {{ i18n.t('game.create')() }} & {{ i18n.t('game.join')() }}
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Difficulty Settings Modal -->
+    @if (isDifficultyModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="isDifficultyModalOpen.set(false)"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-[var(--color-bg-main)] rounded-3xl shadow-2xl border border-[var(--color-border-card)] w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+          <!-- Header -->
+          <div class="p-6 pb-4 border-b border-[var(--color-border-card)] flex justify-between items-center bg-[var(--color-bg-card)]">
+            <h2 class="text-xl font-bold">{{ i18n.t('game.settings_title')() }}</h2>
+            <button (click)="isDifficultyModalOpen.set(false)" class="opacity-50 hover:opacity-100 transition-opacity p-2 -mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          
+          <!-- Content -->
+          <div class="overflow-y-auto p-4 flex-1 space-y-2">
+            @for (diff of predefinedDifficulties; track diff.id) {
+              <button (click)="selectedDifficulty.set(diff.id)"
+                      class="w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all"
+                      [class.border-[var(--color-accent-to)]]="selectedDifficulty() === diff.id"
+                      [class.bg-[var(--color-bg-card)]]="selectedDifficulty() === diff.id"
+                      [class.border-[var(--color-border-card)]]="selectedDifficulty() !== diff.id"
+                      [class.hover:bg-[var(--color-bg-card)]]="selectedDifficulty() !== diff.id">
+                <span class="font-bold text-sm" [class.text-[var(--color-accent-to)]]="selectedDifficulty() === diff.id">{{ i18n.t($any(diff.labelKey))() }}</span>
+                <span class="text-xs opacity-60 font-mono">{{ diff.desc }}</span>
+              </button>
+            }
+
+            <div class="w-full mt-4 border border-[var(--color-border-card)] rounded-xl overflow-hidden transition-all"
+                 [class.border-[var(--color-accent-to)]]="selectedDifficulty() === 'custom'"
+                 [class.bg-[var(--color-bg-card)]]="selectedDifficulty() === 'custom'">
+              <button (click)="selectedDifficulty.set('custom')" class="w-full flex items-center justify-between px-4 py-3">
+                <span class="font-bold text-sm" [class.text-[var(--color-accent-to)]]="selectedDifficulty() === 'custom'">{{ i18n.t('game.diff_custom')() }}</span>
+                <span class="text-xs opacity-60 font-mono" *ngIf="selectedDifficulty() === 'custom'">{{ customWidth() }}x{{ customHeight() }}, {{ customMines() }}</span>
+              </button>
+              
+              @if (selectedDifficulty() === 'custom') {
+                <div class="px-4 pb-4 space-y-4">
+                  <div class="pt-2 border-t border-[var(--color-border-card)]">
+                    <div class="flex justify-between mb-1">
+                      <label class="text-xs font-bold opacity-70">{{ i18n.t('game.width')() }}</label>
+                      <span class="text-xs font-mono">{{ customWidth() }}</span>
+                    </div>
+                    <input type="range" [min]="9" [max]="30" [value]="customWidth()" (input)="customWidth.set($any($event.target).valueAsNumber); updateCustomMines()"
+                           class="w-full accent-[var(--color-accent-to)] h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                  </div>
+                  <div>
+                    <div class="flex justify-between mb-1">
+                      <label class="text-xs font-bold opacity-70">{{ i18n.t('game.height')() }}</label>
+                      <span class="text-xs font-mono">{{ customHeight() }}</span>
+                    </div>
+                    <input type="range" [min]="9" [max]="24" [value]="customHeight()" (input)="customHeight.set($any($event.target).valueAsNumber); updateCustomMines()"
+                           class="w-full accent-[var(--color-accent-to)] h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                  </div>
+                  <div>
+                    <div class="flex justify-between mb-1">
+                      <label class="text-xs font-bold opacity-70">{{ i18n.t('game.mines')() }}</label>
+                      <span class="text-xs font-mono">{{ customMines() }}</span>
+                    </div>
+                    <input type="range" [min]="10" [max]="customWidth() * customHeight() - 15" [value]="customMines()" (input)="customMines.set($any($event.target).valueAsNumber)"
+                           class="w-full accent-[var(--color-accent-to)] h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div class="p-4 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+            <button (click)="applyDifficultySettings()" class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
+              {{ i18n.t('game.apply')() }}
+            </button>
           </div>
         </div>
       </div>
@@ -475,7 +530,25 @@ export class MinesweeperComponent implements OnInit {
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = this.authStore.currentUser()?.username || 'Guest';
   currentRoomMode = signal<string>('single');
-  currentDifficulty = signal<string>('medium');
+  currentDifficulty = signal<string>('intermediate');
+
+  // Difficulty Settings Modal State
+  isDifficultyModalOpen = signal(false);
+  editingDifficultyFor = signal<'single' | 'room'>('single');
+  selectedDifficulty = signal<string>('intermediate');
+  customWidth = signal(9);
+  customHeight = signal(9);
+  customMines = signal(10);
+
+  predefinedDifficulties = [
+    { id: 'beginner', labelKey: 'game.diff_beginner', desc: '9x9 (10)' },
+    { id: 'intermediate', labelKey: 'game.diff_intermediate', desc: '16x16 (40)' },
+    { id: 'advanced', labelKey: 'game.diff_advanced', desc: '30x16 (99)' },
+    { id: 'hard_mode', labelKey: 'game.diff_hard_mode', desc: '30x18 (112)' },
+    { id: 'professional', labelKey: 'game.diff_professional', desc: '30x20 (126)' },
+    { id: 'master', labelKey: 'game.diff_master', desc: '30x22 (139)' },
+    { id: 'expert', labelKey: 'game.diff_expert', desc: '30x24 (158)' }
+  ];
 
   // Derived UI State
   myRooms = computed(() => this.wsService.activeRooms().filter(r => r.host === this.playerId && r.mode !== 'single'));
@@ -486,7 +559,7 @@ export class MinesweeperComponent implements OnInit {
   isCreateModalOpen = signal<boolean>(false);
   newRoomName = signal<string>('');
   newRoomMode = signal<string>('pk_steal');
-  newRoomDifficulty = signal<string>('medium');
+  newRoomDifficulty = signal<string>('intermediate');
 
   // React to cooldowns received from the server
   isFrozen = signal<boolean>(false);
@@ -643,7 +716,48 @@ export class MinesweeperComponent implements OnInit {
 
   leaveRoom() {
     // Reset to single player
-    this.changeSingleDifficulty('medium');
+    this.changeSingleDifficulty('intermediate');
+  }
+
+  openDifficultySettings(forMode: 'single' | 'room') {
+    this.editingDifficultyFor.set(forMode);
+    const currentDiff = forMode === 'single' ? this.currentDifficulty() : this.newRoomDifficulty();
+    
+    if (currentDiff.startsWith('custom_')) {
+      this.selectedDifficulty.set('custom');
+      const parts = currentDiff.split('_');
+      if (parts.length === 4) {
+        this.customWidth.set(parseInt(parts[1], 10));
+        this.customHeight.set(parseInt(parts[2], 10));
+        this.customMines.set(parseInt(parts[3], 10));
+      }
+    } else {
+      this.selectedDifficulty.set(currentDiff);
+    }
+    
+    this.isDifficultyModalOpen.set(true);
+  }
+
+  applyDifficultySettings() {
+    let diffToApply = this.selectedDifficulty();
+    if (diffToApply === 'custom') {
+      diffToApply = `custom_${this.customWidth()}_${this.customHeight()}_${this.customMines()}`;
+    }
+    
+    if (this.editingDifficultyFor() === 'single') {
+      this.changeSingleDifficulty(diffToApply);
+    } else {
+      this.newRoomDifficulty.set(diffToApply);
+    }
+    this.isDifficultyModalOpen.set(false);
+  }
+
+  updateCustomMines() {
+    // Ensure mines don't exceed (W*H - 1)
+    const maxMines = this.customWidth() * this.customHeight() - 1;
+    if (this.customMines() > maxMines) {
+      this.customMines.set(maxMines);
+    }
   }
 
   changeSingleDifficulty(diff: string) {
@@ -653,12 +767,18 @@ export class MinesweeperComponent implements OnInit {
   }
 
   getDifficultyText(difficulty: string): string {
-    switch(difficulty) {
-      case 'easy': return 'Easy (9x9)';
-      case 'medium': return 'Medium (16x16)';
-      case 'hard': return 'Hard (30x16)';
-      default: return 'Medium (16x16)';
+    if (difficulty.startsWith('custom_')) {
+      const parts = difficulty.split('_');
+      if (parts.length === 4) {
+        return `${this.i18n.t('game.diff_custom')()} (${parts[1]}x${parts[2]}, ${parts[3]})`;
+      }
+      return this.i18n.t('game.diff_custom')();
     }
+    const predefined = this.predefinedDifficulties.find(d => d.id === difficulty || d.id === difficulty.replace('easy', 'beginner').replace('medium', 'intermediate').replace('hard', 'advanced'));
+    if (predefined) {
+      return `${this.i18n.t(predefined.labelKey as any)()} (${predefined.desc})`;
+    }
+    return difficulty;
   }
 
   dismissRoom() {
