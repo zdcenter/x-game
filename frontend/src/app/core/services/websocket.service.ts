@@ -57,14 +57,13 @@ export class WebSocketService {
       // Auto reconnect after 2 seconds
       this.unexpectedDisconnectEvent.update(v => v + 1);
       
-      if (mode === 'single') {
-        setTimeout(() => {
-          if (!this.isConnected()) {
-            console.log('Attempting to reconnect Game WS...');
-            this.connect(roomId, playerId, mode, difficulty);
-          }
-        }, 2000);
-      }
+      // Auto reconnect after 2 seconds for all modes
+      setTimeout(() => {
+        if (!this.isConnected()) {
+          console.log('Attempting to reconnect Game WS...');
+          this.connect(roomId, playerId, mode, difficulty);
+        }
+      }, 2000);
     };
   }
 

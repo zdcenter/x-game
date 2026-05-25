@@ -683,15 +683,7 @@ export class MinesweeperComponent implements OnInit {
       }
     }, { allowSignalWrites: true });
 
-    // Watch for unexpected disconnects from PK rooms
-    effect(() => {
-      const disconnects = this.wsService.unexpectedDisconnectEvent();
-      // Only react if disconnects > 0 AND we are currently in a PK room
-      // Use untracked so we don't accidentally trigger this when joining a new room
-      if (disconnects > 0 && untracked(() => this.currentRoomMode()) !== 'single') {
-        this.leaveRoom();
-      }
-    });
+    // Removed unexpectedDisconnectEvent kick-out logic to allow silent auto-reconnects.
   }
 
   stopCountdown() {
