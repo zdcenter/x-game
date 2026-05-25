@@ -24,4 +24,8 @@ export class AuthService {
   login(username: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/login`, { username, password });
   }
+
+  guestLogin(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/guest-login`, {});
+  }
 }

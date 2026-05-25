@@ -12,6 +12,7 @@ type Status string
 const (
 	RoleUser  Role = "user"
 	RoleAdmin Role = "admin"
+	RoleGuest Role = "guest"
 )
 
 const (

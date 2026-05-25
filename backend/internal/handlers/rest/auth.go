@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -72,6 +73,43 @@ func Login(c fiber.Ctx) error {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid credentials"})
+	}
+
+	// Create JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"role":    user.Role,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+	})
+
+	t, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
+	}
+
+	return c.JSON(fiber.Map{"token": t, "user": user})
+}
+
+func GuestLogin(c fiber.Ctx) error {
+	// Generate random username and password for guest
+	timestamp := time.Now().UnixMilli()
+	username := fmt.Sprintf("guest_%s_%03d", time.Now().Format("0102150405"), timestamp%1000) // e.g. guest_0525164500_123
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(username+"_secret_guest_pass"), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to hash password"})
+	}
+
+	user := domain.User{
+		Username: username,
+		Password: string(hashedPassword),
+		Role:     domain.RoleGuest,
+		Status:   domain.StatusActive,
+	}
+
+	result := db.DB.Create(&user)
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create guest user"})
 	}
 
 	// Create JWT token

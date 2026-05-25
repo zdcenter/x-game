@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { AuthStore } from '../../core/auth/auth.store';
 import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
@@ -48,6 +49,18 @@ import { I18nService } from '../../core/i18n/i18n.service';
             </button>
           </form>
 
+          <div class="mt-6 flex items-center justify-between">
+            <span class="border-b w-1/5 border-[var(--color-border-card)]"></span>
+            <span class="text-xs text-center text-slate-500 uppercase font-semibold">Or</span>
+            <span class="border-b w-1/5 border-[var(--color-border-card)]"></span>
+          </div>
+
+          <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
+                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            {{ i18n.currentLang() === 'zh' ? '游客免注册试玩' : 'Play as Guest' }}
+          </button>
+
           <div class="mt-8 text-center text-slate-400 text-sm">
             {{ i18n.t('auth.register.has_account')() }}
             <a routerLink="/login" class="text-teal-400 font-bold hover:text-emerald-400 transition-colors">{{ i18n.t('auth.register.signin')() }}</a>
@@ -59,6 +72,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 })
 export class RegisterComponent {
   authService = inject(AuthService);
+  authStore = inject(AuthStore);
   router = inject(Router);
   i18n = inject(I18nService);
 
@@ -89,6 +103,25 @@ export class RegisterComponent {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMsg.set(err.error?.error || 'Registration failed');
+      }
+    });
+  }
+
+  onGuestLogin() {
+    this.isLoading.set(true);
+    this.errorMsg.set('');
+
+    this.authService.guestLogin().subscribe({
+      next: (res) => {
+        this.isLoading.set(false);
+        if (res.token && res.user) {
+          this.authStore.setCredentials(res.token, res.user);
+          this.router.navigate(['/lobby']);
+        }
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMsg.set(err.error?.error || 'Guest login failed');
       }
     });
   }

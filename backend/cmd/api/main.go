@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/joho/godotenv"
 	"github.com/x-game/backend/internal/handlers/rest"
@@ -24,9 +23,6 @@ func main() {
 
 	// Use middleware
 	app.Use(logger.New())
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-	}))
 
 	// Health check route
 	app.Get("/health", func(c fiber.Ctx) error {
@@ -42,6 +38,7 @@ func main() {
 
 	v1.Post("/register", rest.Register)
 	v1.Post("/login", rest.Login)
+	v1.Post("/guest-login", rest.GuestLogin)
 
 	v1.Get("/games", rest.GetGames)
 
