@@ -64,7 +64,7 @@ import { AuthStore } from '../auth/auth.store';
                 }
                 <button (click)="logout()" 
                         class="px-3 py-1.5 text-sm font-bold rounded shadow transition-all hover:scale-105 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30">
-                  Logout
+                  {{ authStore.currentUser()?.role === 'guest' ? (i18n.currentLang() === 'zh' ? '登录/注册' : 'Sign In') : 'Logout' }}
                 </button>
               </div>
             }
