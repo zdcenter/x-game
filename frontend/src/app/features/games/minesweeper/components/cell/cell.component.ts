@@ -46,12 +46,12 @@ export class CellComponent {
 
   get cellClass(): string {
     if (this.cell.state === CellState.Revealed) {
-      return 'bg-slate-800 border border-slate-700/50 shadow-inner scale-95';
+      return 'bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner scale-95';
     }
     if (this.cell.state === CellState.Exploded) {
       return 'bg-red-500/20 border border-red-500/50 scale-95';
     }
-    return 'bg-slate-700 hover:bg-slate-600 border border-slate-600 border-b-slate-800 border-r-slate-800 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 shadow-md hover:shadow-lg cursor-pointer';
+    return 'bg-[var(--color-border-card)] border-2 border-t-white/60 border-l-white/60 border-b-black/30 border-r-black/30 shadow-md hover:brightness-110 active:scale-95 cursor-pointer';
   }
 
   get neighborColor(): string {

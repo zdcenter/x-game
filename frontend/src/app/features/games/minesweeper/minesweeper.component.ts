@@ -31,11 +31,11 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
               <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent whitespace-nowrap"
                   style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 {{ i18n.t('app.title')() }}
-                <span class="text-[10px] lg:text-sm ml-1 lg:ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-slate-800 text-slate-400 rounded-lg">
+                <span class="text-[10px] lg:text-sm ml-1 lg:ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-main)] opacity-80 border border-[var(--color-border-card)] rounded-lg text-inherit">
                   {{ currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')()) }}
                 </span>
               </h1>
-              <button (click)="showRules.set(true)" class="text-slate-400 hover:text-emerald-400 transition-colors p-1 rounded-full hover:bg-slate-800" [title]="i18n.t('game.rules.tooltip')()">
+              <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)]" [title]="i18n.t('game.rules.tooltip')()">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -45,28 +45,28 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
             <!-- Center: PK Scoreboard & Timer OR Single Player Difficulty -->
             <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center">
               @if (currentRoomMode() === 'single') {
-                <div class="hidden sm:flex bg-slate-800/80 rounded-xl p-1 border border-slate-700 shadow-inner">
+                <div class="hidden sm:flex bg-[var(--color-bg-main)] rounded-xl p-1 border border-[var(--color-border-card)] shadow-inner">
                   <button (click)="changeSingleDifficulty('easy')" 
-                          [class.bg-emerald-500]="currentDifficulty() === 'easy'" [class.text-slate-900]="currentDifficulty() === 'easy'"
-                          [class.text-slate-400]="currentDifficulty() !== 'easy'"
+                          [class.bg-[var(--color-accent-to)]]="currentDifficulty() === 'easy'" [class.text-[var(--color-bg-main)]]="currentDifficulty() === 'easy'"
+                          [class.opacity-50]="currentDifficulty() !== 'easy'" [class.hover:opacity-100]="currentDifficulty() !== 'easy'"
                           class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
                     {{ i18n.t('game.diff_easy')() }}
                   </button>
                   <button (click)="changeSingleDifficulty('medium')" 
-                          [class.bg-emerald-500]="currentDifficulty() === 'medium'" [class.text-slate-900]="currentDifficulty() === 'medium'"
-                          [class.text-slate-400]="currentDifficulty() !== 'medium'"
+                          [class.bg-[var(--color-accent-to)]]="currentDifficulty() === 'medium'" [class.text-[var(--color-bg-main)]]="currentDifficulty() === 'medium'"
+                          [class.opacity-50]="currentDifficulty() !== 'medium'" [class.hover:opacity-100]="currentDifficulty() !== 'medium'"
                           class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
                     {{ i18n.t('game.diff_medium')() }}
                   </button>
                   <button (click)="changeSingleDifficulty('hard')" 
-                          [class.bg-emerald-500]="currentDifficulty() === 'hard'" [class.text-slate-900]="currentDifficulty() === 'hard'"
-                          [class.text-slate-400]="currentDifficulty() !== 'hard'"
+                          [class.bg-[var(--color-accent-to)]]="currentDifficulty() === 'hard'" [class.text-[var(--color-bg-main)]]="currentDifficulty() === 'hard'"
+                          [class.opacity-50]="currentDifficulty() !== 'hard'" [class.hover:opacity-100]="currentDifficulty() !== 'hard'"
                           class="px-3 py-1 rounded-lg text-xs font-bold transition-all">
                     {{ i18n.t('game.diff_hard')() }}
                   </button>
                 </div>
               } @else if (store.status() === 'playing') {
-                <div class="font-mono text-sm lg:text-xl font-bold text-yellow-400 bg-slate-800/80 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-yellow-500/30 flex items-center gap-1 lg:gap-2 shadow-inner">
+                <div class="font-mono text-sm lg:text-xl font-bold text-yellow-400 bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-yellow-500/30 flex items-center gap-1 lg:gap-2 shadow-inner">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -75,20 +75,20 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
               }
 
               @if (currentRoomMode() === 'pk_speed' && store.opponentProgress() !== null) {
-                <div class="flex items-center gap-1 lg:gap-3 bg-slate-800 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-slate-600 shadow-inner">
+                <div class="flex items-center gap-1 lg:gap-3 bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
                   <span class="text-[8px] lg:text-xs text-slate-400 font-bold uppercase tracking-wider hidden sm:inline">{{ i18n.t('game.opponent')() }}</span>
-                  <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                  <div class="w-12 lg:w-32 h-1.5 lg:h-2.5 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
                     <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300" [style.width]="store.opponentProgress() + '%'"></div>
                   </div>
                   <span class="text-[8px] lg:text-xs font-mono font-bold text-blue-400">{{ store.opponentProgress() | number:'1.0-0' }}%</span>
                 </div>
               } @else {
                 @for (player of getPlayerScores(); track player.id) {
-                  <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-slate-800 flex items-center gap-1.5 lg:gap-3 transition-transform"
+                  <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-[var(--color-bg-main)] flex items-center gap-1.5 lg:gap-3 transition-transform"
                        [class.border-emerald-500]="player.id === playerId"
                        [class.scale-110]="player.id === playerId"
                        [class.shadow-lg]="player.id === playerId"
-                       [class.border-slate-600]="player.id !== playerId">
+                       [class.border-[var(--color-border-card)]]="player.id !== playerId">
                     <span class="text-[8px] lg:text-xs font-bold opacity-70">{{ player.id | slice:0:3 }}</span>
                     <span class="text-sm lg:text-lg font-black" [class.text-emerald-400]="player.id === playerId" [class.text-white]="player.id !== playerId">{{ player.score }}</span>
                   </div>
@@ -98,7 +98,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
 
             <!-- Right: Mines -->
             <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center">
-              <div class="flex flex-col items-center bg-slate-800/80 px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-slate-700 shadow-inner">
+              <div class="flex flex-col items-center bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
                 <span class="text-[8px] lg:text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ i18n.t('minesweeper.mines')() }}</span>
                 <span class="text-sm lg:text-2xl font-mono text-emerald-400 font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
               </div>
@@ -115,7 +115,7 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
           </div>
 
           <!-- Game Board (Grid) -->
-          <div class="relative p-4 bg-slate-950/80 rounded-2xl border border-slate-800 shadow-inner flex justify-center flex-grow overflow-auto"
+          <div class="relative p-4 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-inner flex justify-center flex-grow overflow-auto scrollbar-hide"
                [class.animate-gold-pulse]="store.status() === 'finished'">
             
             <!-- Waiting Overlay -->
@@ -210,8 +210,8 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
           <!-- Rules Modal -->
           @if (showRules()) {
             <div class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-[0_0_40px_rgba(0,0,0,0.8)] flex flex-col max-h-[80vh]">
-                <div class="flex justify-between items-center p-4 border-b border-slate-700">
+              <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh]">
+                <div class="flex justify-between items-center p-4 border-b border-[var(--color-border-card)]">
                   <h3 class="text-xl font-bold text-white flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -239,15 +239,15 @@ import { GameService, getLocalizedField } from '../../../core/services/game.serv
       </div>
 
       <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col bg-slate-900/80 backdrop-blur-xl border border-slate-700 rounded-2xl lg:rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] min-h-[400px] lg:min-h-0">
+      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col bg-[var(--color-bg-card)] backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.1)] min-h-[400px] lg:min-h-0">
         <!-- Tabs -->
-        <div class="flex border-b border-slate-700">
-          <button (click)="activeTab = 'rooms'" [class.bg-slate-800]="activeTab === 'rooms'" [class.text-white]="activeTab === 'rooms'" [class.text-slate-500]="activeTab !== 'rooms'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest">
+        <div class="flex border-b border-[var(--color-border-card)]">
+          <button (click)="activeTab = 'rooms'" [class.bg-[var(--color-bg-main)]]="activeTab === 'rooms'" [class.text-[var(--color-accent-from)]]="activeTab === 'rooms'" [class.opacity-50]="activeTab !== 'rooms'" class="flex-1 py-4 font-bold text-sm hover:opacity-100 transition-all uppercase tracking-widest">
             {{ i18n.t('game.arena_rooms')() }}
           </button>
-          <button (click)="activeTab = 'online'" [class.bg-slate-800]="activeTab === 'online'" [class.text-white]="activeTab === 'online'" [class.text-slate-500]="activeTab !== 'online'" class="flex-1 py-4 font-bold text-sm hover:text-white transition-colors uppercase tracking-widest relative">
+          <button (click)="activeTab = 'online'" [class.bg-[var(--color-bg-main)]]="activeTab === 'online'" [class.text-[var(--color-accent-from)]]="activeTab === 'online'" [class.opacity-50]="activeTab !== 'online'" class="flex-1 py-4 font-bold text-sm hover:opacity-100 transition-all uppercase tracking-widest relative">
             {{ i18n.t('game.online')() }}
-            <span class="absolute top-2 right-4 bg-emerald-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ wsService.onlinePlayers().length }}</span>
+            <span class="absolute top-2 right-4 bg-[var(--color-accent-to)] text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ wsService.onlinePlayers().length }}</span>
           </button>
         </div>
 
