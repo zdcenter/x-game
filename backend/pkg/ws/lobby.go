@@ -83,6 +83,7 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 		})
 	}
 
+	log.Printf("Broadcasting %d active rooms", len(activeRooms))
 	payload, err := json.Marshal(map[string]interface{}{
 		"type":    "lobby_update",
 		"players": players,

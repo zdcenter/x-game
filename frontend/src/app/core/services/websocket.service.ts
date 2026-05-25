@@ -74,6 +74,10 @@ export class WebSocketService {
 
   connectLobby(playerId: string, username: string) {
     if (this.lobbySocket) {
+      if ((this.lobbySocket.readyState === WebSocket.CONNECTING || this.lobbySocket.readyState === WebSocket.OPEN) && 
+          this.lobbySocket.url.includes(`playerId=${playerId}`)) {
+        return;
+      }
       this.lobbySocket.onclose = null;
       this.lobbySocket.close();
     }
@@ -89,6 +93,7 @@ export class WebSocketService {
     this.lobbySocket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'lobby_update') {
+        console.log('Lobby Update Received:', msg.rooms);
         this.onlinePlayers.set(msg.players || []);
         this.activeRooms.set(msg.rooms || []);
       }
