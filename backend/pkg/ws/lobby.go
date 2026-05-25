@@ -10,7 +10,8 @@ import (
 
 // LobbyPlayer represents a player connected to the global lobby
 type LobbyPlayer struct {
-	ID       string
+	ID       string // This is the unique connection ID (e.g. remote address)
+	PlayerID string // The actual user ID
 	Username string
 	Conn     *websocket.Conn
 	Status   string // "idle", "playing", "spectating"
@@ -62,7 +63,7 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 	var players []map[string]interface{}
 	for _, p := range l.Players {
 		players = append(players, map[string]interface{}{
-			"id":       p.ID,
+			"id":       p.PlayerID,
 			"username": p.Username,
 			"status":   p.Status,
 		})

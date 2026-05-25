@@ -49,16 +49,20 @@ func GetActiveRooms() []RoomSnapshot {
 	
 	snapshots := make([]RoomSnapshot, 0, len(Rooms))
 	for _, r := range Rooms {
-		r.mu.Lock() // Safely get player count
+		r.mu.Lock() // Safely get fields
 		count := len(r.Clients)
+		host := r.Host
+		mode := r.Mode
+		diff := r.Difficulty
+		status := r.Status
 		r.mu.Unlock()
 		
 		snapshots = append(snapshots, RoomSnapshot{
 			ID:          r.ID,
-			Host:        r.Host,
-			Mode:        r.Mode,
-			Difficulty:  r.Difficulty,
-			Status:      r.Status,
+			Host:        host,
+			Mode:        mode,
+			Difficulty:  diff,
+			Status:      status,
 			PlayerCount: count,
 		})
 	}

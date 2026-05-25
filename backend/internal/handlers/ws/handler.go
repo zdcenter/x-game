@@ -1,7 +1,9 @@
 package ws
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
@@ -68,7 +70,8 @@ func Register(router fiber.Router) {
 		username := c.Query("username", "Anonymous")
 
 		player := &wsManager.LobbyPlayer{
-			ID:       playerID,
+			ID:       fmt.Sprintf("%s-%d", playerID, time.Now().UnixNano()),
+			PlayerID: playerID,
 			Username: username,
 			Conn:     c,
 			Status:   "idle",
