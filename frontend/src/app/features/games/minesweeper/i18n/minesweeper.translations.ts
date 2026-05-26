@@ -57,6 +57,8 @@ export const minesweeperTranslations: Record<Lang, Record<string, string>> = {
     'game.defeat': 'DEFEAT!',
     'game.opponent_finished': 'Opponent finished before you.',
     'game.stepped_mine': 'You stepped on a mine.',
+    'game.steal_victory': 'You flagged the most mines!',
+    'game.steal_defeat': 'Opponent flagged more mines.',
   },
   zh: {
     'app.title': '扫雷',
@@ -114,5 +116,7 @@ export const minesweeperTranslations: Record<Lang, Record<string, string>> = {
     'game.defeat': '战败！',
     'game.opponent_finished': '对手比你先完成。',
     'game.stepped_mine': '你踩到了地雷。',
+    'game.steal_victory': '你成功排除了最多的地雷！',
+    'game.steal_defeat': '对手排除了更多的地雷。',
   }
 };

@@ -58,6 +58,11 @@
     50% { box-shadow: 0 0 50px 20px rgba(250, 204, 21, 0.8); }
   }
 
+  @keyframes red-pulse {
+    0%, 100% { box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.4); }
+    50% { box-shadow: 0 0 50px 20px rgba(239, 68, 68, 0.8); }
+  }
+
   .animate-gold-shine {
     background: linear-gradient(
       to right,
@@ -90,6 +95,10 @@
 
   .animate-gold-pulse {
     animation: gold-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-red-pulse {
+    animation: red-pulse 2s ease-in-out infinite;
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */

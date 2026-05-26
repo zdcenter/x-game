@@ -128,7 +128,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
           <!-- Game Board (Grid) -->
           <div class="relative p-4 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-inner flex justify-center flex-grow overflow-hidden"
-               [class.animate-gold-pulse]="store.status() === 'finished'">
+               [class.animate-gold-pulse]="store.status() === 'finished' && !isDefeat()"
+               [class.animate-red-pulse]="store.status() === 'finished' && isDefeat()">
             
             <!-- Waiting Overlay -->
             @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
@@ -178,19 +179,27 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                     <p class="mt-4 text-red-300 font-bold text-lg animate-pulse">{{ i18n.t('game.opponent_finished')() }}</p>
                   }
                 } @else {
-                  @if (hasLostSingleMode()) {
+                  @if (isDefeat()) {
                     <h2 class="text-6xl font-black uppercase tracking-widest animate-red-shine drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
                       {{ i18n.t('game.defeat')() }}
                     </h2>
                     <p class="mt-4 text-red-300 font-bold text-lg animate-pulse mb-6">
-                      {{ i18n.t('game.stepped_mine')() }}
+                      @if (currentRoomMode() === 'single') {
+                        {{ i18n.t('game.stepped_mine')() }}
+                      } @else {
+                        {{ i18n.t('game.steal_defeat')() }}
+                      }
                     </p>
                   } @else {
                     <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
                       {{ i18n.t('minesweeper.victory')() }}
                     </h2>
                     <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse mb-6">
-                      {{ i18n.t('minesweeper.cleared')() }}
+                      @if (currentRoomMode() === 'single') {
+                        {{ i18n.t('minesweeper.cleared')() }}
+                      } @else {
+                        {{ i18n.t('game.steal_victory')() }}
+                      }
                     </p>
                   }
                 }
