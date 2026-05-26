@@ -25,6 +25,10 @@ export const routes: Routes = [
       {
         path: 'games/minesweeper',
         loadComponent: () => import('./features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent)
+      },
+      {
+        path: 'games/sudoku',
+        loadComponent: () => import('./features/games/sudoku/sudoku.component').then(m => m.SudokuComponent)
       }
     ]
   },

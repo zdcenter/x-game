@@ -46,22 +46,7 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
           </a>
         }
 
-        <!-- Coming Soon Card (Sudoku) -->
-        <div class="relative overflow-hidden rounded-3xl border opacity-60 transition-all duration-300 cursor-not-allowed grayscale"
-             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-          <div class="h-48 w-full flex items-center justify-center text-6xl bg-[var(--color-bg-main)]">
-            🔢
-          </div>
-          <div class="p-6">
-            <h2 class="text-2xl font-bold mb-2">{{ i18n.t('lobby.sudoku')() }}</h2>
-            <p class="opacity-70 text-sm">
-              {{ i18n.t('lobby.coming_soon')() }}
-            </p>
-            <div class="mt-4 flex items-center space-x-2">
-              <span class="px-2 py-1 text-xs font-semibold rounded bg-black/20 border border-yellow-500/50 text-yellow-400">{{ i18n.t('lobby.development')() }}</span>
-            </div>
-          </div>
-        </div>
+
 
       </div>
     </div>
@@ -87,6 +72,7 @@ export class LobbyComponent implements OnInit {
   getGameEmoji(id: string): string {
     switch (id) {
       case 'minesweeper': return '💣';
+      case 'sudoku': return '🔢';
       default: return '🎮';
     }
   }

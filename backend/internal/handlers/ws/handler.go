@@ -22,13 +22,14 @@ func Register(router fiber.Router) {
 
 	router.Get("/join/:roomId", websocket.New(func(c *websocket.Conn) {
 		roomID := c.Params("roomId")
+		gameId := c.Query("game", "") // "minesweeper", "sudoku", etc.
 		mode := c.Query("mode", "single") // "single", "pk_steal", "pk_speed"
 		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"
 		hostId := c.Query("hostId", "") // Used to preserve host on reconnect
 		// For MVP, using a query parameter for playerId, usually this would come from JWT
 		playerID := c.Query("playerId", "anonymous")
 
-		room := wsManager.GetOrCreateRoom(roomID, mode, difficulty, hostId)
+		room := wsManager.GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId)
 		client := &wsManager.Client{
 			ID:   playerID,
 			Conn: c,

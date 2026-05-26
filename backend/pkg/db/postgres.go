@@ -40,6 +40,8 @@ func InitPostgres() {
 	err = DB.AutoMigrate(
 		&domain.User{},
 		&domain.GameConfig{},
+		&domain.SudokuPuzzle{},
+		&domain.UserSudokuProgress{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -47,24 +49,32 @@ func InitPostgres() {
 
 	// Seed default data
 	Seed()
+	SeedSudoku()
 
 	log.Println("Database connected and migrated successfully")
 }
 
 func Seed() {
-	var count int64
-	DB.Model(&domain.GameConfig{}).Count(&count)
-	if count == 0 {
-		defaultMinesweeper := domain.GameConfig{
-			ID:       "minesweeper",
-			Name:     `{"en": "Minesweeper", "zh": "扫雷"}`,
-			Overview: `{"en": "A classic puzzle game. Tap to dig, Long press to flag.", "zh": "经典逻辑益智游戏。点击挖开，长按插旗。"}`,
-			Rules:    `{"en": "# Minesweeper Rules\n\nWelcome to X-Game Minesweeper! The classic game of logic, now with multiplayer competitive modes.\n\n## 🎯 Objective\nClear the minefield without detonating any mines! The game is won when all safe cells are revealed, or all mines are correctly flagged.\n\n## 🎮 Controls\n- **Reveal (Dig)**: Left-click (or tap) on a hidden cell.\n- **Flag**: Right-click (or long press) on a cell to mark it as a mine.\n\n## 🎲 Game Modes\n\n### Single Player\nA relaxed, classic experience.\n- **First Click Safe**: Your first click will *always* reveal a large safe area to get you started!\n- **Instant Death**: Stepping on a mine ends the game immediately.\n\n### PK / Speed Mode\nCompete against others to finish the board first!\n- **Fair Start**: The game automatically reveals a shared safe zone for all players at the exact same moment.\n- **Penalty System**: Stepping on a mine doesn't kill you, but it freezes your screen for a few seconds!", "zh": "# 扫雷玩法规则\n\n欢迎来到 X-Game 扫雷！这不仅是经典的逻辑推理游戏，更加入了刺激的多人竞技模式。\n\n## 🎯 游戏目标\n避开所有地雷，找出所有安全的格子！当所有非雷区域被揭开，或所有地雷被正确插旗标记时，即可获胜。\n\n## 🎮 操作说明\n- **挖开 (揭示)**: 鼠标左键（或在手机上单击）未揭开的格子。\n- **插旗 (标记)**: 鼠标右键（或在手机上长按）格子，将其标记为地雷。\n\n## 🎲 游戏模式\n\n### 单机模式 (Single)\n经典的休闲体验，适合练手。\n- **首击必空**: 你的第一次点击绝对不会踩雷，并且必定为你展开一片安全的空地！\n- **一击毙命**: 只要踩到一次地雷，游戏立即结束。\n\n### 竞速模式 (PK / Speed)\n与其他玩家同场竞技，比拼手速与脑力！\n- **公平开局**: 倒计时结束时，系统会自动为所有人揭开同一块相同的安全区域，确保竞技的绝对公平。\n- **惩罚机制**: 踩到地雷不会立刻死亡，但会受到**冻结惩罚**（屏幕会被锁定数秒无法操作），要格外小心！"}`,
-			Config:   `{"penaltySeconds": 3}`,
-			IsActive: true,
-		}
-		DB.Create(&defaultMinesweeper)
+	defaultMinesweeper := domain.GameConfig{
+		ID:       "minesweeper",
+		Name:     `{"en": "Minesweeper", "zh": "扫雷"}`,
+		Overview: `{"en": "A classic puzzle game. Tap to dig, Long press to flag.", "zh": "经典逻辑益智游戏。点击挖开，长按插旗。"}`,
+		Rules:    `{"en": "# Minesweeper Rules\n\nWelcome to X-Game Minesweeper! The classic game of logic, now with multiplayer competitive modes.\n\n## 🎯 Objective\nClear the minefield without detonating any mines! The game is won when all safe cells are revealed, or all mines are correctly flagged.\n\n## 🎮 Controls\n- **Reveal (Dig)**: Left-click (or tap) on a hidden cell.\n- **Flag**: Right-click (or long press) on a cell to mark it as a mine.\n\n## 🎲 Game Modes\n\n### Single Player\nA relaxed, classic experience.\n- **First Click Safe**: Your first click will *always* reveal a large safe area to get you started!\n- **Instant Death**: Stepping on a mine ends the game immediately.\n\n### PK / Speed Mode\nCompete against others to finish the board first!\n- **Fair Start**: The game automatically reveals a shared safe zone for all players at the exact same moment.\n- **Penalty System**: Stepping on a mine doesn't kill you, but it freezes your screen for a few seconds!", "zh": "# 扫雷玩法规则\n\n欢迎来到 X-Game 扫雷！这不仅是经典的逻辑推理游戏，更加入了刺激的多人竞技模式。\n\n## 🎯 游戏目标\n避开所有地雷，找出所有安全的格子！当所有非雷区域被揭开，或所有地雷被正确插旗标记时，即可获胜。\n\n## 🎮 操作说明\n- **挖开 (揭示)**: 鼠标左键（或在手机上单击）未揭开的格子。\n- **插旗 (标记)**: 鼠标右键（或在手机上长按）格子，将其标记为地雷。\n\n## 🎲 游戏模式\n\n### 单机模式 (Single)\n经典的休闲体验，适合练手。\n- **首击必空**: 你的第一次点击绝对不会踩雷，并且必定为你展开一片安全的空地！\n- **一击毙命**: 只要踩到一次地雷，游戏立即结束。\n\n### 竞速模式 (PK / Speed)\n与其他玩家同场竞技，比拼手速与脑力！\n- **公平开局**: 倒计时结束时，系统会自动为所有人揭开同一块相同的安全区域，确保竞技的绝对公平。\n- **惩罚机制**: 踩到地雷不会立刻死亡，但会受到**冻结惩罚**（屏幕会被锁定数秒无法操作），要格外小心！"}`,
+		Config:   `{"penaltySeconds": 3}`,
+		IsActive: true,
 	}
+	// Use FirstOrCreate to ensure it is inserted if missing
+	DB.Where(domain.GameConfig{ID: "minesweeper"}).FirstOrCreate(&defaultMinesweeper)
+
+	defaultSudoku := domain.GameConfig{
+		ID:       "sudoku",
+		Name:     `{"en": "Sudoku", "zh": "数独"}`,
+		Overview: `{"en": "The classic numbers puzzle. Play solo or race against friends.", "zh": "经典数字逻辑游戏。单机闯关或好友联机竞速。"}`,
+		Rules:    `{"en": "# Sudoku Rules\n\nFill the 9x9 grid with digits so that each column, each row, and each of the nine 3x3 subgrids that compose the grid contain all of the digits from 1 to 9.\n\n## 🎮 Controls\n- **Select**: Tap a cell to select it.\n- **Input**: Use the on-screen numpad or physical keyboard (1-9) to input numbers.\n- **Notes (Pencil)**: Toggle Note mode to draft possible numbers in an empty cell.\n- **Erase**: Remove a number or note from the selected cell.", "zh": "# 数独玩法规则\n\n将数字 1-9 填入 9x9 的网格中，使得每一行、每一列以及每一个 3x3 的粗线宫格内，数字 1-9 都刚好出现一次，不重复也不遗漏。\n\n## 🎮 操作说明\n- **选择**: 点击选中一个格子。\n- **输入**: 点击屏幕下方的数字键盘，或使用物理键盘的 1-9 填入数字。\n- **笔记 (铅笔)**: 开启笔记模式后，可以在空白格内记录可能的候选数字。\n- **擦除**: 清除选中格子内的数字或笔记。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "sudoku"}).FirstOrCreate(&defaultSudoku)
 
 	var userCount int64
 	DB.Model(&domain.User{}).Count(&userCount)
@@ -90,4 +100,21 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func SeedSudoku() {
+	var count int64
+	DB.Model(&domain.SudokuPuzzle{}).Count(&count)
+	if count == 0 {
+		puzzles := []domain.SudokuPuzzle{
+			{ID: "S-EASY-001", Difficulty: domain.DifficultyEasy, Puzzle: "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79", Solution: "534678912672195348198342567859761423426853791713924856961537284287419635345286179"},
+			{ID: "S-EASY-002", Difficulty: domain.DifficultyEasy, Puzzle: ".4.1....9....9..2...6.7.1...8..4...6..2...8..5...2..7...4.3.5...3..5....7....1.4.", Solution: "247165389815394726956278134389742651462513897571826973194637582638951247725489613"},
+			{ID: "S-MED-001", Difficulty: domain.DifficultyMedium, Puzzle: "....24....5.8.....9..1.....3.4.6.....6.....3.....8.2.1.....3..2.....7.4....41....", Solution: "681724593753891426924156783314562978267948135598387261479635812832179645156412357"},
+			{ID: "S-HARD-001", Difficulty: domain.DifficultyHard, Puzzle: "...5.......1..2..3..4.3.5..5..4.1..6..7...2..8..6.7..9..2.5.4..6..8..1.......9...", Solution: "293568714751942683864137592538421976147396258829687349912753468675814129384279835"},
+		}
+		for _, p := range puzzles {
+			DB.Create(&p)
+		}
+		log.Println("Seeded default Sudoku puzzles")
+	}
 }

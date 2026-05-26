@@ -1,0 +1,338 @@
+import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { AuthStore } from '../../../core/auth/auth.store';
+import { getLocalizedField } from '../../../core/services/game.service';
+
+export interface GameMode {
+  id: string;
+  labelKey: string;
+  descKey?: string;
+  desc?: string;
+  icon: string;
+}
+
+export interface GameDifficulty {
+  id: string;
+  labelKey: string;
+  desc: string;
+}
+
+@Component({
+  selector: 'app-game-lobby-panel',
+  standalone: true,
+  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="w-full h-full flex flex-col bg-[var(--color-bg-card)] backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.1)]">
+      <!-- Tabs -->
+      <div class="flex border-b border-[var(--color-border-card)]">
+        <button (click)="activeTab = 'rooms'" [class.bg-[var(--color-bg-main)]]="activeTab === 'rooms'" [class.text-[var(--color-accent-from)]]="activeTab === 'rooms'" [class.opacity-50]="activeTab !== 'rooms'" class="flex-1 py-4 font-bold text-sm hover:opacity-100 transition-all uppercase tracking-widest">
+          {{ t('game.arena_rooms') }}
+        </button>
+        <button (click)="activeTab = 'online'" [class.bg-[var(--color-bg-main)]]="activeTab === 'online'" [class.text-[var(--color-accent-from)]]="activeTab === 'online'" [class.opacity-50]="activeTab !== 'online'" class="flex-1 py-4 font-bold text-sm hover:opacity-100 transition-all uppercase tracking-widest relative">
+          {{ t('game.online') }}
+          <span class="absolute top-2 right-4 bg-[var(--color-accent-to)] text-[var(--color-bg-main)] text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ wsService.onlinePlayers().length }}</span>
+        </button>
+      </div>
+
+      <!-- Rooms Content -->
+      @if (activeTab === 'rooms') {
+        <div class="p-4 flex-grow overflow-y-auto">
+          <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] bg-[var(--color-accent-from)] bg-opacity-10 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
+            <span>➕</span> {{ t('game.create_pk') }}
+          </button>
+
+          <div class="space-y-6">
+            <!-- Other Active Rooms -->
+            <div>
+              <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t('game.active_rooms') }} ({{ otherRooms().length }})</h3>
+              </div>
+              <div class="space-y-3">
+                @for (room of otherRooms(); track room.id) {
+                  <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
+                    <div class="flex justify-between items-center mb-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20"
+                              [class.text-blue-400]="room.game === 'sudoku'"
+                              [class.text-green-400]="room.game === 'minesweeper'">
+                          {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
+                        </span>
+                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)]">{{ room.id }}</span>
+                      </div>
+                      <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
+                            [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
+                            [class.bg-[var(--color-accent-to)]]="room.status === 'waiting'" [class.text-[var(--color-bg-main)]]="room.status === 'waiting'">
+                        {{ room.status }}
+                      </span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                      <div class="text-[10px] opacity-70 uppercase tracking-wider flex items-center gap-2">
+                        <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold">{{ room.host }}</span></span>
+                        <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                        <span>{{ t('game.mode') }}: <span class="text-inherit">{{ getModeLabel(room.mode) }}</span></span>
+                        <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                        <span>{{ t('game.diff') }}: <span class="text-yellow-500">{{ getDifficultyLabel(room.difficulty) }}</span></span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-400">{{ room.players }} 人</span>
+                        @if (currentRoomId === room.id) {
+                          <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.joined') }}</button>
+                        } @else if (room.status === 'waiting') {
+                          <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ t('game.join') }}</button>
+                        } @else {
+                          <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.started') }}</button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-700 rounded-xl">
+                    {{ t('game.no_rooms') }}<br>{{ t('game.create_one') }}
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- My Rooms -->
+            @if (myRooms().length > 0) {
+              <div>
+                <div class="flex items-center justify-between mb-3 px-1">
+                  <h3 class="text-xs font-black text-[var(--color-accent-to)] uppercase tracking-widest">{{ t('game.my_room') }}</h3>
+                </div>
+                <div class="space-y-3">
+                  @for (room of myRooms(); track room.id) {
+                    <div class="p-3 bg-[var(--color-bg-card)] rounded-xl border-[2px] border-[var(--color-accent-to)] shadow-sm">
+                      <div class="flex justify-between items-center mb-2">
+                        <div class="flex items-center gap-2">
+                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20"
+                                [class.text-blue-400]="room.game === 'sudoku'"
+                                [class.text-green-400]="room.game === 'minesweeper'">
+                            {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
+                          </span>
+                          <span class="font-mono text-sm font-bold text-inherit">{{ room.id }} (Host)</span>
+                        </div>
+                        <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
+                              [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
+                              [class.bg-[var(--color-accent-to)]]="room.status === 'waiting'" [class.text-[var(--color-bg-main)]]="room.status === 'waiting'">
+                          {{ room.status }}
+                        </span>
+                      </div>
+                      <div class="flex justify-between items-end">
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider flex flex-col gap-1">
+                          <div>{{ t('game.mode') }}: <span class="text-[var(--color-text-main)]">{{ getModeLabel(room.mode) }}</span></div>
+                          <div>{{ t('game.diff') }}: <span class="text-yellow-400">{{ getDifficultyLabel(room.difficulty) }}</span></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-xs text-slate-400">{{ room.players }} 人</span>
+                          @if (currentRoomId === room.id) {
+                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed ml-2">{{ t('game.joined') }}</button>
+                          } @else {
+                            <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ t('game.join') }}</button>
+                          }
+                          <button (click)="onDismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ t('game.dismiss') }}</button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Online Content -->
+      @if (activeTab === 'online') {
+        <div class="p-4 flex-grow overflow-y-auto space-y-2">
+          @for (player of otherOnlinePlayers(); track player.id) {
+            <div class="flex items-center justify-between p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)]">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                    {{ player.username?.charAt(0)?.toUpperCase() }}
+                  </div>
+                  <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-800"
+                       [class.bg-[var(--color-accent-to)]]="player.status === 'idle'"
+                       [class.bg-yellow-400]="player.status === 'playing'"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-inherit leading-none">{{ player.username }}</div>
+                  <div class="text-[10px] opacity-70 uppercase mt-1">{{ player.status }}</div>
+                </div>
+              </div>
+              <button [disabled]="player.status !== 'idle'" class="text-xs font-bold text-[var(--color-accent-from)] px-2 py-1 hover:bg-[var(--color-accent-from)]/20 rounded disabled:opacity-30 transition-colors">
+                INVITE
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Create Room Modal Overlay -->
+    @if (isCreateModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)]">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">{{ t('game.create_room_title') }}</h2>
+            <button (click)="isCreateModalOpen.set(false)" class="opacity-50 hover:opacity-100 transition-opacity">
+              ✕
+            </button>
+          </div>
+          
+          <div class="space-y-6">
+            <!-- Room Name -->
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
+              <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
+                     class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors"
+                     placeholder="Enter room name">
+            </div>
+
+            <!-- PK Mode -->
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
+              <div class="grid grid-cols-2 gap-3">
+                @for (mode of gameModes; track mode.id) {
+                  <button (click)="newRoomMode.set(mode.id)" 
+                          [class.bg-[var(--color-accent-to)]]="newRoomMode() === mode.id" [class.text-[var(--color-bg-main)]]="newRoomMode() === mode.id"
+                          [class.bg-[var(--color-bg-card)]]="newRoomMode() !== mode.id" [class.opacity-60]="newRoomMode() !== mode.id"
+                          class="px-4 py-3 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-left">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span>{{ mode.icon }}</span> <span>{{ t(mode.labelKey) }}</span>
+                    </div>
+                    @if (mode.desc || mode.descKey) {
+                      <div class="text-[10px] font-normal opacity-80 leading-tight">{{ mode.desc || (mode.descKey ? t(mode.descKey) : '') }}</div>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.difficulty_label') }}</label>
+              <div class="grid grid-cols-3 gap-2">
+                @for (diff of difficulties; track diff.id) {
+                  <button (click)="newRoomDifficulty.set(diff.id)"
+                          [class.bg-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === diff.id"
+                          [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== diff.id" [class.opacity-60]="newRoomDifficulty() !== diff.id"
+                          class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center gap-1">
+                    <span>{{ t(diff.labelKey) }}</span>
+                    <span class="text-[9px] font-normal opacity-80 whitespace-nowrap">{{ diff.desc }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-4 flex gap-3">
+              <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
+                {{ t('game.cancel') }}
+              </button>
+              <button (click)="onConfirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
+                {{ t('game.create') }} & {{ t('game.join') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  `
+})
+export class GameLobbyPanelComponent {
+  i18n = inject(I18nService);
+  wsService = inject(WebSocketService);
+  authStore = inject(AuthStore);
+  router = inject(Router);
+
+  @Input() currentGameId: string = '';
+  @Input({ required: true }) gameModes!: GameMode[];
+  @Input({ required: true }) difficulties!: GameDifficulty[];
+  @Input() currentRoomId: string = '';
+
+  @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string}>();
+  @Output() createRoom = new EventEmitter<{name: string, mode: string, difficulty: string}>();
+  @Output() dismissRoom = new EventEmitter<void>();
+
+  activeTab: 'rooms' | 'online' = 'rooms';
+  playerId = this.authStore.currentUser()?.username || 'Guest';
+
+  isCreateModalOpen = signal(false);
+  newRoomName = signal('');
+  newRoomMode = signal('');
+  newRoomDifficulty = signal('');
+
+  gameModeIds = computed(() => this.gameModes.map(m => m.id));
+  
+  // Show all active rooms across all games
+  gameRooms = computed(() => this.wsService.activeRooms());
+  
+  myRooms = computed(() => this.gameRooms().filter((r: any) => r.host === this.playerId));
+  otherRooms = computed(() => this.gameRooms().filter((r: any) => r.host !== this.playerId));
+  otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId));
+
+  t(key: string): string {
+    return this.i18n.t(key)();
+  }
+
+  openCreateRoomModal() {
+    this.newRoomName.set(`${this.playerId}'s Room`);
+    this.newRoomMode.set(this.gameModes[0]?.id || '');
+    this.newRoomDifficulty.set(this.difficulties[0]?.id || '');
+    this.isCreateModalOpen.set(true);
+  }
+
+  updateRoomName(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.newRoomName.set(input.value);
+  }
+
+  onConfirmCreateRoom() {
+    this.createRoom.emit({
+      name: this.newRoomName(),
+      mode: this.newRoomMode(),
+      difficulty: this.newRoomDifficulty()
+    });
+    this.isCreateModalOpen.set(false);
+  }
+
+  onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string) {
+    if (game && game !== this.currentGameId) {
+      // Different game, navigate and pass params for auto-join
+      this.router.navigate(['/' + game], { 
+        queryParams: { roomId, mode, difficulty, host } 
+      });
+    } else {
+      // Same game, emit normal event
+      this.joinRoom.emit({ roomId, mode, difficulty, host });
+    }
+  }
+
+  onDismissRoom() {
+    this.dismissRoom.emit();
+  }
+
+  getModeLabel(modeId: string): string {
+    const mode = this.gameModes.find(m => m.id === modeId);
+    if (mode) return this.t(mode.labelKey);
+    // Global fallback for cross-game rooms
+    if (modeId.includes('steal')) return this.t('game.steal_mode');
+    if (modeId.includes('speed')) return this.t('game.speed_mode');
+    return modeId;
+  }
+
+  getDifficultyLabel(diffId: string): string {
+    const diff = this.difficulties.find(d => d.id === diffId);
+    if (diff) return this.t(diff.labelKey);
+    // Global fallback
+    if (diffId === 'easy') return this.t('game.diff_easy');
+    if (diffId === 'medium') return this.t('game.diff_medium');
+    if (diffId === 'hard') return this.t('game.diff_hard');
+    return diffId;
+  }
+}

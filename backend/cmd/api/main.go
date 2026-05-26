@@ -42,6 +42,14 @@ func main() {
 
 	v1.Get("/games", rest.GetGames)
 
+	// Sudoku routes (Protected)
+	sudoku := v1.Group("/sudoku")
+	sudoku.Use(middleware.Protected())
+	sudoku.Get("/levels/:difficulty", rest.GetSudokuLevels)
+	sudoku.Get("/puzzle/:id", rest.GetSudokuPuzzle)
+	sudoku.Post("/puzzle/:id/save", rest.SaveSudokuProgress)
+	sudoku.Post("/puzzle/:id/finish", rest.FinishSudoku)
+
 	// Admin routes
 	admin := v1.Group("/admin")
 	admin.Use(middleware.Protected())

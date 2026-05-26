@@ -192,7 +192,7 @@ export class MinesweeperStore {
        this.currentMode.set('single');
     } else {
       this.currentMode.set(mode);
-      this.ws.connect(roomId, playerId, mode, difficulty, hostId);
+      this.ws.connect('minesweeper', roomId, playerId, mode, difficulty, hostId);
     }
   }
 

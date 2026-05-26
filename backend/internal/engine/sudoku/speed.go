@@ -1,0 +1,146 @@
+package sudoku
+
+import (
+	"encoding/json"
+	"math/rand"
+	"sync"
+
+	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/internal/engine"
+	"github.com/x-game/backend/pkg/db"
+)
+
+type SpeedPlayer struct {
+	ID       string `json:"id"`
+	Progress int    `json:"progress"` // Number of correct cells (0-81)
+	Finished bool   `json:"finished"`
+}
+
+type SpeedEngine struct {
+	mu         sync.RWMutex
+	State      engine.GameState
+	Players    map[string]*SpeedPlayer
+	Difficulty string
+	Puzzle     string
+	Solution   string
+	Winners    []string
+}
+
+func (e *SpeedEngine) InitGame(options interface{}) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	e.State = engine.StateWaiting
+	e.Players = make(map[string]*SpeedPlayer)
+	e.Winners = make([]string, 0)
+	
+	e.Difficulty = "medium"
+
+	if opts, ok := options.(map[string]interface{}); ok {
+		if diff, ok := opts["difficulty"].(string); ok {
+			e.Difficulty = diff
+		}
+	}
+
+	var puzzles []domain.SudokuPuzzle
+	if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
+		e.Puzzle = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"
+		e.Solution = "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
+	} else {
+		p := puzzles[rand.Intn(len(puzzles))]
+		e.Puzzle = p.Puzzle
+		e.Solution = p.Solution
+	}
+	
+	return nil
+}
+
+func (e *SpeedEngine) AddPlayer(playerID string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if _, exists := e.Players[playerID]; !exists {
+		e.Players[playerID] = &SpeedPlayer{
+			ID:       playerID,
+			Progress: 0,
+			Finished: false,
+		}
+	}
+}
+
+func (e *SpeedEngine) RemovePlayer(playerID string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	delete(e.Players, playerID)
+}
+
+func (e *SpeedEngine) HasPlayer(playerID string) bool {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	_, exists := e.Players[playerID]
+	return exists
+}
+
+func (e *SpeedEngine) GetState() interface{} {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	
+	return map[string]interface{}{
+		"status":     e.State,
+		"difficulty": e.Difficulty,
+		"players":    e.Players,
+		"puzzle":     e.Puzzle,
+		"winners":    e.Winners,
+	}
+}
+
+func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if action == "start" && e.State == engine.StateWaiting {
+		e.State = engine.StatePlaying
+		return e.State, nil
+	}
+
+	if e.State != engine.StatePlaying {
+		return e.State, nil
+	}
+
+	player, exists := e.Players[playerID]
+	if !exists {
+		return e.State, nil
+	}
+
+	if action == "progress" {
+		var req struct {
+			Progress int `json:"progress"`
+		}
+		if err := json.Unmarshal(payload, &req); err == nil {
+			if req.Progress >= 0 && req.Progress <= 81 {
+				player.Progress = req.Progress
+			}
+		}
+	} else if action == "finish" {
+		var req struct {
+			Board string `json:"board"`
+		}
+		if err := json.Unmarshal(payload, &req); err == nil {
+			// Validate board matches solution
+			if req.Board == e.Solution {
+				player.Finished = true
+				player.Progress = 81
+				
+				e.State = engine.StateFinished
+				e.Winners = []string{player.ID}
+			}
+		}
+	}
+
+	return e.State, nil
+}
+
+func (e *SpeedEngine) CheckGameOver() (bool, []string) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.State == engine.StateFinished, e.Winners
+}

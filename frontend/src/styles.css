@@ -73,6 +73,21 @@
     animation: gold-shine 3s linear infinite;
   }
 
+  .animate-red-shine {
+    background: linear-gradient(
+      to right,
+      #991b1b 20%,
+      #fca5a5 40%,
+      #fca5a5 60%,
+      #991b1b 80%
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: gold-shine 3s linear infinite;
+  }
+
   .animate-gold-pulse {
     animation: gold-pulse 2s ease-in-out infinite;
   }

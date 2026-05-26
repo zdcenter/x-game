@@ -11,6 +11,7 @@ import (
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
 	"github.com/x-game/backend/internal/engine/minesweeper"
+	"github.com/x-game/backend/internal/engine/sudoku"
 	"github.com/x-game/backend/pkg/db"
 )
 
@@ -21,6 +22,7 @@ type Client struct {
 
 type Room struct {
 	ID         string
+	Game       string // "minesweeper" or "sudoku"
 	Host       string // Player ID who created the room
 	Mode       string // "single", "pk_steal", "pk_speed"
 	Difficulty string // "easy", "medium", "hard"
@@ -37,6 +39,7 @@ var (
 
 type RoomSnapshot struct {
 	ID          string `json:"id"`
+	Game        string `json:"game"`
 	Host        string `json:"host"`
 	Mode        string `json:"mode"`
 	Difficulty  string `json:"difficulty"`
@@ -52,6 +55,7 @@ func GetActiveRooms() []RoomSnapshot {
 	for _, r := range Rooms {
 		r.mu.Lock() // Safely get fields
 		count := len(r.Clients)
+		game := r.Game
 		host := r.Host
 		mode := r.Mode
 		diff := r.Difficulty
@@ -60,6 +64,7 @@ func GetActiveRooms() []RoomSnapshot {
 		
 		snapshots = append(snapshots, RoomSnapshot{
 			ID:          r.ID,
+			Game:        game,
 			Host:        host,
 			Mode:        mode,
 			Difficulty:  diff,
@@ -70,7 +75,7 @@ func GetActiveRooms() []RoomSnapshot {
 	return snapshots
 }
 
-func GetOrCreateRoom(roomID, mode, difficulty, hostId string) *Room {
+func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
 	mu.Lock()
 	if r, exists := Rooms[roomID]; exists {
 		mu.Unlock()
@@ -84,12 +89,17 @@ func GetOrCreateRoom(roomID, mode, difficulty, hostId string) *Room {
 	var eng engine.GameEngine
 	if mode == "pk_speed" {
 		eng = &minesweeper.SpeedEngine{}
+	} else if mode == "sudoku_pk_steal" {
+		eng = &sudoku.StealEngine{}
+	} else if mode == "sudoku_pk_speed" {
+		eng = &sudoku.SpeedEngine{}
 	} else {
 		eng = &minesweeper.MinesweeperEngine{}
 	}
 
 	r := &Room{
 		ID:         roomID,
+		Game:       gameId,
 		Host:       hostId, // Explicitly set host here, crucial for preserving host on backend restarts
 		Mode:       mode,
 		Difficulty: difficulty,

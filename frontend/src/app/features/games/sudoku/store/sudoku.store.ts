@@ -1,0 +1,412 @@
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ToastService } from '../../../../core/services/toast.service';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { WebSocketService } from '../../../../core/services/websocket.service';
+
+export interface SudokuCell {
+  r: number;
+  c: number;
+  val: number; // 0 means empty
+  fixed: boolean;
+  notes: Set<number>;
+  error: boolean;
+}
+
+export interface SudokuHistory {
+  board: SudokuCell[][];
+}
+
+@Injectable()
+export class SudokuStore {
+  private http = inject(HttpClient);
+  private toast = inject(ToastService);
+  private auth = inject(AuthStore);
+  ws = inject(WebSocketService);
+
+  playerId = computed(() => this.auth.currentUser()?.username || 'Guest');
+
+  // Modes: 'single', 'sudoku_pk_steal', 'sudoku_pk_speed'
+  currentMode = signal<string>('single');
+  roomId = signal<string>('');
+
+  // Board state (Local)
+  board = signal<SudokuCell[][]>([]);
+  selectedCell = signal<{r: number, c: number} | null>(null);
+  pencilMode = signal<boolean>(false);
+  
+  // History for Undo
+  private history: SudokuHistory[] = [];
+
+  // Metadata
+  view = signal<'lobby' | 'room' | 'play'>('lobby');
+  currentPuzzleId = signal<string>('');
+  timeSpent = signal<number>(0);
+  isFinished = signal<boolean>(false);
+  
+  // WS State derived
+  rawState = computed(() => this.ws.gameState() || {
+    status: 'waiting',
+    difficulty: '',
+    players: {},
+    puzzle: '',
+    currentBoard: '',
+    winners: []
+  });
+
+  gameStatus = computed(() => this.rawState().status || 'waiting');
+  players = computed(() => this.rawState().players || {});
+  host = computed(() => this.rawState().host || '');
+
+  private timer: any;
+
+  constructor() {
+    // Effect to auto-sync Steal mode board
+    effect(() => {
+      if (this.currentMode() === 'sudoku_pk_steal') {
+        const rState = this.rawState() as any;
+        if (rState.status === 'playing' && rState.currentBoard) {
+          // Compare and update our local board
+          // If we haven't initialized, we should init first
+          if (this.board().length === 0 && rState.puzzle) {
+             this.initBoard(rState.puzzle);
+          }
+          if (this.board().length > 0) {
+            const currentStr = rState.currentBoard;
+            const b = this.board();
+            let changed = false;
+            for (let r = 0; r < 9; r++) {
+              for (let c = 0; c < 9; c++) {
+                const char = currentStr[r * 9 + c];
+                const expectedVal = (char === '.' || char === '0') ? 0 : parseInt(char, 10);
+                if (b[r][c].val !== expectedVal && expectedVal !== 0) {
+                  b[r][c].val = expectedVal;
+                  b[r][c].fixed = true; // Mark as fixed once filled by anyone
+                  b[r][c].notes.clear();
+                  this.autoEraseNotes(r, c, expectedVal);
+                  changed = true;
+                }
+              }
+            }
+            if (changed) {
+              this.board.set([...b]);
+              this.checkErrors();
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // --- ROOM MANAGEMENT ---
+  async joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
+    this.currentMode.set(mode);
+    this.roomId.set(roomId);
+    this.view.set('room');
+    await this.ws.connect('sudoku', roomId, this.playerId(), mode, diff, hostId);
+  }
+
+  leaveRoom() {
+    this.ws.disconnect();
+    this.roomId.set('');
+    this.currentMode.set('single');
+    this.view.set('lobby');
+  }
+
+  startGame() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ action: 'start' });
+    }
+  }
+
+  // --- SINGLE PLAYER INIT ---
+  initBoard(puzzleStr: string, savedState?: string, savedTime?: number) {
+    if (savedTime) this.timeSpent.set(savedTime);
+    else this.timeSpent.set(0);
+
+    this.isFinished.set(false);
+    this.history = [];
+
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        // Convert array back to Set for notes
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            parsed[r][c].notes = new Set(parsed[r][c].notes);
+          }
+        }
+        this.board.set(parsed);
+      } catch (e) {
+        this.createBoardFromString(puzzleStr);
+      }
+    } else {
+      this.createBoardFromString(puzzleStr);
+    }
+    
+    this.startTimer();
+    this.checkErrors(); // Initial check
+  }
+
+  private createBoardFromString(str: string) {
+    const newBoard: SudokuCell[][] = [];
+    for (let r = 0; r < 9; r++) {
+      const row: SudokuCell[] = [];
+      for (let c = 0; c < 9; c++) {
+        const char = str[r * 9 + c];
+        const val = (char === '.' || char === '0') ? 0 : parseInt(char, 10);
+        row.push({
+          r, c, val,
+          fixed: val !== 0,
+          notes: new Set<number>(),
+          error: false
+        });
+      }
+      newBoard.push(row);
+    }
+    this.board.set(newBoard);
+  }
+
+  // Interaction
+  selectCell(r: number, c: number) {
+    this.selectedCell.set({r, c});
+  }
+
+  togglePencilMode() {
+    this.pencilMode.set(!this.pencilMode());
+  }
+
+  inputNumber(num: number) {
+    if (this.isFinished()) return;
+    const sel = this.selectedCell();
+    if (!sel) return;
+
+    const b = this.board();
+    const cell = b[sel.r][sel.c];
+    if (cell.fixed) return;
+
+    if (this.currentMode() === 'sudoku_pk_steal') {
+      // In steal mode, we send directly to WS and wait for update
+      this.ws.send({ action: 'input', r: sel.r, c: sel.c, val: num });
+      return;
+    }
+
+    this.saveHistory();
+
+    if (this.pencilMode()) {
+      if (cell.val !== 0) {
+        cell.val = 0; // Clear value if switching to notes
+      }
+      if (cell.notes.has(num)) {
+        cell.notes.delete(num);
+      } else {
+        cell.notes.add(num);
+      }
+    } else {
+      // Inputting a real number
+      if (cell.val === num) {
+        cell.val = 0; // Toggle off
+      } else {
+        cell.val = num;
+        cell.notes.clear();
+        this.autoEraseNotes(sel.r, sel.c, num);
+      }
+    }
+    
+    // Trigger reactivity
+    this.board.set([...b]);
+    this.checkErrors();
+    this.checkWinCondition();
+
+    // Speed mode progress tracking
+    if (this.currentMode() === 'sudoku_pk_speed') {
+      this.ws.send({ action: 'progress', progress: this.countFilledCells() });
+    }
+  }
+
+  private countFilledCells(): number {
+    let count = 0;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (this.board()[r][c].val !== 0) count++;
+      }
+    }
+    return count;
+  }
+
+  erase() {
+    if (this.isFinished()) return;
+    const sel = this.selectedCell();
+    if (!sel) return;
+
+    const b = this.board();
+    const cell = b[sel.r][sel.c];
+    if (cell.fixed) return;
+
+    if (this.currentMode() === 'sudoku_pk_steal') {
+      // Cannot erase in steal mode unless we implement it, but standard rules say only add.
+      return;
+    }
+
+    this.saveHistory();
+    cell.val = 0;
+    cell.notes.clear();
+    this.board.set([...b]);
+    this.checkErrors();
+  }
+
+  undo() {
+    if (this.isFinished() || this.currentMode() === 'sudoku_pk_steal') return;
+    if (this.history.length === 0) return;
+    
+    const prevState = this.history.pop()!;
+    this.board.set(prevState.board);
+    this.checkErrors();
+  }
+
+  private saveHistory() {
+    const currentBoard = this.board().map(row => 
+      row.map(c => ({...c, notes: new Set(c.notes)}))
+    );
+    this.history.push({ board: currentBoard });
+    if (this.history.length > 50) this.history.shift();
+  }
+
+  private autoEraseNotes(r: number, c: number, num: number) {
+    const b = this.board();
+    // Clear in row
+    for (let i = 0; i < 9; i++) b[r][i].notes.delete(num);
+    // Clear in col
+    for (let i = 0; i < 9; i++) b[i][c].notes.delete(num);
+    // Clear in block
+    const br = Math.floor(r / 3) * 3;
+    const bc = Math.floor(c / 3) * 3;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        b[br + i][bc + j].notes.delete(num);
+      }
+    }
+  }
+
+  private checkErrors() {
+    const b = this.board();
+    // Reset errors
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        b[r][c].error = false;
+      }
+    }
+
+    // Check rows, cols, blocks for conflicts
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const val = b[r][c].val;
+        if (val === 0) continue;
+
+        let conflict = false;
+        // Check row
+        for (let i = 0; i < 9; i++) if (i !== c && b[r][i].val === val) conflict = true;
+        // Check col
+        for (let i = 0; i < 9; i++) if (i !== r && b[i][c].val === val) conflict = true;
+        // Check block
+        const br = Math.floor(r / 3) * 3;
+        const bc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if ((br + i !== r || bc + j !== c) && b[br + i][bc + j].val === val) conflict = true;
+          }
+        }
+        
+        if (conflict) b[r][c].error = true;
+      }
+    }
+  }
+
+  private checkWinCondition() {
+    const b = this.board();
+    let complete = true;
+    let hasError = false;
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (b[r][c].val === 0) complete = false;
+        if (b[r][c].error) hasError = true;
+      }
+    }
+
+    if (complete && !hasError) {
+      this.isFinished.set(true);
+      this.stopTimer();
+      (this.toast as any).show('Congratulations! Puzzle solved.', 'success');
+      
+      if (this.currentMode() === 'single') {
+        this.finishPuzzle();
+      } else if (this.currentMode() === 'sudoku_pk_speed') {
+        const serialized = this.serializeBoard();
+        this.ws.send({ action: 'finish', board: serialized });
+      }
+    }
+  }
+
+  private serializeBoard(): string {
+    let res = '';
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const val = this.board()[r][c].val;
+        res += val === 0 ? '.' : val.toString();
+      }
+    }
+    return res;
+  }
+
+  // Timer
+  private startTimer() {
+    this.stopTimer();
+    this.timer = setInterval(() => {
+      this.timeSpent.update(t => t + 1);
+      if (this.timeSpent() % 10 === 0) { // Auto-save every 10 seconds
+        this.saveStateToBackend();
+      }
+    }, 1000);
+  }
+
+  private stopTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  // Backend sync
+  private saveStateToBackend() {
+    if (!this.currentPuzzleId()) return;
+    
+    // Serialize board, converting Sets to arrays
+    const serialized = JSON.stringify(this.board().map(row => 
+      row.map(c => ({...c, notes: Array.from(c.notes)}))
+    ));
+
+    this.http.post(`/api/v1/sudoku/puzzle/${this.currentPuzzleId()}/save`, {
+      current_state: serialized,
+      time_spent: this.timeSpent()
+    }).subscribe();
+  }
+
+  private finishPuzzle() {
+    if (!this.currentPuzzleId()) return;
+    
+    let stars = 3;
+    if (this.timeSpent() > 300) stars = 2; // > 5 mins
+    if (this.timeSpent() > 600) stars = 1; // > 10 mins
+
+    this.http.post(`/api/v1/sudoku/puzzle/${this.currentPuzzleId()}/finish`, {
+      time_spent: this.timeSpent(),
+      stars: stars
+    }).subscribe();
+  }
+
+  destroy() {
+    this.stopTimer();
+    this.saveStateToBackend();
+  }
+}
