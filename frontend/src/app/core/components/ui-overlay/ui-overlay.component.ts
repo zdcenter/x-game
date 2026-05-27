@@ -8,7 +8,7 @@ import { ToastService } from '../../services/toast.service';
   imports: [CommonModule],
   template: `
     <!-- Toasts -->
-    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2">
+    <div class="fixed top-20 right-4 z-[60] flex flex-col gap-2">
       @for (toast of toastService.toasts(); track toast.id) {
         <div class="px-4 py-3 rounded-lg shadow-lg text-sm font-bold text-white transition-all transform animate-slide-in"
              [class.bg-emerald-500]="toast.type === 'success'"

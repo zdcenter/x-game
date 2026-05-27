@@ -171,14 +171,7 @@ export class MinesweeperStore {
     return this.totalMines() - flagged;
   });
 
-  constructor() {
-    effect(() => {
-      const status = this.status();
-      if (status === GameStatus.Finished) {
-        this.audio.playWin();
-      }
-    });
-  }
+  constructor() {}
 
   startLocalGame(width: number, height: number, mines: number) {
     this.currentMode.set('single');

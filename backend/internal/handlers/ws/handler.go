@@ -3,6 +3,7 @@ package ws
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
@@ -21,7 +22,11 @@ func Register(router fiber.Router) {
 	})
 
 	router.Get("/join/:roomId", websocket.New(func(c *websocket.Conn) {
-		roomID := c.Params("roomId")
+		rawRoomID := c.Params("roomId")
+		roomID, err := url.PathUnescape(rawRoomID)
+		if err != nil {
+			roomID = rawRoomID
+		}
 		gameId := c.Query("game", "") // "minesweeper", "sudoku", etc.
 		mode := c.Query("mode", "single") // "single", "pk_steal", "pk_speed"
 		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"

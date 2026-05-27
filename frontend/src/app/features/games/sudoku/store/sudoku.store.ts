@@ -1,8 +1,12 @@
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../../../core/services/toast.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../core/services/websocket.service';
+import { AudioService } from '../../../../core/services/audio.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 export interface SudokuCell {
   r: number;
@@ -22,7 +26,11 @@ export class SudokuStore {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
   private auth = inject(AuthStore);
+  private audio = inject(AudioService);
+  private i18n = inject(I18nService);
   ws = inject(WebSocketService);
+
+  private saveSubject = new Subject<void>();
 
   playerId = computed(() => this.auth.currentUser()?.username || 'Guest');
 
@@ -61,6 +69,10 @@ export class SudokuStore {
   private timer: any;
 
   constructor() {
+    this.saveSubject.pipe(debounceTime(1000)).subscribe(() => {
+      this.saveStateToBackend();
+    });
+
     // Effect to auto-sync Steal mode board
     effect(() => {
       if (this.currentMode() === 'sudoku_pk_steal') {
@@ -185,6 +197,8 @@ export class SudokuStore {
     const cell = b[sel.r][sel.c];
     if (cell.fixed) return;
 
+    this.audio.playClick();
+
     if (this.currentMode() === 'sudoku_pk_steal') {
       // In steal mode, we send directly to WS and wait for update
       this.ws.send({ action: 'input', r: sel.r, c: sel.c, val: num });
@@ -222,6 +236,8 @@ export class SudokuStore {
     if (this.currentMode() === 'sudoku_pk_speed') {
       this.ws.send({ action: 'progress', progress: this.countFilledCells() });
     }
+
+    this.triggerSave();
   }
 
   private countFilledCells(): number {
@@ -243,6 +259,8 @@ export class SudokuStore {
     const cell = b[sel.r][sel.c];
     if (cell.fixed) return;
 
+    this.audio.playClick();
+
     if (this.currentMode() === 'sudoku_pk_steal') {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
       return;
@@ -253,15 +271,20 @@ export class SudokuStore {
     cell.notes.clear();
     this.board.set([...b]);
     this.checkErrors();
+    this.triggerSave();
   }
 
   undo() {
-    if (this.isFinished() || this.currentMode() === 'sudoku_pk_steal') return;
+    if (this.isFinished()) return;
+    if (this.currentMode() === 'sudoku_pk_steal') return;
     if (this.history.length === 0) return;
+
+    this.audio.playClick();
     
     const prevState = this.history.pop()!;
     this.board.set(prevState.board);
     this.checkErrors();
+    this.triggerSave();
   }
 
   private saveHistory() {
@@ -334,11 +357,14 @@ export class SudokuStore {
       }
     }
 
-    if (complete && !hasError) {
+    const valid = complete && !hasError;
+
+    if (valid && this.currentMode() === 'single') {
       this.isFinished.set(true);
       this.stopTimer();
-      (this.toast as any).show('Congratulations! Puzzle solved.', 'success');
-      
+    }
+    
+    if (valid) {
       if (this.currentMode() === 'single') {
         this.finishPuzzle();
       } else if (this.currentMode() === 'sudoku_pk_speed') {
@@ -364,9 +390,6 @@ export class SudokuStore {
     this.stopTimer();
     this.timer = setInterval(() => {
       this.timeSpent.update(t => t + 1);
-      if (this.timeSpent() % 10 === 0) { // Auto-save every 10 seconds
-        this.saveStateToBackend();
-      }
     }, 1000);
   }
 
@@ -374,6 +397,12 @@ export class SudokuStore {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
+    }
+  }
+
+  private triggerSave() {
+    if (this.currentMode() === 'single') {
+      this.saveSubject.next();
     }
   }
 
@@ -394,6 +423,9 @@ export class SudokuStore {
 
   private finishPuzzle() {
     if (!this.currentPuzzleId()) return;
+    
+    // Save the final board state immediately
+    this.saveStateToBackend();
     
     let stars = 3;
     if (this.timeSpent() > 300) stars = 2; // > 5 mins

@@ -81,6 +81,11 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.game_mode': 'Game Mode',
     'game.steal_mode': 'Steal Mode',
     'game.speed_mode': 'Speed Mode',
+    'game.win': 'You won!',
+    'game.lose': 'Game Over! You lost.',
+    'game.sudoku.solved': 'Congratulations! Puzzle solved.',
+    'game.sudoku.next_level_prompt': 'Level cleared! Do you want to play the next level?',
+    'game.sudoku.next_level': 'Next Level',
   },
   zh: {
     'status.playing': '进行中',
@@ -162,5 +167,10 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.game_mode': '游戏模式',
     'game.steal_mode': '同盘抢雷模式',
     'game.speed_mode': '异盘竞速模式',
+    'game.win': '恭喜！你赢了。',
+    'game.lose': '游戏结束！你输了。',
+    'game.sudoku.solved': '恭喜！谜题已解开。',
+    'game.sudoku.next_level_prompt': '闯关成功，是否需要玩下一关？',
+    'game.sudoku.next_level': '下一关',
   }
 };

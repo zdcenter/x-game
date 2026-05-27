@@ -61,6 +61,29 @@ export class AudioService {
     osc.stop(this.audioCtx.currentTime + 0.5);
   }
 
+  // 播放“失败”音效 (连续降调)
+  playLose() {
+    this.initAudio();
+    if (this.isMuted() || !this.audioCtx) return;
+
+    const osc = this.audioCtx.createOscillator();
+    const gainNode = this.audioCtx.createGain();
+    
+    osc.type = 'sawtooth';
+    // 频率随时间降低
+    osc.frequency.setValueAtTime(300, this.audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(100, this.audioCtx.currentTime + 0.4);
+    
+    gainNode.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.6);
+
+    osc.connect(gainNode);
+    gainNode.connect(this.audioCtx.destination);
+    
+    osc.start();
+    osc.stop(this.audioCtx.currentTime + 0.6);
+  }
+
   // 核心的合成器方法（无需外部声音文件）
   private synthesizeBeep(frequency: number, type: OscillatorType, duration: number, volume: number = 0.1) {
     this.initAudio();

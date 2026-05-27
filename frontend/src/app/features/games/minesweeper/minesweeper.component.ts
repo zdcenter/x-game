@@ -11,13 +11,14 @@ import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, CellComponent, DragDropModule, GameLobbyPanelComponent],
+  imports: [CommonModule, CellComponent, DragDropModule, GameLobbyPanelComponent, GameResultOverlayComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -163,53 +164,13 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
             <!-- Victory Overlay -->
             @if (store.status() === 'finished') {
-              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-sm transition-colors duration-1000"
-                   [class.bg-[var(--color-overlay)]]="!isDefeat()"
-                   [class.bg-red-950]="isDefeat()" [class.bg-opacity-90]="isDefeat()">
-                @if (currentRoomMode() === 'pk_speed') {
-                  @if (hasWonSpeedMode()) {
-                    <h2 class="text-6xl font-black uppercase tracking-widest text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-bounce">
-                      {{ i18n.t('game.you_win')() }}
-                    </h2>
-                    <p class="mt-4 text-emerald-300 font-bold text-lg animate-pulse">{{ i18n.t('game.cleared_first')() }}</p>
-                  } @else {
-                    <h2 class="text-6xl font-black uppercase tracking-widest animate-red-shine drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-                      {{ i18n.t('game.defeat')() }}
-                    </h2>
-                    <p class="mt-4 text-red-300 font-bold text-lg animate-pulse">{{ i18n.t('game.opponent_finished')() }}</p>
-                  }
-                } @else {
-                  @if (isDefeat()) {
-                    <h2 class="text-6xl font-black uppercase tracking-widest animate-red-shine drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-                      {{ i18n.t('game.defeat')() }}
-                    </h2>
-                    <p class="mt-4 text-red-300 font-bold text-lg animate-pulse mb-6">
-                      @if (currentRoomMode() === 'single') {
-                        {{ i18n.t('game.stepped_mine')() }}
-                      } @else {
-                        {{ i18n.t('game.steal_defeat')() }}
-                      }
-                    </p>
-                  } @else {
-                    <h2 class="text-6xl font-black uppercase tracking-widest animate-gold-shine drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]">
-                      {{ i18n.t('minesweeper.victory')() }}
-                    </h2>
-                    <p class="mt-4 text-yellow-400 font-bold text-lg animate-pulse mb-6">
-                      @if (currentRoomMode() === 'single') {
-                        {{ i18n.t('minesweeper.cleared')() }}
-                      } @else {
-                        {{ i18n.t('game.steal_victory')() }}
-                      }
-                    </p>
-                  }
-                }
-                
-                @if (currentRoomMode() === 'single' || store.host() === playerId) {
-                  <button (click)="store.restartGame()" class="mt-8 px-8 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                    {{ i18n.t('game.restart')() }}
-                  </button>
-                }
-              </div>
+              <app-game-result-overlay
+                [status]="getOverlayStatus()"
+                [title]="getOverlayTitle()"
+                [subtitle]="getOverlaySubtitle()"
+                [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
+                (restart)="store.restartGame()">
+              </app-game-result-overlay>
             }
 
             <!-- Frozen Overlay (PK Steal Penalty) -->
@@ -225,6 +186,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             <div class="inline-flex flex-col gap-1 relative z-0 m-auto cursor-grab active:cursor-grabbing will-change-transform" 
                  [class.opacity-50]="isFrozen()" 
                  [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting"
+                 [class.animate-board-shake]="store.status() === 'finished'"
                  cdkDrag>
               @for (row of store.board(); track $index) {
                 <div class="flex gap-1">
@@ -417,12 +379,12 @@ export class MinesweeperComponent implements OnInit {
     if (this.currentRoomMode() === 'single') return this.hasLostSingleMode();
     if (this.currentRoomMode() === 'pk_speed') return !this.hasWonSpeedMode();
     if (this.currentRoomMode() === 'pk_steal') {
-      const scores = this.getPlayerScores();
-      if (scores.length > 0) {
-        const topScore = scores[0].score;
-        const myScore = scores.find(s => s.id === this.playerId)?.score || 0;
-        return myScore < topScore;
-      }
+      const rawScores = this.store.scores();
+      const myScore = rawScores[this.playerId] || 0;
+      const otherScores = Object.keys(rawScores).filter(id => id !== this.playerId).map(id => rawScores[id]);
+      const maxOtherScore = otherScores.length > 0 ? Math.max(...otherScores) : 0;
+      
+      return myScore < maxOtherScore;
     }
     return false;
   });
@@ -787,5 +749,30 @@ export class MinesweeperComponent implements OnInit {
   hasWonSpeedMode(): boolean {
     const scores = this.store.scores();
     return scores[this.playerId] > 0;
+  }
+
+  getOverlayStatus(): 'win' | 'lose' {
+    if (this.currentRoomMode() === 'pk_speed') {
+      return this.hasWonSpeedMode() ? 'win' : 'lose';
+    }
+    return this.isDefeat() ? 'lose' : 'win';
+  }
+
+  getOverlayTitle(): string {
+    const status = this.getOverlayStatus();
+    if (status === 'win') {
+      return this.currentRoomMode() === 'pk_speed' ? this.i18n.t('game.you_win')() : this.i18n.t('minesweeper.victory')();
+    }
+    return this.i18n.t('game.defeat')();
+  }
+
+  getOverlaySubtitle(): string {
+    if (this.currentRoomMode() === 'pk_speed') {
+      return this.hasWonSpeedMode() ? this.i18n.t('game.cleared_first')() : this.i18n.t('game.opponent_finished')();
+    }
+    if (this.isDefeat()) {
+      return this.currentRoomMode() === 'single' ? this.i18n.t('game.stepped_mine')() : this.i18n.t('game.steal_defeat')();
+    }
+    return this.currentRoomMode() === 'single' ? this.i18n.t('minesweeper.cleared')() : this.i18n.t('game.steal_victory')();
   }
 }

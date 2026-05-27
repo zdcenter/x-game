@@ -61,7 +61,7 @@ export interface GameDifficulty {
                               [class.text-green-400]="room.game === 'minesweeper'">
                           {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
                         </span>
-                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)]">{{ room.id }}</span>
+                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)]">{{ decodeName(room.id) }}</span>
                       </div>
                       <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
                             [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
@@ -113,7 +113,7 @@ export interface GameDifficulty {
                                 [class.text-green-400]="room.game === 'minesweeper'">
                             {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
                           </span>
-                          <span class="font-mono text-sm font-bold text-inherit">{{ room.id }} (Host)</span>
+                          <span class="font-mono text-sm font-bold text-inherit">{{ decodeName(room.id) }} (Host)</span>
                         </div>
                         <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
                               [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
@@ -278,6 +278,14 @@ export class GameLobbyPanelComponent {
 
   t(key: string): string {
     return this.i18n.t(key)();
+  }
+
+  decodeName(name: string): string {
+    try {
+      return decodeURIComponent(name);
+    } catch {
+      return name;
+    }
   }
 
   openCreateRoomModal() {
