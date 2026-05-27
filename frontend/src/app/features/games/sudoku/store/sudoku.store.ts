@@ -274,6 +274,27 @@ export class SudokuStore {
     this.triggerSave();
   }
 
+  clearBoard() {
+    if (this.isFinished()) return;
+    if (this.currentMode() === 'sudoku_pk_steal') return;
+
+    this.audio.playClick();
+    this.saveHistory();
+
+    const b = this.board();
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (!b[r][c].fixed) {
+          b[r][c].val = 0;
+          b[r][c].notes.clear();
+        }
+      }
+    }
+    this.board.set([...b]);
+    this.checkErrors();
+    this.triggerSave();
+  }
+
   undo() {
     if (this.isFinished()) return;
     if (this.currentMode() === 'sudoku_pk_steal') return;
