@@ -83,3 +83,21 @@
   - 毫秒级的状态帧同步，让原本静态的逻辑推理游戏变成了心跳加速的眼疾手快竞技场。
 - **数独 Speed 模式 (竞速冲刺)**：
   - 玩家互不干涉在各自的完整克隆棋盘中解同一道题，比拼谁先 100% 正确提交解答。
+
+---
+
+## 8. 多人联机游戏接入规范 (Multiplayer Game Development Specification)
+
+为了保证平台的健壮性，任何未来新增的联机游戏（如俄罗斯方块、五子棋等）**必须**严格遵守以下生命周期与接口适配规范，防止出现状态遗漏或“幽灵房间”等严重 Bug：
+
+- **房间生命周期与解散监听 (Room Dismissal Handling)**：
+  - 后端房间解散时会全局广播 `{"type": "room_dismissed"}`。
+  - **前端硬性要求**：新增游戏组件必须在初始化时（如 `constructor` 中）使用 `effect` 监听 `this.wsService.roomDismissedEvent()`。一旦监听到解散，必须强制弹出 Toast 提示（“房主已解散房间”），并立刻调用 `store.leaveRoom()` 将当前所有非房主玩家强制踢回大厅。绝对禁止遗留任何玩家在已被销毁的房间中卡死。
+- **加入与退出逻辑 (Join & Leave)**：
+  - 前端路由参数中必须解析 `roomId`、`mode`、`difficulty`、`host` 并调用 `store.joinRoom()` 进行房间挂载。
+  - 组件销毁 (`ngOnDestroy`) 或玩家主动点击离开时，必须触发退房逻辑。
+- **后端引擎标准化 (Engine Registration)**：
+  - 游戏必须在后端的 `engine` 目录新建实现，并且必须通过 `engine.Register("gameId_mode", factory)` 注册。
+  - 必须完整实现 `GameEngine` 接口：`InitGame`, `AddPlayer`, `RemovePlayer`, `HandleAction`, `GetState`, `GetStatus`, `SetBroadcaster`。
+- **统一模式命名字典 (Mode Naming Convention)**：
+  - 各个游戏的模式命名强制使用公共常量规范：同盘抢分模式统一后缀为 `_pk_steal`，异盘竞速模式统一后缀为 `_pk_speed`。前端使用通用的 `GameLobbyPanelComponent` 组件即可零代码获得大厅列表、建房弹窗和模式匹配的支持。

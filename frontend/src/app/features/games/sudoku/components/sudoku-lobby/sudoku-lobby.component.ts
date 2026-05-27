@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
-import { GameLobbyPanelComponent } from '../../../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { SudokuStore } from '../../store/sudoku.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
@@ -22,7 +21,7 @@ interface LevelResponse {
 @Component({
   selector: 'app-sudoku-lobby',
   standalone: true,
-  imports: [CommonModule, GameLobbyPanelComponent],
+  imports: [CommonModule],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   template: `
     <div class="flex-grow flex flex-col lg:flex-row p-2 lg:p-6 gap-4 lg:gap-6 w-full h-full overflow-y-auto lg:overflow-hidden">
@@ -115,20 +114,6 @@ interface LevelResponse {
           </div>
         }
       </div>
-      </div>
-
-      <!-- RIGHT: Game Lobby Panel -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col min-h-[400px] lg:min-h-0">
-        <app-game-lobby-panel
-          [currentGameId]="'sudoku'"
-          [gameModes]="sudokuModes"
-          [difficulties]="difficulties"
-          [currentRoomId]="store.roomId()"
-          (joinRoom)="handleJoinRoom($event)"
-          (createRoom)="handleCreateRoom($event)"
-          (dismissRoom)="handleDismissRoom()"
-        ></app-game-lobby-panel>
-      </div>
     </div>
   `
 })
@@ -196,19 +181,5 @@ export class SudokuLobbyComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/lobby']);
-  }
-
-  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
-    if (this.store.roomId() === event.roomId) return;
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-  }
-
-  handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
-  }
-
-  handleDismissRoom() {
-    this.wsService.send({ type: 'dismiss_room' });
-    this.store.leaveRoom();
   }
 }

@@ -33,6 +33,24 @@ import { AudioService } from '../../../core/services/audio.service';
         </p>
       }
 
+      <!-- Stats Grid -->
+      @if (stats && stats.length > 0) {
+        <div class="flex flex-wrap justify-center gap-4 mb-6 animate-scale-in" style="animation-delay: 0.2s">
+          @for (stat of stats; track stat.label) {
+            <div class="bg-black/30 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center shadow-lg transform hover:scale-105 transition-transform"
+                 [class.border-yellow-500/30]="status === 'win'"
+                 [class.border-red-500/30]="status === 'lose'">
+              <div class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">{{ stat.label }}</div>
+              <div class="text-xl sm:text-2xl font-mono font-black"
+                   [class.text-yellow-400]="status === 'win'"
+                   [class.text-white]="status === 'lose'">
+                {{ stat.value }}
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <!-- Action Panel (only if there are buttons to show) -->
       @if (showNextLevel || showRestart || showCancel) {
         <div class="mt-8 flex gap-4 bg-[var(--color-bg-card)] p-6 rounded-2xl border shadow-2xl animate-scale-in"
@@ -80,6 +98,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input({ required: true }) title!: string;
   @Input() subtitle?: string;
   @Input() promptText?: string;
+  @Input() stats?: { label: string, value: string | number }[];
 
   @Input() showNextLevel = false;
   @Input() showRestart = false;

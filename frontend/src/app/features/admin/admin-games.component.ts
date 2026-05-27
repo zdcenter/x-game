@@ -111,10 +111,10 @@ interface AdminGame extends GameConfig {
             </div>
             
             <div class="flex-grow flex flex-col gap-4">
-              @if (selectedGameForSettings()!.id === 'minesweeper') {
+              @if (selectedGameForSettings()!.id === 'minesweeper' || selectedGameForSettings()!.id === 'sudoku') {
                 <div class="flex flex-col gap-2">
                   <label class="text-sm font-bold opacity-80 uppercase tracking-wider">Penalty Duration (Seconds)</label>
-                  <p class="text-xs text-slate-400 mb-2">The duration players are frozen when they step on a mine in PK mode.</p>
+                  <p class="text-xs text-slate-400 mb-2">The duration players are frozen when they make a mistake in PK mode.</p>
                   <input type="number" [(ngModel)]="selectedGameForSettings()!.parsedConfig.penaltySeconds" 
                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors">
                 </div>
@@ -241,7 +241,7 @@ export class AdminGamesComponent implements OnInit {
   saveGameSettings(game: AdminGame) {
     this.isUpdating.set(true);
     let configJson = game.rawConfigText;
-    if (game.id === 'minesweeper') {
+    if (game.id === 'minesweeper' || game.id === 'sudoku') {
       configJson = JSON.stringify(game.parsedConfig);
     }
     

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { UiOverlayComponent } from './core/components/ui-overlay/ui-overlay.component';
+import { SeoService } from './core/services/seo.service';
 
 @Component({
   selector: 'app-root',
@@ -11,4 +12,6 @@ import { UiOverlayComponent } from './core/components/ui-overlay/ui-overlay.comp
     <app-ui-overlay></app-ui-overlay>
   `
 })
-export class AppComponent {}
+export class AppComponent {
+  private seoService = inject(SeoService); // Instantiate SEO service globally
+}

@@ -51,6 +51,18 @@ export class SudokuStore {
   currentPuzzleId = signal<string>('');
   timeSpent = signal<number>(0);
   isFinished = signal<boolean>(false);
+
+  filledCells = computed(() => {
+    let count = 0;
+    const b = this.board();
+    if (!b || b.length === 0) return 0;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (b[r] && b[r][c] && b[r][c].val !== 0) count++;
+      }
+    }
+    return count;
+  });
   
   // WS State derived
   rawState = computed(() => this.ws.gameState() || {

@@ -41,7 +41,7 @@ export interface GameDifficulty {
       <!-- Rooms Content -->
       @if (activeTab === 'rooms') {
         <div class="p-4 flex-grow overflow-y-auto">
-          <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] bg-[var(--color-accent-from)] bg-opacity-10 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
+          <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
             <span>➕</span> {{ t('game.create_pk') }}
           </button>
 
@@ -191,7 +191,7 @@ export interface GameDifficulty {
             </button>
           </div>
           
-          <div class="space-y-5 md:space-y-6 overflow-y-auto flex-1 pr-1 custom-scrollbar">
+          <div class="space-y-5 md:space-y-6 overflow-y-auto overflow-x-hidden flex-1 pr-1 custom-scrollbar">
             <!-- Room Name -->
             <div>
               <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
@@ -241,7 +241,7 @@ export interface GameDifficulty {
               <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
                 {{ t('game.cancel') }}
               </button>
-              <button (click)="onConfirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
+              <button (click)="onConfirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:brightness-110 active:scale-95">
                 {{ t('game.create') }} & {{ t('game.join') }}
               </button>
             </div>

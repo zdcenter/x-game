@@ -1,4 +1,4 @@
-import { Component, inject, effect } from '@angular/core';
+import { Component, inject, effect, signal, untracked, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
 import { SudokuBoardComponent } from '../sudoku-board/sudoku-board.component';
@@ -18,6 +18,7 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
         <app-game-result-overlay
           [status]="isWinner() ? 'win' : 'lose'"
           [title]="isWinner() ? i18n.t('game.win')() : i18n.t('game.lose')()"
+          [stats]="getStats()"
           [showCancel]="true"
           (cancel)="store.view.set('lobby')">
         </app-game-result-overlay>
@@ -40,11 +41,14 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
       </div>
 
       <!-- Top Progress Bars -->
-      @if (isFrozen()) {
+      @if (isFrozenSignal()) {
         <div class="absolute inset-0 z-50 flex items-center justify-center bg-blue-900/40 backdrop-blur-sm rounded-xl">
           <div class="text-center animate-bounce">
             <div class="text-6xl mb-4">❄️</div>
             <h2 class="text-3xl font-black text-blue-200 drop-shadow-md tracking-widest uppercase">Frozen</h2>
+            <div class="mt-4 text-2xl font-black text-white font-mono tracking-widest bg-black/50 px-6 py-2 rounded-full inline-block">
+              {{ frozenCountdownDisplay() }}s
+            </div>
           </div>
         </div>
       }
@@ -84,16 +88,23 @@ export class SudokuPkStealComponent {
   store = inject(SudokuStore);
   i18n = inject(I18nService);
 
-  isFrozen(): boolean {
-    const players = this.store.players() as any;
-    const me = players[this.store.playerId()];
-    if (!me) return false;
-    return me.freezeUntil > Date.now();
-  }
+  isFrozenSignal = signal<boolean>(false);
+  frozenCountdownDisplay = signal<number>(0);
+  freezeTimer: any = null;
+  freezeInterval: any = null;
 
   getSortedPlayers() {
     const players = Object.values(this.store.players() as any) as any[];
     return players.sort((a, b) => b.score - a.score);
+  }
+
+  getStats() {
+    const players = this.getSortedPlayers();
+    const myPlayer = players.find(p => p.id === this.store.playerId());
+    if (myPlayer) {
+      return [{ label: 'SCORE', value: myPlayer.score }];
+    }
+    return [];
   }
 
   isWinner(): boolean {
@@ -112,5 +123,51 @@ export class SudokuPkStealComponent {
         // Overlay handles the UI
       }
     });
+
+    // Handle freeze countdown
+    effect(() => {
+      const players = this.store.players() as any;
+      const me = players[this.store.playerId()];
+      if (!me) return;
+      
+      const until = me.freezeUntil;
+      const now = Date.now();
+      
+      if (this.freezeInterval) {
+        clearInterval(this.freezeInterval);
+        this.freezeInterval = null;
+      }
+      
+      if (until > now) {
+        this.isFrozenSignal.set(true);
+        this.frozenCountdownDisplay.set(Math.ceil((until - now) / 1000));
+        
+        this.freezeInterval = setInterval(() => {
+          const rem = Math.ceil((until - Date.now()) / 1000);
+          if (rem <= 0) {
+            clearInterval(this.freezeInterval);
+            this.freezeInterval = null;
+          } else {
+            this.frozenCountdownDisplay.set(rem);
+          }
+        }, 100);
+
+        clearTimeout(this.freezeTimer);
+        this.freezeTimer = setTimeout(() => {
+          this.isFrozenSignal.set(false);
+          if (this.freezeInterval) {
+            clearInterval(this.freezeInterval);
+            this.freezeInterval = null;
+          }
+        }, until - Date.now());
+      } else {
+        this.isFrozenSignal.set(false);
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnDestroy() {
+    if (this.freezeInterval) clearInterval(this.freezeInterval);
+    if (this.freezeTimer) clearTimeout(this.freezeTimer);
   }
 }

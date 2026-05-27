@@ -18,6 +18,7 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
         <app-game-result-overlay
           [status]="isWinner() ? 'win' : 'lose'"
           [title]="isWinner() ? i18n.t('game.win')() : i18n.t('game.lose')()"
+          [stats]="getStats()"
           [showCancel]="true"
           (cancel)="store.view.set('lobby')">
         </app-game-result-overlay>
@@ -95,6 +96,15 @@ export class SudokuPkSpeedComponent {
   getPlayers() {
     const players = Object.values(this.store.players() as any) as any[];
     return players.sort((a, b) => b.progress - a.progress);
+  }
+
+  getStats() {
+    const players = this.getPlayers();
+    const myPlayer = players.find(p => p.id === this.store.playerId());
+    if (myPlayer) {
+      return [{ label: 'PROGRESS', value: `${myPlayer.progress}/81` }];
+    }
+    return [];
   }
 
   isWinner(): boolean {

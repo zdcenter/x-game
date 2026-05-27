@@ -12,12 +12,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, DragDropModule],
+  imports: [CommonModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -31,104 +32,117 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
           
           <!-- Header -->
-          <div class="flex items-center justify-between mb-4 lg:mb-6 pb-4 border-b" style="border-color: var(--color-border-card)">
-            <!-- Left: Title & Mode -->
-            <!-- Left: Title & Mode -->
-            <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
-              <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.back')() || 'Back' }}</span>
-              </button>
-              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap">
-                <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                  {{ i18n.t('app.title')() }}
-                </span>
-                <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
-                  {{ currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')()) }}
-                </span>
-              </h1>
-              <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)]" [title]="i18n.t('game.rules.tooltip')()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </div>
-            
-            <!-- Center: PK Scoreboard OR Single Player Difficulty -->
-            <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center">
-              @if (currentRoomMode() === 'single') {
-                <div class="flex rounded-xl p-0.5 sm:p-1 shadow-inner">
-                  <button (click)="openDifficultySettings('single')" 
-                          class="px-2 sm:px-4 py-1 sm:py-1.5 rounded-lg border border-[var(--color-border-card)] text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 sm:gap-2 shadow-sm shrink-0">
-                    <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentDifficulty()) }}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-              } @else if (currentRoomMode() === 'pk_speed' && store.speedOpponents().length > 0) {
-                <div class="flex flex-wrap items-center gap-2 lg:gap-4 justify-center flex-1">
-                  @for (opp of store.speedOpponents(); track opp.id) {
-                    <div class="flex items-center gap-1 lg:gap-2 bg-[var(--color-bg-main)] px-2 lg:px-3 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
-                      <span class="text-[8px] lg:text-xs opacity-70 font-bold max-w-[50px] truncate" [title]="opp.id">{{ opp.id }}</span>
-                      <div class="w-10 lg:w-20 h-1.5 lg:h-2 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
-                        <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="opp.progress + '%'"></div>
+          <div class="flex flex-col mb-4 lg:mb-6 pb-4 border-b relative" style="border-color: var(--color-border-card)">
+            <div class="flex items-center justify-between w-full">
+              <!-- Left: Title & Mode -->
+              <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
+                <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2 z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ i18n.t('game.back')() || 'Back' }}</span>
+                </button>
+                <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap z-10">
+                  <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                    {{ i18n.t('app.title')() }}
+                  </span>
+                  <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
+                    {{ currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')()) }}
+                  </span>
+                </h1>
+                <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10" [title]="i18n.t('game.rules.tooltip')()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
+              
+              <!-- Center: PK Scoreboard OR Single Player Difficulty -->
+              <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center z-10">
+                @if (currentRoomMode() === 'single') {
+                  <div class="flex rounded-xl p-0.5 sm:p-1 shadow-inner">
+                    <button (click)="openDifficultySettings('single')" 
+                            class="px-2 sm:px-4 py-1 sm:py-1.5 rounded-lg border border-[var(--color-border-card)] text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 sm:gap-2 shadow-sm shrink-0">
+                      <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentDifficulty()) }}</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                } @else if (currentRoomMode() === 'pk_speed' && store.speedOpponents().length > 0) {
+                  <div class="flex flex-wrap items-center gap-2 lg:gap-4 justify-center flex-1">
+                    @for (opp of store.speedOpponents(); track opp.id) {
+                      <div class="flex items-center gap-1 lg:gap-2 bg-[var(--color-bg-main)] px-2 lg:px-3 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
+                        <span class="text-[8px] lg:text-xs opacity-70 font-bold max-w-[50px] truncate" [title]="opp.id">{{ opp.id }}</span>
+                        <div class="w-10 lg:w-20 h-1.5 lg:h-2 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
+                          <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="opp.progress + '%'"></div>
+                        </div>
+                        <span class="text-[8px] lg:text-xs font-mono font-bold text-[var(--color-accent-to)]">{{ opp.progress | number:'1.0-0' }}%</span>
+                        @if (opp.errors > 0) {
+                          <span class="text-[8px] lg:text-xs font-bold text-red-400 flex items-center" title="Mistakes">
+                            💣{{ opp.errors }}
+                          </span>
+                        }
                       </div>
-                      <span class="text-[8px] lg:text-xs font-mono font-bold text-[var(--color-accent-to)]">{{ opp.progress | number:'1.0-0' }}%</span>
-                      @if (opp.errors > 0) {
-                        <span class="text-[8px] lg:text-xs font-bold text-red-400 flex items-center" title="Mistakes">
-                          💣{{ opp.errors }}
-                        </span>
+                    }
+                  </div>
+                } @else {
+                  @for (player of getPlayerScores(); track player.id) {
+                    <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-[var(--color-bg-main)] flex items-center gap-1.5 lg:gap-3 transition-transform"
+                         [class.border-[var(--color-accent-to)]]="player.id === playerId"
+                         [class.scale-110]="player.id === playerId"
+                         [class.shadow-lg]="player.id === playerId"
+                         [class.border-[var(--color-border-card)]]="player.id !== playerId">
+                      <span class="text-[8px] lg:text-xs font-bold opacity-70 max-w-[80px] truncate" [title]="player.id">{{ player.id }}</span>
+                      <span class="text-sm lg:text-lg font-black" [class.text-[var(--color-accent-to)]]="player.id === playerId" [class.text-inherit]="player.id !== playerId">{{ player.score }}</span>
+                      @if (player.id !== playerId && store.opponentErrors() > 0) {
+                        <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.opponentErrors() }}</span>
+                      }
+                      @if (player.id === playerId && store.myErrors() > 0) {
+                        <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.myErrors() }}</span>
                       }
                     </div>
                   }
-                </div>
-              } @else {
-                @for (player of getPlayerScores(); track player.id) {
-                  <div class="px-2 lg:px-4 py-1 lg:py-2 rounded-full border bg-[var(--color-bg-main)] flex items-center gap-1.5 lg:gap-3 transition-transform"
-                       [class.border-[var(--color-accent-to)]]="player.id === playerId"
-                       [class.scale-110]="player.id === playerId"
-                       [class.shadow-lg]="player.id === playerId"
-                       [class.border-[var(--color-border-card)]]="player.id !== playerId">
-                    <span class="text-[8px] lg:text-xs font-bold opacity-70 max-w-[80px] truncate" [title]="player.id">{{ player.id }}</span>
-                    <span class="text-sm lg:text-lg font-black" [class.text-[var(--color-accent-to)]]="player.id === playerId" [class.text-inherit]="player.id !== playerId">{{ player.score }}</span>
-                    @if (player.id !== playerId && store.opponentErrors() > 0) {
-                      <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.opponentErrors() }}</span>
-                    }
-                    @if (player.id === playerId && store.myErrors() > 0) {
-                      <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.myErrors() }}</span>
-                    }
+                }
+              </div>
+
+              <!-- Right: Timer & Mines -->
+              <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center z-10">
+                @if (store.status() === 'playing') {
+                  <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ elapsedTime() }}
                   </div>
                 }
-              }
+
+                <div class="flex flex-col items-center bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
+                  <span class="text-[8px] lg:text-xs opacity-70 font-semibold uppercase tracking-wider">{{ i18n.t('minesweeper.mines')() }}</span>
+                  <span class="text-sm lg:text-2xl font-mono text-[var(--color-accent-to)] font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
+                </div>
+                
+                @if (currentRoomMode() !== 'single') {
+                  <button (click)="leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
+                  </button>
+                }
+              </div>
             </div>
 
-            <!-- Right: Timer & Mines -->
-            <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center">
-              @if (store.status() === 'playing') {
-                <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ elapsedTime() }}
-                </div>
-              }
-
-              <div class="flex flex-col items-center bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
-                <span class="text-[8px] lg:text-xs opacity-70 font-semibold uppercase tracking-wider">{{ i18n.t('minesweeper.mines')() }}</span>
-                <span class="text-sm lg:text-2xl font-mono text-[var(--color-accent-to)] font-bold">{{ store.remainingMines() | number:'2.0' }}</span>
+            <!-- Global Progress Bar -->
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/20 group cursor-help translate-y-[2px]">
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
+                   [style.width.%]="store.myProgress()">
               </div>
-              
-              @if (currentRoomMode() !== 'single') {
-                <button (click)="leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
-                </button>
-              }
+              <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-[10px] font-bold text-white bg-black/80 px-2 rounded-full absolute bottom-2 whitespace-nowrap shadow-md z-20">
+                  {{ store.myRevealedCnt() }} / {{ store.totalSafeCells() }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -137,30 +151,28 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                [class.animate-gold-pulse]="store.status() === 'finished' && !isDefeat()"
                [class.animate-red-pulse]="store.status() === 'finished' && isDefeat()">
             
+            <!-- Waiting Overlay -->
+            @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
+              <div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-bg-main)]">
+                <app-game-waiting-room
+                  class="w-full h-full flex"
+                  [mode]="currentRoomMode()"
+                  [roomId]="currentRoomId()"
+                  [players]="getPlayerScores()"
+                  [hostId]="store.host()"
+                  [currentUserId]="playerId"
+                  (leave)="leaveRoom()"
+                  (start)="store.startGame()"
+                ></app-game-waiting-room>
+              </div>
+            }
+
             <div #boardContainer class="p-4 bg-[var(--color-bg-card)] shadow-inner flex-grow overflow-hidden flex justify-center items-center">
             
               <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
                    [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
             
-            <!-- Waiting Overlay -->
-            @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
-              <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-2xl text-[var(--color-text-main)]">
-                @if (getPlayerScores().length < 2) {
-                  <div class="w-12 h-12 border-4 border-slate-600 border-t-[var(--color-accent-to)] rounded-full animate-spin mb-4"></div>
-                  <h2 class="text-2xl font-bold tracking-widest uppercase">{{ i18n.t('game.waiting_challenger')() }}</h2>
-                } @else {
-                  @if (store.host() === playerId) {
-                    <h2 class="text-3xl font-black mb-6 uppercase">{{ i18n.t('game.ready')() }}</h2>
-                    <button (click)="store.startGame()" class="px-8 py-4 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
-                      {{ i18n.t('game.start_pk')() }}
-                    </button>
-                  } @else {
-                    <div class="w-12 h-12 border-4 border-slate-600 border-t-[var(--color-accent-from)] rounded-full animate-spin mb-4"></div>
-                    <h2 class="text-2xl font-bold tracking-widest uppercase">{{ i18n.t('game.waiting_host')() }}</h2>
-                  }
-                }
-              </div>
-            }
+
             
             <!-- Starting Overlay -->
             @if (store.status() === GameStatus.Starting) {
@@ -178,6 +190,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                 [status]="getOverlayStatus()"
                 [title]="getOverlayTitle()"
                 [subtitle]="getOverlaySubtitle()"
+                [stats]="getOverlayStats()"
                 [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
                 (restart)="store.restartGame()">
               </app-game-result-overlay>
@@ -195,21 +208,23 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
 
 
-            <div #board class="inline-flex flex-col gap-1 relative z-0 m-auto will-change-transform origin-center transition-transform duration-75"
-                 [class.opacity-50]="isFrozen()" 
-                 [class.animate-board-shake]="store.status() === 'finished'">
-              @for (row of store.board(); track $index) {
-                <div class="flex gap-1">
-                  @for (cell of row; track cell.x + '-' + cell.y) {
-                    <app-cell 
-                      [cell]="cell"
-                      (reveal)="handleCellClick(cell.x, cell.y)"
-                      (flag)="store.toggleFlag(cell.x, cell.y)"
-                    ></app-cell>
-                  }
-                </div>
-              }
-            </div>
+            @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
+              <div #board class="inline-flex flex-col gap-1 relative z-0 m-auto will-change-transform origin-center transition-transform duration-75"
+                   [class.opacity-50]="isFrozen()" 
+                   [class.animate-board-shake]="store.status() === 'finished'">
+                @for (row of store.board(); track $index) {
+                  <div class="flex gap-1">
+                    @for (cell of row; track cell.x + '-' + cell.y) {
+                      <app-cell 
+                        [cell]="cell"
+                        (reveal)="handleCellClick(cell.x, cell.y)"
+                        (flag)="store.toggleFlag(cell.x, cell.y)"
+                      ></app-cell>
+                    }
+                  </div>
+                }
+              </div>
+            }
               </div>
           </div>
           </div>
@@ -245,7 +260,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
       </div>
 
       <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col min-h-[400px] lg:min-h-0">
+      <div class="w-full lg:w-80 flex-shrink-0 flex-col min-h-[400px] lg:min-h-0"
+           [ngClass]="store.status() !== 'waiting' ? 'hidden lg:flex' : 'flex'">
         <app-game-lobby-panel
           [currentGameId]="'minesweeper'"
           [gameModes]="minesweeperModes"
@@ -851,5 +867,36 @@ export class MinesweeperComponent implements OnInit {
       return this.currentRoomMode() === 'single' ? this.i18n.t('game.stepped_mine')() : this.i18n.t('game.steal_defeat')();
     }
     return this.currentRoomMode() === 'single' ? this.i18n.t('minesweeper.cleared')() : this.i18n.t('game.steal_victory')();
+  }
+
+  getOverlayStats() {
+    const stats: {label: string, value: string | number}[] = [];
+    
+    // Time spent is relevant for single and speed mode
+    if (this.currentRoomMode() !== 'pk_steal') {
+      let timeStr = this.elapsedTime();
+      if (this.currentRoomMode() === 'single') {
+        const start = this.store.startAt();
+        if (start > 0) {
+          const diffMs = Date.now() - start;
+          const totalSec = Math.max(0, Math.floor(diffMs / 1000));
+          const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+          const s = (totalSec % 60).toString().padStart(2, '0');
+          timeStr = `${m}:${s}`;
+        }
+      }
+      if (timeStr && timeStr !== '00:00') {
+        stats.push({ label: 'TIME', value: timeStr });
+      }
+    }
+    
+    // Score (flags) is relevant for steal mode
+    if (this.currentRoomMode() === 'pk_steal') {
+      const scores = this.store.scores();
+      const myScore = scores[this.playerId] || 0;
+      stats.push({ label: 'SCORE', value: myScore });
+    }
+    
+    return stats;
   }
 }

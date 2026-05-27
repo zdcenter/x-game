@@ -161,6 +161,15 @@ export class MinesweeperStore {
   readonly height = computed(() => this.myBoardData().height || 16);
   readonly totalMines = computed(() => this.myBoardData().mines || 40);
 
+  readonly myRevealedCnt = computed(() => this.myBoardData().revealed_cnt || 0);
+  readonly totalSafeCells = computed(() => (this.width() * this.height()) - this.totalMines());
+  
+  readonly myProgress = computed(() => {
+    const total = this.totalSafeCells();
+    if (total === 0) return 0;
+    return Math.min(100, Math.max(0, (this.myRevealedCnt() / total) * 100));
+  });
+
   readonly remainingMines = computed(() => {
     let flagged = 0;
     for (const row of this.board()) {

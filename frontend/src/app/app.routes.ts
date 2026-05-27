@@ -6,11 +6,13 @@ export const routes: Routes = [
   { path: '', redirectTo: 'lobby', pathMatch: 'full' },
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent),
+    data: { seo: { titleKey: 'seo.login.title', descKey: 'seo.login.desc', keywordsKey: 'seo.login.keywords' } }
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/auth/register.component').then(m => m.RegisterComponent)
+    loadComponent: () => import('./features/auth/register.component').then(m => m.RegisterComponent),
+    data: { seo: { titleKey: 'seo.register.title', descKey: 'seo.register.desc', keywordsKey: 'seo.register.keywords' } }
   },
   
   // -- Player Facing Routes --
@@ -20,15 +22,18 @@ export const routes: Routes = [
     children: [
       {
         path: 'lobby',
-        loadComponent: () => import('./features/lobby/lobby.component').then(m => m.LobbyComponent)
+        loadComponent: () => import('./features/lobby/lobby.component').then(m => m.LobbyComponent),
+        data: { seo: { titleKey: 'seo.lobby.title', descKey: 'seo.lobby.desc', keywordsKey: 'seo.lobby.keywords' } }
       },
       {
         path: 'games/minesweeper',
-        loadComponent: () => import('./features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent)
+        loadComponent: () => import('./features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent),
+        data: { seo: { titleKey: 'seo.minesweeper.title', descKey: 'seo.minesweeper.desc', keywordsKey: 'seo.minesweeper.keywords' } }
       },
       {
         path: 'games/sudoku',
-        loadComponent: () => import('./features/games/sudoku/sudoku.component').then(m => m.SudokuComponent)
+        loadComponent: () => import('./features/games/sudoku/sudoku.component').then(m => m.SudokuComponent),
+        data: { seo: { titleKey: 'seo.sudoku.title', descKey: 'seo.sudoku.desc', keywordsKey: 'seo.sudoku.keywords' } }
       }
     ]
   },
@@ -38,6 +43,7 @@ export const routes: Routes = [
     path: 'admin',
     loadComponent: () => import('./core/layouts/admin-layout.component').then(m => m.AdminLayoutComponent),
     canActivate: [adminGuard],
+    data: { seo: { titleKey: 'seo.admin.title', descKey: 'seo.admin.desc', keywordsKey: 'seo.admin.keywords' } },
     children: [
       { path: '', redirectTo: 'users', pathMatch: 'full' },
       {
