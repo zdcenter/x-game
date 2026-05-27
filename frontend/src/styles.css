@@ -9,6 +9,7 @@
     --color-text-main: #f1f5f9; /* slate-100 */
     --color-bg-card: rgba(15, 23, 42, 0.6); /* slate-900/60 */
     --color-border-card: rgba(51, 65, 85, 0.5); /* slate-700/50 */
+    --color-border-thick: rgba(241, 245, 249, 0.3); /* slate-100/30 */
     --color-accent-from: #60a5fa; /* blue-400 */
     --color-accent-to: #34d399; /* emerald-400 */
     --color-cell-highlight: rgba(255, 255, 255, 0.15);
@@ -21,6 +22,7 @@
     --color-text-main: #f1f5f9;
     --color-bg-card: rgba(15, 23, 42, 0.6);
     --color-border-card: rgba(51, 65, 85, 0.5);
+    --color-border-thick: rgba(241, 245, 249, 0.3); /* slate-100/30 */
     --color-accent-from: #60a5fa;
     --color-accent-to: #34d399;
     --color-cell-highlight: rgba(255, 255, 255, 0.15);
@@ -33,6 +35,7 @@
     --color-text-main: #0f172a; /* slate-900 */
     --color-bg-card: rgba(255, 255, 255, 0.7); /* white/70 */
     --color-border-card: rgba(203, 213, 225, 0.5); /* slate-300/50 */
+    --color-border-thick: rgba(15, 23, 42, 0.3); /* slate-900/30 */
     --color-accent-from: #3b82f6; /* blue-500 */
     --color-accent-to: #10b981; /* emerald-500 */
     --color-cell-highlight: rgba(255, 255, 255, 0.8);

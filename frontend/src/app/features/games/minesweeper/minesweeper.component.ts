@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -36,6 +36,12 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             <!-- Left: Title & Mode -->
             <!-- Left: Title & Mode -->
             <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
+              <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                <span class="hidden sm:inline">{{ i18n.t('game.back')() || 'Back' }}</span>
+              </button>
               <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap">
                 <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                   {{ i18n.t('app.title')() }}
@@ -342,6 +348,7 @@ export class MinesweeperComponent implements OnInit {
   showRules = signal(false);
   gameRules = signal('');
   route = inject(ActivatedRoute);
+  router = inject(Router);
   parsedRulesHTML = computed(() => marked.parse(this.gameRules(), { async: false }) as string);
 
   playerId = this.authStore.currentUser()?.username || 'Guest';
@@ -728,6 +735,17 @@ export class MinesweeperComponent implements OnInit {
         this.toastService.show(this.i18n.t('game.dismiss_success')() || 'Room dismissed successfully', 'success');
       }
     });
+  }
+
+  goBack() {
+    if (this.currentRoomId()) {
+      if (this.store.host() === this.playerId) {
+        this.wsService.send({ type: 'dismiss_room' });
+      } else {
+        this.wsService.send({ type: 'leave_room' });
+      }
+    }
+    this.router.navigate(['/lobby']);
   }
 
   handleCellClick(x: number, y: number) {

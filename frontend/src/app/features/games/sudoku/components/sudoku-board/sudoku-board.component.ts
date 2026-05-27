@@ -24,9 +24,10 @@ import { SudokuStore, SudokuCell } from '../../store/sudoku.store';
             <div 
               class="relative flex items-center justify-center cursor-pointer select-none transition-all duration-200"
               [style.background-color]="getCellBg(cell)"
-              [class.border-r-2]="(c + 1) % 3 === 0 && c !== 8"
-              [class.border-b-2]="(r + 1) % 3 === 0 && r !== 8"
-              [class.border-[var(--color-border-card)]]="true"
+              [class.border-r-[2px]]="(c + 1) % 3 === 0 && c !== 8"
+              [class.border-b-[2px]]="(r + 1) % 3 === 0 && r !== 8"
+              [style.border-right-color]="((c + 1) % 3 === 0 && c !== 8) ? 'var(--color-border-thick)' : ''"
+              [style.border-bottom-color]="((r + 1) % 3 === 0 && r !== 8) ? 'var(--color-border-thick)' : ''"
               [class.text-white]="isSelected(cell) || isSameValue(cell)"
               [class.text-[var(--color-text-main)]]="cell.fixed && !isSelected(cell) && !isSameValue(cell)"
               [class.text-[var(--color-accent-from)]]="!cell.fixed && !cell.error && cell.val !== 0 && !isSelected(cell) && !isSameValue(cell)"
