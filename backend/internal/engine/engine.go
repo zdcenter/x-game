@@ -1,5 +1,7 @@
 package engine
 
+import "fmt"
+
 // GameState represents the current state of a game
 type GameState string
 
@@ -24,6 +26,12 @@ type GameEngine interface {
 	// GetState returns the current game state to be broadcasted to clients
 	GetState() interface{}
 
+	// GetStatus returns the true current status of the game (waiting, starting, playing, finished)
+	GetStatus() GameState
+
+	// SetBroadcaster allows the engine to trigger a websocket broadcast asynchronously
+	SetBroadcaster(func())
+
 	// AddPlayer is called when a player connects to the room
 	AddPlayer(playerID string)
 
@@ -32,4 +40,22 @@ type GameEngine interface {
 
 	// HasPlayer checks if a player is already part of the game session
 	HasPlayer(playerID string) bool
+}
+
+// EngineFactory is a function that creates a new instance of a GameEngine
+type EngineFactory func() GameEngine
+
+var registry = make(map[string]EngineFactory)
+
+// Register adds an engine factory to the global registry for a specific game mode
+func Register(mode string, factory EngineFactory) {
+	registry[mode] = factory
+}
+
+// CreateEngine instantiates a new game engine based on the mode using the registry
+func CreateEngine(mode string) (GameEngine, error) {
+	if factory, exists := registry[mode]; exists {
+		return factory(), nil
+	}
+	return nil, fmt.Errorf("unknown game mode: %s", mode)
 }

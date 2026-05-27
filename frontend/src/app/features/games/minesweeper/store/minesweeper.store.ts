@@ -207,7 +207,7 @@ export class MinesweeperStore {
           this.tick.set(this.tick() + 1);
        }
     } else {
-      this.ws.send({ type: 'start_game' });
+      this.ws.send({ action: 'start' });
     }
   }
 

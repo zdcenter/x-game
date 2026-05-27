@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -12,6 +12,8 @@ import { SudokuRoomComponent } from './components/sudoku-room/sudoku-room.compon
 import { SudokuPkStealComponent } from './components/sudoku-pk-steal/sudoku-pk-steal.component';
 import { SudokuPkSpeedComponent } from './components/sudoku-pk-speed/sudoku-pk-speed.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { AuthStore } from '../../../core/auth/auth.store';
 
 @Component({
   selector: 'app-sudoku',
@@ -39,9 +41,9 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
         <app-sudoku-room></app-sudoku-room>
       } @else {
         <!-- PLAY VIEW -->
-        @if (store.currentMode() === 'sudoku_pk_steal') {
+        @if (store.currentMode() === 'pk_steal') {
           <app-sudoku-pk-steal></app-sudoku-pk-steal>
-        } @else if (store.currentMode() === 'sudoku_pk_speed') {
+        } @else if (store.currentMode() === 'pk_speed') {
           <app-sudoku-pk-speed></app-sudoku-pk-speed>
         } @else {
           <!-- Single Player -->
@@ -95,11 +97,15 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
     </div>
   `
 })
-export class SudokuComponent implements OnInit {
+export class SudokuComponent implements OnInit, OnDestroy {
   store = inject(SudokuStore);
   route = inject(ActivatedRoute);
   http = inject(HttpClient);
   i18n = inject(I18nService);
+  wsService = inject(WebSocketService);
+  authStore = inject(AuthStore);
+  
+  playerId = this.authStore.currentUser()?.username || 'Guest';
   
   // Use signal for view state: 'lobby' | 'play'
   view = this.store.view;
@@ -124,12 +130,13 @@ export class SudokuComponent implements OnInit {
 
   ngOnInit() {
     this.view.set('lobby');
+    this.wsService.connectLobby(this.playerId, this.playerId);
 
     this.route.queryParams.subscribe(params => {
       if (params['roomId']) {
         this.store.joinRoom(
           params['roomId'], 
-          params['mode'] || 'sudoku_pk_steal', 
+          params['mode'] || 'pk_steal', 
           params['difficulty'] || 'easy', 
           params['host']
         );
@@ -137,6 +144,10 @@ export class SudokuComponent implements OnInit {
         window.history.replaceState({}, '', '/sudoku');
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.wsService.disconnectLobby();
   }
 
   startLevel(level: {id: string, puzzle: string, savedState?: string, timeSpent?: number}) {

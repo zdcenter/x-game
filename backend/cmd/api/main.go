@@ -10,6 +10,10 @@ import (
 	ws "github.com/x-game/backend/internal/handlers/ws"
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/middleware"
+
+	// Register engines
+	_ "github.com/x-game/backend/internal/engine/minesweeper"
+	_ "github.com/x-game/backend/internal/engine/sudoku"
 )
 
 func main() {

@@ -18,6 +18,12 @@ type MinesweeperEngine struct {
 	Errors    map[string]int
 	Mode      string
 	PenaltyMs int64
+	broadcast func()
+}
+
+func init() {
+	engine.Register("minesweeper_single", func() engine.GameEngine { return &MinesweeperEngine{} })
+	engine.Register("minesweeper_pk_steal", func() engine.GameEngine { return &MinesweeperEngine{} })
 }
 
 // Action structure for incoming payloads
@@ -98,6 +104,33 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 
 func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error) {
 	log.Printf("[DEBUG] HandleAction called by player=%s, payload=%s", playerID, string(payload))
+	
+	// Parse generic action from payload
+	var baseAction struct {
+		Action string `json:"action"`
+	}
+	if err := json.Unmarshal(payload, &baseAction); err == nil {
+		if baseAction.Action == "start" && e.Board.Status == engine.StateWaiting {
+			e.Board.Status = engine.StateStarting
+			e.Board.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
+			
+			// Schedule start
+			go func() {
+				time.Sleep(3 * time.Second)
+				if e.Board.Status == engine.StateStarting {
+					e.Board.Status = engine.StatePlaying
+					e.Board.StartAt = time.Now().UnixMilli()
+					x, y := e.Board.FindSafeStartPoint()
+					e.revealCell(x, y)
+					if e.broadcast != nil {
+						e.broadcast()
+					}
+				}
+			}()
+			return e.Board.Status, nil
+		}
+	}
+
 	if e.Board.Status != engine.StatePlaying {
 		log.Printf("[DEBUG] Rejecting %s: Game state is %s", playerID, e.Board.Status)
 		return e.Board.Status, errors.New("game is not in playing state")
@@ -300,16 +333,10 @@ func (e *MinesweeperEngine) HasPlayer(playerID string) bool {
 	return exists
 }
 
-func (e *MinesweeperEngine) SetStarting() {
-	e.Board.Status = engine.StateStarting
-	e.Board.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
+func (e *MinesweeperEngine) GetStatus() engine.GameState {
+	return e.Board.Status
 }
 
-func (e *MinesweeperEngine) StartPlayingAndRevealSafe() {
-	e.Board.Status = engine.StatePlaying
-	e.Board.StartAt = time.Now().UnixMilli() // Record start time for elapsed timer
-
-	// Find the best safe start point and reveal it
-	x, y := e.Board.FindSafeStartPoint()
-	e.revealCell(x, y)
+func (e *MinesweeperEngine) SetBroadcaster(b func()) {
+	e.broadcast = b
 }

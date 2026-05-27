@@ -27,6 +27,11 @@ type StealEngine struct {
 	Solution       string
 	CurrentBoard   string // The shared board state, e.g. "53..7..."
 	Winners        []string
+	broadcast      func()
+}
+
+func init() {
+	engine.Register("sudoku_pk_steal", func() engine.GameEngine { return &StealEngine{} })
 }
 
 func (e *StealEngine) InitGame(options interface{}) error {
@@ -109,8 +114,18 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
+	var baseReq struct {
+		Action string `json:"action"`
+	}
+	if err := json.Unmarshal(payload, &baseReq); err == nil && baseReq.Action != "" {
+		action = baseReq.Action
+	}
+
 	if action == "start" && e.State == engine.StateWaiting {
 		e.State = engine.StatePlaying
+		if e.broadcast != nil {
+			go e.broadcast()
+		}
 		return e.State, nil
 	}
 
@@ -192,4 +207,14 @@ func (e *StealEngine) CheckGameOver() (bool, []string) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.State == engine.StateFinished, e.Winners
+}
+
+func (e *StealEngine) GetStatus() engine.GameState {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.State
+}
+
+func (e *StealEngine) SetBroadcaster(b func()) {
+	e.broadcast = b
 }

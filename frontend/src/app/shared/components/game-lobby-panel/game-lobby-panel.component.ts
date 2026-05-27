@@ -56,12 +56,12 @@ export interface GameDifficulty {
                   <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
                     <div class="flex justify-between items-center mb-2">
                       <div class="flex items-center gap-2">
-                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20"
+                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20 shrink-0"
                               [class.text-blue-400]="room.game === 'sudoku'"
                               [class.text-green-400]="room.game === 'minesweeper'">
                           {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
                         </span>
-                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)]">{{ decodeName(room.id) }}</span>
+                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] sm:max-w-[180px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }}</span>
                       </div>
                       <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
                             [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
@@ -71,7 +71,7 @@ export interface GameDifficulty {
                     </div>
                     <div class="flex justify-between items-end">
                       <div class="text-[10px] opacity-70 uppercase tracking-wider flex items-center gap-2">
-                        <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold">{{ room.host }}</span></span>
+                        <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold" [title]="room.host">{{ formatHost(room.host) }}</span></span>
                         @if (room.createdAt) {
                           <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
                           <span>{{ room.createdAt * 1000 | date:'HH:mm:ss' }}</span>
@@ -112,12 +112,12 @@ export interface GameDifficulty {
                     <div class="p-3 bg-[var(--color-bg-card)] rounded-xl border-[2px] border-[var(--color-accent-to)] shadow-sm">
                       <div class="flex justify-between items-center mb-2">
                         <div class="flex items-center gap-2">
-                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20"
+                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20 shrink-0"
                                 [class.text-blue-400]="room.game === 'sudoku'"
                                 [class.text-green-400]="room.game === 'minesweeper'">
                             {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
                           </span>
-                          <span class="font-mono text-sm font-bold text-inherit">{{ decodeName(room.id) }} (Host)</span>
+                          <span class="font-mono text-sm font-bold text-inherit truncate max-w-[100px] sm:max-w-[150px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }} (Host)</span>
                         </div>
                         <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
                               [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
@@ -167,7 +167,7 @@ export interface GameDifficulty {
                        [class.bg-yellow-400]="player.status === 'playing'"></div>
                 </div>
                 <div>
-                  <div class="text-sm font-bold text-inherit leading-none">{{ player.username }}</div>
+                  <div class="text-sm font-bold text-inherit leading-none truncate max-w-[120px]" [title]="player.username">{{ formatHost(player.username, 15) }}</div>
                   <div class="text-[10px] opacity-70 uppercase mt-1">{{ player.status }}</div>
                 </div>
               </div>
@@ -287,12 +287,25 @@ export class GameLobbyPanelComponent {
     return this.i18n.t(key)();
   }
 
-  decodeName(name: string): string {
+  decodeName(name: string, maxLength = 12): string {
+    let decoded = name;
     try {
-      return decodeURIComponent(name);
+      decoded = decodeURIComponent(name);
     } catch {
-      return name;
+      decoded = name;
     }
+    if (decoded.length > maxLength) {
+      return decoded.substring(0, maxLength) + '...';
+    }
+    return decoded;
+  }
+
+  formatHost(name: string, maxLength = 10): string {
+    if (!name) return '';
+    if (name.length > maxLength) {
+      return name.substring(0, maxLength) + '...';
+    }
+    return name;
   }
 
   openCreateRoomModal() {

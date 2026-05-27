@@ -17,7 +17,7 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
         <div class="relative z-10">
           <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">Waiting Room</h2>
           <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-8 text-sm sm:text-base">
-            <p class="text-[var(--color-text-muted)] font-medium bg-black/20 px-4 py-2 rounded-xl">Mode: <span class="text-blue-400 font-bold ml-1">{{ store.currentMode() === 'sudoku_pk_steal' ? 'Steal Mode' : 'Speed Mode' }}</span></p>
+            <p class="text-[var(--color-text-muted)] font-medium bg-black/20 px-4 py-2 rounded-xl">Mode: <span class="text-blue-400 font-bold ml-1">{{ store.currentMode() === 'pk_steal' ? 'Steal Mode' : 'Speed Mode' }}</span></p>
             <p class="text-[var(--color-text-muted)] font-medium bg-black/20 px-4 py-2 rounded-xl">Room: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ store.roomId() }}</span></p>
           </div>
 

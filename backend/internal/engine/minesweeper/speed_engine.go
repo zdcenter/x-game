@@ -18,6 +18,11 @@ type SpeedEngine struct {
 	Errors    map[string]int
 	Status    engine.GameState
 	PenaltyMs int64
+	broadcast func()
+}
+
+func init() {
+	engine.Register("minesweeper_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 type PKSpeedStateResponse struct {
@@ -140,6 +145,39 @@ func (e *SpeedEngine) StartPlayingAndRevealSafe() {
 }
 
 func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error) {
+	// Parse generic action from payload
+	var baseAction struct {
+		Action string `json:"action"`
+	}
+	if err := json.Unmarshal(payload, &baseAction); err == nil {
+		if baseAction.Action == "start" && e.Status == engine.StateWaiting {
+			e.Status = engine.StateStarting
+			for _, b := range e.Boards {
+				b.Status = engine.StateStarting
+				b.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
+			}
+			
+			// Schedule start
+			go func() {
+				time.Sleep(3 * time.Second)
+				if e.Status == engine.StateStarting {
+					e.Status = engine.StatePlaying
+					now := time.Now().UnixMilli()
+					x, y := e.BaseBoard.FindSafeStartPoint()
+					for _, b := range e.Boards {
+						b.Status = engine.StatePlaying
+						b.StartAt = now
+						e.revealCell(b, x, y)
+					}
+					if e.broadcast != nil {
+						e.broadcast()
+					}
+				}
+			}()
+			return e.Status, nil
+		}
+	}
+
 	if e.Status != engine.StatePlaying {
 		return e.Status, errors.New("game is not in playing state")
 	}
@@ -262,4 +300,12 @@ func (e *SpeedEngine) CheckGameOver() (bool, []string) {
 		return true, winners
 	}
 	return false, nil
+}
+
+func (e *SpeedEngine) GetStatus() engine.GameState {
+	return e.Status
+}
+
+func (e *SpeedEngine) SetBroadcaster(b func()) {
+	e.broadcast = b
 }

@@ -24,6 +24,11 @@ type SpeedEngine struct {
 	Puzzle     string
 	Solution   string
 	Winners    []string
+	broadcast  func()
+}
+
+func init() {
+	engine.Register("sudoku_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
@@ -97,8 +102,18 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
+	var baseReq struct {
+		Action string `json:"action"`
+	}
+	if err := json.Unmarshal(payload, &baseReq); err == nil && baseReq.Action != "" {
+		action = baseReq.Action
+	}
+
 	if action == "start" && e.State == engine.StateWaiting {
 		e.State = engine.StatePlaying
+		if e.broadcast != nil {
+			go e.broadcast()
+		}
 		return e.State, nil
 	}
 
@@ -143,4 +158,14 @@ func (e *SpeedEngine) CheckGameOver() (bool, []string) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.State == engine.StateFinished, e.Winners
+}
+
+func (e *SpeedEngine) GetStatus() engine.GameState {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.State
+}
+
+func (e *SpeedEngine) SetBroadcaster(b func()) {
+	e.broadcast = b
 }

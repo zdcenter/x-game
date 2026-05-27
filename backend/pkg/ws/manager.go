@@ -10,8 +10,6 @@ import (
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
-	"github.com/x-game/backend/internal/engine/minesweeper"
-	"github.com/x-game/backend/internal/engine/sudoku"
 	"github.com/x-game/backend/pkg/db"
 )
 
@@ -26,7 +24,6 @@ type Room struct {
 	Host       string // Player ID who created the room
 	Mode       string // "single", "pk_steal", "pk_speed"
 	Difficulty string // "easy", "medium", "hard"
-	Status     string // "waiting", "playing", "finished"
 	CreatedAt  int64  // Unix timestamp of creation
 	Clients    map[string]*Client
 	Engine     engine.GameEngine
@@ -61,7 +58,12 @@ func GetActiveRooms() []RoomSnapshot {
 		host := r.Host
 		mode := r.Mode
 		diff := r.Difficulty
-		status := r.Status
+		var status string
+		if r.Engine != nil {
+			status = string(r.Engine.GetStatus())
+		} else {
+			status = "waiting"
+		}
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
 		
@@ -90,15 +92,16 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
 		mode = "single" // default
 	}
 
-	var eng engine.GameEngine
-	if mode == "pk_speed" {
-		eng = &minesweeper.SpeedEngine{}
-	} else if mode == "sudoku_pk_steal" {
-		eng = &sudoku.StealEngine{}
-	} else if mode == "sudoku_pk_speed" {
-		eng = &sudoku.SpeedEngine{}
-	} else {
-		eng = &minesweeper.MinesweeperEngine{}
+	engineKey := gameId + "_" + mode
+	if mode == "single" {
+		engineKey = gameId + "_single"
+	}
+
+	eng, err := engine.CreateEngine(engineKey)
+	if err != nil {
+		log.Printf("Failed to create engine for %s: %v", engineKey, err)
+		// fallback to single mode if engine not found
+		eng, _ = engine.CreateEngine(gameId + "_single")
 	}
 
 	r := &Room{
@@ -107,7 +110,6 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
 		Host:       hostId, // Explicitly set host here, crucial for preserving host on backend restarts
 		Mode:       mode,
 		Difficulty: difficulty,
-		Status:     "waiting",
 		CreatedAt:  time.Now().Unix(),
 		Clients:    make(map[string]*Client),
 		Engine:     eng,
@@ -128,6 +130,12 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
 	}
 
 	r.Engine.InitGame(map[string]interface{}{"mode": mode, "difficulty": difficulty, "penaltySeconds": penaltySeconds})
+	
+	// Inject broadcaster so engine can asynchronously trigger state updates to clients
+	if asyncEng, ok := r.Engine.(interface{ SetBroadcaster(func()) }); ok {
+		asyncEng.SetBroadcaster(r.BroadcastState)
+	}
+
 	Rooms[roomID] = r
 	mu.Unlock()
 	return r
@@ -138,7 +146,7 @@ func (r *Room) AddClient(client *Client) error {
 	defer r.mu.Unlock()
 
 	// Reject if game started and player is new
-	if r.Status != "waiting" && !r.Engine.HasPlayer(client.ID) {
+	if r.Engine.GetStatus() != engine.StateWaiting && !r.Engine.HasPlayer(client.ID) {
 		return fmt.Errorf("game already started")
 	}
 	
@@ -159,6 +167,7 @@ func (r *Room) AddClient(client *Client) error {
 func (r *Room) RemoveClient(clientID string) {
 	r.mu.Lock()
 	delete(r.Clients, clientID)
+	r.Engine.RemovePlayer(clientID)
 	
 	// Destroy room if empty
 	isEmpty := len(r.Clients) == 0
@@ -208,48 +217,28 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				log.Printf("Received restart_game from %s, Room Host is %s", clientID, r.Host)
 				if clientID == r.Host {
 					log.Printf("Restarting room %s", r.ID)
-					var eng engine.GameEngine
-					if r.Mode == "pk_speed" {
-						eng = &minesweeper.SpeedEngine{}
-					} else {
-						eng = &minesweeper.MinesweeperEngine{}
+					engineKey := r.Game + "_" + r.Mode
+					if r.Mode == "single" {
+						engineKey = r.Game + "_single"
+					}
+					
+					eng, err := engine.CreateEngine(engineKey)
+					if err != nil {
+						log.Printf("Failed to create engine for restart: %v", err)
+						return
 					}
 					eng.InitGame(map[string]interface{}{"mode": r.Mode, "difficulty": r.Difficulty})
 					for id := range r.Clients {
 						eng.AddPlayer(id)
 					}
-					r.Engine = eng
-
-					if r.Mode != "single" {
-						r.Status = "waiting"
-					}
-					r.BroadcastStateLocked()
-					log.Printf("Room %s restarted successfully", r.ID)
-				}
-				return
-			} else if msgType == "start_game" {
-				if clientID == r.Host && r.Status == "waiting" && len(r.Clients) >= 2 {
-					r.Status = "starting"
-					// Common interface for both engines
-					type startableEngine interface {
-						SetStarting()
-						StartPlayingAndRevealSafe()
+					
+					if asyncEng, ok := eng.(interface{ SetBroadcaster(func()) }); ok {
+						asyncEng.SetBroadcaster(r.BroadcastState)
 					}
 					
-					if eng, ok := r.Engine.(startableEngine); ok {
-						eng.SetStarting()
-						go func() {
-							time.Sleep(3 * time.Second)
-							r.mu.Lock()
-							if r.Status == "starting" {
-								r.Status = "playing"
-								eng.StartPlayingAndRevealSafe()
-							}
-							r.mu.Unlock()
-							r.BroadcastState()
-						}()
-					}
+					r.Engine = eng
 					r.BroadcastStateLocked()
+					log.Printf("Room %s restarted successfully", r.ID)
 				}
 				return
 			} else if msgType == "dismiss_room" {
