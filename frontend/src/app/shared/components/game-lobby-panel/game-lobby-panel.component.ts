@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
@@ -72,6 +72,10 @@ export interface GameDifficulty {
                     <div class="flex justify-between items-end">
                       <div class="text-[10px] opacity-70 uppercase tracking-wider flex items-center gap-2">
                         <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold">{{ room.host }}</span></span>
+                        @if (room.createdAt) {
+                          <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                          <span>{{ room.createdAt * 1000 | date:'HH:mm:ss' }}</span>
+                        }
                         <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
                         <span>{{ t('game.mode') }}: <span class="text-inherit">{{ getModeLabel(room.mode) }}</span></span>
                         <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
@@ -125,6 +129,9 @@ export interface GameDifficulty {
                         <div class="text-[10px] text-slate-400 uppercase tracking-wider flex flex-col gap-1">
                           <div>{{ t('game.mode') }}: <span class="text-[var(--color-text-main)]">{{ getModeLabel(room.mode) }}</span></div>
                           <div>{{ t('game.diff') }}: <span class="text-yellow-400">{{ getDifficultyLabel(room.difficulty) }}</span></div>
+                          @if (room.createdAt) {
+                            <div class="opacity-80">{{ t('game.created_at') }}: {{ room.createdAt * 1000 | date:'HH:mm:ss' }}</div>
+                          }
                         </div>
                         <div class="flex items-center gap-2">
                           <span class="text-xs text-slate-400">{{ room.players }} 人</span>
@@ -175,16 +182,16 @@ export interface GameDifficulty {
 
     <!-- Create Room Modal Overlay -->
     @if (isCreateModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
-        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-3xl p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)]">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">{{ t('game.create_room_title') }}</h2>
-            <button (click)="isCreateModalOpen.set(false)" class="opacity-50 hover:opacity-100 transition-opacity">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl md:rounded-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] max-h-[95vh] flex flex-col">
+          <div class="flex justify-between items-center mb-4 md:mb-6 shrink-0">
+            <h2 class="text-xl md:text-2xl font-bold">{{ t('game.create_room_title') }} - {{ t('lobby.' + currentGameId) }}</h2>
+            <button (click)="isCreateModalOpen.set(false)" class="text-xl opacity-50 hover:opacity-100 transition-opacity">
               ✕
             </button>
           </div>
           
-          <div class="space-y-6">
+          <div class="space-y-5 md:space-y-6 overflow-y-auto flex-1 pr-1 custom-scrollbar">
             <!-- Room Name -->
             <div>
               <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
@@ -221,16 +228,16 @@ export interface GameDifficulty {
                   <button (click)="newRoomDifficulty.set(diff.id)"
                           [class.bg-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === diff.id"
                           [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== diff.id" [class.opacity-60]="newRoomDifficulty() !== diff.id"
-                          class="px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center gap-1">
+                          class="px-2 md:px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[60px]">
                     <span>{{ t(diff.labelKey) }}</span>
-                    <span class="text-[9px] font-normal opacity-80 whitespace-nowrap">{{ diff.desc }}</span>
+                    <span class="text-[9px] font-normal opacity-80 leading-tight">{{ diff.desc }}</span>
                   </button>
                 }
               </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="pt-4 flex gap-3">
+            <div class="pt-2 pb-2 flex gap-3 shrink-0">
               <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
                 {{ t('game.cancel') }}
               </button>

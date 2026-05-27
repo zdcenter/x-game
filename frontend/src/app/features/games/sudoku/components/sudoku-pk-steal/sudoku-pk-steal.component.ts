@@ -12,7 +12,7 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
   standalone: true,
   imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent],
   template: `
-    <div class="flex-grow flex flex-col md:flex-row md:justify-center p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto md:overflow-hidden relative">
+    <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto md:overflow-hidden relative">
       
       @if (store.isFinished() || store.gameStatus() === 'finished') {
         <app-game-result-overlay
@@ -49,24 +49,18 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
         </div>
       }
 
-      <div class="w-full md:w-64 flex-shrink-0 flex flex-col gap-4">
-        <!-- Leaderboard -->
-        <div class="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-4 shadow-lg">
-          <h3 class="text-lg font-bold text-center mb-4 uppercase tracking-wider text-[var(--color-accent-from)]">Leaderboard</h3>
-          <div class="flex flex-col gap-3">
-            @for (player of getSortedPlayers(); track player.id) {
-              <div class="flex justify-between items-center bg-black/20 p-3 rounded-lg border border-slate-700/50 relative overflow-hidden"
-                   [class.border-[var(--color-accent-from)]]="player.id === store.playerId()"
-                   [class.bg-slate-800]="player.id === store.playerId()">
-                <div class="flex items-center gap-2">
-                  <span class="text-xl">👤</span>
-                  <span class="font-bold truncate max-w-[100px]">{{ player.id }}</span>
-                </div>
-                <div class="font-mono text-xl font-black text-emerald-400">{{ player.score }}</div>
-              </div>
-            }
+      <div class="w-full flex gap-4 overflow-x-auto pb-2">
+        @for (player of getSortedPlayers(); track player.id) {
+          <div class="flex-1 min-w-[150px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-3 shadow-md flex items-center justify-between"
+               [class.border-[var(--color-accent-from)]]="player.id === store.playerId()"
+               [class.bg-slate-800]="player.id === store.playerId()">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">👤</span>
+              <span class="font-bold truncate max-w-[80px] text-sm">{{ player.id }}</span>
+            </div>
+            <div class="font-mono text-lg font-black text-emerald-400">{{ player.score }}</div>
           </div>
-        </div>
+        }
       </div>
 
       <!-- Board, Numpad, Tools Area -->

@@ -73,16 +73,24 @@ export class SudokuStore {
       this.saveStateToBackend();
     });
 
+    // Effect to handle Room -> Play transition
+    effect(() => {
+      const status = this.gameStatus();
+      if (status === 'playing' && this.view() === 'room') {
+        this.view.set('play');
+        const puzzle = this.rawState().puzzle;
+        if (puzzle) {
+          this.initBoard(puzzle);
+        }
+      }
+    }, { allowSignalWrites: true });
+
     // Effect to auto-sync Steal mode board
     effect(() => {
       if (this.currentMode() === 'sudoku_pk_steal') {
         const rState = this.rawState() as any;
         if (rState.status === 'playing' && rState.currentBoard) {
           // Compare and update our local board
-          // If we haven't initialized, we should init first
-          if (this.board().length === 0 && rState.puzzle) {
-             this.initBoard(rState.puzzle);
-          }
           if (this.board().length > 0) {
             const currentStr = rState.currentBoard;
             const b = this.board();
@@ -107,7 +115,7 @@ export class SudokuStore {
           }
         }
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   // --- ROOM MANAGEMENT ---
@@ -200,6 +208,11 @@ export class SudokuStore {
     this.audio.playClick();
 
     if (this.currentMode() === 'sudoku_pk_steal') {
+      const myPlayer = this.players()[this.playerId()];
+      if (myPlayer && myPlayer.freezeUntil > Date.now()) {
+        this.toast.show('You are frozen!', 'error');
+        return;
+      }
       // In steal mode, we send directly to WS and wait for update
       this.ws.send({ action: 'input', r: sel.r, c: sel.c, val: num });
       return;

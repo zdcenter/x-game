@@ -240,7 +240,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
       </div>
 
       <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col bg-[var(--color-bg-card)] backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.1)] min-h-[400px] lg:min-h-0">
+      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col min-h-[400px] lg:min-h-0">
         <app-game-lobby-panel
           [currentGameId]="'minesweeper'"
           [gameModes]="minesweeperModes"
@@ -529,18 +529,21 @@ export class MinesweeperComponent implements OnInit {
     this.stopCountdown();
     this.audioService.playClick(); // initial beep
     
+    // We do a local 3-second countdown to avoid server-client clock sync drift
+    let secondsLeft = 3;
+    this.countdownDisplay.set(secondsLeft.toString());
+    
     this.countdownInterval = setInterval(() => {
-      const remainingMs = this.store.startAt() - Date.now();
-      if (remainingMs <= 0) {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
         this.countdownDisplay.set('GO!');
         this.audioService.playFlag(); // High pitched GO
         this.stopCountdown();
       } else {
-        const seconds = Math.ceil(remainingMs / 1000);
-        this.countdownDisplay.set(seconds.toString());
+        this.countdownDisplay.set(secondsLeft.toString());
         this.audioService.playClick(); // Tick
       }
-    }, 1000); // Check every second roughly
+    }, 1000);
   }
 
   ngOnInit() {

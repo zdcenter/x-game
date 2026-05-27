@@ -118,7 +118,7 @@ interface LevelResponse {
       </div>
 
       <!-- RIGHT: Game Lobby Panel -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col bg-[var(--color-bg-card)] backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.1)] min-h-[400px] lg:min-h-0">
+      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col min-h-[400px] lg:min-h-0">
         <app-game-lobby-panel
           [currentGameId]="'sudoku'"
           [gameModes]="sudokuModes"
@@ -145,8 +145,8 @@ export class SudokuLobbyComponent implements OnInit {
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, savedState?: string, timeSpent?: number}>();
 
   sudokuModes = [
-    { id: 'sudoku_pk_steal', labelKey: 'game.steal_mode', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-    { id: 'sudoku_pk_speed', labelKey: 'game.speed_mode', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }
+    { id: 'sudoku_pk_steal', labelKey: 'game.sudoku_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_pk_steal_desc' },
+    { id: 'sudoku_pk_speed', labelKey: 'game.sudoku_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_pk_speed_desc' }
   ];
 
   difficulties = [

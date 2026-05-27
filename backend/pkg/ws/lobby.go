@@ -75,11 +75,13 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 	for _, r := range safeRooms {
 		activeRooms = append(activeRooms, map[string]interface{}{
 			"id":         r.ID,
+			"game":       r.Game,
 			"host":       r.Host,
 			"players":    r.PlayerCount,
 			"mode":       r.Mode,
 			"difficulty": r.Difficulty,
 			"status":     r.Status,
+			"createdAt":  r.CreatedAt,
 		})
 	}
 

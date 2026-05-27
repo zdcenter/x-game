@@ -27,6 +27,7 @@ type Room struct {
 	Mode       string // "single", "pk_steal", "pk_speed"
 	Difficulty string // "easy", "medium", "hard"
 	Status     string // "waiting", "playing", "finished"
+	CreatedAt  int64  // Unix timestamp of creation
 	Clients    map[string]*Client
 	Engine     engine.GameEngine
 	mu         sync.Mutex
@@ -44,6 +45,7 @@ type RoomSnapshot struct {
 	Mode        string `json:"mode"`
 	Difficulty  string `json:"difficulty"`
 	Status      string `json:"status"`
+	CreatedAt   int64  `json:"createdAt"`
 	PlayerCount int    `json:"players"`
 }
 
@@ -60,6 +62,7 @@ func GetActiveRooms() []RoomSnapshot {
 		mode := r.Mode
 		diff := r.Difficulty
 		status := r.Status
+		createdAt := r.CreatedAt
 		r.mu.Unlock()
 		
 		snapshots = append(snapshots, RoomSnapshot{
@@ -69,6 +72,7 @@ func GetActiveRooms() []RoomSnapshot {
 			Mode:        mode,
 			Difficulty:  diff,
 			Status:      status,
+			CreatedAt:   createdAt,
 			PlayerCount: count,
 		})
 	}
@@ -104,6 +108,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
 		Mode:       mode,
 		Difficulty: difficulty,
 		Status:     "waiting",
+		CreatedAt:  time.Now().Unix(),
 		Clients:    make(map[string]*Client),
 		Engine:     eng,
 	}
