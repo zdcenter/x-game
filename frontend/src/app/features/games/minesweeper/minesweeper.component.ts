@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
@@ -12,13 +12,12 @@ import { ToastService } from '../../../core/services/toast.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, CellComponent, DragDropModule, GameLobbyPanelComponent, GameResultOverlayComponent],
+  imports: [CommonModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, DragDropModule],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -60,11 +59,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             <!-- Center: PK Scoreboard OR Single Player Difficulty -->
             <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center">
               @if (currentRoomMode() === 'single') {
-                <div class="hidden sm:flex rounded-xl p-1 shadow-inner">
+                <div class="flex rounded-xl p-0.5 sm:p-1 shadow-inner">
                   <button (click)="openDifficultySettings('single')" 
-                          class="px-4 py-1.5 rounded-lg border border-[var(--color-border-card)] text-sm font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-2 shadow-sm">
-                    {{ getDifficultyText(currentDifficulty()) }}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          class="px-2 sm:px-4 py-1 sm:py-1.5 rounded-lg border border-[var(--color-border-card)] text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 sm:gap-2 shadow-sm shrink-0">
+                    <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentDifficulty()) }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -133,10 +132,15 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             </div>
           </div>
 
-          <!-- Game Board (Grid) -->
-          <div class="relative p-4 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-inner flex justify-center flex-grow overflow-hidden"
+          <!-- Game Board (Grid) Wrapper -->
+          <div class="relative flex-grow flex flex-col min-h-0 rounded-2xl overflow-hidden border border-[var(--color-border-card)]"
                [class.animate-gold-pulse]="store.status() === 'finished' && !isDefeat()"
                [class.animate-red-pulse]="store.status() === 'finished' && isDefeat()">
+            
+            <div #boardContainer class="p-4 bg-[var(--color-bg-card)] shadow-inner flex-grow overflow-hidden flex justify-center items-center">
+            
+              <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
+                   [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
             
             <!-- Waiting Overlay -->
             @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
@@ -189,11 +193,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
               </div>
             }
 
-            <div class="inline-flex flex-col gap-1 relative z-0 m-auto cursor-grab active:cursor-grabbing will-change-transform" 
+
+
+            <div #board class="inline-flex flex-col gap-1 relative z-0 m-auto will-change-transform origin-center transition-transform duration-75"
                  [class.opacity-50]="isFrozen()" 
-                 [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting"
-                 [class.animate-board-shake]="store.status() === 'finished'"
-                 cdkDrag>
+                 [class.animate-board-shake]="store.status() === 'finished'">
               @for (row of store.board(); track $index) {
                 <div class="flex gap-1">
                   @for (cell of row; track cell.x + '-' + cell.y) {
@@ -206,8 +210,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                 </div>
               }
             </div>
+              </div>
           </div>
-          
+          </div>
           <!-- Rules Modal -->
           @if (showRules()) {
             <div class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm text-[var(--color-text-main)]">
@@ -399,8 +404,59 @@ export class MinesweeperComponent implements OnInit {
   // Modal State
   isCreateModalOpen = signal<boolean>(false);
   newRoomName = signal<string>('');
-  newRoomMode = signal<string>('pk_steal');
+  newRoomMode = signal<string>('single');
   newRoomDifficulty = signal<string>('intermediate');
+
+  @ViewChild('boardContainer') boardContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('board') board!: ElementRef<HTMLDivElement>;
+
+  private ngZone = inject(NgZone);
+  private renderer = inject(Renderer2);
+
+  initialPinchDistance = 0;
+  initialScale = 1.0;
+  currentScale = 1.0;
+
+  private onTouchStartBound = this.onTouchStart.bind(this);
+  private onTouchMoveBound = this.onTouchMove.bind(this);
+
+  ngAfterViewInit() {
+    this.ngZone.runOutsideAngular(() => {
+      const container = this.boardContainer?.nativeElement;
+      if (container) {
+        container.addEventListener('touchstart', this.onTouchStartBound, { passive: false });
+        container.addEventListener('touchmove', this.onTouchMoveBound, { passive: false });
+      }
+    });
+  }
+
+  onTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      this.initialPinchDistance = this.getDistance(event.touches[0], event.touches[1]);
+      this.initialScale = this.currentScale;
+    }
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      event.preventDefault(); // Prevent native zoom/scroll while pinch-zooming
+      const currentDistance = this.getDistance(event.touches[0], event.touches[1]);
+      if (this.initialPinchDistance > 0) {
+        const scaleDelta = currentDistance / this.initialPinchDistance;
+        let newScale = this.initialScale * scaleDelta;
+        newScale = Math.max(0.3, Math.min(newScale, 3.0));
+        this.currentScale = newScale;
+        
+        if (this.board?.nativeElement) {
+          this.renderer.setStyle(this.board.nativeElement, 'transform', `scale(${this.currentScale})`);
+        }
+      }
+    }
+  }
+
+  private getDistance(t1: Touch, t2: Touch) {
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
 
   // React to cooldowns received from the server
   isFrozen = signal<boolean>(false);
