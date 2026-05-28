@@ -110,6 +110,8 @@
   ```
 - **后端引擎标准化 (Engine Registration)**：
   - 游戏必须在后端的 `engine` 目录新建实现，并且必须通过 `engine.Register("gameId_mode", factory)` 注册。
-  - 必须完整实现 `GameEngine` 接口：`InitGame`, `AddPlayer`, `RemovePlayer`, `HandleAction`, `GetState`, `GetStatus`, `SetBroadcaster`。
+  - **强制继承基石引擎**：任何新增对战引擎必须 `embed` (嵌入) `engine.BaseEngine`。这会自动继承 `Mu` 锁、`State`、`Broadcast` 等基础设施，且不再需要重复实现 `GetStatus` 和 `SetBroadcaster`。
+- **前端组件强制继承 (Component Extension)**：
+  - 所有的对战级别主游戏组件必须 `extends BaseGameComponent`。基类已经完美处理了房间加入、创建、解散，并集成了 `WebSocketService` 和 `GameTimerService`。
 - **统一模式命名字典 (Mode Naming Convention)**：
   - 各个游戏的模式命名强制使用公共常量规范：同盘抢分模式统一后缀为 `_pk_steal`，异盘竞速模式统一后缀为 `_pk_speed`。前端使用通用的 `GameLobbyPanelComponent` 组件即可零代码获得大厅列表、建房弹窗和模式匹配的支持。

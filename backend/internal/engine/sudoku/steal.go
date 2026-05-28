@@ -3,7 +3,6 @@ package sudoku
 import (
 	"encoding/json"
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/x-game/backend/internal/domain"
@@ -18,8 +17,7 @@ type StealPlayer struct {
 }
 
 type StealEngine struct {
-	mu             sync.RWMutex
-	State          engine.GameState
+	engine.BaseEngine
 	Players        map[string]*StealPlayer
 	Difficulty     string
 	PenaltySeconds int
@@ -27,7 +25,6 @@ type StealEngine struct {
 	Solution       string
 	CurrentBoard   string // The shared board state, e.g. "53..7..."
 	Winners        []string
-	broadcast      func()
 }
 
 func init() {
@@ -35,13 +32,13 @@ func init() {
 }
 
 func (e *StealEngine) InitGame(options interface{}) error {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*StealPlayer)
 	e.Winners = make([]string, 0)
-	
+
 	e.Difficulty = "medium"
 	e.PenaltySeconds = 3
 
@@ -49,7 +46,9 @@ func (e *StealEngine) InitGame(options interface{}) error {
 		if diff, ok := opts["difficulty"].(string); ok {
 			e.Difficulty = diff
 		}
-		if penalty, ok := opts["penaltySeconds"].(int); ok {
+		if penalty, ok := opts["penaltySeconds"].(float64); ok {
+			e.PenaltySeconds = int(penalty)
+		} else if penalty, ok := opts["penaltySeconds"].(int); ok {
 			e.PenaltySeconds = penalty
 		}
 	}
@@ -65,14 +64,14 @@ func (e *StealEngine) InitGame(options interface{}) error {
 		e.Puzzle = p.Puzzle
 		e.Solution = p.Solution
 	}
-	
+
 	e.CurrentBoard = e.Puzzle
 	return nil
 }
 
 func (e *StealEngine) AddPlayer(playerID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	if _, exists := e.Players[playerID]; !exists {
 		e.Players[playerID] = &StealPlayer{
 			ID:          playerID,
@@ -83,22 +82,22 @@ func (e *StealEngine) AddPlayer(playerID string) {
 }
 
 func (e *StealEngine) RemovePlayer(playerID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	delete(e.Players, playerID)
 }
 
 func (e *StealEngine) HasPlayer(playerID string) bool {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	_, exists := e.Players[playerID]
 	return exists
 }
 
 func (e *StealEngine) GetState() interface{} {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
+
 	return map[string]interface{}{
 		"status":         e.State,
 		"difficulty":     e.Difficulty,
@@ -111,8 +110,8 @@ func (e *StealEngine) GetState() interface{} {
 }
 
 func (e *StealEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 
 	var baseReq struct {
 		Action string `json:"action"`
@@ -122,7 +121,7 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == "start" && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.mu, &e.State, e.broadcast, nil)
+		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
 		return e.State, nil
 	}
 
@@ -185,7 +184,7 @@ func (e *StealEngine) checkWinConditionLocked() {
 	// Game ends when currentBoard equals solution
 	if e.CurrentBoard == e.Solution {
 		e.State = engine.StateFinished
-		
+
 		var maxScore int = -9999
 		for _, p := range e.Players {
 			if p.Score > maxScore {
@@ -201,17 +200,7 @@ func (e *StealEngine) checkWinConditionLocked() {
 }
 
 func (e *StealEngine) CheckGameOver() (bool, []string) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	return e.State == engine.StateFinished, e.Winners
-}
-
-func (e *StealEngine) GetStatus() engine.GameState {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return e.State
-}
-
-func (e *StealEngine) SetBroadcaster(b func()) {
-	e.broadcast = b
 }

@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
@@ -58,7 +59,7 @@ func Register(router fiber.Router) {
 		}
 
 		defer func() {
-			room.RemoveClient(client.ID)
+			room.RemoveClient(client)
 			c.Close()
 		}()
 
@@ -107,9 +108,19 @@ func Register(router fiber.Router) {
 
 		// Keep connection alive
 		for {
-			mt, _, err := c.ReadMessage()
+			mt, msg, err := c.ReadMessage()
 			if err != nil || mt == websocket.CloseMessage {
 				break
+			}
+			if mt == websocket.TextMessage {
+				var action map[string]interface{}
+				if err := json.Unmarshal(msg, &action); err == nil {
+					if action["type"] == "dismiss_room" {
+						if roomID, ok := action["roomId"].(string); ok && roomID != "" {
+							wsManager.DismissRoom(roomID, playerID)
+						}
+					}
+				}
 			}
 		}
 	}))

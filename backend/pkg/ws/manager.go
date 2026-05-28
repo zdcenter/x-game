@@ -130,21 +130,24 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 		Engine:     eng,
 	}
 	
-	// Fetch game config to get penalty seconds
-	penaltySeconds := 3
+	// Fetch game config to get penalty seconds or other options
+	options := map[string]interface{}{
+		"mode":       mode,
+		"difficulty": difficulty,
+	}
 	var gameConfig domain.GameConfig
-	if err := db.DB.First(&gameConfig, "id = ?", "minesweeper").Error; err == nil {
+	if err := db.DB.First(&gameConfig, "id = ?", gameId).Error; err == nil {
 		if gameConfig.Config != "" {
 			var configData map[string]interface{}
 			if err := json.Unmarshal([]byte(gameConfig.Config), &configData); err == nil {
-				if penalty, ok := configData["penaltySeconds"].(float64); ok {
-					penaltySeconds = int(penalty)
+				for k, v := range configData {
+					options[k] = v // Merge DB config into options
 				}
 			}
 		}
 	}
 
-	r.Engine.InitGame(map[string]interface{}{"mode": mode, "difficulty": difficulty, "penaltySeconds": penaltySeconds})
+	r.Engine.InitGame(options)
 	
 	// Inject broadcaster so engine can asynchronously trigger state updates to clients
 	if asyncEng, ok := r.Engine.(interface{ SetBroadcaster(func()) }); ok {
@@ -174,15 +177,28 @@ func (r *Room) AddClient(client *Client) error {
 	
 	// Do not auto-start here. Host must click start.
 	
-	go r.BroadcastStateLocked()
+	go r.BroadcastState()
 	go Lobby.BroadcastLobbyUpdate() // Notify lobby player count changed
 	return nil
 }
 
-func (r *Room) RemoveClient(clientID string) {
+func (r *Room) RemoveClient(client *Client) {
 	r.mu.Lock()
-	delete(r.Clients, clientID)
-	r.Engine.RemovePlayer(clientID)
+	
+	// Only remove if this exact client connection is still the active one
+	if existing, ok := r.Clients[client.ID]; ok && existing == client {
+		delete(r.Clients, client.ID)
+		
+		// If game hasn't started, completely remove them so the slot frees up
+		// If game has started, do NOT remove them from engine so they can reconnect!
+		if r.Engine.GetStatus() == engine.StateWaiting {
+			r.Engine.RemovePlayer(client.ID)
+		}
+	} else {
+		// This was an old connection closing after a new one already took its place
+		r.mu.Unlock()
+		return
+	}
 	
 	// Destroy room if empty
 	isEmpty := len(r.Clients) == 0
@@ -258,19 +274,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				return
 			} else if msgType == "dismiss_room" {
 				if clientID == r.Host {
-					// Delete the room globally
-					mu.Lock()
-					delete(Rooms, r.ID)
-					DismissedRooms[r.ID] = time.Now()
-					mu.Unlock()
-					go Lobby.BroadcastLobbyUpdate()
-
-					// Disconnect all clients in this room gracefully
-					msg := []byte(`{"type": "room_dismissed"}`)
-					for _, c := range r.Clients {
-						c.Conn.WriteMessage(websocket.TextMessage, msg)
-						// Frontend will handle disconnection
-					}
+					DismissRoom(r.ID, clientID)
 				}
 				return
 			}
@@ -311,5 +315,36 @@ func (r *Room) BroadcastStateLocked() {
 		if err != nil {
 			log.Printf("Failed to send message to %s: %v", client.ID, err)
 		}
+	}
+}
+
+func DismissRoom(roomID string, clientID string) {
+	mu.Lock()
+	r, exists := Rooms[roomID]
+	mu.Unlock()
+
+	if !exists {
+		return
+	}
+
+	r.mu.Lock()
+	isHost := r.Host == clientID
+	r.mu.Unlock()
+
+	if isHost {
+		mu.Lock()
+		delete(Rooms, roomID)
+		DismissedRooms[roomID] = time.Now()
+		mu.Unlock()
+		
+		go Lobby.BroadcastLobbyUpdate()
+
+		// Disconnect all clients in this room gracefully
+		msg := []byte(`{"type": "room_dismissed"}`)
+		r.mu.Lock()
+		for _, c := range r.Clients {
+			c.Conn.WriteMessage(websocket.TextMessage, msg)
+		}
+		r.mu.Unlock()
 	}
 }

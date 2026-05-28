@@ -144,6 +144,14 @@ export class WebSocketService {
     }
   }
 
+  sendLobby(action: any) {
+    if (this.lobbySocket && this.isLobbyConnected()) {
+      this.lobbySocket.send(JSON.stringify(action));
+    } else {
+      console.warn('Lobby WS not connected, cannot send action', action);
+    }
+  }
+
   disconnect(gameId?: string) {
     if (gameId && this.currentGameId !== gameId) {
       return; // Ignore if the socket has already been taken over by another game during routing

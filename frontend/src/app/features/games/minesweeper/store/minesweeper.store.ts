@@ -98,9 +98,21 @@ export class MinesweeperStore {
       this.tick();
       return this.localEngine()?.status || GameStatus.Waiting;
     }
-    const s = this.rawState();
-    if (s.boards && s.status) return s.status;
-    return this.myBoardData().status || GameStatus.Waiting;
+    const s = this.rawState() as any;
+    
+    const mapStatus = (st: any): GameStatus => {
+      if (st === 0 || st === 'waiting') return GameStatus.Waiting;
+      if (st === 1 || st === 'starting') return GameStatus.Starting;
+      if (st === 2 || st === 'playing') return GameStatus.Playing;
+      if (st === 3 || st === 'finished') return GameStatus.Finished;
+      return GameStatus.Waiting;
+    };
+
+    if (s.status !== undefined) {
+      return mapStatus(s.status);
+    }
+    
+    return mapStatus(this.myBoardData().status);
   });
   
   readonly scores = computed<Record<string, number>>(() => {

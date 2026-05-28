@@ -7,6 +7,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { getLocalizedField } from '../../../core/services/game.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 export interface GameMode {
   id: string;
@@ -142,7 +143,7 @@ export interface GameDifficulty {
                           } @else {
                             <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ t('game.join') }}</button>
                           }
-                          <button (click)="onDismissRoom()" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ t('game.dismiss') }}</button>
+                          <button (click)="onDismissRoom(room.id)" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ t('game.dismiss') }}</button>
                         </div>
                       </div>
                     </div>
@@ -257,9 +258,10 @@ export class GameLobbyPanelComponent {
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
-  router = inject(Router);
+  private router = inject(Router);
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
+  private toastService = inject(ToastService);
 
   @Input() currentGameId: string = '';
   @Input({ required: true }) gameModes!: GameMode[];
@@ -268,7 +270,6 @@ export class GameLobbyPanelComponent {
 
   @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string}>();
   @Output() createRoom = new EventEmitter<{name: string, mode: string, difficulty: string}>();
-  @Output() dismissRoom = new EventEmitter<void>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -345,8 +346,17 @@ export class GameLobbyPanelComponent {
     }
   }
 
-  onDismissRoom() {
-    this.dismissRoom.emit();
+  onDismissRoom(roomId: string) {
+    this.toastService.confirm({
+      title: this.t('game.dismiss_title'),
+      message: this.t('game.dismiss_msg'),
+      confirmText: this.t('game.dismiss_confirm'),
+      cancelText: this.t('game.cancel'),
+      onConfirm: () => {
+        this.wsService.sendLobby({ type: 'dismiss_room', roomId });
+        this.toastService.show(this.t('game.dismiss_success'), 'success');
+      }
+    });
   }
 
   getModeLabel(modeId: string, gameId?: string): string {

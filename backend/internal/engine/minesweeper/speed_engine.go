@@ -11,14 +11,13 @@ import (
 )
 
 type SpeedEngine struct {
+	engine.BaseEngine
 	BaseBoard *Board // Used to generate the initial seed
 	Boards    map[string]*Board
 	Scores    map[string]int
 	Cooldowns map[string]int64
 	Errors    map[string]int
-	Status    engine.GameState
 	PenaltyMs int64
-	broadcast func()
 }
 
 func init() {
@@ -37,7 +36,9 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	width, height, mines := 16, 16, 40
 
 	if opts, ok := options.(map[string]interface{}); ok {
-		if penalty, ok := opts["penaltySeconds"].(int); ok {
+		if penalty, ok := opts["penaltySeconds"].(float64); ok {
+			e.PenaltyMs = int64(penalty * 1000)
+		} else if penalty, ok := opts["penaltySeconds"].(int); ok {
 			e.PenaltyMs = int64(penalty * 1000)
 		} else {
 			e.PenaltyMs = 3000
@@ -86,12 +87,14 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Scores = make(map[string]int)
 	e.Cooldowns = make(map[string]int64)
 	e.Errors = make(map[string]int)
-	e.Status = engine.StateWaiting
+	e.State = engine.StateWaiting
 
 	return nil
 }
 
 func (e *SpeedEngine) AddPlayer(playerID string) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	if _, exists := e.Boards[playerID]; !exists {
 		// Clone the base board for this player
 		e.Boards[playerID] = e.BaseBoard.Clone()
@@ -102,28 +105,34 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 }
 
 func (e *SpeedEngine) RemovePlayer(playerID string) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	delete(e.Boards, playerID)
 	delete(e.Scores, playerID)
 	delete(e.Errors, playerID)
 }
 
 func (e *SpeedEngine) HasPlayer(playerID string) bool {
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	_, exists := e.Boards[playerID]
 	return exists
 }
 
 func (e *SpeedEngine) GetState() interface{} {
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	return PKSpeedStateResponse{
 		Boards:    e.Boards,
 		Scores:    e.Scores,
 		Cooldowns: e.Cooldowns,
 		Errors:    e.Errors,
-		Status:    e.Status,
+		Status:    e.State,
 	}
 }
 
 func (e *SpeedEngine) SetStarting() {
-	e.Status = engine.StateStarting
+	e.State = engine.StateStarting
 	for _, b := range e.Boards {
 		b.Status = engine.StateStarting
 		b.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
@@ -131,7 +140,7 @@ func (e *SpeedEngine) SetStarting() {
 }
 
 func (e *SpeedEngine) StartPlayingAndRevealSafe() {
-	e.Status = engine.StatePlaying
+	e.State = engine.StatePlaying
 	now := time.Now().UnixMilli()
 
 	// Find the best safe start point on the base board
@@ -145,18 +154,21 @@ func (e *SpeedEngine) StartPlayingAndRevealSafe() {
 }
 
 func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+
 	// Parse generic action from payload
 	var baseAction struct {
 		Action string `json:"action"`
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
-		if baseAction.Action == "start" && e.Status == engine.StateWaiting {
+		if baseAction.Action == "start" && e.State == engine.StateWaiting {
 			for _, b := range e.Boards {
 				b.Status = engine.StateStarting
 				b.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
 			}
 			
-			engine.StartWithCountdown(nil, &e.Status, e.broadcast, func() {
+			engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
 				now := time.Now().UnixMilli()
 				x, y := e.BaseBoard.FindSafeStartPoint()
 				for _, b := range e.Boards {
@@ -165,39 +177,39 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 					e.revealCell(b, x, y)
 				}
 			})
-			return e.Status, nil
+			return e.State, nil
 		}
 	}
 
-	if e.Status != engine.StatePlaying {
-		return e.Status, errors.New("game is not in playing state")
+	if e.State != engine.StatePlaying {
+		return e.State, errors.New("game is not in playing state")
 	}
 
 	board, exists := e.Boards[playerID]
 	if !exists {
-		return e.Status, errors.New("player not found")
+		return e.State, errors.New("player not found")
 	}
 
 	// Check cooldown
 	if until, exists := e.Cooldowns[playerID]; exists {
 		if time.Now().UnixMilli() < until {
-			return e.Status, errors.New("you are frozen")
+			return e.State, errors.New("you are frozen")
 		}
 	}
 
 	var action PlayerAction
 	if err := json.Unmarshal(payload, &action); err != nil {
-		return e.Status, err
+		return e.State, err
 	}
 
 	if !board.isValid(action.X, action.Y) {
-		return e.Status, errors.New("invalid coordinates")
+		return e.State, errors.New("invalid coordinates")
 	}
 
 	cell := board.Cells[action.Y][action.X]
 
 	if cell.State != CellHidden {
-		return e.Status, errors.New("cell already processed")
+		return e.State, errors.New("cell already processed")
 	}
 
 	switch action.Type {
@@ -221,12 +233,12 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			e.Cooldowns[playerID] = time.Now().UnixMilli() + penalty
 		}
 	default:
-		return e.Status, errors.New("unknown action type")
+		return e.State, errors.New("unknown action type")
 	}
 
 	e.checkWinCondition(playerID)
 
-	return e.Status, nil
+	return e.State, nil
 }
 
 func (e *SpeedEngine) revealCell(b *Board, x, y int) {
@@ -254,7 +266,7 @@ func (e *SpeedEngine) revealCell(b *Board, x, y int) {
 }
 
 func (e *SpeedEngine) checkWinCondition(playerID string) {
-	if e.Status == engine.StateFinished {
+	if e.State == engine.StateFinished {
 		return
 	}
 
@@ -264,7 +276,7 @@ func (e *SpeedEngine) checkWinCondition(playerID string) {
 	// Fix: Use >= as a robust check in case of any flood fill multi-increments,
 	// ensuring the win condition is never skipped.
 	if board.RevealedCnt >= totalSafeCells {
-		e.Status = engine.StateFinished
+		e.State = engine.StateFinished
 		e.Scores[playerID] = 1 // Mark the winner with score 1
 		// Reveal remaining mines for all players to show game over state
 		for _, b := range e.Boards {
@@ -281,7 +293,10 @@ func (e *SpeedEngine) checkWinCondition(playerID string) {
 }
 
 func (e *SpeedEngine) CheckGameOver() (bool, []string) {
-	if e.Status == engine.StateFinished {
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
+	
+	if e.State == engine.StateFinished {
 		var winners []string
 		for p, s := range e.Scores {
 			if s > 0 {
@@ -291,12 +306,4 @@ func (e *SpeedEngine) CheckGameOver() (bool, []string) {
 		return true, winners
 	}
 	return false, nil
-}
-
-func (e *SpeedEngine) GetStatus() engine.GameState {
-	return e.Status
-}
-
-func (e *SpeedEngine) SetBroadcaster(b func()) {
-	e.broadcast = b
 }

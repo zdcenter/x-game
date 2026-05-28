@@ -18,6 +18,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { AudioService } from '../../../core/services/audio.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
 @Component({
   selector: 'app-sudoku',
@@ -53,7 +54,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
           <div class="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-cyan-900/30"></div>
           <div class="relative z-10 flex flex-col items-center gap-6">
             <h2 class="text-8xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] animate-pulse">
-              {{ countdownDisplay() }}
+              {{ gameTimer.countdownDisplay() }}
             </h2>
             <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base">{{ i18n.t('game.get_ready')() }}</p>
             <div class="flex items-center gap-3 mt-4">
@@ -105,7 +106,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                     </button>
                   }
                   <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md">
-                    {{ formatTime(store.timeSpent()) }}
+                    {{ gameTimer.formatTime(store.timeSpent()) }}
                   </div>
                 </div>
               </div>
@@ -131,7 +132,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                 [status]="'win'"
                 [title]="i18n.t('game.win')()"
                 [promptText]="i18n.t('game.sudoku.next_level_prompt')() || 'Level cleared! Play next?'"
-                [stats]="[{label: 'TIME', value: formatTime(store.timeSpent())}]"
+                [stats]="[{label: 'TIME', value: gameTimer.formatTime(store.timeSpent())}]"
                 [showCancel]="true"
                 [showNextLevel]="true"
                 (cancel)="store.view.set('lobby')"
@@ -193,20 +194,19 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     </div>
   `
 })
-export class SudokuComponent implements OnInit, OnDestroy {
+export class SudokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
   store = inject(SudokuStore);
   router = inject(Router);
   http = inject(HttpClient);
   i18n = inject(I18nService);
-  wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
-  audioService = inject(AudioService);
   private roomLifecycle!: RoomLifecycleHandle;
   private gameRegistry = inject(GameRegistryService);
   
   view = this.store.view;
-  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
-  isMobileSidebarOpen = signal<boolean>(false);
+  get playerId(): string {
+    return this.authStore.currentUser()?.username || this.authStore.guestId;
+  }
 
   sudokuModes = [
     { id: 'pk_steal', labelKey: 'game.sudoku_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_pk_steal_desc' },
@@ -221,6 +221,7 @@ export class SudokuComponent implements OnInit, OnDestroy {
   ];
 
   constructor() {
+    super();
     // Register game metadata
     this.gameRegistry.register({
       id: 'sudoku',
@@ -235,7 +236,7 @@ export class SudokuComponent implements OnInit, OnDestroy {
     effect(() => {
       const status = this.store.gameStatus();
       if (status === 'starting') {
-        this.startCountdown();
+        untracked(() => this.gameTimer.startCountdown());
       }
     });
 
@@ -260,37 +261,7 @@ export class SudokuComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.wsService.disconnect('sudoku');
-    this.stopCountdown();
-  }
-
-  // --- Countdown ---
-  countdownDisplay = signal<string>('3');
-  private countdownInterval: any;
-
-  startCountdown() {
-    this.stopCountdown();
-    this.audioService.playClick();
-    let secondsLeft = 3;
-    this.countdownDisplay.set(secondsLeft.toString());
-    
-    this.countdownInterval = setInterval(() => {
-      secondsLeft--;
-      if (secondsLeft <= 0) {
-        this.countdownDisplay.set('GO!');
-        this.audioService.playFlag();
-        this.stopCountdown();
-      } else {
-        this.countdownDisplay.set(secondsLeft.toString());
-        this.audioService.playClick();
-      }
-    }, 1000);
-  }
-
-  stopCountdown() {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-      this.countdownInterval = null;
-    }
+    this.gameTimer.stopCountdown();
   }
 
   startLevel(level: {id: string, puzzle: string, savedState?: string, timeSpent?: number}) {
@@ -324,25 +295,5 @@ export class SudokuComponent implements OnInit, OnDestroy {
         this.store.view.set('lobby');
       }
     });
-  }
-
-  formatTime(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-
-  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
-    if (this.store.roomId() === event.roomId) return;
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-  }
-
-  handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
-  }
-
-  handleDismissRoom() {
-    this.wsService.send({ type: 'dismiss_room' });
-    this.store.leaveRoom();
   }
 }

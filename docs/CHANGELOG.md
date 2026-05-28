@@ -2,6 +2,17 @@
 
 本文档专门记录项目从起步到当前所有里程碑的变更、新功能上线以及重要重构轨迹。
 
+## [Phase 9] 2026-05-28: 核心游戏引擎与前端组件基类重构封装 (Engine & Component Refactoring)
+
+### 重构 (Refactors)
+- **后端引擎基类提取 (`BaseEngine`)**：创建了通用的 `engine.BaseEngine`，提取了所有游戏引擎中的 Mutex 锁、广播回调、游戏状态 (`State`) 等冗余逻辑，并统一实现了 `GetStatus` 和 `SetBroadcaster`。所有特定游戏（扫雷、数独）的 Engine 均改为嵌入此基类，大幅删减了样板代码。
+- **全局倒计时管理**：将 `StartWithCountdown` 逻辑泛用化，确保所有游戏的对战模式（如 PK Speed/Steal）都能够优雅地调用相同的 3-2-1 倒计时起步，无需各自维护定时器。
+- **动态配置解耦**：移除了 `manager.go` 中硬编码读取 `minesweeper` 的数据库配置逻辑。现全面支持根据实际传入的 `gameId` 和参数动态解析各项游戏配置（如 `penaltySeconds`）。
+- **前端基类统一 (`BaseGameComponent`)**：重构并新增了 `BaseGameComponent` 供所有前端游戏组件继承。将通用的加入房间、创建房间、解散房间、WebSocket 服务注入以及移动端侧边栏的 UI 状态抽象至基类，省去了组件间的数百行重复逻辑。
+- **公共计时服务 (`GameTimerService`)**：抽离了原本分散在各处的倒计时器逻辑与时间格式化函数。现在，各游戏只需注入并调用 `GameTimerService` 即可拥有一致的起步倒计时呈现体验。
+
+---
+
 ## [Phase 8] 2026-05-28: 前端架构优化与通用化封装 (Architecture Refactoring)
 
 ### 重构 (Refactors)

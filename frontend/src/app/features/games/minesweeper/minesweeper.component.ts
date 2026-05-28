@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -133,7 +134,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                 </div>
                 
                 @if (currentRoomMode() !== 'single') {
-                  <button (click)="leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                  <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
@@ -171,7 +172,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                   [players]="getPlayerScores()"
                   [hostId]="store.host()"
                   [currentUserId]="playerId"
-                  (leave)="leaveRoom()"
+                  (leave)="returnToLobby()"
                   (start)="store.startGame()"
                 ></app-game-waiting-room>
               </div>
@@ -187,8 +188,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             <!-- Starting Overlay -->
             @if (store.status() === GameStatus.Starting) {
               <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[var(--color-overlay)] backdrop-blur-md rounded-2xl">
-                <h2 class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] animate-pulse">
-                  {{ countdownDisplay() }}
+                <h2 class="text-8xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] animate-pulse">
+                  {{ gameTimer.countdownDisplay() }}
                 </h2>
                 <p class="text-white mt-4 font-bold tracking-[0.3em] uppercase opacity-70">{{ i18n.t('game.get_ready')() }}</p>
               </div>
@@ -209,9 +210,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             <!-- Frozen Overlay (PK Steal Penalty) -->
             @if (isFrozen()) {
               <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
-                <h2 class="text-4xl font-black text-red-500 uppercase tracking-widest animate-pulse drop-shadow-md">
-                  {{ frozenCountdownDisplay() }}s
-                </h2>
+                  <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md">
+                    {{ gameTimer.formatTime(frozenRemaining()) }}
+                  </div>
                 <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
               </div>
             }
@@ -227,8 +228,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                     @for (cell of row; track cell.x + '-' + cell.y) {
                       <app-cell 
                         [cell]="cell"
-                        (reveal)="handleCellClick(cell.x, cell.y)"
-                        (flag)="store.toggleFlag(cell.x, cell.y)"
+                        (reveal)="handleCellReveal(cell)"
+                        (flag)="handleCellFlag(cell)"
                       ></app-cell>
                     }
                   </div>
@@ -360,33 +361,29 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
   `
 })
-export class MinesweeperComponent implements OnInit {
+export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
   store = inject(MinesweeperStore);
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
-  wsService = inject(WebSocketService); // For lobby data
   audioService = inject(AudioService);
   toastService = inject(ToastService);
-  GameStatus = GameStatus; // Expose for template
+  GameStatus = GameStatus;
+  router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
+  private roomLifecycle!: RoomLifecycleHandle;
   
   showRules = signal(false);
-  router = inject(Router);
-  private roomLifecycle!: RoomLifecycleHandle;
-
-  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+  get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
   currentRoomMode = signal<string>('single');
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('intermediate');
-  isMobileSidebarOpen = signal<boolean>(false);
-
-  // Difficulty Settings Modal State (Single player)
   isDifficultyModalOpen = signal(false);
   editingDifficultyFor = signal<'single' | 'room'>('single');
   selectedDifficulty = signal<string>('intermediate');
   customWidth = signal(9);
   customHeight = signal(9);
   customMines = signal(10);
+  frozenRemaining = signal(0);
 
   predefinedDifficulties = [
     { id: 'beginner', labelKey: 'game.diff_beginner', desc: '9x9 (10)' },
@@ -403,8 +400,7 @@ export class MinesweeperComponent implements OnInit {
     { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
   ];
 
-  // Derived UI State
-  hasLostSingleMode = computed(() => this.currentRoomMode() === 'single' && this.store.board().some(row => row.some(c => c.state === 3))); // CellState.Exploded is 3
+  hasLostSingleMode = computed(() => this.currentRoomMode() === 'single' && this.store.board().some(row => row.some(c => c.state === 3)));
 
   isDefeat = computed(() => {
     if (this.currentRoomMode() === 'single') return this.hasLostSingleMode();
@@ -414,85 +410,18 @@ export class MinesweeperComponent implements OnInit {
       const myScore = rawScores[this.playerId] || 0;
       const otherScores = Object.keys(rawScores).filter(id => id !== this.playerId).map(id => rawScores[id]);
       const maxOtherScore = otherScores.length > 0 ? Math.max(...otherScores) : 0;
-      
       return myScore < maxOtherScore;
     }
     return false;
   });
 
-  // Modal State
-  isCreateModalOpen = signal<boolean>(false);
-  newRoomName = signal<string>('');
-  newRoomMode = signal<string>('single');
-  newRoomDifficulty = signal<string>('intermediate');
-
   @ViewChild('boardContainer') boardContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('board') board!: ElementRef<HTMLDivElement>;
-
   private ngZone = inject(NgZone);
   private renderer = inject(Renderer2);
 
-  initialPinchDistance = 0;
-  initialScale = 1.0;
-  currentScale = 1.0;
-
-  private onTouchStartBound = this.onTouchStart.bind(this);
-  private onTouchMoveBound = this.onTouchMove.bind(this);
-
-  ngAfterViewInit() {
-    this.ngZone.runOutsideAngular(() => {
-      const container = this.boardContainer?.nativeElement;
-      if (container) {
-        container.addEventListener('touchstart', this.onTouchStartBound, { passive: false });
-        container.addEventListener('touchmove', this.onTouchMoveBound, { passive: false });
-      }
-    });
-  }
-
-  onTouchStart(event: TouchEvent) {
-    if (event.touches.length === 2) {
-      this.initialPinchDistance = this.getDistance(event.touches[0], event.touches[1]);
-      this.initialScale = this.currentScale;
-    }
-  }
-
-  onTouchMove(event: TouchEvent) {
-    if (event.touches.length === 2) {
-      event.preventDefault(); // Prevent native zoom/scroll while pinch-zooming
-      const currentDistance = this.getDistance(event.touches[0], event.touches[1]);
-      if (this.initialPinchDistance > 0) {
-        const scaleDelta = currentDistance / this.initialPinchDistance;
-        let newScale = this.initialScale * scaleDelta;
-        newScale = Math.max(0.3, Math.min(newScale, 3.0));
-        this.currentScale = newScale;
-        
-        if (this.board?.nativeElement) {
-          this.renderer.setStyle(this.board.nativeElement, 'transform', `scale(${this.currentScale})`);
-        }
-      }
-    }
-  }
-
-  private getDistance(t1: Touch, t2: Touch) {
-    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-  }
-
-  // React to cooldowns received from the server
-  isFrozen = signal<boolean>(false);
-  frozenCountdownDisplay = signal<number>(0);
-  private freezeTimer: any;
-  private freezeInterval: any;
-  
-  // Countdown Timer for PK Start
-  countdownDisplay = signal<string>('3');
-  private countdownInterval: any;
-
-  // Elapsed Timer for PK Match
-  elapsedTime = signal<string>('00:00');
-  private elapsedInterval: any;
-
   constructor() {
-    // Register game metadata
+    super();
     this.gameRegistry.register({
       id: 'minesweeper',
       route: '/games/minesweeper',
@@ -502,18 +431,17 @@ export class MinesweeperComponent implements OnInit {
       difficulties: this.predefinedDifficulties,
     });
 
-    // Watch for countdown and elapsed timer
+    effect(() => {
+      const status = this.store.status();
+      if (status === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
+      }
+    });
+
     effect(() => {
       const status = this.store.status();
       const mode = this.currentRoomMode();
-
-      // Countdown logic
-      if (status === GameStatus.Starting) {
-        this.startCountdown();
-      } else {
-        this.stopCountdown();
-      }
-
+      
       // Elapsed timer logic
       if (status === GameStatus.Playing && mode !== 'single') {
         if (!this.elapsedInterval) {
@@ -537,92 +465,51 @@ export class MinesweeperComponent implements OnInit {
           this.elapsedTime.set('00:00');
         }
       }
-    });
+    }, { allowSignalWrites: true });
 
-    // Watch for cooldown updates
-    effect(() => {
+    effect((onCleanup) => {
       const cooldowns = this.store.cooldowns();
       const until = cooldowns[this.playerId] || 0;
       const now = Date.now();
-      
-      if (this.freezeInterval) {
-        clearInterval(this.freezeInterval);
-        this.freezeInterval = null;
-      }
-      
+      let interval: any;
       if (until > now) {
-        this.isFrozen.set(true);
-        this.frozenCountdownDisplay.set(Math.ceil((until - now) / 1000));
-        
-        this.freezeInterval = setInterval(() => {
+        this.frozenRemaining.set(Math.ceil((until - now) / 1000));
+        interval = setInterval(() => {
           const rem = Math.ceil((until - Date.now()) / 1000);
           if (rem <= 0) {
-            clearInterval(this.freezeInterval);
-            this.freezeInterval = null;
+            clearInterval(interval);
+            this.frozenRemaining.set(0);
           } else {
-            this.frozenCountdownDisplay.set(rem);
+            this.frozenRemaining.set(rem);
           }
-        }, 100);
-
-        clearTimeout(this.freezeTimer);
-        this.freezeTimer = setTimeout(() => {
-          this.isFrozen.set(false);
-          if (this.freezeInterval) {
-            clearInterval(this.freezeInterval);
-            this.freezeInterval = null;
-          }
-        }, until - Date.now());
+        }, 200);
       } else {
-        this.isFrozen.set(false);
+        this.frozenRemaining.set(0);
       }
+      
+      onCleanup(() => {
+        if (interval) clearInterval(interval);
+      });
     }, { allowSignalWrites: true });
 
-    // Room lifecycle: cross-game join, reconnect, room dismissed handling
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'minesweeper',
       getCurrentMode: () => this.currentRoomMode(),
-      onLeaveRoom: () => this.leaveRoom(),
+      onLeaveRoom: () => this.returnToLobby(),
     });
   }
 
-  stopCountdown() {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-      this.countdownInterval = null;
-    }
-  }
-
-  startCountdown() {
-    this.stopCountdown();
-    this.audioService.playClick(); // initial beep
-    
-    // We do a local 3-second countdown to avoid server-client clock sync drift
-    let secondsLeft = 3;
-    this.countdownDisplay.set(secondsLeft.toString());
-    
-    this.countdownInterval = setInterval(() => {
-      secondsLeft--;
-      if (secondsLeft <= 0) {
-        this.countdownDisplay.set('GO!');
-        this.audioService.playFlag(); // High pitched GO
-        this.stopCountdown();
-      } else {
-        this.countdownDisplay.set(secondsLeft.toString());
-        this.audioService.playClick(); // Tick
-      }
-    }, 1000);
-  }
+  isFrozen = computed(() => this.frozenRemaining() > 0);
+  
+  elapsedTime = signal<string>('00:00');
+  private elapsedInterval: any;
 
   ngOnInit() {
-    // 1. Connect to Lobby
     this.wsService.connectLobby(this.playerId, this.playerId);
-    
-    // 2. Check for cross-game join or reconnect
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
     } else {
-      // 3. Connect to local single player game by default
       const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
       this.changeSingleDifficulty(savedDiff);
     }
@@ -630,175 +517,102 @@ export class MinesweeperComponent implements OnInit {
 
   ngOnDestroy() {
     this.wsService.disconnect('minesweeper');
+    this.gameTimer.stopCountdown();
+    if (this.elapsedInterval) {
+      clearInterval(this.elapsedInterval);
+      this.elapsedInterval = null;
+    }
   }
 
-  createRoom() {
-    this.newRoomName.set('PK-' + Math.random().toString(36).substring(2, 6).toUpperCase());
-    this.isCreateModalOpen.set(true);
-  }
-
-
-  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
+  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
     if (this.currentRoomId() === event.roomId) return;
     this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
   }
 
-  handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
-    this.newRoomName.set(event.name);
-    this.newRoomMode.set(event.mode);
-    this.newRoomDifficulty.set(event.difficulty);
-    this.confirmCreateRoom();
-  }
-
-  confirmCreateRoom() {
-    localStorage.setItem('minesweeper_pk_mode', this.newRoomMode());
-    localStorage.setItem('minesweeper_pk_diff', this.newRoomDifficulty());
-    this.isCreateModalOpen.set(false);
-    this.joinRoom(this.newRoomName(), this.newRoomMode(), this.newRoomDifficulty(), this.playerId);
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
   }
 
   joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.currentRoomId.set(roomId);
-    
-    let finalHostId: string | undefined = hostId;
-    if (!finalHostId && mode !== 'single') {
-      const room = this.wsService.activeRooms().find((r: any) => r.id === roomId);
-      if (room) {
-        finalHostId = room.host;
-      } else {
-        finalHostId = sessionStorage.getItem('minesweeper_reconnect_host') || undefined;
-      }
-    }
-
-    if (mode !== 'single') {
-      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, finalHostId);
-    }
-    
-    this.store.joinGame(roomId, this.playerId, mode, difficulty, finalHostId);
+    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
   }
 
-  leaveRoom() {
+  returnToLobby() {
     this.currentRoomId.set('');
     this.store.leaveGame();
     this.roomLifecycle.clearReconnectInfo();
-    // Give the leave_game message 100ms to be sent before resetting to single player
-    setTimeout(() => {
-      this.changeSingleDifficulty('intermediate');
-    }, 100);
-  }
-
-  openDifficultySettings(forMode: 'single' | 'room') {
-    this.editingDifficultyFor.set(forMode);
-    const currentDiff = forMode === 'single' ? this.currentDifficulty() : this.newRoomDifficulty();
-    
-    if (currentDiff.startsWith('custom_')) {
-      this.selectedDifficulty.set('custom');
-      const parts = currentDiff.split('_');
-      if (parts.length === 4) {
-        this.customWidth.set(parseInt(parts[1], 10));
-        this.customHeight.set(parseInt(parts[2], 10));
-        this.customMines.set(parseInt(parts[3], 10));
-      }
-    } else {
-      this.selectedDifficulty.set(currentDiff);
-    }
-    
-    this.isDifficultyModalOpen.set(true);
-  }
-
-  applyDifficultySettings() {
-    let diffToApply = this.selectedDifficulty();
-    if (diffToApply === 'custom') {
-      diffToApply = `custom_${this.customWidth()}_${this.customHeight()}_${this.customMines()}`;
-    }
-    
-    if (this.editingDifficultyFor() === 'single') {
-      this.changeSingleDifficulty(diffToApply);
-    } else {
-      this.newRoomDifficulty.set(diffToApply);
-    }
-    this.isDifficultyModalOpen.set(false);
-  }
-
-  updateCustomMines() {
-    // Ensure mines don't exceed (W*H - 1)
-    const maxMines = this.customWidth() * this.customHeight() - 1;
-    if (this.customMines() > maxMines) {
-      this.customMines.set(maxMines);
-    }
-  }
-
-  changeSingleDifficulty(diff: string) {
-    this.currentDifficulty.set(diff);
-    localStorage.setItem('minesweeper_single_diff', diff);
-    this.currentRoomMode.set('single');
-    
-    let width = 16, height = 16, mines = 40;
-    if (diff.startsWith('custom_')) {
-      const parts = diff.split('_');
-      if (parts.length === 4) {
-        width = parseInt(parts[1], 10) || 16;
-        height = parseInt(parts[2], 10) || 16;
-        mines = parseInt(parts[3], 10) || 40;
-      }
-    } else {
-      switch (diff) {
-        case 'easy': case 'beginner': width = 9; height = 9; mines = 10; break;
-        case 'medium': case 'intermediate': width = 16; height = 16; mines = 40; break;
-        case 'hard': case 'advanced': width = 30; height = 16; mines = 99; break;
-        case 'hard_mode': width = 30; height = 18; mines = 130; break;
-        case 'professional': width = 30; height = 20; mines = 160; break;
-        case 'master': width = 30; height = 22; mines = 190; break;
-        case 'expert': width = 30; height = 24; mines = 230; break;
-      }
-    }
-    
-    this.store.startLocalGame(width, height, mines);
-  }
-
-  getDifficultyText(difficulty: string): string {
-    if (difficulty.startsWith('custom_')) {
-      const parts = difficulty.split('_');
-      if (parts.length === 4) {
-        return `${this.i18n.t('game.diff_custom')()} (${parts[1]}x${parts[2]}, ${parts[3]})`;
-      }
-      return this.i18n.t('game.diff_custom')();
-    }
-    const predefined = this.predefinedDifficulties.find(d => d.id === difficulty || d.id === difficulty.replace('easy', 'beginner').replace('medium', 'intermediate').replace('hard', 'advanced'));
-    if (predefined) {
-      return `${this.i18n.t(predefined.labelKey as any)()} (${predefined.desc})`;
-    }
-    return difficulty;
+    setTimeout(() => this.changeSingleDifficulty('intermediate'), 100);
   }
 
   dismissRoom() {
     this.toastService.confirm({
-      title: this.i18n.t('game.dismiss_title')() || 'Dismiss Room',
-      message: this.i18n.t('game.dismiss_msg')() || 'Are you sure you want to dismiss this room? All players will be kicked out.',
-      confirmText: this.i18n.t('game.dismiss_confirm')() || 'Dismiss',
-      cancelText: this.i18n.t('game.cancel')() || 'Cancel',
+      title: 'Dismiss Room',
+      message: 'Are you sure you want to dismiss this room? All players will be kicked out.',
+      confirmText: 'Dismiss',
+      cancelText: 'Cancel',
       onConfirm: () => {
         this.wsService.send({ type: 'dismiss_room' });
-        this.toastService.show(this.i18n.t('game.dismiss_success')() || 'Room dismissed successfully', 'success');
+        this.toastService.show('Room dismissed successfully', 'success');
       }
     });
   }
 
   goBack() {
     if (this.currentRoomId()) {
-      if (this.store.host() === this.playerId) {
-        this.wsService.send({ type: 'dismiss_room' });
-      } else {
-        this.wsService.send({ type: 'leave_room' });
-      }
+      this.wsService.send({ type: this.store.host() === this.playerId ? 'dismiss_room' : 'leave_room' });
     }
     this.router.navigate(['/lobby']);
   }
 
-  handleCellClick(x: number, y: number) {
-    this.store.revealCell(x, y);
+  handleCellReveal(cell: any) { this.store.revealCell(cell.x, cell.y); }
+  handleCellFlag(cell: any) { this.store.toggleFlag(cell.x, cell.y); }
+
+  openDifficultySettings(forMode: 'single' | 'room') {
+    this.editingDifficultyFor.set(forMode);
+    this.isDifficultyModalOpen.set(true);
+  }
+
+  applyDifficultySettings() {
+    let diff = this.selectedDifficulty();
+    if (diff === 'custom') diff = `custom_${this.customWidth()}_${this.customHeight()}_${this.customMines()}`;
+    if (this.editingDifficultyFor() === 'single') this.changeSingleDifficulty(diff);
+    this.isDifficultyModalOpen.set(false);
+  }
+
+  updateCustomMines() {
+    const maxMines = this.customWidth() * this.customHeight() - 1;
+    if (this.customMines() > maxMines) this.customMines.set(maxMines);
+  }
+
+  changeSingleDifficulty(diff: string) {
+    this.currentDifficulty.set(diff);
+    localStorage.setItem('minesweeper_single_diff', diff);
+    this.currentRoomMode.set('single');
+    let width = 16, height = 16, mines = 40;
+    if (diff.startsWith('custom_')) {
+      const parts = diff.split('_');
+      width = parseInt(parts[1], 10); height = parseInt(parts[2], 10); mines = parseInt(parts[3], 10);
+    } else {
+      switch (diff) {
+        case 'beginner': width = 9; height = 9; mines = 10; break;
+        case 'intermediate': width = 16; height = 16; mines = 40; break;
+        case 'advanced': width = 30; height = 16; mines = 99; break;
+        case 'hard_mode': width = 30; height = 18; mines = 130; break;
+        case 'professional': width = 30; height = 20; mines = 160; break;
+        case 'master': width = 30; height = 22; mines = 190; break;
+        case 'expert': width = 30; height = 24; mines = 230; break;
+      }
+    }
+    this.store.startLocalGame(width, height, mines);
+  }
+
+  getDifficultyText(difficulty: string): string {
+    const d = this.predefinedDifficulties.find(x => x.id === difficulty);
+    return d ? `${this.i18n.t(d.labelKey as any)()} (${d.desc})` : difficulty;
   }
 
   getPlayerScores() {

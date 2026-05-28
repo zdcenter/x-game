@@ -12,13 +12,13 @@ import (
 )
 
 type MinesweeperEngine struct {
+	engine.BaseEngine
 	Board     *Board
 	Scores    map[string]int
 	Cooldowns map[string]int64 // Unix milliseconds
 	Errors    map[string]int
 	Mode      string
 	PenaltyMs int64
-	broadcast func()
 }
 
 func init() {
@@ -43,7 +43,9 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 		} else {
 			e.Mode = "single"
 		}
-		if penalty, ok := opts["penaltySeconds"].(int); ok {
+		if penalty, ok := opts["penaltySeconds"].(float64); ok {
+			e.PenaltyMs = int64(penalty * 1000)
+		} else if penalty, ok := opts["penaltySeconds"].(int); ok {
 			e.PenaltyMs = int64(penalty * 1000)
 		} else {
 			e.PenaltyMs = 3000
@@ -94,7 +96,8 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 	// Determine if we should start in waiting mode
 	if opts, ok := options.(map[string]interface{}); ok {
 		if mode, ok := opts["mode"].(string); ok && mode != "single" {
-			e.Board.Status = engine.StateWaiting
+			e.State = engine.StateWaiting
+			e.Board.Status = engine.StateWaiting // Keep Board status sync
 			e.Board.GenerateMines(-1, -1)
 		}
 	}
@@ -103,6 +106,9 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 }
 
 func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	
 	log.Printf("[DEBUG] HandleAction called by player=%s, payload=%s", playerID, string(payload))
 	
 	// Parse generic action from payload
@@ -110,41 +116,42 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 		Action string `json:"action"`
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
-		if baseAction.Action == "start" && e.Board.Status == engine.StateWaiting {
-			engine.StartWithCountdown(nil, &e.Board.Status, e.broadcast, func() {
+		if baseAction.Action == "start" && e.State == engine.StateWaiting {
+			engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+				e.Board.Status = engine.StatePlaying
 				e.Board.StartAt = time.Now().UnixMilli()
 				x, y := e.Board.FindSafeStartPoint()
 				e.revealCell(x, y)
 			})
-			return e.Board.Status, nil
+			return e.State, nil
 		}
 	}
 
 	if e.Board.Status != engine.StatePlaying {
 		log.Printf("[DEBUG] Rejecting %s: Game state is %s", playerID, e.Board.Status)
-		return e.Board.Status, errors.New("game is not in playing state")
+		return e.State, errors.New("game is not in playing state")
 	}
 
 	// Check cooldown
 	if until, exists := e.Cooldowns[playerID]; exists {
 		if time.Now().UnixMilli() < until {
-			return e.Board.Status, errors.New("you are frozen")
+			return e.State, errors.New("you are frozen")
 		}
 	}
 
 	var action PlayerAction
 	if err := json.Unmarshal(payload, &action); err != nil {
-		return e.Board.Status, err
+		return e.State, err
 	}
 
 	if !e.Board.isValid(action.X, action.Y) {
-		return e.Board.Status, errors.New("invalid coordinates")
+		return e.State, errors.New("invalid coordinates")
 	}
 
 	cell := e.Board.Cells[action.Y][action.X]
 
 	if cell.State != CellHidden {
-		return e.Board.Status, errors.New("cell already processed")
+		return e.State, errors.New("cell already processed")
 	}
 
 	switch action.Type {
@@ -158,6 +165,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 				// Single mode: game over immediately
 				cell.State = CellExploded
 				e.Board.Status = engine.StateFinished
+				e.State = engine.StateFinished
 				e.revealAllMines()
 			} else {
 				// PK mode: Explode, progressive freeze penalty, no score.
@@ -188,12 +196,12 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 			}
 		}
 	default:
-		return e.Board.Status, errors.New("unknown action type")
+		return e.State, errors.New("unknown action type")
 	}
 
 	e.checkWinCondition()
 
-	return e.Board.Status, nil
+	return e.State, nil
 }
 
 func (e *MinesweeperEngine) revealCell(x, y int) {
@@ -255,6 +263,7 @@ func (e *MinesweeperEngine) checkWinCondition() {
 
 	if isFinished {
 		e.Board.Status = engine.StateFinished
+		e.State = engine.StateFinished
 		e.revealAllMines() // Show any remaining hidden mines
 	}
 }
@@ -271,6 +280,9 @@ func (e *MinesweeperEngine) revealAllMines() {
 }
 
 func (e *MinesweeperEngine) CheckGameOver() (bool, []string) {
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
+
 	if e.Board.Status == engine.StateFinished {
 		// Find player with max score
 		maxScore := -1
@@ -294,18 +306,25 @@ type PKStateResponse struct {
 	Scores    map[string]int   `json:"scores"`
 	Cooldowns map[string]int64 `json:"cooldowns"`
 	Errors    map[string]int   `json:"errors"`
+	Status    engine.GameState `json:"status"`
 }
 
 func (e *MinesweeperEngine) GetState() interface{} {
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
+
 	return PKStateResponse{
 		Board:     e.Board,
 		Scores:    e.Scores,
 		Cooldowns: e.Cooldowns,
 		Errors:    e.Errors,
+		Status:    e.State,
 	}
 }
 
 func (e *MinesweeperEngine) AddPlayer(playerID string) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	if _, exists := e.Scores[playerID]; !exists {
 		e.Scores[playerID] = 0
 		e.Errors[playerID] = 0
@@ -313,19 +332,15 @@ func (e *MinesweeperEngine) AddPlayer(playerID string) {
 }
 
 func (e *MinesweeperEngine) RemovePlayer(playerID string) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	delete(e.Scores, playerID)
 	delete(e.Errors, playerID)
 }
 
 func (e *MinesweeperEngine) HasPlayer(playerID string) bool {
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	_, exists := e.Scores[playerID]
 	return exists
-}
-
-func (e *MinesweeperEngine) GetStatus() engine.GameState {
-	return e.Board.Status
-}
-
-func (e *MinesweeperEngine) SetBroadcaster(b func()) {
-	e.broadcast = b
 }

@@ -3,7 +3,6 @@ package sudoku
 import (
 	"encoding/json"
 	"math/rand"
-	"sync"
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
@@ -17,14 +16,12 @@ type SpeedPlayer struct {
 }
 
 type SpeedEngine struct {
-	mu         sync.RWMutex
-	State      engine.GameState
+	engine.BaseEngine
 	Players    map[string]*SpeedPlayer
 	Difficulty string
 	Puzzle     string
 	Solution   string
 	Winners    []string
-	broadcast  func()
 }
 
 func init() {
@@ -32,8 +29,8 @@ func init() {
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*SpeedPlayer)
@@ -61,8 +58,8 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 }
 
 func (e *SpeedEngine) AddPlayer(playerID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	if _, exists := e.Players[playerID]; !exists {
 		e.Players[playerID] = &SpeedPlayer{
 			ID:       playerID,
@@ -73,21 +70,21 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 }
 
 func (e *SpeedEngine) RemovePlayer(playerID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	delete(e.Players, playerID)
 }
 
 func (e *SpeedEngine) HasPlayer(playerID string) bool {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	_, exists := e.Players[playerID]
 	return exists
 }
 
 func (e *SpeedEngine) GetState() interface{} {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 
 	return map[string]interface{}{
 		"status":     e.State,
@@ -99,8 +96,8 @@ func (e *SpeedEngine) GetState() interface{} {
 }
 
 func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 
 	var baseReq struct {
 		Action string `json:"action"`
@@ -110,7 +107,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == "start" && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.mu, &e.State, e.broadcast, nil)
+		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
 		return e.State, nil
 	}
 
@@ -152,17 +149,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 }
 
 func (e *SpeedEngine) CheckGameOver() (bool, []string) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
+	e.Mu.RLock()
+	defer e.Mu.RUnlock()
 	return e.State == engine.StateFinished, e.Winners
-}
-
-func (e *SpeedEngine) GetStatus() engine.GameState {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	return e.State
-}
-
-func (e *SpeedEngine) SetBroadcaster(b func()) {
-	e.broadcast = b
 }
