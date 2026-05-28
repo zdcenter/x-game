@@ -32,6 +32,7 @@ type Room struct {
 
 var (
 	Rooms = make(map[string]*Room)
+	DismissedRooms = make(map[string]time.Time)
 	mu    sync.Mutex
 )
 
@@ -81,11 +82,25 @@ func GetActiveRooms() []RoomSnapshot {
 	return snapshots
 }
 
-func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
+func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, error) {
 	mu.Lock()
+	
+	// Clean up old dismissed rooms periodically
+	now := time.Now()
+	for id, t := range DismissedRooms {
+		if now.Sub(t) > 5*time.Minute {
+			delete(DismissedRooms, id)
+		}
+	}
+
+	if _, dismissed := DismissedRooms[roomID]; dismissed {
+		mu.Unlock()
+		return nil, fmt.Errorf("room has been dismissed")
+	}
+
 	if r, exists := Rooms[roomID]; exists {
 		mu.Unlock()
-		return r
+		return r, nil
 	}
 
 	if mode == "" {
@@ -138,7 +153,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) *Room {
 
 	Rooms[roomID] = r
 	mu.Unlock()
-	return r
+	return r, nil
 }
 
 func (r *Room) AddClient(client *Client) error {
@@ -246,6 +261,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					// Delete the room globally
 					mu.Lock()
 					delete(Rooms, r.ID)
+					DismissedRooms[r.ID] = time.Now()
 					mu.Unlock()
 					go Lobby.BroadcastLobbyUpdate()
 

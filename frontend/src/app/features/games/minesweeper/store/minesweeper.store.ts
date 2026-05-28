@@ -47,7 +47,7 @@ export class MinesweeperStore {
   private audio = inject(AudioService);
   private auth = inject(AuthStore);
   
-  private playerId = computed(() => this.auth.currentUser()?.username || 'Guest');
+  private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
   // Local state for single player mode
   private currentMode = signal<string>('single');

@@ -122,10 +122,7 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == "start" && e.State == engine.StateWaiting {
-		e.State = engine.StatePlaying
-		if e.broadcast != nil {
-			go e.broadcast()
-		}
+		engine.StartWithCountdown(&e.mu, &e.State, e.broadcast, nil)
 		return e.State, nil
 	}
 

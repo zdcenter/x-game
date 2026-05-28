@@ -38,7 +38,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*SpeedPlayer)
 	e.Winners = make([]string, 0)
-	
+
 	e.Difficulty = "medium"
 
 	if opts, ok := options.(map[string]interface{}); ok {
@@ -56,7 +56,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 		e.Puzzle = p.Puzzle
 		e.Solution = p.Solution
 	}
-	
+
 	return nil
 }
 
@@ -88,7 +88,7 @@ func (e *SpeedEngine) HasPlayer(playerID string) bool {
 func (e *SpeedEngine) GetState() interface{} {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"status":     e.State,
 		"difficulty": e.Difficulty,
@@ -110,10 +110,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == "start" && e.State == engine.StateWaiting {
-		e.State = engine.StatePlaying
-		if e.broadcast != nil {
-			go e.broadcast()
-		}
+		engine.StartWithCountdown(&e.mu, &e.State, e.broadcast, nil)
 		return e.State, nil
 	}
 
@@ -144,7 +141,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 			if req.Board == e.Solution {
 				player.Finished = true
 				player.Progress = 81
-				
+
 				e.State = engine.StateFinished
 				e.Winners = []string{player.ID}
 			}

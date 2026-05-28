@@ -16,6 +16,7 @@ export interface User {
 export class AuthStore {
   readonly currentUser = signal<User | null>(null);
   readonly token = signal<string | null>(null);
+  readonly guestId = `Guest_${Math.floor(Math.random() * 10000)}`;
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
   readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');

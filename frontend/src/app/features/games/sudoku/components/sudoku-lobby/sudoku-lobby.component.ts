@@ -125,7 +125,7 @@ export class SudokuLobbyComponent implements OnInit {
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
   
-  playerId = this.authStore.currentUser()?.username || 'Guest';
+  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
 
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, savedState?: string, timeSpent?: number}>();
 

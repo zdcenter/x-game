@@ -1,6 +1,10 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+	"time"
+)
 
 // GameState represents the current state of a game
 type GameState string
@@ -58,4 +62,33 @@ func CreateEngine(mode string) (GameEngine, error) {
 		return factory(), nil
 	}
 	return nil, fmt.Errorf("unknown game mode: %s", mode)
+}
+
+// StartWithCountdown is a shared utility to handle the standard 3-second
+// countdown before a multiplayer game transitions to StatePlaying.
+// It sets the state to starting, broadcasts, waits 3 seconds, sets state to playing,
+// executes any optional onStartPlaying callback, and broadcasts again.
+func StartWithCountdown(mu sync.Locker, state *GameState, broadcast func(), onStartPlaying func()) {
+	*state = StateStarting
+	// Synchronous broadcast is omitted here because HandleMessage already broadcasts
+	// after HandleAction returns. The goroutine below will broadcast the 'playing' state.
+
+	go func() {
+		time.Sleep(3 * time.Second)
+		if mu != nil {
+			mu.Lock()
+		}
+		if *state == StateStarting {
+			*state = StatePlaying
+			if onStartPlaying != nil {
+				onStartPlaying()
+			}
+		}
+		if mu != nil {
+			mu.Unlock()
+		}
+		if broadcast != nil {
+			broadcast()
+		}
+	}()
 }

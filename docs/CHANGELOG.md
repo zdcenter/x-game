@@ -11,6 +11,9 @@
 - **📋 游戏注册表**：新建 `core/services/game-registry.service.ts`，每个游戏在 constructor 中自注册元数据（modes、difficulties、路由、图标）。`GameLobbyPanel` 利用注册表动态查询任意游戏的 mode/difficulty 标签，消除了跨游戏场景下的 hardcoded fallback。
 - **🧹 扫雷组件瘦身**：移除了 `gameRules`/`parsedRulesHTML`/`gameService`/`marked` 等已被通用组件替代的依赖，组件减少约 60 行。
 
+### 新增功能 (Features)
+- **⏱️ 数独 PK 倒计时**：数独多人模式开始前增加 3-2-1-GO 倒计时动画和音效，与扫雷 PK 体验一致。新增 `countdown` 视图状态，在 store 中实现 `room → countdown → play` 三段式过渡。
+
 ---
 
 ## [Phase 7] 2026-05-28: 跨服加入房间系统重构 (Cross-Game Join Refactoring)

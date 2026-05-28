@@ -15,6 +15,9 @@ export class WebSocketService {
   private lobbySocket: WebSocket | null = null;
   private currentGameId: string | null = null;
   
+  private reconnectTimeout: any = null;
+  private lobbyReconnectTimeout: any = null;
+  
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
   
@@ -36,13 +39,19 @@ export class WebSocketService {
       this.socket.onclose = null;
       this.socket.close();
     }
+    
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
 
     // Reset all per-room state to prevent stale cross-game data from leaking
     this.gameState.set(null);
     this.roomDismissedEvent.set(0);
     this.unexpectedDisconnectEvent.set(0);
 
-    const url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${hostId}`;
+    const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
+    const url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${cleanHostId}`;
     this.socket = new WebSocket(url);
     this.currentGameId = gameId;
 
@@ -56,8 +65,9 @@ export class WebSocketService {
       if (msg.type === 'gameState' && msg.state) {
         msg.state.host = msg.host; // Inject host into the state object for the store
         this.gameState.set(msg.state);
-      } else if (msg.type === 'room_dismissed') {
+      } else if (msg.type === 'room_dismissed' || (msg.type === 'error' && msg.message === 'room has been dismissed')) {
         this.roomDismissedEvent.update(v => v + 1);
+        this.disconnect(gameId); // prevent reconnection loop
       }
     };
 
@@ -70,7 +80,7 @@ export class WebSocketService {
       this.unexpectedDisconnectEvent.update(v => v + 1);
       
       // Auto reconnect after 2 seconds for all modes
-      setTimeout(() => {
+      this.reconnectTimeout = setTimeout(() => {
         if (!this.isConnected()) {
           console.log('Attempting to reconnect Game WS...');
           this.connect(gameId, roomId, playerId, mode, difficulty, hostId);
@@ -87,6 +97,11 @@ export class WebSocketService {
       }
       this.lobbySocket.onclose = null;
       this.lobbySocket.close();
+    }
+
+    if (this.lobbyReconnectTimeout) {
+      clearTimeout(this.lobbyReconnectTimeout);
+      this.lobbyReconnectTimeout = null;
     }
 
     const url = `${environment.wsUrl}/ws/lobby?playerId=${playerId}&username=${encodeURIComponent(username)}`;
@@ -112,7 +127,7 @@ export class WebSocketService {
       console.log('Lobby WS Disconnected');
       
       // Auto reconnect after 2 seconds
-      setTimeout(() => {
+      this.lobbyReconnectTimeout = setTimeout(() => {
         if (!this.isLobbyConnected()) {
           console.log('Attempting to reconnect Lobby WS...');
           this.connectLobby(playerId, username);
@@ -133,6 +148,12 @@ export class WebSocketService {
     if (gameId && this.currentGameId !== gameId) {
       return; // Ignore if the socket has already been taken over by another game during routing
     }
+    
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
     if (this.socket) {
       this.socket.onclose = null;
       this.socket.close();
@@ -145,6 +166,11 @@ export class WebSocketService {
   }
 
   disconnectLobby() {
+    if (this.lobbyReconnectTimeout) {
+      clearTimeout(this.lobbyReconnectTimeout);
+      this.lobbyReconnectTimeout = null;
+    }
+
     if (this.lobbySocket) {
       this.lobbySocket.onclose = null;
       this.lobbySocket.close();

@@ -271,7 +271,7 @@ export class GameLobbyPanelComponent {
   @Output() dismissRoom = new EventEmitter<void>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
-  playerId = this.authStore.currentUser()?.username || 'Guest';
+  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
 
   isCreateModalOpen = signal(false);
   newRoomName = signal('');
@@ -313,7 +313,8 @@ export class GameLobbyPanelComponent {
   }
 
   openCreateRoomModal() {
-    this.newRoomName.set(`${this.playerId}'s Room`);
+    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    this.newRoomName.set(`${this.playerId}-${randomSuffix}`);
     this.newRoomMode.set(this.gameModes[0]?.id || '');
     this.newRoomDifficulty.set(this.difficulties[0]?.id || '');
     this.isCreateModalOpen.set(true);

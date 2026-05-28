@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -15,6 +15,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { AudioService } from '../../../core/services/audio.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 
@@ -46,6 +47,21 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
         </app-sudoku-lobby>
       } @else if (view() === 'room') {
         <app-sudoku-room></app-sudoku-room>
+      } @else if (view() === 'countdown') {
+        <!-- Countdown Overlay -->
+        <div class="flex-grow flex flex-col items-center justify-center bg-[var(--color-bg-card)] relative">
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-cyan-900/30"></div>
+          <div class="relative z-10 flex flex-col items-center gap-6">
+            <h2 class="text-8xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] animate-pulse">
+              {{ countdownDisplay() }}
+            </h2>
+            <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base">{{ i18n.t('game.get_ready')() }}</p>
+            <div class="flex items-center gap-3 mt-4">
+              <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{{ i18n.t('game.mode')() }}:</span>
+              <span class="text-sm font-bold text-[var(--color-accent-from)]">{{ store.currentMode() === 'pk_steal' ? i18n.t('game.sudoku_pk_steal_label')() : i18n.t('game.sudoku_pk_speed_label')() }}</span>
+            </div>
+          </div>
+        </div>
       } @else {
         <!-- PLAY VIEW -->
         @if (store.currentMode() === 'pk_steal') {
@@ -59,12 +75,17 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
             <!-- Top Navigation Bar with Progress -->
             <div class="flex flex-col bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] shadow-md shrink-0 w-full max-w-[500px] md:max-w-none mx-auto overflow-hidden relative">
               <div class="flex justify-between items-center p-3 md:p-4">
-                <button (click)="store.view.set('lobby')" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm md:text-base z-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                <button (click)="store.view.set('lobby')" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2 z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
                   </svg>
-                  {{ i18n.t('game.back')() }}
+                  <span class="hidden sm:inline">{{ i18n.t('game.back')() }}</span>
                 </button>
+                <h1 class="text-xl lg:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 uppercase drop-shadow-sm flex items-center gap-2">
+                  <span>Sudoku</span>
+                </h1>
+                
+
                 
                 <div class="flex flex-col items-center z-10">
                   <div class="text-[var(--color-text-main)] font-black opacity-80 uppercase tracking-widest text-sm md:text-base flex items-center gap-2">
@@ -75,8 +96,17 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                   </div>
                 </div>
 
-                <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md z-10">
-                  {{ formatTime(store.timeSpent()) }}
+                <div class="flex items-center gap-2 z-10">
+                  @if (view() === 'play' || view() === 'room') {
+                    <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                      </svg>
+                    </button>
+                  }
+                  <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md">
+                    {{ formatTime(store.timeSpent()) }}
+                  </div>
                 </div>
               </div>
 
@@ -126,9 +156,29 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
       }
       </div>
 
+      <!-- Mobile Sidebar Overlay Backdrop -->
+      @if ((view() === 'play' || view() === 'room') && isMobileSidebarOpen()) {
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+      }
+
       <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex-col min-h-[400px] lg:min-h-0"
-           [ngClass]="(view() === 'play' || view() === 'room') ? 'hidden lg:flex' : 'flex'">
+      <div class="flex-shrink-0 flex-col min-h-[400px] lg:min-h-0 transition-transform duration-300 shadow-[var(--color-border-card)]"
+           [ngClass]="[
+             (view() === 'play' || view() === 'room') 
+               ? 'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:p-0 lg:relative lg:w-80 lg:shadow-none lg:bg-transparent lg:z-auto lg:translate-x-0 ' + (isMobileSidebarOpen() ? 'translate-x-0 flex' : 'translate-x-full lg:flex hidden')
+               : 'w-full lg:w-80 flex'
+           ]">
+           
+           @if (view() === 'play' || view() === 'room') {
+             <div class="flex justify-between items-center mb-4 lg:hidden">
+               <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+               <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                 </svg>
+               </button>
+             </div>
+           }
         <app-game-lobby-panel
           [currentGameId]="'sudoku'"
           [gameModes]="sudokuModes"
@@ -150,11 +200,13 @@ export class SudokuComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
+  audioService = inject(AudioService);
   private roomLifecycle!: RoomLifecycleHandle;
   private gameRegistry = inject(GameRegistryService);
   
   view = this.store.view;
-  playerId = this.authStore.currentUser()?.username || 'Guest';
+  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+  isMobileSidebarOpen = signal<boolean>(false);
 
   sudokuModes = [
     { id: 'pk_steal', labelKey: 'game.sudoku_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_pk_steal_desc' },
@@ -179,19 +231,11 @@ export class SudokuComponent implements OnInit, OnDestroy {
       difficulties: this.difficulties,
     });
 
+    // Watch for countdown trigger
     effect(() => {
       const status = this.store.gameStatus();
-      const currentMode = this.store.currentMode();
-      
-      // Auto-transition to play view when game starts in multiplayer
-      if (status === 'playing' && currentMode !== 'single' && this.view() === 'room') {
-        if (this.store.board().length === 0) {
-          const raw = this.store.rawState() as any;
-          if (raw.puzzle) {
-            this.store.initBoard(raw.puzzle);
-          }
-        }
-        this.view.set('play');
+      if (status === 'starting') {
+        this.startCountdown();
       }
     });
 
@@ -216,6 +260,37 @@ export class SudokuComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.wsService.disconnect('sudoku');
+    this.stopCountdown();
+  }
+
+  // --- Countdown ---
+  countdownDisplay = signal<string>('3');
+  private countdownInterval: any;
+
+  startCountdown() {
+    this.stopCountdown();
+    this.audioService.playClick();
+    let secondsLeft = 3;
+    this.countdownDisplay.set(secondsLeft.toString());
+    
+    this.countdownInterval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        this.countdownDisplay.set('GO!');
+        this.audioService.playFlag();
+        this.stopCountdown();
+      } else {
+        this.countdownDisplay.set(secondsLeft.toString());
+        this.audioService.playClick();
+      }
+    }, 1000);
+  }
+
+  stopCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
   }
 
   startLevel(level: {id: string, puzzle: string, savedState?: string, timeSpent?: number}) {

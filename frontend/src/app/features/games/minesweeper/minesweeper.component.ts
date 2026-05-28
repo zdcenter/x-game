@@ -110,6 +110,14 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
               <!-- Right: Timer & Mines -->
               <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center z-10">
+                @if (store.status() !== 'waiting') {
+                  <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                  </button>
+                }
+                
                 @if (store.status() === 'playing') {
                   <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,9 +243,29 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
         </div>
       </div>
 
+      <!-- Mobile Sidebar Overlay Backdrop -->
+      @if (store.status() !== 'waiting' && isMobileSidebarOpen()) {
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+      }
+
       <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex-col min-h-[400px] lg:min-h-0"
-           [ngClass]="store.status() !== 'waiting' ? 'hidden lg:flex' : 'flex'">
+      <div class="flex-shrink-0 flex-col min-h-[400px] lg:min-h-0 transition-transform duration-300 shadow-[var(--color-border-card)]"
+           [ngClass]="[
+             store.status() !== 'waiting' 
+               ? 'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:p-0 lg:relative lg:w-80 lg:shadow-none lg:bg-transparent lg:z-auto lg:translate-x-0 ' + (isMobileSidebarOpen() ? 'translate-x-0 flex' : 'translate-x-full lg:flex hidden')
+               : 'w-full lg:w-80 flex'
+           ]">
+           
+           @if (store.status() !== 'waiting') {
+             <div class="flex justify-between items-center mb-4 lg:hidden">
+               <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+               <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                 </svg>
+               </button>
+             </div>
+           }
         <app-game-lobby-panel
           [currentGameId]="'minesweeper'"
           [gameModes]="minesweeperModes"
@@ -346,10 +374,11 @@ export class MinesweeperComponent implements OnInit {
   router = inject(Router);
   private roomLifecycle!: RoomLifecycleHandle;
 
-  playerId = this.authStore.currentUser()?.username || 'Guest';
+  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
   currentRoomMode = signal<string>('single');
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('intermediate');
+  isMobileSidebarOpen = signal<boolean>(false);
 
   // Difficulty Settings Modal State (Single player)
   isDifficultyModalOpen = signal(false);

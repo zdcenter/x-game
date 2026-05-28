@@ -151,29 +151,20 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
 		if baseAction.Action == "start" && e.Status == engine.StateWaiting {
-			e.Status = engine.StateStarting
 			for _, b := range e.Boards {
 				b.Status = engine.StateStarting
 				b.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
 			}
 			
-			// Schedule start
-			go func() {
-				time.Sleep(3 * time.Second)
-				if e.Status == engine.StateStarting {
-					e.Status = engine.StatePlaying
-					now := time.Now().UnixMilli()
-					x, y := e.BaseBoard.FindSafeStartPoint()
-					for _, b := range e.Boards {
-						b.Status = engine.StatePlaying
-						b.StartAt = now
-						e.revealCell(b, x, y)
-					}
-					if e.broadcast != nil {
-						e.broadcast()
-					}
+			engine.StartWithCountdown(nil, &e.Status, e.broadcast, func() {
+				now := time.Now().UnixMilli()
+				x, y := e.BaseBoard.FindSafeStartPoint()
+				for _, b := range e.Boards {
+					b.Status = engine.StatePlaying
+					b.StartAt = now
+					e.revealCell(b, x, y)
 				}
-			}()
+			})
 			return e.Status, nil
 		}
 	}

@@ -111,22 +111,11 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
 		if baseAction.Action == "start" && e.Board.Status == engine.StateWaiting {
-			e.Board.Status = engine.StateStarting
-			e.Board.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
-			
-			// Schedule start
-			go func() {
-				time.Sleep(3 * time.Second)
-				if e.Board.Status == engine.StateStarting {
-					e.Board.Status = engine.StatePlaying
-					e.Board.StartAt = time.Now().UnixMilli()
-					x, y := e.Board.FindSafeStartPoint()
-					e.revealCell(x, y)
-					if e.broadcast != nil {
-						e.broadcast()
-					}
-				}
-			}()
+			engine.StartWithCountdown(nil, &e.Board.Status, e.broadcast, func() {
+				e.Board.StartAt = time.Now().UnixMilli()
+				x, y := e.Board.FindSafeStartPoint()
+				e.revealCell(x, y)
+			})
 			return e.Board.Status, nil
 		}
 	}

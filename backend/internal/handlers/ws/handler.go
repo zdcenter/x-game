@@ -34,7 +34,15 @@ func Register(router fiber.Router) {
 		// For MVP, using a query parameter for playerId, usually this would come from JWT
 		playerID := c.Query("playerId", "anonymous")
 
-		room := wsManager.GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId)
+		room, err := wsManager.GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId)
+		if err != nil {
+			log.Printf("Player %s rejected from room %s: %v", playerID, roomID, err)
+			msg := fmt.Sprintf(`{"type": "error", "message": "%s"}`, err.Error())
+			c.WriteMessage(websocket.TextMessage, []byte(msg))
+			c.Close()
+			return
+		}
+		
 		client := &wsManager.Client{
 			ID:   playerID,
 			Conn: c,

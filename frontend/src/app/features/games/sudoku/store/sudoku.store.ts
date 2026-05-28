@@ -32,7 +32,7 @@ export class SudokuStore {
 
   private saveSubject = new Subject<void>();
 
-  playerId = computed(() => this.auth.currentUser()?.username || 'Guest');
+  playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
   // Modes: 'single', 'pk_steal', 'pk_speed'
   currentMode = signal<string>('single');
@@ -47,7 +47,7 @@ export class SudokuStore {
   private history: SudokuHistory[] = [];
 
   // Metadata
-  view = signal<'lobby' | 'room' | 'play'>('lobby');
+  view = signal<'lobby' | 'room' | 'countdown' | 'play'>('lobby');
   currentPuzzleId = signal<string>('');
   timeSpent = signal<number>(0);
   isFinished = signal<boolean>(false);
@@ -85,14 +85,30 @@ export class SudokuStore {
       this.saveStateToBackend();
     });
 
-    // Effect to handle Room -> Play transition
+    // Effect to handle Room -> Countdown -> Play transition
     effect(() => {
       const status = this.gameStatus();
-      if (status === 'playing' && this.view() === 'room') {
-        this.view.set('play');
+      const currentView = this.view();
+      
+      // When server sends 'starting', show countdown overlay
+      if (status === 'starting' && (currentView === 'room' || currentView === 'lobby')) {
+        this.view.set('countdown');
+        // Pre-init the board so it's ready when countdown ends
         const puzzle = this.rawState().puzzle;
         if (puzzle) {
           this.initBoard(puzzle);
+        }
+      }
+      
+      // When server sends 'playing', transition to play view
+      if (status === 'playing' && (currentView === 'countdown' || currentView === 'room')) {
+        this.view.set('play');
+        // Init board if not already done during countdown
+        if (this.board().length === 0) {
+          const puzzle = this.rawState().puzzle;
+          if (puzzle) {
+            this.initBoard(puzzle);
+          }
         }
       }
     }, { allowSignalWrites: true });
