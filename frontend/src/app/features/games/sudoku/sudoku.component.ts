@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SudokuStore } from './store/sudoku.store';
@@ -15,6 +15,8 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-sudoku',
@@ -143,11 +145,13 @@ import { AuthStore } from '../../../core/auth/auth.store';
 })
 export class SudokuComponent implements OnInit, OnDestroy {
   store = inject(SudokuStore);
-  route = inject(ActivatedRoute);
+  router = inject(Router);
   http = inject(HttpClient);
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
+  private roomLifecycle!: RoomLifecycleHandle;
+  private gameRegistry = inject(GameRegistryService);
   
   view = this.store.view;
   playerId = this.authStore.currentUser()?.username || 'Guest';
@@ -165,6 +169,16 @@ export class SudokuComponent implements OnInit, OnDestroy {
   ];
 
   constructor() {
+    // Register game metadata
+    this.gameRegistry.register({
+      id: 'sudoku',
+      route: '/games/sudoku',
+      titleKey: 'lobby.sudoku',
+      iconEmoji: '🔢',
+      modes: this.sudokuModes,
+      difficulties: this.difficulties,
+    });
+
     effect(() => {
       const status = this.store.gameStatus();
       const currentMode = this.store.currentMode();
@@ -181,13 +195,11 @@ export class SudokuComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Watch for room dismissed events
-    effect(() => {
-      const dismissed = this.wsService.roomDismissedEvent();
-      if (dismissed > 0 && untracked(() => this.store.currentMode()) !== 'single') {
-        (this.store as any).toast.show(this.i18n.t('game.room_dismissed_msg')() || 'The host has dismissed the room.', 'info');
-        this.store.leaveRoom();
-      }
+    // Room lifecycle: cross-game join, reconnect, room dismissed handling
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'sudoku',
+      getCurrentMode: () => this.store.currentMode(),
+      onLeaveRoom: () => this.store.leaveRoom(),
     });
   }
 
@@ -195,22 +207,15 @@ export class SudokuComponent implements OnInit, OnDestroy {
     this.view.set('lobby');
     this.wsService.connectLobby(this.playerId, this.playerId);
 
-    this.route.queryParams.subscribe(params => {
-      if (params['roomId']) {
-        this.store.joinRoom(
-          params['roomId'], 
-          params['mode'] || 'pk_steal', 
-          params['difficulty'] || 'easy', 
-          params['host']
-        );
-        // Clean URL to prevent re-join on refresh
-        window.history.replaceState({}, '', '/sudoku');
-      }
-    });
+    // Check for cross-game join or reconnect
+    const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
+    if (joinInfo) {
+      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
+    }
   }
 
   ngOnDestroy() {
-    this.wsService.disconnectLobby();
+    this.wsService.disconnect('sudoku');
   }
 
   startLevel(level: {id: string, puzzle: string, savedState?: string, timeSpent?: number}) {

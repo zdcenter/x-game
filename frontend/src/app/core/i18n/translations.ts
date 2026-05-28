@@ -1,16 +1,18 @@
 import { coreTranslations } from './core.translations';
 import { minesweeperTranslations } from '../../features/games/minesweeper/i18n/minesweeper.translations';
+import { sudokuTranslations } from '../../features/games/sudoku/i18n/sudoku.translations';
 
 export type Lang = 'en' | 'zh';
 
-// Central Registry: Merge core and feature translations
+// Game translation registry — add new game translations here
+const gameTranslations: Record<Lang, Record<string, string>>[] = [
+  minesweeperTranslations,
+  sudokuTranslations,
+  // futureGameTranslations,  // ← 以后新游戏加一行就行
+];
+
+// Auto-merge core + all game translations
 export const TRANSLATIONS: Record<Lang, Record<string, string>> = {
-  en: {
-    ...coreTranslations['en'],
-    ...minesweeperTranslations['en'],
-  },
-  zh: {
-    ...coreTranslations['zh'],
-    ...minesweeperTranslations['zh'],
-  }
+  en: Object.assign({}, coreTranslations['en'], ...gameTranslations.map(t => t['en'])),
+  zh: Object.assign({}, coreTranslations['zh'], ...gameTranslations.map(t => t['zh'])),
 };

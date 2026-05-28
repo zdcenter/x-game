@@ -20,15 +20,15 @@ import { Cell, CellState } from '../../store/minesweeper.store';
     >
       @if (cell.state === CellState.Revealed) {
         @if (cell.neighbors > 0) {
-          <span [ngStyle]="{ 'color': neighborColor }">{{ cell.neighbors }}</span>
+          <span class="pointer-events-none" [ngStyle]="{ 'color': neighborColor }">{{ cell.neighbors }}</span>
         }
       } @else if (cell.state === CellState.Exploded) {
-        <span class="animate-bounce">💣</span>
+        <span class="animate-bounce pointer-events-none">💣</span>
       } @else if (cell.state === CellState.Flagged) {
-        <span class="drop-shadow-md z-10">🚩</span>
+        <span class="drop-shadow-md z-10 pointer-events-none">🚩</span>
         @if (cell.owner) {
-           <div class="absolute inset-0 rounded bg-green-500/20 animate-pulse border border-green-400"></div>
-           <span class="absolute -bottom-1 right-0 text-[9px] font-mono leading-none text-green-300 z-20" style="text-shadow: 0 1px 2px black;">
+           <div class="absolute inset-0 rounded bg-green-500/20 animate-pulse border border-green-400 pointer-events-none"></div>
+           <span class="absolute -bottom-1 right-0 text-[9px] font-mono leading-none text-green-300 z-20 pointer-events-none" style="text-shadow: 0 1px 2px black;">
              {{ (cell.owner | slice:0:3) }}
            </span>
         }

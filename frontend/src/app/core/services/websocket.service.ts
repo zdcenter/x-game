@@ -13,6 +13,7 @@ export interface WSMessage {
 export class WebSocketService {
   private socket: WebSocket | null = null;
   private lobbySocket: WebSocket | null = null;
+  private currentGameId: string | null = null;
   
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
@@ -36,8 +37,14 @@ export class WebSocketService {
       this.socket.close();
     }
 
+    // Reset all per-room state to prevent stale cross-game data from leaking
+    this.gameState.set(null);
+    this.roomDismissedEvent.set(0);
+    this.unexpectedDisconnectEvent.set(0);
+
     const url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${hostId}`;
     this.socket = new WebSocket(url);
+    this.currentGameId = gameId;
 
     this.socket.onopen = () => {
       this.isConnected.set(true);
@@ -122,13 +129,19 @@ export class WebSocketService {
     }
   }
 
-  disconnect() {
+  disconnect(gameId?: string) {
+    if (gameId && this.currentGameId !== gameId) {
+      return; // Ignore if the socket has already been taken over by another game during routing
+    }
     if (this.socket) {
       this.socket.onclose = null;
       this.socket.close();
       this.socket = null;
       this.isConnected.set(false);
+      this.currentGameId = null;
     }
+    // Clear game state so no stale data leaks to the next game
+    this.gameState.set(null);
   }
 
   disconnectLobby() {

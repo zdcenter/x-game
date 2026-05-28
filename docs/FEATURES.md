@@ -94,8 +94,20 @@
   - 后端房间解散时会全局广播 `{"type": "room_dismissed"}`。
   - **前端硬性要求**：新增游戏组件必须在初始化时（如 `constructor` 中）使用 `effect` 监听 `this.wsService.roomDismissedEvent()`。一旦监听到解散，必须强制弹出 Toast 提示（“房主已解散房间”），并立刻调用 `store.leaveRoom()` 将当前所有非房主玩家强制踢回大厅。绝对禁止遗留任何玩家在已被销毁的房间中卡死。
 - **加入与退出逻辑 (Join & Leave)**：
-  - 前端路由参数中必须解析 `roomId`、`mode`、`difficulty`、`host` 并调用 `store.joinRoom()` 进行房间挂载。
+  - 同游戏内加入：通过 `GameLobbyPanelComponent` 的 `(joinRoom)` 事件直接调用 `store.joinRoom()`。
+  - **跨服加入 (Cross-Game Join)**：通过全局 `CrossGameJoinService` 实现。大厅面板在检测到目标房间属于不同游戏时，自动调用 `crossGameJoin.setPendingJoin()` 存储房间信息，然后通过 Angular Router 导航到目标游戏路由（不携带 queryParams）。目标游戏组件在 `ngOnInit` 中调用 `crossGameJoin.consumePendingJoin(gameId)` 同步读取并消费待加入信息。此机制彻底避免了 queryParams 的时序竞争和 URL 二次触发问题。
   - 组件销毁 (`ngOnDestroy`) 或玩家主动点击离开时，必须触发退房逻辑。
+- **新游戏跨服接入模板 (Cross-Game Join Template)**：
+  ```typescript
+  // 在新游戏组件的 ngOnInit 中加入：
+  private crossGameJoin = inject(CrossGameJoinService);
+  ngOnInit() {
+    const pending = this.crossGameJoin.consumePendingJoin('新游戏ID');
+    if (pending) {
+      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host);
+    }
+  }
+  ```
 - **后端引擎标准化 (Engine Registration)**：
   - 游戏必须在后端的 `engine` 目录新建实现，并且必须通过 `engine.Register("gameId_mode", factory)` 注册。
   - 必须完整实现 `GameEngine` 接口：`InitGame`, `AddPlayer`, `RemovePlayer`, `HandleAction`, `GetState`, `GetStatus`, `SetBroadcaster`。

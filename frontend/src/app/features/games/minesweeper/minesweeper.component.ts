@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -9,16 +11,16 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { GameService, getLocalizedField } from '../../../core/services/game.service';
-import { marked } from 'marked';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule],
+  imports: [CommonModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -229,33 +231,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
           </div>
           </div>
           <!-- Rules Modal -->
-          @if (showRules()) {
-            <div class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm text-[var(--color-text-main)]">
-              <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh]">
-                <div class="flex justify-between items-center p-4 border-b border-[var(--color-border-card)]">
-                  <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ i18n.t('game.rules.title')() }}
-                  </h3>
-                  <button (click)="showRules.set(false)" class="text-slate-400 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div class="p-6 overflow-y-auto text-sm opacity-90 markdown-body leading-relaxed"
-                     [innerHTML]="parsedRulesHTML()">
-                </div>
-                <div class="p-4 border-t border-[var(--color-border-card)] flex justify-end">
-                  <button (click)="showRules.set(false)" class="px-6 py-2 bg-[var(--color-bg-card)] hover:opacity-80 rounded-lg font-bold transition-colors border border-[var(--color-border-card)]">
-                    {{ i18n.t('game.rules.got_it')() }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          }
+          <app-game-rules-modal [gameId]="'minesweeper'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
         </div>
       </div>
 
@@ -363,14 +339,12 @@ export class MinesweeperComponent implements OnInit {
   wsService = inject(WebSocketService); // For lobby data
   audioService = inject(AudioService);
   toastService = inject(ToastService);
-  gameService = inject(GameService);
   GameStatus = GameStatus; // Expose for template
+  private gameRegistry = inject(GameRegistryService);
   
   showRules = signal(false);
-  gameRules = signal('');
-  route = inject(ActivatedRoute);
   router = inject(Router);
-  parsedRulesHTML = computed(() => marked.parse(this.gameRules(), { async: false }) as string);
+  private roomLifecycle!: RoomLifecycleHandle;
 
   playerId = this.authStore.currentUser()?.username || 'Guest';
   currentRoomMode = signal<string>('single');
@@ -489,20 +463,14 @@ export class MinesweeperComponent implements OnInit {
   private elapsedInterval: any;
 
   constructor() {
-    // Initial loading state
-    effect(() => {
-      if (this.gameRules() === '') {
-        this.gameRules.set(this.i18n.t('game.rules.loading')());
-      }
-    }, { allowSignalWrites: true });
-
-    this.gameService.getGames().subscribe(games => {
-      const ms = games.find(g => g.id === 'minesweeper');
-      if (ms) {
-        this.gameRules.set(getLocalizedField(ms.rules, this.i18n.currentLang()));
-      } else {
-        this.gameRules.set(this.i18n.t('game.rules.not_found')());
-      }
+    // Register game metadata
+    this.gameRegistry.register({
+      id: 'minesweeper',
+      route: '/games/minesweeper',
+      titleKey: 'app.title',
+      iconEmoji: '💣',
+      modes: this.minesweeperModes,
+      difficulties: this.predefinedDifficulties,
     });
 
     // Watch for countdown and elapsed timer
@@ -580,13 +548,11 @@ export class MinesweeperComponent implements OnInit {
       }
     }, { allowSignalWrites: true });
 
-    // Watch for room dismissed events
-    effect(() => {
-      const dismissed = this.wsService.roomDismissedEvent();
-      if (dismissed > 0 && untracked(() => this.currentRoomMode()) !== 'single') {
-        this.toastService.show(this.i18n.t('game.room_dismissed_msg')() || 'The host has dismissed the room.', 'info');
-        this.leaveRoom();
-      }
+    // Room lifecycle: cross-game join, reconnect, room dismissed handling
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'minesweeper',
+      getCurrentMode: () => this.currentRoomMode(),
+      onLeaveRoom: () => this.leaveRoom(),
     });
   }
 
@@ -622,32 +588,19 @@ export class MinesweeperComponent implements OnInit {
     // 1. Connect to Lobby
     this.wsService.connectLobby(this.playerId, this.playerId);
     
-    // 2. Check for deep link (query params)
-    this.route.queryParams.subscribe(params => {
-      if (params['roomId']) {
-        this.joinRoom(params['roomId'], params['mode'] || 'pk_steal', params['difficulty'] || 'intermediate', params['host']);
-        // Clean URL to prevent re-join on refresh (optional, but good UX)
-        window.history.replaceState({}, '', '/minesweeper');
-        return; // Don't check sessionStorage if we joined via URL
-      }
-      
-      // 3. Check for reconnect
-      const reconnectRoom = sessionStorage.getItem('minesweeper_reconnect_room');
-      const reconnectMode = sessionStorage.getItem('minesweeper_reconnect_mode');
-      const reconnectDiff = sessionStorage.getItem('minesweeper_reconnect_diff');
-      
-      if (reconnectRoom && reconnectMode) {
-        this.joinRoom(reconnectRoom, reconnectMode, reconnectDiff || 'medium');
-      } else {
-        // 4. Connect to local single player game by default
-        const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
-        this.changeSingleDifficulty(savedDiff);
-      }
-    });
+    // 2. Check for cross-game join or reconnect
+    const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
+    if (joinInfo) {
+      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
+    } else {
+      // 3. Connect to local single player game by default
+      const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
+      this.changeSingleDifficulty(savedDiff);
+    }
   }
 
   ngOnDestroy() {
-    this.wsService.disconnect();
+    this.wsService.disconnect('minesweeper');
   }
 
   createRoom() {
@@ -691,12 +644,7 @@ export class MinesweeperComponent implements OnInit {
     }
 
     if (mode !== 'single') {
-      sessionStorage.setItem('minesweeper_reconnect_room', roomId);
-      sessionStorage.setItem('minesweeper_reconnect_mode', mode);
-      sessionStorage.setItem('minesweeper_reconnect_diff', difficulty);
-      if (finalHostId) {
-        sessionStorage.setItem('minesweeper_reconnect_host', finalHostId);
-      }
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, finalHostId);
     }
     
     this.store.joinGame(roomId, this.playerId, mode, difficulty, finalHostId);
@@ -705,10 +653,7 @@ export class MinesweeperComponent implements OnInit {
   leaveRoom() {
     this.currentRoomId.set('');
     this.store.leaveGame();
-    sessionStorage.removeItem('minesweeper_reconnect_room');
-    sessionStorage.removeItem('minesweeper_reconnect_mode');
-    sessionStorage.removeItem('minesweeper_reconnect_diff');
-    sessionStorage.removeItem('minesweeper_reconnect_host');
+    this.roomLifecycle.clearReconnectInfo();
     // Give the leave_game message 100ms to be sent before resetting to single player
     setTimeout(() => {
       this.changeSingleDifficulty('intermediate');

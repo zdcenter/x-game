@@ -197,3 +197,11 @@ lsof -ti :3001 | xargs -r kill -9
 
 - 所有人发到完全相同的一盘数独（各自独立）。
 纯粹比拼手速和脑力，谁第一个 100% 正确填完，谁就直接胜利（类似现在的扫雷竞速）。
+
+
+## 新游戏接入清单（New Game Onboarding Checklist）
+
+1. 创建 `features/games/新游戏/i18n/xxx.translations.ts`，在 `translations.ts` 的 `gameTranslations` 数组加一行
+2. 在 constructor 中调用 `setupRoomLifecycle()`，自动获得跨服加入 + 断线重连 + 房间解散监听
+3. 在模板中加 `<app-game-rules-modal [gameId]="'xxx'" ...>` 接入规则弹窗
+4. 共享组件直接用：`GameLobbyPanel`, `GameWaitingRoom`, `GameResultOverlay`

@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { getLocalizedField } from '../../../core/services/game.service';
 
 export interface GameMode {
@@ -77,9 +79,9 @@ export interface GameDifficulty {
                           <span>{{ room.createdAt * 1000 | date:'HH:mm:ss' }}</span>
                         }
                         <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
-                        <span>{{ t('game.mode') }}: <span class="text-inherit">{{ getModeLabel(room.mode) }}</span></span>
+                        <span>{{ t('game.mode') }}: <span class="text-inherit">{{ getModeLabel(room.mode, room.game) }}</span></span>
                         <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
-                        <span>{{ t('game.diff') }}: <span class="text-yellow-500">{{ getDifficultyLabel(room.difficulty) }}</span></span>
+                        <span>{{ t('game.diff') }}: <span class="text-yellow-500">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></span>
                       </div>
                       <div class="flex items-center gap-2">
                         <span class="text-xs text-slate-400">{{ room.players }} 人</span>
@@ -127,8 +129,8 @@ export interface GameDifficulty {
                       </div>
                       <div class="flex justify-between items-end">
                         <div class="text-[10px] text-slate-400 uppercase tracking-wider flex flex-col gap-1">
-                          <div>{{ t('game.mode') }}: <span class="text-[var(--color-text-main)]">{{ getModeLabel(room.mode) }}</span></div>
-                          <div>{{ t('game.diff') }}: <span class="text-yellow-400">{{ getDifficultyLabel(room.difficulty) }}</span></div>
+                          <div>{{ t('game.mode') }}: <span class="text-[var(--color-text-main)]">{{ getModeLabel(room.mode, room.game) }}</span></div>
+                          <div>{{ t('game.diff') }}: <span class="text-yellow-400">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></div>
                           @if (room.createdAt) {
                             <div class="opacity-80">{{ t('game.created_at') }}: {{ room.createdAt * 1000 | date:'HH:mm:ss' }}</div>
                           }
@@ -256,6 +258,8 @@ export class GameLobbyPanelComponent {
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
   router = inject(Router);
+  private crossGameJoin = inject(CrossGameJoinService);
+  private gameRegistry = inject(GameRegistryService);
 
   @Input() currentGameId: string = '';
   @Input({ required: true }) gameModes!: GameMode[];
@@ -331,10 +335,9 @@ export class GameLobbyPanelComponent {
 
   onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string) {
     if (game && game !== this.currentGameId) {
-      // Different game, navigate and pass params for auto-join
-      this.router.navigate(['/' + game], { 
-        queryParams: { roomId, mode, difficulty, host } 
-      });
+      // Different game: store pending join info, then navigate with clean URL
+      this.crossGameJoin.setPendingJoin({ game, roomId, mode, difficulty, host });
+      this.router.navigate(['/games/' + game]);
     } else {
       // Same game, emit normal event
       this.joinRoom.emit({ roomId, mode, difficulty, host });
@@ -345,18 +348,30 @@ export class GameLobbyPanelComponent {
     this.dismissRoom.emit();
   }
 
-  getModeLabel(modeId: string): string {
+  getModeLabel(modeId: string, gameId?: string): string {
+    // Try current game's modes first
     const mode = this.gameModes.find(m => m.id === modeId);
     if (mode) return this.t(mode.labelKey);
-    // Global fallback for cross-game rooms
+    // Try registry lookup for cross-game rooms
+    if (gameId) {
+      const labelKey = this.gameRegistry.getModeLabel(gameId, modeId);
+      if (labelKey) return this.t(labelKey);
+    }
+    // Global fallback
     if (modeId.includes('steal')) return this.t('game.steal_mode');
     if (modeId.includes('speed')) return this.t('game.speed_mode');
     return modeId;
   }
 
-  getDifficultyLabel(diffId: string): string {
+  getDifficultyLabel(diffId: string, gameId?: string): string {
+    // Try current game's difficulties first
     const diff = this.difficulties.find(d => d.id === diffId);
     if (diff) return this.t(diff.labelKey);
+    // Try registry lookup for cross-game rooms
+    if (gameId) {
+      const labelKey = this.gameRegistry.getDifficultyLabel(gameId, diffId);
+      if (labelKey) return this.t(labelKey);
+    }
     // Global fallback
     if (diffId === 'easy') return this.t('game.diff_easy');
     if (diffId === 'medium') return this.t('game.diff_medium');

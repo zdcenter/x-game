@@ -1,0 +1,97 @@
+import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { GameService, getLocalizedField } from '../../../core/services/game.service';
+import { marked } from 'marked';
+
+/**
+ * Reusable game rules modal — any game can use this by providing its gameId.
+ * Automatically fetches rules from the backend API and renders as Markdown.
+ *
+ * Usage:
+ *   <app-game-rules-modal [gameId]="'minesweeper'" [isOpen]="showRules()" (closed)="showRules.set(false)">
+ */
+@Component({
+  selector: 'app-game-rules-modal',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    @if (isOpen) {
+      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+           (click)="onBackdropClick($event)">
+        <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden relative">
+          <!-- Header -->
+          <div class="flex items-center justify-between p-5 border-b border-[var(--color-border-card)]">
+            <h3 class="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              📖 {{ i18n.t('game.rules.title')() }}
+            </h3>
+            <button (click)="closed.emit()"
+                    class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
+              ✕
+            </button>
+          </div>
+          <!-- Content -->
+          <div class="p-5 overflow-y-auto prose prose-invert prose-sm max-w-none
+                      [&_h1]:text-xl [&_h1]:font-bold [&_h1]:text-[var(--color-text-primary)] [&_h1]:mb-3
+                      [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mb-2 [&_h2]:mt-4
+                      [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mb-2
+                      [&_p]:text-[var(--color-text-secondary)] [&_p]:mb-3 [&_p]:leading-relaxed
+                      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ul]:text-[var(--color-text-secondary)]
+                      [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_ol]:text-[var(--color-text-secondary)]
+                      [&_li]:mb-1
+                      [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold
+                      [&_code]:bg-[var(--color-bg-main)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs"
+               [innerHTML]="parsedRulesHTML()">
+          </div>
+          <!-- Footer -->
+          <div class="p-4 border-t border-[var(--color-border-card)]">
+            <button (click)="closed.emit()"
+                    class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95">
+              {{ i18n.t('game.rules.got_it')() }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  `
+})
+export class GameRulesModalComponent implements OnChanges {
+  i18n = inject(I18nService);
+  private gameService = inject(GameService);
+
+  @Input({ required: true }) gameId!: string;
+  @Input() isOpen = false;
+  @Output() closed = new EventEmitter<void>();
+
+  private rulesMarkdown = signal('');
+  parsedRulesHTML = signal('');
+
+  private loaded = false;
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['isOpen'] && this.isOpen && !this.loaded) {
+      this.loadRules();
+    }
+  }
+
+  private loadRules() {
+    this.parsedRulesHTML.set(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string);
+    this.gameService.getGames().subscribe(games => {
+      const game = games.find(g => g.id === this.gameId);
+      if (game) {
+        const md = getLocalizedField(game.rules, this.i18n.currentLang());
+        this.rulesMarkdown.set(md);
+        this.parsedRulesHTML.set(marked.parse(md, { async: false }) as string);
+      } else {
+        this.parsedRulesHTML.set(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string);
+      }
+      this.loaded = true;
+    });
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      this.closed.emit();
+    }
+  }
+}

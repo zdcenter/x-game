@@ -2,6 +2,26 @@
 
 本文档专门记录项目从起步到当前所有里程碑的变更、新功能上线以及重要重构轨迹。
 
+## [Phase 8] 2026-05-28: 前端架构优化与通用化封装 (Architecture Refactoring)
+
+### 重构 (Refactors)
+- **🌐 i18n 自动合并机制**：重构 `translations.ts` 为数组注册模式，新游戏翻译只需加一行即可自动合并。新建 `sudoku/i18n/sudoku.translations.ts`，将数独专属文案从 `coreTranslations` 中剥离。
+- **📖 通用游戏规则弹窗**：新建 `shared/components/game-rules-modal/`，任何游戏只需 `<app-game-rules-modal [gameId]="'xxx'" [isOpen]="..." (closed)="...">` 一行即可接入。从扫雷组件中移除了 27 行内联规则弹窗模板和规则加载逻辑。
+- **🔄 房间生命周期封装**：新建 `core/services/room-lifecycle.ts`，通过 `setupRoomLifecycle()` 函数封装了跨服加入、断线重连（sessionStorage）、房间解散监听三大功能。扫雷和数独均已接入，新游戏只需在 constructor 中调用一行即可获得全部房间管理能力。
+- **📋 游戏注册表**：新建 `core/services/game-registry.service.ts`，每个游戏在 constructor 中自注册元数据（modes、difficulties、路由、图标）。`GameLobbyPanel` 利用注册表动态查询任意游戏的 mode/difficulty 标签，消除了跨游戏场景下的 hardcoded fallback。
+- **🧹 扫雷组件瘦身**：移除了 `gameRules`/`parsedRulesHTML`/`gameService`/`marked` 等已被通用组件替代的依赖，组件减少约 60 行。
+
+---
+
+## [Phase 7] 2026-05-28: 跨服加入房间系统重构 (Cross-Game Join Refactoring)
+
+### 重构 (Refactors)
+- **🔀 CrossGameJoinService**：新建全局 `CrossGameJoinService`，彻底替换了基于 `queryParams` 的跨服加入机制。通过 Angular Signal 存储待加入房间信息，消除了 URL 参数二次触发、时序竞争和 `window.history.replaceState` 与 Angular Router 冲突等根本性缺陷。
+- **🧹 代码精简**：移除了扫雷和数独组件中的 `ActivatedRoute` 依赖、`take(1)` 订阅、`replaceState` hack 等临时方案，`ngOnInit` 逻辑从异步订阅简化为同步一行调用。
+- **📐 新游戏接入零成本**：任何新增游戏只需在 `ngOnInit` 中调用 `crossGameJoin.consumePendingJoin('gameId')` 即可自动获得跨服加入能力，无需了解底层路由细节。
+
+---
+
 ## [Phase 6] 2026-05-27: 泛用型多人大厅与数独双模式上线 (Generic Lobby & Sudoku PK)
 
 ### 新功能 (New Features)
