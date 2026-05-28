@@ -12,6 +12,13 @@
   - 利用 Angular Signal 与 TailwindCSS 实现了平滑的动画效果。
   - 完全复用 `BaseGameComponent` 和 `BaseEngine` 架构，完美支持断线重连、房间生命周期等机制。
 
+### 架构规范化与布局统一 (Standards & Layout Unification)
+- **纯本地倒计时**：废弃了前端依赖服务端时间戳计算开局倒计时的做法。现在统一使用 `GameTimerService`，由前端执行完全本地化的 3 秒倒计时（基于 `status === 'starting'` 触发），从根本上解决了因客户端与服务端时钟误差（Clock Skew）导致倒计时异常的 Bug。
+- **单机存档覆盖策略**：完善了单机模式本地缓存机制。对于玩家手动切换难度等级的操作，强制重新实例化游戏引擎并覆盖本地存档，只有在初次进入或刷新时才读取旧进度。
+- **横向多对手卡片 (Opponents Layout)**：为解决等比棋盘（`aspect-square`）在 PC 宽屏下因纵向空间不足导致底部对手面板被截断的问题，现将**所有多人 PK 游戏的对手进度卡片统一上移至顶部状态栏上方**，采用横向滚动（`overflow-x-auto`）布局排列，完美复用数独模式的成熟设计，实现了 PC / 移动端高度一致的视觉标准。
+- **全局 i18n 强制规范**：将缺失的结算词条（如 `GAME.YOU_WIN`, `GAME.YOU_LOSE`, `Moves`）统一抽离至 `core.translations.ts` 中，杜绝出现大写生硬文本的情况。
+- **大厅展示优化**：在全局游戏大厅（Lobby）动态显示不同游戏所支持的 PK 模式，并用专属 Emoji 进行了高光展示（如 `⚡ 同盘抢雷`, `⏱️ 异盘竞速`），优化了卡片观感。
+
 ---
 
 ## [Phase 8] 2026-05-28: 核心游戏引擎与前端组件基类重构封装 (Engine & Component Refactoring)
