@@ -1,0 +1,253 @@
+<div class="h-full w-full flex flex-col relative text-[var(--color-text-main)] overflow-hidden">
+  
+  <!-- Rules Modal -->
+  @if (showRules()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div class="w-full max-w-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl overflow-hidden">
+        <div class="p-4 lg:p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              {{ t('sliding.rules.title')() }}
+            </h2>
+            <button (click)="showRules.set(false)" class="p-2 rounded-full hover:bg-white/10 transition-colors">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <ul class="space-y-3 text-sm lg:text-base opacity-80 list-disc pl-5">
+            <li>{{ t('sliding.rules.1')() }}</li>
+            <li>{{ t('sliding.rules.2')() }}</li>
+            <li>{{ t('sliding.rules.3')() }}</li>
+            <li>{{ t('sliding.rules.4')() }}</li>
+            <li class="text-amber-400">{{ t('sliding.rules.5')() }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="flex-grow flex flex-col lg:flex-row h-full overflow-hidden p-2 lg:p-4 gap-4 lg:gap-6 pt-16 lg:pt-4">
+    <!-- LEFT: Game Arena -->
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
+      <div class="w-full h-full flex flex-col overflow-y-auto overflow-x-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
+           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        
+        <!-- Header -->
+        <div class="flex flex-col mb-4 lg:mb-6 pb-4 border-b relative" style="border-color: var(--color-border-card)">
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
+              <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2 z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                <span class="hidden sm:inline">{{ t('game.back')() || 'Back' }}</span>
+              </button>
+              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap z-10">
+                <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                  {{ t('sliding.title')() }}
+                </span>
+                <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
+                  {{ currentRoomMode() === 'pk_speed' ? t('sliding.mode.pk_speed')() : t('sliding.mode.single')() }}
+                </span>
+              </h1>
+              <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Mobile & Desktop Menu Toggle -->
+            @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
+              <button (click)="isMenuOpen.set(true)" class="lg:hidden p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Board Area -->
+        <div class="flex-grow flex flex-col items-center justify-center relative min-h-0">
+          
+          @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
+            <app-game-waiting-room
+              class="w-full h-full flex"
+              [mode]="currentRoomMode()"
+              [roomId]="currentRoomId()"
+              [players]="getPlayerScores()"
+              [hostId]="store.host()"
+              [currentUserId]="playerId"
+              (leave)="returnToLobby()"
+              (start)="store.startGame()">
+            </app-game-waiting-room>
+          } @else {
+            
+            <!-- PK Opponents (Top) -->
+            @if (currentRoomMode() !== 'single') {
+              <div class="w-full max-w-[800px] mx-auto flex gap-4 overflow-x-auto pb-4 mb-2 lg:mb-4">
+                @for (opp of store.otherPlayers(); track opp.id) {
+                  <div class="flex-1 min-w-[200px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-3 shadow-md relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-1 z-10 relative">
+                      <span class="font-bold truncate text-sm flex items-center gap-2">
+                        👤 {{ opp.id }}
+                      </span>
+                      <span class="font-mono font-bold text-xs">{{ opp.board.moves || 0 }} {{ t('sliding.moves')() }}</span>
+                    </div>
+
+                    @if (opp.board.status === 'finished') {
+                      <div class="absolute inset-0 bg-green-900/30 flex items-center justify-center z-0">
+                        <span class="text-4xl opacity-20 transform -rotate-12">{{ t('game.finished')() || 'FINISHED' }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Top Status Header (Only for single or if we want it here) -->
+            <div class="w-full max-w-[600px] mx-auto grid grid-cols-3 items-center mb-4 lg:mb-6 px-2 lg:px-4">
+              <!-- Level Selection / Info -->
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] lg:text-xs font-bold opacity-70 mb-1">{{ t('game.difficulty')() }}</span>
+                @if (currentRoomMode() === 'single') {
+                  <select
+                    [ngModel]="store.currentDifficulty()"
+                    (ngModelChange)="changeSingleDifficulty($event)"
+                    class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg px-2 py-1 text-sm lg:text-xl font-bold cursor-pointer outline-none focus:ring-2 focus:ring-[var(--color-accent-from)] transition-all">
+                    @for (diff of difficulties; track diff.id) {
+                      <option [value]="diff.id">{{ t(diff.labelKey)() }}</option>
+                    }
+                  </select>
+                } @else {
+                  <div class="text-sm lg:text-xl font-bold px-2 py-1">
+                    {{ getDifficultyDesc(store.currentDifficulty()) }}
+                  </div>
+                }
+              </div>
+
+              <!-- Timer -->
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] lg:text-xs font-bold opacity-70 mb-1">{{ t('game.timer')() }}</span>
+                <div class="text-lg lg:text-3xl font-mono font-black" 
+                     [class.text-[var(--color-accent-to)]]="store.status() === 'playing'" 
+                     [class.text-green-500]="store.status() === 'finished'">
+                  {{ formatTime(getElapsedMs(currentRoomMode() === 'single' ? (store.myBoard()?.startAt || 0) : store.globalStartAt())) }}
+                </div>
+              </div>
+              
+              <!-- Moves -->
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] lg:text-xs font-bold opacity-70 mb-1">{{ t('sliding.moves')() }}</span>
+                <div class="text-lg lg:text-3xl font-mono font-black text-[var(--color-text-main)]">
+                  {{ store.myBoard()?.moves || 0 }}
+                </div>
+              </div>
+            </div>
+
+            <!-- The Grid -->
+            <div class="relative w-full max-w-[600px] mx-auto aspect-square bg-[var(--color-bg-card)] rounded-xl lg:rounded-3xl p-2 lg:p-4 shadow-2xl border border-[var(--color-border-card)] flex-shrink-0 mb-4"
+                 (touchstart)="onTouchStart($event)"
+                 (touchend)="onTouchEnd($event)">
+              
+              @if (store.status() === 'starting') {
+                <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md rounded-2xl">
+                  <div class="text-7xl font-bold text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-pulse">
+                    {{ gameTimer.countdownDisplay() }}
+                  </div>
+                  <div class="text-xl text-amber-400 font-bold uppercase tracking-widest">{{ t('game.ready')() }}</div>
+                </div>
+              }
+
+              @if (store.status() === 'finished') {
+                <app-game-result-overlay
+                  [status]="getOverlayStatus()"
+                  [title]="getOverlayTitle()"
+                  [subtitle]="getOverlaySubtitle()"
+                  [stats]="getOverlayStats()"
+                  [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
+                  (restart)="store.playAgain()">
+                </app-game-result-overlay>
+              }
+
+              <!-- Tiles -->
+              <div class="w-full h-full relative">
+                @for (tile of tiles(); track tile.val) {
+                  <div 
+                    class="absolute p-1 transition-all duration-200 ease-out"
+                    [style.width]="(100 / tile.size) + '%'"
+                    [style.height]="(100 / tile.size) + '%'"
+                    [style.left]="(tile.col * 100 / tile.size) + '%'"
+                    [style.top]="(tile.row * 100 / tile.size) + '%'"
+                  >
+                    <button 
+                      (click)="onTileClick(tile)"
+                      [disabled]="store.status() !== 'playing'"
+                      class="w-full h-full rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl md:text-4xl transition-all"
+                      [ngClass]="{
+                        'bg-[var(--color-tile-bg)] border-2 border-b-[6px] border-r-[4px] border-[var(--color-tile-border)] text-[var(--color-text-main)] shadow-[0_4px_10px_var(--color-cell-shadow)] active:translate-y-1 active:translate-x-[2px] active:border-b-2 active:border-r-2': true,
+                        'hover:brightness-110 cursor-pointer': store.status() === 'playing',
+                        'cursor-default opacity-90': store.status() !== 'playing'
+                      }"
+                    >
+                      {{ tile.val }}
+                    </button>
+                  </div>
+                }
+              </div>
+
+            </div>
+            
+
+
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Overlay Backdrop -->
+    @if (isMenuOpen()) {
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMenuOpen.set(false)"></div>
+    }
+
+    <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
+    <div class="flex-shrink-0 flex-col w-full lg:w-80 transition-transform duration-300"
+         [ngClass]="{
+           'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:flex lg:translate-x-0': true,
+           'translate-x-0 flex': isMenuOpen(),
+           'translate-x-full hidden lg:flex': !isMenuOpen()
+         }">
+      
+      @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
+        <div class="flex justify-between items-center mb-4 lg:hidden">
+          <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ t('game.room_info')() || 'Room Info' }}</h3>
+          <button (click)="isMenuOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      }
+
+      <!-- Single Player Extra Controls (Play Again) -->
+      @if (currentRoomMode() === 'single' && store.status() === 'finished') {
+        <div class="backdrop-blur-xl border rounded-2xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+          <button (click)="store.playAgain()" class="w-full px-4 py-3 bg-[var(--color-accent-from)] hover:bg-[var(--color-accent-to)] text-white rounded-xl font-bold shadow-lg transition-all transform hover:scale-105 active:scale-95">
+            {{ t('game.play_again')() }}
+          </button>
+        </div>
+      }
+
+      <!-- PK Lobby Panel -->
+      <app-game-lobby-panel
+        class="flex-grow flex"
+        [currentGameId]="'sliding'"
+        [gameModes]="gameModes"
+        [difficulties]="difficulties"
+        (joinRoom)="handleJoinRoom($event)"
+        (createRoom)="handleCreateRoom($event)">
+      </app-game-lobby-panel>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,309 @@
+import { Component, computed, inject, signal, effect, untracked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { BaseGameComponent } from '../../../core/utils/base-game.component';
+import { SlidingStore, GameStatus } from './store/sliding.store';
+import { AuthStore } from '../../../core/auth/auth.store';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
+import { GameLobbyPanelComponent, GameMode, GameDifficulty } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+
+@Component({
+  selector: 'app-sliding',
+  standalone: true,
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent],
+  providers: [SlidingStore],
+  templateUrl: './sliding.component.html',
+  styleUrls: ['./sliding.component.scss']
+})
+export class SlidingComponent extends BaseGameComponent {
+  override store = inject(SlidingStore);
+  private authStore = inject(AuthStore);
+  private router = inject(Router);
+  readonly i18n = inject(I18nService);
+  private toastService = inject(ToastService);
+  private crossGameJoin = inject(CrossGameJoinService);
+
+  showRules = signal<boolean>(false);
+  isMenuOpen = signal<boolean>(false);
+  Math = Math;
+
+  gameModes: GameMode[] = [
+    { id: 'pk_speed', labelKey: 'sliding.mode.pk_speed', icon: '⚡', descKey: 'game.pk_speed_desc' }
+  ];
+
+  difficulties: GameDifficulty[] = [
+    { id: 'easy', labelKey: 'sliding.difficulty.easy', desc: '4x4' },
+    { id: 'medium', labelKey: 'sliding.difficulty.medium', desc: '5x5' },
+    { id: 'hard', labelKey: 'sliding.difficulty.hard', desc: '6x6' }
+  ];
+
+  private timerInterval: any;
+  currentTime = signal<number>(Date.now());
+  finishedAt = signal<number | null>(null);
+  
+  private roomLifecycle: RoomLifecycleHandle;
+
+  override get playerId(): string {
+    return this.authStore.currentUser()?.username || this.authStore.guestId;
+  }
+
+  get t() {
+    return this.i18n.t.bind(this.i18n);
+  }
+
+  currentRoomMode = this.store.currentRoomMode;
+  currentRoomId = this.store.currentRoomId;
+
+  // For Absolute Positioning Animation
+  // Returns an array of objects representing tiles 1 to size*size-1, plus 0
+  tiles = computed(() => {
+    const board = this.store.myBoard();
+    if (!board) return [];
+    
+    const size = board.size;
+    const cells = board.cells;
+    const tileObjects = [];
+    
+    for (let val = 1; val < size * size; val++) {
+      const idx = cells.indexOf(val);
+      const row = Math.floor(idx / size);
+      const col = idx % size;
+      tileObjects.push({ val, row, col, size });
+    }
+    
+    return tileObjects;
+  });
+  
+  emptyCell = computed(() => {
+    const board = this.store.myBoard();
+    if (!board) return null;
+    const size = board.size;
+    const idx = board.emptyIdx;
+    return { row: Math.floor(idx / size), col: idx % size, size };
+  });
+
+  constructor() {
+    super();
+    
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'sliding',
+      getCurrentMode: () => this.currentRoomMode(),
+      onLeaveRoom: () => this.returnToLobby(),
+    });
+
+    effect(() => {
+      const dc = this.wsService.unexpectedDisconnectEvent();
+      if (dc > 0) {
+        untracked(() => {
+          this.toastService.show(this.t('game.disconnect_reconnecting')(), 'error');
+        });
+      }
+    });
+
+    effect(() => {
+      const status = this.store.status();
+      if (status === GameStatus.Finished) {
+        if (!this.finishedAt()) {
+          this.finishedAt.set(Date.now());
+        }
+      } else {
+        this.finishedAt.set(null);
+      }
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      const status = this.store.status();
+      if (status === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
+      } else {
+        untracked(() => this.gameTimer.stopCountdown());
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.wsService.connectLobby(this.playerId, this.playerId);
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    if (pending) {
+      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      return;
+    } else {
+      this.store.joinGame('', this.playerId, 'single');
+    }
+
+
+    this.timerInterval = setInterval(() => {
+      this.currentTime.set(Date.now());
+    }, 100);
+  }
+
+  ngOnDestroy() {
+    this.store.leaveGame();
+    if (this.timerInterval) clearInterval(this.timerInterval);
+  }
+
+  goBack() {
+    if (this.currentRoomId()) {
+      if (this.store.host() === this.playerId) {
+        this.handleDismissRoom();
+      } else {
+        this.store.leaveGame();
+      }
+    }
+    this.router.navigate(['/lobby']);
+  }
+
+  returnToLobby() {
+    this.currentRoomId.set('');
+    this.store.leaveGame();
+    this.roomLifecycle.clearReconnectInfo();
+    setTimeout(() => this.changeSingleDifficulty('medium'), 100);
+  }
+
+  changeSingleDifficulty(diff: string) {
+    if (this.currentRoomId()) return;
+    this.store.currentDifficulty.set(diff);
+    this.store.playAgain();
+  }
+
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId: string) {
+    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
+    this.isMenuOpen.set(false);
+  }
+
+  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
+    if (this.currentRoomId() === event.roomId) return;
+    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+  }
+
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+  }
+
+  getPlayerScores() {
+    if (this.currentRoomMode() === 'single') {
+      return [{ id: this.playerId, score: 0 }];
+    }
+    const boards = this.store.allBoards();
+    return Object.keys(boards).map(id => ({ id, score: boards[id].status === GameStatus.Finished ? 1 : 0 }));
+  }
+
+  onTileClick(tile: any) {
+    if (this.store.status() !== GameStatus.Playing) return;
+    
+    const board = this.store.myBoard();
+    if (!board) return;
+    const idx = tile.row * tile.size + tile.col;
+    this.store.move(idx);
+  }
+
+  private touchStartX = 0;
+  private touchStartY = 0;
+
+  onTouchStart(event: TouchEvent) {
+    if (event.touches.length > 0) {
+      this.touchStartX = event.touches[0].clientX;
+      this.touchStartY = event.touches[0].clientY;
+    }
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (event.changedTouches.length > 0) {
+      const touchEndX = event.changedTouches[0].clientX;
+      const touchEndY = event.changedTouches[0].clientY;
+      this.handleSwipe(this.touchStartX, this.touchStartY, touchEndX, touchEndY);
+    }
+  }
+
+  onMouseDown(event: MouseEvent) {
+    this.touchStartX = event.clientX;
+    this.touchStartY = event.clientY;
+  }
+
+  onMouseUp(event: MouseEvent) {
+    this.handleSwipe(this.touchStartX, this.touchStartY, event.clientX, event.clientY);
+  }
+
+  handleSwipe(startX: number, startY: number, endX: number, endY: number) {
+    if (this.store.status() !== GameStatus.Playing) return;
+    const board = this.store.myBoard();
+    if (!board) return;
+
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+
+    if (Math.abs(diffX) < 30 && Math.abs(diffY) < 30) return;
+
+    const size = board.size;
+    const emptyRow = Math.floor(board.emptyIdx / size);
+    const emptyCol = board.emptyIdx % size;
+    
+    let targetRow = emptyRow;
+    let targetCol = emptyCol;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) targetCol -= 1; // Swipe Right -> Tile LEFT of empty moves
+      else targetCol += 1;           // Swipe Left -> Tile RIGHT of empty moves
+    } else {
+      if (diffY > 0) targetRow -= 1; // Swipe Down -> Tile ABOVE empty moves
+      else targetRow += 1;           // Swipe Up -> Tile BELOW empty moves
+    }
+
+    if (targetRow >= 0 && targetRow < size && targetCol >= 0 && targetCol < size) {
+      const idx = targetRow * size + targetCol;
+      this.store.move(idx);
+    }
+  }
+
+  getDifficultyDesc(id: string): string {
+    const diff = this.difficulties.find(d => d.id === id);
+    return diff ? this.t(diff.labelKey)() : id;
+  }
+
+  getElapsedMs(startAt: number): number {
+    if (!startAt) return 0;
+    
+    const finishedTime = this.finishedAt();
+    if (this.store.status() === GameStatus.Finished && finishedTime) {
+      return Math.max(0, finishedTime - startAt);
+    }
+    
+    return Math.max(0, this.currentTime() - startAt);
+  }
+
+  formatTime(ms: number): string {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+    const s = (totalSec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  getOverlayStatus(): 'win' | 'lose' {
+    if (this.currentRoomMode() === 'single') return 'win';
+    if (this.store.winners().includes(this.playerId)) return 'win';
+    return 'lose';
+  }
+
+  getOverlayTitle(): string {
+    if (this.currentRoomMode() === 'single') return this.t('game.you_win')();
+    if (this.store.winners().includes(this.playerId)) return this.t('game.you_win')();
+    return this.t('game.you_lose')();
+  }
+
+  getOverlaySubtitle(): string {
+    return `${this.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(this.currentRoomMode() === 'single' ? (this.store.myBoard()?.startAt || 0) : this.store.globalStartAt()))}`;
+  }
+
+  getOverlayStats(): { label: string; value: string | number }[] {
+    return [
+      { label: this.t('game.moves')() || 'Moves', value: this.store.myBoard()?.moves || 0 }
+    ];
+  }
+}

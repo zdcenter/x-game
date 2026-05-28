@@ -76,6 +76,16 @@ func Seed() {
 	}
 	DB.Where(domain.GameConfig{ID: "sudoku"}).FirstOrCreate(&defaultSudoku)
 
+	defaultSliding := domain.GameConfig{
+		ID:       "sliding",
+		Name:     `{"en": "Sliding Puzzle", "zh": "数字华容道"}`,
+		Overview: `{"en": "Classic 15-puzzle. Slide tiles to order them.", "zh": "经典数字滑块拼图。打乱后复原它。"}`,
+		Rules:    `{"en": "# Sliding Puzzle Rules\n\nSlide the numbered tiles into sequential order.\n\n## 🎮 Controls\n- **Move**: Click or tap a tile adjacent to the empty space to slide it.", "zh": "# 数字华容道玩法规则\n\n将数字按顺序从小到大排列。\n\n## 🎮 操作说明\n- **移动**: 点击与空格相邻的方块即可将其移入空格。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "sliding"}).FirstOrCreate(&defaultSliding)
+
 	var userCount int64
 	DB.Model(&domain.User{}).Count(&userCount)
 	if userCount == 0 {

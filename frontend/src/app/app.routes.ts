@@ -34,6 +34,11 @@ export const routes: Routes = [
         path: 'games/sudoku',
         loadComponent: () => import('./features/games/sudoku/sudoku.component').then(m => m.SudokuComponent),
         data: { seo: { titleKey: 'seo.sudoku.title', descKey: 'seo.sudoku.desc', keywordsKey: 'seo.sudoku.keywords' } }
+      },
+      {
+        path: 'games/sliding',
+        loadComponent: () => import('./features/games/sliding/sliding.component').then(m => m.SlidingComponent),
+        data: { seo: { titleKey: 'seo.sliding.title', descKey: 'seo.sliding.desc', keywordsKey: 'seo.sliding.keywords' } }
       }
     ]
   },

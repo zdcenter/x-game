@@ -14,6 +14,7 @@ import (
 	// Register engines
 	_ "github.com/x-game/backend/internal/engine/minesweeper"
 	_ "github.com/x-game/backend/internal/engine/sudoku"
+	_ "github.com/x-game/backend/internal/engine/sliding"
 )
 
 func main() {

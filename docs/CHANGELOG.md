@@ -2,7 +2,19 @@
 
 本文档专门记录项目从起步到当前所有里程碑的变更、新功能上线以及重要重构轨迹。
 
-## [Phase 9] 2026-05-28: 核心游戏引擎与前端组件基类重构封装 (Engine & Component Refactoring)
+## [Phase 9] 2026-05-28: 新增游戏 - 数字华容道 (Sliding Puzzle)
+
+### 新功能 (Features)
+- **数字华容道 (Sliding Puzzle)**：实现经典的 15-Puzzle 数字滑块拼图游戏。
+  - 支持 **单机模式 (Single)**，供玩家本地练手，引擎在前端运行。
+  - 支持 **PK 竞速模式 (Speed)**，支持多玩家同房对战。后端统一下发完全相同的打乱状态，公平竞速。
+  - 提供 **三种难度** 棋盘选择：初级 (4x4)、中级 (5x5)、高级 (6x6)。
+  - 利用 Angular Signal 与 TailwindCSS 实现了平滑的动画效果。
+  - 完全复用 `BaseGameComponent` 和 `BaseEngine` 架构，完美支持断线重连、房间生命周期等机制。
+
+---
+
+## [Phase 8] 2026-05-28: 核心游戏引擎与前端组件基类重构封装 (Engine & Component Refactoring)
 
 ### 重构 (Refactors)
 - **后端引擎基类提取 (`BaseEngine`)**：创建了通用的 `engine.BaseEngine`，提取了所有游戏引擎中的 Mutex 锁、广播回调、游戏状态 (`State`) 等冗余逻辑，并统一实现了 `GetStatus` 和 `SetBroadcaster`。所有特定游戏（扫雷、数独）的 Engine 均改为嵌入此基类，大幅删减了样板代码。

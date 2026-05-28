@@ -111,14 +111,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
               <!-- Right: Timer & Mines -->
               <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center z-10">
-                @if (store.status() !== 'waiting') {
-                  <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                    </svg>
-                  </button>
-                }
-                
+
                 @if (store.status() === 'playing') {
                   <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -141,6 +134,15 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                     <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
                   </button>
                 }
+                
+                @if (store.status() !== 'waiting'){
+                  <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                  </button>
+                }
+                
               </div>
             </div>
 
@@ -371,7 +373,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
   private roomLifecycle!: RoomLifecycleHandle;
-  
+
   showRules = signal(false);
   get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
   currentRoomMode = signal<string>('single');
@@ -441,7 +443,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     effect(() => {
       const status = this.store.status();
       const mode = this.currentRoomMode();
-      
+
       // Elapsed timer logic
       if (status === GameStatus.Playing && mode !== 'single') {
         if (!this.elapsedInterval) {
@@ -486,7 +488,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       } else {
         this.frozenRemaining.set(0);
       }
-      
+
       onCleanup(() => {
         if (interval) clearInterval(interval);
       });
@@ -500,7 +502,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   isFrozen = computed(() => this.frozenRemaining() > 0);
-  
+
   elapsedTime = signal<string>('00:00');
   private elapsedInterval: any;
 
@@ -524,12 +526,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
     if (this.currentRoomId() === event.roomId) return;
     this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
     this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
   }
 
@@ -618,7 +620,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   getPlayerScores() {
     const scores = this.store.scores();
     const players = Object.keys(scores).map(id => ({ id, score: scores[id] }));
-    
+
     // Sort logic: current player first, then others by score (descending)
     return players.sort((a, b) => {
       if (a.id === this.playerId) return -1;
@@ -658,8 +660,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   getOverlayStats() {
-    const stats: {label: string, value: string | number}[] = [];
-    
+    const stats: { label: string, value: string | number }[] = [];
+
     // Time spent is relevant for single and speed mode
     if (this.currentRoomMode() !== 'pk_steal') {
       let timeStr = this.elapsedTime();
@@ -677,14 +679,14 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         stats.push({ label: 'TIME', value: timeStr });
       }
     }
-    
+
     // Score (flags) is relevant for steal mode
     if (this.currentRoomMode() === 'pk_steal') {
       const scores = this.store.scores();
       const myScore = scores[this.playerId] || 0;
       stats.push({ label: 'SCORE', value: myScore });
     }
-    
+
     return stats;
   }
 }

@@ -105,8 +105,13 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.back': 'Back',
     'game.leave': 'Leave',
     'game.waiting_room': 'Waiting Room',
+    'game.timer': 'Timer',
+    'game.difficulty': 'Difficulty',
     'game.start_match': 'Start Match',
     'game.waiting_for_host': 'Waiting for host...',
+    'game.you_win': 'YOU WIN!',
+    'game.you_lose': 'YOU LOSE!',
+    'game.moves': 'Moves',
   },
   zh: {
     // SEO
@@ -195,6 +200,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.started': '已开始',
     'game.full': '满员',
     'game.watch': '观战',
+    'game.timer': '当前耗时',
+    'game.difficulty': '游戏等级',
     'game.my_room': '我的房间',
     'game.dismiss': '解散',
     'game.dismiss_title': '解散房间',
@@ -214,5 +221,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.waiting_room': '等待大厅',
     'game.start_match': '开始游戏',
     'game.waiting_for_host': '等待房主开始...',
-  }
+    'game.you_win': '游戏胜利！',
+    'game.you_lose': '游戏失败！',
+    'game.moves': '移动步数',
+  },
 };

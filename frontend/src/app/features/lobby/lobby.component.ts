@@ -41,6 +41,9 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
               </p>
               <div class="mt-4 flex flex-wrap gap-2">
                 <span class="px-2 py-1 text-xs font-semibold rounded bg-black/20 border border-emerald-500/50 text-emerald-400">{{ i18n.t('lobby.ready')() }}</span>
+                @for (mode of getGameModes(game.id); track mode) {
+                  <span class="px-2 py-1 text-xs font-semibold rounded bg-black/20 border border-indigo-500/50 text-indigo-400">{{ mode }}</span>
+                }
               </div>
             </div>
           </a>
@@ -73,7 +76,18 @@ export class LobbyComponent implements OnInit {
     switch (id) {
       case 'minesweeper': return '💣';
       case 'sudoku': return '🔢';
+      case 'sliding': return '🔲';
       default: return '🎮';
+    }
+  }
+
+  getGameModes(id: string): string[] {
+    const isZh = this.i18n.currentLang() === 'zh';
+    switch (id) {
+      case 'minesweeper': return isZh ? ['⚡ 同盘抢雷', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
+      case 'sudoku': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
+      case 'sliding': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
+      default: return [];
     }
   }
 
