@@ -247,28 +247,27 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
       </div>
 
       <!-- Mobile Sidebar Overlay Backdrop -->
-      @if (store.status() !== 'waiting' && isMobileSidebarOpen()) {
+      @if (isMobileSidebarOpen()) {
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
       }
 
-      <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="flex-shrink-0 flex-col min-h-[400px] lg:min-h-0 transition-transform duration-300 shadow-[var(--color-border-card)]"
-           [ngClass]="[
-             store.status() !== 'waiting' 
-               ? 'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:p-0 lg:relative lg:w-80 lg:shadow-none lg:bg-transparent lg:z-auto lg:translate-x-0 ' + (isMobileSidebarOpen() ? 'translate-x-0 flex' : 'translate-x-full lg:flex hidden')
-               : 'w-full lg:w-80 flex'
-           ]">
+      <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
+      <div class="flex-shrink-0 flex-col w-full lg:w-80 transition-transform duration-300"
+           [ngClass]="{
+             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:flex lg:translate-x-0': true,
+             'translate-x-0 flex': isMobileSidebarOpen(),
+             'translate-x-full hidden lg:flex': !isMobileSidebarOpen(),
+             '!hidden': currentRoomId() !== ''
+           }">
            
-           @if (store.status() !== 'waiting') {
-             <div class="flex justify-between items-center mb-4 lg:hidden">
-               <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
-               <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                 </svg>
-               </button>
-             </div>
-           }
+           <div class="flex justify-between items-center mb-4 lg:hidden">
+             <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+             <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+               </svg>
+             </button>
+           </div>
         <app-game-lobby-panel
           [currentGameId]="'minesweeper'"
           [gameModes]="minesweeperModes"
@@ -467,7 +466,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
           this.elapsedTime.set('00:00');
         }
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect((onCleanup) => {
       const cooldowns = this.store.cooldowns();
@@ -492,7 +491,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       onCleanup(() => {
         if (interval) clearInterval(interval);
       });
-    }, { allowSignalWrites: true });
+    });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'minesweeper',
@@ -506,8 +505,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   elapsedTime = signal<string>('00:00');
   private elapsedInterval: any;
 
-  ngOnInit() {
-    this.wsService.connectLobby(this.playerId, this.playerId);
+  override ngOnInit() {
+    super.ngOnInit(); // connects lobby WS
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
@@ -517,7 +516,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     this.wsService.disconnect('minesweeper');
     this.gameTimer.stopCountdown();
     if (this.elapsedInterval) {

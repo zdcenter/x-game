@@ -55,10 +55,14 @@ func init() {
 - 提取游戏特有的棋盘和分数状态。
 
 ### 3. 编写主组件 (强制继承 `BaseGameComponent`)
-主组件必须继承 `BaseGameComponent`，从而免费获得建房、加入房间、房间销毁监听等逻辑。
+主组件必须继承 `BaseGameComponent`，从而免费获得以下能力：
+- **竞技大厅 WebSocket 自动连接**：`BaseGameComponent.ngOnInit()` 会自动调用 `connectLobby()`，确保右侧竞技大厅面板能收到房间和在线玩家数据。
+- **建房 / 加入房间 / 房间销毁监听**等通用逻辑。
+
+**关键规则**：如果你的子组件需要覆写 `ngOnInit()` 或 `ngOnDestroy()`，**必须调用 `super.ngOnInit()` / `super.ngOnDestroy()`**，否则大厅功能会失效！
 
 ```typescript
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { BaseGameComponent } from '../../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../../core/auth/auth.store';
@@ -68,12 +72,22 @@ import { AuthStore } from '../../../../core/auth/auth.store';
   templateUrl: './tetris.component.html',
   // ...
 })
-export class TetrisComponent extends BaseGameComponent {
+export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
   // 必须实现父类的抽象属性
   override store = inject(TetrisStore);
   private authStore = inject(AuthStore);
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
+  }
+
+  override ngOnInit() {
+    super.ngOnInit(); // ← 必须！自动连接竞技大厅 WebSocket
+    // 你的游戏初始化逻辑...
+  }
+
+  override ngOnDestroy() {
+    super.ngOnDestroy(); // ← 必须！
+    this.store.leaveGame();
   }
 }
 ```

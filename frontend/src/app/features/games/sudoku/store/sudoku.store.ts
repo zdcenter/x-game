@@ -111,7 +111,7 @@ export class SudokuStore {
           }
         }
       }
-    }, { allowSignalWrites: true });
+    });
 
     // Effect to auto-sync Steal mode board
     effect(() => {
@@ -143,7 +143,7 @@ export class SudokuStore {
           }
         }
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   // --- ROOM MANAGEMENT ---

@@ -274,7 +274,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				return
 			} else if msgType == "dismiss_room" {
 				if clientID == r.Host {
-					DismissRoom(r.ID, clientID)
+					go DismissRoom(r.ID, clientID)
 				}
 				return
 			}
@@ -293,9 +293,11 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 }
 
 func (r *Room) BroadcastState() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.BroadcastStateLocked()
+	go func() {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		r.BroadcastStateLocked()
+	}()
 }
 
 func (r *Room) BroadcastStateLocked() {
@@ -311,6 +313,7 @@ func (r *Room) BroadcastStateLocked() {
 	}
 
 	for _, client := range r.Clients {
+		client.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 		err := client.Conn.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
 			log.Printf("Failed to send message to %s: %v", client.ID, err)
@@ -343,6 +346,7 @@ func DismissRoom(roomID string, clientID string) {
 		msg := []byte(`{"type": "room_dismissed"}`)
 		r.mu.Lock()
 		for _, c := range r.Clients {
+			c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 			c.Conn.WriteMessage(websocket.TextMessage, msg)
 		}
 		r.mu.Unlock()

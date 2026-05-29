@@ -28,6 +28,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'lobby.minesweeper': 'Minesweeper',
     'lobby.minesweeper.desc': 'Classic puzzle game now with Multiplayer PK! Race against time or steal mines in shared-board mode.',
     'lobby.sudoku': 'Sudoku',
+    'lobby.hexa': 'Hexa Puzzle',
     'lobby.coming_soon': 'Currently under development. Stay tuned for future updates.',
     'lobby.ready': 'Ready',
     'lobby.development': 'Development (Phase 4)',
@@ -111,6 +112,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.waiting_for_host': 'Waiting for host...',
     'game.you_win': 'YOU WIN!',
     'game.you_lose': 'YOU LOSE!',
+    'game.play_again': 'Play Again',
     'game.moves': 'Moves',
   },
   zh: {
@@ -140,6 +142,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'lobby.minesweeper': '扫雷',
     'lobby.minesweeper.desc': '经典扫雷竞技版！支持同盘抢雷和异盘竞速两大硬核多人联机对战模式。',
     'lobby.sudoku': '数独',
+    'lobby.hexa': '六边形消除',
     'lobby.coming_soon': '游戏核心引擎开发中，敬请期待后续版本。',
     'lobby.ready': '已就绪',
     'lobby.development': '开发中 (第四期)',
@@ -223,6 +226,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.waiting_for_host': '等待房主开始...',
     'game.you_win': '游戏胜利！',
     'game.you_lose': '游戏失败！',
+    'game.play_again': '再来一局',
     'game.moves': '移动步数',
   },
 };

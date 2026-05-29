@@ -18,7 +18,7 @@ func (e *PKScoreEngine) InitGame(options interface{}) error {
 
 	e.state = &GameState{
 		Players: make(map[string]*PlayerInfo),
-		Seed:    time.Now().UnixNano(),
+		Seed:    time.Now().UnixMilli(),
 		Winners: []string{},
 	}
 	e.State = engine.StateWaiting
@@ -61,9 +61,14 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
+	var act ActionPayload
+	if err := json.Unmarshal(payload, &act); err == nil && act.Action != "" {
+		actionType = act.Action
+	}
+
 	// Handle Start
 	if actionType == "start" && e.State == engine.StateWaiting {
-		e.state.Seed = time.Now().UnixNano()
+		e.state.Seed = time.Now().UnixMilli()
 		e.state.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
 		
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
@@ -86,10 +91,6 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 
 	// Update score/progress
 	if actionType == "update" && e.State == engine.StatePlaying {
-		var act ActionPayload
-		if err := json.Unmarshal(payload, &act); err != nil {
-			return e.State, err
-		}
 
 		if p, ok := e.state.Players[playerID]; ok {
 			p.Score = act.Score

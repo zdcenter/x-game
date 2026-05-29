@@ -12,7 +12,7 @@ export enum GameStatus {
   FINISHED = 'finished'
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class HexaStore {
   private wsService = inject(WebSocketService);
   private authStore = inject(AuthStore);
@@ -41,8 +41,7 @@ export class HexaStore {
   // Host info
   readonly host = computed(() => {
     if (this.currentMode() === 'single') return this.playerId();
-    const players = this.wsService.gameState()?.players || {};
-    return Object.keys(players)[0] || '';
+    return this.wsService.gameState()?.host || '';
   });
 
   // Current user
@@ -58,9 +57,14 @@ export class HexaStore {
   // PK Mode
   globalStartAt = computed(() => this.wsService.gameState()?.globalStartAt || 0);
   
-  otherPlayers = computed(() => {
-    if (this.currentMode() === 'single') return [];
-    const state = this.wsService.gameState();
+  readonly allPlayers = computed(() => {
+    const state = this.wsService.gameState() as any;
+    if (!state || !state.players) return [];
+    return Object.values(state.players);
+  });
+
+  readonly pkOpponents = computed(() => {
+    const state = this.wsService.gameState() as any;
     if (!state || !state.players) return [];
     
     return Object.values(state.players)
@@ -71,7 +75,12 @@ export class HexaStore {
         piecesPlaced: p.piecesPlaced,
         finished: p.finished
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a: any, b: any) => b.score - a.score);
+  });
+
+  readonly otherPlayers = computed(() => {
+    if (this.currentMode() === 'single') return [];
+    return this.pkOpponents();
   });
 
   myPkState = computed(() => {
@@ -157,8 +166,7 @@ export class HexaStore {
         this.gameOver.set(true);
         if (this.currentMode() !== 'single') {
           this.wsService.send({
-            type: 'game_action',
-            payload: { action: 'game_over' }
+            action: 'game_over'
           });
         }
       }
@@ -166,13 +174,10 @@ export class HexaStore {
       // Sync with server if PK
       if (this.currentMode() !== 'single') {
         this.wsService.send({
-          type: 'game_action',
-          payload: { 
-            action: 'update', 
-            score: this.score(),
-            piecesPlaced: this.piecesPlaced,
-            finished: this.gameOver()
-          }
+          action: 'update', 
+          score: this.score(),
+          piecesPlaced: this.piecesPlaced,
+          finished: this.gameOver()
         });
       } else {
         this.saveSinglePlayer();
@@ -193,7 +198,7 @@ export class HexaStore {
 
   // PK Actions
   startGame() {
-    this.wsService.send({ type: 'game_action', payload: { action: 'start' } });
+    this.wsService.send({ action: 'start' });
   }
 
   // Single Player

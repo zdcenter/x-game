@@ -224,7 +224,8 @@ export interface GameDifficulty {
             </div>
 
             <!-- Difficulty -->
-            <div>
+            @if (difficulties && difficulties.length > 0) {
+              <div>
               <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.difficulty_label') }}</label>
               <div class="grid grid-cols-3 gap-2">
                 @for (diff of difficulties; track diff.id) {
@@ -237,7 +238,8 @@ export interface GameDifficulty {
                   </button>
                 }
               </div>
-            </div>
+              </div>
+            }
 
             <!-- Action Buttons -->
             <div class="pt-2 pb-2 flex gap-3 shrink-0">
@@ -272,7 +274,7 @@ export class GameLobbyPanelComponent {
   @Output() createRoom = new EventEmitter<{name: string, mode: string, difficulty: string}>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
-  playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+  playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
 
   isCreateModalOpen = signal(false);
   newRoomName = signal('');
@@ -284,9 +286,9 @@ export class GameLobbyPanelComponent {
   // Show all active rooms across all games
   gameRooms = computed(() => this.wsService.activeRooms());
   
-  myRooms = computed(() => this.gameRooms().filter((r: any) => r.host === this.playerId));
-  otherRooms = computed(() => this.gameRooms().filter((r: any) => r.host !== this.playerId));
-  otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId));
+  myRooms = computed(() => this.gameRooms().filter((r: any) => r.host === this.playerId()));
+  otherRooms = computed(() => this.gameRooms().filter((r: any) => r.host !== this.playerId()));
+  otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId()));
 
   t(key: string): string {
     return this.i18n.t(key)();
@@ -315,7 +317,7 @@ export class GameLobbyPanelComponent {
 
   openCreateRoomModal() {
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    this.newRoomName.set(`${this.playerId}-${randomSuffix}`);
+    this.newRoomName.set(`${this.playerId()}-${randomSuffix}`);
     this.newRoomMode.set(this.gameModes[0]?.id || '');
     this.newRoomDifficulty.set(this.difficulties[0]?.id || '');
     this.isCreateModalOpen.set(true);

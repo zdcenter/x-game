@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
 )
@@ -99,8 +100,12 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 	for _, p := range l.Players {
 		if p.Conn != nil {
 			p.mu.Lock()
-			p.Conn.WriteMessage(websocket.TextMessage, payload)
+			p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+			err := p.Conn.WriteMessage(websocket.TextMessage, payload)
 			p.mu.Unlock()
+			if err != nil {
+				log.Printf("Failed to write to lobby WS: %v", err)
+			}
 		}
 	}
 }

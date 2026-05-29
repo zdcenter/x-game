@@ -2,6 +2,25 @@
 
 本文档专门记录项目从起步到当前所有里程碑的变更、新功能上线以及重要重构轨迹。
 
+## [Phase 10] 2026-05-29: 竞技大厅通用化重构 & 六边形消除完善
+
+### 架构重构 (Refactors)
+- **竞技大厅 WebSocket 自动连接**：将 `connectLobby()` 调用从各个游戏组件的 `ngOnInit` 中提升到 `BaseGameComponent` 基类。所有继承基类的游戏组件现在**自动连接竞技大厅 WebSocket**，无需手动调用。新增游戏时只需调用 `super.ngOnInit()` 即可获得完整的大厅功能（房间列表、在线玩家、创建/加入房间）。
+- **统一生命周期钩子**：`BaseGameComponent` 新增 `ngOnInit` 和 `ngOnDestroy` 标准生命周期方法，子类通过 `override` + `super` 调用即可安全扩展。
+- **全部 4 个游戏组件统一迁移**：Minesweeper、Sudoku、Sliding、Hexa 均已移除各自手动的 `connectLobby()` 调用，改为统一使用 `super.ngOnInit()`。
+
+### 修复 (Fixes)
+- **Hexa 竞技大厅不显示数据**：修复了六边形消除游戏中竞技大厅面板完全不显示房间、在线玩家和自己房间的严重 Bug。根因是 Hexa 组件遗漏了 `connectLobby()` 调用，现已通过基类自动化彻底解决。
+- **Hexa 创建房间弹窗难度区域**：当游戏无难度概念（如 Hexa）时，创建房间弹窗自动隐藏难度选择区域。
+- **Hexa 多语言完善**：补充了游戏模式（竞速计分 PK）、大厅游戏名称等翻译词条。
+- **Hexa GameRegistry 注册**：补充了在 `GameRegistryService` 中的注册，支持跨游戏房间标签显示。
+- **Hexa 缺失 ngOnDestroy**：补充了组件销毁时的清理逻辑（`leaveRoom`）。
+
+### 文档 (Documentation)
+- 更新 `HOW_TO_ADD_GAME.md`：明确了 `super.ngOnInit()` 和 `super.ngOnDestroy()` 的强制调用规范。
+
+---
+
 ## [Phase 9] 2026-05-28: 新增游戏 - 数字华容道 (Sliding Puzzle)
 
 ### 新功能 (Features)

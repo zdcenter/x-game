@@ -163,7 +163,7 @@ export class SudokuPkStealComponent {
       } else {
         this.isFrozenSignal.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   ngOnDestroy() {

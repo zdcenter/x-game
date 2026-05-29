@@ -98,6 +98,14 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
                 </div>
 
                 <div class="flex items-center gap-2 z-10">
+                  @if (store.currentMode() !== 'single') {
+                    <button (click)="store.leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span class="hidden sm:inline">{{ i18n.t('game.leave')() || 'Leave' }}</span>
+                    </button>
+                  }
                   @if (view() === 'play' || view() === 'room') {
                     <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -158,28 +166,27 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
       </div>
 
       <!-- Mobile Sidebar Overlay Backdrop -->
-      @if ((view() === 'play' || view() === 'room') && isMobileSidebarOpen()) {
+      @if (isMobileSidebarOpen()) {
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
       }
 
-      <!-- RIGHT: Social Lobby Sidebar (30%) -->
-      <div class="flex-shrink-0 flex-col min-h-[400px] lg:min-h-0 transition-transform duration-300 shadow-[var(--color-border-card)]"
-           [ngClass]="[
-             (view() === 'play' || view() === 'room') 
-               ? 'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:p-0 lg:relative lg:w-80 lg:shadow-none lg:bg-transparent lg:z-auto lg:translate-x-0 ' + (isMobileSidebarOpen() ? 'translate-x-0 flex' : 'translate-x-full lg:flex hidden')
-               : 'w-full lg:w-80 flex'
-           ]">
+      <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
+      <div class="flex-shrink-0 flex-col w-full lg:w-80 transition-transform duration-300"
+           [ngClass]="{
+             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:flex lg:translate-x-0': true,
+             'translate-x-0 flex': isMobileSidebarOpen(),
+             'translate-x-full hidden lg:flex': !isMobileSidebarOpen(),
+             '!hidden': store.roomId() !== ''
+           }">
            
-           @if (view() === 'play' || view() === 'room') {
-             <div class="flex justify-between items-center mb-4 lg:hidden">
-               <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
-               <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                 </svg>
-               </button>
-             </div>
-           }
+           <div class="flex justify-between items-center mb-4 lg:hidden">
+             <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+             <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+               </svg>
+             </button>
+           </div>
         <app-game-lobby-panel
           [currentGameId]="'sudoku'"
           [gameModes]="sudokuModes"
@@ -248,9 +255,9 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     });
   }
 
-  ngOnInit() {
+  override ngOnInit() {
+    super.ngOnInit(); // connects lobby WS
     this.view.set('lobby');
-    this.wsService.connectLobby(this.playerId, this.playerId);
 
     // Check for cross-game join or reconnect
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
@@ -259,7 +266,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     this.wsService.disconnect('sudoku');
     this.gameTimer.stopCountdown();
   }

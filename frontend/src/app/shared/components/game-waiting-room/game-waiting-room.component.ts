@@ -21,7 +21,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           </div>
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-10">
-            @for (player of players; track player.id) {
+            @for (player of sortedPlayers; track player.id) {
               <div class="flex flex-col items-center p-4 sm:p-6 bg-[var(--color-bg-main)] rounded-2xl border border-[var(--color-border-card)] shadow-inner relative group">
                 <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-[var(--color-border-card)] mb-3 flex items-center justify-center text-3xl shadow-lg group-hover:scale-105 transition-transform">
                   @if (player.id === hostId) { 👑 } @else { 👤 }
@@ -66,4 +66,13 @@ export class GameWaitingRoomComponent {
 
   @Output() leave = new EventEmitter<void>();
   @Output() start = new EventEmitter<void>();
+
+  get sortedPlayers() {
+    if (!this.players) return [];
+    return [...this.players].sort((a, b) => {
+      if (a.id === this.currentUserId) return -1;
+      if (b.id === this.currentUserId) return 1;
+      return 0;
+    });
+  }
 }

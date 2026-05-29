@@ -115,7 +115,7 @@ export class SlidingComponent extends BaseGameComponent {
       } else {
         this.finishedAt.set(null);
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       const status = this.store.status();
@@ -127,8 +127,8 @@ export class SlidingComponent extends BaseGameComponent {
     });
   }
 
-  ngOnInit() {
-    this.wsService.connectLobby(this.playerId, this.playerId);
+  override ngOnInit() {
+    super.ngOnInit(); // connects lobby WS
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
@@ -143,7 +143,7 @@ export class SlidingComponent extends BaseGameComponent {
     }, 100);
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     this.store.leaveGame();
     if (this.timerInterval) clearInterval(this.timerInterval);
   }

@@ -1,4 +1,4 @@
-import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -11,6 +11,7 @@ import { HexPiece, HexCoord } from './store/hexa-engine';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AudioService } from '../../../core/services/audio.service';
 
 @Component({
@@ -23,27 +24,27 @@ import { AudioService } from '../../../core/services/audio.service';
     GameWaitingRoomComponent,
     GameLobbyPanelComponent
   ],
+  providers: [HexaStore],
   templateUrl: './hexa.component.html'
 })
-export class HexaComponent extends BaseGameComponent implements OnInit {
+export class HexaComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(HexaStore);
   private authStore = inject(AuthStore);
   private crossGameJoin = inject(CrossGameJoinService);
   override gameTimer = inject(GameTimerService);
   readonly i18n = inject(I18nService);
   private audioService = inject(AudioService);
+  private gameRegistry = inject(GameRegistryService);
 
   get t() {
     return this.i18n.t.bind(this.i18n);
   }
 
   gameModes = [
-    { id: 'pk_score', labelKey: 'sliding.mode.pk_speed', icon: '⏱️', descKey: 'game.pk_score_desc' }
+    { id: 'pk_score', labelKey: 'hexa.mode.pk_score', icon: '⏱️', descKey: 'hexa.mode.pk_score_desc' }
   ];
 
-  difficulties = [
-    { id: 'medium', labelKey: 'sliding.difficulty.medium', desc: 'Standard' }
-  ];
+  difficulties = []; // Hexa has no difficulty levels
 
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLElement>;
   @ViewChild(HexaBoardComponent) boardComponent!: HexaBoardComponent;
@@ -58,6 +59,8 @@ export class HexaComponent extends BaseGameComponent implements OnInit {
   dragPos = { x: 0, y: 0 };
   previewOrigin: HexCoord | null = null;
   dragStartOffset = { x: 0, y: 0 };
+
+
   isDragging = false;
   
   // Need this for coordinate mapping
@@ -69,6 +72,14 @@ export class HexaComponent extends BaseGameComponent implements OnInit {
 
   constructor() {
     super();
+    this.gameRegistry.register({
+      id: 'hexa',
+      route: '/games/hexa',
+      titleKey: 'lobby.hexa',
+      iconEmoji: '🔶',
+      modes: this.gameModes,
+      difficulties: this.difficulties,
+    });
 
     // Start single player by default if we land directly on page
     effect(() => {
@@ -77,7 +88,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit {
           this.store.startSinglePlayer();
         }
       }
-    }, { allowSignalWrites: true });
+    });
 
     // Handle PK Start countdown
     effect(() => {
@@ -87,14 +98,20 @@ export class HexaComponent extends BaseGameComponent implements OnInit {
       } else {
         this.gameTimer.stopCountdown();
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit(); // connects lobby WS automatically
     const pending = this.crossGameJoin.consumePendingJoin('hexa');
     if (pending) {
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host);
     }
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this.store.leaveRoom();
   }
 
   // --- Drag and Drop Logic --- //
@@ -216,10 +233,13 @@ export class HexaComponent extends BaseGameComponent implements OnInit {
   }
 
   returnToLobby(): void {
-    history.back();
+    this.store.leaveRoom();
   }
 
   goBack(): void {
+    if (this.currentRoomId() && this.currentRoomId() !== 'local') {
+      this.store.leaveRoom();
+    }
     history.back();
   }
 
