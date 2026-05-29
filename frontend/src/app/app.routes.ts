@@ -39,6 +39,11 @@ export const routes: Routes = [
         path: 'games/sliding',
         loadComponent: () => import('./features/games/sliding/sliding.component').then(m => m.SlidingComponent),
         data: { seo: { titleKey: 'seo.sliding.title', descKey: 'seo.sliding.desc', keywordsKey: 'seo.sliding.keywords' } }
+      },
+      {
+        path: 'games/hexa',
+        loadComponent: () => import('./features/games/hexa/hexa.component').then(m => m.HexaComponent),
+        data: { seo: { titleKey: 'seo.hexa.title', descKey: 'seo.hexa.desc', keywordsKey: 'seo.hexa.keywords' } }
       }
     ]
   },

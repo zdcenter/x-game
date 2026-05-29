@@ -9,7 +9,7 @@ export class AudioService {
   // 全局静音状态，使用 Signal 方便与 UI 绑定
   readonly isMuted = signal(false);
 
-  private initAudio() {
+  initAudio() {
     if (!this.audioCtx) {
       this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -36,6 +36,33 @@ export class AudioService {
   // 播放“爆炸”音效 (低沉长音噪音，这里用低频锯齿波模拟)
   playExplosion() {
     this.synthesizeBeep(100, 'sawtooth', 0.5, 0.3);
+  }
+
+  // 播放“放置”音效
+  playDrop() {
+    this.synthesizeBeep(150, 'square', 0.08, 0.05);
+  }
+
+  // 播放“消除”音效
+  playClear() {
+    this.initAudio();
+    if (this.isMuted() || !this.audioCtx) return;
+
+    const osc = this.audioCtx.createOscillator();
+    const gainNode = this.audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, this.audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(1200, this.audioCtx.currentTime + 0.15);
+    
+    gainNode.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.2);
+
+    osc.connect(gainNode);
+    gainNode.connect(this.audioCtx.destination);
+    
+    osc.start();
+    osc.stop(this.audioCtx.currentTime + 0.2);
   }
 
   // 播放“胜利”音效 (连续升调)

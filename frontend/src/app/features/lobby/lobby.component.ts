@@ -77,6 +77,7 @@ export class LobbyComponent implements OnInit {
       case 'minesweeper': return '💣';
       case 'sudoku': return '🔢';
       case 'sliding': return '🔲';
+      case 'hexa': return '🔶';
       default: return '🎮';
     }
   }
@@ -87,6 +88,7 @@ export class LobbyComponent implements OnInit {
       case 'minesweeper': return isZh ? ['⚡ 同盘抢雷', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
       case 'sudoku': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
       case 'sliding': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
+      case 'hexa': return isZh ? ['⏱️ 异盘竞分'] : ['⏱️ PK Score'];
       default: return [];
     }
   }

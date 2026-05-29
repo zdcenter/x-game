@@ -86,6 +86,16 @@ func Seed() {
 	}
 	DB.Where(domain.GameConfig{ID: "sliding"}).FirstOrCreate(&defaultSliding)
 
+	defaultHexa := domain.GameConfig{
+		ID:       "hexa",
+		Name:     `{"en": "Hexa Puzzle", "zh": "六边形消除"}`,
+		Overview: `{"en": "Place hex blocks to clear lines in 3 directions.", "zh": "拖拽六边形方块，填满任意直线即可消除得分。"}`,
+		Rules:    `{"en": "# Hexa Puzzle Rules\n\nDrag blocks to the grid. Clear lines in any of the 3 directions.\n\n## 🎮 Controls\n- **Drag & Drop**: Move pieces to the board.", "zh": "# 六边形消除玩法规则\n\n拖拽随机出现的六边形碎片到大棋盘上，填满任意一条直线（横向或斜向）即可消除得分。\n\n## 🎮 操作说明\n- **拖拽**: 将屏幕下方的方块拖入棋盘空位。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "hexa"}).FirstOrCreate(&defaultHexa)
+
 	var userCount int64
 	DB.Model(&domain.User{}).Count(&userCount)
 	if userCount == 0 {
