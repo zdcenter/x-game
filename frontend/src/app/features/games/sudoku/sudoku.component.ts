@@ -176,7 +176,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
              'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:flex lg:translate-x-0': true,
              'translate-x-0 flex': isMobileSidebarOpen(),
              'translate-x-full hidden lg:flex': !isMobileSidebarOpen(),
-             '!hidden': store.roomId() !== ''
+             'max-lg:!hidden': store.roomId() !== ''
            }">
            
            <div class="flex justify-between items-center mb-4 lg:hidden">
