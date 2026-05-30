@@ -48,10 +48,10 @@ export class HexaBoardComponent {
   
   // ViewBox: calculate max width and height
   // width = size * sqrt(3) * (radius*2 + 1)
-  // height = size * 2 * (radius*2 + 1) 
+  // height = size * (radius*3 + 2) 
   get viewBox(): string {
     const w = this.size * Math.sqrt(3) * (this.radius * 2 + 1);
-    const h = this.size * 2 * (this.radius * 2 + 1);
+    const h = this.size * (this.radius * 3 + 2);
     const offset = 5; // padding
     return `${-w/2 - offset} ${-h/2 - offset} ${w + offset*2} ${h + offset*2}`;
   }
@@ -82,7 +82,7 @@ export class HexaBoardComponent {
   pixelToHex(px: number, py: number, svgRect: DOMRect): HexCoord | null {
     // 1. Map client pixel (px, py) to SVG viewBox coordinates
     const w = this.size * Math.sqrt(3) * (this.radius * 2 + 1);
-    const h = this.size * 2 * (this.radius * 2 + 1);
+    const h = this.size * (this.radius * 3 + 2);
     const offset = 5;
     const viewBoxWidth = w + offset*2;
     const viewBoxHeight = h + offset*2;

@@ -92,14 +92,31 @@ export class HexaStore {
   });
 
   piecesPlaced = 0;
+  private currentSeed: number | null = null;
 
   constructor() {
     effect(() => {
       const state = this.wsService.gameState();
-      if (this.currentMode() !== 'single' && state?.status === 'starting') {
-        if (state.seed && !this.prng) {
+      if (this.currentMode() !== 'single' && (state?.status === 'starting' || state?.status === 'playing')) {
+        if (state.seed && this.currentSeed !== state.seed) {
+          this.currentSeed = state.seed;
           this.prng = new PRNG(state.seed);
           this.resetLocalGame();
+          
+          if (state.status === 'playing') {
+            const me = state.players?.[this.playerId()];
+            if (me) {
+              this.engine.score = me.score || 0;
+              this.piecesPlaced = me.piecesPlaced || 0;
+              this.updateSignals();
+              
+              // Advance PRNG to match their progress
+              const draws = Math.floor(this.piecesPlaced / 3);
+              for (let i = 0; i < draws; i++) {
+                this.drawPieces();
+              }
+            }
+          }
         }
       }
     });
