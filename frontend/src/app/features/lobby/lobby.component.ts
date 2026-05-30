@@ -1,18 +1,24 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameConfig, getLocalizedField } from '../../core/services/game.service';
+import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { WebSocketService } from '../../core/services/websocket.service';
+import { AuthStore } from '../../core/auth/auth.store';
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent],
   template: `
-    <div class="flex-grow flex flex-col items-center p-8 transition-colors duration-300">
+    <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-[var(--color-bg-main)]">
       
-      <!-- Welcome Header -->
-      <div class="text-center mb-16 mt-8">
+      <!-- LEFT: Main Games Content -->
+      <div class="flex-grow flex flex-col items-center p-4 lg:p-8 overflow-y-auto custom-scrollbar">
+        <!-- Welcome Header -->
+        <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-4 lg:mt-8 relative max-w-6xl">
+          <div class="text-center">
         <h1 class="text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent"
             style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
           {{ i18n.t('lobby.title')() }}
@@ -20,10 +26,17 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
         <p class="text-lg opacity-80 max-w-2xl mx-auto">
           {{ i18n.t('lobby.subtitle')() }}
         </p>
-      </div>
+          </div>
+          <!-- Toggle Lobby Button (Mobile Only) -->
+          <button (click)="isGlobalLobbyOpen.set(true)" class="absolute right-0 top-0 p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all lg:hidden hover:bg-[var(--color-bg-main)] z-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </button>
+        </div>
 
-      <!-- Games Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
+        <!-- Games Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 max-w-6xl w-full pb-10">
         @for (game of games(); track game.id) {
           <!-- Dynamic Game Card -->
           <a [routerLink]="['/games', game.id]" class="group relative overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
@@ -196,18 +209,39 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
             </div>
           </a>
         }
-
-
-
+        </div>
       </div>
+
+      <!-- RIGHT: Global Arena Lobby (Sidebar on Desktop, Drawer on Mobile) -->
+      @if (isGlobalLobbyOpen()) {
+        <!-- Overlay Background for Mobile -->
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+             (click)="isGlobalLobbyOpen.set(false)"></div>
+      }
+
+      <!-- Sidebar Container -->
+      <div class="fixed lg:static top-[64px] lg:top-0 right-0 h-[calc(100vh-64px)] lg:h-full w-[300px] sm:w-[350px] lg:w-[350px] xl:w-[400px] z-50 lg:z-auto transition-transform duration-300 ease-in-out shrink-0 flex flex-col p-0 lg:p-4 bg-[var(--color-bg-main)] lg:bg-transparent border-l border-[var(--color-border-card)] lg:border-none"
+           [class.translate-x-0]="isGlobalLobbyOpen()"
+           [class.translate-x-full]="!isGlobalLobbyOpen()"
+           [class.lg:translate-x-0]="true">
+
+        <app-game-lobby-panel
+          class="flex-grow flex w-full h-full min-h-0 lg:h-full lg:bg-transparent"
+          [isGlobal]="true">
+        </app-game-lobby-panel>
+      </div>
+
     </div>
   `
 })
-export class LobbyComponent implements OnInit {
+export class LobbyComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   gameService = inject(GameService);
+  wsService = inject(WebSocketService);
+  authStore = inject(AuthStore);
   
   games = signal<GameConfig[]>([]);
+  isGlobalLobbyOpen = signal(false);
 
   ngOnInit() {
     this.gameService.getGames().subscribe({
@@ -218,6 +252,13 @@ export class LobbyComponent implements OnInit {
         console.error('Failed to load games', err);
       }
     });
+
+    const player = this.authStore.currentUser()?.username || this.authStore.guestId;
+    this.wsService.connectLobby(player, player);
+  }
+
+  ngOnDestroy() {
+    this.wsService.disconnectLobby();
   }
 
   getGameEmoji(id: string): string {

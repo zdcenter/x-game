@@ -44,9 +44,11 @@ export interface GameDifficulty {
       <!-- Rooms Content -->
       @if (activeTab === 'rooms') {
         <div class="p-4 flex-grow overflow-y-auto">
-          <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
-            <span>➕</span> {{ t('game.create_pk') }}
-          </button>
+          @if (!isGlobal) {
+            <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
+              <span>➕</span> {{ t('game.create_pk') }}
+            </button>
+          }
 
           <div class="space-y-6">
             <!-- Other Active Rooms -->
@@ -274,9 +276,10 @@ export class GameLobbyPanelComponent {
   private toastService = inject(ToastService);
 
   @Input() currentGameId: string = '';
-  @Input({ required: true }) gameModes!: GameMode[];
-  @Input({ required: true }) difficulties!: GameDifficulty[];
+  @Input() gameModes: GameMode[] = [];
+  @Input() difficulties: GameDifficulty[] = [];
   @Input() currentRoomId: string = '';
+  @Input() isGlobal: boolean = false;
 
   @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string}>();
   @Output() createRoom = new EventEmitter<{name: string, mode: string, difficulty: string}>();
@@ -289,7 +292,7 @@ export class GameLobbyPanelComponent {
   newRoomMode = signal('');
   newRoomDifficulty = signal('');
 
-  gameModeIds = computed(() => this.gameModes.map(m => m.id));
+  gameModeIds = computed(() => this.gameModes ? this.gameModes.map(m => m.id) : []);
   
   // Show all active rooms across all games
   gameRooms = computed(() => this.wsService.activeRooms());
@@ -371,7 +374,7 @@ export class GameLobbyPanelComponent {
 
   getModeLabel(modeId: string, gameId?: string): string {
     // Try current game's modes first
-    const mode = this.gameModes.find(m => m.id === modeId);
+    const mode = this.gameModes?.find(m => m.id === modeId);
     if (mode) return this.t(mode.labelKey);
     // Try registry lookup for cross-game rooms
     if (gameId) {
@@ -392,7 +395,7 @@ export class GameLobbyPanelComponent {
 
   getDifficultyLabel(diffId: string, gameId?: string): string {
     // Try current game's difficulties first
-    const diff = this.difficulties.find(d => d.id === diffId);
+    const diff = this.difficulties?.find(d => d.id === diffId);
     if (diff) return this.t(diff.labelKey);
     // Try registry lookup for cross-game rooms
     if (gameId) {

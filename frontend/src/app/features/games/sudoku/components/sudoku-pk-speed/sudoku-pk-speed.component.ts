@@ -1,4 +1,4 @@
-import { Component, inject, effect } from '@angular/core';
+import { Component, inject, effect, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
 import { SudokuBoardComponent } from '../sudoku-board/sudoku-board.component';
@@ -39,8 +39,15 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
         <div class="text-[var(--color-text-main)] font-bold opacity-80 uppercase tracking-widest text-sm md:text-base">
           {{ i18n.t('game.pk_speed_label')() }}
         </div>
-        <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md opacity-0">
-          00:00
+        <div class="flex items-center gap-2">
+          <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md opacity-0">
+            00:00
+          </div>
+          <button (click)="openLobby.emit()" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-card)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -96,6 +103,8 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
 export class SudokuPkSpeedComponent {
   store = inject(SudokuStore);
   i18n = inject(I18nService);
+
+  @Output() openLobby = new EventEmitter<void>();
 
   getPlayers() {
     const players = Object.values(this.store.players() as any) as any[];

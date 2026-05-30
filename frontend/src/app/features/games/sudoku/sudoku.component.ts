@@ -44,7 +44,8 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
       <div class="flex-grow flex flex-col relative min-w-0 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-xl overflow-hidden">
         @if (view() === 'lobby') {
         <app-sudoku-lobby class="flex-grow flex flex-col min-h-0"
-          (levelSelect)="startLevel($event)">
+          (levelSelect)="startLevel($event)"
+          (openLobby)="isMobileSidebarOpen.set(true)">
         </app-sudoku-lobby>
       } @else if (view() === 'room') {
         <app-sudoku-room></app-sudoku-room>
@@ -66,9 +67,9 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
       } @else {
         <!-- PLAY VIEW -->
         @if (store.currentMode() === 'pk_steal') {
-          <app-sudoku-pk-steal></app-sudoku-pk-steal>
+          <app-sudoku-pk-steal (openLobby)="isMobileSidebarOpen.set(true)"></app-sudoku-pk-steal>
         } @else if (store.currentMode() === 'pk_speed') {
-          <app-sudoku-pk-speed></app-sudoku-pk-speed>
+          <app-sudoku-pk-speed (openLobby)="isMobileSidebarOpen.set(true)"></app-sudoku-pk-speed>
         } @else {
           <!-- Single Player -->
           <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto md:overflow-hidden relative">
@@ -107,9 +108,9 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
                     </button>
                   }
                   @if (view() === 'play' || view() === 'room') {
-                    <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </button>
                   }
@@ -171,21 +172,16 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
       }
 
       <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
-      <div class="flex-shrink-0 flex-col w-full lg:w-80 transition-transform duration-300"
+      <div class="flex-shrink-0 transition-transform duration-300"
            [ngClass]="{
-             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:flex lg:translate-x-0': true,
-             'translate-x-0 flex': isMobileSidebarOpen(),
-             'translate-x-full hidden lg:flex': !isMobileSidebarOpen(),
-             'max-lg:!hidden': store.roomId() !== ''
+             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+             'translate-x-0': isMobileSidebarOpen(),
+             'translate-x-full': !isMobileSidebarOpen(),
+             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': store.roomId() === ''
            }">
            
-           <div class="flex justify-between items-center mb-4 lg:hidden">
+           <div class="flex justify-between items-center mb-4" [class.lg:hidden]="store.roomId() === ''">
              <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
-             <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-               </svg>
-             </button>
            </div>
         <app-game-lobby-panel
           [currentGameId]="'sudoku'"
