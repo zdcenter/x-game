@@ -48,12 +48,6 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     return this.i18n.t.bind(this.i18n);
   }
 
-  gameModes = [
-    { id: 'pk_score', labelKey: 'hexa.mode.pk_score', icon: '⏱️', descKey: 'hexa.mode.pk_score_desc' }
-  ];
-
-  difficulties = []; // Hexa has no difficulty levels
-
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLElement>;
   @ViewChild(HexaBoardComponent) boardComponent!: HexaBoardComponent;
 
@@ -80,14 +74,6 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   constructor() {
     super();
-    this.gameRegistry.register({
-      id: 'hexa',
-      route: '/games/hexa',
-      titleKey: 'lobby.hexa',
-      iconEmoji: '🔶',
-      modes: this.gameModes,
-      difficulties: this.difficulties,
-    });
 
     // Start single player by default if we land directly on page
     effect(() => {

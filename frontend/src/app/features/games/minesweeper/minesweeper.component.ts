@@ -251,7 +251,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
       <!-- Mobile Sidebar Overlay Backdrop -->
       @if (isMobileSidebarOpen()) {
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+        <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
       }
 
       <div class="flex-shrink-0 transition-transform duration-300"
@@ -267,8 +267,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
            </div>
         <app-game-lobby-panel
           [currentGameId]="'minesweeper'"
-          [gameModes]="minesweeperModes"
-          [difficulties]="predefinedDifficulties"
           [currentRoomId]="currentRoomId()"
           (joinRoom)="handleJoinRoom($event)"
           (createRoom)="handleCreateRoom($event)"
@@ -382,21 +380,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   customHeight = signal(9);
   customMines = signal(10);
   frozenRemaining = signal(0);
-
-  predefinedDifficulties = [
-    { id: 'beginner', labelKey: 'game.diff_beginner', desc: '9x9 (10)' },
-    { id: 'intermediate', labelKey: 'game.diff_intermediate', desc: '16x16 (40)' },
-    { id: 'advanced', labelKey: 'game.diff_advanced', desc: '30x16 (99)' },
-    { id: 'hard_mode', labelKey: 'game.diff_hard_mode', desc: '30x18 (130)' },
-    { id: 'professional', labelKey: 'game.diff_professional', desc: '30x20 (160)' },
-    { id: 'master', labelKey: 'game.diff_master', desc: '30x22 (190)' },
-    { id: 'expert', labelKey: 'game.diff_expert', desc: '30x24 (230)' }
-  ];
-
-  minesweeperModes = [
-    { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'Shared board. Race to flag mines!' },
-    { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
-  ];
+  
+  get predefinedDifficulties() {
+    return this.gameRegistry.getConfig('minesweeper')?.difficulties || [];
+  }
 
   hasLostSingleMode = computed(() => this.currentRoomMode() === 'single' && this.store.board().some(row => row.some(c => c.state === 3)));
 
@@ -420,14 +407,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   constructor() {
     super();
-    this.gameRegistry.register({
-      id: 'minesweeper',
-      route: '/games/minesweeper',
-      titleKey: 'app.title',
-      iconEmoji: '💣',
-      modes: this.minesweeperModes,
-      difficulties: this.predefinedDifficulties,
-    });
 
     effect(() => {
       const status = this.store.status();
@@ -610,7 +589,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   getDifficultyText(difficulty: string): string {
-    const d = this.predefinedDifficulties.find(x => x.id === difficulty);
+    const d = this.predefinedDifficulties.find((x: any) => x.id === difficulty);
     return d ? `${this.i18n.t(d.labelKey as any)()} (${d.desc})` : difficulty;
   }
 

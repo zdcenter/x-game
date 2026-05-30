@@ -35,13 +35,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   currentRoomMode = this.store.mode;
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
   showRules = signal(false);
-  
-  gameModes = [
-    { id: 'pk_attack', name: 'PK Attack', desc: 'Send garbage lines to opponents', labelKey: 'tetris.mode.pk_attack', icon: '⚔️' },
-    { id: 'pk_score', name: 'PK Score', desc: 'Same pieces, highest score wins', labelKey: 'tetris.mode.pk_score', icon: '🏆' }
-  ];
-  
-  difficulties = [];
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -49,14 +42,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   constructor() {
     super();
-    this.gameRegistry.register({
-      id: 'tetris',
-      route: '/games/tetris',
-      titleKey: 'tetris.title',
-      iconEmoji: '🧱',
-      modes: this.gameModes,
-      difficulties: this.difficulties,
-    });
     effect(() => {
       const status = this.store.status();
       if (status === 'starting') {

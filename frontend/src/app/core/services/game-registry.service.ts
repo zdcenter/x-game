@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GameMode, GameDifficulty } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GAME_DEFINITIONS } from '../config/game-definitions';
 
 /**
  * Central registry for all game metadata (modes, difficulties, routing info).
@@ -39,6 +40,11 @@ export interface GameConfig {
 @Injectable({ providedIn: 'root' })
 export class GameRegistryService {
   private registry = new Map<string, GameConfig>();
+
+  constructor() {
+    // Eagerly register all globally defined games
+    GAME_DEFINITIONS.forEach(config => this.register(config));
+  }
 
   /**
    * Register a game's metadata. Safe to call multiple times (idempotent).

@@ -43,12 +43,10 @@ export interface GameDifficulty {
 
       <!-- Rooms Content -->
       @if (activeTab === 'rooms') {
-        <div class="p-4 flex-grow overflow-y-auto">
-          @if (!isGlobal) {
+        <div class="p-4 flex-grow overflow-y-auto custom-scrollbar">
             <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
               <span>➕</span> {{ t('game.create_pk') }}
             </button>
-          }
 
           <div class="space-y-6">
             <!-- Other Active Rooms -->
@@ -167,7 +165,7 @@ export interface GameDifficulty {
 
       <!-- Online Content -->
       @if (activeTab === 'online') {
-        <div class="p-4 flex-grow overflow-y-auto space-y-2">
+        <div class="p-4 flex-grow overflow-y-auto space-y-2 custom-scrollbar">
           @for (player of otherOnlinePlayers(); track player.id) {
             <div class="flex items-center justify-between p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)]">
               <div class="flex items-center gap-3">
@@ -195,10 +193,15 @@ export interface GameDifficulty {
 
     <!-- Create Room Modal Overlay -->
     @if (isCreateModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity">
         <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl md:rounded-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] max-h-[95vh] flex flex-col">
           <div class="flex justify-between items-center mb-4 md:mb-6 shrink-0">
-            <h2 class="text-xl md:text-2xl font-bold">{{ t('game.create_room_title') }} - {{ t('lobby.' + currentGameId) }}</h2>
+            <h2 class="text-xl md:text-2xl font-bold">
+              {{ t('game.create_room_title') }}
+              @if (!isGlobal) {
+                - {{ t('lobby.' + currentGameId) }}
+              }
+            </h2>
             <button (click)="isCreateModalOpen.set(false)" class="text-xl opacity-50 hover:opacity-100 transition-opacity">
               ✕
             </button>
@@ -211,37 +214,55 @@ export interface GameDifficulty {
               <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
                      class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors"
                      placeholder="Enter room name">
-            </div>
+                        <!-- Game Selection (Global Mode Only) -->
+            @if (isGlobal) {
+              <div>
+                <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.select_game') }}</label>
+                <div class="grid grid-cols-3 gap-2">
+                  @for (game of allGames(); track game.id) {
+                    <button (click)="selectGameForNewRoom(game.id)"
+                            [class.bg-[var(--color-accent-to)]]="newRoomGameId() === game.id" [class.text-[var(--color-bg-main)]]="newRoomGameId() === game.id" [class.border-[var(--color-accent-to)]]="newRoomGameId() === game.id"
+                            [class.bg-[var(--color-bg-card)]]="newRoomGameId() !== game.id" [class.hover:border-[var(--color-accent-to)]]="newRoomGameId() !== game.id"
+                            class="px-2 py-2 rounded-xl border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[60px]">
+                      <span class="text-lg">{{ game.iconEmoji }}</span>
+                      <span class="leading-tight">{{ t(game.titleKey) }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
 
             <!-- PK Mode -->
-            <div>
-              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
-              <div class="grid grid-cols-2 gap-3">
-                @for (mode of gameModes; track mode.id) {
-                  <button (click)="newRoomMode.set(mode.id)" 
-                          [class.bg-[var(--color-accent-to)]]="newRoomMode() === mode.id" [class.text-[var(--color-bg-main)]]="newRoomMode() === mode.id"
-                          [class.bg-[var(--color-bg-card)]]="newRoomMode() !== mode.id" [class.opacity-60]="newRoomMode() !== mode.id"
-                          class="px-4 py-3 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-left">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span>{{ mode.icon }}</span> <span>{{ t(mode.labelKey) }}</span>
-                    </div>
-                    @if (mode.desc || mode.descKey) {
-                      <div class="text-[10px] font-normal opacity-80 leading-tight">{{ mode.desc || (mode.descKey ? t(mode.descKey) : '') }}</div>
-                    }
-                  </button>
-                }
+            @if (availableModes().length > 0) {
+              <div>
+                <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
+                <div class="grid grid-cols-2 gap-3">
+                  @for (mode of availableModes(); track mode.id) {
+                    <button (click)="newRoomMode.set(mode.id)" 
+                            [class.bg-[var(--color-accent-to)]]="newRoomMode() === mode.id" [class.text-[var(--color-bg-main)]]="newRoomMode() === mode.id" [class.border-[var(--color-accent-to)]]="newRoomMode() === mode.id"
+                            [class.bg-[var(--color-bg-card)]]="newRoomMode() !== mode.id" [class.hover:border-[var(--color-accent-to)]]="newRoomMode() !== mode.id"
+                            class="px-4 py-3 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-left">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span>{{ mode.icon }}</span> <span>{{ t(mode.labelKey) }}</span>
+                      </div>
+                      @if (mode.desc || mode.descKey) {
+                        <div class="text-[10px] font-normal opacity-80 leading-tight">{{ mode.desc || (mode.descKey ? t(mode.descKey) : '') }}</div>
+                      }
+                    </button>
+                  }
+                </div>
               </div>
-            </div>
+            }        </div>
 
             <!-- Difficulty -->
-            @if (difficulties && difficulties.length > 0) {
+            @if (availableDifficulties().length > 0) {
               <div>
               <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.difficulty_label') }}</label>
               <div class="grid grid-cols-3 gap-2">
-                @for (diff of difficulties; track diff.id) {
+                @for (diff of availableDifficulties(); track diff.id) {
                   <button (click)="newRoomDifficulty.set(diff.id)"
-                          [class.bg-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === diff.id"
-                          [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== diff.id" [class.opacity-60]="newRoomDifficulty() !== diff.id"
+                          [class.bg-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === diff.id" [class.border-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id"
+                          [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== diff.id" [class.hover:border-[var(--color-accent-from)]]="newRoomDifficulty() !== diff.id"
                           class="px-2 md:px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[60px]">
                     <span>{{ t(diff.labelKey) }}</span>
                     <span class="text-[9px] font-normal opacity-80 leading-tight">{{ diff.desc }}</span>
@@ -253,11 +274,11 @@ export interface GameDifficulty {
 
             <!-- Action Buttons -->
             <div class="pt-2 pb-2 flex gap-3 shrink-0">
-              <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
+              <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] transition-colors">
                 {{ t('game.cancel') }}
               </button>
               <button (click)="onConfirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:brightness-110 active:scale-95">
-                {{ t('game.create') }} & {{ t('game.join') }}
+                {{ t('game.create_and_join') }}
               </button>
             </div>
           </div>
@@ -276,23 +297,24 @@ export class GameLobbyPanelComponent {
   private toastService = inject(ToastService);
 
   @Input() currentGameId: string = '';
-  @Input() gameModes: GameMode[] = [];
-  @Input() difficulties: GameDifficulty[] = [];
   @Input() currentRoomId: string = '';
   @Input() isGlobal: boolean = false;
 
   @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string}>();
-  @Output() createRoom = new EventEmitter<{name: string, mode: string, difficulty: string}>();
+  @Output() createRoom = new EventEmitter<{name: string, gameId: string, mode: string, difficulty: string}>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
 
   isCreateModalOpen = signal(false);
   newRoomName = signal('');
+  newRoomGameId = signal('');
   newRoomMode = signal('');
   newRoomDifficulty = signal('');
 
-  gameModeIds = computed(() => this.gameModes ? this.gameModes.map(m => m.id) : []);
+  allGames = computed(() => this.gameRegistry.getAllConfigs());
+  availableModes = computed(() => this.gameRegistry.getConfig(this.newRoomGameId())?.modes || []);
+  availableDifficulties = computed(() => this.gameRegistry.getConfig(this.newRoomGameId())?.difficulties || []);
   
   // Show all active rooms across all games
   gameRooms = computed(() => this.wsService.activeRooms());
@@ -329,9 +351,21 @@ export class GameLobbyPanelComponent {
   openCreateRoomModal() {
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.newRoomName.set(`${this.playerId()}-${randomSuffix}`);
-    this.newRoomMode.set(this.gameModes[0]?.id || '');
-    this.newRoomDifficulty.set(this.difficulties[0]?.id || '');
+    const initialGame = this.isGlobal ? (this.allGames()[0]?.id || '') : this.currentGameId;
+    this.selectGameForNewRoom(initialGame);
     this.isCreateModalOpen.set(true);
+  }
+
+  selectGameForNewRoom(gameId: string) {
+    this.newRoomGameId.set(gameId);
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config) {
+      this.newRoomMode.set(config.modes[0]?.id || '');
+      this.newRoomDifficulty.set(config.difficulties[0]?.id || '');
+    } else {
+      this.newRoomMode.set('');
+      this.newRoomDifficulty.set('');
+    }
   }
 
   updateRoomName(event: Event) {
@@ -342,6 +376,7 @@ export class GameLobbyPanelComponent {
   onConfirmCreateRoom() {
     this.createRoom.emit({
       name: this.newRoomName(),
+      gameId: this.newRoomGameId(),
       mode: this.newRoomMode(),
       difficulty: this.newRoomDifficulty()
     });
@@ -373,9 +408,6 @@ export class GameLobbyPanelComponent {
   }
 
   getModeLabel(modeId: string, gameId?: string): string {
-    // Try current game's modes first
-    const mode = this.gameModes?.find(m => m.id === modeId);
-    if (mode) return this.t(mode.labelKey);
     // Try registry lookup for cross-game rooms
     if (gameId) {
       const labelKey = this.gameRegistry.getModeLabel(gameId, modeId);
@@ -394,9 +426,6 @@ export class GameLobbyPanelComponent {
   }
 
   getDifficultyLabel(diffId: string, gameId?: string): string {
-    // Try current game's difficulties first
-    const diff = this.difficulties?.find(d => d.id === diffId);
-    if (diff) return this.t(diff.labelKey);
     // Try registry lookup for cross-game rooms
     if (gameId) {
       const labelKey = this.gameRegistry.getDifficultyLabel(gameId, diffId);

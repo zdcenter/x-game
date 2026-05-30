@@ -1,11 +1,13 @@
 import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { GameService, GameConfig, getLocalizedField } from '../../core/services/game.service';
-import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameService, GameConfig as BackendGameConfig, getLocalizedField } from '../../core/services/game.service';
 import { WebSocketService } from '../../core/services/websocket.service';
 import { AuthStore } from '../../core/auth/auth.store';
+import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
+import { GameConfig as RegistryGameConfig } from '../../core/services/game-registry.service';
+import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 
 @Component({
   selector: 'app-lobby',
@@ -215,7 +217,7 @@ import { AuthStore } from '../../core/auth/auth.store';
       <!-- RIGHT: Global Arena Lobby (Sidebar on Desktop, Drawer on Mobile) -->
       @if (isGlobalLobbyOpen()) {
         <!-- Overlay Background for Mobile -->
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+        <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden transition-opacity"
              (click)="isGlobalLobbyOpen.set(false)"></div>
       }
 
@@ -227,7 +229,8 @@ import { AuthStore } from '../../core/auth/auth.store';
 
         <app-game-lobby-panel
           class="flex-grow flex w-full h-full min-h-0 lg:h-full lg:bg-transparent"
-          [isGlobal]="true">
+          [isGlobal]="true"
+          (createRoom)="handleGlobalCreateRoom($event)">
         </app-game-lobby-panel>
       </div>
 
@@ -239,8 +242,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
   gameService = inject(GameService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
+  router = inject(Router);
+  crossGameJoin = inject(CrossGameJoinService);
   
-  games = signal<GameConfig[]>([]);
+  games = signal<BackendGameConfig[]>([]);
   isGlobalLobbyOpen = signal(false);
 
   ngOnInit() {
@@ -259,6 +264,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.wsService.disconnectLobby();
+  }
+
+  handleGlobalCreateRoom(event: {name: string, gameId: string, mode: string, difficulty: string}) {
+    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+    this.crossGameJoin.setPendingJoin({
+      game: event.gameId,
+      roomId: event.name,
+      mode: event.mode,
+      difficulty: event.difficulty,
+      host: playerId
+    });
+    this.router.navigate([`/games/${event.gameId}`]);
   }
 
   getGameEmoji(id: string): string {

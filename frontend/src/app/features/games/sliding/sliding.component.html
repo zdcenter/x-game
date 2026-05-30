@@ -199,7 +199,7 @@
 
     <!-- Sidebar Overlay Backdrop -->
     @if (isMenuOpen()) {
-      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMenuOpen.set(false)"></div>
+      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMenuOpen.set(false)"></div>
     }
 
     <div class="flex-shrink-0 transition-transform duration-300"
@@ -228,8 +228,6 @@
       <app-game-lobby-panel
         class="flex-grow flex"
         [currentGameId]="'sliding'"
-        [gameModes]="gameModes"
-        [difficulties]="difficulties"
         (joinRoom)="handleJoinRoom($event)"
         (createRoom)="handleCreateRoom($event)">
       </app-game-lobby-panel>

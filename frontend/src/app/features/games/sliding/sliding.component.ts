@@ -36,15 +36,9 @@ export class SlidingComponent extends BaseGameComponent {
   isMenuOpen = signal<boolean>(false);
   Math = Math;
 
-  gameModes: GameMode[] = [
-    { id: 'pk_speed', labelKey: 'sliding.mode.pk_speed', icon: '⚡', descKey: 'game.pk_speed_desc' }
-  ];
-
-  difficulties: GameDifficulty[] = [
-    { id: 'easy', labelKey: 'sliding.difficulty.easy', desc: '4x4' },
-    { id: 'medium', labelKey: 'sliding.difficulty.medium', desc: '5x5' },
-    { id: 'hard', labelKey: 'sliding.difficulty.hard', desc: '6x6' }
-  ];
+  get difficulties() {
+    return this.gameRegistry.getConfig('sliding')?.difficulties || [];
+  }
 
   private timerInterval: any;
   currentTime = signal<number>(Date.now());
@@ -93,15 +87,6 @@ export class SlidingComponent extends BaseGameComponent {
 
   constructor() {
     super();
-
-    this.gameRegistry.register({
-      id: 'sliding',
-      route: '/games/sliding',
-      titleKey: 'sliding.title',
-      iconEmoji: '🧩',
-      modes: this.gameModes,
-      difficulties: this.difficulties,
-    });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sliding',
@@ -288,7 +273,8 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   getDifficultyDesc(id: string): string {
-    const diff = this.difficulties.find(d => d.id === id);
+    const config = this.gameRegistry.getConfig('sliding');
+    const diff = config?.difficulties.find(d => d.id === id);
     return diff ? this.t(diff.labelKey)() : id;
   }
 

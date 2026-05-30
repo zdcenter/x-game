@@ -222,7 +222,7 @@
 
     <!-- Sidebar Overlay Backdrop -->
     @if (isMobileSidebarOpen()) {
-      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
     }
 
     <div class="flex-shrink-0 transition-transform duration-300"
@@ -242,8 +242,6 @@
         class="flex-grow flex"
         [currentGameId]="'tetris'"
         [currentRoomId]="currentRoomId()"
-        [gameModes]="gameModes"
-        [difficulties]="difficulties"
         (joinRoom)="handleJoinRoom($event)"
         (createRoom)="handleCreateRoom($event)">
       </app-game-lobby-panel>

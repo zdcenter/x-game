@@ -168,7 +168,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
       <!-- Mobile Sidebar Overlay Backdrop -->
       @if (isMobileSidebarOpen()) {
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+        <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
       }
 
       <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
@@ -185,8 +185,6 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
            </div>
         <app-game-lobby-panel
           [currentGameId]="'sudoku'"
-          [gameModes]="sudokuModes"
-          [difficulties]="difficulties"
           [currentRoomId]="store.roomId()"
           (joinRoom)="handleJoinRoom($event)"
           (createRoom)="handleCreateRoom($event)"
@@ -211,29 +209,8 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
-  sudokuModes = [
-    { id: 'pk_steal', labelKey: 'game.sudoku_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_pk_steal_desc' },
-    { id: 'pk_speed', labelKey: 'game.sudoku_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_pk_speed_desc' }
-  ];
-
-  difficulties = [
-    { id: 'easy', labelKey: 'game.diff_easy', desc: 'A gentle start' },
-    { id: 'medium', labelKey: 'game.diff_medium', desc: 'A fair challenge' },
-    { id: 'hard', labelKey: 'game.diff_hard', desc: 'For experienced players' },
-    { id: 'expert', labelKey: 'game.diff_expert', desc: 'True test of skill' }
-  ];
-
   constructor() {
     super();
-    // Register game metadata
-    this.gameRegistry.register({
-      id: 'sudoku',
-      route: '/games/sudoku',
-      titleKey: 'lobby.sudoku',
-      iconEmoji: '🔢',
-      modes: this.sudokuModes,
-      difficulties: this.difficulties,
-    });
 
     // Watch for countdown trigger
     effect(() => {
