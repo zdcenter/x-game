@@ -1,0 +1,261 @@
+<div class="h-full w-full flex flex-col relative text-[var(--color-text-main)] overflow-hidden">
+  <div class="flex-grow flex flex-col lg:flex-row h-full overflow-hidden p-1 lg:p-4 gap-2 lg:gap-6 pt-12 lg:pt-4">
+    
+    <!-- LEFT: Main Game Area -->
+    <!-- By making this relative and the Dark Card absolute, we anchor all percentage heights to physical pixels -->
+    <div class="flex-grow h-full relative min-w-0 min-h-[600px] lg:min-h-0">
+      <div class="absolute inset-0 flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-3 lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
+           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        
+        <!-- Header -->
+        <div class="flex flex-col pb-2 lg:pb-3 border-b relative shrink-0" style="border-color: var(--color-border-card)">
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
+              <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2 z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                <span class="hidden sm:inline">{{ i18n.t('game.back')() }}</span>
+              </button>
+              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap z-10">
+                <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                  {{ i18n.t('tetris.title')() }}
+                </span>
+                <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
+                  {{ currentRoomMode() === 'pk_attack' ? i18n.t('tetris.mode.pk_attack')() : i18n.t('tetris.mode.single')() }}
+                </span>
+              </h1>
+              <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 ml-2" [title]="i18n.t('game.rules.tooltip')()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              @if (currentRoomMode() === 'single') {
+                <button (click)="store.startGame()" class="px-2 lg:px-4 py-1 lg:py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ i18n.t('game.play_again')() }}</span>
+                </button>
+              }
+
+              @if (currentRoomMode() !== 'single') {
+                <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
+                </button>
+              }
+              
+              @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
+                <button (click)="isMobileSidebarOpen.set(true)" class="lg:hidden p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Board Area (Since Dark Card is absolute, flex-1 works perfectly here) -->
+        <div class="flex-1 flex flex-col min-h-0 overflow-hidden mt-2 w-full">
+          @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
+            <app-game-waiting-room
+              class="w-full h-full flex"
+              [mode]="currentRoomMode()"
+              [roomId]="currentRoomId()"
+              [players]="getPlayerScores()"
+              [hostId]="store.host()"
+              [currentUserId]="playerId"
+              (leave)="returnToLobby()"
+              (start)="store.startGame()">
+            </app-game-waiting-room>
+          } @else {
+            <!-- Playing area wrapper to resolve absolute layout heights -->
+            <div class="flex-grow flex-1 relative w-full min-h-0">
+              <!-- Classic Layout: [Hold+Stats] | [Board] -->
+              <div class="absolute inset-0 flex items-stretch justify-center gap-4 lg:gap-8 w-full max-w-4xl mx-auto px-2 lg:px-0 py-2">
+                
+                <!-- LEFT: Hold + Stats -->
+                <div class="flex flex-col gap-3 lg:gap-5 w-20 sm:w-24 lg:w-32 shrink-0 self-center">
+                  <!-- Hold -->
+                  <div class="bg-black/40 p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] flex flex-col items-center shadow-lg">
+                    <div class="text-[10px] lg:text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2 lg:mb-3">{{ i18n.t('tetris.hold')() }}</div>
+                    <div class="w-16 h-16 lg:w-20 lg:h-20 flex items-center justify-center">
+                      @if (store.holdPiece()) {
+                        <div class="grid gap-[2px]" [style.gridTemplateColumns]="'repeat(' + getShapeArray(store.holdPiece()!).length + ', minmax(0, 1fr))'">
+                          @for (row of getShapeArray(store.holdPiece()!); track $index) {
+                            @for (cell of row; track $index) {
+                              <div class="w-3.5 h-3.5 lg:w-4.5 lg:h-4.5 rounded-[3px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
+                            }
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                  <!-- Score -->
+                  <div class="bg-black/40 p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] shadow-lg">
+                    <div class="text-[10px] lg:text-sm text-[var(--color-text-muted)] uppercase tracking-wider mb-1">{{ i18n.t('tetris.score')() }}</div>
+                    <div class="font-bold font-mono text-base lg:text-2xl text-emerald-400 leading-none">{{ store.score() }}</div>
+                  </div>
+                  <!-- Lines -->
+                  <div class="bg-black/40 p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] shadow-lg">
+                    <div class="text-[10px] lg:text-sm text-[var(--color-text-muted)] uppercase tracking-wider mb-1">{{ i18n.t('tetris.lines')() }}</div>
+                    <div class="font-bold font-mono text-base lg:text-2xl text-blue-400 leading-none">{{ store.lines() }}</div>
+                  </div>
+                </div>
+
+                <!-- CENTER: Main Board (Because of the absolute root, this h-full will strictly compute against pixel boundaries!) -->
+                <div class="relative h-full flex-shrink-0" style="aspect-ratio: 1/2;">
+                  <div class="w-full h-full bg-[var(--color-bg-main)] rounded-xl lg:rounded-2xl border-4 border-[var(--color-border-card)] shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden p-[2px] lg:p-1 relative">
+                    <div class="grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] lg:gap-[2px] w-full h-full relative z-10">
+                      @for (row of store.grid(); track $index; let r = $index) {
+                        @for (cell of row; track $index; let c = $index) {
+                          <div class="w-full h-full rounded-[3px] lg:rounded-md border border-white/[0.05]"
+                              [style.backgroundColor]="getCellColor(c, r)">
+                          </div>
+                        }
+                      }
+                    </div>
+
+                    <!-- OVERLAYS INSIDE BOARD -->
+                    <!-- Level (Top Left) -->
+                    <div class="absolute top-2 left-2 lg:top-4 lg:left-4 z-20 pointer-events-none bg-black/50 backdrop-blur-md px-1.5 lg:px-2.5 py-1 rounded-lg border border-white/10 flex flex-col items-center shadow-md">
+                      <span class="text-[7px] lg:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">LV</span>
+                      <span class="font-black font-mono text-xs lg:text-lg text-amber-400 leading-none">{{ store.level() }}</span>
+                    </div>
+
+                    <!-- Next Piece (Top Right) -->
+                    <div class="absolute top-2 right-2 lg:top-4 lg:right-4 z-20 pointer-events-none bg-black/50 backdrop-blur-md px-1.5 lg:px-2.5 py-1 rounded-lg border border-white/10 flex flex-col items-center shadow-md">
+                      <span class="text-[7px] lg:text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">NEXT</span>
+                      @for (nextType of store.nextPieces().slice(0, 1); track $index) {
+                        <div class="flex items-center justify-center my-0.5 lg:my-1 min-w-[24px] lg:min-w-[40px] min-h-[24px] lg:min-h-[40px]">
+                          <div class="grid gap-[1px]" [style.gridTemplateColumns]="'repeat(' + getShapeArray(nextType).length + ', minmax(0, 1fr))'">
+                            @for (row of getShapeArray(nextType); track $index) {
+                              @for (cell of row; track $index) {
+                                <div class="w-1.5 h-1.5 lg:w-2.5 lg:h-2.5 rounded-[1px] lg:rounded-[2px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
+                              }
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Starting Countdown Overlay -->
+                  @if (store.status() === 'starting') {
+                    <div class="absolute inset-0 bg-black/60 rounded-xl lg:rounded-2xl flex flex-col items-center justify-center backdrop-blur-sm z-30">
+                      <div class="text-7xl font-bold text-white mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-pulse">
+                        {{ timerService.countdownDisplay() }}
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Game Over Overlay -->
+                  @if (store.status() === 'finished') {
+                    <app-game-result-overlay
+                      [status]="store.winners().includes(playerId) || store.mode() === 'single' ? 'win' : 'lose'"
+                      [title]="store.winners().includes(playerId) || store.mode() === 'single' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
+                      [stats]="[{label: i18n.t('tetris.score')(), value: store.score()}]"
+                      [showLeave]="store.mode() === 'single' || store.host() !== playerId"
+                      [showRestart]="store.mode() === 'single' || store.host() === playerId"
+                      [showDismiss]="store.mode() !== 'single' && store.host() === playerId"
+                      (leave)="goBack()"
+                      (restart)="store.playAgain()"
+                      (dismiss)="dismissRoom()"
+                      class="absolute inset-0 z-30 rounded-xl lg:rounded-2xl overflow-hidden">
+                    </app-game-result-overlay>
+                  }
+                </div>
+
+                <!-- RIGHT: Opponents -->
+                @if (currentRoomMode() !== 'single') {
+                  <div class="flex flex-col gap-2 lg:gap-3 w-20 sm:w-24 lg:w-32 shrink-0 self-center max-h-full overflow-y-auto custom-scrollbar">
+                    @for (opp of store.opponents(); track opp.id) {
+                      <div class="bg-black/40 rounded-xl p-2 lg:p-3 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full">
+                        <div class="flex flex-col w-full text-center mb-1">
+                          <div class="text-[9px] lg:text-xs font-bold text-white truncate w-full" [title]="opp.id">
+                            {{ opp.id }}
+                            @if (opp.finished) { <span class="text-red-500">💀</span> }
+                          </div>
+                          <div class="text-[8px] lg:text-[10px] text-emerald-400 font-mono font-bold">{{ opp.score }} pts</div>
+                        </div>
+                        <div class="w-full relative" style="aspect-ratio: 1/2;">
+                          <div class="absolute inset-0 grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] bg-black/60 rounded p-[1px] lg:p-[2px] w-full h-full">
+                            @for (row of opp.matrix; track $index) {
+                              @for (cell of row; track $index) {
+                                <div class="w-full h-full rounded-[1px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
+                              }
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
+              </div>
+            </div>
+            
+            <!-- Mobile Controls -->
+            @if (store.status() === 'playing') {
+              <div class="flex gap-4 lg:hidden w-full max-w-sm justify-between px-4 py-2 shrink-0 self-center">
+                <div class="flex gap-2">
+                  <button (click)="store.moveLeft()" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center active:bg-white/30 text-xl">⬅️</button>
+                  <button (click)="store.moveRight()" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center active:bg-white/30 text-xl">➡️</button>
+                </div>
+                <div class="flex gap-2">
+                  <button (click)="store.rotate()" class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center active:bg-blue-500/40 text-xl">🔄</button>
+                  <button (click)="store.hardDrop()" class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center active:bg-red-500/40 text-xl">⏬</button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Overlay Backdrop -->
+    @if (isMobileSidebarOpen()) {
+      <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+    }
+
+    <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
+    <div class="flex-shrink-0 flex-col w-full lg:w-80 transition-transform duration-300"
+         [ngClass]="{
+           'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:flex lg:translate-x-0': true,
+           'translate-x-0 flex': isMobileSidebarOpen(),
+           'translate-x-full hidden lg:flex': !isMobileSidebarOpen(),
+           '!hidden': currentRoomId() !== '' && currentRoomId() !== 'local'
+         }">
+      
+      <div class="flex justify-between items-center mb-4 lg:hidden">
+        <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+        <button (click)="isMobileSidebarOpen.set(false)" class="p-2 text-slate-400 hover:text-[var(--color-text-main)] rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- PK Lobby Panel -->
+      <app-game-lobby-panel
+        class="flex-grow flex"
+        [currentGameId]="'tetris'"
+        [currentRoomId]="currentRoomId()"
+        [gameModes]="gameModes"
+        [difficulties]="difficulties"
+        (joinRoom)="handleJoinRoom($event)"
+        (createRoom)="handleCreateRoom($event)">
+      </app-game-lobby-panel>
+    </div>
+
+  </div>
+  
+  <app-game-rules-modal [gameId]="'tetris'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+</div>

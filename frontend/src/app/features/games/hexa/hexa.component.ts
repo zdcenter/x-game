@@ -1,4 +1,4 @@
-import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -10,8 +10,11 @@ import { HexaBoardComponent } from './components/hexa-board/hexa-board.component
 import { HexPiece, HexCoord } from './store/hexa-engine';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { ToastService } from '../../../core/services/toast.service';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { AudioService } from '../../../core/services/audio.service';
 
 @Component({
@@ -22,7 +25,9 @@ import { AudioService } from '../../../core/services/audio.service';
     FormsModule,
     HexaBoardComponent,
     GameWaitingRoomComponent,
-    GameLobbyPanelComponent
+    GameLobbyPanelComponent,
+    GameRulesModalComponent,
+    GameResultOverlayComponent
   ],
   providers: [HexaStore],
   templateUrl: './hexa.component.html'
@@ -30,11 +35,14 @@ import { AudioService } from '../../../core/services/audio.service';
 export class HexaComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(HexaStore);
   private authStore = inject(AuthStore);
+  private toastService = inject(ToastService);
   private crossGameJoin = inject(CrossGameJoinService);
   override gameTimer = inject(GameTimerService);
   readonly i18n = inject(I18nService);
   private audioService = inject(AudioService);
   private gameRegistry = inject(GameRegistryService);
+
+  showRules = signal(false);
 
   get t() {
     return this.i18n.t.bind(this.i18n);
@@ -265,6 +273,19 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     const vbH = (maxY - minY) + hexHeight + pad * 2;
     
     return { vbX, vbY, vbW, vbH };
+  }
+
+  dismissRoom() {
+    this.toastService.confirm({
+      title: this.i18n.t('game.dismiss_title')(),
+      message: this.i18n.t('game.dismiss_msg')(),
+      confirmText: this.i18n.t('game.dismiss_confirm')(),
+      cancelText: this.i18n.t('game.cancel')(),
+      onConfirm: () => {
+        this.store.dismissRoom();
+        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
+      }
+    });
   }
 
   getPieceSvgViewBox(piece: HexPiece): string {

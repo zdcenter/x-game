@@ -7,7 +7,7 @@ import "sync"
 type BaseEngine struct {
 	Mu        sync.RWMutex
 	State     GameState
-	Broadcast func()
+	broadcast func()
 }
 
 // GetStatus returns the true current status of the game
@@ -19,5 +19,12 @@ func (b *BaseEngine) GetStatus() GameState {
 
 // SetBroadcaster allows the engine to trigger a websocket broadcast asynchronously
 func (b *BaseEngine) SetBroadcaster(broadcaster func()) {
-	b.Broadcast = broadcaster
+	b.broadcast = broadcaster
+}
+
+// Broadcast safely invokes the broadcast callback if it is set
+func (b *BaseEngine) Broadcast() {
+	if b.broadcast != nil {
+		b.broadcast()
+	}
 }

@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
-import { HexaEngine, HexPiece, PRNG, HexCell, HexCoord } from './hexa-engine';
+import { HexaEngine, HexPiece, HexCell, HexCoord } from './hexa-engine';
+import { PRNG } from '../../../../core/utils/prng';
 import { generatePieces } from './hexa-pieces';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
@@ -199,6 +200,20 @@ export class HexaStore {
   // PK Actions
   startGame() {
     this.wsService.send({ action: 'start' });
+  }
+
+  playAgain() {
+    if (this.currentMode() === 'single') {
+      this.startSinglePlayer();
+    } else {
+      this.wsService.send({ type: 'restart_game' });
+    }
+  }
+
+  dismissRoom() {
+    if (this.currentMode() !== 'single') {
+      this.wsService.send({ type: 'dismiss_room' });
+    }
   }
 
   // Single Player

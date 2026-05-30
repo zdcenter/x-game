@@ -19,8 +19,12 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
           [status]="isWinner() ? 'win' : 'lose'"
           [title]="isWinner() ? i18n.t('game.win')() : i18n.t('game.lose')()"
           [stats]="getStats()"
-          [showCancel]="true"
-          (cancel)="store.view.set('lobby')">
+          [showLeave]="store.host() !== store.playerId()"
+          [showRestart]="store.host() === store.playerId()"
+          [showDismiss]="store.host() === store.playerId()"
+          (restart)="store.playAgain()"
+          (dismiss)="store.dismissRoom()"
+          (leave)="store.view.set('lobby')">
         </app-game-result-overlay>
       }
 

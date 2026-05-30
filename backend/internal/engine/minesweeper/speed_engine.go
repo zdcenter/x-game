@@ -179,6 +179,30 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			})
 			return e.State, nil
 		}
+		
+		if baseAction.Action == "restart_game" && e.State == engine.StateFinished {
+			e.State = engine.StateWaiting
+			// We need a new base board to randomize mines
+			e.BaseBoard = NewBoard(e.BaseBoard.Width, e.BaseBoard.Height, e.BaseBoard.Mines)
+			e.BaseBoard.GenerateMines(-1, -1)
+			
+			for _, b := range e.Boards {
+				b.Status = engine.StateWaiting
+				// Clone new board
+				newBoard := e.BaseBoard.Clone()
+				b.Cells = newBoard.Cells
+				b.RevealedCnt = 0
+			}
+			
+			for playerID := range e.Scores {
+				e.Scores[playerID] = 0
+				e.Errors[playerID] = 0
+			}
+			e.Cooldowns = make(map[string]int64)
+			
+			e.Broadcast()
+			return e.State, nil
+		}
 	}
 
 	if e.State != engine.StatePlaying {

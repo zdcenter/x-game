@@ -165,15 +165,3 @@ export class HexaEngine {
     };
   }
 }
-
-// Basic random generator seeded or Math.random
-export class PRNG {
-  private seed: number;
-  constructor(seed: number) {
-    this.seed = seed;
-  }
-  next(): number {
-    const x = Math.sin(this.seed++) * 10000;
-    return x - Math.floor(x);
-  }
-}

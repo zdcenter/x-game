@@ -8,10 +8,9 @@ import { AudioService } from '../../../core/services/audio.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="absolute inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-sm transition-colors duration-1000"
-         [class.bg-[var(--color-overlay)]]="status === 'win'"
-         [class.bg-red-950]="status === 'lose'" 
-         [class.bg-opacity-90]="status === 'lose'">
+    <div class="fixed inset-0 z-[100] flex flex-col items-center justify-center backdrop-blur-sm transition-colors duration-1000"
+         [class.bg-slate-900/90]="status === 'win'"
+         [class.bg-red-950/90]="status === 'lose'">
       
       <!-- Main Title -->
       @if (status === 'win') {
@@ -52,7 +51,7 @@ import { AudioService } from '../../../core/services/audio.service';
       }
 
       <!-- Action Panel (only if there are buttons to show) -->
-      @if (showNextLevel || showRestart || showCancel) {
+      @if (showNextLevel || showRestart || showCancel || showDismiss || showLeave) {
         <div class="mt-8 flex gap-4 bg-[var(--color-bg-card)] p-6 rounded-2xl border shadow-2xl animate-scale-in"
              [class.border-yellow-500/30]="status === 'win'"
              [class.border-red-500/30]="status === 'lose'">
@@ -62,25 +61,39 @@ import { AudioService } from '../../../core/services/audio.service';
               <p class="text-xl font-bold mb-6 text-white">{{ promptText }}</p>
             }
             
-            <div class="flex flex-wrap justify-center gap-4">
+            <div class="flex flex-col sm:flex-row w-full sm:w-auto items-stretch sm:items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
+              <!-- Leave / Back Button -->
+              @if (showLeave) {
+                <button (click)="leave.emit()" class="w-full sm:w-auto px-6 py-3 sm:py-2 rounded-xl font-bold bg-white/10 hover:bg-white/20 transition-colors text-white border border-white/20">
+                  {{ i18n.t('game.leave')() }}
+                </button>
+              }
+
               <!-- Cancel / Back Button -->
               @if (showCancel) {
-                <button (click)="cancel.emit()" class="px-6 py-2 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 transition-colors text-white">
+                <button (click)="cancel.emit()" class="w-full sm:w-auto px-6 py-3 sm:py-2 rounded-xl font-bold bg-slate-700 hover:bg-slate-600 transition-colors text-white">
                   {{ i18n.t('game.cancel')() }}
                 </button>
               }
 
               <!-- Restart Button -->
               @if (showRestart) {
-                <button (click)="restart.emit()" class="px-6 py-2 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                <button (click)="restart.emit()" class="w-full sm:w-auto px-6 py-3 sm:py-2 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-lg rounded-xl shadow-lg hover:shadow-xl transform sm:hover:scale-105 transition-all">
                   {{ i18n.t('game.restart')() }}
+                </button>
+              }
+
+              <!-- Dismiss Room Button -->
+              @if (showDismiss) {
+                <button (click)="dismiss.emit()" class="w-full sm:w-auto px-6 py-3 sm:py-2 rounded-xl font-bold bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 transition-colors">
+                  {{ i18n.t('game.dismiss_room')() || 'Dismiss Room' }}
                 </button>
               }
 
               <!-- Next Level Button -->
               @if (showNextLevel) {
-                <button (click)="nextLevel.emit()" class="px-6 py-2 rounded-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 text-black hover:scale-105 transition-transform shadow-lg shadow-yellow-500/20">
-                  {{ i18n.t('game.sudoku.next_level')() }}
+                <button (click)="nextLevel.emit()" class="w-full sm:w-auto px-6 py-3 sm:py-2 rounded-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 text-black sm:hover:scale-105 transition-transform shadow-lg shadow-yellow-500/20">
+                  {{ i18n.t('game.next_level')() }}
                 </button>
               }
             </div>
@@ -103,10 +116,14 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() showNextLevel = false;
   @Input() showRestart = false;
   @Input() showCancel = false;
+  @Input() showDismiss = false;
+  @Input() showLeave = false;
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() restart = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+  @Output() dismiss = new EventEmitter<void>();
+  @Output() leave = new EventEmitter<void>();
 
   private audioPlayed = false;
 

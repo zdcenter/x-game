@@ -1,4 +1,6 @@
 import { Lang } from './translations';
+import { minesweeperTranslations } from '../../features/games/minesweeper/i18n/minesweeper.translations';
+import { TETRIS_TRANSLATIONS } from './tetris.translations';
 
 export const coreTranslations: Record<Lang, Record<string, string>> = {
   en: {
@@ -18,6 +20,9 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'seo.admin.title': 'Admin Console - X-Game',
     'seo.admin.desc': 'Administration console for X-Game platform management.',
     'seo.admin.keywords': 'admin, dashboard, management',
+
+    ...minesweeperTranslations.en,
+    ...TETRIS_TRANSLATIONS.en,
 
     'status.playing': 'PLAYING',
     'status.finished': 'FINISHED',
@@ -90,7 +95,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.full': 'FULL',
     'game.watch': 'WATCH',
     'game.my_room': 'My Room',
-    'game.dismiss': 'DISMISS',
+    'game.dismiss_room': 'Dismiss Room',
+    'game.next_level': 'Next Level',
     'game.dismiss_title': 'Dismiss Room',
     'game.dismiss_msg': 'Are you sure you want to dismiss this room? All players will be kicked out.',
     'game.dismiss_confirm': 'Dismiss',
@@ -113,6 +119,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.you_win': 'YOU WIN!',
     'game.you_lose': 'YOU LOSE!',
     'game.play_again': 'Play Again',
+    'game.restart': 'Play Again',
     'game.moves': 'Moves',
   },
   zh: {
@@ -206,7 +213,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.timer': '当前耗时',
     'game.difficulty': '游戏等级',
     'game.my_room': '我的房间',
-    'game.dismiss': '解散',
+    'game.dismiss_room': '解散房间',
+    'game.next_level': '下一关',
     'game.dismiss_title': '解散房间',
     'game.dismiss_msg': '确定要解散此房间吗？所有玩家都将被强制请出房间。',
     'game.dismiss_confirm': '确认解散',
@@ -227,6 +235,10 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.you_win': '游戏胜利！',
     'game.you_lose': '游戏失败！',
     'game.play_again': '再来一局',
+    'game.restart': '再来一局',
     'game.moves': '移动步数',
+
+    ...minesweeperTranslations.zh,
+    ...TETRIS_TRANSLATIONS.zh
   },
 };

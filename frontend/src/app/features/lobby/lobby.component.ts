@@ -149,6 +149,34 @@ import { GameService, GameConfig, getLocalizedField } from '../../core/services/
                     <use href="#hx" x="56.1" y="39.5" />
                   </g>
                 </svg>
+              } @else if (game.id === 'tetris') {
+                <svg width="110" height="110" viewBox="0 0 100 100" class="drop-shadow-2xl hover:scale-110 transition-transform duration-500">
+                  <rect x="25" y="10" width="50" height="80" rx="4" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                  <g fill="#3b82f6" stroke="rgba(0,0,0,0.2)" stroke-width="1">
+                    <rect x="25" y="70" width="10" height="10" rx="1.5" />
+                    <rect x="35" y="70" width="10" height="10" rx="1.5" />
+                    <rect x="45" y="70" width="10" height="10" rx="1.5" />
+                    <rect x="25" y="60" width="10" height="10" rx="1.5" />
+                  </g>
+                  <g fill="#ef4444" stroke="rgba(0,0,0,0.2)" stroke-width="1">
+                    <rect x="45" y="60" width="10" height="10" rx="1.5" />
+                    <rect x="55" y="60" width="10" height="10" rx="1.5" />
+                    <rect x="55" y="70" width="10" height="10" rx="1.5" />
+                    <rect x="65" y="70" width="10" height="10" rx="1.5" />
+                  </g>
+                  <g fill="#eab308" stroke="rgba(0,0,0,0.2)" stroke-width="1">
+                    <rect x="35" y="50" width="10" height="10" rx="1.5" />
+                    <rect x="45" y="50" width="10" height="10" rx="1.5" />
+                    <rect x="35" y="40" width="10" height="10" rx="1.5" />
+                    <rect x="45" y="40" width="10" height="10" rx="1.5" />
+                  </g>
+                  <g fill="#06b6d4" stroke="rgba(0,0,0,0.2)" stroke-width="1">
+                    <rect x="55" y="20" width="10" height="10" rx="1.5" />
+                    <rect x="55" y="30" width="10" height="10" rx="1.5" />
+                    <rect x="55" y="40" width="10" height="10" rx="1.5" />
+                    <rect x="55" y="50" width="10" height="10" rx="1.5" />
+                  </g>
+                </svg>
               } @else {
                 <span class="text-6xl">{{ getGameEmoji(game.id) }}</span>
               }

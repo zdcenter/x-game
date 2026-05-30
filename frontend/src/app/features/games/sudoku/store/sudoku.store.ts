@@ -167,6 +167,27 @@ export class SudokuStore {
     }
   }
 
+  playAgain() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'restart_game' });
+    }
+  }
+
+  dismissRoom() {
+    if (this.currentMode() !== 'single') {
+      this.toast.confirm({
+        title: 'Dismiss Room',
+        message: 'Are you sure you want to dismiss this room? All players will be kicked out.',
+        confirmText: 'Dismiss',
+        cancelText: 'Cancel',
+        onConfirm: () => {
+          this.ws.send({ type: 'dismiss_room' });
+          this.toast.show('Room dismissed successfully', 'success');
+        }
+      });
+    }
+  }
+
   // --- SINGLE PLAYER INIT ---
   initBoard(puzzleStr: string, savedState?: string, savedTime?: number) {
     if (savedTime) this.timeSpent.set(savedTime);

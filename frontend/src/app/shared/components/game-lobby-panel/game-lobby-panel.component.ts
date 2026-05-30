@@ -61,8 +61,11 @@ export interface GameDifficulty {
                       <div class="flex items-center gap-2">
                         <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20 shrink-0"
                               [class.text-blue-400]="room.game === 'sudoku'"
-                              [class.text-green-400]="room.game === 'minesweeper'">
-                          {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
+                              [class.text-green-400]="room.game === 'minesweeper'"
+                              [class.text-purple-400]="room.game === 'hexa'"
+                              [class.text-orange-400]="room.game === 'sliding'"
+                              [class.text-indigo-400]="room.game === 'tetris'">
+                          {{ getGameLabel(room.game) }}
                         </span>
                         <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] sm:max-w-[180px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }}</span>
                       </div>
@@ -117,8 +120,11 @@ export interface GameDifficulty {
                         <div class="flex items-center gap-2">
                           <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20 shrink-0"
                                 [class.text-blue-400]="room.game === 'sudoku'"
-                                [class.text-green-400]="room.game === 'minesweeper'">
-                            {{ room.game === 'sudoku' ? t('lobby.sudoku') : t('app.title') }}
+                                [class.text-green-400]="room.game === 'minesweeper'"
+                                [class.text-purple-400]="room.game === 'hexa'"
+                                [class.text-orange-400]="room.game === 'sliding'"
+                                [class.text-indigo-400]="room.game === 'tetris'">
+                            {{ getGameLabel(room.game) }}
                           </span>
                           <span class="font-mono text-sm font-bold text-inherit truncate max-w-[100px] sm:max-w-[150px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }} (Host)</span>
                         </div>
@@ -143,7 +149,9 @@ export interface GameDifficulty {
                           } @else {
                             <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ t('game.join') }}</button>
                           }
-                          <button (click)="onDismissRoom(room.id)" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ t('game.dismiss') }}</button>
+                          @if (room.host === playerId()) {
+                            <button (click)="onDismissRoom(room.id)" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ t('game.dismiss_room') }}</button>
+                          }
                         </div>
                       </div>
                     </div>
@@ -374,6 +382,12 @@ export class GameLobbyPanelComponent {
     if (modeId.includes('steal')) return this.t('game.steal_mode');
     if (modeId.includes('speed')) return this.t('game.speed_mode');
     return modeId;
+  }
+
+  getGameLabel(gameId: string): string {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config && config.titleKey) return this.t(config.titleKey);
+    return this.t('app.title'); // fallback
   }
 
   getDifficultyLabel(diffId: string, gameId?: string): string {

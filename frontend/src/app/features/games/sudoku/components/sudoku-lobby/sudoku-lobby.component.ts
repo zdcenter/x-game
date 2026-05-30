@@ -6,6 +6,7 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { SudokuStore } from '../../store/sudoku.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
+import { GameRulesModalComponent } from '../../../../../shared/components/game-rules-modal/game-rules-modal.component';
 
 interface LevelResponse {
   id: string;
@@ -21,7 +22,7 @@ interface LevelResponse {
 @Component({
   selector: 'app-sudoku-lobby',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GameRulesModalComponent],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   template: `
     <div class="flex-grow flex flex-col lg:flex-row p-2 lg:p-6 gap-4 lg:gap-6 w-full h-full overflow-y-auto lg:overflow-hidden">
@@ -42,8 +43,13 @@ interface LevelResponse {
               </svg>
             </div>
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight uppercase">
+              <h1 class="text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight uppercase flex items-center gap-2">
                 {{ i18n.t('lobby.sudoku')() || 'Sudoku' }}
+                <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-emerald-400 transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10" [title]="i18n.t('game.rules.tooltip')()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-[var(--color-text-main)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
               </h1>
               <p class="text-xs sm:text-sm text-[var(--color-text-main)] opacity-70 font-medium mt-1">
                 Select a difficulty and level to start playing
@@ -115,6 +121,8 @@ interface LevelResponse {
         }
       </div>
     </div>
+    
+    <app-game-rules-modal [gameId]="'sudoku'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
   `
 })
 export class SudokuLobbyComponent implements OnInit {
@@ -126,6 +134,7 @@ export class SudokuLobbyComponent implements OnInit {
   authStore = inject(AuthStore);
   
   playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+  showRules = signal(false);
 
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, savedState?: string, timeSpent?: number}>();
 

@@ -38,6 +38,11 @@
                   {{ currentRoomMode() === 'pk_score' ? 'PK Score' : 'Single' }}
                 </span>
               </h1>
+              <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 ml-2" [title]="t('game.rules.tooltip')()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
             </div>
             <div class="flex items-center gap-2">
               @if (currentRoomMode() === 'single') {
@@ -141,16 +146,16 @@
                 }
 
                 @if (store.status() === 'finished' || store.gameOver()) {
-                  <div class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md rounded-3xl">
-                    <div class="text-4xl font-bold text-red-500 mb-2">GAME OVER</div>
-                    <div class="text-xl text-white">Score: {{ store.score() }}</div>
-                    
-                    @if (currentRoomMode() === 'single') {
-                      <button (click)="store.startSinglePlayer()" class="mt-4 px-6 py-2 bg-[var(--color-accent-from)] text-white font-bold rounded-lg hover:scale-105 transition-transform shadow-lg">
-                        {{ t('game.play_again')() || 'Play Again' }}
-                      </button>
-                    }
-                  </div>
+                  <app-game-result-overlay
+                    [status]="'lose'"
+                    [title]="t('game.you_lose')()"
+                    [stats]="[{label: 'SCORE', value: store.score()}]"
+                    [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
+                    [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
+                    (restart)="store.playAgain()"
+                    (dismiss)="dismissRoom()"
+                    class="absolute inset-0 z-20 rounded-3xl overflow-hidden">
+                  </app-game-result-overlay>
                 }
               </div>
             </div>
@@ -242,4 +247,6 @@
       </svg>
     </div>
   }
+
+  <app-game-rules-modal [gameId]="'hexa'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 </div>

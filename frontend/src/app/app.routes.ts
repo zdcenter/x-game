@@ -44,6 +44,11 @@ export const routes: Routes = [
         path: 'games/hexa',
         loadComponent: () => import('./features/games/hexa/hexa.component').then(m => m.HexaComponent),
         data: { seo: { titleKey: 'seo.hexa.title', descKey: 'seo.hexa.desc', keywordsKey: 'seo.hexa.keywords' } }
+      },
+      {
+        path: 'games/tetris',
+        loadComponent: () => import('./features/games/tetris/tetris.component').then(m => m.TetrisComponent),
+        data: { seo: { titleKey: 'seo.tetris.title', descKey: 'seo.tetris.desc', keywordsKey: 'seo.tetris.keywords' } }
       }
     ]
   },

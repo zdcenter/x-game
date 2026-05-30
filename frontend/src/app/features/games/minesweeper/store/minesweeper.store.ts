@@ -243,6 +243,12 @@ export class MinesweeperStore {
     }
   }
 
+  dismissRoom() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'dismiss_room' });
+    }
+  }
+
   revealCell(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playClick();

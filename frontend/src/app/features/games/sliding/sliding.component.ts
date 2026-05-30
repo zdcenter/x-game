@@ -10,13 +10,15 @@ import { ToastService } from '../../../core/services/toast.service';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent, GameMode, GameDifficulty } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -28,6 +30,7 @@ export class SlidingComponent extends BaseGameComponent {
   readonly i18n = inject(I18nService);
   private toastService = inject(ToastService);
   private crossGameJoin = inject(CrossGameJoinService);
+  private gameRegistry = inject(GameRegistryService);
 
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
@@ -90,7 +93,16 @@ export class SlidingComponent extends BaseGameComponent {
 
   constructor() {
     super();
-    
+
+    this.gameRegistry.register({
+      id: 'sliding',
+      route: '/games/sliding',
+      titleKey: 'sliding.title',
+      iconEmoji: '🧩',
+      modes: this.gameModes,
+      difficulties: this.difficulties,
+    });
+
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sliding',
       getCurrentMode: () => this.currentRoomMode(),
@@ -151,7 +163,7 @@ export class SlidingComponent extends BaseGameComponent {
   goBack() {
     if (this.currentRoomId()) {
       if (this.store.host() === this.playerId) {
-        this.handleDismissRoom();
+        this.dismissRoom();
       } else {
         this.store.leaveGame();
       }
@@ -164,6 +176,19 @@ export class SlidingComponent extends BaseGameComponent {
     this.store.leaveGame();
     this.roomLifecycle.clearReconnectInfo();
     setTimeout(() => this.changeSingleDifficulty('medium'), 100);
+  }
+
+  dismissRoom() {
+    this.toastService.confirm({
+      title: this.i18n.t('game.dismiss_title')(),
+      message: this.i18n.t('game.dismiss_msg')(),
+      confirmText: this.i18n.t('game.dismiss_confirm')(),
+      cancelText: this.i18n.t('game.cancel')(),
+      onConfirm: () => {
+        this.store.dismissRoom();
+        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
+      }
+    });
   }
 
   changeSingleDifficulty(diff: string) {

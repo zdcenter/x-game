@@ -89,6 +89,19 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 		return e.State, nil
 	}
 
+	// Handle Restart
+	if actionType == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.state.Winners = []string{}
+		for _, p := range e.state.Players {
+			p.Score = 0
+			p.PiecesPlaced = 0
+			p.Finished = false
+		}
+		e.Broadcast()
+		return e.State, nil
+	}
+
 	// Update score/progress
 	if actionType == "update" && e.State == engine.StatePlaying {
 

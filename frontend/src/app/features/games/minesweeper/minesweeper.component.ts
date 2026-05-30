@@ -197,7 +197,6 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
               </div>
             }
 
-            <!-- Victory Overlay -->
             @if (store.status() === 'finished') {
               <app-game-result-overlay
                 [status]="getOverlayStatus()"
@@ -205,7 +204,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                 [subtitle]="getOverlaySubtitle()"
                 [stats]="getOverlayStats()"
                 [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
-                (restart)="store.restartGame()">
+                [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
+                [showLeave]="currentRoomMode() === 'single' || store.host() !== playerId"
+                (leave)="goBack()"
+                (restart)="store.restartGame()"
+                (dismiss)="dismissRoom()">
               </app-game-result-overlay>
             }
 
@@ -538,6 +541,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.currentRoomId.set(roomId);
+    this.isMobileSidebarOpen.set(false);
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
     this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
   }
@@ -551,13 +555,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   dismissRoom() {
     this.toastService.confirm({
-      title: 'Dismiss Room',
-      message: 'Are you sure you want to dismiss this room? All players will be kicked out.',
-      confirmText: 'Dismiss',
-      cancelText: 'Cancel',
+      title: this.i18n.t('game.dismiss_title')(),
+      message: this.i18n.t('game.dismiss_msg')(),
+      confirmText: this.i18n.t('game.dismiss_confirm')(),
+      cancelText: this.i18n.t('game.cancel')(),
       onConfirm: () => {
-        this.wsService.send({ type: 'dismiss_room' });
-        this.toastService.show('Room dismissed successfully', 'success');
+        this.store.dismissRoom();
+        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
       }
     });
   }

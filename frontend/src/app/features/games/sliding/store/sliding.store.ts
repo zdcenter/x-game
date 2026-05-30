@@ -178,7 +178,13 @@ export class SlidingStore {
       engine.saveToStorage(this.currentDifficulty());
       this.startGame();
     } else {
-      this.ws.send({ type: 'game_action', action: 'restart_game' });
+      this.ws.send({ type: 'restart_game' });
+    }
+  }
+
+  dismissRoom() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'dismiss_room' });
     }
   }
 }
