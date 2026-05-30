@@ -130,7 +130,7 @@ func (e *PKAttackEngine) HandleAction(playerID string, actionType string, payloa
 				e.Broadcast()
 			}
 
-		case "game_over":
+		case "game_over", "forfeit":
 			p.Finished = true
 			e.checkGameEnd()
 			e.Broadcast()

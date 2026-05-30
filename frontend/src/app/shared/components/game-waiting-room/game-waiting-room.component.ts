@@ -14,15 +14,17 @@ import { I18nService } from '../../../core/i18n/i18n.service';
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-accent-to)] opacity-5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
         
         <div class="relative z-10">
-          <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">{{ i18n.t('game.waiting_room')() }}</h2>
+          <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">
+            {{ i18n.t('lobby.' + gameId)() }} - {{ i18n.t('game.waiting_room')() }}
+          </h2>
           <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-8 text-sm sm:text-base">
             <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ mode === 'pk_steal' ? i18n.t('game.steal_mode')() : i18n.t('game.speed_mode')() }}</span></p>
             <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-10">
+          <div class="flex flex-wrap justify-center gap-4 sm:gap-6 mb-10">
             @for (player of sortedPlayers; track player.id) {
-              <div class="flex flex-col items-center p-4 sm:p-6 bg-[var(--color-bg-main)] rounded-2xl border border-[var(--color-border-card)] shadow-inner relative group">
+              <div class="w-32 sm:w-40 flex flex-col items-center p-4 sm:p-6 bg-[var(--color-bg-main)] rounded-2xl border border-[var(--color-border-card)] shadow-inner relative group">
                 <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--color-bg-card)] border-2 border-[var(--color-border-card)] mb-3 flex items-center justify-center text-3xl shadow-lg group-hover:scale-105 transition-transform text-[var(--color-text-main)]">
                   @if (player.id === hostId) { 👑 } @else { 👤 }
                 </div>
@@ -40,6 +42,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
             </button>
             
             @if (currentUserId === hostId) {
+              <button (click)="changeSettings.emit()" class="px-8 py-3.5 rounded-xl border-2 border-blue-500/50 text-blue-400 hover:text-white hover:bg-blue-600 font-bold transition-all active:scale-95 shadow-sm">
+                {{ i18n.t('game.change_settings')() || 'Change Settings' }}
+              </button>
               <button (click)="start.emit()" class="px-10 py-3.5 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black uppercase tracking-wider hover:opacity-90 shadow-lg transition-all active:scale-95 border border-transparent">
                 {{ i18n.t('game.start_match')() }}
               </button>
@@ -58,6 +63,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 export class GameWaitingRoomComponent {
   i18n = inject(I18nService);
 
+  @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;
   @Input({ required: true }) roomId!: string;
   @Input({ required: true }) players!: any[];
@@ -66,6 +72,7 @@ export class GameWaitingRoomComponent {
 
   @Output() leave = new EventEmitter<void>();
   @Output() start = new EventEmitter<void>();
+  @Output() changeSettings = new EventEmitter<void>();
 
   get sortedPlayers() {
     if (!this.players) return [];

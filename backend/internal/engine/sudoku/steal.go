@@ -14,6 +14,7 @@ type StealPlayer struct {
 	ID          string `json:"id"`
 	Score       int    `json:"score"`
 	FreezeUntil int64  `json:"freezeUntil"` // Unix milliseconds
+	Finished    bool   `json:"finished"`
 }
 
 type StealEngine struct {
@@ -77,6 +78,7 @@ func (e *StealEngine) AddPlayer(playerID string) {
 			ID:          playerID,
 			Score:       0,
 			FreezeUntil: 0,
+			Finished:    false,
 		}
 	}
 }
@@ -174,6 +176,30 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 			// Wrong!
 			player.Score -= 1
 			player.FreezeUntil = time.Now().UnixMilli() + int64(e.PenaltySeconds*1000)
+		}
+	} else if action == "forfeit" {
+		player.Finished = true
+		
+		allFinished := true
+		for _, p := range e.Players {
+			if !p.Finished {
+				allFinished = false
+				break
+			}
+		}
+		if allFinished && len(e.Players) > 0 {
+			e.State = engine.StateFinished
+			var maxScore int = -9999
+			for _, p := range e.Players {
+				if p.Score > maxScore {
+					maxScore = p.Score
+				}
+			}
+			for _, p := range e.Players {
+				if p.Score == maxScore {
+					e.Winners = append(e.Winners, p.ID)
+				}
+			}
 		}
 	}
 

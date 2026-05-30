@@ -125,6 +125,15 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 			})
 			return e.State, nil
 		}
+		
+		if baseAction.Action == "forfeit" {
+			e.RemovePlayer(playerID)
+			if len(e.Scores) == 0 {
+				e.Board.Status = engine.StateFinished
+				e.State = engine.StateFinished
+			}
+			return e.State, nil
+		}
 	}
 
 	if e.Board.Status != engine.StatePlaying {

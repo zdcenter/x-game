@@ -78,13 +78,15 @@
           @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
             <app-game-waiting-room
               class="w-full h-full flex"
+              [gameId]="'hexa'"
               [mode]="currentRoomMode()"
               [roomId]="currentRoomId()"
               [players]="store.allPlayers()"
               [hostId]="store.host()"
               [currentUserId]="playerId"
               (leave)="returnToLobby()"
-              (start)="store.startGame()">
+              (start)="store.startGame()"
+              (changeSettings)="openChangeSettings()">
             </app-game-waiting-room>
           } @else {
             
@@ -95,7 +97,7 @@
                   <div class="flex-1 min-w-[160px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-3 shadow-md relative overflow-hidden">
                     <div class="flex justify-between items-center mb-1 z-10 relative">
                       <span class="font-bold truncate text-sm flex items-center gap-2">
-                        👤 {{ opp.id }}
+                        {{ opp.id === store.host() ? '👑' : '👤' }} {{ opp.id }}
                       </span>
                       <span class="font-mono font-bold text-xs">{{ opp.score }} pts</span>
                     </div>
@@ -209,6 +211,7 @@
 
       <!-- PK Lobby Panel -->
       <app-game-lobby-panel
+        #lobbyPanel
         class="flex-grow flex"
         [currentGameId]="'hexa'"
         [currentRoomId]="currentRoomId()"

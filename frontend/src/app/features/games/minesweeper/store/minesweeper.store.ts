@@ -196,7 +196,7 @@ export class MinesweeperStore {
 
   startLocalGame(width: number, height: number, mines: number) {
     this.currentMode.set('single');
-    this.ws.disconnect(); // Ensure we don't hold a WebSocket for single player
+    this.ws.disconnect('minesweeper'); // Ensure we don't hold a WebSocket for single player
     this.localEngine.set(new LocalMinesweeperEngine(width, height, mines));
     this.tick.set(this.tick() + 1);
   }
@@ -216,7 +216,7 @@ export class MinesweeperStore {
     }
     // Give it a tiny delay to ensure the message is sent before the connection closes
     setTimeout(() => {
-      this.ws.disconnect();
+      this.ws.disconnect('minesweeper');
     }, 100);
   }
 

@@ -67,13 +67,15 @@
           @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
             <app-game-waiting-room
               class="w-full h-full flex"
+              [gameId]="'tetris'"
               [mode]="currentRoomMode()"
               [roomId]="currentRoomId()"
               [players]="getPlayerScores()"
               [hostId]="store.host()"
               [currentUserId]="playerId"
               (leave)="returnToLobby()"
-              (start)="store.startGame()">
+              (start)="store.startGame()"
+              (changeSettings)="openChangeSettings()">
             </app-game-waiting-room>
           } @else {
             <!-- Playing area wrapper to resolve absolute layout heights -->
@@ -91,7 +93,7 @@
                         <div class="grid gap-[2px]" [style.gridTemplateColumns]="'repeat(' + getShapeArray(store.holdPiece()!).length + ', minmax(0, 1fr))'">
                           @for (row of getShapeArray(store.holdPiece()!); track $index) {
                             @for (cell of row; track $index) {
-                              <div class="w-3.5 h-3.5 lg:w-4.5 lg:h-4.5 rounded-[3px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
+                              <div class="w-3.5 h-3.5 lg:w-4.5 lg:h-4.5 rounded-[3px] shadow-sm" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'" [class.opacity-0]="!cell"></div>
                             }
                           }
                         </div>
@@ -110,14 +112,15 @@
                   </div>
                 </div>
 
-                <!-- CENTER: Main Board (Because of the absolute root, this h-full will strictly compute against pixel boundaries!) -->
+                <!-- CENTER: Main Board -->
                 <div class="relative h-full flex-shrink-0" style="aspect-ratio: 1/2;">
-                  <div class="w-full h-full bg-[var(--color-bg-main)] rounded-xl lg:rounded-2xl border-4 border-[var(--color-border-card)] shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden p-[2px] lg:p-1 relative">
-                    <div class="grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] lg:gap-[2px] w-full h-full relative z-10">
+                  <div class="w-full h-full bg-[var(--color-bg-card)] rounded-xl lg:rounded-2xl border-4 border-[var(--color-border-card)] shadow-2xl overflow-hidden p-[2px] lg:p-1 relative backdrop-blur-md">
+                    <div class="grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] lg:gap-[2px] w-full h-full relative z-10 bg-[var(--color-bg-main)]/50">
                       @for (row of store.grid(); track $index; let r = $index) {
                         @for (cell of row; track $index; let c = $index) {
-                          <div class="w-full h-full rounded-[3px] lg:rounded-md border border-[var(--color-border-card)]"
-                              [style.backgroundColor]="getCellColor(c, r)">
+                          <div class="w-full h-full rounded-[3px] lg:rounded-md transition-colors duration-75"
+                               [class.shadow-sm]="cell !== 0"
+                               [style.backgroundColor]="getCellColor(c, r)">
                           </div>
                         }
                       }
@@ -138,7 +141,7 @@
                           <div class="grid gap-[1px]" [style.gridTemplateColumns]="'repeat(' + getShapeArray(nextType).length + ', minmax(0, 1fr))'">
                             @for (row of getShapeArray(nextType); track $index) {
                               @for (cell of row; track $index) {
-                                <div class="w-1.5 h-1.5 lg:w-2.5 lg:h-2.5 rounded-[1px] lg:rounded-[2px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
+                                <div class="w-1.5 h-1.5 lg:w-2.5 lg:h-2.5 rounded-[1px] lg:rounded-[2px] shadow-sm" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'" [class.opacity-0]="!cell"></div>
                               }
                             }
                           </div>
@@ -180,7 +183,7 @@
                       <div class="bg-[var(--color-bg-card)] backdrop-blur-sm rounded-xl p-2 lg:p-3 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full">
                         <div class="flex flex-col w-full text-center mb-1">
                           <div class="text-[9px] lg:text-xs font-bold text-[var(--color-text-main)] truncate w-full" [title]="opp.id">
-                            {{ opp.id }}
+                            {{ opp.id === store.host() ? '👑 ' : '' }}{{ opp.id }}
                             @if (opp.finished) { <span class="text-red-500">💀</span> }
                           </div>
                           <div class="text-[8px] lg:text-[10px] text-[var(--color-accent-to)] font-mono font-bold">{{ opp.score }} pts</div>
@@ -239,6 +242,7 @@
 
       <!-- PK Lobby Panel -->
       <app-game-lobby-panel
+        #lobbyPanel
         class="flex-grow flex"
         [currentGameId]="'tetris'"
         [currentRoomId]="currentRoomId()"

@@ -1,7 +1,4 @@
 import { Lang } from './translations';
-import { minesweeperTranslations } from '../../features/games/minesweeper/i18n/minesweeper.translations';
-import { TETRIS_TRANSLATIONS } from './tetris.translations';
-
 export const coreTranslations: Record<Lang, Record<string, string>> = {
   en: {
     // SEO
@@ -20,9 +17,6 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'seo.admin.title': 'Admin Console - X-Game',
     'seo.admin.desc': 'Administration console for X-Game platform management.',
     'seo.admin.keywords': 'admin, dashboard, management',
-
-    ...minesweeperTranslations.en,
-    ...TETRIS_TRANSLATIONS.en,
 
     'status.playing': 'PLAYING',
     'status.finished': 'FINISHED',
@@ -146,6 +140,9 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_hexa_standard': 'Normal Board',
     'game.diff_tetris_standard': 'Normal Drop Speed',
 
+    'game.change_settings': 'Change Settings',
+    'game.update_settings': 'Update Settings',
+    'game.update': 'Update',
     'game.win': 'You won!',
     'game.lose': 'Game Over! You lost.',
     'game.back': 'Back',
@@ -304,6 +301,9 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_hexa_standard': '标准棋盘',
     'game.diff_tetris_standard': '标准下落速度',
 
+    'game.change_settings': '更改设置',
+    'game.update_settings': '更改房间设置',
+    'game.update': '更新',
     'game.win': '恭喜！你赢了。',
     'game.lose': '游戏结束！你输了。',
     'game.back': '返回',
@@ -317,8 +317,5 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.play_again': '再来一局',
     'game.restart': '再来一局',
     'game.moves': '移动步数',
-
-    ...minesweeperTranslations.zh,
-    ...TETRIS_TRANSLATIONS.zh
   },
 };

@@ -76,7 +76,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                   <div class="flex flex-wrap items-center gap-2 lg:gap-4 justify-center flex-1">
                     @for (opp of store.speedOpponents(); track opp.id) {
                       <div class="flex items-center gap-1 lg:gap-2 bg-[var(--color-bg-main)] px-2 lg:px-3 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] shadow-inner">
-                        <span class="text-[8px] lg:text-xs opacity-70 font-bold max-w-[50px] truncate" [title]="opp.id">{{ opp.id }}</span>
+                        <span class="text-[8px] lg:text-xs opacity-70 font-bold max-w-[50px] truncate" [title]="opp.id">
+                          {{ opp.id === store.host() ? '👑 ' : '' }}{{ opp.id }}
+                        </span>
                         <div class="w-10 lg:w-20 h-1.5 lg:h-2 bg-[var(--color-bg-card)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
                           <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300" [style.width]="opp.progress + '%'"></div>
                         </div>
@@ -96,7 +98,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                          [class.scale-110]="player.id === playerId"
                          [class.shadow-lg]="player.id === playerId"
                          [class.border-[var(--color-border-card)]]="player.id !== playerId">
-                      <span class="text-[8px] lg:text-xs font-bold opacity-70 max-w-[80px] truncate" [title]="player.id">{{ player.id }}</span>
+                      <span class="text-[8px] lg:text-xs font-bold opacity-70 max-w-[80px] truncate" [title]="player.id">
+                        {{ player.id === store.host() ? '👑 ' : '' }}{{ player.id }}
+                      </span>
                       <span class="text-sm lg:text-lg font-black" [class.text-[var(--color-accent-to)]]="player.id === playerId" [class.text-inherit]="player.id !== playerId">{{ player.score }}</span>
                       @if (player.id !== playerId && store.opponentErrors() > 0) {
                         <span class="text-xs text-red-400 font-bold" title="Mistakes">💣{{ store.opponentErrors() }}</span>
@@ -169,6 +173,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
               <div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-bg-main)]">
                 <app-game-waiting-room
                   class="w-full h-full flex"
+                  [gameId]="'minesweeper'"
                   [mode]="currentRoomMode()"
                   [roomId]="currentRoomId()"
                   [players]="getPlayerScores()"
@@ -176,6 +181,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                   [currentUserId]="playerId"
                   (leave)="returnToLobby()"
                   (start)="store.startGame()"
+                  (changeSettings)="openChangeSettings()"
                 ></app-game-waiting-room>
               </div>
             }
@@ -266,6 +272,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
              <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
            </div>
         <app-game-lobby-panel
+          #lobbyPanel
           [currentGameId]="'minesweeper'"
           [currentRoomId]="currentRoomId()"
           (joinRoom)="handleJoinRoom($event)"
@@ -401,6 +408,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   });
 
   @ViewChild('boardContainer') boardContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   @ViewChild('board') board!: ElementRef<HTMLDivElement>;
   private ngZone = inject(NgZone);
   private renderer = inject(Renderer2);
@@ -552,6 +560,19 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   openDifficultySettings(forMode: 'single' | 'room') {
     this.editingDifficultyFor.set(forMode);
     this.isDifficultyModalOpen.set(true);
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.currentRoomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.currentRoomId(),
+        game: 'minesweeper',
+        mode: this.currentRoomMode(),
+        difficulty: this.currentDifficulty(),
+        host: this.store.host()
+      });
+    }
   }
 
   applyDifficultySettings() {

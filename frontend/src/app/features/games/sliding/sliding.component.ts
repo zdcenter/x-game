@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, effect, untracked } from '@angular/core';
+import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,6 +24,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
   styleUrls: ['./sliding.component.scss']
 })
 export class SlidingComponent extends BaseGameComponent {
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(SlidingStore);
   private authStore = inject(AuthStore);
   private router = inject(Router);
@@ -174,6 +175,19 @@ export class SlidingComponent extends BaseGameComponent {
         this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
       }
     });
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.currentRoomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.currentRoomId(),
+        game: 'sliding',
+        mode: this.currentRoomMode(),
+        difficulty: this.store.currentDifficulty(),
+        host: this.store.host()
+      });
+    }
   }
 
   changeSingleDifficulty(diff: string) {

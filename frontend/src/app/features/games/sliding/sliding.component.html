@@ -61,13 +61,15 @@
           @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
             <app-game-waiting-room
               class="w-full h-full flex"
+              [gameId]="'sliding'"
               [mode]="currentRoomMode()"
               [roomId]="currentRoomId()"
               [players]="getPlayerScores()"
               [hostId]="store.host()"
               [currentUserId]="playerId"
               (leave)="returnToLobby()"
-              (start)="store.startGame()">
+              (start)="store.startGame()"
+              (changeSettings)="openChangeSettings()">
             </app-game-waiting-room>
           } @else {
             
@@ -78,7 +80,7 @@
                   <div class="flex-1 min-w-[200px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-3 shadow-md relative overflow-hidden">
                     <div class="flex justify-between items-center mb-1 z-10 relative">
                       <span class="font-bold truncate text-sm flex items-center gap-2">
-                        👤 {{ opp.id }}
+                        {{ opp.id === store.host() ? '👑' : '👤' }} {{ opp.id }}
                       </span>
                       <span class="font-mono font-bold text-xs">{{ opp.board.moves || 0 }} {{ t('sliding.moves')() }}</span>
                     </div>
@@ -211,21 +213,21 @@
          }">
       
       <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomId() === 'local'">
-        <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ t('game.room_info')() || 'Room Info' }}</h3>
+        <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
       </div>
-
+      
       <!-- Single Player Extra Controls (Play Again) -->
       @if (currentRoomMode() === 'single' && store.status() === 'finished') {
-        <div class="backdrop-blur-xl border rounded-2xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+        <div class="backdrop-blur-xl border rounded-2xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] mb-4"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
           <button (click)="store.playAgain()" class="w-full px-4 py-3 bg-[var(--color-accent-from)] hover:bg-[var(--color-accent-to)] text-white rounded-xl font-bold shadow-lg transition-all transform hover:scale-105 active:scale-95">
-            {{ t('game.play_again')() }}
+            {{ i18n.t('game.play_again')() }}
           </button>
         </div>
       }
 
-      <!-- PK Lobby Panel -->
       <app-game-lobby-panel
+        #lobbyPanel
         class="flex-grow flex"
         [currentGameId]="'sliding'"
         (joinRoom)="handleJoinRoom($event)"

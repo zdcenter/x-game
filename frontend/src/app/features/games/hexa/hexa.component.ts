@@ -6,6 +6,7 @@ import { HexaStore, GameStatus } from './store/hexa.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { RoomLifecycleHandle, setupRoomLifecycle } from '../../../core/services/room-lifecycle';
 import { HexaBoardComponent } from './components/hexa-board/hexa-board.component';
 import { HexPiece, HexCoord } from './store/hexa-engine';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
@@ -49,6 +50,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   }
 
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLElement>;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   @ViewChild(HexaBoardComponent) boardComponent!: HexaBoardComponent;
 
   override get playerId(): string {
@@ -71,9 +73,17 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   fingerOffsetY = 0;
   fingerOffsetX = 0;
   rootOffset = { x: 0, y: 0 };
+  
+  private roomLifecycle: RoomLifecycleHandle;
 
   constructor() {
     super();
+
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'hexa',
+      getCurrentMode: () => this.currentRoomMode(),
+      onLeaveRoom: () => this.goBack(),
+    });
 
     // Start single player by default if we land directly on page
     effect(() => {
@@ -97,10 +107,31 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   override ngOnInit(): void {
     super.ngOnInit(); // connects lobby WS automatically
-    const pending = this.crossGameJoin.consumePendingJoin('hexa');
+    
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host);
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      }
     }
+  }
+
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
+    if (this.currentRoomId() === event.roomId) return;
+    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
+    }
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
+    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
+    }
+    this.isMobileSidebarOpen.set(false);
   }
 
   override ngOnDestroy(): void {
@@ -228,13 +259,28 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   returnToLobby(): void {
     this.store.leaveRoom();
+    this.roomLifecycle.clearReconnectInfo();
   }
 
   goBack(): void {
     if (this.currentRoomId() && this.currentRoomId() !== 'local') {
       this.store.leaveRoom();
+      this.roomLifecycle.clearReconnectInfo();
     }
     history.back();
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.currentRoomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.currentRoomId(),
+        game: 'hexa',
+        mode: this.currentRoomMode(),
+        difficulty: '',
+        host: this.store.host()
+      });
+    }
   }
 
   // Draw helpers for the piece palette

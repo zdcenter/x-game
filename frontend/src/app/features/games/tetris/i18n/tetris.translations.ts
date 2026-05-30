@@ -1,4 +1,4 @@
-export const TETRIS_TRANSLATIONS = {
+export const tetrisTranslations = {
   en: {
     'tetris.title': 'Tetris Battle',
     'tetris.mode.single': 'Single Player',

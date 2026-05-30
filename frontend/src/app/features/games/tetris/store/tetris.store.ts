@@ -98,10 +98,10 @@ export class TetrisStore {
 
   leaveRoom() {
     this.stopGameLoop();
-    if (this._localMode() !== 'single') {
+    if (this.mode() !== 'single') {
       this.ws.send({ type: 'leave_game' });
       setTimeout(() => {
-        this.ws.disconnect();
+        this.ws.disconnect('tetris');
       }, 100);
     }
   }

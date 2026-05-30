@@ -70,7 +70,7 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
                [class.border-[var(--color-accent-from)]]="player.id === store.playerId()"
                [class.bg-slate-800]="player.id === store.playerId()">
             <div class="flex items-center gap-2">
-              <span class="text-lg">👤</span>
+              <span class="text-lg">{{ player.id === store.host() ? '👑' : '👤' }}</span>
               <span class="font-bold truncate max-w-[80px] text-sm">{{ player.id }}</span>
             </div>
             <div class="font-mono text-lg font-black text-emerald-400">{{ player.score }}</div>

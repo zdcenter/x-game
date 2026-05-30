@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES } from './models/tetris.model';
 
 @Component({
@@ -21,6 +22,8 @@ import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES
   styleUrls: ['./tetris.component.css']
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  @ViewChild('boardArea') boardArea!: ElementRef<HTMLDivElement>;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(TetrisStore);
   private authStore = inject(AuthStore);
   public timerService = inject(GameTimerService);
@@ -40,6 +43,8 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
+  private roomLifecycle: RoomLifecycleHandle;
+
   constructor() {
     super();
     effect(() => {
@@ -50,10 +55,29 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.gameTimer.stopCountdown();
       }
     });
+
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'tetris',
+      getCurrentMode: () => this.currentRoomMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
+    });
   }
 
   override ngOnInit() {
     super.ngOnInit();
+    
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    if (pending) {
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      }
+    } else {
+      this.store.joinRoom('local', 'single', 'normal', '');
+    }
   }
 
   override ngOnDestroy() {
@@ -64,16 +88,23 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
     if (this.currentRoomId() === event.roomId) return;
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
+    }
     this.isMobileSidebarOpen.set(false);
   }
 
   override handleCreateRoom(config: {name: string, mode: string, difficulty: string}) {
     this.store.joinRoom(config.name, config.mode, config.difficulty, this.playerId);
+    if (config.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty, this.playerId);
+    }
     this.isMobileSidebarOpen.set(false);
   }
 
   returnToLobby() {
     this.store.leaveRoom();
+    this.roomLifecycle.clearReconnectInfo();
     this.store.joinRoom('local', 'single', 'normal', '');
   }
 
@@ -143,9 +174,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.dismissRoom();
       } else {
         this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
       }
     } else {
       this.store.leaveRoom();
+      this.roomLifecycle.clearReconnectInfo();
     }
     history.back();
   }
@@ -161,6 +194,19 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
       }
     });
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.currentRoomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.currentRoomId(),
+        game: 'tetris',
+        mode: this.currentRoomMode(),
+        difficulty: '',
+        host: this.store.host()
+      });
+    }
   }
 
   getPlayerScores(): Array<{id: string; score: number}> {

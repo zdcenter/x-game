@@ -151,7 +151,10 @@ export interface GameDifficulty {
                             <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ t('game.join') }}</button>
                           }
                           @if (room.host === playerId()) {
-                            <button (click)="onDismissRoom(room.id)" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors">{{ t('game.dismiss_room') }}</button>
+                            <button (click)="openUpdateRoomModal(room)" class="px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/50 text-xs font-bold rounded shadow hover:bg-blue-600 hover:text-white transition-colors ml-2">
+                              {{ t('game.change_settings') || 'Change Game' }}
+                            </button>
+                            <button (click)="onDismissRoom(room.id)" class="px-3 py-1 bg-red-600/20 text-red-400 border border-red-500/50 text-xs font-bold rounded shadow hover:bg-red-600 hover:text-white transition-colors ml-2">{{ t('game.dismiss_room') }}</button>
                           }
                         </div>
                       </div>
@@ -198,8 +201,8 @@ export interface GameDifficulty {
         <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl md:rounded-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] max-h-[95vh] flex flex-col">
           <div class="flex justify-between items-center mb-4 md:mb-6 shrink-0">
             <h2 class="text-xl md:text-2xl font-bold">
-              {{ t('game.create_room_title') }}
-              @if (!isGlobal) {
+              {{ isUpdateMode() ? (t('game.update_settings') || 'Update Room') : t('game.create_room_title') }}
+              @if (!isGlobal && !isUpdateMode()) {
                 - {{ t('lobby.' + currentGameId) }}
               }
             </h2>
@@ -210,13 +213,16 @@ export interface GameDifficulty {
           
           <div class="space-y-5 md:space-y-6 overflow-y-auto overflow-x-hidden flex-1 pr-1 custom-scrollbar">
             <!-- Room Name -->
-            <div>
-              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
-              <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
-                     class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors"
-                     placeholder="Enter room name">
-                        <!-- Game Selection (Global Mode Only) -->
-            @if (isGlobal) {
+            @if (!isUpdateMode()) {
+              <div>
+                <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
+                <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
+                       class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors"
+                       placeholder="Enter room name">
+              </div>
+            }
+                        <!-- Game Selection (Global Mode Only or Update Mode) -->
+            @if (isGlobal || isUpdateMode()) {
               <div>
                 <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.select_game') }}</label>
                 <div class="grid grid-cols-3 gap-2">
@@ -253,7 +259,7 @@ export interface GameDifficulty {
                   }
                 </div>
               </div>
-            }        </div>
+            }
 
             <!-- Difficulty -->
             @if (availableDifficulties().length > 0) {
@@ -279,7 +285,7 @@ export interface GameDifficulty {
                 {{ t('game.cancel') }}
               </button>
               <button (click)="onConfirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:brightness-110 active:scale-95">
-                {{ t('game.create_and_join') }}
+                {{ isUpdateMode() ? (t('game.update') || 'Update') : t('game.create_and_join') }}
               </button>
             </div>
           </div>
@@ -308,6 +314,8 @@ export class GameLobbyPanelComponent {
   playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
 
   isCreateModalOpen = signal(false);
+  isUpdateMode = signal(false);
+  updatingRoomId = signal('');
   newRoomName = signal('');
   newRoomGameId = signal('');
   newRoomMode = signal('');
@@ -350,10 +358,22 @@ export class GameLobbyPanelComponent {
   }
 
   openCreateRoomModal() {
+    this.isUpdateMode.set(false);
+    this.updatingRoomId.set('');
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.newRoomName.set(`${this.playerId()}-${randomSuffix}`);
     const initialGame = this.isGlobal ? (this.allGames()[0]?.id || '') : this.currentGameId;
     this.selectGameForNewRoom(initialGame);
+    this.isCreateModalOpen.set(true);
+  }
+
+  openUpdateRoomModal(room: any) {
+    this.isUpdateMode.set(true);
+    this.updatingRoomId.set(room.id);
+    this.newRoomName.set(room.id); // not editable anyway
+    this.selectGameForNewRoom(room.game);
+    this.newRoomMode.set(room.mode);
+    this.newRoomDifficulty.set(room.difficulty);
     this.isCreateModalOpen.set(true);
   }
 
@@ -375,12 +395,21 @@ export class GameLobbyPanelComponent {
   }
 
   onConfirmCreateRoom() {
-    this.createRoom.emit({
-      name: this.newRoomName(),
-      gameId: this.newRoomGameId(),
-      mode: this.newRoomMode(),
-      difficulty: this.newRoomDifficulty()
-    });
+    if (this.isUpdateMode()) {
+      this.wsService.send({
+        type: 'change_game',
+        game: this.newRoomGameId(),
+        mode: this.newRoomMode(),
+        difficulty: this.newRoomDifficulty()
+      });
+    } else {
+      this.createRoom.emit({
+        name: this.newRoomName(),
+        gameId: this.newRoomGameId(),
+        mode: this.newRoomMode(),
+        difficulty: this.newRoomDifficulty()
+      });
+    }
     this.isCreateModalOpen.set(false);
   }
 

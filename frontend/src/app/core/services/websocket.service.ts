@@ -1,5 +1,7 @@
-import { Injectable, signal, effect, untracked } from '@angular/core';
+import { Injectable, signal, effect, untracked, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { CrossGameJoinService } from './cross-game-join.service';
 
 export interface WSMessage {
   type: string;
@@ -11,6 +13,9 @@ export interface WSMessage {
   providedIn: 'root'
 })
 export class WebSocketService {
+  private router = inject(Router);
+  private crossGameJoin = inject(CrossGameJoinService);
+  
   private socket: WebSocket | null = null;
   private lobbySocket: WebSocket | null = null;
   private currentGameId: string | null = null;
@@ -68,6 +73,18 @@ export class WebSocketService {
       } else if (msg.type === 'room_dismissed' || (msg.type === 'error' && msg.message === 'room has been dismissed')) {
         this.roomDismissedEvent.update(v => v + 1);
         this.disconnect(gameId); // prevent reconnection loop
+      } else if (msg.type === 'room_game_changed') {
+        this.crossGameJoin.setPendingJoin({
+          game: msg.game,
+          roomId: msg.roomId,
+          mode: msg.mode,
+          difficulty: msg.difficulty,
+          host: msg.host || ''
+        });
+        
+        console.log('Room changed game:', msg.game);
+        // Navigate to the new game component. Angular will destroy current component and disconnect cleanly.
+        this.router.navigate(['/games', msg.game]);
       }
     };
 

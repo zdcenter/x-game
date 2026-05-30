@@ -155,7 +155,7 @@ export class SudokuStore {
   }
 
   leaveRoom() {
-    this.ws.disconnect();
+    this.ws.disconnect('sudoku');
     this.roomId.set('');
     this.currentMode.set('single');
     this.view.set('lobby');

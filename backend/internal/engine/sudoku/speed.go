@@ -143,9 +143,25 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 				e.Winners = []string{player.ID}
 			}
 		}
+	} else if action == "forfeit" {
+		player.Finished = true
+		e.checkGameEnd()
 	}
 
 	return e.State, nil
+}
+
+func (e *SpeedEngine) checkGameEnd() {
+	allFinished := true
+	for _, p := range e.Players {
+		if !p.Finished {
+			allFinished = false
+			break
+		}
+	}
+	if allFinished && len(e.Players) > 0 {
+		e.State = engine.StateFinished
+	}
 }
 
 func (e *SpeedEngine) CheckGameOver() (bool, []string) {

@@ -14,8 +14,17 @@ import (
 )
 
 type Client struct {
-	ID   string
-	Conn *websocket.Conn
+	ID      string
+	Conn    *websocket.Conn
+	WriteMu sync.Mutex
+}
+
+// WriteMessage securely writes to the websocket connection
+func (c *Client) WriteMessage(messageType int, data []byte) error {
+	c.WriteMu.Lock()
+	defer c.WriteMu.Unlock()
+	c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	return c.Conn.WriteMessage(messageType, data)
 }
 
 type Room struct {
@@ -130,7 +139,22 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 		Engine:     eng,
 	}
 	
-	// Fetch game config to get penalty seconds or other options
+	options := getGameOptions(gameId, mode, difficulty)
+
+	r.Engine.InitGame(options)
+	
+	// Inject broadcaster so engine can asynchronously trigger state updates to clients
+	if asyncEng, ok := r.Engine.(interface{ SetBroadcaster(func()) }); ok {
+		asyncEng.SetBroadcaster(r.BroadcastState)
+	}
+
+	Rooms[roomID] = r
+	mu.Unlock()
+	return r, nil
+}
+
+// getGameOptions fetches the database config and merges it with standard options
+func getGameOptions(gameId, mode, difficulty string) map[string]interface{} {
 	options := map[string]interface{}{
 		"mode":       mode,
 		"difficulty": difficulty,
@@ -146,17 +170,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 			}
 		}
 	}
-
-	r.Engine.InitGame(options)
-	
-	// Inject broadcaster so engine can asynchronously trigger state updates to clients
-	if asyncEng, ok := r.Engine.(interface{ SetBroadcaster(func()) }); ok {
-		asyncEng.SetBroadcaster(r.BroadcastState)
-	}
-
-	Rooms[roomID] = r
-	mu.Unlock()
-	return r, nil
+	return options
 }
 
 func (r *Room) AddClient(client *Client) error {
@@ -202,6 +216,29 @@ func (r *Room) RemoveClient(client *Client) {
 	
 	// Destroy room if empty
 	isEmpty := len(r.Clients) == 0
+	
+	// Host migration with delay
+	if !isEmpty && r.Host == client.ID {
+		go func(roomID, oldHost string) {
+			time.Sleep(15 * time.Second)
+			mu.Lock()
+			if room, exists := Rooms[roomID]; exists {
+				room.mu.Lock()
+				if room.Host == oldHost {
+					if _, stillHere := room.Clients[oldHost]; !stillHere {
+						for id := range room.Clients {
+							room.Host = id
+							break
+						}
+						room.BroadcastStateLocked()
+					}
+				}
+				room.mu.Unlock()
+			}
+			mu.Unlock()
+		}(r.ID, client.ID)
+	}
+
 	mode := r.Mode
 	roomID := r.ID
 	r.mu.Unlock()
@@ -277,6 +314,62 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					go DismissRoom(r.ID, clientID)
 				}
 				return
+			} else if msgType == "leave_game" {
+				if r.Engine.GetStatus() == engine.StateWaiting {
+					r.Engine.RemovePlayer(clientID)
+				} else {
+					r.Engine.HandleAction(clientID, "forfeit", []byte(`{"action":"forfeit"}`))
+				}
+				r.BroadcastStateLocked()
+				return
+			} else if msgType == "change_game" {
+				if clientID == r.Host {
+					gameId, _ := baseMsg["game"].(string)
+					mode, _ := baseMsg["mode"].(string)
+					diff, _ := baseMsg["difficulty"].(string)
+
+					if gameId != "" {
+						log.Printf("Host %s changing game in room %s to %s (mode: %s, diff: %s)", clientID, r.ID, gameId, mode, diff)
+						
+						// Create new engine
+						engineKey := gameId + "_" + mode
+						if mode == "single" {
+							engineKey = gameId + "_single"
+						}
+						
+						eng, err := engine.CreateEngine(engineKey)
+						if err != nil {
+							log.Printf("Failed to create engine %s: %v", engineKey, err)
+							return
+						}
+						
+						// Update room state
+						r.Game = gameId
+						r.Mode = mode
+						r.Difficulty = diff
+						
+						eng.InitGame(getGameOptions(gameId, mode, diff))
+						
+						for id := range r.Clients {
+							eng.AddPlayer(id)
+						}
+						
+						if asyncEng, ok := eng.(interface{ SetBroadcaster(func()) }); ok {
+							asyncEng.SetBroadcaster(r.BroadcastState)
+						}
+						
+						r.Engine = eng
+						
+						// Broadcast room_game_changed so frontend can route
+						msg := []byte(fmt.Sprintf(`{"type": "room_game_changed", "game": "%s", "mode": "%s", "difficulty": "%s", "roomId": "%s", "host": "%s"}`, gameId, mode, diff, r.ID, r.Host))
+						for _, c := range r.Clients {
+							c.WriteMessage(websocket.TextMessage, msg)
+						}
+						
+						go Lobby.BroadcastLobbyUpdate()
+					}
+				}
+				return
 			}
 		}
 	}
@@ -313,8 +406,7 @@ func (r *Room) BroadcastStateLocked() {
 	}
 
 	for _, client := range r.Clients {
-		client.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-		err := client.Conn.WriteMessage(websocket.TextMessage, data)
+		err := client.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
 			log.Printf("Failed to send message to %s: %v", client.ID, err)
 		}
@@ -346,8 +438,7 @@ func DismissRoom(roomID string, clientID string) {
 		msg := []byte(`{"type": "room_dismissed"}`)
 		r.mu.Lock()
 		for _, c := range r.Clients {
-			c.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-			c.Conn.WriteMessage(websocket.TextMessage, msg)
+			c.WriteMessage(websocket.TextMessage, msg)
 		}
 		r.mu.Unlock()
 	}

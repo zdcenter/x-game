@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -48,7 +48,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
           (openLobby)="isMobileSidebarOpen.set(true)">
         </app-sudoku-lobby>
       } @else if (view() === 'room') {
-        <app-sudoku-room></app-sudoku-room>
+        <app-sudoku-room (changeSettings)="openChangeSettings()"></app-sudoku-room>
       } @else if (view() === 'countdown') {
         <!-- Countdown Overlay -->
         <div class="flex-grow flex flex-col items-center justify-center bg-[var(--color-bg-card)] relative">
@@ -184,6 +184,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
              <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
            </div>
         <app-game-lobby-panel
+          #lobbyPanel
           [currentGameId]="'sudoku'"
           [currentRoomId]="store.roomId()"
           (joinRoom)="handleJoinRoom($event)"
@@ -203,6 +204,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   authStore = inject(AuthStore);
   private roomLifecycle!: RoomLifecycleHandle;
   private gameRegistry = inject(GameRegistryService);
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   
   view = this.store.view;
   get playerId(): string {
@@ -224,7 +226,10 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sudoku',
       getCurrentMode: () => this.store.currentMode(),
-      onLeaveRoom: () => this.store.leaveRoom(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
     });
   }
 
@@ -235,13 +240,51 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     // Check for cross-game join or reconnect
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
+      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      if (joinInfo.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      }
     }
+  }
+
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
+    if (this.store.roomId() === event.roomId) return;
+    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
+    }
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
+    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
+    }
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  override handleDismissRoom() {
+    super.handleDismissRoom();
+    this.roomLifecycle.clearReconnectInfo();
   }
 
   override ngOnDestroy() {
     this.wsService.disconnect('sudoku');
     this.gameTimer.stopCountdown();
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.store.roomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.store.roomId(),
+        game: 'sudoku',
+        mode: this.store.currentMode(),
+        difficulty: '',
+        host: this.store.host()
+      });
+    }
   }
 
   startLevel(level: {id: string, puzzle: string, savedState?: string, timeSpent?: number}) {

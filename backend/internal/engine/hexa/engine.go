@@ -128,7 +128,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 	}
 
 	// Force end for testing or manual game over
-	if actionType == "game_over" && e.State == engine.StatePlaying {
+	if (actionType == "game_over" || actionType == "forfeit") && e.State == engine.StatePlaying {
 		if p, ok := e.state.Players[playerID]; ok {
 			p.Finished = true
 			
@@ -201,7 +201,7 @@ func (e *PKScoreEngine) CheckGameOver() (bool, []string) {
 }
 
 func init() {
-	engine.Register("hexa_pk_score", func() engine.GameEngine {
+	engine.Register("hexa_pk_steal", func() engine.GameEngine {
 		return &PKScoreEngine{}
 	})
 }

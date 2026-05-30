@@ -143,6 +143,14 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		}
 		return e.State, nil
 	}
+	
+	if baseAction.Action == "forfeit" {
+		e.RemovePlayer(playerID)
+		if len(e.Boards) == 0 {
+			e.State = engine.StateFinished
+		}
+		return e.State, nil
+	}
 
 	if e.State != engine.StatePlaying {
 		return e.State, errors.New("game not playing")

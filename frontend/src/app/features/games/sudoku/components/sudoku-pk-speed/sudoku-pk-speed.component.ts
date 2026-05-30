@@ -60,7 +60,7 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
             
             <div class="flex justify-between items-center mb-2 z-10 relative">
               <span class="font-bold truncate text-sm flex items-center gap-2">
-                👤 {{ player.id }}
+                {{ player.id === store.host() ? '👑' : '👤' }} {{ player.id }}
                 @if (player.id === store.playerId()) {
                   <span class="text-xs text-yellow-500">(You)</span>
                 }

@@ -123,7 +123,7 @@ export class HexaStore {
     if (this.currentMode() !== 'single') {
       this.wsService.send({ type: 'leave_game' });
       setTimeout(() => {
-        this.wsService.disconnect();
+        this.wsService.disconnect('hexa');
       }, 100);
     }
   }
