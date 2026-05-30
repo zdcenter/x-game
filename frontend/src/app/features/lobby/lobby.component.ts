@@ -203,9 +203,9 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
                 {{ getLocalized(game.overview) }}
               </p>
               <div class="mt-4 flex flex-wrap gap-2">
-                <span class="px-2 py-1 text-xs font-semibold rounded bg-black/20 border border-emerald-500/50 text-emerald-400">{{ i18n.t('lobby.ready')() }}</span>
+                <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-emerald-500">{{ i18n.t('lobby.ready')() }}</span>
                 @for (mode of getGameModes(game.id); track mode) {
-                  <span class="px-2 py-1 text-xs font-semibold rounded bg-black/20 border border-indigo-500/50 text-indigo-400">{{ mode }}</span>
+                  <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-[var(--color-accent-from)]">{{ mode }}</span>
                 }
               </div>
             </div>

@@ -21,7 +21,7 @@ import { ToastService } from '../../services/toast.service';
 
     <!-- Confirm Dialog -->
     @if (toastService.currentConfirm(); as dialog) {
-      <div class="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="fixed inset-0 z-[60] bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform animate-scale-in text-[var(--color-text-main)]">
           <div class="p-6">
             <h3 class="text-lg font-bold mb-2">{{ dialog.title }}</h3>

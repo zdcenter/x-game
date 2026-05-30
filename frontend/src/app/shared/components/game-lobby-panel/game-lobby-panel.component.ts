@@ -20,6 +20,7 @@ export interface GameMode {
 export interface GameDifficulty {
   id: string;
   labelKey: string;
+  descKey?: string;
   desc: string;
 }
 
@@ -59,7 +60,7 @@ export interface GameDifficulty {
                   <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
                     <div class="flex justify-between items-center mb-2">
                       <div class="flex items-center gap-2">
-                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20 shrink-0"
+                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0"
                               [class.text-blue-400]="room.game === 'sudoku'"
                               [class.text-green-400]="room.game === 'minesweeper'"
                               [class.text-purple-400]="room.game === 'hexa'"
@@ -118,7 +119,7 @@ export interface GameDifficulty {
                     <div class="p-3 bg-[var(--color-bg-card)] rounded-xl border-[2px] border-[var(--color-accent-to)] shadow-sm">
                       <div class="flex justify-between items-center mb-2">
                         <div class="flex items-center gap-2">
-                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-black/20 shrink-0"
+                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0"
                                 [class.text-blue-400]="room.game === 'sudoku'"
                                 [class.text-green-400]="room.game === 'minesweeper'"
                                 [class.text-purple-400]="room.game === 'hexa'"
@@ -135,9 +136,9 @@ export interface GameDifficulty {
                         </span>
                       </div>
                       <div class="flex justify-between items-end">
-                        <div class="text-[10px] text-slate-400 uppercase tracking-wider flex flex-col gap-1">
+                        <div class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider flex flex-col gap-1">
                           <div>{{ t('game.mode') }}: <span class="text-[var(--color-text-main)]">{{ getModeLabel(room.mode, room.game) }}</span></div>
-                          <div>{{ t('game.diff') }}: <span class="text-yellow-400">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></div>
+                          <div>{{ t('game.diff') }}: <span class="text-amber-500 font-bold">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></div>
                           @if (room.createdAt) {
                             <div class="opacity-80">{{ t('game.created_at') }}: {{ room.createdAt * 1000 | date:'HH:mm:ss' }}</div>
                           }
@@ -246,7 +247,7 @@ export interface GameDifficulty {
                         <span>{{ mode.icon }}</span> <span>{{ t(mode.labelKey) }}</span>
                       </div>
                       @if (mode.desc || mode.descKey) {
-                        <div class="text-[10px] font-normal opacity-80 leading-tight">{{ mode.desc || (mode.descKey ? t(mode.descKey) : '') }}</div>
+                        <div class="text-[10px] font-normal opacity-80 leading-tight">{{ mode.descKey ? t(mode.descKey) : mode.desc }}</div>
                       }
                     </button>
                   }
@@ -257,7 +258,7 @@ export interface GameDifficulty {
             <!-- Difficulty -->
             @if (availableDifficulties().length > 0) {
               <div>
-              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.difficulty_label') }}</label>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.diff') }}</label>
               <div class="grid grid-cols-3 gap-2">
                 @for (diff of availableDifficulties(); track diff.id) {
                   <button (click)="newRoomDifficulty.set(diff.id)"
@@ -265,7 +266,7 @@ export interface GameDifficulty {
                           [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== diff.id" [class.hover:border-[var(--color-accent-from)]]="newRoomDifficulty() !== diff.id"
                           class="px-2 md:px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[60px]">
                     <span>{{ t(diff.labelKey) }}</span>
-                    <span class="text-[9px] font-normal opacity-80 leading-tight">{{ diff.desc }}</span>
+                    <span class="text-[9px] font-normal opacity-80 leading-tight">{{ diff.descKey ? t(diff.descKey) : diff.desc }}</span>
                   </button>
                 }
               </div>

@@ -7,6 +7,7 @@
     /* Default is dark */
     --color-bg-main: #020617; /* slate-950 */
     --color-text-main: #f1f5f9; /* slate-100 */
+    --color-text-muted: #94a3b8; /* slate-400 */
     --color-bg-card: rgba(15, 23, 42, 0.6); /* slate-900/60 */
     --color-border-card: rgba(51, 65, 85, 0.5); /* slate-700/50 */
     --color-border-thick: rgba(241, 245, 249, 0.3); /* slate-100/30 */
@@ -26,6 +27,7 @@
   .theme-dark {
     --color-bg-main: #020617;
     --color-text-main: #f1f5f9;
+    --color-text-muted: #94a3b8;
     --color-bg-card: rgba(15, 23, 42, 0.6);
     --color-border-card: rgba(51, 65, 85, 0.5);
     --color-border-thick: rgba(241, 245, 249, 0.3); /* slate-100/30 */
@@ -45,6 +47,7 @@
   .theme-light {
     --color-bg-main: #f8fafc; /* slate-50 */
     --color-text-main: #0f172a; /* slate-900 */
+    --color-text-muted: #64748b; /* slate-500 */
     --color-bg-card: rgba(255, 255, 255, 0.7); /* white/70 */
     --color-border-card: rgba(203, 213, 225, 0.5); /* slate-300/50 */
     --color-border-thick: rgba(15, 23, 42, 0.3); /* slate-900/30 */

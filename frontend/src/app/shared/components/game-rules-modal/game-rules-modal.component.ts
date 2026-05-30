@@ -17,7 +17,7 @@ import { marked } from 'marked';
   imports: [CommonModule],
   template: `
     @if (isOpen) {
-      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm"
            (click)="onBackdropClick($event)">
         <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden relative">
           <!-- Header -->

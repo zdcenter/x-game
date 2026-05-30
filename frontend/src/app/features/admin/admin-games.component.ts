@@ -103,7 +103,7 @@ interface AdminGame extends GameConfig {
 
       <!-- Settings Modal -->
       @if (selectedGameForSettings()) {
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity">
           <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 shadow-2xl w-full max-w-md m-4 transform transition-all flex flex-col">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-xl font-bold">{{ getLocalized(selectedGameForSettings()!.name) }} Settings</h3>

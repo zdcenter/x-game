@@ -100,7 +100,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
                 <div class="flex items-center gap-2 z-10">
                   @if (store.currentMode() !== 'single') {
-                    <button (click)="store.leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                    <button (click)="store.leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
@@ -114,20 +114,20 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
                       </svg>
                     </button>
                   }
-                  <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md">
+                  <div class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
                     {{ gameTimer.formatTime(store.timeSpent()) }}
                   </div>
                 </div>
               </div>
 
               <!-- Progress Bar -->
-              <div class="w-full h-1.5 bg-black/20 relative group">
+              <div class="w-full h-1.5 bg-[var(--color-border-card)] relative group">
                 <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300" 
                      [style.width.%]="(store.filledCells() / 81) * 100">
                 </div>
                 <!-- Tooltip -->
                 <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span class="text-[10px] font-bold text-white bg-black/80 px-2 rounded-full absolute -top-6 whitespace-nowrap shadow-md">
+                  <span class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute -top-6 whitespace-nowrap shadow-md">
                     {{ store.filledCells() }} / 81
                   </span>
                 </div>

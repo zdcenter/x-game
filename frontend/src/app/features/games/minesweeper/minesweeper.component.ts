@@ -127,7 +127,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                 </div>
                 
                 @if (currentRoomMode() !== 'single') {
-                  <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-900/40 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                  <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
@@ -147,12 +147,12 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             </div>
 
             <!-- Global Progress Bar -->
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/20 group cursor-help translate-y-[2px]">
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-border-card)] group cursor-help translate-y-[2px]">
               <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
                    [style.width.%]="store.myProgress()">
               </div>
               <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span class="text-[10px] font-bold text-white bg-black/80 px-2 rounded-full absolute bottom-2 whitespace-nowrap shadow-md z-20">
+                <span class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute bottom-2 whitespace-nowrap shadow-md z-20">
                   {{ store.myRevealedCnt() }} / {{ store.totalSafeCells() }}
                 </span>
               </div>
@@ -215,7 +215,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
             <!-- Frozen Overlay (PK Steal Penalty) -->
             @if (isFrozen()) {
               <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
-                  <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md">
+                  <div class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
                     {{ gameTimer.formatTime(frozenRemaining()) }}
                   </div>
                 <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
@@ -280,7 +280,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     @if (isDifficultyModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="isDifficultyModalOpen.set(false)"></div>
+        <div class="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm" (click)="isDifficultyModalOpen.set(false)"></div>
         
         <!-- Modal Content -->
         <div class="relative bg-[var(--color-bg-main)] rounded-3xl shadow-2xl border border-[var(--color-border-card)] w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
