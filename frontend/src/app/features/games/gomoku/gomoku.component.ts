@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -29,6 +29,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   store = inject(GomokuStore);
   gameTimer = inject(GameTimerService);
   
+  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
 
   constructor() {
@@ -150,6 +151,19 @@ export class GomokuComponent implements OnInit, OnDestroy {
 
   returnToLobby() {
     this.router.navigate(['/lobby']);
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.roomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.roomId(),
+        game: 'gomoku',
+        mode: this.currentRoomMode(),
+        difficulty: this.currentDifficulty(),
+        host: this.hostId()
+      });
+    }
   }
 
   handleCreateRoom(config: any) {

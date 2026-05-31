@@ -114,31 +114,57 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 }
 ```
 
-### 4. 复用通用 UI 组件
-在你的模板 (`.html`) 中，无需手写等待大厅和列表，请直接使用现成的公共组件：
+### 4. 复用通用 UI 组件与房间设置同步 (Change Settings / Game Setup) 🚨 极其重要！
+为了支持**综合包厢模式（Party Room Mode）**（即房主可以随时在当前房间切换不同的游戏或更改难度），新游戏在复用通用 UI 组件时必须正确绑定大厅面板实例和修改事件：
 
-- **等待大厅**：在未开始状态下使用。
+- **等待大厅**：在未开始状态下使用。房主在等待大厅有权点击“更改设置”，此时需要绑定 `(changeSettings)` 事件：
 ```html
 <app-game-waiting-room
   [mode]="currentRoomMode()"
-  [roomId]="currentRoomId()"
-  [players]="getPlayerScores()"
-  [hostId]="store.host()"
+  [roomId]="roomId()"
+  [players]="mappedPlayers"
+  [hostId]="hostId()"
   [currentUserId]="playerId"
   (leave)="returnToLobby()"
-  (start)="store.startGame()">
+  (start)="store.startGame()"
+  (changeSettings)="openChangeSettings()">
 </app-game-waiting-room>
 ```
 
-- **大厅面板**：如果你的游戏有独立的大厅界面，直接嵌入：
+- **大厅面板**：如果你的游戏有独立的大厅界面，在模板中需要使用 `#lobbyPanel` 声明模板引用：
 ```html
 <app-game-lobby-panel
-  game="tetris"
-  title="俄罗斯方块大厅"
-  (join)="handleJoinRoom($event)"
-  (create)="handleCreateRoom($event)">
+  #lobbyPanel
+  [currentGameId]="'your-game-id'"
+  [currentRoomId]="roomId()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)">
 </app-game-lobby-panel>
 ```
+
+- **组件逻辑绑定**：在你的游戏主组件（`<game>.component.ts`）中，必须通过 `@ViewChild` 获取大厅面板，并实现 `openChangeSettings()`：
+```typescript
+import { ViewChild } from '@angular/core';
+import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+
+// 在组件类中：
+@ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+
+openChangeSettings() {
+  if (this.lobbyPanel && this.roomId()) {
+    this.isMobileSidebarOpen.set(true); // 如果是移动端，先呼出侧边栏
+    this.lobbyPanel.openUpdateRoomModal({
+      id: this.roomId(),
+      game: 'your-game-id',
+      mode: this.currentRoomMode(),
+      difficulty: this.currentDifficulty(),
+      host: this.hostId()
+    });
+  }
+}
+```
+如果不遵守此项配置，房主切换游戏时房客将无法进行自动路由跳转，且点击“更改设置”按钮会报错/无响应。
+
 
 ### 5. 跨游戏跳转配置
 在新游戏组件的 `ngOnInit` 中加入 `CrossGameJoinService` 消费逻辑，以支持从全局大厅点击“加入”直接跨游戏跳转：

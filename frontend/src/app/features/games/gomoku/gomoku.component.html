@@ -146,7 +146,8 @@
         [hostId]="hostId()"
         [currentUserId]="myPlayerId()"
         (start)="store.startGame()"
-        (leave)="returnToLobby()">
+        (leave)="returnToLobby()"
+        (changeSettings)="openChangeSettings()">
       </app-game-waiting-room>
     </div>
   }
@@ -189,6 +190,7 @@
       <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
     </div>
     <app-game-lobby-panel
+      #lobbyPanel
       class="flex-grow flex"
       [currentGameId]="'gomoku'"
       [currentRoomId]="roomId()"

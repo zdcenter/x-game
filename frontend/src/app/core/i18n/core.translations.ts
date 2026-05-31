@@ -146,7 +146,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_gomoku_medium': 'Medium AI (15x15)',
     'game.diff_gomoku_hard': 'Hard AI (15x15)',
 
-    'game.change_settings': 'Change Settings',
+    'game.change_settings': 'Switch Game',
     'game.update_settings': 'Update Settings',
     'game.update': 'Update',
     'game.win': 'You won!',
@@ -317,7 +317,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_gomoku_medium': '中等 AI (15x15)',
     'game.diff_gomoku_hard': '困难 AI (15x15)',
 
-    'game.change_settings': '更改设置',
+    'game.change_settings': '切换游戏',
     'game.update_settings': '更改房间设置',
     'game.update': '更新',
     'game.win': '恭喜！你赢了。',

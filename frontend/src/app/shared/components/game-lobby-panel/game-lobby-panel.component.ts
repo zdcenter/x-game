@@ -197,8 +197,8 @@ export interface GameDifficulty {
 
     <!-- Create Room Modal Overlay -->
     @if (isCreateModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity">
-        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl md:rounded-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] max-h-[95vh] flex flex-col">
+      <div class="fixed inset-0 z-50 flex items-start justify-center px-4 pb-4 pt-0 bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity overflow-y-auto">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-t-none rounded-b-2xl md:rounded-b-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] h-fit max-h-[95vh] md:max-h-[90vh] flex flex-col">
           <div class="flex justify-between items-center mb-4 md:mb-6 shrink-0">
             <h2 class="text-xl md:text-2xl font-bold">
               {{ isUpdateMode() ? (t('game.update_settings') || 'Update Room') : t('game.create_room_title') }}
@@ -230,7 +230,7 @@ export interface GameDifficulty {
                     <button (click)="selectGameForNewRoom(game.id)"
                             [class.bg-[var(--color-accent-to)]]="newRoomGameId() === game.id" [class.text-[var(--color-bg-main)]]="newRoomGameId() === game.id" [class.border-[var(--color-accent-to)]]="newRoomGameId() === game.id"
                             [class.bg-[var(--color-bg-card)]]="newRoomGameId() !== game.id" [class.hover:border-[var(--color-accent-to)]]="newRoomGameId() !== game.id"
-                            class="px-2 py-2 rounded-xl border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[60px]">
+                            class="px-2 pt-3 pb-2 rounded-xl border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-start text-center gap-1 min-h-[72px]">
                       <span class="text-lg">{{ game.iconEmoji }}</span>
                       <span class="leading-tight">{{ t(game.titleKey) }}</span>
                     </button>
@@ -270,7 +270,7 @@ export interface GameDifficulty {
                   <button (click)="newRoomDifficulty.set(diff.id)"
                           [class.bg-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id" [class.text-[var(--color-bg-main)]]="newRoomDifficulty() === diff.id" [class.border-[var(--color-accent-from)]]="newRoomDifficulty() === diff.id"
                           [class.bg-[var(--color-bg-card)]]="newRoomDifficulty() !== diff.id" [class.hover:border-[var(--color-accent-from)]]="newRoomDifficulty() !== diff.id"
-                          class="px-2 md:px-3 py-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[60px]">
+                          class="px-2 md:px-3 pt-3 pb-2 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-start text-center gap-1 min-h-[72px]">
                     <span>{{ t(diff.labelKey) }}</span>
                     <span class="text-[9px] font-normal opacity-80 leading-tight">{{ diff.descKey ? t(diff.descKey) : diff.desc }}</span>
                   </button>
@@ -396,7 +396,7 @@ export class GameLobbyPanelComponent {
 
   onConfirmCreateRoom() {
     if (this.isUpdateMode()) {
-      this.wsService.sendLobby({
+      this.wsService.send({
         type: 'change_game',
         game: this.newRoomGameId(),
         mode: this.newRoomMode(),
