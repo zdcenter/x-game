@@ -6,12 +6,11 @@
 
 ## 一、 后端开发规范 (Backend)
 
-### 1. 创建游戏引擎包
+### 1. 创建游戏引擎包与自动注册
 在 `backend/internal/engine/` 目录下新建你的游戏目录（例如 `backend/internal/engine/tetris/`）。
+你的对战类游戏引擎必须 **强制嵌入（embed）** `engine.BaseEngine`。这会自动继承并发锁 `Mu`、生命周期状态 `State` 和广播通道。
 
-### 2. 编写 PK 模式引擎 (强制继承 `BaseEngine`)
-对于任何对战模式（如 `pk_steal` 或 `pk_speed`），请定义你的引擎结构体并 **强制嵌入（embed）** `engine.BaseEngine`。这会自动继承读写锁、状态管理和广播功能。
-
+并在 `init()` 函数中向全局工厂注册，命名规范遵循：`游戏名_模式名`：
 ```go
 package tetris
 
@@ -22,24 +21,25 @@ type PKStealEngine struct {
 	// 定义你的游戏特有状态
 	Players map[string]*PlayerState
 }
-```
 
-### 3. 实现 `GameEngine` 接口
-你需要实现以下核心方法：
-- `InitGame(options interface{}) error`：初始化游戏参数。
-- `AddPlayer(playerID string)`：玩家加入房间时触发。
-- `RemovePlayer(playerID string)`：玩家彻底离开房间时触发（注意：由于我们支持断线重连，只有在游戏未开始时，引擎框架才会主动调用此方法。若游戏进行中掉线，数据会被保留）。
-- `HasPlayer(playerID string) bool`：判断玩家是否存在。
-- `HandleAction(playerID string, actionType string, payload []byte) (interface{}, error)`：处理玩家具体操作（如点击、移动等）。
-- `GetState() interface{}`：返回要广播给客户端的当前游戏状态。
-
-### 4. 注册引擎
-在你的引擎文件中添加 `init()` 函数进行注册。命名规范遵循：`游戏名_模式名`。
-```go
 func init() {
 	engine.Register("tetris_pk_steal", func() engine.GameEngine { return &PKStealEngine{} })
 }
 ```
+然后在 `backend/cmd/api/main.go` 中空白导入该包（`_ "github.com/x-game/backend/internal/engine/tetris"`），使注册逻辑在程序启动时自动执行。这彻底避免了侵入和修改 `pkg/ws/manager.go`。
+
+### 2. 实现 `GameEngine` interface
+你需要实现以下核心方法：
+- `InitGame(options interface{}) error`：初始化游戏参数与棋盘配置。
+- `AddPlayer(playerID string)`：玩家加入房间时触发。
+- `RemovePlayer(playerID string)`：玩家彻底离开房间时触发（注意：由于我们支持断线重连，只有在游戏未开始时，引擎框架才会主动调用此方法。若游戏进行中掉线，数据会被保留）。
+- `HasPlayer(playerID string) bool`：判断玩家是否存在。
+- `HandleAction(playerID string, actionType string, payload []byte) (interface{}, error)`：处理玩家具体操作（如点击、落子等）。
+- `GetState() interface{}`：返回要广播给客户端的当前游戏状态。
+
+**🚨 后端防坑指南：**
+- **PK 模式下的 CheckGameOver**：在竞速或抢分模式下，切记需要在这个函数里对比所有玩家的状态，并且当有人胜利时，通过 WS Manager 向房间发送 `game_over` 广播。
+- **状态同步 (GetState)**：每次客户端进行操作（如翻开卡片、消除方块）后，WebSocket Manager 都会自动调用每个玩家的 `GetState`，所以你需要确保该方法返回的数据是脱敏且最新的。
 
 ---
 
@@ -48,11 +48,33 @@ func init() {
 ### 1. 建立游戏目录
 在 `frontend/src/app/features/games/` 下创建新游戏目录（例如 `tetris/`）。
 
-### 2. 编写状态管理 Store (建议使用 Signal)
-新建 `tetris.store.ts`，基于现有的 `WebSocketService` 获取 `gameState()`。Store 中需包含：
-- 连接和退出逻辑（调用 `wsService.connect()` / `wsService.send({ type: 'leave_game' })`）。
-- 将后端数字 `status` 转换为前端字符串枚举 (`GameStatus`)。
-- 提取游戏特有的棋盘和分数状态。
+### 2. 状态管理 (Store) 的 Signals 规范 🚨 极其重要！
+新建 `tetris.store.ts`，基于现有的 `WebSocketService` 获取 `gameState()`。
+在编写前端的 `<game>.store.ts` 时，必须使用依赖于 `this.ws.gameState()` 信号的 `computed` (派生计算信号) 来接收并同步对局状态，**切勿使用 `effect()` 并在其中通过副作用强行 `set` 状态信号**！
+
+- **原因**：由于 WebSocket 接收是非 Zone.js 托管的异步任务，而在 `effect` 中反向写入本地状态信号极易导致 Angular 变更检测失效，从而出现“房主看不到房客”、“状态不同步”等致命 bug。
+- **最佳范式**：
+  - 定义本地识别的私有信号（如 `localBoard = signal(...)`），用于处理单机模式下的即时计算。
+  - 定义只读的 `computed` 信号，根据当前是 `single` 还是 PK 模式，自动路由并返回本地状态或全局 WS 状态：
+
+```typescript
+// 1. 获取全局 raw 状态
+private rawState = computed(() => this.ws.gameState());
+
+// 2. 声明派生计算信号
+board = computed<number[][]>(() => {
+  if (this.currentMode() === 'single') return this.localBoard();
+  return this.rawState()?.board || this.emptyBoard;
+});
+
+players = computed<string[]>(() => {
+  if (this.currentMode() === 'single') return this.localPlayers();
+  const st = this.rawState();
+  if (!st || !st.players) return [];
+  return Array.isArray(st.players) ? st.players : Object.keys(st.players);
+});
+```
+- **effect 的正确用法**：在 Store 的构造函数里只允许用 `effect()` 触发不修改信号的**副作用行为**，例如当对局状态变为 finished 时调用 `audio.playWin()`。
 
 ### 3. 编写主组件 (强制继承 `BaseGameComponent`)
 主组件必须继承 `BaseGameComponent`，从而免费获得以下能力：
