@@ -14,36 +14,29 @@
 - **数据库/初始化配置**：如果平台通过数据库或常量维护游戏列表（如 `gm_game_configs`），请为新游戏添加一条记录（例如 `id: "newgame", name: "New Game", is_active: true`）。
 - **难度与模式支持**：明确该游戏支持的难度（如 `easy`, `medium`, `hard`）和模式（如 `single`, `pk_speed`, `pk_score`）。
 
-### 2. 实现 GameEngine 接口
+### 2. 实现 GameEngine 接口与自动注册
 在 `backend/internal/engine/<newgame>/` 目录下创建你的引擎代码（例如 `engine.go`）。
-你需要实现 `engine.GameEngine` 接口：
+你的对战类游戏引擎必须 `embed` (嵌入) `engine.BaseEngine`，以自动继承并发锁 `Mu`、生命周期状态 `State` 和广播通道。
+并在 `init()` 函数中向全局工厂注册：
 ```go
-type GameEngine interface {
-    Init(room *domain.Room) error
-    Start() error
-    ProcessAction(playerID string, action map[string]interface{}) error
-    GetState(playerID string) map[string]interface{}
-    CheckGameOver() bool
+package newgame
+
+import "github.com/x-game/backend/internal/engine"
+
+type PKEngine struct {
+	engine.BaseEngine
+	// 其它对战字段...
+}
+
+func init() {
+	engine.Register("newgame_pk_classic", NewPKEngine)
 }
 ```
-**🚨 防坑指南：**
+然后在 `backend/cmd/api/main.go` 中空白导入该包（`_ "github.com/x-game/backend/internal/engine/newgame"`），使注册逻辑在程序启动时自动执行。这彻底避免了侵入和修改 `pkg/ws/manager.go`。
+
+**🚨 后端防坑指南：**
 - **PK 模式下的 CheckGameOver**：在竞速或抢分模式下，切记需要在这个函数里对比所有玩家的状态，并且当有人胜利时，通过 WS Manager 向房间发送 `game_over` 广播。
 - **状态同步 (GetState)**：每次客户端进行操作（如翻开卡片、消除方块）后，WebSocket Manager 都会自动调用每个玩家的 `GetState`，所以你需要确保该方法返回的数据是脱敏且最新的。
-
-### 3. 注册到 WebSocket 管理器
-修改 `backend/pkg/ws/manager.go` 中的 `InitRoom` 函数：
-```go
-switch room.GameID {
-    case "minesweeper":
-        // ...
-    case "newgame": // <- 新增的路由
-        if room.Mode == "pk_speed" {
-            room.Engine = newgame.NewSpeedEngine()
-        } else {
-            // ...
-        }
-}
-```
 
 ---
 
@@ -55,13 +48,32 @@ switch room.GameID {
 - 创建新模块 `frontend/src/app/features/games/<newgame>/`
 - 在 `app.routes.ts` 中注册路由 `games/newgame`，并配置好 SEO Metadata。
 
-### 2. 状态管理 (Store)
-使用 Angular Signals 的 `signalStore` 创建独立的状态管理文件，例如 `newgame.store.ts`。
-**必需的状态包括：**
-- `currentMode`: 标识当前是 `single`（单机）还是联机。
-- `currentDifficulty`: 当前难度。
-- `bestTime` / `bestScore`: 如果有单机成绩，请务必在初始化时从 `GameStatsService` 获取历史最佳并存入 Signal。
-- WebSocket 的收发管理：利用 `WebSocketService` 接收服务端下发的状态。
+### 2. 状态管理 (Store) 的 Signals 规范 🚨 极其重要！
+在编写前端的 `<game>.store.ts` 时，必须使用依赖于 `this.ws.gameState()` 信号的 `computed` (派生计算信号) 来接收并同步对局状态，**切勿使用 `effect()` 并在其中通过副作用强行 `set` 状态信号**！
+
+- **原因**：由于 WebSocket 接收是非 Zone.js 托管的异步任务，而在 `effect` 中反向写入本地状态信号极易导致 Angular 变更检测失效，从而出现“房主看不到房客”、“状态不同步”等致命 bug。
+- **最佳范式**：
+  - 定义本地私有信号（如 `localBoard = signal(...)`），用于处理单机模式下的即时计算。
+  - 定义只读的 `computed` 信号，根据当前是 `single` 还是 PK 模式，自动路由并返回本地状态或全局 WS 状态：
+
+```typescript
+// 1. 获取全局 raw 状态
+private rawState = computed(() => this.ws.gameState());
+
+// 2. 声明派生计算信号
+board = computed<GomokuColor[][]>(() => {
+  if (this.singlePlayerMode) return this.localBoard();
+  return this.rawState()?.board || this.emptyBoard;
+});
+
+players = computed<string[]>(() => {
+  if (this.singlePlayerMode) return this.localPlayers();
+  const st = this.rawState();
+  if (!st || !st.players) return [];
+  return Array.isArray(st.players) ? st.players : Object.keys(st.players);
+});
+```
+- **effect 的正确用法**：在 Store 的构造函数里只允许用 `effect()` 触发不修改信号的**副作用行为**，例如当对局中 turn 切换时调用 `audio.playDrop()` 播音。
 
 ### 3. 核心游戏组件 (Component)
 创建 `newgame.component.ts`。你的组件最好继承或参考现有的游戏组件生命周期：
