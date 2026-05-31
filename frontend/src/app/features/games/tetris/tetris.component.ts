@@ -217,4 +217,17 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     scores.push({ id: this.playerId, score: this.store.score() });
     return scores;
   }
+  
+  getOverlayStats() {
+    const stats: { label: string, value: string | number }[] = [
+      { label: this.i18n.t('tetris.score')() || 'SCORE', value: this.store.score() }
+    ];
+    if (this.currentRoomMode() === 'single') {
+      const best = this.store.bestScore();
+      if (best > 0) {
+        stats.push({ label: 'BEST', value: best });
+      }
+    }
+    return stats;
+  }
 }

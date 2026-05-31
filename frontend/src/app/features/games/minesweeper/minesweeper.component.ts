@@ -117,11 +117,18 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
               <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center z-10">
 
                 @if (store.status() === 'playing') {
-                  <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {{ elapsedTime() }}
+                  <div class="flex flex-col items-center">
+                    <div class="font-mono text-sm lg:text-xl font-bold text-[var(--color-accent-to)] bg-[var(--color-bg-main)] px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] flex items-center gap-1 lg:gap-2 shadow-inner">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-5 lg:w-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {{ elapsedTime() }}
+                    </div>
+                    @if (currentRoomMode() === 'single' && store.bestTime() > 0) {
+                      <div class="text-[9px] lg:text-[10px] font-bold text-amber-500/80 mt-1 tracking-widest uppercase flex items-center gap-1">
+                        <span>👑</span> BEST: {{ formatBestTime() }}
+                      </div>
+                    }
                   </div>
                 }
 
@@ -675,6 +682,15 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       if (timeStr && timeStr !== '00:00') {
         stats.push({ label: 'TIME', value: timeStr });
       }
+
+      if (this.currentRoomMode() === 'single') {
+        const best = this.store.bestTime();
+        if (best > 0) {
+          const m = Math.floor(best / 60).toString().padStart(2, '0');
+          const s = (best % 60).toString().padStart(2, '0');
+          stats.push({ label: 'BEST', value: `${m}:${s}` });
+        }
+      }
     }
 
     // Score (flags) is relevant for steal mode
@@ -685,5 +701,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
 
     return stats;
+  }
+
+  formatBestTime(): string {
+    const best = this.store.bestTime();
+    if (best <= 0) return '00:00';
+    const m = Math.floor(best / 60).toString().padStart(2, '0');
+    const s = (best % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   }
 }

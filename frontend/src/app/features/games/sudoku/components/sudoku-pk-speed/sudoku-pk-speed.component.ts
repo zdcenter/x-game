@@ -76,8 +76,8 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
             </div>
 
             @if (player.finished) {
-              <div class="absolute inset-0 bg-emerald-900/30 flex items-center justify-center z-0">
-                <span class="text-5xl opacity-20 transform -rotate-12">FINISHED</span>
+              <div class="absolute inset-0 bg-green-900/30 flex items-center justify-center z-0">
+                <span class="text-5xl opacity-20 transform -rotate-12">{{ i18n.t('game.finished')() || 'FINISHED' }}</span>
               </div>
             }
           </div>

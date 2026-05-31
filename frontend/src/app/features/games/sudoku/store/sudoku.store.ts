@@ -7,6 +7,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 
 export interface SudokuCell {
   r: number;
@@ -29,6 +30,7 @@ export class SudokuStore {
   private audio = inject(AudioService);
   private i18n = inject(I18nService);
   ws = inject(WebSocketService);
+  private statsService = inject(GameStatsService);
 
   private saveSubject = new Subject<void>();
 
@@ -51,6 +53,7 @@ export class SudokuStore {
   currentPuzzleId = signal<string>('');
   timeSpent = signal<number>(0);
   isFinished = signal<boolean>(false);
+  bestTime = signal<number>(0);
 
   filledCells = computed(() => {
     let count = 0;
@@ -211,6 +214,20 @@ export class SudokuStore {
       }
     } else {
       this.createBoardFromString(puzzleStr);
+    }
+    
+    // Load best time
+    if (this.auth.isAuthenticated()) {
+      const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
+      let diff = 'easy';
+      if (match) {
+        if (match[1].includes('medium')) diff = 'medium';
+        else if (match[1].includes('hard')) diff = 'hard';
+      }
+      this.statsService.getStats('sudoku').subscribe(stats => {
+        const stat = stats.find(s => s.Mode === 'single' && s.Difficulty === diff);
+        if (stat) this.bestTime.set(stat.BestTime);
+      });
     }
     
     this.startTimer();
@@ -445,6 +462,27 @@ export class SudokuStore {
     if (valid && this.currentMode() === 'single') {
       this.isFinished.set(true);
       this.stopTimer();
+      
+      // Submit stat
+      if (this.auth.isAuthenticated()) {
+        const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
+        let diff = 'easy';
+        if (match) {
+          if (match[1].includes('medium')) diff = 'medium';
+          else if (match[1].includes('hard')) diff = 'hard';
+        }
+        this.statsService.submitStat('sudoku', {
+          mode: 'single',
+          difficulty: diff,
+          score: 0,
+          time: this.timeSpent(),
+          won: true
+        }).subscribe(res => {
+          if (res.isNewRecord) {
+            this.bestTime.set(this.timeSpent());
+          }
+        });
+      }
     }
     
     if (valid) {

@@ -101,9 +101,14 @@
                     </div>
                   </div>
                   <!-- Score -->
-                  <div class="bg-[var(--color-bg-card)] p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] shadow-lg backdrop-blur-sm">
+                  <div class="bg-[var(--color-bg-card)] p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] shadow-lg backdrop-blur-sm relative">
                     <div class="text-[10px] lg:text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">{{ i18n.t('tetris.score')() }}</div>
                     <div class="font-bold font-mono text-base lg:text-2xl text-[var(--color-accent-to)] leading-none">{{ store.score() }}</div>
+                    @if (currentRoomMode() === 'single' && store.bestScore() > 0) {
+                      <div class="text-[8px] lg:text-[10px] font-bold text-amber-500/80 mt-1.5 tracking-widest uppercase flex items-center gap-1">
+                        <span>👑</span> BEST: {{ store.bestScore() }}
+                      </div>
+                    }
                   </div>
                   <!-- Lines -->
                   <div class="bg-[var(--color-bg-card)] p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] shadow-lg backdrop-blur-sm">
@@ -164,7 +169,7 @@
                     <app-game-result-overlay
                       [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
                       [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.mode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-                      [stats]="[{label: i18n.t('tetris.score')(), value: store.score()}]"
+                      [stats]="getOverlayStats()"
                       [showLeave]="store.mode() === 'single' || store.host() !== playerId"
                       [showRestart]="store.mode() === 'single' || store.host() === playerId"
                       [showDismiss]="store.mode() !== 'single' && store.host() === playerId"

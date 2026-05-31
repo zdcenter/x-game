@@ -6,6 +6,7 @@ export class LocalSlidingEngine {
   emptyIdx: number;
   status: GameStatus = GameStatus.Playing;
   startAt: number = 0;
+  endAt: number = 0;
   moves: number = 0;
 
   static readonly STORAGE_KEY = 'x_game_sliding_single_state';
@@ -28,6 +29,7 @@ export class LocalSlidingEngine {
         emptyIdx: this.emptyIdx,
         status: this.status,
         startAt: this.startAt,
+        endAt: this.endAt,
         moves: this.moves
       };
       localStorage.setItem(LocalSlidingEngine.STORAGE_KEY, JSON.stringify(data));
@@ -48,6 +50,7 @@ export class LocalSlidingEngine {
           engine.emptyIdx = data.emptyIdx;
           engine.status = data.status;
           engine.startAt = data.startAt;
+          engine.endAt = data.endAt || 0;
           engine.moves = data.moves || 0;
           return { engine, difficulty: data.difficulty || 'medium' };
         }
@@ -124,6 +127,7 @@ export class LocalSlidingEngine {
 
       if (this.checkWin()) {
         this.status = GameStatus.Finished;
+        this.endAt = Date.now();
       }
       return true;
     }

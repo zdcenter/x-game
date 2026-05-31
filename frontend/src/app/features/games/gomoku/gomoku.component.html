@@ -1,0 +1,200 @@
+<div class="h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative select-none">
+  
+  <div class="flex-grow flex flex-col items-center overflow-y-auto overflow-x-hidden relative min-w-0">
+    <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden flex justify-center items-center opacity-[0.03]">
+    <span class="text-[40rem] rotate-12">⚫⚪</span>
+  </div>
+
+  <!-- Header -->
+  <header class="w-full max-w-4xl px-4 py-4 md:py-6 flex justify-between items-center z-10 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl flex items-center justify-center text-white text-xl md:text-2xl shadow-lg border border-white/20">
+        ⚫⚪
+      </div>
+      <div class="flex flex-col">
+        <h1 class="text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
+          {{ i18n.t('game.gomoku')() || 'Gomoku' }}
+        </h1>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+            {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.pk_classic')() }}
+          </span>
+          @if (currentRoomMode() === 'single') {
+            <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
+            <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              {{ currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')()) }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <!-- AI Difficulty selector for Single Player -->
+      @if (currentRoomMode() === 'single') {
+        <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-accent-from)] text-xs md:text-sm font-bold appearance-none cursor-pointer outline-none focus:border-emerald-500">
+          <option value="easy">{{ i18n.t('game.diff_gomoku_easy')() || 'Easy AI' }}</option>
+          <option value="medium">{{ i18n.t('game.diff_gomoku_medium')() || 'Medium AI' }}</option>
+          <option value="hard">{{ i18n.t('game.diff_gomoku_hard')() || 'Hard AI' }}</option>
+        </select>
+      }
+
+      <button (click)="showRules.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </button>
+      <button (click)="onRestart()" class="p-2 md:p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-sm hover:bg-emerald-500/20 transition-all font-bold text-sm hidden sm:block">
+        {{ i18n.t('gomoku.restart')() }}
+      </button>
+      <button (click)="onSurrender()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm hidden sm:block" [disabled]="gameStatus().status !== 'playing'">
+        {{ i18n.t('gomoku.surrender')() }}
+      </button>
+      <button (click)="isMobileSidebarOpen.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] lg:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Area -->
+  <main class="flex-grow w-full max-w-4xl px-2 md:px-4 flex flex-col md:flex-row items-center justify-center gap-6 z-10 pb-4 md:pb-8">
+    
+    <!-- Player Status Panel (Mobile: Top, Desktop: Left) -->
+    <div class="w-full md:w-48 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-row md:flex-col justify-around md:justify-start gap-4">
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-md relative"
+             [ngClass]="myColor === 1 ? 'bg-gradient-to-b from-gray-700 to-black border-2 border-gray-600' : 'bg-gradient-to-b from-white to-gray-200 border-2 border-gray-300'">
+          @if(isMyTurn) {
+            <div class="absolute -inset-1 rounded-full animate-ping opacity-75" [ngClass]="myColor === 1 ? 'bg-black' : 'bg-white'"></div>
+          }
+        </div>
+        <span class="font-bold text-sm md:text-base">{{ i18n.t(myColor === 1 ? 'gomoku.you_are_black' : 'gomoku.you_are_white')() }}</span>
+      </div>
+      
+      <div class="hidden md:flex flex-col items-center my-4">
+        <span class="text-xs uppercase font-bold text-[var(--color-text-muted)]">{{ i18n.t('minesweeper.status')() }}</span>
+        <span class="font-black text-lg mt-1" [ngClass]="isMyTurn ? 'text-emerald-500' : 'text-amber-500'">
+          {{ isMyTurn ? i18n.t('gomoku.turn.yours')() : i18n.t('gomoku.turn.opponent')() }}
+        </span>
+      </div>
+
+      <!-- Mobile Turn Indicator -->
+      <div class="flex md:hidden flex-col items-center justify-center">
+        <span class="font-black text-xl" [ngClass]="isMyTurn ? 'text-emerald-500' : 'text-amber-500'">
+          {{ isMyTurn ? i18n.t('gomoku.turn.yours')() : i18n.t('gomoku.turn.opponent')() }}
+        </span>
+      </div>
+    </div>
+
+
+    <!-- Board Area -->
+    <div class="relative shrink-0 shadow-2xl rounded-sm p-4" style="background: url('/assets/wood-texture.jpg') center/cover, #d4a373;">
+      <!-- Grid lines -->
+      <div class="absolute inset-4 border-2 border-black/40"></div>
+      
+      <!-- The Gomoku Grid -->
+      <div class="grid grid-cols-[repeat(15,_minmax(0,_1fr))] grid-rows-[repeat(15,_minmax(0,_1fr))] w-[360px] h-[360px] sm:w-[550px] sm:h-[550px] lg:w-[680px] lg:h-[680px] gap-0 relative">
+        @for (row of board(); track $index; let y = $index) {
+          @for (cell of row; track $index; let x = $index) {
+            <div class="relative flex items-center justify-center cursor-pointer group"
+                 (click)="onCellClick(y, x)">
+                 
+              <!-- Horizontal and vertical lines -->
+              <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div class="w-full h-[1.5px] bg-black/40"></div>
+                <div class="h-full w-[1.5px] bg-black/40 absolute"></div>
+              </div>
+
+              <!-- 5 dots for visual reference -->
+              @if ((x===3||x===11||x===7) && (y===3||y===11||y===7)) {
+                <div class="absolute w-2 h-2 bg-black/70 rounded-full pointer-events-none z-0"></div>
+              }
+
+              <!-- The Piece -->
+              @if (cell !== 0) {
+                <div class="w-[85%] h-[85%] rounded-full shadow-md relative z-10 transition-transform duration-200"
+                     [ngClass]="cell === 1 ? 'bg-gradient-to-b from-gray-700 to-black shadow-[2px_2px_4px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-white to-gray-200 shadow-[2px_2px_4px_rgba(0,0,0,0.3)]'">
+                </div>
+              } @else {
+                <!-- Hover Preview -->
+                @if (isMyTurn && gameStatus().status === 'playing') {
+                  <div class="w-[85%] h-[85%] rounded-full relative z-10 opacity-0 group-hover:opacity-50 transition-opacity duration-150"
+                       [ngClass]="myColor === 1 ? 'bg-black' : 'bg-white'">
+                  </div>
+                }
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </main>
+  
+  <!-- Modals & Overlays -->
+  <app-game-rules-modal [gameId]="'gomoku'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  @if (currentRoomMode() !== 'single' && gameStatus().status === 'waiting') {
+    <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
+      <app-game-waiting-room
+        class="w-full h-full flex"
+        [gameId]="'gomoku'"
+        [mode]="currentRoomMode()"
+        [roomId]="roomId()"
+        [players]="mappedPlayers"
+        [hostId]="hostId()"
+        [currentUserId]="myPlayerId()"
+        (start)="store.startGame()"
+        (leave)="returnToLobby()">
+      </app-game-waiting-room>
+    </div>
+  }
+
+  <!-- Starting Overlay -->
+  @if (gameStatus().status === 'starting') {
+    <div class="absolute inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
+      <div class="text-[4rem] md:text-[6rem] font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest">
+        {{ i18n.t('game.get_ready')() || 'Get Ready!' }}
+      </div>
+    </div>
+  }
+
+  @if (gameStatus().status === 'finished') {
+    <app-game-result-overlay
+      [status]="gameStatus().winner === myPlayerId() ? 'win' : 'lose'"
+      [title]="winnerText"
+      [showRestart]="true"
+      [showLeave]="currentRoomMode() !== 'single'"
+      [stats]="[]"
+      (restart)="onRestart()">
+    </app-game-result-overlay>
+  }
+  </div> <!-- End of main content area -->
+
+  <!-- Sidebar Overlay Backdrop -->
+  @if (isMobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+  }
+
+  <!-- Sidebar -->
+  <div class="flex-shrink-0 transition-transform duration-300"
+       [ngClass]="{
+         'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+         'translate-x-0': isMobileSidebarOpen(),
+         'translate-x-full': !isMobileSidebarOpen(),
+         'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
+       }">
+    <div class="flex justify-between items-center mb-4 lg:hidden">
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+    </div>
+    <app-game-lobby-panel
+      class="flex-grow flex"
+      [currentGameId]="'gomoku'"
+      [currentRoomId]="roomId()"
+      (joinRoom)="handleJoinRoom($event)"
+      (createRoom)="handleCreateRoom($event)">
+    </app-game-lobby-panel>
+  </div>
+
+</div>

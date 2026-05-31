@@ -42,6 +42,7 @@ func InitPostgres() {
 		&domain.GameConfig{},
 		&domain.SudokuPuzzle{},
 		&domain.UserSudokuProgress{},
+		&domain.UserGameStat{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -105,6 +106,16 @@ func Seed() {
 		IsActive: true,
 	}
 	DB.Where(domain.GameConfig{ID: "tetris"}).FirstOrCreate(&defaultTetris)
+
+	defaultGomoku := domain.GameConfig{
+		ID:       "gomoku",
+		Name:     `{"en": "Gomoku", "zh": "五子棋"}`,
+		Overview: `{"en": "Classic 5-in-a-row strategy game. Challenge the AI or play online.", "zh": "经典的五子连珠策略游戏。单机挑战 AI 或联机对战。"}`,
+		Rules:    `{"en": "# Gomoku Rules\n\nBe the first to get an unbroken row of five pieces horizontally, vertically, or diagonally.\n\n## 🎮 Controls\n- **Place Piece**: Click or tap an empty intersection on the board.", "zh": "# 五子棋规则\n\n黑白双方轮流落子，任意一方先在横线、竖线或斜线上形成连续的五颗棋子即可获胜。\n\n## 🎮 操作说明\n- **落子**: 点击棋盘上的空白交叉点即可落子。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "gomoku"}).FirstOrCreate(&defaultGomoku)
 
 	var userCount int64
 	DB.Model(&domain.User{}).Count(&userCount)

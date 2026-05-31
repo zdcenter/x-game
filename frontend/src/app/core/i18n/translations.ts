@@ -4,6 +4,7 @@ import { sudokuTranslations } from '../../features/games/sudoku/i18n/sudoku.tran
 import { slidingTranslations } from '../../features/games/sliding/i18n/sliding.translations';
 import { hexaTranslations } from '../../features/games/hexa/i18n/hexa.translations';
 import { tetrisTranslations } from '../../features/games/tetris/i18n/tetris.translations';
+import { gomokuTranslations } from '../../features/games/gomoku/i18n/gomoku.translations';
 
 export type Lang = 'en' | 'zh';
 
@@ -14,7 +15,7 @@ const gameTranslations: Record<Lang, Record<string, string>>[] = [
   slidingTranslations,
   hexaTranslations,
   tetrisTranslations,
-  // futureGameTranslations,  // ← 以后新游戏加一行就行
+  gomokuTranslations,
 ];
 
 // Auto-merge core + all game translations

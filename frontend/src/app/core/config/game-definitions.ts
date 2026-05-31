@@ -72,5 +72,19 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
     ]
+  },
+  {
+    id: 'gomoku',
+    route: '/games/gomoku',
+    titleKey: 'lobby.gomoku',
+    iconEmoji: '⚫⚪',
+    modes: [
+      { id: 'pk_classic', labelKey: 'game.pk_classic', descKey: 'game.pk_classic_desc', icon: '⚔️', desc: 'Classic 1v1 PvP' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_gomoku_easy', desc: 'Easy AI (15x15)' },
+      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_gomoku_medium', desc: 'Medium AI (15x15)' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
+    ]
   }
 ];

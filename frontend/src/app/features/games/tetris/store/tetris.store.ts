@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
 export type TetrisGameStatus = 'waiting' | 'starting' | 'playing' | 'finished' | 'disconnected';
 import { WebSocketService } from '../../../../core/services/websocket.service';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { getEmptyGrid, Piece, rotateMatrix, Tetromino, TETROMINO_SHAPES, TETRIS_COLS, TETRIS_ROWS } from '../models/tetris.model';
 import { PRNG } from '../../../../core/utils/prng';
@@ -19,6 +20,7 @@ export interface TetrisOpponent {
 })
 export class TetrisStore {
   private ws = inject(WebSocketService);
+  private statsService = inject(GameStatsService);
   private authStore = inject(AuthStore);
 
   // Connection & Room state
@@ -65,6 +67,7 @@ export class TetrisStore {
   score = signal<number>(0);
   lines = signal<number>(0);
   level = signal<number>(1);
+  bestScore = signal<number>(0);
 
   private dropInterval: any;
   private localGarbageApplied = 0;
@@ -110,10 +113,43 @@ export class TetrisStore {
     if (this.mode() === 'single') {
       this.localStatus.set('playing');
       this.resetLocalState();
+      
+      // Load best score
+      if (this.authStore.isAuthenticated()) {
+        this.statsService.getStats('tetris').subscribe(stats => {
+          const stat = stats.find(s => s.Mode === 'single');
+          if (stat) this.bestScore.set(stat.BestScore);
+        });
+      }
+
       this.spawnPiece();
       this.startGameLoop();
     } else {
       this.ws.send({ action: 'start' });
+    }
+  }
+
+  gameOver() {
+    this.stopGameLoop();
+    this.localStatus.set('finished');
+    if (this.mode() === 'single') {
+      
+      // Submit stat
+      if (this.authStore.isAuthenticated()) {
+        this.statsService.submitStat('tetris', {
+          mode: 'single',
+          difficulty: '',
+          score: this.score(),
+          time: 0,
+          won: true
+        }).subscribe(res => {
+          if (res.isNewRecord) {
+            this.bestScore.set(this.score());
+          }
+        });
+      }
+    } else {
+      this.ws.send({ type: 'game_over' });
     }
   }
 
@@ -353,14 +389,7 @@ export class TetrisStore {
     });
   }
 
-  private gameOver() {
-    this.stopGameLoop();
-    if (this.mode() === 'single') {
-      this.localStatus.set('finished');
-    } else {
-      this.ws.send({ action: 'game_over' });
-    }
-  }
+
 
   // --- Game Loop ---
   private startGameLoop() {

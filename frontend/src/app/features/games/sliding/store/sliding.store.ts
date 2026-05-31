@@ -2,6 +2,7 @@ import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { LocalSlidingEngine } from './sliding-engine';
 
 export enum GameStatus {
@@ -16,11 +17,13 @@ export class SlidingStore {
   private ws = inject(WebSocketService);
   private audio = inject(AudioService);
   private auth = inject(AuthStore);
+  private statsService = inject(GameStatsService);
   
   private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
   private currentMode = signal<string>('single');
   private localEngine = signal<LocalSlidingEngine | null>(null);
+  readonly bestTime = signal<number>(0);
 
   private rawState = computed(() => this.ws.gameState() || {
     boards: {},
@@ -124,6 +127,14 @@ export class SlidingStore {
         this.localEngine.set(engine);
         engine.saveToStorage(difficulty);
       }
+      
+      // Load best time
+      if (this.auth.isAuthenticated()) {
+        this.statsService.getStats('sliding').subscribe(stats => {
+          const stat = stats.find(s => s.Mode === 'single' && s.Difficulty === difficulty);
+          if (stat) this.bestTime.set(stat.BestTime);
+        });
+      }
     } else {
       this.currentDifficulty.set(difficulty);
       const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
@@ -162,6 +173,23 @@ export class SlidingStore {
       if (le && le.move(idx)) {
         this.audio.playClick(); // optional, but good for feedback
         le.saveToStorage(this.currentDifficulty());
+        
+        // Submit stat if finished
+        if (le.status === GameStatus.Finished && this.auth.isAuthenticated()) {
+          const timeSecs = Math.floor((le.endAt! - le.startAt!) / 1000);
+          this.statsService.submitStat('sliding', {
+            mode: 'single',
+            difficulty: this.currentDifficulty(),
+            score: 0,
+            time: timeSecs,
+            won: true
+          }).subscribe(res => {
+            if (res.isNewRecord) {
+              this.bestTime.set(timeSecs);
+            }
+          });
+        }
+        
         // Force reactivity
         this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty()), le));
       }

@@ -70,7 +70,16 @@ func GetActiveRooms() []RoomSnapshot {
 		diff := r.Difficulty
 		var status string
 		if r.Engine != nil {
-			status = string(r.Engine.GetStatus())
+			st := r.Engine.GetStatus()
+			if st == engine.StateWaiting {
+				status = "waiting"
+			} else if st == engine.StateStarting {
+				status = "starting"
+			} else if st == engine.StatePlaying {
+				status = "playing"
+			} else {
+				status = "finished"
+			}
 		} else {
 			status = "waiting"
 		}
@@ -395,6 +404,7 @@ func (r *Room) BroadcastState() {
 
 func (r *Room) BroadcastStateLocked() {
 	state := r.Engine.GetState()
+	log.Printf("[DEBUG] Room %s broadcasting state: %+v to %d clients. Host: %s", r.ID, state, len(r.Clients), r.Host)
 	data, err := json.Marshal(map[string]interface{}{
 		"type":  "gameState",
 		"state": state,
@@ -405,10 +415,12 @@ func (r *Room) BroadcastStateLocked() {
 		return
 	}
 
-	for _, client := range r.Clients {
+	for id, client := range r.Clients {
 		err := client.WriteMessage(websocket.TextMessage, data)
 		if err != nil {
 			log.Printf("Failed to send message to %s: %v", client.ID, err)
+		} else {
+			log.Printf("[DEBUG] Successfully sent state to client %s", id)
 		}
 	}
 }

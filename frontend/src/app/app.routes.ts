@@ -49,6 +49,16 @@ export const routes: Routes = [
         path: 'games/tetris',
         loadComponent: () => import('./features/games/tetris/tetris.component').then(m => m.TetrisComponent),
         data: { seo: { titleKey: 'seo.tetris.title', descKey: 'seo.tetris.desc', keywordsKey: 'seo.tetris.keywords' } }
+      },
+      {
+        path: 'games/gomoku',
+        loadComponent: () => import('./features/games/gomoku/gomoku.component').then(m => m.GomokuComponent),
+        data: { seo: { titleKey: 'seo.gomoku.title', descKey: 'seo.gomoku.desc', keywordsKey: 'seo.gomoku.keywords' } }
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+        data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }
       }
     ]
   },

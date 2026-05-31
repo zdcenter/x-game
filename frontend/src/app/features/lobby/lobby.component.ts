@@ -284,6 +284,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'sudoku': return '🔢';
       case 'sliding': return '🔲';
       case 'hexa': return '🔶';
+      case 'gomoku': return '⚫⚪';
       default: return '🎮';
     }
   }
@@ -295,6 +296,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'sudoku': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
       case 'sliding': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
       case 'hexa': return isZh ? ['⏱️ 异盘竞分'] : ['⏱️ PK Score'];
+      case 'gomoku': return isZh ? ['⚔️ 经典对战'] : ['⚔️ PK Classic'];
       default: return [];
     }
   }

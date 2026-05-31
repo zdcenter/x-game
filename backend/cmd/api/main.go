@@ -17,6 +17,7 @@ import (
 	_ "github.com/x-game/backend/internal/engine/sliding"
 	_ "github.com/x-game/backend/internal/engine/hexa"
 	_ "github.com/x-game/backend/internal/engine/tetris"
+	_ "github.com/x-game/backend/internal/engine/gomoku"
 )
 
 func main() {
@@ -48,6 +49,12 @@ func main() {
 	v1.Post("/guest-login", rest.GuestLogin)
 
 	v1.Get("/games", rest.GetGames)
+
+	// Stats routes (Protected)
+	stats := v1.Group("/stats")
+	stats.Use(middleware.Protected())
+	stats.Get("/:game_id", rest.GetStats)
+	stats.Post("/:game_id", rest.SubmitStat)
 
 	// Sudoku routes (Protected)
 	sudoku := v1.Group("/sudoku")

@@ -396,15 +396,16 @@ export class GameLobbyPanelComponent {
 
   onConfirmCreateRoom() {
     if (this.isUpdateMode()) {
-      this.wsService.send({
+      this.wsService.sendLobby({
         type: 'change_game',
         game: this.newRoomGameId(),
         mode: this.newRoomMode(),
         difficulty: this.newRoomDifficulty()
       });
     } else {
+      const roomName = this.newRoomName().trim() || `${this.newRoomGameId()}-${Date.now()}`;
       this.createRoom.emit({
-        name: this.newRoomName(),
+        name: roomName,
         gameId: this.newRoomGameId(),
         mode: this.newRoomMode(),
         difficulty: this.newRoomDifficulty()

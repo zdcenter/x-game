@@ -5,6 +5,7 @@ import { PRNG } from '../../../../core/utils/prng';
 import { generatePieces } from './hexa-pieces';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 
 export enum GameStatus {
   WAITING = 'waiting',
@@ -18,6 +19,7 @@ export class HexaStore {
   private wsService = inject(WebSocketService);
   private authStore = inject(AuthStore);
   private audio = inject(AudioService);
+  private statsService = inject(GameStatsService);
 
   // Local Engine
   private engine = new HexaEngine();
@@ -54,6 +56,7 @@ export class HexaStore {
   combo = signal<number>(0);
   availablePieces = signal<HexPiece[]>([]);
   gameOver = signal<boolean>(false);
+  bestScore = signal<number>(0);
 
   // PK Mode
   globalStartAt = computed(() => this.wsService.gameState()?.globalStartAt || 0);
@@ -89,6 +92,10 @@ export class HexaStore {
     const state = this.wsService.gameState();
     if (!state || !state.players) return null;
     return state.players[this.playerId()];
+  });
+
+  readonly winners = computed(() => {
+    return this.wsService.gameState()?.winners || [];
   });
 
   piecesPlaced = 0;
@@ -129,6 +136,12 @@ export class HexaStore {
     if (mode === 'single') {
       this._localMode.set('single');
       this.startSinglePlayer();
+      if (this.authStore.isAuthenticated()) {
+        this.statsService.getStats('hexa').subscribe(stats => {
+          const stat = stats.find(s => s.Mode === 'single');
+          if (stat) this.bestScore.set(stat.BestScore);
+        });
+      }
     } else {
       this._localMode.set(mode);
       this.prng = undefined;
@@ -180,12 +193,24 @@ export class HexaStore {
       }
 
       // Check Game Over
-      if (this.engine.checkGameOver(remainingPieces)) {
+      const currentPieces = this.availablePieces().filter(p => p !== null);
+      if (this.engine.checkGameOver(currentPieces)) {
         this.gameOver.set(true);
         if (this.currentMode() !== 'single') {
           this.wsService.send({
             action: 'game_over'
           });
+        } else {
+          // Submit best score in single player mode
+          if (this.authStore.isAuthenticated()) {
+            this.statsService.submitStat('hexa', {
+              mode: 'single',
+              difficulty: '',
+              score: this.score(),
+              time: 0,
+              won: false
+            }).subscribe();
+          }
         }
       }
 

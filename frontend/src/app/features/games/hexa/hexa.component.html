@@ -103,7 +103,7 @@
                     </div>
                     @if (opp.finished) {
                       <div class="absolute inset-0 bg-green-900/30 flex items-center justify-center z-0">
-                        <span class="text-3xl opacity-20 transform -rotate-12">FINISHED</span>
+                        <span class="text-3xl opacity-20 transform -rotate-12">{{ t('game.finished')() || 'FINISHED' }}</span>
                       </div>
                     }
                   </div>
@@ -118,6 +118,11 @@
                 <div class="text-2xl font-mono font-black text-amber-400">
                   {{ store.score() }}
                 </div>
+                @if (currentRoomMode() === 'single' && store.bestScore() > 0) {
+                  <div class="text-[9px] lg:text-[10px] font-bold text-amber-500/80 mt-1 tracking-widest uppercase flex items-center gap-1">
+                    <span>👑</span> BEST: {{ store.bestScore() }}
+                  </div>
+                }
               </div>
               <div class="flex flex-col items-center">
                 <span class="text-xs font-bold opacity-70 mb-1">COMBO</span>
@@ -149,11 +154,11 @@
 
                 @if (store.status() === 'finished' || store.gameOver()) {
                   <app-game-result-overlay
-                    [status]="'lose'"
-                    [title]="t('game.you_lose')()"
-                    [stats]="[{label: 'SCORE', value: store.score()}]"
-                    [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
-                    [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
+                    [status]="store.status() === 'finished' ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"
+                    [title]="currentRoomMode() === 'single' ? t('game.you_lose')() : (store.status() === 'finished' ? (store.winners().includes(playerId) ? t('game.you_win')() : t('game.you_lose')()) : t('game.waiting_for_others')())"
+                    [stats]="currentRoomMode() === 'single' ? [{label: 'SCORE', value: store.score()}, {label: 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: 'SCORE', value: store.score()}]"
+                    [showRestart]="currentRoomMode() === 'single' || (store.status() === 'finished' && store.host() === playerId)"
+                    [showDismiss]="currentRoomMode() !== 'single' && store.status() === 'finished' && store.host() === playerId"
                     (restart)="store.playAgain()"
                     (dismiss)="dismissRoom()"
                     class="absolute inset-0 z-20 rounded-3xl overflow-hidden">

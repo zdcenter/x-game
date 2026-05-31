@@ -16,7 +16,27 @@
 
 ---
 
-## 2. 国际化与主题系统 (I18n & Theming)
+## Available Games (核心游戏矩阵)
+
+- **Minesweeper (扫雷)**
+  - Modes: Single Player (首击必空), PK Speed (异盘竞速), PK Steal (同盘抢雷)
+- **Sudoku (数独)**
+  - Modes: Single Player (3 difficulties), PK Speed
+- **Sliding Puzzle (数字华容道)**
+  - Modes: Single Player (3x3 to 6x6), PK Speed
+- **Hexa Puzzle (六边形消除)**
+  - Modes: Single Player (无尽模式), PK Score
+- **Tetris Battle (俄罗斯方块)**
+  - Modes: Single Player (无尽马拉松), PK Attack (异盘乱斗 / 发送垃圾行)
+- **Gomoku (五子棋)**
+  - Modes: Single Player (AI挑战 - Easy/Medium/Hard), PK Classic (经典对战)
+
+## Personal Records & Global Achievements (个人记录与成就系统)
+- **Persistent Local Records**: Tracks best time, best score, play count, and win rate across all single-player game modes.
+- **Global Achievements Profile (`/profile`)**: A unified, centralized dashboard displaying all historical personal records.
+- **In-Game Display**: Real-time display of the player's personal best inline within the game interface to promote engagement.
+
+## UI/UX Design System (UI/UX 规范)
 
 - **全局状态隔离**：通过依赖注入（DI）与 Signals 双向绑定实现了纯前端状态管理的强隔离。
 - **无缝多语言切换 (I18n)**：`I18nService` 支持中文（zh-CN）与英文（en-US）的瞬时热切换，不刷新页面即刻更新全站文案。

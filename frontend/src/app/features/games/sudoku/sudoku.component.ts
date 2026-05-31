@@ -114,8 +114,15 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
                       </svg>
                     </button>
                   }
-                  <div class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
-                    {{ gameTimer.formatTime(store.timeSpent()) }}
+                  <div class="flex flex-col items-center">
+                    <div class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
+                      {{ gameTimer.formatTime(store.timeSpent()) }}
+                    </div>
+                    @if (store.currentMode() === 'single' && store.bestTime() > 0) {
+                      <div class="text-[9px] lg:text-[10px] font-bold text-amber-500/80 mt-1 tracking-widest uppercase flex items-center gap-1">
+                        <span>👑</span> BEST: {{ gameTimer.formatTime(store.bestTime()) }}
+                      </div>
+                    }
                   </div>
                 </div>
               </div>
@@ -141,7 +148,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
                 [status]="'win'"
                 [title]="i18n.t('game.win')()"
                 [promptText]="i18n.t('game.sudoku.next_level_prompt')() || 'Level cleared! Play next?'"
-                [stats]="[{label: 'TIME', value: gameTimer.formatTime(store.timeSpent())}]"
+                [stats]="getSinglePlayerStats()"
                 [showCancel]="true"
                 [showNextLevel]="true"
                 (cancel)="store.view.set('lobby')"
@@ -246,6 +253,17 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       }
     }
   }
+  getSinglePlayerStats() {
+    const stats = [
+      { label: 'TIME', value: this.gameTimer.formatTime(this.store.timeSpent()) }
+    ];
+    const best = this.store.bestTime();
+    if (best > 0) {
+      stats.push({ label: 'BEST', value: this.gameTimer.formatTime(best) });
+    }
+    return stats;
+  }
+
 
   override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
     if (this.store.roomId() === event.roomId) return;

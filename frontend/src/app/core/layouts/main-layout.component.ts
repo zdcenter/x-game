@@ -79,6 +79,11 @@ import { AuthStore } from '../auth/auth.store';
                 <span class="font-bold tracking-wider max-w-[60px] sm:max-w-[120px] truncate" style="color: var(--color-accent-from)" [title]="authStore.currentUser()?.username">
                   {{ authStore.currentUser()?.username }}
                 </span>
+                
+                <a routerLink="/profile" class="hidden sm:flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 cursor-pointer shrink-0" title="Profile & Achievements">
+                  🏆 <span class="hidden md:inline">{{ i18n.currentLang() === 'zh' ? '成就' : 'Profile' }}</span>
+                </a>
+
                 @if (authStore.currentUser()?.role === 'guest') {
                   <span class="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded shadow bg-slate-500/20 text-slate-400 border border-slate-500/30 uppercase shrink-0 hidden sm:inline-block">
                     {{ i18n.currentLang() === 'zh' ? '游客' : 'Guest' }}

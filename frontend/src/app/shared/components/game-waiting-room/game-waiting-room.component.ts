@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-game-waiting-room',
@@ -18,7 +19,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
             {{ i18n.t('lobby.' + gameId)() }} - {{ i18n.t('game.waiting_room')() }}
           </h2>
           <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-8 text-sm sm:text-base">
-            <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ mode === 'pk_steal' ? i18n.t('game.steal_mode')() : i18n.t('game.speed_mode')() }}</span></p>
+            <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
             <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
           </div>
 
@@ -62,6 +63,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 })
 export class GameWaitingRoomComponent {
   i18n = inject(I18nService);
+  gameRegistry = inject(GameRegistryService);
 
   @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;
@@ -81,5 +83,23 @@ export class GameWaitingRoomComponent {
       if (b.id === this.currentUserId) return 1;
       return 0;
     });
+  }
+
+  getModeName(modeId: string): string {
+    if (!modeId) return '';
+    try {
+      const labelKey = this.gameRegistry.getModeLabel(this.gameId, modeId);
+      if (labelKey) {
+        const translation = this.i18n.t(labelKey)();
+        if (translation) return translation;
+      }
+    } catch (e) {
+      console.error('Error getting mode label:', e);
+    }
+    if (typeof modeId === 'string') {
+      if (modeId.includes('steal')) return this.i18n.t('game.steal_mode')() || 'PK Steal';
+      if (modeId.includes('speed')) return this.i18n.t('game.speed_mode')() || 'PK Speed';
+    }
+    return modeId || '';
   }
 }

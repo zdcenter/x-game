@@ -2,6 +2,7 @@ import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { LocalMinesweeperEngine } from './minesweeper-engine';
 
 export enum CellState {
@@ -46,6 +47,7 @@ export class MinesweeperStore {
   private ws = inject(WebSocketService);
   private audio = inject(AudioService);
   private auth = inject(AuthStore);
+  private statsService = inject(GameStatsService);
   
   private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
@@ -53,6 +55,9 @@ export class MinesweeperStore {
   private currentMode = signal<string>('single');
   private localEngine = signal<LocalMinesweeperEngine | null>(null);
   private tick = signal(0);
+  
+  bestTime = signal<number>(0);
+  private currentDifficulty = signal<string>('medium');
 
   // Derive all state from the WebSocketService's global gameState
   private rawState = computed(() => this.ws.gameState() || {
@@ -194,10 +199,20 @@ export class MinesweeperStore {
 
   constructor() {}
 
-  startLocalGame(width: number, height: number, mines: number) {
+  startLocalGame(width: number, height: number, mines: number, difficulty: string = 'medium') {
     this.currentMode.set('single');
+    this.currentDifficulty.set(difficulty);
     this.ws.disconnect('minesweeper'); // Ensure we don't hold a WebSocket for single player
     this.localEngine.set(new LocalMinesweeperEngine(width, height, mines));
+    
+    // Load best time
+    if (this.auth.currentUser()) {
+        this.statsService.getStats('minesweeper').subscribe(stats => {
+          const stat = stats.find(s => s.Mode === 'single' && s.Difficulty === difficulty);
+          if (stat) this.bestTime.set(stat.BestTime);
+        });
+    }
+    
     this.tick.set(this.tick() + 1);
   }
 
@@ -225,6 +240,7 @@ export class MinesweeperStore {
        const engine = this.localEngine();
        if (engine) {
           engine.status = GameStatus.Playing;
+          engine.startAt = Date.now();
           this.tick.set(this.tick() + 1);
        }
     } else {

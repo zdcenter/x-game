@@ -327,8 +327,15 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   getOverlayStats(): { label: string; value: string | number }[] {
-    return [
+    const stats = [
       { label: this.t('game.moves')() || 'Moves', value: this.store.myBoard()?.moves || 0 }
     ];
+    if (this.currentRoomMode() === 'single') {
+      const best = this.store.bestTime();
+      if (best > 0) {
+        stats.push({ label: 'BEST', value: this.formatTime(best * 1000) });
+      }
+    }
+    return stats;
   }
 }

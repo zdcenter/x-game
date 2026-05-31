@@ -124,6 +124,11 @@
                      [class.text-green-500]="store.status() === 'finished'">
                   {{ formatTime(getElapsedMs(currentRoomMode() === 'single' ? (store.myBoard()?.startAt || 0) : store.globalStartAt())) }}
                 </div>
+                @if (currentRoomMode() === 'single' && store.bestTime() > 0) {
+                  <div class="text-[9px] lg:text-[10px] font-bold text-amber-500/80 mt-1 tracking-widest uppercase flex items-center gap-1">
+                    <span>👑</span> BEST: {{ formatTime(store.bestTime() * 1000) }}
+                  </div>
+                }
               </div>
               
               <!-- Moves -->
