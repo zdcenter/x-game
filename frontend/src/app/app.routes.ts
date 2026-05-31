@@ -56,6 +56,11 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'seo.gomoku.title', descKey: 'seo.gomoku.desc', keywordsKey: 'seo.gomoku.keywords' } }
       },
       {
+        path: 'games/codebreaker',
+        loadComponent: () => import('./features/games/codebreaker/codebreaker.component').then(m => m.CodebreakerComponent),
+        data: { seo: { titleKey: 'seo.codebreaker.title', descKey: 'seo.codebreaker.desc', keywordsKey: 'seo.codebreaker.keywords' } }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }

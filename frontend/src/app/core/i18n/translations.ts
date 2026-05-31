@@ -5,6 +5,7 @@ import { slidingTranslations } from '../../features/games/sliding/i18n/sliding.t
 import { hexaTranslations } from '../../features/games/hexa/i18n/hexa.translations';
 import { tetrisTranslations } from '../../features/games/tetris/i18n/tetris.translations';
 import { gomokuTranslations } from '../../features/games/gomoku/i18n/gomoku.translations';
+import { codebreakerTranslations } from '../../features/games/codebreaker/i18n/codebreaker.translations';
 
 export type Lang = 'en' | 'zh';
 
@@ -16,6 +17,7 @@ const gameTranslations: Record<Lang, Record<string, string>>[] = [
   hexaTranslations,
   tetrisTranslations,
   gomokuTranslations,
+  codebreakerTranslations,
 ];
 
 // Auto-merge core + all game translations

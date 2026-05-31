@@ -1,0 +1,278 @@
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { AuthStore } from '../../../core/auth/auth.store';
+import { CodebreakerStore } from './store/codebreaker.store';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
+import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameTimerService } from '../../../core/services/game-timer.service';
+import { ToastService } from '../../../core/services/toast.service';
+
+@Component({
+  selector: 'app-codebreaker',
+  standalone: true,
+  imports: [
+    CommonModule,
+    GameResultOverlayComponent,
+    GameRulesModalComponent,
+    GameWaitingRoomComponent,
+    GameLobbyPanelComponent
+  ],
+  providers: [CodebreakerStore],
+  templateUrl: './codebreaker.component.html',
+  styleUrls: ['./codebreaker.component.css']
+})
+export class CodebreakerComponent implements OnInit, OnDestroy {
+  i18n = inject(I18nService);
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+  authStore = inject(AuthStore);
+  ws = inject(WebSocketService);
+  store = inject(CodebreakerStore);
+  gameTimer = inject(GameTimerService);
+  toastService = inject(ToastService);
+
+  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  roomLifecycle: RoomLifecycleHandle;
+
+  showRules = signal(false);
+  isMobileSidebarOpen = signal(false);
+
+  // User input signals
+  currentInput = signal<string>('');
+  
+  // Helper scratchpad: tracks digit markers (none, cross, check)
+  // mapped to 0-9
+  helperMarks = signal<Record<string, 'none' | 'cross' | 'check'>>({
+    '0': 'none', '1': 'none', '2': 'none', '3': 'none', '4': 'none',
+    '5': 'none', '6': 'none', '7': 'none', '8': 'none', '9': 'none'
+  });
+
+  // Computed state
+  status = this.store.status;
+  digitLength = this.store.digitLength;
+  players = this.store.players;
+  myState = this.store.myState;
+  opponentState = this.store.opponentState;
+  winners = this.store.winners;
+  myPlayerId = this.store.myPlayerId;
+
+  // Room state
+  currentRoomMode = signal<string>('single');
+  currentDifficulty = signal<string>('medium');
+  roomId = signal<string>('');
+  hostId = signal<string>('');
+
+  get mappedPlayers() {
+    return this.players().map(p => ({ id: p.id }));
+  }
+
+  constructor() {
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'codebreaker',
+      getCurrentMode: () => this.currentRoomMode(),
+      onLeaveRoom: () => this.returnToLobby(),
+    });
+
+    effect(() => {
+      const status = this.status();
+      if (status === 'starting') {
+        this.gameTimer.startCountdown();
+      } else {
+        this.gameTimer.stopCountdown();
+      }
+    });
+  }
+
+  ngOnInit() {
+    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+    this.ws.connectLobby(playerId, playerId);
+
+    const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
+    if (joinInfo) {
+      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+    } else {
+      this.route.queryParams.subscribe(params => {
+        const mode = params['mode'] || 'single';
+        const diff = params['difficulty'] || 'medium';
+        const roomId = params['room'] || `codebreaker-${Date.now()}`;
+        const host = params['host'] || roomId;
+        
+        if (this.roomId() === roomId && this.currentRoomMode() === mode) {
+          return;
+        }
+
+        this.joinRoom(roomId, mode, diff, host);
+      });
+    }
+  }
+
+  joinRoom(roomId: string, mode: string, difficulty: string, host: string) {
+    if (!roomId) return;
+    this.currentRoomMode.set(mode);
+    this.currentDifficulty.set(difficulty);
+    this.roomId.set(roomId);
+    this.hostId.set(host);
+
+    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+    
+    this.store.init(
+      mode,
+      difficulty,
+      roomId,
+      playerId,
+      host
+    );
+
+    // Reset local helpers on join
+    this.currentInput.set('');
+    this.helperMarks.set({
+      '0': 'none', '1': 'none', '2': 'none', '3': 'none', '4': 'none',
+      '5': 'none', '6': 'none', '7': 'none', '8': 'none', '9': 'none'
+    });
+    
+    if (mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
+    }
+  }
+
+  ngOnDestroy() {
+    this.store.destroy();
+  }
+
+  returnToLobby() {
+    this.router.navigate(['/lobby']);
+  }
+
+  openChangeSettings() {
+    if (this.lobbyPanel && this.roomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.roomId(),
+        game: 'codebreaker',
+        mode: this.currentRoomMode(),
+        difficulty: this.currentDifficulty(),
+        host: this.hostId()
+      });
+    }
+  }
+
+  handleCreateRoom(config: any) {
+    const roomId = config.name || `codebreaker-${Date.now()}`;
+    const host = this.myPlayerId();
+    const diff = config.difficulty || 'medium';
+    this.joinRoom(roomId, config.mode, diff, host);
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  handleJoinRoom(room: any) {
+    const diff = room.difficulty || 'medium';
+    this.joinRoom(room.roomId, room.mode, diff, room.host);
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  changeDifficulty(event: Event) {
+    const diff = (event.target as HTMLSelectElement).value;
+    if (diff === this.currentDifficulty()) return;
+    this.currentDifficulty.set(diff);
+    this.store.init(
+      this.currentRoomMode(),
+      diff,
+      this.roomId(),
+      this.myPlayerId(),
+      this.hostId()
+    );
+    this.currentInput.set('');
+  }
+
+  onRestart() {
+    this.store.startGame();
+    this.currentInput.set('');
+  }
+
+  // Keyboard actions
+  pressKey(num: string) {
+    if (this.status() !== 'playing') return;
+    
+    const input = this.currentInput();
+    
+    // Check digit length
+    if (input.length >= this.digitLength()) {
+      return;
+    }
+    // Prevent duplicate digits
+    if (input.includes(num)) {
+      this.toastService.show(this.i18n.t('codebreaker.duplicate_digits')(), 'error');
+      return;
+    }
+
+    this.currentInput.set(input + num);
+  }
+
+  clearInput() {
+    this.currentInput.set('');
+  }
+
+  submitGuess() {
+    const val = this.currentInput();
+    if (val.length !== this.digitLength()) {
+      this.toastService.show(
+        this.i18n.t('codebreaker.invalid_length')().replace('{length}', this.digitLength().toString()),
+        'error'
+      );
+      return;
+    }
+    this.store.submitGuess(val);
+    this.currentInput.set('');
+  }
+
+  // Scratchpad toggle
+  cycleHelperMark(num: string) {
+    const current = this.helperMarks()[num];
+    let next: 'none' | 'cross' | 'check' = 'none';
+    if (current === 'none') next = 'cross';
+    else if (current === 'cross') next = 'check';
+    
+    this.helperMarks.update(record => ({
+      ...record,
+      [num]: next
+    }));
+  }
+
+  // Helper getters
+  getOpponentBestResult(): string {
+    const state = this.opponentState();
+    if (!state || state.guesses.length === 0) return '0A0B';
+    
+    let maxA = -1;
+    let bestB = 0;
+    for (const r of state.guesses) {
+      if (r.a > maxA) {
+        maxA = r.a;
+        bestB = r.b;
+      } else if (r.a === maxA && r.b > bestB) {
+        bestB = r.b;
+      }
+    }
+    return `${maxA}A${bestB}B`;
+  }
+
+  get winnerText(): string {
+    const winList = this.winners();
+    if (winList.length === 0) return '';
+    if (winList.includes(this.myPlayerId())) {
+      return this.i18n.t('game.you_win')();
+    }
+    return this.i18n.t('game.you_lose')();
+  }
+
+  get winDescription(): string {
+    const attempts = this.myState()?.guesses.length || 0;
+    return this.i18n.t('codebreaker.victory_desc')().replace('{attempts}', attempts.toString());
+  }
+}

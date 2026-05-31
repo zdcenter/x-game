@@ -150,6 +150,9 @@ export class GomokuComponent implements OnInit, OnDestroy {
   }
 
   returnToLobby() {
+    this.roomId.set('');
+    this.store.leaveGame();
+    this.roomLifecycle.clearReconnectInfo();
     this.router.navigate(['/lobby']);
   }
 
@@ -181,10 +184,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   }
 
   onSurrender() {
-    // Basic surrender logic for single player
-    if (this.currentRoomMode() === 'single') {
-       this.store.surrender();
-    }
+    this.store.surrender();
   }
 
   get winnerText(): string {

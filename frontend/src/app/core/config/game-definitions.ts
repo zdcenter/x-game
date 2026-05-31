@@ -86,5 +86,20 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_gomoku_medium', desc: 'Medium AI (15x15)' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
     ]
+  },
+  {
+    id: 'codebreaker',
+    route: '/games/codebreaker',
+    titleKey: 'lobby.codebreaker',
+    iconEmoji: '🕵️',
+    modes: [
+      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_codebreaker_easy', desc: '3-digit code' },
+      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_codebreaker_medium', desc: '4-digit code' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_codebreaker_hard', desc: '5-digit code' }
+    ]
   }
 ];
+

@@ -1,0 +1,276 @@
+<div class="h-[calc(100vh-64px)] w-full overflow-hidden flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative select-none">
+  
+  <div class="flex-grow flex flex-col items-center overflow-y-auto overflow-x-hidden relative min-w-0">
+    <!-- Cyber decoration -->
+    <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden flex justify-center items-center opacity-[0.03]">
+      <span class="text-[30rem] rotate-12">🕵️🔢</span>
+    </div>
+
+    <!-- Header -->
+    <header class="w-full max-w-5xl px-4 py-4 md:py-6 flex justify-between items-center z-10 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl flex items-center justify-center text-white text-xl md:text-2xl shadow-lg border border-white/20">
+          🕵️
+        </div>
+        <div class="flex flex-col">
+          <h1 class="text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
+            {{ i18n.t('lobby.codebreaker')() }}
+          </h1>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('codebreaker.game_mode_pk')() }}
+            </span>
+            @if (currentRoomMode() === 'single') {
+              <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
+              <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                {{ currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')()) }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        @if (currentRoomMode() === 'single') {
+          <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-accent-from)] text-xs md:text-sm font-bold appearance-none cursor-pointer outline-none focus:border-emerald-500">
+            <option value="easy">{{ i18n.t('game.diff_codebreaker_easy')() }}</option>
+            <option value="medium">{{ i18n.t('game.diff_codebreaker_medium')() }}</option>
+            <option value="hard">{{ i18n.t('game.diff_codebreaker_hard')() }}</option>
+          </select>
+        }
+
+        <button (click)="showRules.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)]" title="Rules">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+        <button (click)="onRestart()" class="p-2 md:p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-sm hover:bg-emerald-500/20 transition-all font-bold text-sm hidden sm:block">
+          {{ i18n.t('game.restart')() }}
+        </button>
+        @if (currentRoomMode() !== 'single') {
+          <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm">
+            {{ i18n.t('game.leave')() }}
+          </button>
+        }
+        <button (click)="isMobileSidebarOpen.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] lg:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow w-full max-w-5xl px-2 md:px-4 flex flex-col md:flex-row items-stretch justify-center gap-6 z-10 pb-4 md:pb-8 min-h-0 overflow-y-auto md:overflow-hidden">
+      
+      <!-- Left Panel: My Guess History (Scrollable) -->
+      <div class="flex-grow md:w-1/3 min-h-[250px] md:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
+        <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
+          <span>{{ i18n.t('codebreaker.guess_history')() }}</span>
+          <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() }}</span>
+        </h3>
+        
+        <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+          @if (myState() && myState()!.guesses.length > 0) {
+            @for (rec of myState()!.guesses; track $index) {
+              <div class="flex items-center justify-between p-2.5 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-emerald-500/30 transition-all font-mono">
+                <span class="text-xs text-[var(--color-text-muted)]">#{{ $index + 1 }}</span>
+                <span class="font-black text-lg text-[var(--color-text-main)] tracking-widest pl-2">{{ rec.guess }}</span>
+                <div class="flex gap-1.5 ml-auto">
+                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">{{ rec.a }}A</span>
+                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">{{ rec.b }}B</span>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--color-text-muted)] text-sm">
+              🕵️ <span>输入数字开始逻辑推理吧！</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Center Panel: Inputs and Soft Keyboard -->
+      <div class="flex-grow md:w-2/5 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-5 md:p-6 shadow-lg flex flex-col justify-between overflow-y-auto custom-scrollbar">
+        
+        <!-- Code Display Inputs -->
+        <div class="flex flex-col items-center justify-center gap-4 my-2">
+          <div class="flex gap-2">
+            @for (item of [].constructor(digitLength()); track $index) {
+              <div class="w-12 h-14 md:w-14 md:h-16 rounded-xl border-2 border-[var(--color-border-card)] bg-[var(--color-bg-main)] flex items-center justify-center text-2xl md:text-3xl font-black text-[var(--color-accent-from)] shadow-inner transition-all duration-200"
+                   [class.border-emerald-500]="currentInput().length === $index"
+                   [class.shadow-[0_0_12px_rgba(16,185,129,0.2)]]="currentInput().length === $index">
+                {{ currentInput()[$index] || '•' }}
+              </div>
+            }
+          </div>
+          <span class="text-xs font-bold text-[var(--color-text-muted)] tracking-wider">密码长度：{{ digitLength() }} 位不重复数字</span>
+        </div>
+
+        <!-- Numeric Soft Keyboard -->
+        <div class="grid grid-cols-4 gap-2.5 max-w-sm mx-auto w-full my-4">
+          @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
+            <button (click)="pressKey(num)" 
+                    [disabled]="currentInput().includes(num)"
+                    class="py-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-base md:text-lg font-black transition-all active:scale-95 shadow-sm disabled:opacity-30 disabled:pointer-events-none">
+              {{ num }}
+            </button>
+          }
+          <!-- Control buttons -->
+          <button (click)="clearInput()" 
+                  class="py-3 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs md:text-sm font-bold transition-all active:scale-95 shadow-sm">
+            {{ i18n.t('codebreaker.keyboard.clear')() }}
+          </button>
+          <button (click)="submitGuess()" 
+                  [disabled]="currentInput().length !== digitLength()"
+                  class="py-3 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] text-xs md:text-sm font-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:pointer-events-none">
+            {{ i18n.t('codebreaker.keyboard.submit')() }}
+          </button>
+        </div>
+
+        <!-- Helpers Number Scratchpad -->
+        <div class="border-t border-[var(--color-border-card)] pt-4 mt-2">
+          <h4 class="text-xs font-bold text-[var(--color-text-main)] mb-1 uppercase tracking-wider flex items-center justify-between">
+            <span>{{ i18n.t('codebreaker.helper_board')() }}</span>
+          </h4>
+          <p class="text-[10px] text-[var(--color-text-muted)] leading-tight mb-3">{{ i18n.t('codebreaker.helper_desc')() }}</p>
+          
+          <div class="grid grid-cols-5 gap-2 max-w-sm mx-auto w-full">
+            @for (num of ['0','1','2','3','4','5','6','7','8','9']; track num) {
+              <button (click)="cycleHelperMark(num)" 
+                      [class.bg-red-500/10]="helperMarks()[num] === 'cross'" [class.text-red-400]="helperMarks()[num] === 'cross'" [class.border-red-500/20]="helperMarks()[num] === 'cross'"
+                      [class.bg-emerald-500/10]="helperMarks()[num] === 'check'" [class.text-emerald-400]="helperMarks()[num] === 'check'" [class.border-emerald-500/20]="helperMarks()[num] === 'check'"
+                      [class.bg-[var(--color-bg-main)]]="helperMarks()[num] === 'none'"
+                      class="py-2.5 rounded-lg border border-[var(--color-border-card)] font-bold text-xs transition-all relative flex flex-col items-center justify-center gap-0.5">
+                <span>{{ num }}</span>
+                @if (helperMarks()[num] === 'cross') {
+                  <span class="text-[8px] font-black leading-none">❌</span>
+                } @else if (helperMarks()[num] === 'check') {
+                  <span class="text-[8px] font-black leading-none">✅</span>
+                } @else {
+                  <span class="text-[8px] font-black leading-none opacity-0">•</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Opponent Progress (PK mode only) -->
+      @if (currentRoomMode() !== 'single') {
+        <div class="flex-grow md:w-1/3 min-h-[200px] md:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
+          <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
+            <span class="flex items-center gap-1.5">
+              <span>{{ i18n.t('codebreaker.opponent_history')() }}</span>
+              @if (opponentState()) {
+                <span class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full font-bold">
+                  👤 {{ opponentState()?.id }}
+                </span>
+              }
+            </span>
+            @if (opponentState()) {
+              <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ opponentState()!.guesses.length }} {{ i18n.t('codebreaker.guess')() }}</span>
+            }
+          </h3>
+
+          <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+            @if (opponentState() && opponentState()!.guesses.length > 0) {
+              <div class="mb-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col gap-1.5 font-mono text-xs text-indigo-300">
+                <div class="flex justify-between items-center">
+                  <span>{{ i18n.t('codebreaker.opponent_attempts')()?.replace('{count}', opponentState()!.guesses.length.toString()) }}</span>
+                  @if (opponentState()?.finished) {
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">🎉 已破译</span>
+                  } @else {
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">⚡ 正在推理</span>
+                  }
+                </div>
+                <div>{{ i18n.t('codebreaker.opponent_best')()?.replace('{best}', getOpponentBestResult()) }}</div>
+              </div>
+
+              @for (rec of opponentState()!.guesses; track $index) {
+                <div class="flex items-center justify-between p-2 bg-[var(--color-bg-main)]/50 rounded-xl border border-[var(--color-border-card)]/50 font-mono text-xs opacity-60">
+                  <span>#{{ $index + 1 }}</span>
+                  <span class="font-black tracking-widest pl-2">****</span>
+                  <div class="flex gap-1">
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80">{{ rec.a }}A</span>
+                    <span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400/80">{{ rec.b }}B</span>
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--color-text-muted)] text-sm">
+                👤 <span>对方还没有进行尝试</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+    </main>
+  </div>
+
+  <!-- Modals & Overlays -->
+  <app-game-rules-modal [gameId]="'codebreaker'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  @if (currentRoomMode() !== 'single' && status() === 'waiting') {
+    <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
+      <app-game-waiting-room
+        class="w-full h-full flex"
+        [gameId]="'codebreaker'"
+        [mode]="currentRoomMode()"
+        [roomId]="roomId()"
+        [players]="mappedPlayers"
+        [hostId]="hostId()"
+        [currentUserId]="myPlayerId()"
+        (start)="store.startGame()"
+        (leave)="returnToLobby()"
+        (changeSettings)="openChangeSettings()">
+      </app-game-waiting-room>
+    </div>
+  }
+
+  <!-- Starting Overlay -->
+  @if (status() === 'starting') {
+    <div class="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
+      <div class="text-[5rem] md:text-[8rem] font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest text-center w-full">
+        {{ gameTimer.countdownDisplay() }}
+      </div>
+    </div>
+  }
+
+  <!-- Results Overlay -->
+  @if (status() === 'finished') {
+    <app-game-result-overlay
+      [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"
+      [title]="winnerText"
+      [subtitle]="winDescription"
+      [showRestart]="true"
+      [showLeave]="currentRoomMode() !== 'single'"
+      (restart)="onRestart()"
+      (leave)="returnToLobby()">
+    </app-game-result-overlay>
+  }
+
+  <!-- Sidebar -->
+  <div class="flex-shrink-0 transition-transform duration-300"
+       [ngClass]="{
+         'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+         'translate-x-0': isMobileSidebarOpen(),
+         'translate-x-full': !isMobileSidebarOpen(),
+         'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
+       }">
+    <div class="flex justify-between items-center mb-4 lg:hidden">
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
+    </div>
+    <app-game-lobby-panel
+      #lobbyPanel
+      class="flex-grow flex"
+      [currentGameId]="'codebreaker'"
+      [currentRoomId]="roomId()"
+      (joinRoom)="handleJoinRoom($event)"
+      (createRoom)="handleCreateRoom($event)">
+    </app-game-lobby-panel>
+  </div>
+
+</div>

@@ -140,6 +140,21 @@ export class GomokuStore {
   surrender() {
     if (this.singlePlayerMode) {
       this.localGameStatus.set({ status: 'finished', winner: 'AI' });
+    } else {
+      this.ws.send({ action: 'forfeit' });
+    }
+  }
+
+  leaveGame() {
+    if (!this.singlePlayerMode) {
+      this.ws.send({ type: 'leave_game' });
+      this.ws.disconnect('gomoku');
+    }
+  }
+
+  dismissRoom() {
+    if (!this.singlePlayerMode) {
+      this.ws.send({ type: 'dismiss_room' });
     }
   }
 

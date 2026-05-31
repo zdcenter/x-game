@@ -104,6 +104,14 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 			return e.State, fmt.Errorf("gomoku requires exactly 2 players")
 		}
 
+		// Clear the board and reset winner for the new game
+		for i := 0; i < Size; i++ {
+			for j := 0; j < Size; j++ {
+				e.Board[i][j] = Empty
+			}
+		}
+		e.Winner = ""
+
 		// First player is Black, second is White
 		e.PlayerColors[e.Players[0]] = Black
 		e.PlayerColors[e.Players[1]] = White
@@ -154,6 +162,17 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 			}
 		}
 
+		return e.State, nil
+	}
+
+	if action == "forfeit" {
+		e.State = engine.StateFinished
+		for _, p := range e.Players {
+			if p != playerID {
+				e.Winner = p
+				break
+			}
+		}
 		return e.State, nil
 	}
 

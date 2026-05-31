@@ -117,6 +117,17 @@ func Seed() {
 	}
 	DB.Where(domain.GameConfig{ID: "gomoku"}).FirstOrCreate(&defaultGomoku)
 
+	defaultCodebreaker := domain.GameConfig{
+		ID:       "codebreaker",
+		Name:     `{"en": "Codebreaker", "zh": "1A2B 密码破译"}`,
+		Overview: `{"en": "Logic deduction game. Find the secret numbers by matching A and B clues.", "zh": "经典逻辑推导游戏。根据A和B的提示推理出正确的数字密码。"}`,
+		Rules:    `{"en": "# Codebreaker (1A2B) Rules\n\nGuess the secret non-repeating number code! For each guess, the system returns clues:\n- **A**: Correct digit in the correct position.\n- **B**: Correct digit but in the wrong position.\n\n## 🎮 Difficulties\n- **Easy**: 3-digit code.\n- **Medium**: 4-digit code.\n- **Hard**: 5-digit code.", "zh": "# 1A2B 密码破译规则\n\n通过逻辑推导找出系统生成的互不重复的数字密码！每次猜测后，系统会给出相应的提示：\n- **A**: 数字正确且位置也正确。\n- **B**: 数字正确但位置不正确。\n\n## 🎮 难度说明\n- **简单**: 3 位数密码。\n- **中等**: 4 位数密码。\n- **困难**: 5 位数密码。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "codebreaker"}).FirstOrCreate(&defaultCodebreaker)
+
+
 	var userCount int64
 	DB.Model(&domain.User{}).Count(&userCount)
 	if userCount == 0 {

@@ -18,6 +18,7 @@ import (
 	_ "github.com/x-game/backend/internal/engine/hexa"
 	_ "github.com/x-game/backend/internal/engine/tetris"
 	_ "github.com/x-game/backend/internal/engine/gomoku"
+	_ "github.com/x-game/backend/internal/engine/codebreaker"
 )
 
 func main() {
