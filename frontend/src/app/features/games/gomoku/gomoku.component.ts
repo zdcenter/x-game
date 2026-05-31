@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -10,6 +10,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameTimerService } from '../../../core/services/game-timer.service';
 
 @Component({
   selector: 'app-gomoku',
@@ -26,6 +27,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   authStore = inject(AuthStore);
   ws = inject(WebSocketService);
   store = inject(GomokuStore);
+  gameTimer = inject(GameTimerService);
   
   roomLifecycle: RoomLifecycleHandle;
 
@@ -34,6 +36,15 @@ export class GomokuComponent implements OnInit, OnDestroy {
       gameId: 'gomoku',
       getCurrentMode: () => this.currentRoomMode(),
       onLeaveRoom: () => this.returnToLobby(),
+    });
+
+    effect(() => {
+      const status = this.gameStatus().status;
+      if (status === 'starting') {
+        this.gameTimer.startCountdown();
+      } else {
+        this.gameTimer.stopCountdown();
+      }
     });
   }
 

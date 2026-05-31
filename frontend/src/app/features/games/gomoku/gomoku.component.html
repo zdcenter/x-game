@@ -153,9 +153,9 @@
 
   <!-- Starting Overlay -->
   @if (gameStatus().status === 'starting') {
-    <div class="absolute inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
-      <div class="text-[4rem] md:text-[6rem] font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest">
-        {{ i18n.t('game.get_ready')() || 'Get Ready!' }}
+    <div class="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
+      <div class="text-[5rem] md:text-[8rem] font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest text-center w-full">
+        {{ gameTimer.countdownDisplay() }}
       </div>
     </div>
   }
