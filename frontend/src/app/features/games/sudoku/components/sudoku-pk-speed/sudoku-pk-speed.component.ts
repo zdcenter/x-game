@@ -6,6 +6,7 @@ import { SudokuNumpadComponent } from '../sudoku-numpad/sudoku-numpad.component'
 import { SudokuToolsComponent } from '../sudoku-tools/sudoku-tools.component';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { GameResultOverlayComponent } from '../../../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GameRegistryService } from '../../../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-sudoku-pk-speed',
@@ -16,8 +17,22 @@ import { GameResultOverlayComponent } from '../../../../../shared/components/gam
 export class SudokuPkSpeedComponent {
   store = inject(SudokuStore);
   i18n = inject(I18nService);
+  gameRegistry = inject(GameRegistryService);
 
   @Output() openLobby = new EventEmitter<void>();
+
+  getModeName() {
+    const mode = this.store.currentMode();
+    const key = this.gameRegistry.getModeLabel('sudoku', mode);
+    return key ? this.i18n.t(key)() : mode;
+  }
+  
+  getDiffName() {
+    const rState = this.store.rawState() as any;
+    const diff = rState?.difficulty || '';
+    const key = this.gameRegistry.getDifficultyLabel('sudoku', diff);
+    return key ? this.i18n.t(key)() : diff;
+  }
 
   getPlayers() {
     const players = Object.values(this.store.players() as any) as any[];

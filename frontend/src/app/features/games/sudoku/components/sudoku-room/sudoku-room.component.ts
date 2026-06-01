@@ -1,4 +1,4 @@
-import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
+
 import { Component, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';

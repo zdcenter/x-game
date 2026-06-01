@@ -89,8 +89,15 @@ export class WebSocketService {
         });
         
         console.log('Room changed game:', msg.game);
-        // Navigate to the new game component. Angular will destroy current component and disconnect cleanly.
-        this.router.navigate(['/games', msg.game]);
+        const targetUrl = '/games/' + msg.game;
+        if (this.router.url === targetUrl) {
+          // Force reload component by navigating away and back
+          this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+            this.router.navigate([targetUrl]);
+          });
+        } else {
+          this.router.navigate([targetUrl]);
+        }
       }
     };
 

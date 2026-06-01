@@ -404,19 +404,22 @@ export class GameLobbyPanelComponent {
     if (this.isUpdateMode()) {
       this.wsService.send({
         type: 'change_game',
+        roomId: this.updatingRoomId(),
         game: this.newRoomGameId(),
         mode: this.newRoomMode(),
         difficulty: this.newRoomDifficulty()
       });
-    } else {
-      const roomName = this.newRoomName().trim() || `${this.newRoomGameId()}-${Date.now()}`;
-      this.createRoom.emit({
-        name: roomName,
-        gameId: this.newRoomGameId(),
-        mode: this.newRoomMode(),
-        difficulty: this.newRoomDifficulty()
-      });
+      this.isCreateModalOpen.set(false);
+      return;
     }
+
+    const roomName = this.newRoomName().trim() || `${this.newRoomGameId()}-${Date.now()}`;
+    this.createRoom.emit({
+      name: roomName,
+      gameId: this.newRoomGameId(),
+      mode: this.newRoomMode(),
+      difficulty: this.newRoomDifficulty()
+    });
     this.isCreateModalOpen.set(false);
   }
 

@@ -23,8 +23,16 @@
           </svg>
           {{ i18n.t('game.leave')() }}
         </button>
-        <div class="text-[var(--color-text-main)] font-bold opacity-80 uppercase tracking-widest text-sm md:text-base">
-          {{ i18n.t('game.pk_steal_label')() }}
+        <div class="flex items-center justify-center gap-1.5 md:gap-2">
+          <span class="text-[var(--color-text-main)] font-bold opacity-90 uppercase tracking-widest text-sm md:text-base">
+            {{ getModeName() }}
+          </span>
+          @if (getDiffName()) {
+            <span class="text-[var(--color-text-muted)] opacity-50 text-xs md:text-sm">/</span>
+            <span class="text-[var(--color-accent-from)] font-bold uppercase tracking-widest text-sm md:text-base">
+              {{ getDiffName() }}
+            </span>
+          }
         </div>
         <div class="flex items-center gap-2">
           <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md opacity-0">
