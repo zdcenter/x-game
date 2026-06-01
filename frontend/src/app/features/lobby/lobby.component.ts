@@ -215,6 +215,38 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
                   <circle cx="50" cy="72" r="4" fill="#34d399" />
                   <path d="M 48 74 L 47 80 L 53 80 L 52 74 Z" fill="#34d399" />
                 </svg>
+              } @else if (game.id === 'math24') {
+                <svg width="110" height="110" viewBox="0 0 100 100" class="drop-shadow-2xl hover:scale-110 transition-transform duration-500">
+                  <!-- Math Operators in Background -->
+                  <g fill="rgba(255,255,255,0.25)" font-family="sans-serif" font-size="28" font-weight="900" text-anchor="middle">
+                    <text x="20" y="32">+</text>
+                    <text x="80" y="38">-</text>
+                    <text x="25" y="85">×</text>
+                    <text x="80" y="80">÷</text>
+                  </g>
+
+                  <!-- Left Card (Black Suit) -->
+                  <g transform="translate(35, 55) rotate(-15) translate(-35, -55)">
+                    <rect x="15" y="25" width="40" height="60" rx="6" fill="#f8fafc" stroke="rgba(0,0,0,0.1)" stroke-width="2" />
+                    <text x="22" y="42" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">3</text>
+                    <text x="22" y="56" font-family="sans-serif" font-size="14" fill="#0f172a">♠</text>
+                    <text x="35" y="65" font-family="sans-serif" font-size="24" fill="#0f172a" text-anchor="middle">♠</text>
+                  </g>
+                  
+                  <!-- Right Card (Red Suit) -->
+                  <g transform="translate(65, 50) rotate(12) translate(-65, -50)">
+                    <rect x="45" y="20" width="40" height="60" rx="6" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="2" />
+                    <text x="52" y="37" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ef4444">8</text>
+                    <text x="52" y="51" font-family="sans-serif" font-size="14" fill="#ef4444">♥</text>
+                    <text x="65" y="60" font-family="sans-serif" font-size="24" fill="#ef4444" text-anchor="middle">♥</text>
+                  </g>
+
+                  <!-- Math24 Badge -->
+                  <g transform="translate(50, 75)">
+                    <rect x="-24" y="-16" width="48" height="30" rx="15" fill="#3b82f6" stroke="#ffffff" stroke-width="2" />
+                    <text x="0" y="5" font-family="sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">24</text>
+                  </g>
+                </svg>
               } @else {
                 <span class="text-6xl">{{ getGameEmoji(game.id) }}</span>
               }
@@ -317,10 +349,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
     const isZh = this.i18n.currentLang() === 'zh';
     switch (id) {
       case 'minesweeper': return isZh ? ['⚡ 同盘抢雷', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
-      case 'sudoku': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
+      case 'sudoku': return isZh ? ['⚡ 同盘填数', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
       case 'sliding': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
       case 'hexa': return isZh ? ['⏱️ 异盘竞分'] : ['⏱️ PK Score'];
       case 'gomoku': return isZh ? ['⚔️ 经典对战'] : ['⚔️ PK Classic'];
+      case 'math24': return isZh ? ['⚡ 同盘抢分', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
+      case 'codebreaker': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
       default: return [];
     }
   }
