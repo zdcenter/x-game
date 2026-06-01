@@ -231,4 +231,28 @@ ngOnInit() {
   - 如果新增的游戏属于“棋盘面积小且为固定比例”（如数独、华容道），在 PC 端宽屏下如果隐藏侧边栏会导致屏幕右侧大面积留白。这类游戏应保持大厅面板在 PC 端**始终显示**（可使用 `max-lg:!hidden` 使其仅在手机端隐藏）。
   - 如果游戏属于“棋盘可随屏幕无限扩展或伸缩”（如六边形消除、扫雷），则在进入房间后可以全局隐藏侧边栏（使用 `!hidden`），带来震撼的全屏沉浸体验。
 
+### 10. 统一的顶部导航与动态标签展示 (Unified Header & Dynamic Labels)
+- **避免硬编码**：在编写 PK 模式或者等待界面的顶部 Header 时，**绝不允许**将模式名称或难度写死（例如写死成 `{{ i18n.t('game.pk_steal_label')() }}`）。必须注入 `GameRegistryService` 并在 TS 类中动态获取：
+  ```typescript
+  getModeName() {
+    const mode = this.store.currentMode();
+    const key = this.gameRegistry.getModeLabel('your_game', mode);
+    return key ? this.i18n.t(key)() : mode;
+  }
+  // 难度同理，使用 getDifficultyLabel
+  ```
+- **视觉排版**：对于模式和难度的展示，标准做法是采用水平并列的形式（例如：`同盘抢分 / 中等`），并利用半透明的斜杠 `/` 进行分隔。避免使用上下两排文字堆叠，以节省垂直空间。
+- **单机下拉切换**：对于单机模式，强烈推荐直接复用公共组件 `<app-game-header>`，并在 `header-center` 插槽中放入一个原生下拉选择框 `<select>`，允许玩家在游戏内直接点击顶部切换难度，并绑定 `changeDifficulty()` 重新发牌/重置。
+
+### 11. 更改房间设置与同路由刷新机制 (Room Settings Change & Router Reload)
+- **前后端协议对齐**：当房主在等待大厅点击“更改设置”并提交时，前端调用的指令 `type` 必须为 `change_game`，后端引擎收到后会销毁旧对局并创建新对局，随后广播 `room_game_changed` 事件。
+- **同路由组件强制销毁**：在 `WebSocketService` 监听到 `room_game_changed` 时，如果新设置的游戏和当前所在的路由完全一致（例如都在 `/games/sudoku`），Angular 路由会默认“偷懒”不进行跳转，导致旧的 Component 不会被销毁，新的难度和模式也无法被加载。
+- **标准做法（已在核心封装）**：采用先跳出再跳回的强刷策略：
+  ```typescript
+  this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigate(['/games/' + msg.game]);
+  });
+  ```
+  在开发新游戏时，你只需保证 `openChangeSettings()` 的传参正确即可，跳转刷新的逻辑框架已为你完美接管。
+
 遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉上达到最顶级的体验！
