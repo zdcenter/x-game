@@ -58,7 +58,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
                   class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            {{ i18n.currentLang() === 'zh' ? '游客直接游玩' : 'Play as Guest' }}
+            {{ i18n.t('auth.play_as_guest')() }}
           </button>
 
           <div class="mt-8 text-center text-slate-400 text-sm">

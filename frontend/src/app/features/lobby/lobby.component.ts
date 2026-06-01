@@ -198,20 +198,22 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
                   
                   <!-- Cyber Security Cipher Lock Design -->
                   <!-- Lock Shackle (U-bar) -->
-                  <path d="M32 45 V 32 A 18 18 0 0 1 68 32 V 45" fill="none" stroke="#60a5fa" stroke-width="6.5" stroke-linecap="round" />
+                  <path d="M 32 35 V 24 A 18 18 0 0 1 68 24 V 35" fill="none" stroke="#60a5fa" stroke-width="7" stroke-linecap="round" />
+                  
                   <!-- Lock Body -->
-                  <rect x="25" y="44" width="50" height="40" rx="10" fill="url(#pieceGrad)" stroke="#34d399" stroke-width="4" />
+                  <rect x="15" y="32" width="70" height="52" rx="10" fill="#0f172a" stroke="#34d399" stroke-width="3" />
                   
-                  <!-- Combination Dial / Keyhole with Glowing Hack Matrix -->
-                  <circle cx="50" cy="64" r="11" fill="#0f172a" stroke="#34d399" stroke-width="2.5" />
-                  <!-- Glowing indicator -->
-                  <line x1="50" y1="53" x2="50" y2="58" stroke="#ef4444" stroke-width="3" stroke-linecap="round" />
+                  <!-- Huge 1A2B Text -->
+                  <text x="50" y="58" font-family="monospace" font-size="22" font-weight="900" text-anchor="middle" letter-spacing="1">
+                    <tspan fill="#10b981">1</tspan>
+                    <tspan fill="#ef4444">A</tspan>
+                    <tspan fill="#3b82f6">2</tspan>
+                    <tspan fill="#eab308">B</tspan>
+                  </text>
                   
-                  <!-- Cyber hack matrix code details on body background -->
-                  <text x="36" y="58" font-family="monospace" font-size="7" font-weight="black" fill="#10b981" opacity="0.6">1</text>
-                  <text x="34" y="73" font-family="monospace" font-size="7" font-weight="black" fill="#ef4444" opacity="0.6">A</text>
-                  <text x="64" y="58" font-family="monospace" font-size="7" font-weight="black" fill="#3b82f6" opacity="0.6">2</text>
-                  <text x="64" y="73" font-family="monospace" font-size="7" font-weight="black" fill="#eab308" opacity="0.6">B</text>
+                  <!-- Small Keyhole at bottom -->
+                  <circle cx="50" cy="72" r="4" fill="#34d399" />
+                  <path d="M 48 74 L 47 80 L 53 80 L 52 74 Z" fill="#34d399" />
                 </svg>
               } @else {
                 <span class="text-6xl">{{ getGameEmoji(game.id) }}</span>

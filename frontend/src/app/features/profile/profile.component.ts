@@ -83,14 +83,14 @@ import { AuthStore } from '../../core/auth/auth.store';
                       <div class="flex justify-around items-center pt-1">
                         @if (isTimeGame(game.id)) {
                           <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">BEST TIME</span>
+                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">{{ i18n.t('profile.best_time')() }}</span>
                             <span class="font-mono text-xl md:text-2xl font-black text-[var(--color-accent-to)] drop-shadow-sm">
                               {{ stat.BestTime > 0 ? formatTime(stat.BestTime) : '--:--' }}
                             </span>
                           </div>
                         } @else {
                           <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">BEST SCORE</span>
+                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">{{ i18n.t('profile.best_score')() }}</span>
                             <span class="font-mono text-xl md:text-2xl font-black text-amber-500 drop-shadow-sm">
                               {{ stat.BestScore > 0 ? stat.BestScore : '0' }}
                             </span>
@@ -104,7 +104,7 @@ import { AuthStore } from '../../core/auth/auth.store';
 
                 <div class="mt-6 flex justify-end relative z-10">
                   <a [routerLink]="['/games', game.id]" class="text-sm font-bold text-[var(--color-accent-to)] hover:text-[var(--color-accent-from)] transition-colors flex items-center gap-1 group/btn">
-                    Play Now
+                    {{ i18n.t('game.play_now')() }}
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
@@ -188,17 +188,23 @@ export class ProfileComponent implements OnInit {
   }
 
   formatModeAndDiff(stat: UserGameStat): string {
-    let modeStr = stat.Mode === 'single' ? (this.i18n.currentLang() === 'zh' ? '单机' : 'Single') : stat.Mode;
+    let modeStr = stat.Mode === 'single' ? (this.i18n.t('game.single_mode')() || 'Single') : stat.Mode;
     let diffStr = stat.Difficulty;
     if (!diffStr) return modeStr;
 
-    if (this.i18n.currentLang() === 'zh') {
-      const zhMap: Record<string, string> = {
-        'easy': '简单', 'medium': '中等', 'hard': '困难', 'expert': '专家',
-        'beginner': '初级', 'intermediate': '中级',
-        '3x3': '3x3', '4x4': '4x4', '5x5': '5x5', '6x6': '6x6'
-      };
-      diffStr = zhMap[diffStr] || diffStr;
+    const possibleKey = 'game.diff_' + diffStr.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const translatedDiff = this.i18n.t(possibleKey)();
+    
+    // if translation exists, use it, else fallback to diffStr but we also check common map
+    if (translatedDiff && translatedDiff !== possibleKey) {
+        diffStr = translatedDiff;
+    } else if (this.i18n.currentLang() === 'zh') {
+        const zhMap: Record<string, string> = {
+            'easy': '简单', 'medium': '中等', 'hard': '困难', 'expert': '专家',
+            'beginner': '初级', 'intermediate': '中级',
+            '3x3': '3x3', '4x4': '4x4', '5x5': '5x5', '6x6': '6x6'
+        };
+        diffStr = zhMap[diffStr] || diffStr;
     }
     return `${modeStr} - ${diffStr}`;
   }

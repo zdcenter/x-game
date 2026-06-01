@@ -81,12 +81,12 @@ import { AuthStore } from '../auth/auth.store';
                 </span>
                 
                 <a routerLink="/profile" class="hidden sm:flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 cursor-pointer shrink-0" title="Profile & Achievements">
-                  🏆 <span class="hidden md:inline">{{ i18n.currentLang() === 'zh' ? '成就' : 'Profile' }}</span>
+                  🏆 <span class="hidden md:inline">{{ i18n.t('nav.profile')() }}</span>
                 </a>
 
                 @if (authStore.currentUser()?.role === 'guest') {
                   <span class="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded shadow bg-slate-500/20 text-slate-400 border border-slate-500/30 uppercase shrink-0 hidden sm:inline-block">
-                    {{ i18n.currentLang() === 'zh' ? '游客' : 'Guest' }}
+                    {{ i18n.t('nav.guest')() }}
                   </span>
                 }
                 @if (authStore.isAdmin()) {
@@ -96,7 +96,7 @@ import { AuthStore } from '../auth/auth.store';
                 }
                 <button (click)="logout()" 
                         class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 shrink-0">
-                  {{ authStore.currentUser()?.role === 'guest' ? (i18n.currentLang() === 'zh' ? '登录' : 'Sign In') : 'Logout' }}
+                  {{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}
                 </button>
               </div>
             } @else {
@@ -104,7 +104,7 @@ import { AuthStore } from '../auth/auth.store';
                 <a routerLink="/login" 
                    class="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 border hover:bg-slate-800"
                    style="background-color: var(--color-bg-main); border-color: var(--color-border-card); color: var(--color-text-main)">
-                  {{ i18n.currentLang() === 'zh' ? '登录/注册' : 'Sign In' }}
+                  {{ i18n.t('nav.signin')() }}
                 </a>
               </div>
             }

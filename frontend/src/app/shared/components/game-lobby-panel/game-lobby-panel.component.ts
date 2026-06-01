@@ -92,7 +92,7 @@ export interface GameDifficulty {
                         <span>{{ t('game.diff') }}: <span class="text-yellow-500">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></span>
                       </div>
                       <div class="flex items-center gap-2">
-                        <span class="text-xs text-slate-400">{{ room.players }} 人</span>
+                        <span class="text-xs text-slate-400">{{ room.players }} {{ t('game.players_count') }}</span>
                         @if (currentRoomId === room.id) {
                           <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.joined') }}</button>
                         } @else if (room.status === 'waiting') {
@@ -133,7 +133,7 @@ export interface GameDifficulty {
                             <span>{{ getGameIconEmoji(room.game) }}</span>
                             <span>{{ getGameLabel(room.game) }}</span>
                           </span>
-                          <span class="font-mono text-sm font-bold text-inherit truncate max-w-[100px] sm:max-w-[150px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }} (Host)</span>
+                          <span class="font-mono text-sm font-bold text-inherit truncate max-w-[100px] sm:max-w-[150px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }} ({{ t('game.host') }})</span>
                         </div>
                         <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
                               [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
@@ -150,7 +150,7 @@ export interface GameDifficulty {
                           }
                         </div>
                         <div class="flex items-center gap-2">
-                          <span class="text-xs text-slate-400">{{ room.players }} 人</span>
+                          <span class="text-xs text-slate-400">{{ room.players }} {{ t('game.players_count') }}</span>
                           @if (currentRoomId === room.id) {
                             <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed ml-2">{{ t('game.joined') }}</button>
                           } @else {
