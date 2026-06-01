@@ -1,3 +1,4 @@
+import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -22,7 +23,7 @@ interface LevelResponse {
 @Component({
   selector: 'app-sudoku-lobby',
   standalone: true,
-  imports: [CommonModule, GameRulesModalComponent],
+  imports: [CommonModule, GameRulesModalComponent, GameHeaderComponent],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   templateUrl: './sudoku-lobby.component.html',
   styleUrl: './sudoku-lobby.component.css'})

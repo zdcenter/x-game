@@ -3,43 +3,29 @@
       <!-- LEFT: Level Grid -->
       <div class="flex-grow flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0">
       <!-- Lobby Header -->
-      <div class="relative bg-gradient-to-r from-blue-900/30 to-emerald-900/30 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between border-b border-[var(--color-border-card)]">
-        <div class="flex items-center justify-between w-full">
-          <div class="flex items-center gap-4">
-            <button (click)="goBack()" class="p-2 bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] rounded-full transition-colors text-[var(--color-text-main)] hover:text-white shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </div>
-              <div>
-                <h1 class="text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight uppercase flex items-center gap-2">
-                  {{ i18n.t('lobby.sudoku')() || 'Sudoku' }}
-                  <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-emerald-400 transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10" [title]="i18n.t('game.rules.tooltip')()">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-[var(--color-text-main)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                </h1>
-                <p class="text-xs sm:text-sm text-[var(--color-text-main)] opacity-70 font-medium mt-1">
-                  Select a difficulty and level to start playing
-                </p>
-              </div>
-            </div>
-          </div>
-          <!-- Toggle Lobby Button -->
-          <button (click)="openLobby.emit()" class="p-2 sm:p-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] ml-4 shrink-0 lg:hidden">
+      <app-game-header
+        [title]="i18n.t('lobby.sudoku')() || 'Sudoku'"
+        subtitle="Select a difficulty and level to start playing"
+        iconGradientClass="from-blue-500 to-emerald-500"
+        titleGradientClass="from-blue-400 to-emerald-400"
+        shadowClass="shadow-emerald-500/20"
+        headerBgClass="bg-gradient-to-r from-blue-900/30 to-emerald-900/30"
+        (back)="goBack()"
+        (rules)="showRules.set(true)">
+        
+        <svg game-icon xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+
+        <ng-container header-right>
+          <!-- Toggle Lobby Button (mobile) -->
+          <button (click)="openLobby.emit()" class="p-2 sm:p-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </button>
-        </div>
-      </div>
+        </ng-container>
+      </app-game-header>
 
       <!-- Header Tabs -->
       <div class="flex border-b border-[var(--color-border-card)] bg-black/20">

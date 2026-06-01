@@ -1,0 +1,41 @@
+<div class="relative p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between border-b border-[var(--color-border-card)] shrink-0 w-full z-10"
+     [ngClass]="headerBgClass">
+  <div class="flex items-center justify-between w-full flex-wrap sm:flex-nowrap gap-4">
+    <!-- Left: Title Area -->
+    <div class="flex items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto">
+      <button (click)="onBack()" class="p-2 bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] rounded-full transition-colors text-[var(--color-text-main)] hover:text-white shadow-md z-10 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
+           [ngClass]="[iconGradientClass, shadowClass]">
+        <ng-content select="[game-icon]"></ng-content>
+      </div>
+      <div class="flex flex-col">
+        <h1 class="text-xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r tracking-tight uppercase flex items-center gap-2"
+            [ngClass]="titleGradientClass">
+          {{ title }}
+          <button (click)="onRules()" class="text-[var(--color-text-main)] opacity-70 hover:opacity-100 transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 shrink-0" [title]="i18n.t('game.rules.tooltip')()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+        </h1>
+        <p class="text-[10px] sm:text-sm text-[var(--color-text-main)] opacity-70 font-medium mt-0.5 sm:mt-1 max-w-[150px] sm:max-w-none truncate sm:whitespace-normal">
+          {{ subtitle }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Center Area -->
+    <div class="flex-1 flex justify-center items-center min-w-0">
+      <ng-content select="[header-center]"></ng-content>
+    </div>
+
+    <!-- Right Area -->
+    <div class="flex items-center justify-end gap-2 sm:gap-4 shrink-0 w-full sm:w-auto">
+      <ng-content select="[header-right]"></ng-content>
+    </div>
+  </div>
+</div>

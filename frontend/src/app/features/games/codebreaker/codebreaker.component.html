@@ -7,63 +7,37 @@
     </div>
 
     <!-- Header -->
-    <header class="w-full max-w-5xl px-4 py-4 md:py-6 flex justify-between items-center z-10 shrink-0">
-      <div class="flex items-center gap-3">
-        <!-- explicit back arrow for mobile -->
-        <button (click)="returnToLobby()" class="p-2 -ml-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-card)] transition-colors lg:hidden" title="返回">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+    <div class="w-full">
+      <app-game-header
+        [title]="i18n.t('lobby.codebreaker')() || 'Codebreaker'"
+        [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
+        iconGradientClass="from-teal-500 to-emerald-500"
+        titleGradientClass="from-teal-400 to-emerald-400"
+        shadowClass="shadow-emerald-500/20"
+        headerBgClass="bg-transparent"
+        (back)="returnToLobby()"
+        (rules)="showRules.set(true)">
+        
+        <span game-icon class="text-2xl sm:text-3xl">🕵️</span>
 
-        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl flex items-center justify-center text-white text-xl md:text-2xl shadow-lg border border-white/20">
-          🕵️
-        </div>
-        <div class="flex flex-col">
-          <h1 class="text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
-            {{ i18n.t('lobby.codebreaker')() }}
-          </h1>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-              {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('codebreaker.game_mode_pk')() }}
-            </span>
-            @if (currentRoomMode() === 'single') {
-              <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
-              <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                {{ currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')()) }}
+        <ng-container header-right>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider hidden sm:inline">
+                {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('codebreaker.game_mode_pk')() }}
               </span>
-            }
-          </div>
-        </div>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        @if (currentRoomMode() === 'single') {
-          <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-accent-from)] text-xs md:text-sm font-bold appearance-none cursor-pointer outline-none focus:border-emerald-500">
-            <option value="easy">{{ i18n.t('game.diff_codebreaker_easy')() }}</option>
-            <option value="medium">{{ i18n.t('game.diff_codebreaker_medium')() }}</option>
-            <option value="hard">{{ i18n.t('game.diff_codebreaker_hard')() }}</option>
-          </select>
-        }
-
-        <button (click)="showRules.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)]" title="Rules">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </button>
-        <button (click)="onRestart()" class="p-2 md:p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-sm hover:bg-emerald-500/20 transition-all font-bold text-sm hidden sm:block">
-          {{ i18n.t('game.restart')() }}
-        </button>
-        <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm hidden lg:block">
-          {{ currentRoomMode() === 'single' ? i18n.t('game.back')() : i18n.t('game.leave')() }}
-        </button>
-        <button (click)="isMobileSidebarOpen.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] lg:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 md:w-6 md:h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-          </svg>
-        </button>
-      </div>
-    </header>
+              @if (currentRoomMode() === 'single') {
+                <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
+                <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
+                        class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
+                  <option value="easy">{{ i18n.t('game.diff_easy')() || 'Easy' }}</option>
+                  <option value="medium">{{ i18n.t('game.diff_medium')() || 'Medium' }}</option>
+                  <option value="hard">{{ i18n.t('game.diff_hard')() || 'Hard' }}</option>
+                </select>
+              }
+            </div>
+        </ng-container>
+      </app-game-header>
+    </div>
 
     <!-- Main Content Area -->
     <main class="flex-grow w-full max-w-5xl px-2 md:px-4 flex flex-col md:flex-row items-stretch justify-center gap-6 z-10 pb-4 md:pb-8 min-h-0 overflow-y-auto md:overflow-hidden">

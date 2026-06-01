@@ -4,36 +4,23 @@
       <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
         
         <!-- Premium Glassmorphism Container -->
-        <div class="w-full h-full flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto"
+        <div class="w-full h-full flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
           
           <!-- Header -->
-          <div class="flex flex-col mb-4 lg:mb-6 pb-4 border-b relative" style="border-color: var(--color-border-card)">
-            <div class="flex items-center justify-between w-full">
-              <!-- Left: Title & Mode -->
-              <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
-                <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2 z-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="hidden sm:inline">{{ i18n.t('game.back')() || 'Back' }}</span>
-                </button>
-                <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap z-10">
-                  <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                    {{ i18n.t('app.title')() }}
-                  </span>
-                  <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
-                    {{ currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')()) }}
-                  </span>
-                </h1>
-                <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10" [title]="i18n.t('game.rules.tooltip')()">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-              </div>
-              
-              <!-- Center: PK Scoreboard OR Single Player Difficulty -->
+          <app-game-header
+            [title]="i18n.t('app.title')() || 'Minesweeper'"
+            [subtitle]="currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')())"
+            iconGradientClass="from-rose-500 to-orange-500"
+            titleGradientClass="from-rose-400 to-orange-400"
+            shadowClass="shadow-orange-500/20"
+            headerBgClass="bg-gradient-to-r from-rose-900/20 to-orange-900/20 rounded-t-2xl lg:rounded-t-3xl -mt-4 lg:-mt-6 -mx-4 lg:-mx-6 px-4 lg:px-6 mb-4 lg:mb-6"
+            (back)="goBack()"
+            (rules)="showRules.set(true)">
+            
+            <span game-icon class="text-2xl sm:text-3xl">💣</span>
+
+            <ng-container header-center>
               <div class="flex justify-center gap-2 lg:gap-4 flex-1 items-center z-10">
                 @if (currentRoomMode() === 'single') {
                   <div class="flex rounded-xl p-0.5 sm:p-1 shadow-inner">
@@ -85,8 +72,9 @@
                   }
                 }
               </div>
+            </ng-container>
 
-              <!-- Right: Timer & Mines -->
+            <ng-container header-right>
               <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center z-10">
 
                 @if (store.status() === 'playing') {
@@ -128,9 +116,10 @@
                 }
                 
               </div>
-            </div>
+            </ng-container>
+          </app-game-header>
 
-            <!-- Global Progress Bar -->
+          <!-- Global Progress Bar -->
             <div class="absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-border-card)] group cursor-help translate-y-[2px]">
               <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
                    [style.width.%]="store.myProgress()">
@@ -141,7 +130,6 @@
                 </span>
               </div>
             </div>
-          </div>
 
           <!-- Game Board (Grid) Wrapper -->
           <div class="relative flex-grow flex flex-col min-h-0 rounded-2xl overflow-hidden border border-[var(--color-border-card)]"

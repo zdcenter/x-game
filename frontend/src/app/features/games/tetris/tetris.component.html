@@ -8,59 +8,46 @@
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         
         <!-- Header -->
-        <div class="flex flex-col pb-2 lg:pb-3 border-b relative shrink-0" style="border-color: var(--color-border-card)">
-          <div class="flex items-center justify-between w-full">
-            <div class="flex items-center space-x-2 lg:space-x-4 flex-1">
-              <button (click)="goBack()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm lg:text-base mr-2 z-10">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.back')() }}</span>
-              </button>
-              <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight flex items-center whitespace-nowrap z-10">
-                <span class="bg-clip-text text-transparent" style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                  {{ i18n.t('tetris.title')() }}
-                </span>
-                <span class="text-[10px] lg:text-sm ml-2 px-1.5 lg:px-2 py-0.5 lg:py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-text-main)] font-semibold shadow-sm tracking-normal">
-                  {{ currentRoomMode() === 'pk_attack' ? i18n.t('tetris.mode.pk_attack')() : i18n.t('tetris.mode.single')() }}
-                </span>
-              </h1>
-              <button (click)="showRules.set(true)" class="opacity-70 hover:opacity-100 hover:text-[var(--color-accent-to)] transition-colors p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 ml-2" [title]="i18n.t('game.rules.tooltip')()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </div>
-            
-            <div class="flex items-center gap-2">
-              @if (currentRoomMode() === 'single') {
-                <button (click)="store.startGame()" class="px-2 lg:px-4 py-1 lg:py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner z-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span class="hidden sm:inline">{{ i18n.t('game.play_again')() }}</span>
-                </button>
-              }
+        <app-game-header
+          [title]="i18n.t('tetris.title')() || 'Tetris'"
+          [subtitle]="currentRoomMode() === 'pk_attack' ? i18n.t('tetris.mode.pk_attack')() : i18n.t('tetris.mode.single')()"
+          iconGradientClass="from-indigo-500 to-cyan-500"
+          titleGradientClass="from-indigo-400 to-cyan-400"
+          shadowClass="shadow-cyan-500/20"
+          headerBgClass="bg-gradient-to-r from-indigo-900/20 to-cyan-900/20 rounded-t-2xl lg:rounded-t-3xl -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
+          (back)="goBack()"
+          (rules)="showRules.set(true)">
+          
+          <span game-icon class="text-2xl sm:text-3xl">🧱</span>
 
-              @if (currentRoomMode() !== 'single') {
-                <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
-                </button>
-              }
-              
-              @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
-                <button (click)="isMobileSidebarOpen.set(true)" class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </button>
-              }
-            </div>
-          </div>
-        </div>
+          <ng-container header-right>
+            @if (currentRoomMode() === 'single') {
+              <button (click)="store.startGame()" class="px-2 lg:px-4 py-1 lg:py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/50 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="hidden sm:inline">{{ i18n.t('game.play_again')() }}</span>
+              </button>
+            }
+
+            @if (currentRoomMode() !== 'single') {
+              <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
+              </button>
+            }
+            
+            @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
+              <button (click)="isMobileSidebarOpen.set(true)" class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm lg:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+            }
+          </ng-container>
+        </app-game-header>
 
         <!-- Board Area (Since Dark Card is absolute, flex-1 works perfectly here) -->
         <div class="flex-1 flex flex-col min-h-0 overflow-hidden mt-2 w-full">

@@ -6,60 +6,37 @@
   </div>
 
   <!-- Header -->
-  <header class="w-full max-w-4xl px-4 py-4 md:py-6 flex justify-between items-center z-10 shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl flex items-center justify-center text-white text-xl md:text-2xl shadow-lg border border-white/20">
-        ⚫⚪
-      </div>
-      <div class="flex flex-col">
-        <h1 class="text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
-          {{ i18n.t('game.gomoku')() || 'Gomoku' }}
-        </h1>
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-            {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.pk_classic')() }}
-          </span>
-          @if (currentRoomMode() === 'single') {
-            <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
-            <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-              {{ currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')()) }}
-            </span>
-          }
-        </div>
-      </div>
-    </div>
-    
-    <div class="flex items-center gap-2">
-      <!-- AI Difficulty selector for Single Player -->
-      @if (currentRoomMode() === 'single') {
-        <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-accent-from)] text-xs md:text-sm font-bold appearance-none cursor-pointer outline-none focus:border-emerald-500">
-          <option value="easy">{{ i18n.t('game.diff_gomoku_easy')() || 'Easy AI' }}</option>
-          <option value="medium">{{ i18n.t('game.diff_gomoku_medium')() || 'Medium AI' }}</option>
-          <option value="hard">{{ i18n.t('game.diff_gomoku_hard')() || 'Hard AI' }}</option>
-        </select>
-      }
+  <div class="w-full">
+    <app-game-header
+      [title]="i18n.t('game.gomoku')() || 'Gomoku'"
+      [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.pk_classic')()"
+      iconGradientClass="from-emerald-500 to-teal-600"
+      titleGradientClass="from-emerald-400 to-teal-500"
+      shadowClass="shadow-emerald-500/20"
+      headerBgClass="bg-transparent"
+      (back)="returnToLobby()"
+      (rules)="showRules.set(true)">
+      
+      <span game-icon class="text-2xl sm:text-3xl">⚫⚪</span>
 
-      <button (click)="showRules.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </button>
-      <button (click)="onRestart()" class="p-2 md:p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-sm hover:bg-emerald-500/20 transition-all font-bold text-sm hidden sm:block">
-        {{ i18n.t('gomoku.restart')() }}
-      </button>
-      <button (click)="onSurrender()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm hidden sm:block" [disabled]="gameStatus().status !== 'playing'">
-        {{ i18n.t('gomoku.surrender')() }}
-      </button>
-      <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm">
-        {{ currentRoomMode() === 'single' ? i18n.t('game.back')() : i18n.t('game.leave')() }}
-      </button>
-      <button (click)="isMobileSidebarOpen.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] lg:hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-      </button>
-    </div>
-  </header>
+          <ng-container header-right>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider hidden sm:inline">
+                {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.pk_classic')() }}
+              </span>
+              @if (currentRoomMode() === 'single') {
+                <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
+                <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
+                        class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
+                  <option value="easy">{{ i18n.t('gomoku.diff.easy')() || 'Easy' }}</option>
+                  <option value="medium">{{ i18n.t('gomoku.diff.medium')() || 'Medium' }}</option>
+                  <option value="hard">{{ i18n.t('gomoku.diff.hard')() || 'Hard' }}</option>
+                </select>
+              }
+            </div>
+          </ng-container>
+    </app-game-header>
+  </div>
 
   <!-- Main Game Area -->
   <main class="flex-grow w-full max-w-4xl px-2 md:px-4 flex flex-col md:flex-row items-center justify-center gap-6 z-10 pb-4 md:pb-8">

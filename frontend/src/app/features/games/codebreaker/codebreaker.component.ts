@@ -1,3 +1,4 @@
+import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,7 +23,7 @@ import { ToastService } from '../../../core/services/toast.service';
     GameRulesModalComponent,
     GameWaitingRoomComponent,
     GameLobbyPanelComponent
-  ],
+  , GameHeaderComponent],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
   styleUrls: ['./codebreaker.component.css']

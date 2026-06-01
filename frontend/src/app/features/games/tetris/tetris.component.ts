@@ -1,3 +1,4 @@
+import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -17,7 +18,7 @@ import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent],
+  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css']
 })

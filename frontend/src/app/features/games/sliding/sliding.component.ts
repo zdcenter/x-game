@@ -1,3 +1,4 @@
+import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +19,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -194,6 +195,13 @@ export class SlidingComponent extends BaseGameComponent {
     if (this.currentRoomId()) return;
     this.store.currentDifficulty.set(diff);
     this.store.playAgain();
+  }
+
+  changeDifficulty(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    if (target) {
+      this.changeSingleDifficulty(target.value);
+    }
   }
 
   joinRoom(roomId: string, mode: string, difficulty: string, hostId: string) {

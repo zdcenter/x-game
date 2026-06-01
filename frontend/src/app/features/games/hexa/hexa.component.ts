@@ -1,3 +1,4 @@
+import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -29,7 +30,7 @@ import { AudioService } from '../../../core/services/audio.service';
     GameLobbyPanelComponent,
     GameRulesModalComponent,
     GameResultOverlayComponent
-  ],
+  , GameHeaderComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html'
 })

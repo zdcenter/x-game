@@ -16,12 +16,22 @@ export interface User {
 export class AuthStore {
   readonly currentUser = signal<User | null>(null);
   readonly token = signal<string | null>(null);
-  readonly guestId = `Guest_${Math.floor(Math.random() * 10000)}`;
+  
+  // Persist guestId to avoid changing identity on page refresh
+  readonly guestId: string;
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
   readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   constructor() {
+    const savedGuestId = localStorage.getItem('x_game_guest_id');
+    if (savedGuestId) {
+      this.guestId = savedGuestId;
+    } else {
+      this.guestId = `Guest_${Math.floor(Math.random() * 10000)}`;
+      localStorage.setItem('x_game_guest_id', this.guestId);
+    }
+    
     this.loadFromStorage();
   }
 
