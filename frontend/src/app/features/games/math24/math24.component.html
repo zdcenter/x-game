@@ -119,7 +119,7 @@
     <app-game-lobby-panel 
       #lobbyPanel
       class="flex-grow flex"
-      gameId="math24"
+      [currentGameId]="'math24'"
       [currentRoomId]="store.roomId()"
       (joinRoom)="handleJoinRoom($event)"
       (closeSidebar)="isMobileSidebarOpen.set(false)">

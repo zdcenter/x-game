@@ -5,7 +5,7 @@
       <!-- Lobby Header -->
       <app-game-header
         [title]="i18n.t('lobby.sudoku')() || 'Sudoku'"
-        subtitle="Select a difficulty and level to start playing"
+        [subtitle]="i18n.t('lobby.select_level')()"
         iconGradientClass="from-blue-500 to-emerald-500"
         titleGradientClass="from-blue-400 to-emerald-400"
         shadowClass="shadow-emerald-500/20"
