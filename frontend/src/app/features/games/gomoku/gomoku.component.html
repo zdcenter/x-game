@@ -52,20 +52,6 @@
         </div>
         <span class="font-bold text-sm md:text-base">{{ i18n.t(myColor === 1 ? 'gomoku.you_are_black' : 'gomoku.you_are_white')() }}</span>
       </div>
-      
-      <div class="hidden md:flex flex-col items-center my-4">
-        <span class="text-xs uppercase font-bold text-[var(--color-text-muted)]">{{ i18n.t('minesweeper.status')() }}</span>
-        <span class="font-black text-lg mt-1" [ngClass]="isMyTurn ? 'text-emerald-500' : 'text-amber-500'">
-          {{ isMyTurn ? i18n.t('gomoku.turn.yours')() : i18n.t('gomoku.turn.opponent')() }}
-        </span>
-      </div>
-
-      <!-- Mobile Turn Indicator -->
-      <div class="flex md:hidden flex-col items-center justify-center">
-        <span class="font-black text-xl" [ngClass]="isMyTurn ? 'text-emerald-500' : 'text-amber-500'">
-          {{ isMyTurn ? i18n.t('gomoku.turn.yours')() : i18n.t('gomoku.turn.opponent')() }}
-        </span>
-      </div>
     </div>
 
 
@@ -94,8 +80,11 @@
 
               <!-- The Piece -->
               @if (cell !== 0) {
-                <div class="w-[85%] h-[85%] rounded-full shadow-md relative z-10 transition-transform duration-200"
+                <div class="w-[85%] h-[85%] rounded-full shadow-md relative z-10 transition-transform duration-200 flex items-center justify-center"
                      [ngClass]="cell === 1 ? 'bg-gradient-to-b from-gray-700 to-black shadow-[2px_2px_4px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-white to-gray-200 shadow-[2px_2px_4px_rgba(0,0,0,0.3)]'">
+                     @if (lastMove() && lastMove()![0] === y && lastMove()![1] === x) {
+                        <div class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_2px_rgba(0,0,0,0.8)]"></div>
+                     }
                 </div>
               } @else {
                 <!-- Hover Preview -->

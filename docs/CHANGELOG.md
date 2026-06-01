@@ -51,3 +51,6 @@
 - **修复综合包厢（Party Room）内同路由组件不刷新及后台通讯失效的问题**：
   - 将前端「更改房间设置」弹窗下发的事件标识从 `update_room_settings` 修正为与 Go 后端引擎 `change_game` 动作完美对齐，解决了修改对局规则后没有反应的 Bug。
   - 修复了 Angular Router 在同页面（同 URL 下比如都是 `/games/sudoku` 但只改难度和模式）不会触发重新实例化的特性漏洞。在核心 WS 服务监听 `room_game_changed` 时，如果遇到相同组件，则强制采用 `skipLocationChange: true` 辅以跳至根目录的方案迫使 Angular Router 完全刷新，并触发了组件层的生命周期流转。
+
+### Added
+- **Math 24 Game**: Added a new Math 24 game supporting single-player mode, speed PK mode, and steal PK mode. The game follows the standard game architecture and generic lobby mechanisms.

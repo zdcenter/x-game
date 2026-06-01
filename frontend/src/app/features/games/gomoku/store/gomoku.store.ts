@@ -26,6 +26,7 @@ export class GomokuStore {
   private localPlayerColors = signal<Record<string, GomokuColor>>({});
   private localGameStatus = signal<GameStatus>({ status: 'waiting' });
   private localPlayers = signal<string[]>([]);
+  private localLastMove = signal<number[] | null>(null);
 
   // Public computed states (reactive derivation from ws state or local state)
   board = computed<GomokuColor[][]>(() => {
@@ -36,6 +37,11 @@ export class GomokuStore {
   currentTurn = computed<string>(() => {
     if (this.singlePlayerMode) return this.localCurrentTurn();
     return this.rawState()?.currentTurn || '';
+  });
+
+  lastMove = computed<number[] | null>(() => {
+    if (this.singlePlayerMode) return this.localLastMove();
+    return this.rawState()?.lastMove || null;
   });
 
   playerColors = computed<Record<string, GomokuColor>>(() => {
@@ -130,6 +136,7 @@ export class GomokuStore {
       this.localBoard.set(this.createEmptyBoard());
       this.localGameStatus.set({ status: 'playing', winner: undefined });
       this.localCurrentTurn.set(this.myPlayerId());
+      this.localLastMove.set(null);
       if (this.ai) {
         this.ai = new GomokuAI(2, this.aiDifficulty);
       }
@@ -189,6 +196,7 @@ export class GomokuStore {
       const currentB = this.localBoard();
       currentB[y][x] = this.playerColors()[this.myPlayerId()];
       this.localBoard.set([...currentB]);
+      this.localLastMove.set([y, x]);
       this.audio.playDrop();
       
       if (this.checkWin(y, x, currentB[y][x])) {
@@ -210,10 +218,11 @@ export class GomokuStore {
       setTimeout(() => {
         if (this.ai && this.gameStatus().status === 'playing') {
           const [aiY, aiX] = this.ai.getBestMove(this.localBoard());
-          if (aiY !== -1) {
+            if (aiY !== -1) {
             const aiB = this.localBoard();
             aiB[aiY][aiX] = this.playerColors()['AI'];
             this.localBoard.set([...aiB]);
+            this.localLastMove.set([aiY, aiX]);
             this.audio.playDrop();
             
             if (this.checkWin(aiY, aiX, aiB[aiY][aiX])) {

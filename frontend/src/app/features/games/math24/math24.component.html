@@ -1,0 +1,85 @@
+<div class="h-screen w-full flex bg-slate-950 text-slate-100 overflow-hidden relative">
+
+  <!-- Mobile Sidebar Overlay -->
+  <div *ngIf="isMobileSidebarOpen()" 
+       class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 lg:hidden"
+       (click)="isMobileSidebarOpen.set(false)">
+  </div>
+
+  <!-- Left Sidebar: Lobby Panel -->
+  <div class="absolute lg:static inset-y-0 left-0 w-80 bg-slate-900 border-r border-slate-800 z-50 transform transition-transform duration-300 flex-shrink-0"
+       [class.-translate-x-full]="!isMobileSidebarOpen()"
+       [class.translate-x-0]="isMobileSidebarOpen()">
+    <app-game-lobby-panel 
+      #lobbyPanel
+      gameId="math24"
+      [currentRoomId]="store.roomId()"
+      (joinRoom)="handleJoinRoom($event)"
+      (closeSidebar)="isMobileSidebarOpen.set(false)">
+    </app-game-lobby-panel>
+  </div>
+
+  <!-- Main Game Area -->
+  <div class="flex-1 flex flex-col min-w-0 relative h-full">
+
+    <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
+      <app-game-header 
+        [title]="i18n.t('lobby.math24')()"
+        (back)="isMobileSidebarOpen.set(!isMobileSidebarOpen())">
+        <div header-right class="flex items-center gap-2">
+          <select 
+            class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-2.5 py-1.5"
+            [value]="store.currentDifficulty()"
+            (change)="onSinglePlayerDifficultyChange($event)">
+            <option value="easy">{{ i18n.t('game.diff_math24_easy')() }}</option>
+            <option value="hard">{{ i18n.t('game.diff_math24_hard')() }}</option>
+          </select>
+          
+          <div class="px-3 py-1.5 rounded-lg bg-[var(--color-bg-card)] text-blue-400 font-mono text-sm border border-[var(--color-border-card)] flex items-center gap-2">
+            <span class="opacity-60">⏱️</span>
+            <span>{{ store.timeSpent() }}s</span>
+          </div>
+        </div>
+      </app-game-header>
+    </ng-container>
+
+    <ng-template #pkHeader>
+      <app-game-header 
+        [title]="i18n.t('lobby.math24')()"
+        (back)="isMobileSidebarOpen.set(!isMobileSidebarOpen())">
+      </app-game-header>
+    </ng-template>
+
+    <div class="flex-1 overflow-y-auto relative p-4 h-full">
+      <!-- Waiting Room -->
+      <ng-container *ngIf="store.currentMode() !== 'single' && store.gameStatus() === 'waiting'">
+        <app-game-waiting-room
+          [gameId]="'math24'"
+          [mode]="store.currentMode()"
+          [roomId]="store.roomId()"
+          [players]="store.players()"
+          [currentUserId]="playerId"
+          [hostId]="store.host()"
+          (start)="store.startGame()"
+          (leave)="store.leaveRoom()"
+          (changeSettings)="openChangeSettings()">
+        </app-game-waiting-room>
+      </ng-container>
+
+      <!-- PK Speed Mode -->
+      <ng-container *ngIf="store.currentMode() === 'pk_speed' && store.gameStatus() !== 'waiting'">
+        <app-math24-pk-speed [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-speed>
+      </ng-container>
+
+      <!-- PK Steal Mode -->
+      <ng-container *ngIf="store.currentMode() === 'pk_steal' && store.gameStatus() !== 'waiting'">
+        <app-math24-pk-steal [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-steal>
+      </ng-container>
+
+      <!-- Single Player Mode -->
+      <ng-container *ngIf="store.currentMode() === 'single'">
+        <app-math24-board></app-math24-board>
+      </ng-container>
+    </div>
+  </div>
+</div>

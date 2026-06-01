@@ -25,6 +25,7 @@ type ClassicEngine struct {
 	PlayerColors map[string]int  `json:"playerColors"` // map playerID -> Black or White
 	Winner       string          `json:"winner"`
 	Players      []string        `json:"players"`
+	LastMove     []int           `json:"lastMove"` // [y, x]
 }
 
 func NewClassicEngine() engine.GameEngine {
@@ -47,6 +48,7 @@ func (e *ClassicEngine) InitGame(options interface{}) error {
 		}
 	}
 	e.Winner = ""
+	e.LastMove = nil
 	return nil
 }
 
@@ -111,6 +113,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 			}
 		}
 		e.Winner = ""
+		e.LastMove = nil
 
 		// First player is Black, second is White
 		e.PlayerColors[e.Players[0]] = Black
@@ -148,6 +151,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 
 		color := e.PlayerColors[playerID]
 		e.Board[data.Y][data.X] = color
+		e.LastMove = []int{data.Y, data.X}
 
 		if e.checkWin(data.X, data.Y, color) {
 			e.State = engine.StateFinished
@@ -189,6 +193,7 @@ func (e *ClassicEngine) GetState() interface{} {
 		"winner":       e.Winner,
 		"status":       e.State,
 		"players":      e.Players,
+		"lastMove":     e.LastMove,
 	}
 }
 

@@ -43,6 +43,8 @@ func InitPostgres() {
 		&domain.SudokuPuzzle{},
 		&domain.UserSudokuProgress{},
 		&domain.UserGameStat{},
+		&domain.Math24Puzzle{},
+		&domain.UserMath24Progress{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -51,6 +53,7 @@ func InitPostgres() {
 	// Seed default data
 	Seed()
 	SeedSudoku()
+	SeedMath24()
 
 	log.Println("Database connected and migrated successfully")
 }
@@ -126,6 +129,16 @@ func Seed() {
 		IsActive: true,
 	}
 	DB.Where(domain.GameConfig{ID: "codebreaker"}).FirstOrCreate(&defaultCodebreaker)
+
+	defaultMath24 := domain.GameConfig{
+		ID:       "math24",
+		Name:     `{"en": "Math 24", "zh": "24点"}`,
+		Overview: `{"en": "Use all 4 cards and arithmetic operators to get exactly 24.", "zh": "使用4张扑克牌和加减乘除，算出24。"}`,
+		Rules:    `{"en": "# Math 24 Rules\n\nYou are given 4 numbers. You must use all 4 numbers exactly once, along with addition, subtraction, multiplication, and division, to arrive at a final result of 24.\n\n## 🎮 Controls\n- **Click**: Tap two numbers and an operator to combine them into a new number.\n- **Undo**: Tap the undo button to reverse your last step.", "zh": "# 24点规则\n\n利用随机给出的4个数字，使用加、减、乘、除，计算出结果为24。每张牌必须且只能使用一次。\n\n## 🎮 操作说明\n- **合并**: 依次点击两张数字牌和一个运算符，将它们合并成一个新的数字。\n- **撤销**: 算错了可以随时点击撤销按钮退回上一步。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "math24"}).FirstOrCreate(&defaultMath24)
 
 
 	var userCount int64

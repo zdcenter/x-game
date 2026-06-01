@@ -100,6 +100,20 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_codebreaker_medium', desc: '4-digit code' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_codebreaker_hard', desc: '5-digit code' }
     ]
+  },
+  {
+    id: 'math24',
+    route: '/games/math24',
+    titleKey: 'lobby.math24',
+    iconEmoji: '🃏',
+    modes: [
+      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Solve 5 puzzles first!' },
+      { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'First to solve gets the point!' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_math24_easy', desc: 'Basic math' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_math24_hard', desc: 'Fractional & Complex' }
+    ]
   }
 ];
 

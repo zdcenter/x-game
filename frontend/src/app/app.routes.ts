@@ -61,6 +61,11 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'seo.codebreaker.title', descKey: 'seo.codebreaker.desc', keywordsKey: 'seo.codebreaker.keywords' } }
       },
       {
+        path: 'games/math24',
+        loadComponent: () => import('./features/games/math24/math24.component').then(m => m.Math24Component),
+        data: { seo: { titleKey: 'seo.math24.title', descKey: 'seo.math24.desc', keywordsKey: 'seo.math24.keywords' } }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }
