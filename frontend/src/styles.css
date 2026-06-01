@@ -154,23 +154,23 @@
     scrollbar-width: none;  /* Firefox */
   }
 
-  /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
+  /* Global Custom Scrollbar */
+  ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-  .custom-scrollbar::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: transparent;
   }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background: var(--color-border-card);
     border-radius: 10px;
   }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  ::-webkit-scrollbar-thumb:hover {
     background: var(--color-accent-from);
   }
   /* Firefox */
-  .custom-scrollbar {
+  * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border-card) transparent;
   }
