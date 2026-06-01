@@ -113,6 +113,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.my_room': 'My Room',
     'game.dismiss_room': 'Dismiss Room',
     'game.game_over': 'GAME OVER',
+    'game.prev_level': 'Prev Level',
     'game.next_level': 'Next Level',
     'game.dismiss_title': 'Dismiss Room',
     'game.dismiss_msg': 'Are you sure you want to dismiss this room? All players will be kicked out.',
@@ -170,6 +171,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_math24_hard': 'Fractions & Complex',
     'game.hint_ad': 'Hint (Ad)',
     'game.level': 'Level',
+    'game.undo': 'Undo',
+    'game.reset': 'Reset',
 
     'game.change_settings': 'Switch Game',
     'game.update_settings': 'Update Settings',
@@ -370,6 +373,9 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_math24_hard': '带分数与括号',
     'game.hint_ad': '提醒Ad',
     'game.level': '等级',
+    'game.prev_level': '上一关',
+    'game.undo': '撤销',
+    'game.reset': '重置',
 
     'game.change_settings': '切换游戏',
     'game.update_settings': '更改房间设置',

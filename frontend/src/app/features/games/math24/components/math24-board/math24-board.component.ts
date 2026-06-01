@@ -90,11 +90,11 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
                   (click)="undo()"
                   [disabled]="store.boardHistory().length <= 1"
                   [ngClass]="{'opacity-50 cursor-not-allowed': store.boardHistory().length <= 1}">
-            <span>↩️</span> Undo
+            <span>↩️</span> {{ i18n.t('game.undo')() }}
           </button>
           <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
                   (click)="reset()">
-            <span>🔄</span> Reset
+            <span>🔄</span> {{ i18n.t('game.reset')() }}
           </button>
         </div>
       </div>

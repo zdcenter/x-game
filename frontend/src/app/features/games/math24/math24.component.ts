@@ -108,7 +108,10 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   getStats(): { label: string; value: string | number }[] {
     if (this.store.currentMode() === 'single') {
       const time = this.store.timeSpent();
-      return [{ label: this.i18n.t('game.time')(), value: `${time}s` }];
+      return [
+        { label: this.i18n.t('game.level')(), value: this.store.localLevelIndex() + 1 },
+        { label: this.i18n.t('game.timer')(), value: `${time}s` }
+      ];
     }
     const myPlayer = this.store.players()[this.playerId];
     if (myPlayer) {
