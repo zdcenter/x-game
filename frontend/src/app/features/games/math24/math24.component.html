@@ -1,105 +1,103 @@
 <div class="h-[calc(100vh-64px)] w-full flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative overflow-hidden">
 
   <!-- Main Game Area (Left/Top side) -->
-  <div class="flex-1 flex flex-col min-w-0 relative h-full">
+  <div class="flex-1 flex flex-col min-w-0 relative h-full bg-[var(--color-bg-card)] rounded-none lg:rounded-2xl lg:m-2 lg:border lg:border-[var(--color-border-card)] shadow-xl overflow-hidden">
 
-    <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
-      <app-game-header 
-        [title]="i18n.t('lobby.math24')()"
-        iconGradientClass="from-blue-500 to-indigo-600"
-        titleGradientClass="from-blue-400 to-indigo-500"
-        shadowClass="shadow-blue-500/20"
-        headerBgClass="bg-transparent"
+    @if (view() === 'lobby') {
+      <app-math24-lobby class="flex-grow flex flex-col min-h-0"
+        (levelSelect)="startLevel($event)"
+        (openLobby)="isMobileSidebarOpen.set(true)"
         (back)="returnToLobby()">
-        <span game-icon class="text-2xl sm:text-3xl">🃏</span>
-        <div header-right class="flex items-center gap-2">
-          <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </button>
-          <select 
-            class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-2.5 py-1.5"
-            [value]="store.currentDifficulty()"
-            (change)="onSinglePlayerDifficultyChange($event)">
-            <option value="easy">{{ i18n.t('game.diff_math24_easy')() }}</option>
-            <option value="hard">{{ i18n.t('game.diff_math24_hard')() }}</option>
-          </select>
-          
-          <div class="px-3 py-1.5 rounded-lg bg-[var(--color-bg-card)] text-blue-400 font-mono text-sm border border-[var(--color-border-card)] flex items-center gap-2">
-            <span class="opacity-60">⏱️</span>
-            <span>{{ store.timeSpent() }}s</span>
+      </app-math24-lobby>
+    } @else if (view() === 'room') {
+      <app-game-waiting-room 
+        [gameId]="'math24'"
+        [mode]="store.currentMode()"
+        [roomId]="store.roomId()"
+        [players]="store.players()"
+        [currentUserId]="playerId"
+        [hostId]="store.host()"
+        (start)="store.startGame()"
+        (leave)="returnToLobby()"
+        (changeSettings)="openChangeSettings()">
+      </app-game-waiting-room>
+    } @else {
+      <!-- PLAY VIEW -->
+      <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
+        <app-game-header 
+          [title]="i18n.t('lobby.math24')()"
+          iconGradientClass="from-blue-500 to-indigo-600"
+          titleGradientClass="from-blue-400 to-indigo-500"
+          shadowClass="shadow-blue-500/20"
+          headerBgClass="bg-transparent"
+          (back)="view.set('lobby')">
+          <span game-icon class="text-2xl sm:text-3xl">🃏</span>
+          <div header-right class="flex items-center gap-2">
+            <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
+            <div class="px-3 py-1.5 rounded-lg bg-[var(--color-bg-card)] text-blue-400 font-mono text-sm border border-[var(--color-border-card)] flex items-center gap-2">
+              <span class="opacity-60">⏱️</span>
+              <span>{{ store.timeSpent() }}s</span>
+            </div>
           </div>
-        </div>
-      </app-game-header>
-    </ng-container>
-
-    <ng-template #pkHeader>
-      <app-game-header 
-        [title]="i18n.t('lobby.math24')()"
-        [subtitle]="store.currentMode() === 'pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
-        iconGradientClass="from-blue-500 to-indigo-600"
-        titleGradientClass="from-blue-400 to-indigo-500"
-        shadowClass="shadow-blue-500/20"
-        headerBgClass="bg-transparent"
-        (back)="returnToLobby()">
-        <span game-icon class="text-2xl sm:text-3xl">🃏</span>
-        <div header-right class="flex items-center gap-2">
-          <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </button>
-        </div>
-      </app-game-header>
-    </ng-template>
-
-    <div class="flex-1 overflow-y-auto relative p-4 h-full">
-      <!-- Result Overlay -->
-      @if (store.isFinished()) {
-        <app-game-result-overlay
-          [status]="getGameResultStatus()"
-          [title]="getGameResultTitle()"
-          [stats]="getStats()"
-          [showLeave]="true"
-          [showNextLevel]="store.currentMode() === 'single'"
-          [showRestart]="store.currentMode() !== 'single'"
-          (leave)="returnToLobby()"
-          (nextLevel)="playNextLevel()"
-          (restart)="playAgain()">
-        </app-game-result-overlay>
-      }
-
-      <!-- Waiting Room -->
-      <ng-container *ngIf="store.currentMode() !== 'single' && store.gameStatus() === 'waiting'">
-        <app-game-waiting-room
-          [gameId]="'math24'"
-          [mode]="store.currentMode()"
-          [roomId]="store.roomId()"
-          [players]="store.players()"
-          [currentUserId]="playerId"
-          [hostId]="store.host()"
-          (start)="store.startGame()"
-          (leave)="store.leaveRoom()"
-          (changeSettings)="openChangeSettings()">
-        </app-game-waiting-room>
+        </app-game-header>
       </ng-container>
 
-      <!-- PK Speed Mode -->
-      <ng-container *ngIf="store.currentMode() === 'pk_speed' && store.gameStatus() !== 'waiting'">
-        <app-math24-pk-speed [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-speed>
-      </ng-container>
+      <ng-template #pkHeader>
+        <app-game-header 
+          [title]="i18n.t('lobby.math24')()"
+          [subtitle]="store.currentMode() === 'pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
+          iconGradientClass="from-blue-500 to-indigo-600"
+          titleGradientClass="from-blue-400 to-indigo-500"
+          shadowClass="shadow-blue-500/20"
+          headerBgClass="bg-transparent"
+          (back)="returnToLobby()">
+          <span game-icon class="text-2xl sm:text-3xl">🃏</span>
+          <div header-right class="flex items-center gap-2">
+            <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
+          </div>
+        </app-game-header>
+      </ng-template>
 
-      <!-- PK Steal Mode -->
-      <ng-container *ngIf="store.currentMode() === 'pk_steal' && store.gameStatus() !== 'waiting'">
-        <app-math24-pk-steal [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-steal>
-      </ng-container>
+      <div class="flex-1 overflow-y-auto relative p-4 h-full">
+        <!-- Result Overlay -->
+        @if (store.isFinished()) {
+          <app-game-result-overlay
+            [status]="getGameResultStatus()"
+            [title]="getGameResultTitle()"
+            [stats]="getStats()"
+            [showLeave]="true"
+            [showNextLevel]="store.currentMode() === 'single'"
+            [showRestart]="store.currentMode() !== 'single'"
+            (leave)="view.set('lobby')"
+            (nextLevel)="playNextLevel()"
+            (restart)="playAgain()">
+          </app-game-result-overlay>
+        }
 
-      <!-- Single Player Mode -->
-      <ng-container *ngIf="store.currentMode() === 'single'">
-        <app-math24-board></app-math24-board>
-      </ng-container>
-    </div>
+        <!-- PK Steal Mode -->
+        <ng-container *ngIf="store.currentMode() === 'pk_steal' && store.gameStatus() !== 'waiting'">
+          <app-math24-pk-steal [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-steal>
+        </ng-container>
+
+        <!-- PK Speed Mode -->
+        <ng-container *ngIf="store.currentMode() === 'pk_speed' && store.gameStatus() !== 'waiting'">
+          <app-math24-pk-speed [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-speed>
+        </ng-container>
+
+        <!-- Single Player Mode -->
+        <ng-container *ngIf="store.currentMode() === 'single'">
+          <app-math24-board></app-math24-board>
+        </ng-container>
+      </div>
+    }
   </div>
 
   <!-- Sidebar Overlay Backdrop -->

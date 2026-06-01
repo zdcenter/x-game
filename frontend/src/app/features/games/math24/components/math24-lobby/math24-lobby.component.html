@@ -1,0 +1,91 @@
+<div class="flex-grow flex flex-col p-2 lg:p-4 gap-4 lg:gap-6 w-full h-full overflow-hidden min-w-0">
+  <div class="flex-grow flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0">
+    <!-- Lobby Header -->
+    <app-game-header
+      [title]="i18n.t('lobby.math24')()"
+      subtitle="Select a difficulty and level to start playing"
+      iconGradientClass="from-blue-500 to-indigo-600"
+      titleGradientClass="from-blue-400 to-indigo-500"
+      shadowClass="shadow-blue-500/20"
+      headerBgClass="bg-gradient-to-r from-blue-900/30 to-indigo-900/30"
+      (back)="back.emit()">
+      
+      <span game-icon class="text-2xl sm:text-3xl text-white">🃏</span>
+
+      <ng-container header-right>
+        <!-- Toggle Lobby Button (mobile) -->
+        <button (click)="openLobby.emit()" class="p-2 sm:p-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </button>
+      </ng-container>
+    </app-game-header>
+
+    <!-- Header Tabs -->
+    <div class="flex border-b border-[var(--color-border-card)] bg-black/20">
+      @for (diff of difficulties; track diff.id) {
+        <button 
+          (click)="selectDifficulty(diff.id)"
+          class="flex-1 py-4 text-center font-bold text-sm sm:text-lg transition-all border-b-2"
+          [class.text-blue-500]="activeTab() === diff.id"
+          [class.border-blue-500]="activeTab() === diff.id"
+          [class.text-[var(--color-text-muted)]]="activeTab() !== diff.id"
+          [class.border-transparent]="activeTab() !== diff.id"
+          [class.hover:text-[var(--color-text-main)]]="activeTab() !== diff.id">
+          {{ i18n.t($any(diff.labelKey))() }}
+        </button>
+      }
+    </div>
+
+    <!-- Level Grid -->
+    <div #scrollContainer class="flex-grow p-4 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4 shrink-0">
+        @for (level of paginatedLevels(); track level.id; let i = $index) {
+          <button 
+            (click)="playLevel(level, (currentPage() - 1) * pageSize + i)"
+            class="aspect-square flex items-center justify-center rounded-xl text-lg sm:text-xl font-bold transition-all duration-300 relative group overflow-hidden shadow-lg border"
+            [ngClass]="{
+              'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30': level.progress?.status === 'finished',
+              'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:text-white': level.progress?.status !== 'finished'
+            }">
+            
+            <span class="z-10 relative">{{ (currentPage() - 1) * pageSize + i + 1 }}</span>
+            
+            @if (level.progress?.status === 'finished') {
+              <div class="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
+                <span class="text-4xl">⭐</span>
+              </div>
+              <div class="absolute -top-1 -right-1">
+                <span class="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] text-sm sm:text-base">★</span>
+              </div>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- Pagination Controls -->
+      @if (totalPages() > 1) {
+        <div class="flex justify-center items-center gap-4 pt-4 shrink-0 border-t border-[var(--color-border-card)]">
+          <button 
+            (click)="prevPage()" 
+            [disabled]="currentPage() === 1"
+            class="px-4 py-2 rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-card)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg-card)] transition-colors">
+            Previous
+          </button>
+          
+          <span class="text-sm font-medium text-[var(--color-text-muted)]">
+            Page {{ currentPage() }} of {{ totalPages() }}
+          </span>
+          
+          <button 
+            (click)="nextPage()" 
+            [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-card)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg-card)] transition-colors">
+            Next
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

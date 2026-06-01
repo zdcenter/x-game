@@ -66,6 +66,13 @@ func main() {
 	sudoku.Post("/puzzle/:id/save", rest.SaveSudokuProgress)
 	sudoku.Post("/puzzle/:id/finish", rest.FinishSudoku)
 
+	// Math24 routes (Protected)
+	math24 := v1.Group("/math24")
+	math24.Use(middleware.Protected())
+	math24.Get("/levels/:difficulty", rest.GetMath24Levels)
+	math24.Get("/puzzle/:id", rest.GetMath24Puzzle)
+	math24.Post("/puzzle/:id/finish", rest.FinishMath24)
+
 	// Admin routes
 	admin := v1.Group("/admin")
 	admin.Use(middleware.Protected())

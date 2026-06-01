@@ -1,14 +1,37 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store, Math24Card, Operator } from '../../store/math24.store';
+import { I18nService } from '../../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-math24-board',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex flex-col items-center justify-center w-full max-w-md mx-auto h-full gap-4 sm:gap-8 py-4 sm:py-8">
+    <div class="flex flex-col items-center justify-center w-full max-w-md mx-auto h-full gap-2 sm:gap-4 py-2 sm:py-4">
       
+      <!-- Top controls above board -->
+      <div class="flex justify-between items-end w-full px-2 mb-2">
+        <!-- Prev Level -->
+        <button class="text-[var(--color-text-muted)] hover:text-blue-400 font-bold transition-colors px-2 py-1"
+                (click)="store.loadPrevLevel()"
+                [disabled]="store.localLevelIndex() <= 0"
+                [ngClass]="{'opacity-30 cursor-not-allowed': store.localLevelIndex() <= 0}">
+          <span class="mr-1">«</span> {{ i18n.t('game.prev_level')() }}
+        </button>
+        
+        <!-- Level Badge -->
+        <div class="px-5 py-1.5 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-sm sm:text-base font-black text-blue-400 -translate-y-2">
+          {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
+        </div>
+
+        <!-- Next Level -->
+        <button class="text-[var(--color-text-muted)] hover:text-blue-400 font-bold transition-colors px-2 py-1"
+                (click)="store.loadNextLevel()">
+          {{ i18n.t('game.next_level')() }} <span class="ml-1">»</span>
+        </button>
+      </div>
+
       <!-- 3x3 Grid Board -->
       <div class="grid grid-cols-3 grid-rows-3 gap-3 sm:gap-4 w-full aspect-square relative select-none">
         
@@ -50,22 +73,30 @@ import { Math24Store, Math24Card, Operator } from '../../store/math24.store';
       </div>
 
       <!-- Equation Builder Preview -->
-      <div class="h-8 text-xl sm:text-2xl font-mono text-[var(--color-text-muted)] font-bold">
+      <div class="h-8 text-xl sm:text-2xl font-mono text-[var(--color-text-muted)] font-bold mt-2">
         {{ getPreviewText() }}
       </div>
 
       <!-- Controls -->
-      <div class="flex gap-4 mt-2">
-        <button class="px-6 py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-2"
-                (click)="undo()"
-                [disabled]="store.boardHistory().length <= 1"
-                [ngClass]="{'opacity-50 cursor-not-allowed': store.boardHistory().length <= 1}">
-          <span>↩️</span> Undo
+      <div class="flex justify-between w-full px-2 mt-4">
+        <!-- Hint Ad Button -->
+        <button class="px-3 sm:px-4 py-2 sm:py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-xl font-bold transition-all flex items-center gap-1 sm:gap-2 shadow-sm shrink-0"
+                (click)="showHintAd()">
+          <span>💡</span> <span class="text-sm sm:text-base">{{ i18n.t('game.hint_ad')() }}</span>
         </button>
-        <button class="px-6 py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-2"
-                (click)="reset()">
-          <span>🔄</span> Reset
-        </button>
+        
+        <div class="flex gap-2 sm:gap-4">
+          <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
+                  (click)="undo()"
+                  [disabled]="store.boardHistory().length <= 1"
+                  [ngClass]="{'opacity-50 cursor-not-allowed': store.boardHistory().length <= 1}">
+            <span>↩️</span> Undo
+          </button>
+          <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
+                  (click)="reset()">
+            <span>🔄</span> Reset
+          </button>
+        </div>
       </div>
 
       <!-- Templates -->
@@ -99,6 +130,7 @@ import { Math24Store, Math24Card, Operator } from '../../store/math24.store';
 })
 export class Math24BoardComponent {
   store = inject(Math24Store);
+  i18n = inject(I18nService);
 
   operators: Operator[] = ['+', '-', '*', '/'];
   
@@ -112,9 +144,9 @@ export class Math24BoardComponent {
       this.selectedCard = null; // deselect
     } else if (this.selectedOp) {
       // Combine
-      const success = this.store.combineCards(this.selectedCard, card, this.selectedOp);
-      if (success) {
-        this.selectedCard = null;
+      const newCard = this.store.combineCards(this.selectedCard, card, this.selectedOp);
+      if (newCard) {
+        this.selectedCard = newCard;
         this.selectedOp = null;
       }
     } else {
@@ -145,6 +177,10 @@ export class Math24BoardComponent {
       this.selectedCard = null;
       this.selectedOp = null;
     }
+  }
+
+  showHintAd() {
+    alert("Ad integration placeholder! Here you would show a rewarded video ad, then give a hint to the user.");
   }
 
   getPreviewText(): string {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, ViewChild, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Math24Store } from './store/math24.store';
@@ -11,6 +11,7 @@ import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-s
 import { Math24PkSpeedComponent } from './components/math24-pk-speed/math24-pk-speed.component';
 import { Math24BoardComponent } from './components/math24-board/math24-board.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { Math24LobbyComponent } from './components/math24-lobby/math24-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 
@@ -25,7 +26,8 @@ import { Router } from '@angular/router';
     Math24PkStealComponent,
     Math24PkSpeedComponent,
     Math24BoardComponent,
-    GameResultOverlayComponent
+    GameResultOverlayComponent,
+    Math24LobbyComponent
   ],
   templateUrl: './math24.component.html'
 })
@@ -38,8 +40,24 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
+  view = signal<'lobby' | 'room' | 'play'>('lobby');
+
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
+  }
+
+  constructor() {
+    super();
+    effect(() => {
+      const status = this.store.gameStatus();
+      if (this.store.currentMode() !== 'single') {
+        if (status === 'playing') {
+          untracked(() => this.view.set('play'));
+        } else if (status === 'waiting') {
+          untracked(() => this.view.set('room'));
+        }
+      }
+    });
   }
 
   override ngOnInit() {
@@ -49,8 +67,6 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     const pending = this.crossGameJoin.consumePendingJoin('math24');
     if (pending) {
       this.handleJoinRoom({ roomId: pending.roomId, mode: pending.mode, difficulty: pending.difficulty, host: pending.host || '' });
-    } else if (this.store.currentMode() === 'single') {
-      this.store.startSinglePlayer();
     }
   }
 
@@ -106,17 +122,20 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   }
 
   playNextLevel() {
-    this.store.startSinglePlayer(this.store.currentDifficulty(), this.store.localLevelIndex() + 1);
+    this.store.loadNextLevel();
   }
 
   playAgain() {
-    // In PK mode, the host usually restarts the game, but we can emit a ready state if supported, 
-    // or just return to lobby for now if there is no built-in ready mechanism in Math24 yet.
     this.returnToLobby();
   }
 
-  onSinglePlayerDifficultyChange(event: Event) {
-    const target = event.target as HTMLSelectElement;
-    this.store.startSinglePlayer(target.value);
+  startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {
+    this.view.set('play');
+    this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);
+  }
+
+  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string }) {
+    super.handleJoinRoom(params);
+    this.view.set('room');
   }
 }

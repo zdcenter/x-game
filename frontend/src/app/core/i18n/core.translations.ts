@@ -166,7 +166,10 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_codebreaker_medium': '4-digit code',
     'game.diff_codebreaker_hard': '5-digit code',
     'game.diff_math24_easy': 'Basic Math',
+    'game.diff_math24_medium': 'Intermediate Math',
     'game.diff_math24_hard': 'Fractions & Complex',
+    'game.hint_ad': 'Hint (Ad)',
+    'game.level': 'Level',
 
     'game.change_settings': 'Switch Game',
     'game.update_settings': 'Update Settings',
@@ -363,7 +366,10 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.diff_codebreaker_medium': '4位密码',
     'game.diff_codebreaker_hard': '5位密码',
     'game.diff_math24_easy': '纯加减乘除',
+    'game.diff_math24_medium': '进阶混合运算(无分数)',
     'game.diff_math24_hard': '带分数与括号',
+    'game.hint_ad': '提醒Ad',
+    'game.level': '等级',
 
     'game.change_settings': '切换游戏',
     'game.update_settings': '更改房间设置',

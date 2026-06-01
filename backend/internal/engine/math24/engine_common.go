@@ -19,7 +19,7 @@ type Math24Player struct {
 func getRandomPuzzles(difficulty string, n int) []domain.Math24Puzzle {
 	var puzzles []domain.Math24Puzzle
 	if difficulty == "" {
-		difficulty = string(domain.DifficultyMath24Easy)
+		difficulty = string(domain.Math24DifficultyEasy)
 	}
 	db.DB.Where("difficulty = ?", difficulty).Find(&puzzles)
 
@@ -27,7 +27,7 @@ func getRandomPuzzles(difficulty string, n int) []domain.Math24Puzzle {
 	if len(puzzles) == 0 {
 		// Fallback puzzle
 		return []domain.Math24Puzzle{
-			{ID: "fallback", Difficulty: domain.DifficultyMath24Easy, Cards: "1,2,3,4", Solutions: `["1*2*3*4"]`},
+			{ID: "fallback", Difficulty: domain.Math24DifficultyEasy, Cards: "1,2,3,4"},
 		}
 	}
 
