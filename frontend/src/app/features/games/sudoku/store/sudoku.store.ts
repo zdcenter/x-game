@@ -42,9 +42,9 @@ export class SudokuStore {
 
   // Board state (Local)
   board = signal<SudokuCell[][]>([]);
-  selectedCell = signal<{r: number, c: number} | null>(null);
+  selectedCell = signal<{ r: number, c: number } | null>(null);
   pencilMode = signal<boolean>(false);
-  
+
   // History for Undo
   private history: SudokuHistory[] = [];
 
@@ -66,7 +66,7 @@ export class SudokuStore {
     }
     return count;
   });
-  
+
   // WS State derived
   rawState = computed(() => this.ws.gameState() || {
     status: 'waiting',
@@ -92,7 +92,7 @@ export class SudokuStore {
     effect(() => {
       const status = this.gameStatus();
       const currentView = this.view();
-      
+
       // When server sends 'starting', show countdown overlay
       if (status === 'starting' && (currentView === 'room' || currentView === 'lobby')) {
         this.view.set('countdown');
@@ -102,7 +102,7 @@ export class SudokuStore {
           this.initBoard(puzzle);
         }
       }
-      
+
       // When server sends 'playing', transition to play view
       if (status === 'playing' && (currentView === 'countdown' || currentView === 'room')) {
         this.view.set('play');
@@ -191,6 +191,24 @@ export class SudokuStore {
     }
   }
 
+  kickPlayer(playerId: string) {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'cancel_ready' });
+    }
+  }
+
   // --- SINGLE PLAYER INIT ---
   initBoard(puzzleStr: string, savedState?: string, savedTime?: number) {
     if (savedTime) this.timeSpent.set(savedTime);
@@ -215,7 +233,7 @@ export class SudokuStore {
     } else {
       this.createBoardFromString(puzzleStr);
     }
-    
+
     // Load best time
     if (this.auth.isAuthenticated()) {
       const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
@@ -229,7 +247,7 @@ export class SudokuStore {
         if (stat) this.bestTime.set(stat.BestTime);
       });
     }
-    
+
     this.startTimer();
     this.checkErrors(); // Initial check
   }
@@ -255,7 +273,7 @@ export class SudokuStore {
 
   // Interaction
   selectCell(r: number, c: number) {
-    this.selectedCell.set({r, c});
+    this.selectedCell.set({ r, c });
   }
 
   togglePencilMode() {
@@ -305,7 +323,7 @@ export class SudokuStore {
         this.autoEraseNotes(sel.r, sel.c, num);
       }
     }
-    
+
     // Trigger reactivity
     this.board.set([...b]);
     this.checkErrors();
@@ -380,7 +398,7 @@ export class SudokuStore {
     if (this.history.length === 0) return;
 
     this.audio.playClick();
-    
+
     const prevState = this.history.pop()!;
     this.board.set(prevState.board);
     this.checkErrors();
@@ -388,8 +406,8 @@ export class SudokuStore {
   }
 
   private saveHistory() {
-    const currentBoard = this.board().map(row => 
-      row.map(c => ({...c, notes: new Set(c.notes)}))
+    const currentBoard = this.board().map(row =>
+      row.map(c => ({ ...c, notes: new Set(c.notes) }))
     );
     this.history.push({ board: currentBoard });
     if (this.history.length > 50) this.history.shift();
@@ -439,7 +457,7 @@ export class SudokuStore {
             if ((br + i !== r || bc + j !== c) && b[br + i][bc + j].val === val) conflict = true;
           }
         }
-        
+
         if (conflict) b[r][c].error = true;
       }
     }
@@ -462,7 +480,7 @@ export class SudokuStore {
     if (valid && this.currentMode() === 'single') {
       this.isFinished.set(true);
       this.stopTimer();
-      
+
       // Submit stat
       if (this.auth.isAuthenticated()) {
         const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
@@ -484,7 +502,7 @@ export class SudokuStore {
         });
       }
     }
-    
+
     if (valid) {
       if (this.currentMode() === 'single') {
         this.finishPuzzle();
@@ -530,10 +548,10 @@ export class SudokuStore {
   // Backend sync
   private saveStateToBackend() {
     if (!this.currentPuzzleId()) return;
-    
+
     // Serialize board, converting Sets to arrays
-    const serialized = JSON.stringify(this.board().map(row => 
-      row.map(c => ({...c, notes: Array.from(c.notes)}))
+    const serialized = JSON.stringify(this.board().map(row =>
+      row.map(c => ({ ...c, notes: Array.from(c.notes) }))
     ));
 
     this.http.post(`/api/v1/sudoku/puzzle/${this.currentPuzzleId()}/save`, {
@@ -544,10 +562,10 @@ export class SudokuStore {
 
   private finishPuzzle() {
     if (!this.currentPuzzleId()) return;
-    
+
     // Save the final board state immediately
     this.saveStateToBackend();
-    
+
     let stars = 3;
     if (this.timeSpent() > 300) stars = 2; // > 5 mins
     if (this.timeSpent() > 600) stars = 1; // > 10 mins

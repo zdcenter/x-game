@@ -9,6 +9,13 @@
     <!-- Header -->
     <header class="w-full max-w-5xl px-4 py-4 md:py-6 flex justify-between items-center z-10 shrink-0">
       <div class="flex items-center gap-3">
+        <!-- explicit back arrow for mobile -->
+        <button (click)="returnToLobby()" class="p-2 -ml-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-card)] transition-colors lg:hidden" title="返回">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
         <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl flex items-center justify-center text-white text-xl md:text-2xl shadow-lg border border-white/20">
           🕵️
         </div>
@@ -47,14 +54,12 @@
         <button (click)="onRestart()" class="p-2 md:p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shadow-sm hover:bg-emerald-500/20 transition-all font-bold text-sm hidden sm:block">
           {{ i18n.t('game.restart')() }}
         </button>
-        @if (currentRoomMode() !== 'single') {
-          <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm">
-            {{ i18n.t('game.leave')() }}
-          </button>
-        }
+        <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm hidden lg:block">
+          {{ currentRoomMode() === 'single' ? i18n.t('game.back')() : i18n.t('game.leave')() }}
+        </button>
         <button (click)="isMobileSidebarOpen.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] lg:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 md:w-6 md:h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
           </svg>
         </button>
       </div>
@@ -117,9 +122,11 @@
             </button>
           }
           <!-- Control buttons -->
-          <button (click)="clearInput()" 
-                  class="py-3 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs md:text-sm font-bold transition-all active:scale-95 shadow-sm">
-            {{ i18n.t('codebreaker.keyboard.clear')() }}
+          <button (click)="deleteLast()" 
+                  class="py-3 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center transition-all active:scale-95 shadow-sm" title="Delete">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+            </svg>
           </button>
           <button (click)="submitGuess()" 
                   [disabled]="currentInput().length !== digitLength()"
@@ -178,14 +185,14 @@
             @if (opponentState() && opponentState()!.guesses.length > 0) {
               <div class="mb-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col gap-1.5 font-mono text-xs text-indigo-300">
                 <div class="flex justify-between items-center">
-                  <span>{{ i18n.t('codebreaker.opponent_attempts')()?.replace('{count}', opponentState()!.guesses.length.toString()) }}</span>
+                  <span>{{ i18n.t('codebreaker.opponent_attempts')().replace('{count}', opponentState()!.guesses.length.toString()) }}</span>
                   @if (opponentState()?.finished) {
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">🎉 已破译</span>
                   } @else {
                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">⚡ 正在推理</span>
                   }
                 </div>
-                <div>{{ i18n.t('codebreaker.opponent_best')()?.replace('{best}', getOpponentBestResult()) }}</div>
+                <div>{{ i18n.t('codebreaker.opponent_best')().replace('{best}', getOpponentBestResult()) }}</div>
               </div>
 
               @for (rec of opponentState()!.guesses; track $index) {
@@ -225,7 +232,12 @@
         [currentUserId]="myPlayerId()"
         (start)="store.startGame()"
         (leave)="returnToLobby()"
-        (changeSettings)="openChangeSettings()">
+        (changeSettings)="openChangeSettings()"
+        [readyPlayers]="store.gameState()?.readyPlayers || {}"
+        (kick)="store.kickPlayer($event)"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+      >
       </app-game-waiting-room>
     </div>
   }
@@ -246,10 +258,15 @@
       [title]="winnerText"
       [subtitle]="winDescription"
       [showRestart]="true"
-      [showLeave]="currentRoomMode() !== 'single'"
+      [showLeave]="true"
       (restart)="onRestart()"
       (leave)="returnToLobby()">
     </app-game-result-overlay>
+  }
+
+  <!-- Sidebar Overlay Backdrop -->
+  @if (isMobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
   }
 
   <!-- Sidebar -->

@@ -20,6 +20,7 @@ export interface TetrisOpponent {
 })
 export class TetrisStore {
   private ws = inject(WebSocketService);
+  gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
   private authStore = inject(AuthStore);
 
@@ -164,6 +165,24 @@ export class TetrisStore {
   dismissRoom() {
     if (this.mode() !== 'single') {
       this.ws.send({ type: 'dismiss_room' });
+    }
+  }
+
+  kickPlayer(playerId: string) {
+    if (this.mode() !== 'single') {
+      this.ws.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (this.mode() !== 'single') {
+      this.ws.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (this.mode() !== 'single') {
+      this.ws.send({ type: 'cancel_ready' });
     }
   }
 

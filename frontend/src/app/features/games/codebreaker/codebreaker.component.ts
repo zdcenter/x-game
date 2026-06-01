@@ -98,6 +98,10 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
     } else {
       this.route.queryParams.subscribe(params => {
+        // Only run if we don't already have an active room set by consumePendingOrReconnect
+        if (this.roomId()) {
+          return;
+        }
         const mode = params['mode'] || 'single';
         const diff = params['difficulty'] || 'medium';
         const roomId = params['room'] || `codebreaker-${Date.now()}`;
@@ -146,6 +150,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   }
 
   returnToLobby() {
+    this.roomLifecycle.clearReconnectInfo();
     this.router.navigate(['/lobby']);
   }
 
@@ -216,6 +221,13 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   clearInput() {
     this.currentInput.set('');
+  }
+
+  deleteLast() {
+    const input = this.currentInput();
+    if (input.length > 0) {
+      this.currentInput.set(input.slice(0, -1));
+    }
   }
 
   submitGuess() {

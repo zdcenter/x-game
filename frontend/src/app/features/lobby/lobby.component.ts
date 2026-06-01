@@ -192,6 +192,27 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
                     <rect x="55" y="50" width="10" height="10" rx="1.5" />
                   </g>
                 </svg>
+              } @else if (game.id === 'codebreaker') {
+                <svg width="110" height="110" viewBox="0 0 100 100" class="drop-shadow-2xl hover:scale-110 transition-transform duration-500">
+                  <rect x="10" y="10" width="80" height="80" rx="12" fill="#1e293b" />
+                  
+                  <!-- Cyber Security Cipher Lock Design -->
+                  <!-- Lock Shackle (U-bar) -->
+                  <path d="M32 45 V 32 A 18 18 0 0 1 68 32 V 45" fill="none" stroke="#60a5fa" stroke-width="6.5" stroke-linecap="round" />
+                  <!-- Lock Body -->
+                  <rect x="25" y="44" width="50" height="40" rx="10" fill="url(#pieceGrad)" stroke="#34d399" stroke-width="4" />
+                  
+                  <!-- Combination Dial / Keyhole with Glowing Hack Matrix -->
+                  <circle cx="50" cy="64" r="11" fill="#0f172a" stroke="#34d399" stroke-width="2.5" />
+                  <!-- Glowing indicator -->
+                  <line x1="50" y1="53" x2="50" y2="58" stroke="#ef4444" stroke-width="3" stroke-linecap="round" />
+                  
+                  <!-- Cyber hack matrix code details on body background -->
+                  <text x="36" y="58" font-family="monospace" font-size="7" font-weight="black" fill="#10b981" opacity="0.6">1</text>
+                  <text x="34" y="73" font-family="monospace" font-size="7" font-weight="black" fill="#ef4444" opacity="0.6">A</text>
+                  <text x="64" y="58" font-family="monospace" font-size="7" font-weight="black" fill="#3b82f6" opacity="0.6">2</text>
+                  <text x="64" y="73" font-family="monospace" font-size="7" font-weight="black" fill="#eab308" opacity="0.6">B</text>
+                </svg>
               } @else {
                 <span class="text-6xl">{{ getGameEmoji(game.id) }}</span>
               }
@@ -285,6 +306,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'sliding': return '🔲';
       case 'hexa': return '🔶';
       case 'gomoku': return '⚫⚪';
+      case 'codebreaker': return '🔐';
       default: return '🎮';
     }
   }

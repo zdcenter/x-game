@@ -78,6 +78,9 @@ export class GomokuComponent implements OnInit, OnDestroy {
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
     } else {
       this.route.queryParams.subscribe(params => {
+        if (this.roomId()) {
+          return;
+        }
         const mode = params['mode'] || 'single';
         const diff = params['difficulty'] || 'medium';
         const roomId = params['room'] || `gomoku-${Date.now()}`;

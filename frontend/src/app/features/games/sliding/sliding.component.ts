@@ -179,7 +179,7 @@ export class SlidingComponent extends BaseGameComponent {
 
   openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
-      this.isMobileSidebarOpen.set(true);
+      this.isMenuOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
         id: this.currentRoomId(),
         game: 'sliding',

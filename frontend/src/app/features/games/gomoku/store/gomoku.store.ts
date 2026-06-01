@@ -11,6 +11,7 @@ export interface GameStatus {
 
 export class GomokuStore {
   private ws = inject(WebSocketService);
+  gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
 
@@ -155,6 +156,24 @@ export class GomokuStore {
   dismissRoom() {
     if (!this.singlePlayerMode) {
       this.ws.send({ type: 'dismiss_room' });
+    }
+  }
+
+  kickPlayer(playerId: string) {
+    if (!this.singlePlayerMode) {
+      this.ws.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (!this.singlePlayerMode) {
+      this.ws.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (!this.singlePlayerMode) {
+      this.ws.send({ type: 'cancel_ready' });
     }
   }
 

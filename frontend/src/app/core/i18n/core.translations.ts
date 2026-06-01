@@ -173,6 +173,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.play_again': 'Play Again',
     'game.restart': 'Play Again',
     'game.moves': 'Moves',
+    'game.room_dismissed_msg': 'The host has dismissed the room.',
     'game.finished': 'FINISHED',
   },
   zh: {
@@ -349,5 +350,6 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.play_again': '再来一局',
     'game.restart': '再来一局',
     'game.moves': '移动步数',
+    'game.room_dismissed_msg': '房主已解散房间，您已自动退出。',
   },
 };

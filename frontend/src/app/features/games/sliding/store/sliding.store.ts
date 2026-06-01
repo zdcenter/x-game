@@ -15,6 +15,7 @@ export enum GameStatus {
 @Injectable()
 export class SlidingStore {
   private ws = inject(WebSocketService);
+  gameState = computed(() => this.ws.gameState());
   private audio = inject(AudioService);
   private auth = inject(AuthStore);
   private statsService = inject(GameStatsService);
@@ -213,6 +214,24 @@ export class SlidingStore {
   dismissRoom() {
     if (this.currentMode() !== 'single') {
       this.ws.send({ type: 'dismiss_room' });
+    }
+  }
+
+  kickPlayer(playerId: string) {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'cancel_ready' });
     }
   }
 }

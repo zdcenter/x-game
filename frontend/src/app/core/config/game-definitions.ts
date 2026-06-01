@@ -91,7 +91,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     id: 'codebreaker',
     route: '/games/codebreaker',
     titleKey: 'lobby.codebreaker',
-    iconEmoji: '🕵️',
+    iconEmoji: '🔐',
     modes: [
       { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],

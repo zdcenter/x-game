@@ -7,6 +7,9 @@
 ## [Unreleased]
 ### Added
 - **1A2B 密码破译 (Codebreaker)**: 经典的逻辑推理猜数字游戏正式上线！支持单人练习模式（支持 3 位/4 位/5 位数难度选项）与双人联机实时竞速（PK Speed）模式。游戏搭载了极其精美的毛玻璃（Glassmorphism）科技风格 UI 界面、自适应虚拟辅助数字键盘（一键排除、锁定草稿），以及联机模式下的实时对手进度追踪和战绩看板，带来无与伦比的智力博弈体验。
+  - **细节体验全面升级**：在移动端左上角独立增加了直观的 `返回`（<）按钮；为游戏内数字键盘增加了符合直觉的 `删除 (Delete)` 退格键，替代了之前体验不佳的 `清空 (Clear)` 键。
+  - **修复了大厅死锁 Bug**：修复了玩家在进入已解散的联机房间后，缓存未能被正确清除，导致之后即使在大厅点击 1A2B 也无限提示“房主已解散房间”并被强制弹出的死锁问题。现在玩家可以随时无缝重开单机游戏了。
+  - **后端房间管理逻辑极简重构**：大刀阔斧地简化了联机房间的生命周期（去除了原先导致逻辑混乱的“空房间 60 秒滞留”和“房主转移 15 秒延迟”）。现在，只要房间内所有人都离开，该房间就会立刻被销毁，彻底杜绝了大厅中无缘无故多出“幽灵房间”的灵异现象，也解决了房主解散房间可能失效的问题。
 - **Gomoku (五子棋)**: Classic 5-in-a-row strategy game! Includes an advanced Alpha-Beta Pruning AI for single-player practice (3 difficulties), and full WebSocket PvP support for challenging friends! Features a highly-polished wood-textured board with glassmorphic pieces.
 - **Global Achievements (Profile) Page**: A centralized dashboard to view best records across all 5 single-player games. Includes a new `🏆 Profile` button in the main navigation.
 - **In-Game Best Records**: Display real-time "Best Time" or "Best Score" inline during single-player gameplay for all games.

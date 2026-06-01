@@ -50,11 +50,9 @@
       <button (click)="onSurrender()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm hidden sm:block" [disabled]="gameStatus().status !== 'playing'">
         {{ i18n.t('gomoku.surrender')() }}
       </button>
-      @if (currentRoomMode() !== 'single') {
-        <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm">
-          {{ i18n.t('game.leave')() }}
-        </button>
-      }
+      <button (click)="returnToLobby()" class="p-2 md:p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 shadow-sm hover:bg-red-500/20 transition-all font-bold text-sm">
+        {{ currentRoomMode() === 'single' ? i18n.t('game.back')() : i18n.t('game.leave')() }}
+      </button>
       <button (click)="isMobileSidebarOpen.set(true)" class="p-2 md:p-2.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] lg:hidden">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
@@ -152,7 +150,12 @@
         [currentUserId]="myPlayerId()"
         (start)="store.startGame()"
         (leave)="returnToLobby()"
-        (changeSettings)="openChangeSettings()">
+        (changeSettings)="openChangeSettings()"
+        [readyPlayers]="store.gameState()?.readyPlayers || {}"
+        (kick)="store.kickPlayer($event)"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+      >
       </app-game-waiting-room>
     </div>
   }

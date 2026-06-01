@@ -6,37 +6,8 @@ import { HexCell, HexPiece, HexCoord } from '../../store/hexa-engine';
   selector: 'app-hexa-board',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="relative w-full h-full select-none" (contextmenu)="$event.preventDefault()">
-      <svg [attr.viewBox]="viewBox" class="w-full h-full drop-shadow-lg overflow-visible">
-        <!-- Grid Cells -->
-        <g *ngFor="let cell of cells">
-          <polygon 
-            [attr.points]="hexPoints(cell.q, cell.r)" 
-            [attr.fill]="cell.filled ? 'url(#pieceGrad)' : 'var(--color-hexa-empty)'"
-            [attr.stroke]="cell.filled ? 'rgba(255,255,255,0.2)' : 'var(--color-hexa-empty-stroke)'"
-            [attr.stroke-width]="cell.filled ? '0.8' : '1.2'"
-            stroke-linejoin="round"
-            class="transition-colors duration-200"
-            [attr.filter]="cell.filled ? 'url(#shadow3dLight)' : null">
-          </polygon>
-        </g>
-        
-        <!-- Hover Preview -->
-        <g *ngIf="previewPiece && previewOrigin">
-          <polygon *ngFor="let offset of previewPiece.shape"
-            [attr.points]="hexPoints(previewOrigin.q + offset.q, previewOrigin.r + offset.r)"
-            [attr.fill]="'url(#pieceGrad)'"
-            class="opacity-40"
-            stroke="white"
-            stroke-width="2"
-            stroke-dasharray="4">
-          </polygon>
-        </g>
-      </svg>
-    </div>
-  `
-})
+  templateUrl: './hexa-board.component.html',
+  styleUrl: './hexa-board.component.css'})
 export class HexaBoardComponent {
   @Input() cells: HexCell[] = [];
   @Input() previewPiece: HexPiece | null = null;

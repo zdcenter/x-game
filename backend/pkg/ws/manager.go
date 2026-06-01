@@ -16,6 +16,7 @@ import (
 type Client struct {
 	ID      string
 	Conn    *websocket.Conn
+	IsReady bool
 	WriteMu sync.Mutex
 }
 
@@ -226,57 +227,25 @@ func (r *Room) RemoveClient(client *Client) {
 	// Destroy room if empty
 	isEmpty := len(r.Clients) == 0
 	
-	// Host migration with delay
+	// Instant Host Migration if not empty
 	if !isEmpty && r.Host == client.ID {
-		go func(roomID, oldHost string) {
-			time.Sleep(15 * time.Second)
-			mu.Lock()
-			if room, exists := Rooms[roomID]; exists {
-				room.mu.Lock()
-				if room.Host == oldHost {
-					if _, stillHere := room.Clients[oldHost]; !stillHere {
-						for id := range room.Clients {
-							room.Host = id
-							break
-						}
-						room.BroadcastStateLocked()
-					}
-				}
-				room.mu.Unlock()
-			}
-			mu.Unlock()
-		}(r.ID, client.ID)
+		for id := range r.Clients {
+			r.Host = id
+			break
+		}
 	}
 
-	mode := r.Mode
+	// Clean up ready state
+	client.IsReady = false
+
 	roomID := r.ID
 	r.mu.Unlock()
 
 	if isEmpty {
-		if mode == "single" {
-			mu.Lock()
-			delete(Rooms, roomID)
-			mu.Unlock()
-			go Lobby.BroadcastLobbyUpdate()
-		} else {
-			// Delay destruction for PK rooms to allow reconnecting after refresh
-			go Lobby.BroadcastLobbyUpdate() // broadcast 0 players
-			go func() {
-				time.Sleep(60 * time.Second)
-				mu.Lock()
-				if room, exists := Rooms[roomID]; exists {
-					room.mu.Lock()
-					if len(room.Clients) == 0 {
-						room.mu.Unlock()
-						delete(Rooms, roomID)
-						go Lobby.BroadcastLobbyUpdate()
-					} else {
-						room.mu.Unlock()
-					}
-				}
-				mu.Unlock()
-			}()
-		}
+		mu.Lock()
+		delete(Rooms, roomID)
+		mu.Unlock()
+		go Lobby.BroadcastLobbyUpdate()
 	} else {
 		r.BroadcastState()
 		go Lobby.BroadcastLobbyUpdate() // Notify lobby player count changed
@@ -379,6 +348,48 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					}
 				}
 				return
+			} else if msgType == "ready" {
+                                log.Printf("Received ready from %s in room %s", clientID, r.ID)
+				if c, ok := r.Clients[clientID]; ok {
+					c.IsReady = true
+					r.BroadcastStateLocked()
+				}
+				return
+			} else if msgType == "cancel_ready" {
+				if c, ok := r.Clients[clientID]; ok {
+					c.IsReady = false
+					r.BroadcastStateLocked()
+				}
+				return
+			} else if msgType == "kick_player" {
+				if clientID == r.Host {
+					if targetID, ok := baseMsg["target"].(string); ok && targetID != "" && targetID != r.Host {
+						if targetClient, exists := r.Clients[targetID]; exists {
+							targetClient.WriteMessage(websocket.TextMessage, []byte(`{"type": "kicked"}`))
+							targetClient.Conn.Close()
+						}
+					}
+				}
+				return
+			}
+		}
+	}
+
+	// Intercept "start" action to enforce readiness in PK modes
+	var actionMsg struct {
+		Action string `json:"action"`
+	}
+	if err := json.Unmarshal(payload, &actionMsg); err == nil && actionMsg.Action == "start" {
+		if clientID != r.Host {
+			log.Printf("Non-host %s tried to start the game", clientID)
+			return // Only host can start
+		}
+		if r.Mode != "single" {
+			for _, c := range r.Clients {
+				if c.ID != r.Host && !c.IsReady {
+					log.Printf("Cannot start game: player %s is not ready", c.ID)
+					return // Not everyone is ready
+				}
 			}
 		}
 	}
@@ -404,11 +415,18 @@ func (r *Room) BroadcastState() {
 
 func (r *Room) BroadcastStateLocked() {
 	state := r.Engine.GetState()
+	
+	readyPlayers := make(map[string]bool)
+	for id, client := range r.Clients {
+		readyPlayers[id] = client.IsReady
+	}
+
 	log.Printf("[DEBUG] Room %s broadcasting state: %+v to %d clients. Host: %s", r.ID, state, len(r.Clients), r.Host)
 	data, err := json.Marshal(map[string]interface{}{
-		"type":  "gameState",
-		"state": state,
-		"host":  r.Host,
+		"type":         "gameState",
+		"state":        state,
+		"host":         r.Host,
+		"readyPlayers": readyPlayers,
 	})
 	if err != nil {
 		log.Printf("Failed to marshal state: %v", err)

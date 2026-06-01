@@ -17,6 +17,7 @@ export enum GameStatus {
 @Injectable()
 export class HexaStore {
   private wsService = inject(WebSocketService);
+  gameState = computed(() => this.wsService.gameState());
   private authStore = inject(AuthStore);
   private audio = inject(AudioService);
   private statsService = inject(GameStatsService);
@@ -255,6 +256,24 @@ export class HexaStore {
   dismissRoom() {
     if (this.currentMode() !== 'single') {
       this.wsService.send({ type: 'dismiss_room' });
+    }
+  }
+
+  kickPlayer(playerId: string) {
+    if (this.currentMode() !== 'single') {
+      this.wsService.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (this.currentMode() !== 'single') {
+      this.wsService.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (this.currentMode() !== 'single') {
+      this.wsService.send({ type: 'cancel_ready' });
     }
   }
 

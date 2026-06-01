@@ -1,0 +1,18 @@
+
+    <app-game-waiting-room
+      class="w-full h-full flex"
+      [gameId]="'sudoku'"
+      [mode]="store.currentMode()"
+      [roomId]="store.roomId()"
+      [players]="getPlayers()"
+      [hostId]="store.host()"
+      [currentUserId]="store.playerId()"
+      [readyPlayers]="store.rawState()?.readyPlayers || {}"
+      (leave)="store.leaveRoom()"
+      (start)="store.startGame()"
+      (changeSettings)="changeSettings.emit()"
+      (kick)="store.kickPlayer($event)"
+      (ready)="store.ready()"
+      (cancelReady)="store.cancelReady()"
+    ></app-game-waiting-room>
+  

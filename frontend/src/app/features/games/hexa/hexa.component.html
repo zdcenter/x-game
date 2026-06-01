@@ -86,7 +86,12 @@
               [currentUserId]="playerId"
               (leave)="returnToLobby()"
               (start)="store.startGame()"
-              (changeSettings)="openChangeSettings()">
+              (changeSettings)="openChangeSettings()"
+        [readyPlayers]="store.gameState()?.readyPlayers || {}"
+        (kick)="store.kickPlayer($event)"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+      >
             </app-game-waiting-room>
           } @else {
             

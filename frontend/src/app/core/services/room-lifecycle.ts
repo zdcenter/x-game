@@ -1,4 +1,7 @@
-import { Signal, WritableSignal, effect, inject, untracked } from '@angular/core';
+import { Signal, WritableSignal, effect, inject, untracked, DestroyRef } from '@angular/core';
+import { Router, NavigationStart } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WebSocketService } from './websocket.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
@@ -73,14 +76,44 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
   const toastService = inject(ToastService);
   const i18n = inject(I18nService);
   const crossGameJoin = inject(CrossGameJoinService);
+  const router = inject(Router);
+  const destroyRef = inject(DestroyRef);
 
   const prefix = `${config.gameId}_reconnect`;
+
+  const clearReconnectInfo = () => {
+    sessionStorage.removeItem(`${prefix}_room`);
+    sessionStorage.removeItem(`${prefix}_mode`);
+    sessionStorage.removeItem(`${prefix}_diff`);
+    sessionStorage.removeItem(`${prefix}_host`);
+  };
+
+  // Clear session storage if user navigates away via Angular SPA router
+  router.events.pipe(
+    filter((event): event is NavigationStart => event instanceof NavigationStart),
+    takeUntilDestroyed(destroyRef)
+  ).subscribe(event => {
+    if (!event.url.includes(`/games/${config.gameId}`)) {
+      clearReconnectInfo();
+    }
+  });
+
 
   // Auto-register room dismissed handler via Angular effect()
   effect(() => {
     const dismissed = wsService.roomDismissedEvent();
     if (dismissed > 0 && untracked(() => config.getCurrentMode()) !== 'single') {
       toastService.show(i18n.t('game.room_dismissed_msg')() || 'The host has dismissed the room.', 'info');
+      clearReconnectInfo();
+      config.onLeaveRoom();
+    }
+  });
+
+  effect(() => {
+    const kicked = wsService.kickedEvent();
+    if (kicked > 0) {
+      toastService.show(i18n.t('game.kicked_msg')() || 'You have been kicked from the room by the host.', 'error');
+      clearReconnectInfo();
       config.onLeaveRoom();
     }
   });
@@ -125,11 +158,6 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
       }
     },
 
-    clearReconnectInfo() {
-      sessionStorage.removeItem(`${prefix}_room`);
-      sessionStorage.removeItem(`${prefix}_mode`);
-      sessionStorage.removeItem(`${prefix}_diff`);
-      sessionStorage.removeItem(`${prefix}_host`);
-    },
+    clearReconnectInfo,
   };
 }

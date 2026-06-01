@@ -60,13 +60,16 @@ export interface GameDifficulty {
                   <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
                     <div class="flex justify-between items-center mb-2">
                       <div class="flex items-center gap-2">
-                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0"
+                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0 flex items-center gap-1"
                               [class.text-blue-400]="room.game === 'sudoku'"
                               [class.text-green-400]="room.game === 'minesweeper'"
                               [class.text-purple-400]="room.game === 'hexa'"
                               [class.text-orange-400]="room.game === 'sliding'"
-                              [class.text-indigo-400]="room.game === 'tetris'">
-                          {{ getGameLabel(room.game) }}
+                              [class.text-indigo-400]="room.game === 'tetris'"
+                              [class.text-emerald-400]="room.game === 'codebreaker'"
+                              [class.text-amber-400]="room.game === 'gomoku'">
+                          <span>{{ getGameIconEmoji(room.game) }}</span>
+                          <span>{{ getGameLabel(room.game) }}</span>
                         </span>
                         <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] sm:max-w-[180px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }}</span>
                       </div>
@@ -119,13 +122,16 @@ export interface GameDifficulty {
                     <div class="p-3 bg-[var(--color-bg-card)] rounded-xl border-[2px] border-[var(--color-accent-to)] shadow-sm">
                       <div class="flex justify-between items-center mb-2">
                         <div class="flex items-center gap-2">
-                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0"
+                          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0 flex items-center gap-1"
                                 [class.text-blue-400]="room.game === 'sudoku'"
                                 [class.text-green-400]="room.game === 'minesweeper'"
                                 [class.text-purple-400]="room.game === 'hexa'"
                                 [class.text-orange-400]="room.game === 'sliding'"
-                                [class.text-indigo-400]="room.game === 'tetris'">
-                            {{ getGameLabel(room.game) }}
+                                [class.text-indigo-400]="room.game === 'tetris'"
+                                [class.text-emerald-400]="room.game === 'codebreaker'"
+                                [class.text-amber-400]="room.game === 'gomoku'">
+                            <span>{{ getGameIconEmoji(room.game) }}</span>
+                            <span>{{ getGameLabel(room.game) }}</span>
                           </span>
                           <span class="font-mono text-sm font-bold text-inherit truncate max-w-[100px] sm:max-w-[150px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }} (Host)</span>
                         </div>
@@ -467,5 +473,18 @@ export class GameLobbyPanelComponent {
     if (diffId === 'medium') return this.t('game.diff_medium');
     if (diffId === 'hard') return this.t('game.diff_hard');
     return diffId;
+  }
+
+  getGameIconEmoji(gameId: string): string {
+    switch (gameId) {
+      case 'minesweeper': return '💣';
+      case 'sudoku': return '🔢';
+      case 'sliding': return '🔲';
+      case 'hexa': return '🔶';
+      case 'tetris': return '🧱';
+      case 'gomoku': return '⚫';
+      case 'codebreaker': return '🔐';
+      default: return '🎮';
+    }
   }
 }

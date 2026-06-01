@@ -38,6 +38,7 @@ export class WebSocketService {
 
   // Triggered when the room is dismissed
   readonly roomDismissedEvent = signal<number>(0);
+  readonly kickedEvent = signal<number>(0);
 
   connect(gameId: string, roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '') {
     if (this.socket) {
@@ -53,6 +54,7 @@ export class WebSocketService {
     // Reset all per-room state to prevent stale cross-game data from leaking
     this.gameState.set(null);
     this.roomDismissedEvent.set(0);
+    this.kickedEvent.set(0);
     this.unexpectedDisconnectEvent.set(0);
 
     const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
@@ -69,9 +71,13 @@ export class WebSocketService {
       const msg: any = JSON.parse(event.data);
       if (msg.type === 'gameState' && msg.state) {
         msg.state.host = msg.host; // Inject host into the state object for the store
+        msg.state.readyPlayers = msg.readyPlayers || {}; // Inject readyPlayers
         this.gameState.set(msg.state);
-      } else if (msg.type === 'room_dismissed' || (msg.type === 'error' && msg.message === 'room has been dismissed')) {
+      } else if (msg.type === 'room_dismissed' || (msg.type === 'error' && (msg.message === 'room has been dismissed' || (msg.error && msg.error.includes('room has been dismissed'))))) {
         this.roomDismissedEvent.update(v => v + 1);
+        this.disconnect(gameId); // prevent reconnection loop
+      } else if (msg.type === 'kicked') {
+        this.kickedEvent.update(v => v + 1);
         this.disconnect(gameId); // prevent reconnection loop
       } else if (msg.type === 'room_game_changed') {
         this.crossGameJoin.setPendingJoin({

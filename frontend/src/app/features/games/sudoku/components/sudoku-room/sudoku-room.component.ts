@@ -7,21 +7,8 @@ import { GameWaitingRoomComponent } from '../../../../../shared/components/game-
   selector: 'app-sudoku-room',
   standalone: true,
   imports: [CommonModule, GameWaitingRoomComponent],
-  template: `
-    <app-game-waiting-room
-      class="w-full h-full flex"
-      [gameId]="'sudoku'"
-      [mode]="store.currentMode()"
-      [roomId]="store.roomId()"
-      [players]="getPlayers()"
-      [hostId]="store.host()"
-      [currentUserId]="store.playerId()"
-      (leave)="store.leaveRoom()"
-      (start)="store.startGame()"
-      (changeSettings)="changeSettings.emit()"
-    ></app-game-waiting-room>
-  `
-})
+  templateUrl: './sudoku-room.component.html',
+  styleUrl: './sudoku-room.component.css'})
 export class SudokuRoomComponent {
   store = inject(SudokuStore);
   @Output() changeSettings = new EventEmitter<void>();
