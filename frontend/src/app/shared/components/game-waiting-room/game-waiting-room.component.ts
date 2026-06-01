@@ -64,7 +64,11 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                 }
               </button>
             } @else {
-              @if (readyPlayers[currentUserId]) {
+              @if (isSpectator) {
+                <button class="px-10 py-3.5 rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)] font-black uppercase tracking-wider shadow-inner transition-all border border-[var(--color-border-card)] cursor-default">
+                  {{ i18n.t('game.spectating')() || 'Spectating...' }}
+                </button>
+              } @else if (readyPlayers[currentUserId]) {
                 <button (click)="cancelReady.emit()" class="px-10 py-3.5 rounded-xl bg-amber-500 text-black font-black uppercase tracking-wider hover:bg-amber-400 shadow-lg transition-all active:scale-95 border border-transparent">
                   {{ i18n.t('game.cancel_ready')() || 'Cancel Ready' }}
                 </button>
@@ -102,16 +106,19 @@ export class GameWaitingRoomComponent {
   get sortedPlayers() {
     if (!this.players) return [];
     return [...this.players].sort((a, b) => {
-      if (a.id === this.currentUserId) return -1;
-      if (b.id === this.currentUserId) return 1;
+      if (a.id === this.hostId) return -1;
+      if (b.id === this.hostId) return 1;
       return 0;
     });
+  }
+
+  get isSpectator(): boolean {
+    return !this.players.some(p => p.id === this.currentUserId);
   }
 
   get allGuestsReady(): boolean {
     if (!this.players) return false;
     const guests = this.players.filter(p => p.id !== this.hostId);
-    if (guests.length === 0) return true; // If playing alone, always ready? (Wait, usually there's at least one guest in PK, but if not, let it start?) Wait, we can return false if no guests.
     if (guests.length === 0 && this.mode !== 'single') return false; // Must have at least 1 guest in PK
     return guests.every(g => this.readyPlayers[g.id]);
   }

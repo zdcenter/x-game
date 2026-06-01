@@ -8,29 +8,29 @@ import { Math24BoardComponent } from '../math24-board/math24-board.component';
   standalone: true,
   imports: [CommonModule, Math24BoardComponent],
   template: `
-    <div class="flex flex-col h-full relative overflow-hidden bg-slate-950">
+    <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
       
       <!-- Top Scoreboard -->
-      <div class="flex-none p-4 bg-slate-900 border-b border-slate-800">
+      <div class="flex-none p-4 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)]">
         <div class="flex flex-wrap gap-4 justify-center items-center max-w-4xl mx-auto">
           <div *ngFor="let kv of store.players() | keyvalue"
                class="flex items-center gap-3 px-4 py-2 rounded-xl border transition-all duration-300"
                [ngClass]="{
                  'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20 scale-105': kv.key === playerId,
-                 'border-slate-700 bg-slate-800': kv.key !== playerId,
+                 'border-[var(--color-border-card)] bg-[var(--color-bg-main)]': kv.key !== playerId,
                  'opacity-50 grayscale': isFrozen(kv.value)
                }">
             <!-- Player Avatar Placeholder -->
-            <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-lg">
+            <div class="w-10 h-10 rounded-full bg-[var(--color-bg-card)] flex items-center justify-center font-bold text-lg">
               {{ getFirstChar(kv.key) }}
             </div>
             <div class="flex flex-col">
-              <span class="text-sm font-medium text-slate-300" [class.text-blue-400]="kv.key === playerId">
+              <span class="text-sm font-medium text-[var(--color-text-muted)]" [class.text-blue-400]="kv.key === playerId">
                 {{ kv.key === playerId ? 'You' : kv.key }}
               </span>
               <div class="flex items-center gap-1">
-                <span class="text-xl font-black text-white">{{ kv.value.score }}</span>
-                <span class="text-xs text-slate-500">pts</span>
+                <span class="text-xl font-black text-[var(--color-text-main)]">{{ kv.value.score }}</span>
+                <span class="text-xs text-[var(--color-text-muted)]">pts</span>
               </div>
             </div>
             

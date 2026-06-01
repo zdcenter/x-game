@@ -73,6 +73,13 @@ export class GomokuStore {
     }
   });
 
+  isSpectator = computed<boolean>(() => {
+    const p = this.players();
+    const myId = this.myPlayerId();
+    if (!myId || p.length === 0) return false;
+    return !p.includes(myId);
+  });
+
   myPlayerId = signal<string>('');
   
   // Single Player AI

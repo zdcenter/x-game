@@ -6,6 +6,21 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 
+const PUZZLE_BANK: Record<string, string[]> = {
+  easy: [
+    '1,2,3,4', '2,3,4,5', '1,1,1,8', '2,2,4,8', '3,3,4,6',
+    '2,4,6,8', '2,3,6,6', '1,2,6,6', '2,4,4,4', '1,3,4,6'
+  ],
+  medium: [
+    '2,5,8,8', '3,5,7,13', '4,5,6,9', '2,4,10,10', '1,2,7,7',
+    '2,3,5,8', '2,3,5,12', '1,4,5,6', '2,2,13,13', '3,4,5,6'
+  ],
+  hard: [
+    '3,3,8,8', '1,5,5,5', '4,4,7,7', '2,7,7,10', '3,8,8,3',
+    '5,5,5,1', '4,6,6,9', '2,2,11,11', '1,4,5,6', '3,3,7,7'
+  ]
+};
+
 export interface Math24Card {
   id: string;
   value: number;
@@ -49,6 +64,8 @@ export class Math24Store {
   private localCards = signal<Math24Card[]>([]);
   private localHistory = signal<Math24Card[][]>([]);
   private localTime = signal<number>(0);
+  private localStatus = signal<'waiting' | 'playing' | 'finished'>('waiting');
+  localLevelIndex = signal<number>(0);
   private timerInterval: any;
 
   currentMode = computed(() => {
@@ -59,7 +76,10 @@ export class Math24Store {
     return this.localDifficulty();
   });
 
-  isFinished = computed(() => this.gameStatus() === 'finished');
+  isFinished = computed(() => {
+    if (this.currentMode() === 'single') return this.localStatus() === 'finished';
+    return this.gameStatus() === 'finished';
+  });
 
   timeSpent = computed(() => {
     if (this.currentMode() === 'single') return this.localTime();
@@ -163,7 +183,7 @@ export class Math24Store {
       this.audio.playWin();
       if (this.currentMode() === 'single') {
         this.stopTimer();
-        // WIN single player
+        this.localStatus.set('finished');
       } else {
         // Send solve to server
         this.ws.send({
@@ -186,18 +206,16 @@ export class Math24Store {
   }
 
   // --- Single Player Logic ---
-  startSinglePlayer(difficulty: string = 'easy') {
+  startSinglePlayer(difficulty: string = 'easy', levelIndex: number = 0) {
     this.localMode.set('single');
     this.localDifficulty.set(difficulty);
-    // Fetch random from server or generate locally.
-    // For now let's just generate a random simple one if server is not available, or call an API.
-    // Since we didn't write a specific REST API for Math24 puzzle fetching yet, we can mock it here for Single Player:
-    const mockPuzzles: any = {
-      'easy': '2,3,4,5',
-      'hard': '3,3,8,8'
-    };
-    this.loadPuzzle(mockPuzzles[difficulty] || '1,2,3,4');
+    this.localStatus.set('playing');
+    this.localLevelIndex.set(levelIndex);
     
+    const bank = PUZZLE_BANK[difficulty] || PUZZLE_BANK['easy'];
+    const puzzle = bank[levelIndex % bank.length];
+    
+    this.loadPuzzle(puzzle);
     this.startTimer();
   }
 

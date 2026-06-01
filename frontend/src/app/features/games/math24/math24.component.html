@@ -1,32 +1,23 @@
-<div class="h-screen w-full flex bg-slate-950 text-slate-100 overflow-hidden relative">
+<div class="h-[calc(100vh-64px)] w-full flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative overflow-hidden">
 
-  <!-- Mobile Sidebar Overlay -->
-  <div *ngIf="isMobileSidebarOpen()" 
-       class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 lg:hidden"
-       (click)="isMobileSidebarOpen.set(false)">
-  </div>
-
-  <!-- Left Sidebar: Lobby Panel -->
-  <div class="absolute lg:static inset-y-0 left-0 w-80 bg-slate-900 border-r border-slate-800 z-50 transform transition-transform duration-300 flex-shrink-0"
-       [class.-translate-x-full]="!isMobileSidebarOpen()"
-       [class.translate-x-0]="isMobileSidebarOpen()">
-    <app-game-lobby-panel 
-      #lobbyPanel
-      gameId="math24"
-      [currentRoomId]="store.roomId()"
-      (joinRoom)="handleJoinRoom($event)"
-      (closeSidebar)="isMobileSidebarOpen.set(false)">
-    </app-game-lobby-panel>
-  </div>
-
-  <!-- Main Game Area -->
+  <!-- Main Game Area (Left/Top side) -->
   <div class="flex-1 flex flex-col min-w-0 relative h-full">
 
     <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
       <app-game-header 
         [title]="i18n.t('lobby.math24')()"
-        (back)="isMobileSidebarOpen.set(!isMobileSidebarOpen())">
+        iconGradientClass="from-blue-500 to-indigo-600"
+        titleGradientClass="from-blue-400 to-indigo-500"
+        shadowClass="shadow-blue-500/20"
+        headerBgClass="bg-transparent"
+        (back)="returnToLobby()">
+        <span game-icon class="text-2xl sm:text-3xl">🃏</span>
         <div header-right class="flex items-center gap-2">
+          <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </button>
           <select 
             class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-2.5 py-1.5"
             [value]="store.currentDifficulty()"
@@ -46,11 +37,39 @@
     <ng-template #pkHeader>
       <app-game-header 
         [title]="i18n.t('lobby.math24')()"
-        (back)="isMobileSidebarOpen.set(!isMobileSidebarOpen())">
+        [subtitle]="store.currentMode() === 'pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
+        iconGradientClass="from-blue-500 to-indigo-600"
+        titleGradientClass="from-blue-400 to-indigo-500"
+        shadowClass="shadow-blue-500/20"
+        headerBgClass="bg-transparent"
+        (back)="returnToLobby()">
+        <span game-icon class="text-2xl sm:text-3xl">🃏</span>
+        <div header-right class="flex items-center gap-2">
+          <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] lg:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </button>
+        </div>
       </app-game-header>
     </ng-template>
 
     <div class="flex-1 overflow-y-auto relative p-4 h-full">
+      <!-- Result Overlay -->
+      @if (store.isFinished()) {
+        <app-game-result-overlay
+          [status]="getGameResultStatus()"
+          [title]="getGameResultTitle()"
+          [stats]="getStats()"
+          [showLeave]="true"
+          [showNextLevel]="store.currentMode() === 'single'"
+          [showRestart]="store.currentMode() !== 'single'"
+          (leave)="returnToLobby()"
+          (nextLevel)="playNextLevel()"
+          (restart)="playAgain()">
+        </app-game-result-overlay>
+      }
+
       <!-- Waiting Room -->
       <ng-container *ngIf="store.currentMode() !== 'single' && store.gameStatus() === 'waiting'">
         <app-game-waiting-room
@@ -81,5 +100,31 @@
         <app-math24-board></app-math24-board>
       </ng-container>
     </div>
+  </div>
+
+  <!-- Sidebar Overlay Backdrop -->
+  @if (isMobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+  }
+
+  <!-- Right Sidebar: Lobby Panel -->
+  <div class="flex-shrink-0 transition-transform duration-300"
+       [ngClass]="{
+         'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+         'translate-x-0': isMobileSidebarOpen(),
+         'translate-x-full': !isMobileSidebarOpen(),
+         'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
+       }">
+    <div class="flex justify-between items-center mb-4 lg:hidden">
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+    </div>
+    <app-game-lobby-panel 
+      #lobbyPanel
+      class="flex-grow flex"
+      gameId="math24"
+      [currentRoomId]="store.roomId()"
+      (joinRoom)="handleJoinRoom($event)"
+      (closeSidebar)="isMobileSidebarOpen.set(false)">
+    </app-game-lobby-panel>
   </div>
 </div>

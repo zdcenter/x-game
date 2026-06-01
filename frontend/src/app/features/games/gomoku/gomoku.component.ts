@@ -60,6 +60,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   playerColors = this.store.playerColors;
   myPlayerId = this.store.myPlayerId;
   lastMove = computed(() => this.store.lastMove());
+  isSpectator = this.store.isSpectator;
   
   // Room state
   currentRoomMode = signal<string>('single');

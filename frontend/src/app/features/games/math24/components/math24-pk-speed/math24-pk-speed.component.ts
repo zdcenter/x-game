@@ -8,10 +8,10 @@ import { Math24BoardComponent } from '../math24-board/math24-board.component';
   standalone: true,
   imports: [CommonModule, Math24BoardComponent],
   template: `
-    <div class="flex flex-col h-full relative overflow-hidden bg-slate-950">
+    <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
       
       <!-- Top Progress Board -->
-      <div class="flex-none p-4 bg-slate-900 border-b border-slate-800">
+      <div class="flex-none p-4 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)]">
         <div class="flex flex-col gap-4 max-w-4xl mx-auto">
           
           <div *ngFor="let kv of store.players() | keyvalue"
@@ -21,18 +21,18 @@ import { Math24BoardComponent } from '../math24-board/math24-board.component';
               {{ kv.key === playerId ? 'You' : kv.key }}
             </span>
 
-            <div class="flex-1 h-6 bg-slate-800 rounded-full overflow-hidden relative border border-slate-700 shadow-inner">
+            <div class="flex-1 h-6 bg-[var(--color-bg-main)] rounded-full overflow-hidden relative border border-[var(--color-border-card)] shadow-inner">
               <div class="h-full transition-all duration-500 rounded-full relative"
                    [ngClass]="{
                      'bg-gradient-to-r from-blue-600 to-blue-400': kv.key === playerId,
-                     'bg-gradient-to-r from-slate-600 to-slate-500': kv.key !== playerId
+                     'bg-gradient-to-r from-gray-500 to-gray-400': kv.key !== playerId
                    }"
                    [style.width]="(kv.value.progress / totalPuzzles) * 100 + '%'">
                 <div class="absolute inset-0 bg-white/20" style="background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem;"></div>
               </div>
             </div>
 
-            <span class="w-12 text-sm font-bold text-slate-300">{{ kv.value.progress }}/{{ totalPuzzles }}</span>
+            <span class="w-12 text-sm font-bold text-[var(--color-text-muted)]">{{ kv.value.progress }}/{{ totalPuzzles }}</span>
 
           </div>
 
@@ -49,8 +49,8 @@ import { Math24BoardComponent } from '../math24-board/math24-board.component';
         <ng-template #finishedBlock>
           <div class="flex flex-col items-center justify-center h-full">
             <span class="text-6xl mb-4">🎉</span>
-            <h2 class="text-3xl font-black text-white mb-2">Finished!</h2>
-            <p class="text-slate-400">Waiting for others to complete...</p>
+            <h2 class="text-3xl font-black text-[var(--color-text-main)] mb-2">Finished!</h2>
+            <p class="text-[var(--color-text-muted)]">Waiting for others to complete...</p>
           </div>
         </ng-template>
         

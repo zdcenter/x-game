@@ -10,7 +10,9 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-steal.component';
 import { Math24PkSpeedComponent } from './components/math24-pk-speed/math24-pk-speed.component';
 import { Math24BoardComponent } from './components/math24-board/math24-board.component';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-math24',
@@ -22,7 +24,8 @@ import { I18nService } from '../../../core/i18n/i18n.service';
     GameWaitingRoomComponent,
     Math24PkStealComponent,
     Math24PkSpeedComponent,
-    Math24BoardComponent
+    Math24BoardComponent,
+    GameResultOverlayComponent
   ],
   templateUrl: './math24.component.html'
 })
@@ -30,6 +33,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   store = inject(Math24Store);
   private authStore = inject(AuthStore);
   private crossGameJoin = inject(CrossGameJoinService);
+  private router = inject(Router);
   i18n = inject(I18nService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
@@ -55,6 +59,11 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.store.leaveRoom();
   }
 
+  returnToLobby() {
+    this.store.leaveRoom();
+    this.router.navigate(['/lobby']);
+  }
+
   openChangeSettings() {
     if (this.lobbyPanel && this.store.roomId()) {
       this.isMobileSidebarOpen.set(true);
@@ -66,6 +75,44 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
         host: this.store.host()
       });
     }
+  }
+
+  getGameResultStatus(): 'win' | 'lose' {
+    if (this.store.currentMode() === 'single') return 'win';
+    const isWinner = this.store.winners().includes(this.playerId);
+    return isWinner ? 'win' : 'lose';
+  }
+
+  getGameResultTitle(): string {
+    if (this.store.currentMode() === 'single') return this.i18n.t('game.win')();
+    const isWinner = this.store.winners().includes(this.playerId);
+    return isWinner ? this.i18n.t('game.win')() : this.i18n.t('game.lose')();
+  }
+
+  getStats(): { label: string; value: string | number }[] {
+    if (this.store.currentMode() === 'single') {
+      const time = this.store.timeSpent();
+      return [{ label: this.i18n.t('game.time')(), value: `${time}s` }];
+    }
+    const myPlayer = this.store.players()[this.playerId];
+    if (myPlayer) {
+      if (this.store.currentMode() === 'pk_steal') {
+        return [{ label: 'Score', value: myPlayer.score || 0 }];
+      } else {
+        return [{ label: 'Solved', value: myPlayer.progress || 0 }];
+      }
+    }
+    return [];
+  }
+
+  playNextLevel() {
+    this.store.startSinglePlayer(this.store.currentDifficulty(), this.store.localLevelIndex() + 1);
+  }
+
+  playAgain() {
+    // In PK mode, the host usually restarts the game, but we can emit a ready state if supported, 
+    // or just return to lobby for now if there is no built-in ready mechanism in Math24 yet.
+    this.returnToLobby();
   }
 
   onSinglePlayerDifficultyChange(event: Event) {
