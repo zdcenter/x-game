@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -11,12 +11,16 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 
 @Component({
   selector: 'app-drop2048',
   standalone: true,
+  host: {
+    class: 'flex-1 flex flex-col w-full overflow-hidden'
+  },
   imports: [
     CommonModule, 
     GameLobbyPanelComponent, 
@@ -25,7 +29,8 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
-    Drop2048BoardComponent
+    Drop2048BoardComponent,
+    GameRulesModalComponent
   ],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html'
@@ -41,6 +46,8 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   }
 
   view = signal<'lobby' | 'room' | 'play'>('lobby');
+  showRules = signal(false);
+  currentRoomId = computed(() => this.store.roomId());
 
   constructor() {
     super();
@@ -94,6 +101,9 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
         this.view.set('play');
         this.store.startGame();
       }
+    } else {
+      // Automatically start a single-player game when entering
+      this.onJoinSinglePlayer('standard');
     }
   }
 
@@ -114,11 +124,11 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   onLeaveClick() {
     if (this.store.currentMode() === 'single') {
-      this.view.set('lobby');
+      this.router.navigate(['/lobby']);
     } else {
       this.store.leaveGame();
-      this.view.set('lobby');
       this.roomLifecycle.clearReconnectInfo();
+      this.router.navigate(['/lobby']);
     }
   }
 

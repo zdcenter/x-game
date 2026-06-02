@@ -247,8 +247,117 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
                     <text x="0" y="5" font-family="sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">24</text>
                   </g>
                 </svg>
-              } @else {
-                <span class="text-6xl">{{ getGameEmoji(game.id) }}</span>
+              } @else if (game.id === 'drop2048') {
+                <svg width="110" height="110" viewBox="0 0 100 100" class="drop-shadow-2xl hover:scale-110 transition-transform duration-500">
+                  <defs>
+                    <g id="hi">
+                      <rect width="14" height="3" rx="1.5" fill="#ffffff" opacity="0.3" pointer-events="none" />
+                      <rect y="11" width="14" height="3" rx="1.5" fill="#000000" opacity="0.2" pointer-events="none" />
+                    </g>
+                  </defs>
+                  
+                  <!-- Board Background -->
+                  <rect x="8" y="10" width="84" height="80" rx="6" fill="#0f172a" />
+                  
+                  <!-- Highlighted Column -->
+                  <rect x="42" y="10" width="16" height="80" fill="#ffffff" opacity="0.05" />
+
+                  <!-- Block 0,0 (128 - orange) -->
+                  <g transform="translate(11, 74)">
+                    <rect width="14" height="14" rx="3" fill="#f97316" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="5.5" font-weight="900" fill="#ffffff" text-anchor="middle">128</text>
+                  </g>
+                  
+                  <!-- Block 1,0 (32 - purple) -->
+                  <g transform="translate(27, 74)">
+                    <rect width="14" height="14" rx="3" fill="#a855f7" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#ffffff" text-anchor="middle">32</text>
+                  </g>
+
+                  <!-- Block 2,0 (128 - orange) -->
+                  <g transform="translate(43, 74)">
+                    <rect width="14" height="14" rx="3" fill="#f97316" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="5.5" font-weight="900" fill="#ffffff" text-anchor="middle">128</text>
+                  </g>
+
+                  <!-- Block 3,0 (32 - purple) -->
+                  <g transform="translate(59, 74)">
+                    <rect width="14" height="14" rx="3" fill="#a855f7" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#ffffff" text-anchor="middle">32</text>
+                  </g>
+
+                  <!-- Block 4,0 (8 - yellow) -->
+                  <g transform="translate(75, 74)">
+                    <rect width="14" height="14" rx="3" fill="#eab308" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">8</text>
+                  </g>
+
+                  <!-- Row 1 (y=58) -->
+                  <g transform="translate(11, 58)">
+                    <rect width="14" height="14" rx="3" fill="#ec4899" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#ffffff" text-anchor="middle">64</text>
+                  </g>
+                  <g transform="translate(27, 58)">
+                    <rect width="14" height="14" rx="3" fill="#22c55e" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">4</text>
+                  </g>
+                  <g transform="translate(43, 58)">
+                    <rect width="14" height="14" rx="3" fill="#ec4899" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#ffffff" text-anchor="middle">64</text>
+                  </g>
+                  <g transform="translate(75, 58)">
+                    <rect width="14" height="14" rx="3" fill="#22c55e" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">4</text>
+                  </g>
+
+                  <!-- Row 2 (y=42) -->
+                  <g transform="translate(11, 42)">
+                    <rect width="14" height="14" rx="3" fill="#eab308" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">8</text>
+                  </g>
+                  <g transform="translate(27, 42)">
+                    <rect width="14" height="14" rx="3" fill="#ef4444" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">2</text>
+                  </g>
+                  <g transform="translate(43, 42)">
+                    <rect width="14" height="14" rx="3" fill="#22c55e" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">4</text>
+                  </g>
+                  <g transform="translate(75, 42)">
+                    <rect width="14" height="14" rx="3" fill="#b91c1c" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">2</text>
+                  </g>
+
+                  <!-- Motion Trails for falling block -->
+                  <g stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" opacity="0.6">
+                    <line x1="47" y1="12" x2="47" y2="16" />
+                    <line x1="50" y1="11" x2="50" y2="16" />
+                    <line x1="53" y1="13" x2="53" y2="16" />
+                  </g>
+
+                  <!-- Falling Block (2 - red) at y=18 -->
+                  <g transform="translate(43, 18)">
+                    <!-- Glow behind -->
+                    <rect x="-3" y="-3" width="20" height="20" rx="5" fill="#ef4444" opacity="0.3" />
+                    <rect width="14" height="14" rx="3" fill="#ef4444" />
+                    <use href="#hi" />
+                    <text x="7" y="10" font-family="sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle">2</text>
+                  </g>
+                </svg>
+              } @else {                <span class="text-6xl">{{ getGameEmoji(game.id) }}</span>
               }
             </div>
             <!-- Card Content -->

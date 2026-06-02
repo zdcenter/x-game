@@ -20,12 +20,29 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
       <!-- Inner Score Overlays -->
       <div class="absolute top-4 left-4 z-0 flex flex-col pointer-events-none text-left text-white/20 font-black leading-tight">
         <span class="text-[10px] tracking-widest uppercase">SCORE</span>
-        <span class="text-2xl">{{ store.score() }}</span>
+        <span class="text-2xl mb-2">{{ store.score() }}</span>
+
+        <span class="text-[10px] tracking-widest uppercase text-cyan-500/50">LEVEL</span>
+        <span class="text-2xl text-cyan-400/50">{{ store.level() }}</span>
       </div>
       
-      <div *ngIf="store.currentMode() === 'single'" class="absolute top-4 right-4 z-0 flex flex-col pointer-events-none text-right text-white/20 font-black leading-tight">
-        <span class="text-[10px] tracking-widest uppercase">BEST</span>
-        <span class="text-2xl">{{ store.bestScore() }}</span>
+      <div class="absolute top-4 right-4 z-0 flex flex-col items-end pointer-events-none font-black leading-tight">
+        
+        <!-- NEXT Block -->
+        <div class="flex flex-col items-end text-white/40 mb-2">
+          <span class="text-[10px] tracking-widest uppercase mb-1">NEXT</span>
+          <div class="w-12 h-12 flex items-center justify-center text-white text-xl block-3d shadow-md opacity-80"
+               [ngClass]="getColorClass(store.nextVal())"
+               style="border-radius: 8px;">
+             {{ store.nextVal() }}
+          </div>
+        </div>
+
+        <!-- BEST Score -->
+        <div *ngIf="store.currentMode() === 'single'" class="flex flex-col items-end text-white/20 mt-2">
+          <span class="text-[10px] tracking-widest uppercase">BEST</span>
+          <span class="text-2xl">{{ store.bestScore() }}</span>
+        </div>
       </div>
 
       <!-- Active Block -->

@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
@@ -58,6 +58,22 @@ export class Drop2048Store {
     return this.rawState()?.status || 'waiting';
   });
 
+  constructor() {
+    effect(() => {
+      if (this.localMode() === 'single') {
+        const state = {
+          board: this.board(),
+          activeBlock: this.activeBlock(),
+          nextVal: this.nextVal(),
+          localScore: this.localScore(),
+          isDead: this.isDead(),
+          localStatus: this.localStatus()
+        };
+        localStorage.setItem('drop2048_save', JSON.stringify(state));
+      }
+    });
+  }
+
   score = computed(() => {
     if (this.currentMode() === 'single') return this.localScore();
     const st = this.rawState();
@@ -98,6 +114,22 @@ export class Drop2048Store {
 
   startGame() {
     if (this.currentMode() === 'single') {
+      const saved = localStorage.getItem('drop2048_save');
+      if (saved) {
+        try {
+          const state = JSON.parse(saved);
+          if (state.localStatus === 'playing') {
+            this.board.set(state.board || []);
+            this.activeBlock.set(state.activeBlock || null);
+            this.nextVal.set(state.nextVal || 2);
+            this.localScore.set(state.localScore || 0);
+            this.isDead.set(state.isDead || false);
+            this.localStatus.set('playing');
+            this.startGravity();
+            return;
+          }
+        } catch (e) {}
+      }
       this.initLocalGame();
     } else {
       this.ws.send({ type: 'start_game' });
@@ -129,15 +161,63 @@ export class Drop2048Store {
     this.spawnBlock();
   }
 
-  // Generate a random block (2, 4, 8, 16, 32, 64) with weighted probabilities
+  // Calculate current level based on score
+  level = computed(() => {
+    const s = this.score();
+    if (s < 1000) return 1;
+    if (s < 3000) return 2;
+    if (s < 6000) return 3;
+    if (s < 10000) return 4;
+    if (s < 20000) return 5;
+    if (s < 40000) return 6;
+    return 7; // Max level
+  });
+
+  // Calculate drop speed based on level
+  private getDropSpeed(): number {
+    const lvl = this.level();
+    switch (lvl) {
+      case 1: return 1000;
+      case 2: return 800;
+      case 3: return 600;
+      case 4: return 500;
+      case 5: return 400;
+      case 6: return 300;
+      default: return 200; // Level 7+
+    }
+  }
+
+  // Generate a random block with probabilities scaling by level
   private generateRandomValue(): number {
     const r = Math.random();
-    if (r < 0.3) return 2;
-    if (r < 0.55) return 4;
-    if (r < 0.75) return 8;
-    if (r < 0.88) return 16;
-    if (r < 0.96) return 32;
-    return 64;
+    const lvl = this.level();
+    
+    if (lvl >= 5) {
+      // High levels: spawn bigger blocks more often
+      if (r < 0.1) return 2;
+      if (r < 0.3) return 4;
+      if (r < 0.5) return 8;
+      if (r < 0.7) return 16;
+      if (r < 0.85) return 32;
+      if (r < 0.95) return 64;
+      return 128;
+    } else if (lvl >= 3) {
+      // Medium levels
+      if (r < 0.2) return 2;
+      if (r < 0.45) return 4;
+      if (r < 0.65) return 8;
+      if (r < 0.85) return 16;
+      if (r < 0.95) return 32;
+      return 64;
+    } else {
+      // Low levels
+      if (r < 0.3) return 2;
+      if (r < 0.55) return 4;
+      if (r < 0.75) return 8;
+      if (r < 0.88) return 16;
+      if (r < 0.96) return 32;
+      return 64;
+    }
   }
 
   private generateId(): string {
@@ -164,6 +244,7 @@ export class Drop2048Store {
 
   private startGravity() {
     this.stopGravity();
+    const speed = this.getDropSpeed();
     this.gravityInterval = setInterval(() => {
       if (!this.activeBlock() || this.isDead()) {
         this.stopGravity();
@@ -177,7 +258,7 @@ export class Drop2048Store {
       } else {
         this.activeBlock.set({ ...curr, r: curr.r + 1 });
       }
-    }, 1000); // Falls 1 row every second
+    }, speed);
   }
 
   private stopGravity() {
