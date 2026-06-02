@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 ### Added
+- **Sudoku**: Full implementation of Sudoku including Single Player, PK Speed, and PK Steal modes.
+- **Sudoku Engine**: Go backend engine handling board verification and real-time multiplayer states.
+
+### Changed
+- **Math24**: Filtered and optimized puzzle datasets (limited easy/medium counts, prioritized puzzles with fractions).
+- **Math24 PK Modes Overhaul**: 
+  - **Speed Mode**: Fixed an issue where the game ended after only 1 puzzle. It now strictly requires solving 5 consecutive puzzles to win.
+  - **Steal Mode**: Fixed an issue where the board did not visually update to the new puzzle after an opponent scored.
+  - **Freeze Penalty**: Enabled a 3-second freeze penalty in both PK modes for incorrect submissions, complete with a new visually immersive icy overlay and countdown timer on the board.
+
+### Added
 - **1A2B 密码破译 (Codebreaker)**: 经典的逻辑推理猜数字游戏正式上线！支持单人练习模式（支持 3 位/4 位/5 位数难度选项）与双人联机实时竞速（PK Speed）模式。游戏搭载了极其精美的毛玻璃（Glassmorphism）科技风格 UI 界面、自适应虚拟辅助数字键盘（一键排除、锁定草稿），以及联机模式下的实时对手进度追踪和战绩看板，带来无与伦比的智力博弈体验。
   - **细节体验全面升级**：在移动端左上角独立增加了直观的 `返回`（<）按钮；为游戏内数字键盘增加了符合直觉的 `删除 (Delete)` 退格键，替代了之前体验不佳的 `清空 (Clear)` 键。
   - **修复了大厅死锁 Bug**：修复了玩家在进入已解散的联机房间后，缓存未能被正确清除，导致之后即使在大厅点击 1A2B 也无限提示“房主已解散房间”并被强制弹出的死锁问题。现在玩家可以随时无缝重开单机游戏了。

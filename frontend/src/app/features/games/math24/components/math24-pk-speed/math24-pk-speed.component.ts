@@ -1,4 +1,4 @@
-import { Component, effect, inject, Input } from '@angular/core';
+import { Component, effect, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
@@ -58,6 +58,7 @@ import { Math24BoardComponent } from '../math24-board/math24-board.component';
         <div *ngIf="isMyPlayerFrozen()" 
              class="absolute inset-0 flex flex-col items-center justify-center bg-blue-950/60 backdrop-blur-md z-50">
           <span class="text-6xl mb-4 animate-bounce">🥶</span>
+          <div class="text-4xl text-white font-black mb-2">{{ frozenRemaining() }}</div>
           <h2 class="text-3xl font-black text-blue-300 mb-2">Frozen!</h2>
         </div>
       </div>
@@ -70,6 +71,7 @@ export class Math24PkSpeedComponent {
   @Input({ required: true }) hostId!: string;
 
   store = inject(Math24Store);
+  frozenRemaining = signal(0);
 
   get totalPuzzles(): number {
     return this.store.rawState().puzzles?.length || 5;
@@ -87,6 +89,30 @@ export class Math24PkSpeedComponent {
         this.store.loadPuzzle(puzzle.cards);
       }
     });
+
+    effect((onCleanup) => {
+      const p = this.store.players()[this.playerId];
+      const until = p?.freezeUntil || 0;
+      const now = Date.now();
+      let interval: any;
+      if (until > now) {
+        this.frozenRemaining.set(Math.ceil((until - now) / 1000));
+        interval = setInterval(() => {
+          const rem = Math.ceil((until - Date.now()) / 1000);
+          if (rem <= 0) {
+            clearInterval(interval);
+            this.frozenRemaining.set(0);
+          } else {
+            this.frozenRemaining.set(rem);
+          }
+        }, 200);
+      } else {
+        this.frozenRemaining.set(0);
+      }
+      onCleanup(() => {
+        if (interval) clearInterval(interval);
+      });
+    });
   }
 
   isFrozen(player: any): boolean {
@@ -95,7 +121,6 @@ export class Math24PkSpeedComponent {
   }
 
   isMyPlayerFrozen(): boolean {
-    const p = this.store.players()[this.playerId];
-    return this.isFrozen(p);
+    return this.frozenRemaining() > 0;
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store, Math24Card, Operator } from '../../store/math24.store';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
@@ -35,6 +35,15 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
       <!-- 3x3 Grid Board -->
       <div class="grid grid-cols-3 grid-rows-3 gap-3 sm:gap-4 w-full aspect-square relative select-none">
         
+        <!-- Freeze Overlay -->
+        @if (freezeRemaining() > 0) {
+          <div class="absolute inset-0 z-50 bg-blue-900/40 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-blue-400/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+            <span class="text-6xl sm:text-8xl animate-pulse drop-shadow-lg">❄️</span>
+            <div class="mt-4 text-2xl font-black text-white tracking-widest">{{ freezeRemaining() }}s</div>
+            <div class="text-sm font-bold text-blue-200 mt-2 uppercase">{{ i18n.t('game.frozen')() || 'Frozen Penalty' }}</div>
+          </div>
+        }
+
         <!-- Row 0 -->
         <div class="w-full h-full">
           <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.boardCards()[0] }"></ng-container>
@@ -137,7 +146,33 @@ export class Math24BoardComponent {
   selectedCard: Math24Card | null = null;
   selectedOp: Operator | null = null;
 
+  freezeRemaining = signal<number>(0);
+  private freezeInterval: any;
+
+  constructor() {
+    effect(() => {
+      const target = this.store.freezeUntil();
+      if (target > Date.now()) {
+        if (this.freezeInterval) clearInterval(this.freezeInterval);
+        this.freezeRemaining.set(Math.ceil((target - Date.now()) / 1000));
+        this.freezeInterval = setInterval(() => {
+          const rem = Math.ceil((target - Date.now()) / 1000);
+          if (rem <= 0) {
+            this.freezeRemaining.set(0);
+            clearInterval(this.freezeInterval);
+          } else {
+            this.freezeRemaining.set(rem);
+          }
+        }, 100);
+      } else {
+        this.freezeRemaining.set(0);
+        if (this.freezeInterval) clearInterval(this.freezeInterval);
+      }
+    });
+  }
+
   selectCard(card: Math24Card) {
+    if (this.freezeRemaining() > 0) return;
     if (!this.selectedCard) {
       this.selectedCard = card;
     } else if (this.selectedCard.id === card.id) {
@@ -156,6 +191,7 @@ export class Math24BoardComponent {
   }
 
   selectOp(op: Operator) {
+    if (this.freezeRemaining() > 0) return;
     if (this.selectedCard) {
       this.selectedOp = this.selectedOp === op ? null : op;
     }

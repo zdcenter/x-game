@@ -12,11 +12,12 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameResultOverlayComponent, GameRulesModalComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameHeaderComponent],
+  imports: [CommonModule, GameResultOverlayComponent, GameRulesModalComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameHeaderComponent, GameStartingOverlayComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']

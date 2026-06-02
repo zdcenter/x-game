@@ -14,12 +14,16 @@
         [gameId]="'math24'"
         [mode]="store.currentMode()"
         [roomId]="store.roomId()"
-        [players]="store.players()"
+        [players]="store.playersList()"
         [currentUserId]="playerId"
         [hostId]="store.host()"
+        [readyPlayers]="store.readyPlayers()"
         (start)="store.startGame()"
         (leave)="returnToLobby()"
-        (changeSettings)="openChangeSettings()">
+        (changeSettings)="openChangeSettings()"
+        (kick)="store.kickPlayer($event)"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()">
       </app-game-waiting-room>
     } @else {
       <!-- PLAY VIEW -->
@@ -73,12 +77,14 @@
             [status]="getGameResultStatus()"
             [title]="getGameResultTitle()"
             [stats]="getStats()"
-            [showLeave]="true"
+            [showLeave]="store.currentMode() === 'single' || store.host() !== playerId"
             [showNextLevel]="store.currentMode() === 'single'"
-            [showRestart]="store.currentMode() !== 'single'"
+            [showRestart]="store.currentMode() === 'single' || store.host() === playerId"
+            [showDismiss]="store.currentMode() !== 'single' && store.host() === playerId"
             (leave)="view.set('lobby')"
             (nextLevel)="playNextLevel()"
-            (restart)="playAgain()">
+            (restart)="playAgain()"
+            (dismiss)="store.dismissRoom()">
           </app-game-result-overlay>
         }
 
@@ -96,6 +102,11 @@
         <ng-container *ngIf="store.currentMode() === 'single'">
           <app-math24-board></app-math24-board>
         </ng-container>
+
+        <!-- Starting Overlay -->
+        @if (store.gameStatus() === 'starting') {
+          <app-game-starting-overlay [countdown]="startingCountdown()"></app-game-starting-overlay>
+        }
       </div>
     }
   </div>
@@ -122,7 +133,8 @@
       [currentGameId]="'math24'"
       [currentRoomId]="store.roomId()"
       (joinRoom)="handleJoinRoom($event)"
-      (closeSidebar)="isMobileSidebarOpen.set(false)">
+      (createRoom)="handleCreateRoom($event)"
+      (dismissRoom)="handleDismissRoom()">
     </app-game-lobby-panel>
   </div>
 </div>

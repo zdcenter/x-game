@@ -56,10 +56,14 @@ type SolvePayload struct {
 	IsCorrect  bool   `json:"isCorrect"`
 }
 
+type WsActionMessage struct {
+	Payload SolvePayload `json:"payload"`
+}
+
 func parseSolvePayload(payload []byte) (*SolvePayload, error) {
-	var p SolvePayload
-	if err := json.Unmarshal(payload, &p); err != nil {
+	var msg WsActionMessage
+	if err := json.Unmarshal(payload, &msg); err != nil {
 		return nil, err
 	}
-	return &p, nil
+	return &msg.Payload, nil
 }

@@ -255,4 +255,15 @@ ngOnInit() {
   ```
   在开发新游戏时，你只需保证 `openChangeSettings()` 的传参正确即可，跳转刷新的逻辑框架已为你完美接管。
 
+### 12. 统一的游戏开局倒计时遮罩 (Game Starting Overlay)
+- **避免冗余**：开发新游戏时，**严禁**在 HTML 模板中重复手写包含 `z-index`、`backdrop-blur`、大号数字和多语言文本的倒计时遮罩层代码。
+- **标准做法**：全局已经抽离了跨游戏的通用倒计时组件。只需在主组件模块中导入 `GameStartingOverlayComponent`，然后在 HTML 模板中判断 `status === 'starting'` 时直接使用即可：
+  ```html
+  @if (store.status() === 'starting') {
+    <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+  }
+  ```
+  该组件已内置了全屏遮罩、发光特效、动态脉冲动画，并自动绑定了 `game.starting` 的全局多语言翻译。
+
 遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉上达到最顶级的体验！
+

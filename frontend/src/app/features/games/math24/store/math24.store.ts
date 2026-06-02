@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { GameTimerService } from '../../../../core/services/game-timer.service';
@@ -37,6 +37,11 @@ export class Math24Store {
 
   gameStatus = computed(() => this.rawState().status);
   players = computed(() => this.rawState().players);
+  playersList = computed(() => {
+    const p = this.players() || {};
+    return Object.keys(p).map(id => ({ id, ...p[id] }));
+  });
+  readyPlayers = computed(() => (this.rawState() as any).readyPlayers || {});
   winners = computed(() => this.rawState().winners || []);
   host = computed(() => this.rawState().host || '');
 
@@ -54,9 +59,27 @@ export class Math24Store {
   completedLevels = signal<Record<string, number[]>>({});
   private timerInterval: any;
 
+  freezeUntil = computed(() => {
+    if (this.currentMode() === 'single') return 0;
+    const p = this.players()?.[this.playerId()];
+    return p?.freezeUntil || 0;
+  });
+
   constructor() {
-    // completedLevels is no longer stored in localStorage.
-    // It's fetched from the backend via math24-lobby.
+    effect(() => {
+      const puzzle = this.currentPuzzle();
+      const mode = this.currentMode();
+      
+      if (mode !== 'single' && puzzle && puzzle.cards) {
+        untracked(() => {
+          const id = puzzle.id || puzzle.cards;
+          if (this.currentPuzzleId() !== id) {
+            this.currentPuzzleId.set(id);
+            this.loadPuzzle(puzzle.cards);
+          }
+        });
+      }
+    });
   }
 
   currentMode = computed(() => {
@@ -206,6 +229,16 @@ export class Math24Store {
         });
         // Server will freeze us
       }
+      
+      // Auto-reset board on fail
+      setTimeout(() => {
+        const history = this.boardHistory();
+        if (history.length > 0) {
+          const initial = history[0];
+          this.boardHistory.set([initial]);
+          this.boardCards.set(initial);
+        }
+      }, 500);
     }
   }
 
@@ -268,9 +301,31 @@ export class Math24Store {
   }
 
   leaveRoom() {
-    this.ws.disconnect('math24');
+    this.ws.send({ type: 'leave_game' });
     this.roomId.set('');
     this.localMode.set('single');
+  }
+
+  disconnectWS() {
+    this.ws.disconnect('math24');
+  }
+
+  kickPlayer(playerId: string) {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'cancel_ready' });
+    }
   }
 
   startGame() {
@@ -279,5 +334,9 @@ export class Math24Store {
 
   dismissRoom() {
     this.ws.send({ type: 'dismiss_room' });
+  }
+
+  restartGame() {
+    this.ws.send({ type: 'restart_game' });
   }
 }

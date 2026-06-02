@@ -11,6 +11,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -22,8 +23,10 @@ import { ToastService } from '../../../core/services/toast.service';
     GameResultOverlayComponent,
     GameRulesModalComponent,
     GameWaitingRoomComponent,
-    GameLobbyPanelComponent
-  , GameHeaderComponent],
+    GameLobbyPanelComponent,
+    GameStartingOverlayComponent,
+    GameHeaderComponent
+  ],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
   styleUrls: ['./codebreaker.component.css']

@@ -17,6 +17,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { AudioService } from '../../../core/services/audio.service';
 
 @Component({
@@ -29,8 +30,9 @@ import { AudioService } from '../../../core/services/audio.service';
     GameWaitingRoomComponent,
     GameLobbyPanelComponent,
     GameRulesModalComponent,
-    GameResultOverlayComponent
-  , GameHeaderComponent],
+    GameResultOverlayComponent,
+    GameStartingOverlayComponent,
+    GameHeaderComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html'
 })

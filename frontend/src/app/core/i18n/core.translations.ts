@@ -174,6 +174,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.level': 'Level',
     'game.undo': 'Undo',
     'game.reset': 'Reset',
+    'game.spectating': 'Spectating...',
+    'game.starting': 'Starting...',
 
     'game.change_settings': 'Switch Game',
     'game.update_settings': 'Update Settings',
@@ -380,6 +382,9 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.reset': '重置',
 
     'game.change_settings': '切换游戏',
+    'game.spectating': '观战中...',
+    'game.starting': '即将开始...',
+    'game.width': '宽度',
     'game.update_settings': '更改房间设置',
     'game.update': '更新',
     'game.win': '恭喜！你赢了。',

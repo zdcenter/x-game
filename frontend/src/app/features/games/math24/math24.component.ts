@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Math24Store } from './store/math24.store';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
@@ -14,6 +14,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { Math24LobbyComponent } from './components/math24-lobby/math24-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 
 @Component({
   selector: 'app-math24',
@@ -27,20 +28,23 @@ import { Router } from '@angular/router';
     Math24PkSpeedComponent,
     Math24BoardComponent,
     GameResultOverlayComponent,
-    Math24LobbyComponent
+    Math24LobbyComponent,
+    GameStartingOverlayComponent
   ],
   templateUrl: './math24.component.html'
 })
 export class Math24Component extends BaseGameComponent implements OnInit, OnDestroy {
   store = inject(Math24Store);
   private authStore = inject(AuthStore);
-  private crossGameJoin = inject(CrossGameJoinService);
+  private roomLifecycle!: RoomLifecycleHandle;
   private router = inject(Router);
   i18n = inject(I18nService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
   view = signal<'lobby' | 'room' | 'play'>('lobby');
+  startingCountdown = signal(3);
+  private countdownInterval: any;
 
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -48,13 +52,37 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   constructor() {
     super();
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'math24',
+      getCurrentMode: () => this.store.currentMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
+    });
+    
     effect(() => {
       const status = this.store.gameStatus();
       if (this.store.currentMode() !== 'single') {
-        if (status === 'playing') {
-          untracked(() => this.view.set('play'));
+        if (status === 'starting') {
+          untracked(() => {
+            this.view.set('play');
+            this.startingCountdown.set(3);
+            if (this.countdownInterval) clearInterval(this.countdownInterval);
+            this.countdownInterval = setInterval(() => {
+              this.startingCountdown.update(v => Math.max(1, v - 1));
+            }, 1000);
+          });
+        } else if (status === 'playing') {
+          untracked(() => {
+            this.view.set('play');
+            if (this.countdownInterval) clearInterval(this.countdownInterval);
+          });
         } else if (status === 'waiting') {
-          untracked(() => this.view.set('room'));
+          untracked(() => {
+            this.view.set('room');
+            if (this.countdownInterval) clearInterval(this.countdownInterval);
+          });
         }
       }
     });
@@ -63,16 +91,20 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   override ngOnInit() {
     super.ngOnInit();
     
-    // Cross Game Join
-    const pending = this.crossGameJoin.consumePendingJoin('math24');
-    if (pending) {
-      this.handleJoinRoom({ roomId: pending.roomId, mode: pending.mode, difficulty: pending.difficulty, host: pending.host || '' });
+    const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
+    if (joinInfo) {
+      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      if (joinInfo.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      }
+      this.view.set('room');
     }
   }
 
   override ngOnDestroy() {
     super.ngOnDestroy();
-    this.store.leaveRoom();
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.store.disconnectWS();
   }
 
   returnToLobby() {
@@ -129,7 +161,11 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   }
 
   playAgain() {
-    this.returnToLobby();
+    if (this.store.currentMode() === 'single') {
+      this.playNextLevel();
+    } else {
+      this.store.restartGame();
+    }
   }
 
   startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {
@@ -137,8 +173,24 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);
   }
 
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+    super.handleCreateRoom(event);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
+    }
+    this.view.set("room");
+  }
+
   override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string }) {
     super.handleJoinRoom(params);
+    if (params.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
+    }
     this.view.set('room');
+  }
+  
+  override handleDismissRoom() {
+    super.handleDismissRoom();
+    this.roomLifecycle.clearReconnectInfo();
   }
 }

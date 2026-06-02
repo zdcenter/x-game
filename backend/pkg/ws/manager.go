@@ -376,10 +376,12 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	}
 
 	// Intercept "start" action to enforce readiness in PK modes
+log.Printf("Received payload in room %s from %s: %s", r.ID, clientID, string(payload))
 	var actionMsg struct {
 		Action string `json:"action"`
 	}
 	if err := json.Unmarshal(payload, &actionMsg); err == nil && actionMsg.Action == "start" {
+log.Printf("Start action received from %s", clientID)
 		if clientID != r.Host {
 			log.Printf("Non-host %s tried to start the game", clientID)
 			return // Only host can start
@@ -395,7 +397,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	}
 
 	// Handle game action
-	_, err := r.Engine.HandleAction(clientID, "", payload) // Action type is inside payload
+	_, err := r.Engine.HandleAction(clientID, actionMsg.Action, payload) // Action type is inside payload
 	if err != nil {
 		log.Printf("Action Error from %s: %v", clientID, err)
 		// Optionally send error to specific client
