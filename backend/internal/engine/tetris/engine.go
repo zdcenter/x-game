@@ -149,24 +149,33 @@ func (e *PKAttackEngine) GetState() interface{} {
 
 func (e *PKAttackEngine) checkGameEnd() {
 	allFinished := true
-	var alive []string
 
-	for id, p := range e.state.Players {
+	for _, p := range e.state.Players {
 		if !p.Finished {
 			allFinished = false
-			alive = append(alive, id)
+			break
 		}
 	}
 
-	if len(e.state.Players) > 1 {
-		if len(alive) <= 1 {
-			e.State = engine.StateFinished
-			e.state.Winners = alive
+	if allFinished {
+		e.State = engine.StateFinished
+		
+		// Find max score
+		maxScore := -1
+		for _, p := range e.state.Players {
+			if p.Score > maxScore {
+				maxScore = p.Score
+			}
 		}
-	} else {
-		if allFinished {
-			e.State = engine.StateFinished
+
+		// Collect winners
+		var winners []string
+		for id, p := range e.state.Players {
+			if p.Score == maxScore && maxScore >= 0 {
+				winners = append(winners, id)
+			}
 		}
+		e.state.Winners = winners
 	}
 }
 

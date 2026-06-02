@@ -73,17 +73,21 @@ export class TetrisStore {
   private dropInterval: any;
   private localGarbageApplied = 0;
   private prng: PRNG | undefined;
+  
+  isDead = signal<boolean>(false);
 
   constructor() {
     effect(() => {
       const st = this.ws.gameState();
       if (this.mode() !== 'single') {
         if (st?.status === 'playing') { // PLAYING
-          if (!this.dropInterval) {
+          if (!this.dropInterval && !this.isDead()) {
             this.onGlobalStart();
           }
         } else if (st?.status === 'finished') { // FINISHED
           this.stopGameLoop();
+        } else if (st?.status === 'starting' || st?.status === 'waiting') {
+          this.isDead.set(false);
         }
       }
     });
@@ -133,6 +137,7 @@ export class TetrisStore {
   gameOver() {
     this.stopGameLoop();
     this.localStatus.set('finished');
+    this.isDead.set(true);
     if (this.mode() === 'single') {
       
       // Submit stat
@@ -150,7 +155,7 @@ export class TetrisStore {
         });
       }
     } else {
-      this.ws.send({ type: 'game_over' });
+      this.ws.send({ action: 'game_over' });
     }
   }
 

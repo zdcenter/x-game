@@ -152,6 +152,15 @@
                     <app-game-starting-overlay [countdown]="timerService.countdownDisplay()"></app-game-starting-overlay>
                   }
 
+                  <!-- Spectating Overlay -->
+                  @if (store.status() === 'playing' && store.isDead()) {
+                    <div class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl lg:rounded-2xl">
+                      <div class="text-3xl lg:text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest text-center">
+                        {{ i18n.t('game.spectating')() || 'Spectating...' }}
+                      </div>
+                    </div>
+                  }
+
                   <!-- Game Over Overlay -->
                   @if (store.status() === 'finished') {
                     <app-game-result-overlay
