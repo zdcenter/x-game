@@ -35,6 +35,7 @@ type Room struct {
 	Mode       string // "single", "pk_steal", "pk_speed"
 	Difficulty string // "easy", "medium", "hard"
 	CreatedAt  int64  // Unix timestamp of creation
+	GameChangedAt int64 // Unix timestamp of last game change to prevent disconnect races
 	Clients    map[string]*Client
 	Engine     engine.GameEngine
 	mu         sync.Mutex
@@ -227,8 +228,10 @@ func (r *Room) RemoveClient(client *Client) {
 	// Destroy room if empty
 	isEmpty := len(r.Clients) == 0
 	
-	// Instant Host Migration if not empty
-	if !isEmpty && r.Host == client.ID {
+	isSwitchingGame := time.Now().Unix() - r.GameChangedAt < 5
+	
+	// Instant Host Migration if not empty, and not switching games
+	if !isEmpty && r.Host == client.ID && !isSwitchingGame {
 		for id := range r.Clients {
 			r.Host = id
 			break
@@ -241,12 +244,12 @@ func (r *Room) RemoveClient(client *Client) {
 	roomID := r.ID
 	r.mu.Unlock()
 
-	if isEmpty {
+	if isEmpty && !isSwitchingGame {
 		mu.Lock()
 		delete(Rooms, roomID)
 		mu.Unlock()
 		go Lobby.BroadcastLobbyUpdate()
-	} else {
+	} else if !isEmpty {
 		r.BroadcastState()
 		go Lobby.BroadcastLobbyUpdate() // Notify lobby player count changed
 	}
@@ -325,6 +328,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 						r.Game = gameId
 						r.Mode = mode
 						r.Difficulty = diff
+						r.GameChangedAt = time.Now().Unix()
 						
 						eng.InitGame(getGameOptions(gameId, mode, diff))
 						
