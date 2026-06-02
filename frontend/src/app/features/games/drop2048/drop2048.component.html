@@ -1,0 +1,123 @@
+<div class="h-[calc(100vh-64px)] w-full flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative overflow-hidden">
+  
+  <!-- Main Game Area (Left/Top side) -->
+  <div class="flex-1 flex flex-col min-w-0 relative h-full bg-[var(--color-bg-card)] rounded-none lg:rounded-2xl lg:m-2 lg:border lg:border-[var(--color-border-card)] shadow-xl overflow-hidden">
+
+    @if (view() === 'lobby') {
+      <div class="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4">
+        <!-- Icon -->
+        <div class="text-7xl mb-6 animate-bounce drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]">🧊</div>
+        <h1 class="text-4xl md:text-6xl font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-lg text-center">
+          2048 下落合成
+        </h1>
+        <p class="text-slate-400 mb-10 text-center max-w-sm">
+          拖动并下落数字，相同的数字碰撞会合成更大的数字！挑战你的极限反应与连锁消除！
+        </p>
+        
+        <div class="flex flex-col gap-4 w-full max-w-xs">
+          <button (click)="onJoinSinglePlayer('standard')" class="py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2">
+            <span>🎮</span> 开始单机游戏
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (view() === 'room') {
+      <app-game-waiting-room
+        [gameId]="'drop2048'"
+        [mode]="store.currentMode()"
+        [roomId]="store.roomId()"
+        [players]="store.playersList()"
+        [hostId]="store.host()"
+        [currentUserId]="playerId"
+        (start)="store.startGame()"
+        (leaveRoom)="onLeaveClick()"
+        (changeSettings)="openChangeSettings()"
+      ></app-game-waiting-room>
+    }
+
+    @if (view() === 'play') {
+      <div class="h-full flex flex-col relative">
+        <app-game-header 
+          (back)="onLeaveClick()"
+          [title]="i18n.t('lobby.drop2048')()">
+        </app-game-header>
+
+        <div class="flex-1 overflow-y-auto flex flex-col relative bg-[var(--color-bg-base)] p-4">
+          
+          <!-- Top Opponents Panel in PK Mode -->
+          @if (store.currentMode() !== 'single' && store.otherPlayers().length > 0) {
+            <div class="flex-none pb-4 mb-4 border-b border-[var(--color-border-card)]">
+              <div class="w-full max-w-4xl mx-auto flex gap-4 overflow-x-auto pb-2">
+                @for (opp of store.otherPlayers(); track opp.id) {
+                  <app-player-badge
+                    class="flex-1 min-w-[160px]"
+                    layout="card"
+                    [playerName]="opp.id"
+                    [isHost]="opp.id === store.host()"
+                    [score]="opp.score"
+                    [status]="opp.finished ? 'finished' : 'playing'"
+                  ></app-player-badge>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Main Game Board with Top Stats -->
+          <div class="flex-1 relative flex flex-col items-center justify-start min-h-[450px] pt-4 md:pt-8">
+            
+
+
+            <div class="relative">
+              <!-- Local Player Spectating overlay if dead in PK -->
+              @if (store.currentMode() !== 'single' && store.isDead() && store.status() === 'playing') {
+                <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg">
+                  <div class="text-3xl font-black text-white drop-shadow-lg">{{ i18n.t('game.spectating')() }}</div>
+                </div>
+              }
+
+              <app-drop2048-board
+                class="transform scale-100 md:scale-125 lg:scale-[1.4] transition-transform duration-300 origin-top block"
+                [board]="store.board()"
+                [activeBlock]="store.activeBlock()"
+                [combos]="store.combos()"
+                [particles]="store.particles()"
+              ></app-drop2048-board>
+            </div>
+          </div>
+        </div>
+
+        <!-- Starting Overlay -->
+        @if (store.status() === 'starting') {
+          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+        }
+
+        <!-- Game Over Result Overlay -->
+        @if (store.status() === 'finished') {
+          <app-game-result-overlay
+            [status]="getResultTitle() === 'game.you_lose' ? 'lose' : 'win'"
+            [title]="i18n.t(getResultTitle())()"
+            [stats]="[{label: 'SCORE', value: store.score()}]"
+            [showRestart]="store.host() === playerId || store.currentMode() === 'single'"
+            (restart)="store.playAgain()"
+            (leave)="onLeaveClick()"
+          >
+            <div class="text-xl mb-4 font-bold text-[var(--color-text-secondary)]">
+              FINAL SCORE: <span class="text-cyan-400 text-3xl">{{ store.score() }}</span>
+            </div>
+          </app-game-result-overlay>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Right Sidebar: Lobby Panel -->
+  <div class="flex-shrink-0 transition-transform duration-300 hidden lg:flex lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]">
+    <app-game-lobby-panel 
+      class="flex-grow flex"
+      [currentGameId]="'drop2048'"
+      [currentRoomId]="store.roomId()"
+      (createRoom)="onRoomCreated()">
+    </app-game-lobby-panel>
+  </div>
+</div>

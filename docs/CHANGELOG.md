@@ -5,6 +5,9 @@
 - **Lobby Icons**: Replaced the generic hamburger menu icon with a semantic "User Group" (People) icon across all game views to intuitively represent multiplayer rooms and lobbies.
 
 ## [Unreleased]
+- **New Game**: Added Drop 2048 (Number Merge) with physics dropping, combo sounds, vibration feedback, and PK Score Mode support.
+
+## [v0.3.3] - 2026-06-02
 ### Added
 - **Sudoku**: Full implementation of Sudoku including Single Player, PK Speed, and PK Steal modes.
 - **Sudoku Engine**: Go backend engine handling board verification and real-time multiplayer states.

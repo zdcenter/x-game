@@ -66,6 +66,11 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'seo.math24.title', descKey: 'seo.math24.desc', keywordsKey: 'seo.math24.keywords' } }
       },
       {
+        path: 'games/drop2048',
+        loadComponent: () => import('./features/games/drop2048/drop2048.component').then(m => m.Drop2048Component),
+        data: { seo: { titleKey: 'seo.drop2048.title', descKey: 'seo.drop2048.desc', keywordsKey: 'seo.drop2048.keywords' } }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }

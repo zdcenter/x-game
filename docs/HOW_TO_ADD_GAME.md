@@ -265,5 +265,44 @@ ngOnInit() {
   ```
   该组件已内置了全屏遮罩、发光特效、动态脉冲动画，并自动绑定了 `game.starting` 的全局多语言翻译。
 
-遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉上达到最顶级的体验！
+### 13. PK 模式下的阵亡与观战状态 (Death & Spectating in PK Mode)
+- **避免隐患**：如果在 PK 模式中单人阵亡（如俄罗斯方块触顶），绝对不能因为全局 `status` 仍是 `playing` 就被前端 Effect 重新拉起新局，从而导致无限自动重开的严重 Bug。
+- **标准做法**：
+  - 前端 Store 中必须显式增加 `isDead = signal<boolean>(false)` 状态。
+  - 玩家阵亡时调用 `this.isDead.set(true)` 并且停止本地的定时器/游戏循环。
+  - 在监听 `gameState` 的 `effect` 中，拉起新局前必须判断 `!this.isDead()`。
+  - 当全局 `status` 变回 `waiting` 或 `starting` 时，记得重置 `isDead` 为 `false`。
+  - UI 层面：在游戏容器内增加判定 `@if (store.status() === 'playing' && store.isDead())`，渲染出全屏的 `Spectating... (观战中...)` 遮罩层，剥夺操作权限。直到全局状态变为 `finished` 时，才弹出最终的 `<app-game-result-overlay>` 结算界面。
 
+### 14. 游戏内操作通信的载荷规范 (In-Game Action Payload Standard)
+- **避免隐患**：千万不要把游戏内专有的操作指令（如“发送阵亡”、“发出攻击”）错写成 `{ type: 'your_action' }` 发给后端！WebSocket Manager 的外层路由只会拦截房间级的通用命令（如 `leave_game`, `ready`, `restart_game` 等），无法识别自定义 type，会将其透传给 Engine。但 `Engine.HandleAction` 默认读取的是载荷里的 `action` 字段。如果不带 `action` 字段，该指令会被后端直接丢弃，且无任何报错提示。
+- **标准做法**：所有**具体的游戏内操作**都必须使用 `{ action: '操作名', ...其他参数 }` 的格式发送！
+  - ❌ 错误做法：`this.ws.send({ type: 'game_over' })`
+  - ✅ 正确做法：`this.ws.send({ action: 'game_over', score: 100 })`
+
+### 15. PK 模式后端的结算时机 (Backend PK Game Over Condition)
+- **避免隐患**：设计非大逃杀模式（即非“剩者为王”）的 PK 游戏时，切勿在后端的 `checkGameEnd()` 中看到有人死掉（存活 `< 1`）就立刻将状态改为 `StateFinished`。这会导致第一个死亡的人直接掐断所有人的游戏进程。
+- **标准做法**：对于需要比拼最终积分（Score / Timer）的游戏，后端的 `checkGameEnd()` 必须耐心等待 **所有玩家的 Finished 状态都变为 true**（即 `allFinished == true`）时，才触发全局结束。此时再遍历对比所有玩家的数据，将表现最好的人推入 `Winners` 数组。
+
+### 16. 跨游戏跳转的“断线容灾” (Network Race Condition in Game Switching)
+- **原理解析**：在同房间切换不同游戏时，前端会经历“销毁旧页面 -> 断开 WebSocket -> 加载新页面 -> 重连新 WebSocket”的过程。在这 0.5 秒的间隙，如果不做特殊处理，后端会认为“房主跑路了”，从而把房主身份转让给别人，甚至解散房间。
+- **开发者须知**：为了完美解决这个时序竞争，后端的 WebSocket Manager 中已经加入了 `GameChangedAt` 的防抖时间戳。只要你是正常点击“切换游戏”，后端会自动开启 **5 秒的免死金牌**，拦截这 5 秒内的房主转移和房间销毁惩罚。因此，前端开发新游戏时无需惧怕断线，在 `ngOnDestroy` 中安心调用 `disconnectWS()` 即可。
+
+### 17. PK 模式对手卡片封装 (PK Player Badge)
+- **避免冗余**：如果在 PK 模式下需要渲染对手的分数、进度条或状态，**严禁**手写包含头像、皇冠、分数、冰冻效果等重复的 UI 代码。
+- **标准做法**：全局已经抽离了跨游戏的公共组件 `<app-player-badge>`。只需导入 `PlayerBadgeComponent` 并在模板中直接循环渲染。该组件原生支持 `👑` (房主)、`👁️` (观战者)、高亮 "You" 等统一视觉：
+  ```html
+  <app-player-badge
+    *ngFor="let opp of opponents"
+    layout="card" <!-- 或 "bar" 进度条模式 -->
+    [playerName]="opp.id"
+    [isHost]="opp.id === hostId"
+    [isMe]="opp.id === playerId"
+    [score]="opp.score"
+    [status]="opp.finished ? 'finished' : (opp.isFrozen ? 'frozen' : 'playing')"
+    [freezeCountdown]="opp.freezeCountdown"
+  ></app-player-badge>
+  ```
+- **例外情况**：如果你的游戏需要在对手面板里渲染缩微版的小棋盘（例如俄罗斯方块、扫雷），由于结构差异过大，允许单独手写对手 UI 结构，但也请尽量复用现有的视觉规范。
+
+遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉上达到最顶级的体验！

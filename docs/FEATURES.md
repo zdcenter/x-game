@@ -30,8 +30,11 @@
   - Modes: Single Player (无尽马拉松), PK Attack (异盘乱斗 / 发送垃圾行)
 - **Gomoku (五子棋)**
   - Modes: Single Player (AI挑战 - Easy/Medium/Hard), PK Classic (经典对战)
-- **Codebreaker (1A2B 密码破译)**
-  - Modes: Single Player (3/4/5 位数难度练习), PK Speed (同屏竞速破译)
+- **Codebreaker (1A2B)**
+- **Math 24**
+- **Drop 2048 (Number Merge)**
+
+## Global Features: Single Player (3/4/5 位数难度练习), PK Speed (同屏竞速破译)
 
 ## Personal Records & Global Achievements (个人记录与成就系统)
 - **Persistent Local Records**: Tracks best time, best score, play count, and win rate across all single-player game modes.

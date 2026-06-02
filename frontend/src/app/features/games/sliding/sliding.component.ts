@@ -16,11 +16,12 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']

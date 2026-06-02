@@ -2,42 +2,28 @@ import { Component, effect, inject, Input, signal, untracked } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
+import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-math24-pk-steal',
   standalone: true,
-  imports: [CommonModule, Math24BoardComponent],
+  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent],
   template: `
     <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
       
       <!-- Top Scoreboard -->
       <div class="flex-none p-4 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)]">
         <div class="flex flex-wrap gap-4 justify-center items-center max-w-4xl mx-auto">
-          <div *ngFor="let kv of store.players() | keyvalue"
-               class="flex items-center gap-3 px-4 py-2 rounded-xl border transition-all duration-300"
-               [ngClass]="{
-                 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20 scale-105': kv.key === playerId,
-                 'border-[var(--color-border-card)] bg-[var(--color-bg-main)]': kv.key !== playerId,
-                 'opacity-50 grayscale': isFrozen(kv.value)
-               }">
-            <!-- Player Avatar Placeholder -->
-            <div class="w-10 h-10 rounded-full bg-[var(--color-bg-card)] flex items-center justify-center font-bold text-lg">
-              {{ getFirstChar(kv.key) }}
-            </div>
-            <div class="flex flex-col">
-              <span class="text-sm font-medium text-[var(--color-text-muted)]" [class.text-blue-400]="kv.key === playerId">
-                {{ kv.key === playerId ? 'You' : kv.key }}
-              </span>
-              <div class="flex items-center gap-1">
-                <span class="text-xl font-black text-[var(--color-text-main)]">{{ kv.value.score }}</span>
-                <span class="text-xs text-[var(--color-text-muted)]">pts</span>
-              </div>
-            </div>
-            
-            <div *ngIf="isFrozen(kv.value)" class="absolute inset-0 flex items-center justify-center bg-blue-900/40 rounded-xl backdrop-blur-sm z-10">
-              <span class="text-2xl animate-pulse">❄️</span>
-            </div>
-          </div>
+          <app-player-badge
+            *ngFor="let kv of store.players() | keyvalue"
+            layout="card"
+            [playerName]="$any(kv.key)"
+            [isHost]="kv.key === hostId"
+            [isMe]="kv.key === playerId"
+            [score]="kv.value.score"
+            [status]="isFrozen(kv.value) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+            [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
+          ></app-player-badge>
         </div>
       </div>
 
@@ -123,6 +109,12 @@ export class Math24PkStealComponent {
   isFrozen(player: any): boolean {
     if (!player || !player.freezeUntil) return false;
     return player.freezeUntil > Date.now();
+  }
+
+  getFrozenRemaining(player: any): number {
+    if (!player || !player.freezeUntil) return 0;
+    const rem = Math.ceil((player.freezeUntil - Date.now()) / 1000);
+    return Math.max(0, rem);
   }
 
   isMyPlayerFrozen(): boolean {

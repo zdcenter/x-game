@@ -79,20 +79,15 @@
             @if (currentRoomMode() !== 'single') {
               <div class="w-full max-w-[800px] mx-auto flex gap-4 overflow-x-auto pb-4 mb-2 lg:mb-4">
                 @for (opp of store.otherPlayers(); track opp.id) {
-                  <div class="flex-1 min-w-[200px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-3 shadow-md relative overflow-hidden">
-                    <div class="flex justify-between items-center mb-1 z-10 relative">
-                      <span class="font-bold truncate text-sm flex items-center gap-2">
-                        {{ opp.id === store.host() ? '👑' : '👤' }} {{ opp.id }}
-                      </span>
-                      <span class="font-mono font-bold text-xs">{{ opp.board.moves || 0 }} {{ t('sliding.moves')() }}</span>
-                    </div>
-
-                    @if (opp.board.status === 'finished') {
-                      <div class="absolute inset-0 bg-green-900/30 flex items-center justify-center z-0">
-                        <span class="text-4xl opacity-20 transform -rotate-12">{{ t('game.finished')() || 'FINISHED' }}</span>
-                      </div>
-                    }
-                  </div>
+                  <app-player-badge
+                    class="flex-1 min-w-[200px]"
+                    layout="card"
+                    [playerName]="opp.id"
+                    [isHost]="opp.id === store.host()"
+                    [isMe]="opp.id === playerId"
+                    [subText]="(opp.board.moves || 0) + ' ' + (t('sliding.moves')() || 'moves')"
+                    [status]="opp.board.status === 'finished' ? 'finished' : 'playing'"
+                  ></app-player-badge>
                 }
               </div>
             }

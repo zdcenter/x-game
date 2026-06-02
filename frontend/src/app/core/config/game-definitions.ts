@@ -114,6 +114,18 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_math24_easy', desc: 'Basic math' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_math24_hard', desc: 'Fractional & Complex' }
     ]
+  },
+  {
+    id: 'drop2048',
+    route: '/games/drop2048',
+    titleKey: 'lobby.drop2048',
+    iconEmoji: '🟦',
+    modes: [
+      { id: 'pk_score', labelKey: 'game.score_mode', descKey: 'game.pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
+    ],
+    difficulties: [
+      { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
+    ]
   }
 ];
 

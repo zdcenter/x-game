@@ -2,11 +2,12 @@ import { Component, effect, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
+import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-math24-pk-speed',
   standalone: true,
-  imports: [CommonModule, Math24BoardComponent],
+  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent],
   template: `
     <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
       
@@ -14,27 +15,16 @@ import { Math24BoardComponent } from '../math24-board/math24-board.component';
       <div class="flex-none p-4 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)]">
         <div class="flex flex-col gap-4 max-w-4xl mx-auto">
           
-          <div *ngFor="let kv of store.players() | keyvalue"
-               class="flex items-center gap-4">
-            
-            <span class="w-16 text-sm font-medium text-right truncate" [class.text-blue-400]="kv.key === playerId">
-              {{ kv.key === playerId ? 'You' : kv.key }}
-            </span>
-
-            <div class="flex-1 h-6 bg-[var(--color-bg-main)] rounded-full overflow-hidden relative border border-[var(--color-border-card)] shadow-inner">
-              <div class="h-full transition-all duration-500 rounded-full relative"
-                   [ngClass]="{
-                     'bg-gradient-to-r from-blue-600 to-blue-400': kv.key === playerId,
-                     'bg-gradient-to-r from-gray-500 to-gray-400': kv.key !== playerId
-                   }"
-                   [style.width]="(kv.value.progress / totalPuzzles) * 100 + '%'">
-                <div class="absolute inset-0 bg-white/20" style="background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem;"></div>
-              </div>
-            </div>
-
-            <span class="w-12 text-sm font-bold text-[var(--color-text-muted)]">{{ kv.value.progress }}/{{ totalPuzzles }}</span>
-
-          </div>
+          <app-player-badge
+            *ngFor="let kv of store.players() | keyvalue"
+            layout="bar"
+            [playerName]="$any(kv.key)"
+            [isHost]="kv.key === hostId"
+            [isMe]="kv.key === playerId"
+            [progress]="{ current: kv.value.progress || 0, total: totalPuzzles }"
+            [status]="isFrozen(kv.value) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+            [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
+          ></app-player-badge>
 
         </div>
       </div>
@@ -118,6 +108,12 @@ export class Math24PkSpeedComponent {
   isFrozen(player: any): boolean {
     if (!player || !player.freezeUntil) return false;
     return player.freezeUntil > Date.now();
+  }
+
+  getFrozenRemaining(player: any): number {
+    if (!player || !player.freezeUntil) return 0;
+    const rem = Math.ceil((player.freezeUntil - Date.now()) / 1000);
+    return Math.max(0, rem);
   }
 
   isMyPlayerFrozen(): boolean {

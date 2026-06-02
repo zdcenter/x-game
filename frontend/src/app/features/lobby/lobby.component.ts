@@ -341,6 +341,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'hexa': return '🔶';
       case 'gomoku': return '⚫⚪';
       case 'codebreaker': return '🔐';
+      case 'drop2048': return '🧊';
       default: return '🎮';
     }
   }
@@ -355,6 +356,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'gomoku': return isZh ? ['⚔️ 经典对战'] : ['⚔️ PK Classic'];
       case 'math24': return isZh ? ['⚡ 同盘抢分', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
       case 'codebreaker': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
+      case 'drop2048': return isZh ? ['⏱️ 积分赛'] : ['⏱️ PK Score'];
       default: return [];
     }
   }

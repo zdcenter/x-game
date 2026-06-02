@@ -19,6 +19,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { AudioService } from '../../../core/services/audio.service';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-hexa',
@@ -32,7 +33,8 @@ import { AudioService } from '../../../core/services/audio.service';
     GameRulesModalComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    GameHeaderComponent],
+    GameHeaderComponent,
+    PlayerBadgeComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html'
 })

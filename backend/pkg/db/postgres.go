@@ -139,7 +139,15 @@ func Seed() {
 		IsActive: true,
 	}
 	DB.Where(domain.GameConfig{ID: "math24"}).FirstOrCreate(&defaultMath24)
-
+	defaultDrop2048 := domain.GameConfig{
+		ID:       "drop2048",
+		Name:     `{"en": "Drop 2048", "zh": "2048下落合成"}`,
+		Overview: `{"en": "Drop numbers to merge them and reach 2048!", "zh": "拖动并下落数字，相同的数字碰撞会合成更大的数字！"}`,
+		Rules:    `{"en": "# Drop 2048 Rules\n\nMerge numbers by dropping them on top of the same numbers.\n\n## 🎮 Controls\n- **Move**: Left/Right arrows or tap columns.\n- **Drop**: Down arrow or tap same column.", "zh": "# 2048下落合成 规则\n\n将掉落的数字方块与下面或旁边相同的数字合并，挑战更高的分数！\n\n## 🎮 操作说明\n- **移动**: 左右方向键或点击对应的列。\n- **降落**: 向下方向键或再次点击所在的列。"}`,
+		Config:   `{}`,
+		IsActive: true,
+	}
+	DB.Where(domain.GameConfig{ID: "drop2048"}).FirstOrCreate(&defaultDrop2048)
 
 	var userCount int64
 	DB.Model(&domain.User{}).Count(&userCount)
