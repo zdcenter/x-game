@@ -130,7 +130,7 @@ export class SudokuStore {
             for (let r = 0; r < 9; r++) {
               for (let c = 0; c < 9; c++) {
                 const char = currentStr[r * 9 + c];
-                const expectedVal = (char === '.' || char === '0') ? 0 : parseInt(char, 10);
+                const expectedVal = (char === '.' || char === '0' || char === '-') ? 0 : parseInt(char, 10);
                 if (b[r][c].val !== expectedVal && expectedVal !== 0) {
                   b[r][c].val = expectedVal;
                   b[r][c].fixed = true; // Mark as fixed once filled by anyone
@@ -259,7 +259,7 @@ export class SudokuStore {
       const row: SudokuCell[] = [];
       for (let c = 0; c < 9; c++) {
         const char = str[r * 9 + c];
-        const val = (char === '.' || char === '0') ? 0 : parseInt(char, 10);
+        const val = (char === '.' || char === '0' || char === '-') ? 0 : parseInt(char, 10);
         row.push({
           r, c, val,
           fixed: val !== 0,
