@@ -225,18 +225,11 @@ func (r *Room) RemoveClient(client *Client) {
 		return
 	}
 	
-	// Destroy room if empty
+	// Destroy room if empty or if host leaves
 	isEmpty := len(r.Clients) == 0
 	
 	isSwitchingGame := time.Now().Unix() - r.GameChangedAt < 5
-	
-	// Instant Host Migration if not empty, and not switching games
-	if !isEmpty && r.Host == client.ID && !isSwitchingGame {
-		for id := range r.Clients {
-			r.Host = id
-			break
-		}
-	}
+	isHostLeaving := r.Host == client.ID && !isSwitchingGame
 
 	// Clean up ready state
 	client.IsReady = false
@@ -244,10 +237,14 @@ func (r *Room) RemoveClient(client *Client) {
 	roomID := r.ID
 	r.mu.Unlock()
 
-	if isEmpty && !isSwitchingGame {
+	if isHostLeaving {
+		// Host left, completely destroy the room and kick remaining players
+		DismissRoom(roomID, client.ID)
+	} else if isEmpty && !isSwitchingGame {
 		mu.Lock()
 		delete(Rooms, roomID)
 		mu.Unlock()
+		
 		go Lobby.BroadcastLobbyUpdate()
 	} else if !isEmpty {
 		r.BroadcastState()
