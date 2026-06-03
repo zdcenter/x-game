@@ -139,6 +139,7 @@
 
                 @if (store.status() === 'finished' || store.gameOver()) {
                   <app-game-result-overlay
+                    currentGameId="hexa"
                     [status]="store.status() === 'finished' ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"
                     [title]="currentRoomMode() === 'single' ? t('game.you_lose')() : (store.status() === 'finished' ? (store.winners().includes(playerId) ? t('game.you_win')() : t('game.you_lose')()) : t('game.waiting_for_others')())"
                     [stats]="currentRoomMode() === 'single' ? [{label: 'SCORE', value: store.score()}, {label: 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: 'SCORE', value: store.score()}]"

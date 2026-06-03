@@ -149,6 +149,7 @@
 
               @if (store.status() === 'finished') {
                 <app-game-result-overlay
+                  currentGameId="sliding"
                   [status]="getOverlayStatus()"
                   [title]="getOverlayTitle()"
                   [subtitle]="getOverlaySubtitle()"

@@ -119,6 +119,13 @@ func Register(router fiber.Router) {
 						if roomID, ok := action["roomId"].(string); ok && roomID != "" {
 							wsManager.DismissRoom(roomID, playerID)
 						}
+					} else if action["type"] == "broadcast" {
+						// Pass through the broadcast to all clients
+						// Optionally enrich with sender info
+						action["senderId"] = playerID
+						action["senderName"] = username
+						action["timestamp"] = time.Now().UnixMilli()
+						wsManager.Lobby.BroadcastMessage(action)
 					}
 				}
 			}

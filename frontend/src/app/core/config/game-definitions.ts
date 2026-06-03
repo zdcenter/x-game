@@ -18,7 +18,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'professional', labelKey: 'game.diff_professional', descKey: 'game.diff_mine_30x20', desc: '30x20 (160)' },
       { id: 'master', labelKey: 'game.diff_master', descKey: 'game.diff_mine_30x22', desc: '30x22 (190)' },
       { id: 'expert', labelKey: 'game.diff_expert', descKey: 'game.diff_mine_30x24', desc: '30x24 (230)' }
-    ]
+    ],
+    recommendations: ['sudoku', 'sliding']
   },
   {
     id: 'sudoku',
@@ -33,7 +34,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner friendly' },
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_sudoku_medium', desc: 'Standard challenge' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_sudoku_hard', desc: 'For experts' }
-    ]
+    ],
+    recommendations: ['minesweeper', 'math24']
   },
   {
     id: 'sliding',
@@ -47,7 +49,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_slide_4x4', desc: '4x4 Grid' },
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_slide_5x5', desc: '5x5 Grid' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_slide_6x6', desc: '6x6 Grid' }
-    ]
+    ],
+    recommendations: ['sudoku', 'hexa']
   },
   {
     id: 'hexa',
@@ -59,7 +62,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     ],
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
-    ]
+    ],
+    recommendations: ['tetris', 'drop2048']
   },
   {
     id: 'tetris',
@@ -71,7 +75,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     ],
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
-    ]
+    ],
+    recommendations: ['drop2048', 'hexa']
   },
   {
     id: 'gomoku',
@@ -85,7 +90,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_gomoku_easy', desc: 'Easy AI (15x15)' },
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_gomoku_medium', desc: 'Medium AI (15x15)' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
-    ]
+    ],
+    recommendations: ['codebreaker', 'minesweeper']
   },
   {
     id: 'codebreaker',
@@ -99,7 +105,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_codebreaker_easy', desc: '3-digit code' },
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_codebreaker_medium', desc: '4-digit code' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_codebreaker_hard', desc: '5-digit code' }
-    ]
+    ],
+    recommendations: ['math24', 'sudoku']
   },
   {
     id: 'math24',
@@ -113,7 +120,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_math24_easy', desc: 'Basic math' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_math24_hard', desc: 'Fractional & Complex' }
-    ]
+    ],
+    recommendations: ['sudoku', 'codebreaker']
   },
   {
     id: 'drop2048',
@@ -125,7 +133,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     ],
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
-    ]
+    ],
+    recommendations: ['tetris', 'hexa']
   }
 ];
 

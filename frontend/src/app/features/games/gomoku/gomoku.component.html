@@ -139,6 +139,7 @@
 
   @if (gameStatus().status === 'finished') {
     <app-game-result-overlay
+      currentGameId="gomoku"
       [status]="gameStatus().winner === myPlayerId() ? 'win' : 'lose'"
       [title]="winnerText"
       [showRestart]="true"

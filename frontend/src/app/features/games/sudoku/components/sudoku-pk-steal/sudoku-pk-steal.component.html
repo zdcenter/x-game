@@ -3,6 +3,7 @@
       
       @if (store.isFinished() || store.gameStatus() === 'finished') {
         <app-game-result-overlay
+          currentGameId="sudoku"
           [status]="isWinner() ? 'win' : 'lose'"
           [title]="isWinner() ? i18n.t('game.win')() : i18n.t('game.lose')()"
           [stats]="getStats()"

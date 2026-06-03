@@ -98,6 +98,7 @@
         <!-- Game Over Result Overlay -->
         @if (store.status() === 'finished') {
           <app-game-result-overlay
+            currentGameId="drop2048"
             [status]="getResultTitle() === 'game.you_lose' ? 'lose' : 'win'"
             [title]="i18n.t(getResultTitle())()"
             [stats]="[{label: 'SCORE', value: store.score()}]"

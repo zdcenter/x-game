@@ -35,6 +35,8 @@ export interface GameConfig {
   modes: GameMode[];
   /** Available difficulty levels */
   difficulties: GameDifficulty[];
+  /** Recommended games to show on the result screen */
+  recommendations?: string[];
 }
 
 @Injectable({ providedIn: 'root' })

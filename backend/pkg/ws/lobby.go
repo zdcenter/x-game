@@ -109,3 +109,27 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 		}
 	}
 }
+
+// BroadcastMessage sends an arbitrary JSON message to all connected lobby players
+func (l *GlobalLobby) BroadcastMessage(msg interface{}) {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	payload, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("Failed to marshal lobby broadcast message: %v", err)
+		return
+	}
+
+	for _, p := range l.Players {
+		if p.Conn != nil {
+			p.mu.Lock()
+			p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+			err := p.Conn.WriteMessage(websocket.TextMessage, payload)
+			p.mu.Unlock()
+			if err != nil {
+				log.Printf("Failed to write broadcast to lobby WS: %v", err)
+			}
+		}
+	}
+}

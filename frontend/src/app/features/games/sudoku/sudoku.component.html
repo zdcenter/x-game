@@ -106,6 +106,7 @@
               <!-- Victory Overlay -->
               @if (store.isFinished() && store.currentMode() === 'single') {
               <app-game-result-overlay
+                currentGameId="sudoku"
                 [status]="'win'"
                 [title]="i18n.t('game.win')()"
                 [promptText]="i18n.t('game.sudoku.next_level_prompt')() || 'Level cleared! Play next?'"

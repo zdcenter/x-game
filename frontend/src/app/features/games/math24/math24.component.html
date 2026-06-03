@@ -74,6 +74,7 @@
         <!-- Result Overlay -->
         @if (store.isFinished()) {
           <app-game-result-overlay
+            currentGameId="math24"
             [status]="getGameResultStatus()"
             [title]="getGameResultTitle()"
             [stats]="getStats()"

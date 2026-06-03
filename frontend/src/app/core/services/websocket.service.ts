@@ -32,6 +32,7 @@ export class WebSocketService {
   // Expose lobby state
   readonly onlinePlayers = signal<any[]>([]);
   readonly activeRooms = signal<any[]>([]);
+  readonly broadcastMessages = signal<any[]>([]);
 
   // Triggered when the websocket disconnects unexpectedly
   readonly unexpectedDisconnectEvent = signal<number>(0);
@@ -148,6 +149,14 @@ export class WebSocketService {
         console.log('Lobby Update Received:', msg.rooms);
         this.onlinePlayers.set(msg.players || []);
         this.activeRooms.set(msg.rooms || []);
+      } else if (msg.type === 'broadcast') {
+        this.broadcastMessages.update(msgs => {
+          const newMsgs = [msg, ...msgs];
+          return newMsgs.slice(0, 3); // keep latest 3
+        });
+        setTimeout(() => {
+          this.broadcastMessages.update(msgs => msgs.filter(m => m !== msg));
+        }, 15000);
       }
     };
 

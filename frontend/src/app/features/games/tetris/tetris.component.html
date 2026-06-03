@@ -164,6 +164,7 @@
                   <!-- Game Over Overlay -->
                   @if (store.status() === 'finished') {
                     <app-game-result-overlay
+                      currentGameId="tetris"
                       [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
                       [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.mode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
                       [stats]="getOverlayStats()"

@@ -69,3 +69,11 @@
 
 ### Added
 - **Math 24 Game**: Added a new Math 24 game supporting single-player mode, speed PK mode, and steal PK mode. The game follows the standard game architecture and generic lobby mechanisms.
+- **大厅公屏广播：“发英雄帖” (Global Lobby Broadcast)**:
+  - 玩家创建房间后，可在“我的房间”内点击【📢 发英雄帖】按钮。
+  - 大厅面板顶部新增跑马灯式广播横幅区域，全服玩家可实时接收。
+  - 广播消息内嵌 `[点击此处] 立即应战！` 的快速加房链接，点击后即刻跨游戏进入对方房间，极大促进玩家互动和跨游戏引流。
+- **结果页智能推荐 (Smart Game Recommendation)**:
+  - 游戏结算 Overlay（胜利/失败界面）底部新增横向滑动的“你可能还想挑战”精美卡片区。
+  - 通过 `GameRegistryService` 全局按需动态提供当前游戏的相关推荐。例如：玩过《数字华容道》，自动推荐挑战《数独》或《六边形消除》。
+  - 点击推荐卡片直接路由至新游戏界面，有效提升游戏内停留时长（User Retention）。

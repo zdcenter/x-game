@@ -44,12 +44,33 @@ export interface GameDifficulty {
 
       <!-- Rooms Content -->
       @if (activeTab === 'rooms') {
-        <div class="p-4 flex-grow overflow-y-auto custom-scrollbar">
+        <div class="p-4 flex-grow overflow-y-auto custom-scrollbar relative flex flex-col">
+          <!-- Broadcast Messages Banner -->
+          @if (wsService.broadcastMessages().length > 0) {
+            <div class="w-full flex flex-col gap-2 mb-4 shrink-0">
+              @for (msg of wsService.broadcastMessages(); track msg.timestamp) {
+                <div class="w-full bg-gradient-to-r from-yellow-500/10 via-amber-500/20 to-orange-500/10 border border-yellow-500/30 rounded-xl p-3 flex items-center justify-between shadow-[0_0_15px_rgba(245,158,11,0.15)] animate-slide-in">
+                  <div class="flex items-center gap-3 overflow-hidden">
+                    <span class="text-2xl animate-pulse shrink-0">📢</span>
+                    <div class="text-sm font-bold text-[var(--color-text-main)] truncate">
+                      👑 玩家【<span class="text-yellow-500">{{ msg.senderName || msg.senderId }}</span>】在《{{ getGameLabel(msg.room.game) }}》{{ getModeLabel(msg.room.mode, msg.room.game) }}摆下擂台，
+                      <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host)" class="text-amber-400 hover:text-amber-300 underline decoration-amber-400/50 hover:decoration-amber-300 font-black cursor-pointer ml-1 transition-colors">
+                        [点击此处] 立即应战！
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="shrink-0">
             <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
               <span>➕</span> {{ t('game.create_pk') }}
             </button>
+          </div>
 
-          <div class="space-y-6">
+          <div class="space-y-6 flex-grow">
             <!-- Other Active Rooms -->
             <div>
               <div class="flex items-center justify-between mb-3 px-1">
@@ -157,6 +178,9 @@ export interface GameDifficulty {
                             <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ t('game.join') }}</button>
                           }
                           @if (room.host === playerId()) {
+                            <button (click)="sendHeroBroadcast(room)" class="px-3 py-1 bg-amber-600/20 text-amber-400 border border-amber-500/50 text-xs font-bold rounded shadow hover:bg-amber-600 hover:text-white transition-colors ml-2">
+                              📢 发英雄帖
+                            </button>
                             <button (click)="openUpdateRoomModal(room)" class="px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/50 text-xs font-bold rounded shadow hover:bg-blue-600 hover:text-white transition-colors ml-2">
                               {{ t('game.change_settings') || 'Change Game' }}
                             </button>
@@ -445,6 +469,20 @@ export class GameLobbyPanelComponent {
         this.toastService.show(this.t('game.dismiss_success'), 'success');
       }
     });
+  }
+
+  sendHeroBroadcast(room: any) {
+    this.wsService.sendLobby({
+      type: 'broadcast',
+      room: {
+        id: room.id,
+        game: room.game,
+        mode: room.mode,
+        difficulty: room.difficulty,
+        host: room.host
+      }
+    });
+    this.toastService.show('广播发送成功！', 'success');
   }
 
   getModeLabel(modeId: string, gameId?: string): string {

@@ -224,6 +224,7 @@
   <!-- Results Overlay -->
   @if (status() === 'finished') {
     <app-game-result-overlay
+      currentGameId="codebreaker"
       [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"
       [title]="winnerText"
       [subtitle]="winDescription"
