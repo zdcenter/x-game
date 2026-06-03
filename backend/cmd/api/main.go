@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/joho/godotenv"
 	"github.com/x-game/backend/internal/handlers/rest"
@@ -13,15 +12,15 @@ import (
 	"github.com/x-game/backend/pkg/middleware"
 
 	// Register engines
-	_ "github.com/x-game/backend/internal/engine/minesweeper"
-	_ "github.com/x-game/backend/internal/engine/sudoku"
-	_ "github.com/x-game/backend/internal/engine/sliding"
-	_ "github.com/x-game/backend/internal/engine/hexa"
-	_ "github.com/x-game/backend/internal/engine/tetris"
-	_ "github.com/x-game/backend/internal/engine/gomoku"
 	_ "github.com/x-game/backend/internal/engine/codebreaker"
-	_ "github.com/x-game/backend/internal/engine/math24"
 	_ "github.com/x-game/backend/internal/engine/drop2048"
+	_ "github.com/x-game/backend/internal/engine/gomoku"
+	_ "github.com/x-game/backend/internal/engine/hexa"
+	_ "github.com/x-game/backend/internal/engine/math24"
+	_ "github.com/x-game/backend/internal/engine/minesweeper"
+	_ "github.com/x-game/backend/internal/engine/sliding"
+	_ "github.com/x-game/backend/internal/engine/sudoku"
+	_ "github.com/x-game/backend/internal/engine/tetris"
 )
 
 // Version is injected during build
@@ -37,11 +36,6 @@ func main() {
 	app := fiber.New()
 
 	// Use middleware
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	}))
 	app.Use(logger.New())
 
 	// Health check route

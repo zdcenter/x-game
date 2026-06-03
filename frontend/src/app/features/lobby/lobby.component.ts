@@ -9,7 +9,8 @@ import { CrossGameJoinService } from '../../core/services/cross-game-join.servic
 import { GameConfig as RegistryGameConfig } from '../../core/services/game-registry.service';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/version';
+import { environment as versionEnv } from '../../../environments/version';
+import { environment as appEnvironment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-lobby',
@@ -473,11 +474,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
   
   games = signal<BackendGameConfig[]>([]);
   isGlobalLobbyOpen = signal(false);
-  frontendVersion = environment.version;
+  frontendVersion = versionEnv.version;
   backendVersion = 'loading...';
 
   ngOnInit() {
-    this.http.get<{version: string}>(`${environment.apiUrl}/version`).subscribe({
+    this.http.get<{version: string}>(`${appEnvironment.apiUrl}/version`).subscribe({
       next: (res) => this.backendVersion = res.version,
       error: () => this.backendVersion = 'unknown'
     });

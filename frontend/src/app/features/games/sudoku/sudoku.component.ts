@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, 
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SudokuStore } from './store/sudoku.store';
 import { SudokuLobbyComponent } from './components/sudoku-lobby/sudoku-lobby.component';
