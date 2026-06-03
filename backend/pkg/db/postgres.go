@@ -104,7 +104,7 @@ func Seed() {
 		ID:       "tetris",
 		Name:     `{"en": "Tetris Battle", "zh": "俄罗斯方块对战"}`,
 		Overview: `{"en": "Classic block-stacking game. Clear lines to send garbage to your opponent!", "zh": "经典方块堆叠游戏。消除多行即可向对手发送垃圾行！"}`,
-		Rules:    `{"en": "# Tetris Battle Rules\n\nStack falling blocks to clear lines.\n\n## 🎮 Controls\n- **Move**: Left/Right arrows or swipe.\n- **Rotate**: Up arrow or tap rotate button.\n- **Soft Drop**: Down arrow.\n- **Hard Drop**: Spacebar.\n- **Hold**: Shift or C.\n\n## ⚔️ PK Attack Mode\nClear 2 or more lines simultaneously to send garbage lines to your opponent's board!", "zh": "# 俄罗斯方块对战规则\n\n拼合下落的方块，填满一整行即可消除。\n\n## 🎮 操作说明\n- **移动**: 左右方向键或滑动屏幕。\n- **旋转**: 向上方向键或点击旋转按钮。\n- **加速下落**: 向下方向键。\n- **瞬间下落**: 空格键。\n- **暂存 (Hold)**: Shift 键或 C 键。\n\n## ⚔️ 异盘乱斗模式\n一次性消除 2 行及以上，即可给对手的棋盘底部增加垃圾行（带一个随机缺口），疯狂攻击吧！"}`,
+		Rules:    `{"en": "# Tetris Battle Rules\n\nStack falling blocks to clear lines.\n\n## 🎮 Controls\n- **Move**: Left/Right arrows, or Swipe Left/Right on screen.\n- **Rotate**: Up arrow, or Tap on screen.\n- **Soft Drop**: Down arrow, or Swipe Down on screen.\n- **Hard Drop**: Spacebar, or Fast Swipe Down on screen.\n- **Hold**: Shift or C key.\n\n## ⚔️ PK Attack Mode\nClear 2 or more lines simultaneously to send garbage lines to your opponent's board!", "zh": "# 俄罗斯方块对战规则\n\n拼合下落的方块，填满一整行即可消除。\n\n## 🎮 操作说明\n- **移动**: 键盘左右键，或在屏幕上向左/向右滑动。\n- **旋转**: 键盘向上键，或在屏幕上点击(Tap)。\n- **加速下落**: 键盘向下键，或在屏幕上向下滑动。\n- **瞬间下落**: 空格键，或在屏幕上快速向下滑动到底。\n- **暂存 (Hold)**: Shift 键或 C 键。\n\n## ⚔️ 异盘乱斗模式\n一次性消除 2 行及以上，即可给对手的棋盘底部增加垃圾行（带一个随机缺口），疯狂攻击吧！"}`,
 		Config:   `{}`,
 		IsActive: true,
 	}
