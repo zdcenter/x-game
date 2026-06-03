@@ -206,7 +206,7 @@ export class Math24Store {
         if (this.localTime() > 60) stars = 1;
 
         if (this.auth.isAuthenticated() && this.currentPuzzleId()) {
-          this.http.post(`/api/v1/math24/puzzle/${this.currentPuzzleId()}/finish`, {
+          this.http.post(`${environment.apiUrl}/math24/puzzle/${this.currentPuzzleId()}/finish`, {
             time_spent: this.localTime(),
             stars: stars
           }).subscribe();
@@ -258,7 +258,7 @@ export class Math24Store {
     if (this.currentMode() !== 'single') return;
     const diff = this.localDifficulty();
     const nextIndex = this.localLevelIndex() + 1;
-    this.http.get<any>(`/api/v1/math24/levels/${diff}`).subscribe(levels => {
+    this.http.get<any>(`${environment.apiUrl}/math24/levels/${diff}`).subscribe(levels => {
       if (levels && levels.length > nextIndex) {
         const level = levels[nextIndex];
         this.startSinglePlayer(level.id, level.cards, diff, nextIndex);
@@ -271,7 +271,7 @@ export class Math24Store {
     const diff = this.localDifficulty();
     const prevIndex = this.localLevelIndex() - 1;
     if (prevIndex < 0) return;
-    this.http.get<any>(`/api/v1/math24/levels/${diff}`).subscribe(levels => {
+    this.http.get<any>(`${environment.apiUrl}/math24/levels/${diff}`).subscribe(levels => {
       if (levels && levels.length > prevIndex) {
         const level = levels[prevIndex];
         this.startSinglePlayer(level.id, level.cards, diff, prevIndex);

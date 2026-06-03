@@ -477,7 +477,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   backendVersion = 'loading...';
 
   ngOnInit() {
-    this.http.get<{version: string}>('/api/v1/version').subscribe({
+    this.http.get<{version: string}>(`${environment.apiUrl}/version`).subscribe({
       next: (res) => this.backendVersion = res.version,
       error: () => this.backendVersion = 'unknown'
     });

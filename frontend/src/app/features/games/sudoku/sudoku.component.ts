@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, 
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SudokuStore } from './store/sudoku.store';
 import { SudokuLobbyComponent } from './components/sudoku-lobby/sudoku-lobby.component';
@@ -161,7 +162,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     const nextNum = parseInt(numStr, 10) + 1;
     const nextId = `${prefix}-${nextNum.toString().padStart(numStr.length, '0')}`;
     
-    this.http.get<any>(`/api/v1/sudoku/puzzle/${nextId}`).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${nextId}`).subscribe({
       next: (res) => {
         this.store.currentPuzzleId.set(res.puzzle.id);
         this.store.initBoard(res.puzzle.puzzle, res.progress?.current_state, res.progress?.time_spent);

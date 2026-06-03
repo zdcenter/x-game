@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { Math24Store } from '../../store/math24.store';
+import { environment } from '../../../../../../environments/environment';
 
 interface LevelResponse {
   id: string;
@@ -86,7 +87,7 @@ export class Math24LobbyComponent implements OnInit {
 
   private loadLevels(difficulty: string) {
     this.loading.set(true);
-    this.http.get<LevelResponse[]>(`/api/v1/math24/levels/${difficulty}`).subscribe({
+    this.http.get<LevelResponse[]>(`${environment.apiUrl}/math24/levels/${difficulty}`).subscribe({
       next: (data) => {
         this.levels.set(data || []);
         this.loading.set(false);
@@ -98,7 +99,7 @@ export class Math24LobbyComponent implements OnInit {
   }
 
   playLevel(level: LevelResponse, index: number) {
-    this.http.get<any>(`/api/v1/math24/puzzle/${level.id}`).subscribe(res => {
+    this.http.get<any>(`${environment.apiUrl}/math24/puzzle/${level.id}`).subscribe(res => {
       this.levelSelect.emit({ 
         id: res.puzzle.id, 
         puzzle: res.puzzle.cards,

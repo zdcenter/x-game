@@ -8,6 +8,7 @@ import { SudokuStore } from '../../store/sudoku.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
 import { GameRulesModalComponent } from '../../../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { environment } from '../../../../../../environments/environment';
 
 interface LevelResponse {
   id: string;
@@ -68,7 +69,7 @@ export class SudokuLobbyComponent implements OnInit {
 
   private loadLevels(difficulty: string) {
     this.loading.set(true);
-    this.http.get<LevelResponse[]>(`/api/v1/sudoku/levels/${difficulty}`).subscribe({
+    this.http.get<LevelResponse[]>(`${environment.apiUrl}/sudoku/levels/${difficulty}`).subscribe({
       next: (data) => {
         this.levels.set(data || []);
         this.loading.set(false);
@@ -81,7 +82,7 @@ export class SudokuLobbyComponent implements OnInit {
 
   playLevel(level: LevelResponse) {
     // Fetch the actual puzzle string
-    this.http.get<any>(`/api/v1/sudoku/puzzle/${level.id}`).subscribe(res => {
+    this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${level.id}`).subscribe(res => {
       this.levelSelect.emit({
         id: res.puzzle.id,
         puzzle: res.puzzle.puzzle,

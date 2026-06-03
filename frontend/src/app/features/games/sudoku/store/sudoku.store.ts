@@ -8,6 +8,7 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
+import { environment } from '../../../../../environments/environment';
 
 export interface SudokuCell {
   r: number;
@@ -554,7 +555,7 @@ export class SudokuStore {
       row.map(c => ({ ...c, notes: Array.from(c.notes) }))
     ));
 
-    this.http.post(`/api/v1/sudoku/puzzle/${this.currentPuzzleId()}/save`, {
+    this.http.post(`${environment.apiUrl}/sudoku/puzzle/${this.currentPuzzleId()}/save`, {
       current_state: serialized,
       time_spent: this.timeSpent()
     }).subscribe();
@@ -570,7 +571,7 @@ export class SudokuStore {
     if (this.timeSpent() > 300) stars = 2; // > 5 mins
     if (this.timeSpent() > 600) stars = 1; // > 10 mins
 
-    this.http.post(`/api/v1/sudoku/puzzle/${this.currentPuzzleId()}/finish`, {
+    this.http.post(`${environment.apiUrl}/sudoku/puzzle/${this.currentPuzzleId()}/finish`, {
       time_spent: this.timeSpent(),
       stars: stars
     }).subscribe();
