@@ -23,6 +23,9 @@ import (
 	_ "github.com/x-game/backend/internal/engine/drop2048"
 )
 
+// Version is injected during build
+var Version = "dev"
+
 func main() {
 	// Load .env file if it exists
 	if err := godotenv.Load(); err != nil {
@@ -50,6 +53,12 @@ func main() {
 	v1.Post("/register", rest.Register)
 	v1.Post("/login", rest.Login)
 	v1.Post("/guest-login", rest.GuestLogin)
+
+	v1.Get("/version", func(c fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"version": Version,
+		})
+	})
 
 	v1.Get("/games", rest.GetGames)
 

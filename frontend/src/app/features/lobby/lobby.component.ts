@@ -8,6 +8,8 @@ import { AuthStore } from '../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
 import { GameConfig as RegistryGameConfig } from '../../core/services/game-registry.service';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/version';
 
 @Component({
   selector: 'app-lobby',
@@ -425,6 +427,16 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
           </a>
         }
         </div>
+
+        <!-- Copyright & Version Footer -->
+        <div class="w-full mt-auto pt-16 pb-8 flex flex-col items-center justify-center text-[var(--color-text-muted)] text-sm opacity-60">
+          <p>© 2026 X-Game. All rights reserved.</p>
+          <div class="flex items-center gap-4 mt-2 font-mono text-xs">
+            <span>Frontend: {{ frontendVersion }}</span>
+            <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
+            <span>Backend: {{ backendVersion }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- RIGHT: Global Arena Lobby (Sidebar on Desktop, Drawer on Mobile) -->
@@ -453,15 +465,23 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
 export class LobbyComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   gameService = inject(GameService);
-  wsService = inject(WebSocketService);
-  authStore = inject(AuthStore);
+  private wsService = inject(WebSocketService);
+  private authStore = inject(AuthStore);
+  private crossGameJoin = inject(CrossGameJoinService);
+  private http = inject(HttpClient);
   router = inject(Router);
-  crossGameJoin = inject(CrossGameJoinService);
   
   games = signal<BackendGameConfig[]>([]);
   isGlobalLobbyOpen = signal(false);
+  frontendVersion = environment.version;
+  backendVersion = 'loading...';
 
   ngOnInit() {
+    this.http.get<{version: string}>('/api/v1/version').subscribe({
+      next: (res) => this.backendVersion = res.version,
+      error: () => this.backendVersion = 'unknown'
+    });
+
     this.gameService.getGames().subscribe({
       next: (data) => {
         this.games.set(data);

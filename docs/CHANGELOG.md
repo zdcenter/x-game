@@ -1,3 +1,4 @@
+## [2026-06-03] Added automatic timestamp-based version numbers for both frontend and backend displayed on the UI.
 # Changelog
 
 ### Changed / Improved
