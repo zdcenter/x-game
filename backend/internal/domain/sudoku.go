@@ -34,7 +34,8 @@ type UserSudokuProgress struct {
 	ID        uint         `gorm:"primarykey" json:"id"`
 	UserID    uint         `gorm:"uniqueIndex:idx_user_sudoku_puzzle;not null" json:"user_id"`
 	PuzzleID  string       `gorm:"uniqueIndex:idx_user_sudoku_puzzle;type:varchar(50);not null" json:"puzzle_id"`
-	Status    SudokuStatus `gorm:"type:varchar(20);default:'playing'" json:"status"`
+	Status       SudokuStatus `gorm:"type:varchar(20);default:'playing'" json:"status"`
+	CurrentState string       `gorm:"type:text" json:"current_state"`
 	TimeSpent int          `gorm:"default:0" json:"time_spent"` // Time spent in seconds
 	Stars     int          `gorm:"default:0" json:"stars"`      // Star rating (1-3)
 	CreatedAt time.Time    `json:"created_at"`
