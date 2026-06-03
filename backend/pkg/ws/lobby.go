@@ -57,20 +57,21 @@ func (l *GlobalLobby) UpdatePlayerStatus(playerID string, status string) {
 
 // BroadcastLobbyUpdate sends the current lobby state to all connected lobby players
 func (l *GlobalLobby) BroadcastLobbyUpdate() {
+	// Step 1: Snapshot players under lock (fast)
 	l.mu.RLock()
-	defer l.mu.RUnlock()
-
-	// Build players list
+	playersCopy := make([]*LobbyPlayer, 0, len(l.Players))
 	var players []map[string]interface{}
 	for _, p := range l.Players {
+		playersCopy = append(playersCopy, p)
 		players = append(players, map[string]interface{}{
 			"id":       p.PlayerID,
 			"username": p.Username,
 			"status":   p.Status,
 		})
 	}
+	l.mu.RUnlock()
 
-	// Build active rooms list
+	// Step 2: Build rooms list (no lobby lock held, GetActiveRooms uses its own locks)
 	var activeRooms []map[string]interface{}
 	safeRooms := GetActiveRooms()
 	for _, r := range safeRooms {
@@ -86,7 +87,6 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 		})
 	}
 
-	log.Printf("Broadcasting %d active rooms", len(activeRooms))
 	payload, err := json.Marshal(map[string]interface{}{
 		"type":    "lobby_update",
 		"players": players,
@@ -97,7 +97,8 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 		return
 	}
 
-	for _, p := range l.Players {
+	// Step 3: Send to all players (no lobby lock held)
+	for _, p := range playersCopy {
 		if p.Conn != nil {
 			p.mu.Lock()
 			p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))

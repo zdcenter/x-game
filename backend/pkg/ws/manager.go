@@ -59,17 +59,24 @@ type RoomSnapshot struct {
 }
 
 func GetActiveRooms() []RoomSnapshot {
+	// Step 1: Copy room pointers under global lock (fast)
 	mu.Lock()
-	defer mu.Unlock()
-	
-	snapshots := make([]RoomSnapshot, 0, len(Rooms))
+	roomsCopy := make([]*Room, 0, len(Rooms))
 	for _, r := range Rooms {
-		r.mu.Lock() // Safely get fields
+		roomsCopy = append(roomsCopy, r)
+	}
+	mu.Unlock()
+
+	// Step 2: Read each room's state under its own lock (no global lock held)
+	snapshots := make([]RoomSnapshot, 0, len(roomsCopy))
+	for _, r := range roomsCopy {
+		r.mu.Lock()
 		count := len(r.Clients)
 		game := r.Game
 		host := r.Host
 		mode := r.Mode
 		diff := r.Difficulty
+		_, hostConnected := r.Clients[host]
 		var status string
 		if r.Engine != nil {
 			st := r.Engine.GetStatus()
@@ -87,6 +94,11 @@ func GetActiveRooms() []RoomSnapshot {
 		}
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
+
+		// Skip rooms where host is disconnected and game hasn't started (ghost rooms)
+		if !hostConnected && status == "waiting" {
+			continue
+		}
 		
 		snapshots = append(snapshots, RoomSnapshot{
 			ID:          r.ID,
@@ -108,7 +120,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 	// Clean up old dismissed rooms periodically
 	now := time.Now()
 	for id, t := range DismissedRooms {
-		if now.Sub(t) > 5*time.Minute {
+		if now.Sub(t) > 30*time.Second {
 			delete(DismissedRooms, id)
 		}
 	}
@@ -235,6 +247,7 @@ func (r *Room) RemoveClient(client *Client) {
 	
 	isSwitchingGame := time.Now().Unix() - r.GameChangedAt < 5
 	isHostLeaving := r.Host == client.ID && !isSwitchingGame
+	gameStatus := r.Engine.GetStatus()
 
 	// Clean up ready state
 	client.IsReady = false
@@ -243,31 +256,37 @@ func (r *Room) RemoveClient(client *Client) {
 	r.mu.Unlock()
 
 	if isHostLeaving {
-		// Host disconnected. Start a 3-minute grace period timer.
-		go func(rID string, hID string) {
-			time.Sleep(3 * time.Minute)
+		if gameStatus == engine.StateWaiting || gameStatus == engine.StateFinished {
+			// Game not in progress: dismiss immediately, no grace period needed
+			DismissRoom(roomID, client.ID)
+		} else {
+			// Game in progress: give host 3 minutes to reconnect
+			log.Printf("Host %s disconnected from active game in room %s, starting 3-min grace period", client.ID, roomID)
+			go func(rID string, hID string) {
+				time.Sleep(3 * time.Minute)
+				
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+				
+				if !exists {
+					return
+				}
+				
+				room.mu.Lock()
+				_, hostConnected := room.Clients[hID]
+				isStillHost := room.Host == hID
+				room.mu.Unlock()
+				
+				if isStillHost && !hostConnected {
+					log.Printf("Host %s failed to reconnect to room %s within 3 minutes. Auto-dismissing.", hID, rID)
+					DismissRoom(rID, hID)
+				}
+			}(roomID, client.ID)
 			
-			mu.Lock()
-			room, exists := Rooms[rID]
-			mu.Unlock()
-			
-			if !exists {
-				return // Room was already destroyed (e.g. manually dismissed or empty)
-			}
-			
-			room.mu.Lock()
-			_, hostConnected := room.Clients[hID]
-			isStillHost := room.Host == hID
-			room.mu.Unlock()
-			
-			if isStillHost && !hostConnected {
-				log.Printf("Host %s failed to reconnect to room %s within 3 minutes. Auto-dismissing room.", hID, rID)
-				DismissRoom(rID, hID)
-			}
-		}(roomID, client.ID)
-		
-		r.BroadcastState()
-		go Lobby.BroadcastLobbyUpdate()
+			r.BroadcastState()
+			go Lobby.BroadcastLobbyUpdate()
+		}
 	} else if isEmpty && !isSwitchingGame {
 		mu.Lock()
 		delete(Rooms, roomID)
@@ -276,7 +295,7 @@ func (r *Room) RemoveClient(client *Client) {
 		go Lobby.BroadcastLobbyUpdate()
 	} else if !isEmpty {
 		r.BroadcastState()
-		go Lobby.BroadcastLobbyUpdate() // Notify lobby player count changed
+		go Lobby.BroadcastLobbyUpdate()
 	}
 }
 
