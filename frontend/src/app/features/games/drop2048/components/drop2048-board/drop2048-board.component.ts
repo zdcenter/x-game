@@ -7,7 +7,7 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="relative bg-slate-900/80 rounded-xl overflow-hidden shadow-2xl mx-auto select-none"
+    <div class="relative bg-slate-900/80 rounded-xl overflow-hidden shadow-2xl mx-auto select-none touch-manipulation"
          [style.width.px]="boardWidth"
          [style.height.px]="boardHeight"
          style="box-sizing: content-box;">
