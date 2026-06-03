@@ -238,8 +238,31 @@ func (r *Room) RemoveClient(client *Client) {
 	r.mu.Unlock()
 
 	if isHostLeaving {
-		// Host left, completely destroy the room and kick remaining players
-		DismissRoom(roomID, client.ID)
+		// Host disconnected. Start a 3-minute grace period timer.
+		go func(rID string, hID string) {
+			time.Sleep(3 * time.Minute)
+			
+			mu.Lock()
+			room, exists := Rooms[rID]
+			mu.Unlock()
+			
+			if !exists {
+				return // Room was already destroyed (e.g. manually dismissed or empty)
+			}
+			
+			room.mu.Lock()
+			_, hostConnected := room.Clients[hID]
+			isStillHost := room.Host == hID
+			room.mu.Unlock()
+			
+			if isStillHost && !hostConnected {
+				log.Printf("Host %s failed to reconnect to room %s within 3 minutes. Auto-dismissing room.", hID, rID)
+				DismissRoom(rID, hID)
+			}
+		}(roomID, client.ID)
+		
+		r.BroadcastState()
+		go Lobby.BroadcastLobbyUpdate()
 	} else if isEmpty && !isSwitchingGame {
 		mu.Lock()
 		delete(Rooms, roomID)
