@@ -34,9 +34,13 @@
               [players]="store.playersList()"
               [hostId]="store.host()"
               [currentUserId]="playerId"
+              [readyPlayers]="store.readyPlayers()"
               (start)="store.startGame()"
-              (leaveRoom)="onLeaveClick()"
+              (leave)="onLeaveClick()"
               (changeSettings)="openChangeSettings()"
+              (ready)="store.ready()"
+              (cancelReady)="store.cancelReady()"
+              (kick)="store.kickPlayer($event)"
             ></app-game-waiting-room>
           }
 
@@ -132,6 +136,7 @@
 
     <!-- PK Lobby Panel -->
     <app-game-lobby-panel
+      #lobbyPanel
       class="flex-grow flex"
       [currentGameId]="'drop2048'"
       [currentRoomId]="currentRoomId()"

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -14,6 +14,7 @@ import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-boa
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
+import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 
 @Component({
   selector: 'app-drop2048',
@@ -40,6 +41,9 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   roomLifecycle!: RoomLifecycleHandle;
   private router = inject(Router);
   i18n = inject(I18nService);
+  private crossGameJoin = inject(CrossGameJoinService);
+
+  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
   get playerId(): string {
     return this.store.playerId;
@@ -69,6 +73,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
           if (status === 'starting' && rawState?.globalStartAt) {
             this.view.set('play');
             this.gameTimer.startCountdown();
+            this.store.resetForPK();
           } else if (status === 'playing') {
             this.view.set('play');
             if (this.store.board().length === 0) {
@@ -92,11 +97,13 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     super.ngOnInit();
     
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
-    if (joinInfo) {
-      // Setup room via WS would be handled by Manager usually, but here we just wait for WS to sync
+    const pendingCrossJoin = this.crossGameJoin.consumePendingJoin('drop2048');
+
+    if (pendingCrossJoin) {
+      this.joinRoom(pendingCrossJoin.roomId, pendingCrossJoin.mode, pendingCrossJoin.difficulty, pendingCrossJoin.host);
+    } else if (joinInfo) {
       if (joinInfo.mode !== 'single') {
-        this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
-        this.view.set('room');
+        this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
       } else {
         this.view.set('play');
         this.store.startGame();
@@ -114,8 +121,24 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   onJoinSinglePlayer(diff: any) {
     this.view.set('play');
-    this.store.joinRoom('single_room', 'single', diff, this.playerId);
+    this.store.joinGame('single_room', this.playerId, 'single', diff);
     this.store.startGame();
+  }
+
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
+    this.isMobileSidebarOpen.set(false);
+    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
+    this.view.set('room');
+  }
+
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
+    if (this.store.roomId() === event.roomId) return;
+    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+  }
+
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
+    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
   }
 
   onRoomCreated() {
@@ -126,16 +149,27 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     if (this.store.currentMode() === 'single') {
       this.router.navigate(['/lobby']);
     } else {
-      this.store.leaveGame();
+      if (this.store.host() === this.playerId) {
+        this.store.dismissRoom();
+      } else {
+        this.store.leaveGame();
+      }
       this.roomLifecycle.clearReconnectInfo();
       this.router.navigate(['/lobby']);
     }
   }
 
   openChangeSettings() {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-      this.router.navigate(['/games/drop2048']);
-    });
+    if (this.lobbyPanel && this.store.roomId()) {
+      this.isMobileSidebarOpen.set(true);
+      this.lobbyPanel.openUpdateRoomModal({
+        id: this.store.roomId(),
+        game: 'drop2048',
+        mode: this.store.currentMode(),
+        difficulty: this.store.localDifficulty(),
+        host: this.store.host()
+      });
+    }
   }
 
   getResultTitle(): string {

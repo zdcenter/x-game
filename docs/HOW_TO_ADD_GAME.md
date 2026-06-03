@@ -76,7 +76,33 @@ players = computed<string[]>(() => {
 ```
 - **effect 的正确用法**：在 Store 的构造函数里只允许用 `effect()` 触发不修改信号的**副作用行为**，例如当对局状态变为 finished 时调用 `audio.playWin()`。
 
-### 3. 编写主组件 (强制继承 `BaseGameComponent`)
+### 3. 实现联机必须的核心 WS 生命周期接口 (Store Network Lifecycle) 🚨 极其重要！
+如果你的游戏支持 PK 模式，你的 `Store` 必须提供以下方法，并且**绝不能漏掉 `ws.connect`**，否则你创建的房间会变成无人知晓的“幽灵单机房间”：
+
+```typescript
+// 1. 建立与后端的连接
+joinGame(roomId: string, playerId: string, mode: string, diff: string, hostId?: string) {
+  // 设置本地状态...
+  if (mode !== 'single') {
+    // 【关键】必须调用此方法，后端才会真正创建/加入房间！
+    this.ws.connect('your_game', roomId, playerId, mode, diff, hostId);
+  }
+}
+
+// 2. 补齐与 app-game-waiting-room 绑定的周边操作
+ready() { this.ws.send({ type: 'ready' }); }
+cancelReady() { this.ws.send({ type: 'cancel_ready' }); }
+kickPlayer(playerId: string) { this.ws.send({ type: 'kick_player', target: playerId }); }
+dismissRoom() { this.ws.send({ type: 'dismiss_room' }); }
+leaveGame() {
+  this.ws.send({ type: 'leave_game' });
+  this.ws.disconnect('your_game');
+}
+// 游戏开始，注意用 action 触发后端引擎逻辑
+startGame() { this.ws.send({ action: 'start' }); }
+```
+
+### 4. 编写主组件 (强制继承 `BaseGameComponent`)
 主组件必须继承 `BaseGameComponent`，从而免费获得以下能力：
 - **竞技大厅 WebSocket 自动连接**：`BaseGameComponent.ngOnInit()` 会自动调用 `connectLobby()`，确保右侧竞技大厅面板能收到房间和在线玩家数据。
 - **建房 / 加入房间 / 房间销毁监听**等通用逻辑。
@@ -120,14 +146,19 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 - **等待大厅**：在未开始状态下使用。房主在等待大厅有权点击“更改设置”，此时需要绑定 `(changeSettings)` 事件：
 ```html
 <app-game-waiting-room
+  [gameId]="'your-game-id'"
   [mode]="currentRoomMode()"
   [roomId]="roomId()"
-  [players]="mappedPlayers"
+  [players]="store.playersList()"
   [hostId]="hostId()"
   [currentUserId]="playerId"
-  (leave)="returnToLobby()"
+  [readyPlayers]="store.readyPlayers()"
+  (leave)="onLeaveClick()"
   (start)="store.startGame()"
-  (changeSettings)="openChangeSettings()">
+  (changeSettings)="openChangeSettings()"
+  (ready)="store.ready()"
+  (cancelReady)="store.cancelReady()"
+  (kick)="store.kickPlayer($event)">
 </app-game-waiting-room>
 ```
 

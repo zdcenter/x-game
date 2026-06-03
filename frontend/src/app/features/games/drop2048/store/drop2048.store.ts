@@ -93,6 +93,7 @@ export class Drop2048Store {
 
   host = computed(() => (this.rawState() as any)?.host || '');
   winners = computed(() => this.rawState()?.winners || []);
+  readyPlayers = computed(() => (this.rawState() as any)?.readyPlayers || {});
 
   get playerId(): string {
     return this.auth.currentUser()?.username || this.auth.guestId;
@@ -106,10 +107,13 @@ export class Drop2048Store {
     return this.localMode();
   }
 
-  joinRoom(roomId: string, mode: string, diff: string, host: string) {
+  joinGame(roomId: string, playerId: string, mode: string = 'single', diff: string = 'standard', hostId?: string) {
     this.roomId.set(roomId);
     this.localMode.set(mode);
     this.localDifficulty.set(diff);
+    if (mode !== 'single') {
+      this.ws.connect('drop2048', roomId, playerId, mode, diff, hostId);
+    }
   }
 
   startGame() {
@@ -132,7 +136,7 @@ export class Drop2048Store {
       }
       this.initLocalGame();
     } else {
-      this.ws.send({ type: 'start_game' });
+      this.ws.send({ action: 'start' });
     }
   }
 
@@ -145,20 +149,55 @@ export class Drop2048Store {
   }
 
   leaveGame() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'leave_game' });
+    }
     this.stopGravity();
-    this.ws.disconnect('drop2048');
+    setTimeout(() => {
+      this.ws.disconnect('drop2048');
+    }, 100);
     this.localMode.set('single');
     this.localStatus.set('waiting');
   }
 
+  dismissRoom() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'dismiss_room' });
+    }
+  }
+
+  kickPlayer(playerId: string) {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'kick_player', target: playerId });
+    }
+  }
+
+  ready() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'ready' });
+    }
+  }
+
+  cancelReady() {
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'cancel_ready' });
+    }
+  }
+
   private initLocalGame() {
+    this.resetForPK();
+    this.localStatus.set('playing');
+    this.spawnBlock();
+  }
+
+  resetForPK() {
     this.board.set([]);
     this.localScore.set(0);
     this.isDead.set(false);
-    this.localStatus.set('playing');
     this.combos.set([]);
     this.particles.set([]);
-    this.spawnBlock();
+    this.activeBlock.set(null);
+    this.stopGravity();
   }
 
   // Calculate current level based on score
