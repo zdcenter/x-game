@@ -197,6 +197,11 @@ func (r *Room) AddClient(client *Client) error {
 		r.Host = client.ID // Fallback if hostId was not provided
 	}
 	
+	// Preserve IsReady state on reconnect (Bug 6 fix)
+	if old, exists := r.Clients[client.ID]; exists {
+		client.IsReady = old.IsReady
+	}
+
 	r.Clients[client.ID] = client
 	r.Engine.AddPlayer(client.ID)
 	
@@ -283,31 +288,16 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	if err := json.Unmarshal(payload, &baseMsg); err == nil {
 		if msgType, ok := baseMsg["type"].(string); ok {
 			if msgType == "restart_game" {
-				log.Printf("Received restart_game from %s, Room Host is %s", clientID, r.Host)
+				// Only host can restart. Pass through to engine's own restart handler
+				// to reuse state in-place instead of creating a new engine instance.
 				if clientID == r.Host {
-					log.Printf("Restarting room %s", r.ID)
-					engineKey := r.Game + "_" + r.Mode
-					if r.Mode == "single" {
-						engineKey = r.Game + "_single"
+					log.Printf("Restarting room %s via engine", r.ID)
+					r.Engine.HandleAction(clientID, "restart_game", payload)
+					// Reset ready state for all clients
+					for _, c := range r.Clients {
+						c.IsReady = false
 					}
-					
-					eng, err := engine.CreateEngine(engineKey)
-					if err != nil {
-						log.Printf("Failed to create engine for restart: %v", err)
-						return
-					}
-					eng.InitGame(map[string]interface{}{"mode": r.Mode, "difficulty": r.Difficulty})
-					for id := range r.Clients {
-						eng.AddPlayer(id)
-					}
-					
-					if asyncEng, ok := eng.(interface{ SetBroadcaster(func()) }); ok {
-						asyncEng.SetBroadcaster(r.BroadcastState)
-					}
-					
-					r.Engine = eng
 					r.BroadcastStateLocked()
-					log.Printf("Room %s restarted successfully", r.ID)
 				}
 				return
 			} else if msgType == "dismiss_room" {
@@ -400,12 +390,11 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	}
 
 	// Intercept "start" action to enforce readiness in PK modes
-log.Printf("Received payload in room %s from %s: %s", r.ID, clientID, string(payload))
 	var actionMsg struct {
 		Action string `json:"action"`
 	}
 	if err := json.Unmarshal(payload, &actionMsg); err == nil && actionMsg.Action == "start" {
-log.Printf("Start action received from %s", clientID)
+
 		if clientID != r.Host {
 			log.Printf("Non-host %s tried to start the game", clientID)
 			return // Only host can start
@@ -447,7 +436,6 @@ func (r *Room) BroadcastStateLocked() {
 		readyPlayers[id] = client.IsReady
 	}
 
-	log.Printf("[DEBUG] Room %s broadcasting state: %+v to %d clients. Host: %s", r.ID, state, len(r.Clients), r.Host)
 	data, err := json.Marshal(map[string]interface{}{
 		"type":         "gameState",
 		"state":        state,
@@ -459,12 +447,9 @@ func (r *Room) BroadcastStateLocked() {
 		return
 	}
 
-	for id, client := range r.Clients {
-		err := client.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
+	for _, client := range r.Clients {
+		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
 			log.Printf("Failed to send message to %s: %v", client.ID, err)
-		} else {
-			log.Printf("[DEBUG] Successfully sent state to client %s", id)
 		}
 	}
 }
@@ -472,30 +457,22 @@ func (r *Room) BroadcastStateLocked() {
 func DismissRoom(roomID string, clientID string) {
 	mu.Lock()
 	r, exists := Rooms[roomID]
-	mu.Unlock()
-
 	if !exists {
+		mu.Unlock()
 		return
 	}
+	// Atomic check-and-delete to prevent double dismissal
+	delete(Rooms, roomID)
+	DismissedRooms[roomID] = time.Now()
+	mu.Unlock()
 
+	go Lobby.BroadcastLobbyUpdate()
+
+	// Disconnect all clients in this room gracefully
+	msg := []byte(`{"type": "room_dismissed"}`)
 	r.mu.Lock()
-	isHost := r.Host == clientID
-	r.mu.Unlock()
-
-	if isHost {
-		mu.Lock()
-		delete(Rooms, roomID)
-		DismissedRooms[roomID] = time.Now()
-		mu.Unlock()
-		
-		go Lobby.BroadcastLobbyUpdate()
-
-		// Disconnect all clients in this room gracefully
-		msg := []byte(`{"type": "room_dismissed"}`)
-		r.mu.Lock()
-		for _, c := range r.Clients {
-			c.WriteMessage(websocket.TextMessage, msg)
-		}
-		r.mu.Unlock()
+	for _, c := range r.Clients {
+		c.WriteMessage(websocket.TextMessage, msg)
 	}
+	r.mu.Unlock()
 }

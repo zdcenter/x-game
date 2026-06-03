@@ -21,7 +21,8 @@ import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES
   standalone: true,
   imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent],
   templateUrl: './tetris.component.html',
-  styleUrls: ['./tetris.component.css']
+  styleUrls: ['./tetris.component.css'],
+  providers: [TetrisStore]
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLDivElement>;

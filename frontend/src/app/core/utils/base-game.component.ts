@@ -32,7 +32,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
     // Deep link check for PK invites
     const q = this._baseRoute.snapshot.queryParams;
-    if (q['joinRoom'] && q['mode'] && q['diff']) {
+    if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== 'single') {
       // Use setTimeout to allow subclass to finish initialization (like fetching single player records)
       setTimeout(() => {
         this.handleJoinRoom({

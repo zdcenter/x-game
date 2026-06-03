@@ -15,9 +15,7 @@ export interface TetrisOpponent {
   garbageReceived: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class TetrisStore {
   private ws = inject(WebSocketService);
   gameState = computed(() => this.ws.gameState());
