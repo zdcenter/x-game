@@ -140,10 +140,10 @@
             @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
               <div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-bg-main)]">
                 <app-game-waiting-room
-                  class="w-full h-full flex"
                   [gameId]="'minesweeper'"
                   [mode]="currentRoomMode()"
                   [roomId]="currentRoomId()"
+                  [difficulty]="'medium'"
                   [players]="getPlayerScores()"
                   [hostId]="store.host()"
                   [currentUserId]="playerId"

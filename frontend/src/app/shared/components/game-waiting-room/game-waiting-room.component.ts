@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -20,7 +20,21 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
           </h2>
           <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-8 text-sm sm:text-base">
             <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
-            <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
+            <div class="flex items-center gap-2">
+              <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
+              @if (mode !== 'single') {
+                <button (click)="copyInviteLink()" class="relative group p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/50 transition-all active:scale-95 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)]" [title]="i18n.t('game.copy_invite_link')() || 'Copy Invite Link'">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  @if (showCopiedToast()) {
+                    <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-[var(--color-accent-from)] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap animate-fade-in-up">
+                      {{ i18n.t('game.copied')() || 'Copied!' }}
+                    </span>
+                  }
+                </button>
+              }
+            </div>
           </div>
 
           <div class="flex flex-wrap justify-center gap-4 sm:gap-6 mb-10">
@@ -90,6 +104,7 @@ export class GameWaitingRoomComponent {
 
   @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;
+  @Input({ required: true }) difficulty!: string;
   @Input({ required: true }) roomId!: string;
   @Input({ required: true }) players!: any[];
   @Input({ required: true }) hostId!: string;
@@ -139,5 +154,58 @@ export class GameWaitingRoomComponent {
       if (modeId.includes('speed')) return this.i18n.t('game.speed_mode')() || 'PK Speed';
     }
     return modeId || '';
+  }
+
+  showCopiedToast = signal(false);
+
+  copyInviteLink() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('joinRoom', this.roomId);
+    url.searchParams.set('mode', this.mode);
+    url.searchParams.set('diff', this.difficulty);
+    url.searchParams.set('host', this.hostId);
+    
+    const gameName = this.i18n.t('lobby.' + this.gameId)() || this.gameId;
+    let message = this.i18n.t('game.invite_message')() || `I am playing [game]! Join my room [room]:\n[url]`;
+    message = message.replace('[game]', gameName).replace('[room]', this.roomId).replace('[url]', url.toString());
+    
+    const showSuccess = () => {
+      this.showCopiedToast.set(true);
+      setTimeout(() => this.showCopiedToast.set(false), 3000);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(message).then(showSuccess).catch(err => {
+        console.warn('Clipboard API failed, using fallback.', err);
+        this.fallbackCopyTextToClipboard(message, showSuccess);
+      });
+    } else {
+      this.fallbackCopyTextToClipboard(message, showSuccess);
+    }
+  }
+
+  private fallbackCopyTextToClipboard(text: string, onSuccess: () => void) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    // Avoid scrolling to bottom
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.position = 'fixed';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        onSuccess();
+      } else {
+        alert('Failed to copy. Please manually copy the link: ' + text);
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      alert('Failed to copy. Please manually copy the link: ' + text);
+    }
+    document.body.removeChild(textArea);
   }
 }

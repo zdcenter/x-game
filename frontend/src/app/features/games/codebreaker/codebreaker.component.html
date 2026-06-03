@@ -197,10 +197,10 @@
   @if (currentRoomMode() !== 'single' && status() === 'waiting') {
     <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
       <app-game-waiting-room
-        class="w-full h-full flex"
         [gameId]="'codebreaker'"
         [mode]="currentRoomMode()"
         [roomId]="roomId()"
+        [difficulty]="currentDifficulty()"
         [players]="mappedPlayers"
         [hostId]="hostId()"
         [currentUserId]="myPlayerId()"

@@ -130,66 +130,115 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
               } @else if (game.id === 'hexa') {
                 <svg width="110" height="110" viewBox="0 0 100 100" class="drop-shadow-2xl hover:scale-110 transition-transform duration-500">
                   <defs>
-                    <polygon id="hx" points="0,-7 6.1,-3.5 6.1,3.5 0,7 -6.1,3.5 -6.1,-3.5" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" />
+                    <linearGradient id="h-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#334155" />
+                      <stop offset="100%" stop-color="#1e293b" />
+                    </linearGradient>
+                    <linearGradient id="h-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#60a5fa" /><stop offset="100%" stop-color="#2563eb" />
+                    </linearGradient>
+                    <linearGradient id="h-red" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#f87171" /><stop offset="100%" stop-color="#dc2626" />
+                    </linearGradient>
+                    <linearGradient id="h-yellow" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#fde047" /><stop offset="100%" stop-color="#ca8a04" />
+                    </linearGradient>
+                    <linearGradient id="h-green" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#4ade80" /><stop offset="100%" stop-color="#16a34a" />
+                    </linearGradient>
+                    
+                    <polygon id="hx-cell" points="0,-8 6.9,-4 6.9,4 0,8 -6.9,4 -6.9,-4" />
+                    <polygon id="hx-piece" points="0,-7.5 6.5,-3.75 6.5,3.75 0,7.5 -6.5,3.75 -6.5,-3.75" />
+                    <filter id="h-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#000" flood-opacity="0.5"/>
+                    </filter>
                   </defs>
-                  <g fill="rgba(255,255,255,0.25)">
-                    <use href="#hx" x="37.9" y="29.0" />
-                    <use href="#hx" x="50.0" y="29.0" />
-                    <use href="#hx" x="62.1" y="29.0" />
-                    <use href="#hx" x="31.8" y="39.5" />
-                    <use href="#hx" x="43.9" y="39.5" />
-                    <use href="#hx" x="56.1" y="39.5" />
-                    <use href="#hx" x="68.2" y="39.5" />
-                    <use href="#hx" x="25.8" y="50.0" />
-                    <use href="#hx" x="37.9" y="50.0" />
-                    <use href="#hx" x="50.0" y="50.0" />
-                    <use href="#hx" x="62.1" y="50.0" />
-                    <use href="#hx" x="74.2" y="50.0" />
-                    <use href="#hx" x="31.8" y="60.5" />
-                    <use href="#hx" x="43.9" y="60.5" />
-                    <use href="#hx" x="56.1" y="60.5" />
-                    <use href="#hx" x="68.2" y="60.5" />
-                    <use href="#hx" x="37.9" y="71.0" />
-                    <use href="#hx" x="50.0" y="71.0" />
-                    <use href="#hx" x="62.1" y="71.0" />
+                  
+                  <g fill="url(#h-bg)" stroke="#0f172a" stroke-width="1.5">
+                    <use href="#hx-cell" x="50" y="50" />
+                    <use href="#hx-cell" x="63.9" y="50" />
+                    <use href="#hx-cell" x="56.9" y="62" />
+                    <use href="#hx-cell" x="43.1" y="62" />
+                    <use href="#hx-cell" x="36.1" y="50" />
+                    <use href="#hx-cell" x="43.1" y="38" />
+                    <use href="#hx-cell" x="56.9" y="38" />
+                    
+                    <use href="#hx-cell" x="77.7" y="50" />
+                    <use href="#hx-cell" x="70.8" y="62" />
+                    <use href="#hx-cell" x="56.9" y="74" />
+                    <use href="#hx-cell" x="43.1" y="74" />
+                    <use href="#hx-cell" x="29.2" y="74" />
+                    <use href="#hx-cell" x="22.3" y="62" />
+                    <use href="#hx-cell" x="22.3" y="50" />
+                    <use href="#hx-cell" x="29.2" y="38" />
+                    <use href="#hx-cell" x="43.1" y="26" />
+                    <use href="#hx-cell" x="56.9" y="26" />
+                    <use href="#hx-cell" x="70.8" y="26" />
+                    <use href="#hx-cell" x="77.7" y="38" />
                   </g>
-                  <g fill="#fde047" stroke="rgba(250,204,21,0.5)">
-                    <use href="#hx" x="43.9" y="60.5" />
-                    <use href="#hx" x="56.1" y="60.5" />
-                    <use href="#hx" x="62.1" y="71.0" />
-                  </g>
-                  <g fill="#34d399" stroke="rgba(52,211,153,0.5)">
-                    <use href="#hx" x="31.8" y="39.5" />
-                    <use href="#hx" x="43.9" y="39.5" />
-                    <use href="#hx" x="56.1" y="39.5" />
+                  
+                  <g filter="url(#h-shadow)">
+                    <!-- Blue Triangle -->
+                    <g fill="url(#h-blue)" stroke="rgba(255,255,255,0.3)" stroke-width="1">
+                      <use href="#hx-piece" x="43.1" y="38" />
+                      <use href="#hx-piece" x="29.2" y="38" />
+                      <use href="#hx-piece" x="43.1" y="26" />
+                    </g>
+                    <!-- Red Zigzag -->
+                    <g fill="url(#h-red)" stroke="rgba(255,255,255,0.3)" stroke-width="1">
+                      <use href="#hx-piece" x="70.8" y="26" />
+                      <use href="#hx-piece" x="77.7" y="38" />
+                      <use href="#hx-piece" x="77.7" y="50" />
+                      <use href="#hx-piece" x="70.8" y="62" />
+                    </g>
+                    <!-- Green Diamond -->
+                    <g fill="url(#h-green)" stroke="rgba(255,255,255,0.3)" stroke-width="1">
+                      <use href="#hx-piece" x="50" y="50" />
+                      <use href="#hx-piece" x="36.1" y="50" />
+                      <use href="#hx-piece" x="43.1" y="62" />
+                      <use href="#hx-piece" x="56.9" y="62" />
+                    </g>
+                    <!-- Floating Yellow Piece -->
+                    <g fill="url(#h-yellow)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" transform="scale(1.1) translate(-3, 1)">
+                      <use href="#hx-piece" x="43.1" y="74" />
+                      <use href="#hx-piece" x="56.9" y="74" />
+                    </g>
                   </g>
                 </svg>
               } @else if (game.id === 'tetris') {
                 <svg width="110" height="110" viewBox="0 0 100 100" class="drop-shadow-2xl hover:scale-110 transition-transform duration-500">
-                  <rect x="25" y="10" width="50" height="80" rx="4" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
-                  <g fill="#3b82f6" stroke="rgba(0,0,0,0.2)" stroke-width="1">
-                    <rect x="25" y="70" width="10" height="10" rx="1.5" />
-                    <rect x="35" y="70" width="10" height="10" rx="1.5" />
-                    <rect x="45" y="70" width="10" height="10" rx="1.5" />
-                    <rect x="25" y="60" width="10" height="10" rx="1.5" />
+                  <defs>
+                    <linearGradient id="t-blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#2563eb"/></linearGradient>
+                    <linearGradient id="t-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#dc2626"/></linearGradient>
+                    <linearGradient id="t-yellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#ca8a04"/></linearGradient>
+                    <linearGradient id="t-cyan" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0891b2"/></linearGradient>
+                    <linearGradient id="t-green" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#16a34a"/></linearGradient>
+                    <linearGradient id="t-purple" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#9333ea"/></linearGradient>
+                    <linearGradient id="t-orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ea580c"/></linearGradient>
+                    <rect id="tb" width="4.5" height="4.5" rx="0.5" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                    <filter id="t-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="1" flood-color="#000" flood-opacity="0.6"/>
+                    </filter>
+                  </defs>
+                  
+                  <rect x="25" y="10" width="50" height="80" rx="3" fill="#0f172a" stroke="#334155" stroke-width="2" />
+                  
+                  <g stroke="#334155" stroke-width="0.5" opacity="0.4">
+                    <line x1="30" y1="10" x2="30" y2="90" /><line x1="35" y1="10" x2="35" y2="90" /><line x1="40" y1="10" x2="40" y2="90" /><line x1="45" y1="10" x2="45" y2="90" /><line x1="50" y1="10" x2="50" y2="90" /><line x1="55" y1="10" x2="55" y2="90" /><line x1="60" y1="10" x2="60" y2="90" /><line x1="65" y1="10" x2="65" y2="90" /><line x1="70" y1="10" x2="70" y2="90" />
+                    <line x1="25" y1="15" x2="75" y2="15" /><line x1="25" y1="20" x2="75" y2="20" /><line x1="25" y1="25" x2="75" y2="25" /><line x1="25" y1="30" x2="75" y2="30" /><line x1="25" y1="35" x2="75" y2="35" /><line x1="25" y1="40" x2="75" y2="40" /><line x1="25" y1="45" x2="75" y2="45" /><line x1="25" y1="50" x2="75" y2="50" /><line x1="25" y1="55" x2="75" y2="55" /><line x1="25" y1="60" x2="75" y2="60" /><line x1="25" y1="65" x2="75" y2="65" /><line x1="25" y1="70" x2="75" y2="70" /><line x1="25" y1="75" x2="75" y2="75" /><line x1="25" y1="80" x2="75" y2="80" /><line x1="25" y1="85" x2="75" y2="85" />
                   </g>
-                  <g fill="#ef4444" stroke="rgba(0,0,0,0.2)" stroke-width="1">
-                    <rect x="45" y="60" width="10" height="10" rx="1.5" />
-                    <rect x="55" y="60" width="10" height="10" rx="1.5" />
-                    <rect x="55" y="70" width="10" height="10" rx="1.5" />
-                    <rect x="65" y="70" width="10" height="10" rx="1.5" />
-                  </g>
-                  <g fill="#eab308" stroke="rgba(0,0,0,0.2)" stroke-width="1">
-                    <rect x="35" y="50" width="10" height="10" rx="1.5" />
-                    <rect x="45" y="50" width="10" height="10" rx="1.5" />
-                    <rect x="35" y="40" width="10" height="10" rx="1.5" />
-                    <rect x="45" y="40" width="10" height="10" rx="1.5" />
-                  </g>
-                  <g fill="#06b6d4" stroke="rgba(0,0,0,0.2)" stroke-width="1">
-                    <rect x="55" y="20" width="10" height="10" rx="1.5" />
-                    <rect x="55" y="30" width="10" height="10" rx="1.5" />
-                    <rect x="55" y="40" width="10" height="10" rx="1.5" />
-                    <rect x="55" y="50" width="10" height="10" rx="1.5" />
+                  
+                  <g filter="url(#t-shadow)">
+                    <!-- Stacked -->
+                    <g fill="url(#t-blue)"><use href="#tb" x="25" y="85" /><use href="#tb" x="30" y="85" /><use href="#tb" x="35" y="85" /><use href="#tb" x="25" y="80" /></g>
+                    <g fill="url(#t-orange)"><use href="#tb" x="40" y="85" /><use href="#tb" x="45" y="85" /><use href="#tb" x="50" y="85" /><use href="#tb" x="50" y="80" /></g>
+                    <g fill="url(#t-yellow)"><use href="#tb" x="55" y="85" /><use href="#tb" x="60" y="85" /><use href="#tb" x="55" y="80" /><use href="#tb" x="60" y="80" /></g>
+                    <g fill="url(#t-red)"><use href="#tb" x="30" y="80" /><use href="#tb" x="35" y="80" /><use href="#tb" x="35" y="75" /><use href="#tb" x="40" y="75" /></g>
+                    <g fill="url(#t-green)"><use href="#tb" x="65" y="85" /><use href="#tb" x="70" y="85" /><use href="#tb" x="60" y="75" /><use href="#tb" x="65" y="75" /></g>
+                    
+                    <!-- Falling -->
+                    <g fill="url(#t-cyan)"><use href="#tb" x="45" y="25" /><use href="#tb" x="45" y="30" /><use href="#tb" x="45" y="35" /><use href="#tb" x="45" y="40" /></g>
+                    <g fill="url(#t-purple)"><use href="#tb" x="30" y="45" /><use href="#tb" x="35" y="45" /><use href="#tb" x="40" y="45" /><use href="#tb" x="35" y="50" /></g>
                   </g>
                 </svg>
               } @else if (game.id === 'codebreaker') {

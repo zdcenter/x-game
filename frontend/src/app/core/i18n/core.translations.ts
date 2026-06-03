@@ -205,6 +205,9 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.moves': 'Moves',
     'game.room_dismissed_msg': 'The host has dismissed the room.',
     'game.finished': 'FINISHED',
+    'game.copied': 'Copied successfully!',
+    'game.copy_invite_link': 'Copy Invite Link',
+    'game.invite_message': 'I am playing [game] on X-Game! Come join my room [room] and let\'s play together!\nClick the link to join directly:\n[url]',
   },
   zh: {
     // SEO
@@ -412,5 +415,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.restart': '再来一局',
     'game.moves': '移动步数',
     'game.room_dismissed_msg': '房主已解散房间，您已自动退出。',
+    'game.copied': '复制成功！快去粘贴分享给好友吧',
+    'game.copy_invite_link': '复制邀请链接',
+    'game.invite_message': '我正在 X-Game 玩【[game]】，快来加入我的房间 [room] 一起PK吧！\n点击下方链接直接进入房间：\n[url]',
   },
 };

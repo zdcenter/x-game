@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 
 export interface DropBlock {
   id: string; // Unique ID for DOM tracking
@@ -31,6 +32,7 @@ export class Drop2048Store {
   private ws = inject(WebSocketService);
   private auth = inject(AuthStore);
   private audio = inject(AudioService);
+  private statsService = inject(GameStatsService);
 
   // Constants
   readonly ROWS = 7;
@@ -186,6 +188,14 @@ export class Drop2048Store {
 
   private initLocalGame() {
     this.resetForPK();
+
+    if (this.auth.isAuthenticated()) {
+      this.statsService.getStats('drop2048').subscribe(stats => {
+        const stat = stats.find(s => s.Mode === 'single');
+        if (stat) this.bestScore.set(stat.BestScore);
+      });
+    }
+
     this.localStatus.set('playing');
     this.spawnBlock();
   }
@@ -474,6 +484,20 @@ export class Drop2048Store {
     this.stopGravity();
     if (this.currentMode() === 'single') {
       this.localStatus.set('finished');
+
+      if (this.auth.isAuthenticated()) {
+        this.statsService.submitStat('drop2048', {
+          mode: 'single',
+          difficulty: this.localDifficulty(),
+          score: this.localScore(),
+          time: 0,
+          won: true
+        }).subscribe(res => {
+          if (res.isNewRecord) {
+            this.bestScore.set(this.localScore());
+          }
+        });
+      }
     }
     this.activeBlock.set(null);
     if (this.currentMode() !== 'single') {

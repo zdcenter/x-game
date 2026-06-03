@@ -149,17 +149,18 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   [gameId]="'your-game-id'"
   [mode]="currentRoomMode()"
   [roomId]="roomId()"
+  [difficulty]="store.localDifficulty() || store.currentDifficulty() || 'medium'"
   [players]="store.playersList()"
   [hostId]="hostId()"
   [currentUserId]="playerId"
   [readyPlayers]="store.readyPlayers()"
-  (leave)="onLeaveClick()"
   (start)="store.startGame()"
+  (leave)="onLeaveClick()"
   (changeSettings)="openChangeSettings()"
   (ready)="store.ready()"
   (cancelReady)="store.cancelReady()"
-  (kick)="store.kickPlayer($event)">
-</app-game-waiting-room>
+  (kick)="store.kickPlayer($event)"
+></app-game-waiting-room>
 ```
 
 - **大厅面板**：如果你的游戏有独立的大厅界面，在模板中需要使用 `#lobbyPanel` 声明模板引用：

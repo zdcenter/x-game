@@ -30,7 +30,7 @@
               class="w-full h-full flex"
               [gameId]="'drop2048'"
               [mode]="store.currentMode()"
-              [roomId]="store.roomId()"
+              [roomId]="store.roomId()" [difficulty]="store.localDifficulty() || 'medium'"
               [players]="store.playersList()"
               [hostId]="store.host()"
               [currentUserId]="playerId"

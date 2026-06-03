@@ -1,4 +1,5 @@
 import { Directive, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
 
@@ -13,6 +14,8 @@ import { WebSocketService } from '../services/websocket.service';
 export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected gameTimer = inject(GameTimerService);
   protected wsService = inject(WebSocketService);
+  private _baseRoute = inject(ActivatedRoute);
+  private _baseRouter = inject(Router);
   
   isMobileSidebarOpen = signal<boolean>(false);
 
@@ -26,6 +29,28 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    */
   ngOnInit(): void {
     this.wsService.connectLobby(this.playerId, this.playerId);
+
+    // Deep link check for PK invites
+    const q = this._baseRoute.snapshot.queryParams;
+    if (q['joinRoom'] && q['mode'] && q['diff']) {
+      // Use setTimeout to allow subclass to finish initialization (like fetching single player records)
+      setTimeout(() => {
+        this.handleJoinRoom({
+          roomId: q['joinRoom'],
+          mode: q['mode'],
+          difficulty: q['diff'],
+          host: q['host'] || ''
+        });
+        
+        // Clean up URL
+        this._baseRouter.navigate([], {
+          relativeTo: this._baseRoute,
+          queryParams: { joinRoom: null, mode: null, diff: null, host: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+      }, 200);
+    }
   }
 
   /**

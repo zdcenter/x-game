@@ -65,10 +65,10 @@
           
           @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
             <app-game-waiting-room
-              class="w-full h-full flex"
               [gameId]="'hexa'"
               [mode]="currentRoomMode()"
               [roomId]="currentRoomId()"
+              [difficulty]="'medium'"
               [players]="store.allPlayers()"
               [hostId]="store.host()"
               [currentUserId]="playerId"

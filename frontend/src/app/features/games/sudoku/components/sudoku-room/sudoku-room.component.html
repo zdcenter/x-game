@@ -1,9 +1,9 @@
-
     <app-game-waiting-room
       class="w-full h-full flex"
       [gameId]="'sudoku'"
       [mode]="store.currentMode()"
       [roomId]="store.roomId()"
+      [difficulty]="'medium'"
       [players]="getPlayers()"
       [hostId]="store.host()"
       [currentUserId]="store.playerId()"
