@@ -45,6 +45,14 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
+  // Touch Handling properties
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private lastProcessedX = 0;
+  private lastProcessedY = 0;
+  private touchStartTime = 0;
+  private hasMoved = false;
+
   private roomLifecycle: RoomLifecycleHandle;
 
   constructor() {
@@ -141,6 +149,60 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.store.hold();
         event.preventDefault();
         break;
+    }
+  }
+
+  onTouchStart(e: TouchEvent) {
+    if (this.store.status() !== 'playing') return;
+    this.touchStartX = e.touches[0].clientX;
+    this.touchStartY = e.touches[0].clientY;
+    this.lastProcessedX = this.touchStartX;
+    this.lastProcessedY = this.touchStartY;
+    this.touchStartTime = Date.now();
+    this.hasMoved = false;
+  }
+
+  onTouchMove(e: TouchEvent) {
+    if (this.store.status() !== 'playing') return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+
+    const dx = currentX - this.lastProcessedX;
+    const dy = currentY - this.lastProcessedY;
+
+    // Horizontal movement
+    if (Math.abs(dx) > 25) {
+      if (dx > 0) {
+        this.store.moveRight();
+      } else {
+        this.store.moveLeft();
+      }
+      this.lastProcessedX = currentX;
+      this.hasMoved = true;
+    }
+
+    // Vertical soft drop (only downwards)
+    if (dy > 35) {
+      this.store.softDrop();
+      this.lastProcessedY = currentY;
+      this.hasMoved = true;
+    }
+  }
+
+  onTouchEnd(e: TouchEvent) {
+    if (this.store.status() !== 'playing') return;
+    const currentX = e.changedTouches[0].clientX;
+    const currentY = e.changedTouches[0].clientY;
+    const totalDx = currentX - this.touchStartX;
+    const totalDy = currentY - this.touchStartY;
+    const duration = Date.now() - this.touchStartTime;
+
+    if (!this.hasMoved && duration < 300 && Math.abs(totalDx) < 10 && Math.abs(totalDy) < 10) {
+      // Tap -> Rotate
+      this.store.rotate();
+    } else if (totalDy > 60 && duration < 300 && totalDy > Math.abs(totalDx)) {
+      // Fast flick down -> Hard Drop
+      this.store.hardDrop();
     }
   }
 

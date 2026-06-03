@@ -110,7 +110,10 @@
                 </div>
 
                 <!-- CENTER: Main Board -->
-                <div class="relative h-full flex-shrink-0" style="aspect-ratio: 1/2;">
+                <div class="relative h-full flex-shrink-0 touch-none" style="aspect-ratio: 1/2;"
+                     (touchstart)="onTouchStart($event)"
+                     (touchmove)="onTouchMove($event)"
+                     (touchend)="onTouchEnd($event)">
                   <div class="w-full h-full bg-[var(--color-bg-card)] rounded-xl lg:rounded-2xl border-4 border-[var(--color-border-card)] shadow-2xl overflow-hidden p-[2px] lg:p-1 relative backdrop-blur-md">
                     <div class="grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] lg:gap-[2px] w-full h-full relative z-10 bg-[var(--color-bg-main)]/50">
                       @for (row of store.grid(); track $index; let r = $index) {
@@ -208,19 +211,7 @@
               </div>
             </div>
             
-            <!-- Mobile Controls -->
-            @if (store.status() === 'playing') {
-              <div class="flex gap-4 lg:hidden w-full max-w-sm justify-between px-4 py-2 shrink-0 self-center">
-                <div class="flex gap-2">
-                  <button (click)="store.moveLeft()" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center active:bg-white/30 text-xl">⬅️</button>
-                  <button (click)="store.moveRight()" class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center active:bg-white/30 text-xl">➡️</button>
-                </div>
-                <div class="flex gap-2">
-                  <button (click)="store.rotate()" class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center active:bg-blue-500/40 text-xl">🔄</button>
-                  <button (click)="store.hardDrop()" class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center active:bg-red-500/40 text-xl">⏬</button>
-                </div>
-              </div>
-            }
+
           }
         </div>
       </div>
