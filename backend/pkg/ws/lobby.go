@@ -29,11 +29,16 @@ var Lobby = &GlobalLobby{
 	Players: make(map[string]*LobbyPlayer),
 }
 
-// AddPlayer adds a player to the lobby and broadcasts the update
+// AddPlayer adds a player to the lobby and immediately sends them the current state
 func (l *GlobalLobby) AddPlayer(player *LobbyPlayer) {
 	l.mu.Lock()
 	l.Players[player.ID] = player
 	l.mu.Unlock()
+
+	// Send current lobby state directly to the new player (guaranteed delivery)
+	l.SendLobbyStateTo(player)
+
+	// Also broadcast to everyone so existing clients see the updated player list
 	l.BroadcastLobbyUpdate()
 }
 
@@ -55,14 +60,12 @@ func (l *GlobalLobby) UpdatePlayerStatus(playerID string, status string) {
 	l.BroadcastLobbyUpdate()
 }
 
-// BroadcastLobbyUpdate sends the current lobby state to all connected lobby players
-func (l *GlobalLobby) BroadcastLobbyUpdate() {
-	// Step 1: Snapshot players under lock (fast)
+// buildLobbyPayload constructs the lobby_update JSON payload (no locks held)
+func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
+	// Snapshot players
 	l.mu.RLock()
-	playersCopy := make([]*LobbyPlayer, 0, len(l.Players))
 	var players []map[string]interface{}
 	for _, p := range l.Players {
-		playersCopy = append(playersCopy, p)
 		players = append(players, map[string]interface{}{
 			"id":       p.PlayerID,
 			"username": p.Username,
@@ -71,7 +74,7 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 	}
 	l.mu.RUnlock()
 
-	// Step 2: Build rooms list (no lobby lock held, GetActiveRooms uses its own locks)
+	// Build rooms list
 	var activeRooms []map[string]interface{}
 	safeRooms := GetActiveRooms()
 	for _, r := range safeRooms {
@@ -87,50 +90,98 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 		})
 	}
 
-	payload, err := json.Marshal(map[string]interface{}{
+	return json.Marshal(map[string]interface{}{
 		"type":    "lobby_update",
 		"players": players,
 		"rooms":   activeRooms,
 	})
+}
+
+// SendLobbyStateTo sends the current lobby state to a single player
+func (l *GlobalLobby) SendLobbyStateTo(player *LobbyPlayer) {
+	payload, err := l.buildLobbyPayload()
+	if err != nil {
+		log.Printf("Failed to marshal lobby state for new player: %v", err)
+		return
+	}
+	player.mu.Lock()
+	player.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	err = player.Conn.WriteMessage(websocket.TextMessage, payload)
+	player.mu.Unlock()
+	if err != nil {
+		log.Printf("Failed to send initial lobby state to %s: %v", player.PlayerID, err)
+	}
+}
+
+// BroadcastLobbyUpdate sends the current lobby state to all connected lobby players
+func (l *GlobalLobby) BroadcastLobbyUpdate() {
+	payload, err := l.buildLobbyPayload()
 	if err != nil {
 		log.Printf("Failed to marshal lobby update: %v", err)
 		return
 	}
 
-	// Step 3: Send to all players (no lobby lock held)
+	// Snapshot player pointers
+	l.mu.RLock()
+	playersCopy := make([]*LobbyPlayer, 0, len(l.Players))
+	for _, p := range l.Players {
+		playersCopy = append(playersCopy, p)
+	}
+	l.mu.RUnlock()
+
+	// Send to all players (no lobby lock held)
+	var deadPlayers []string
 	for _, p := range playersCopy {
-		if p.Conn != nil {
-			p.mu.Lock()
-			p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-			err := p.Conn.WriteMessage(websocket.TextMessage, payload)
-			p.mu.Unlock()
-			if err != nil {
-				log.Printf("Failed to write to lobby WS: %v", err)
-			}
+		p.mu.Lock()
+		p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+		err := p.Conn.WriteMessage(websocket.TextMessage, payload)
+		p.mu.Unlock()
+		if err != nil {
+			deadPlayers = append(deadPlayers, p.ID)
 		}
+	}
+
+	// Clean up dead connections
+	if len(deadPlayers) > 0 {
+		l.mu.Lock()
+		for _, id := range deadPlayers {
+			delete(l.Players, id)
+		}
+		l.mu.Unlock()
 	}
 }
 
 // BroadcastMessage sends an arbitrary JSON message to all connected lobby players
 func (l *GlobalLobby) BroadcastMessage(msg interface{}) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-
 	payload, err := json.Marshal(msg)
 	if err != nil {
 		log.Printf("Failed to marshal lobby broadcast message: %v", err)
 		return
 	}
 
+	l.mu.RLock()
+	playersCopy := make([]*LobbyPlayer, 0, len(l.Players))
 	for _, p := range l.Players {
-		if p.Conn != nil {
-			p.mu.Lock()
-			p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
-			err := p.Conn.WriteMessage(websocket.TextMessage, payload)
-			p.mu.Unlock()
-			if err != nil {
-				log.Printf("Failed to write broadcast to lobby WS: %v", err)
-			}
+		playersCopy = append(playersCopy, p)
+	}
+	l.mu.RUnlock()
+
+	var deadPlayers []string
+	for _, p := range playersCopy {
+		p.mu.Lock()
+		p.Conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+		err := p.Conn.WriteMessage(websocket.TextMessage, payload)
+		p.mu.Unlock()
+		if err != nil {
+			deadPlayers = append(deadPlayers, p.ID)
 		}
+	}
+
+	if len(deadPlayers) > 0 {
+		l.mu.Lock()
+		for _, id := range deadPlayers {
+			delete(l.Players, id)
+		}
+		l.mu.Unlock()
 	}
 }
