@@ -1,5 +1,16 @@
-## [2026-06-03] Added automatic timestamp-based version numbers for both frontend and backend displayed on the UI.
+## [2026-06-04] WebSocket 房间系统大规模重构
 # Changelog
+
+### 🔧 核心重构 - WebSocket 房间系统
+- **三重保障机制**：实现了心跳保活（Ping/Pong 30 秒检测）+ 实时推送 + HTTP 轮询兜底（10 秒间隔），彻底解决了"其他玩家看不到房间"的致命 Bug。
+- **拆分房间创建/加入**：将 `GetOrCreateRoom` 拆分为 `CreateRoom` 和 `JoinRoom` 两个独立操作，消灭了断线重连意外创建幽灵房间的问题。
+- **房主断线自动转移**：房主异常断线后等待 30 秒，若未重连则自动将房主权限转移给下一个在线玩家，而非直接解散房间。
+- **踢人冷却期**：被踢出的玩家需等待 30 秒后才能重新加入同一房间，防止恶意循环加入。
+- **切换游戏重置准备**：房主切换游戏类型时自动重置所有房客的"已准备"状态。
+- **指数退避重连**：前端 WebSocket 断线重连从固定 2 秒改为指数退避（2s→4s→8s→最大 30s），减少服务器压力。
+- **DismissedRooms 延长**：被解散房间的记录保留时间从 30 秒延长至 5 分钟，防止旧连接意外重建房间。
+
+### Changed / Improved
 
 ### Changed / Improved
 - **Global Arena Lobby (Homepage)**: The arena lobby has been promoted to the homepage (`LobbyComponent`). Players can now view all active rooms across all games directly from the main index. On desktop, it is a permanent sidebar; on mobile, it uses a smooth overlay drawer.
