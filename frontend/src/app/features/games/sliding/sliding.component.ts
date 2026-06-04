@@ -132,6 +132,7 @@ export class SlidingComponent extends BaseGameComponent {
     super.ngOnInit(); // connects lobby WS
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       return;
     } else {
@@ -212,12 +213,14 @@ export class SlidingComponent extends BaseGameComponent {
     this.isMenuOpen.set(false);
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
+  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
     if (this.currentRoomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
   }
 

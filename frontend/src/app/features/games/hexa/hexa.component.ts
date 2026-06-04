@@ -115,6 +115,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       if (pending.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
@@ -122,8 +123,9 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     }
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
     if (this.currentRoomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
@@ -131,7 +133,8 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);

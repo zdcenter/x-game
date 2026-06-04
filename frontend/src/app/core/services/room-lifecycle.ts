@@ -44,6 +44,7 @@ export interface PendingJoinInfo {
   mode: string;
   difficulty: string;
   host?: string;
+  password?: string;
 }
 
 export interface RoomLifecycleHandle {

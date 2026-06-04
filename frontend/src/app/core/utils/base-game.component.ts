@@ -61,13 +61,15 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     // Game-specific cleanup should be handled in the subclass.
   }
 
-  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
+  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
     if (this.store.roomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
     this.isMobileSidebarOpen.set(false);
   }
 
-  handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+  handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
     this.isMobileSidebarOpen.set(false);
   }

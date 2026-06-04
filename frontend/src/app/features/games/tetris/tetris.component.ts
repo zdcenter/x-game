@@ -82,6 +82,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       if (pending.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
@@ -96,8 +97,9 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     this.store.leaveRoom();
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string}) {
+  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
     if (this.currentRoomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
@@ -105,7 +107,8 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(config: {name: string, mode: string, difficulty: string}) {
+  override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}) {
+    if (config.password) this.wsService.setPendingPassword(config.password);
     this.store.joinRoom(config.name, config.mode, config.difficulty, this.playerId);
     if (config.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty, this.playerId);

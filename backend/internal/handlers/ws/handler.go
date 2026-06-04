@@ -33,13 +33,14 @@ func Register(router fiber.Router) {
 		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"
 		hostId := c.Query("hostId", "")             // Used to preserve host on reconnect
 		action := c.Query("action", "")             // "create" or "join"
+		password := c.Query("password", "")           // Optional 4-digit room password
 		playerID := c.Query("playerId", "anonymous")
 
 		var room *wsManager.Room
 
 		if action == "create" {
 			// Explicit create: only create, fail if exists
-			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId)
+			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password)
 			if err != nil {
 				// Room might already exist (e.g. reconnect after page refresh), try to join
 				room, err = wsManager.JoinRoom(roomID)
@@ -66,7 +67,7 @@ func Register(router fiber.Router) {
 		}
 
 		log.Printf("Player %s attempting to join room %s", playerID, roomID)
-		if err := room.AddClient(client); err != nil {
+		if err := room.AddClient(client, password); err != nil {
 			log.Printf("Player %s rejected from room %s: %v", playerID, roomID, err)
 			msg := fmt.Sprintf(`{"type": "error", "message": "%s"}`, err.Error())
 			c.WriteMessage(websocket.TextMessage, []byte(msg))

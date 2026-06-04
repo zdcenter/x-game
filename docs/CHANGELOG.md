@@ -17,6 +17,11 @@
 - **Lobby Icons**: Replaced the generic hamburger menu icon with a semantic "User Group" (People) icon across all game views to intuitively represent multiplayer rooms and lobbies.
 
 ## [Unreleased]
+- **私密房间密码保护 (Private Room Password)**: 
+  - 玩家在创建房间时可以设置 4 位纯数字密码，建立私密好友房。
+  - 大厅中的私密房间会显示锁定图标 🔒，其他玩家点击加入时会弹出美观的毛玻璃质感密码输入框。
+  - **无缝跨游戏体验**：结合现有的综合包厢模式（Party Room Mode），密码状态会由系统在跨游戏路由跳转间被妥善保存与传递，免除了切游戏需要反复输入密码的繁琐。
+  - **房主断线直连**：系统智能识别并赋予特权，当房主断线重连时，直接跳过密码验证环节瞬间回到房间。
 - **New Game**: Added Drop 2048 (Number Merge) with physics dropping, combo sounds, vibration feedback, and PK Score Mode support.
 
 ## [v0.3.3] - 2026-06-02

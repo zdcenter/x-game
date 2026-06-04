@@ -99,6 +99,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
+      if (joinInfo.password) this.ws.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
     } else {
       this.route.queryParams.subscribe(params => {
@@ -172,6 +173,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   }
 
   handleCreateRoom(config: any) {
+    if (config.password) this.ws.setPendingPassword(config.password);
     const roomId = config.name || `codebreaker-${Date.now()}`;
     const host = this.myPlayerId();
     const diff = config.difficulty || 'medium';
@@ -180,6 +182,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   }
 
   handleJoinRoom(room: any) {
+    if (room.password) this.ws.setPendingPassword(room.password);
     const diff = room.difficulty || 'medium';
     this.joinRoom(room.roomId, room.mode, diff, room.host);
     this.isMobileSidebarOpen.set(false);

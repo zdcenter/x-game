@@ -34,6 +34,7 @@ type Room struct {
 	Host          string // Player ID who created the room
 	Mode          string // "single", "pk_steal", "pk_speed"
 	Difficulty    string // "easy", "medium", "hard"
+	Password      string // Optional 4-digit password (empty = public room)
 	CreatedAt     int64  // Unix timestamp of creation
 	GameChangedAt int64  // Unix timestamp of last game change to prevent disconnect races
 	Clients       map[string]*Client
@@ -57,6 +58,7 @@ type RoomSnapshot struct {
 	Status      string `json:"status"`
 	CreatedAt   int64  `json:"createdAt"`
 	PlayerCount int    `json:"players"`
+	HasPassword bool   `json:"hasPassword"`
 }
 
 func GetActiveRooms() []RoomSnapshot {
@@ -77,6 +79,7 @@ func GetActiveRooms() []RoomSnapshot {
 		host := r.Host
 		mode := r.Mode
 		diff := r.Difficulty
+		hasPassword := r.Password != ""
 		var status string
 		if r.Engine != nil {
 			st := r.Engine.GetStatus()
@@ -104,13 +107,14 @@ func GetActiveRooms() []RoomSnapshot {
 			Status:      status,
 			CreatedAt:   createdAt,
 			PlayerCount: count,
+			HasPassword: hasPassword,
 		})
 	}
 	return snapshots
 }
 
 // CreateRoom creates a new room. Returns error if the room already exists or was recently dismissed.
-func CreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, error) {
+func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Room, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -146,6 +150,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, error) 
 		Host:          hostId,
 		Mode:          mode,
 		Difficulty:    difficulty,
+		Password:      password,
 		CreatedAt:     time.Now().Unix(),
 		Clients:       make(map[string]*Client),
 		Engine:        eng,
@@ -190,7 +195,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 
 	// If room doesn't exist AND hostId matches (meaning the caller is the creator), create it
 	if hostId != "" {
-		return CreateRoom(roomID, gameId, mode, difficulty, hostId)
+		return CreateRoom(roomID, gameId, mode, difficulty, hostId, "")
 	}
 
 	return nil, fmt.Errorf("room not found")
@@ -226,9 +231,14 @@ func getGameOptions(gameId, mode, difficulty string) map[string]interface{} {
 	return options
 }
 
-func (r *Room) AddClient(client *Client) error {
+func (r *Room) AddClient(client *Client, password string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	// Check password (host always skips password check)
+	if r.Password != "" && client.ID != r.Host && password != r.Password {
+		return fmt.Errorf("wrong_password")
+	}
 
 	// Check kick cooldown (30 seconds)
 	if kickTime, kicked := r.KickedPlayers[client.ID]; kicked {

@@ -11,6 +11,7 @@ export interface PendingJoin {
   mode: string;
   difficulty: string;
   host: string;
+  password?: string;  // Optional room password for protected rooms
 }
 
 /**

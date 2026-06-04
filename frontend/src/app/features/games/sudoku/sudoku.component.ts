@@ -84,6 +84,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     // Check for cross-game join or reconnect
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
+      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
       if (joinInfo.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
@@ -102,8 +103,9 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
     if (this.store.roomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
@@ -111,7 +113,8 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);

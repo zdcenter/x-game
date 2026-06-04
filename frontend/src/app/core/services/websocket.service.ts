@@ -36,6 +36,9 @@ export class WebSocketService {
   // Track if disconnect was intentional
   private gameDisconnectIntentional = false;
   private lobbyDisconnectIntentional = false;
+
+  // Pending password for the next connect() call (set by lobby panel, consumed by connect)
+  private _pendingPassword = '';
   
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
@@ -58,7 +61,12 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  connect(gameId: string, roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '', action: string = '') {
+  connect(gameId: string, roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '', action: string = '', password: string = '') {
+    // Auto-consume pendingPassword if no explicit password provided
+    if (!password && this._pendingPassword) {
+      password = this._pendingPassword;
+      this._pendingPassword = '';
+    }
     // Mark any previous disconnect as intentional to prevent old onclose from reconnecting
     this.gameDisconnectIntentional = true;
     
@@ -86,6 +94,9 @@ export class WebSocketService {
     let url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${cleanHostId}`;
     if (action) {
       url += `&action=${action}`;
+    }
+    if (password) {
+      url += `&password=${password}`;
     }
     this.socket = new WebSocket(url);
     this.currentGameId = gameId;
@@ -364,6 +375,17 @@ export class WebSocketService {
     if (errorMsg === 'room already exists') {
       return this.i18n.t('game.room_already_exists_msg')() || 'Room already exists.';
     }
+    if (errorMsg === 'wrong_password') {
+      return this.i18n.t('game.wrong_password_msg')() || 'Wrong password, please try again.';
+    }
     return errorMsg;
+  }
+
+  /**
+   * Set password for the next connect() call. Used by lobby panel to pass
+   * password to game stores without modifying every store's joinGame signature.
+   */
+  setPendingPassword(password: string) {
+    this._pendingPassword = password;
   }
 }

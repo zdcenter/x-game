@@ -158,6 +158,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     super.ngOnInit(); // connects lobby WS
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
+      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
     } else {
       const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
@@ -174,12 +175,14 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string }) {
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
     if (this.currentRoomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string }) {
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
   }
 

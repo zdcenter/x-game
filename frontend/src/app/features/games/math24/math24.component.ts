@@ -93,6 +93,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
+      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
       if (joinInfo.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
@@ -173,7 +174,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string}) {
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
@@ -181,7 +182,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.view.set("room");
   }
 
-  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string }) {
+  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
     super.handleJoinRoom(params);
     if (params.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
