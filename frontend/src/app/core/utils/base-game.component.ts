@@ -63,12 +63,14 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
   handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
     if (this.store.roomId() === event.roomId) return;
+    this.wsService.setPendingAction('join');
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
     this.isMobileSidebarOpen.set(false);
   }
 
   handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    this.wsService.setPendingAction('create');
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
     this.isMobileSidebarOpen.set(false);

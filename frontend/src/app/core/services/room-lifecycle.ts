@@ -121,14 +121,14 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
 
   return {
     consumePendingOrReconnect(): PendingJoinInfo | null {
-      // 1. Check for cross-game join (from another game's lobby panel)
-      const pending = crossGameJoin.consumePendingJoin(config.gameId);
-      if (pending) {
+      const joinInfo = crossGameJoin.consumePendingJoin(config.gameId);
+      if (joinInfo) {
+        wsService.setPendingAction('join');
         return {
-          roomId: pending.roomId,
-          mode: pending.mode,
-          difficulty: pending.difficulty,
-          host: pending.host,
+          roomId: joinInfo.roomId,
+          mode: joinInfo.mode,
+          difficulty: joinInfo.difficulty,
+          host: joinInfo.host,
         };
       }
 
@@ -139,6 +139,9 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
       const host = sessionStorage.getItem(`${prefix}_host`) || undefined;
 
       if (room && mode) {
+        if (mode !== 'single') {
+          wsService.setPendingAction('join');
+        }
         return {
           roomId: room,
           mode,

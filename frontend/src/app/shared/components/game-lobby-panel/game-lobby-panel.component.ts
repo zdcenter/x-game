@@ -56,7 +56,7 @@ export interface GameDifficulty {
                     <span class="text-2xl animate-pulse shrink-0">📢</span>
                     <div class="text-sm font-bold text-[var(--color-text-main)] truncate">
                       👑 玩家【<span class="text-yellow-500">{{ msg.senderName || msg.senderId }}</span>】在《{{ getGameLabel(msg.room.game) }}》{{ getModeLabel(msg.room.mode, msg.room.game) }}摆下擂台，
-                      <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host)" class="text-amber-400 hover:text-amber-300 underline decoration-amber-400/50 hover:decoration-amber-300 font-black cursor-pointer ml-1 transition-colors">
+                      <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host, msg.room.hasPassword)" class="text-amber-400 hover:text-amber-300 underline decoration-amber-400/50 hover:decoration-amber-300 font-black cursor-pointer ml-1 transition-colors">
                         [点击此处] 立即应战！
                       </button>
                     </div>
@@ -541,6 +541,7 @@ export class GameLobbyPanelComponent implements OnInit, OnDestroy {
     }
 
     const roomName = this.newRoomName().trim() || `${this.newRoomGameId()}-${Date.now()}`;
+    this.wsService.setPendingAction('create');
     this.createRoom.emit({
       name: roomName,
       gameId: this.newRoomGameId(),
@@ -583,6 +584,7 @@ export class GameLobbyPanelComponent implements OnInit, OnDestroy {
       this.crossGameJoin.setPendingJoin({ game, roomId, mode, difficulty, host, password });
       this.router.navigate(['/games/' + game]);
     } else {
+      this.wsService.setPendingAction('join');
       this.joinRoom.emit({ roomId, mode, difficulty, host, password });
     }
   }

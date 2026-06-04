@@ -39,7 +39,12 @@ export class WebSocketService {
 
   // Pending password for the next connect() call (set by lobby panel, consumed by connect)
   private _pendingPassword = '';
-  
+  private _pendingAction = '';
+
+  setPendingAction(action: string) {
+    this._pendingAction = action;
+  }
+
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
   
@@ -66,6 +71,12 @@ export class WebSocketService {
     if (!password && this._pendingPassword) {
       password = this._pendingPassword;
       this._pendingPassword = '';
+    }
+    
+    // Auto-consume pendingAction if no explicit action provided
+    if (!action && this._pendingAction) {
+      action = this._pendingAction;
+      this._pendingAction = '';
     }
     // Mark any previous disconnect as intentional to prevent old onclose from reconnecting
     this.gameDisconnectIntentional = true;
