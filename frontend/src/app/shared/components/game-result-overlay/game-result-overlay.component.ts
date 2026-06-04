@@ -10,10 +10,10 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="absolute inset-0 z-[100] flex flex-col items-center justify-center backdrop-blur-md transition-colors duration-500 p-4 bg-[var(--color-overlay)] overflow-y-auto">
-      
-      <!-- Result Card -->
-      <div class="relative w-full max-w-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xl rounded-3xl p-8 md:p-10 flex flex-col items-center animate-scale-in overflow-hidden my-4 shrink-0">
+    <div class="absolute inset-0 z-[100] flex flex-col items-center backdrop-blur-md transition-colors duration-500 p-4 bg-[var(--color-overlay)] overflow-y-auto">
+      <div class="m-auto w-full flex flex-col items-center">
+        <!-- Result Card -->
+        <div class="relative w-full max-w-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xl rounded-3xl p-8 md:p-10 flex flex-col items-center animate-scale-in overflow-hidden my-4 shrink-0">
            
         <!-- Title -->
         <h2 class="text-5xl md:text-6xl font-black mb-2 relative z-10 text-center"
@@ -86,6 +86,7 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
           </div>
         </div>
       }
+      </div>
     </div>
   `
 })
