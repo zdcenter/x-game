@@ -61,6 +61,7 @@ func main() {
 	})
 
 	v1.Get("/games", rest.GetGames)
+	v1.Get("/rooms", rest.GetRooms) // HTTP polling fallback for room list
 
 	// Stats routes (Protected)
 	stats := v1.Group("/stats")

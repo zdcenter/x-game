@@ -28,14 +28,30 @@ func Register(router fiber.Router) {
 		if err != nil {
 			roomID = rawRoomID
 		}
-		gameId := c.Query("game", "") // "minesweeper", "sudoku", etc.
-		mode := c.Query("mode", "single") // "single", "pk_steal", "pk_speed"
+		gameId := c.Query("game", "")              // "minesweeper", "sudoku", etc.
+		mode := c.Query("mode", "single")           // "single", "pk_steal", "pk_speed"
 		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"
-		hostId := c.Query("hostId", "") // Used to preserve host on reconnect
-		// For MVP, using a query parameter for playerId, usually this would come from JWT
+		hostId := c.Query("hostId", "")             // Used to preserve host on reconnect
+		action := c.Query("action", "")             // "create" or "join"
 		playerID := c.Query("playerId", "anonymous")
 
-		room, err := wsManager.GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId)
+		var room *wsManager.Room
+
+		if action == "create" {
+			// Explicit create: only create, fail if exists
+			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId)
+			if err != nil {
+				// Room might already exist (e.g. reconnect after page refresh), try to join
+				room, err = wsManager.JoinRoom(roomID)
+			}
+		} else if action == "join" {
+			// Explicit join: only join, fail if not exists
+			room, err = wsManager.JoinRoom(roomID)
+		} else {
+			// Backward compatible: use GetOrCreateRoom
+			room, err = wsManager.GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId)
+		}
+
 		if err != nil {
 			log.Printf("Player %s rejected from room %s: %v", playerID, roomID, err)
 			msg := fmt.Sprintf(`{"type": "error", "message": "%s"}`, err.Error())
@@ -43,7 +59,7 @@ func Register(router fiber.Router) {
 			c.Close()
 			return
 		}
-		
+
 		client := &wsManager.Client{
 			ID:   playerID,
 			Conn: c,
@@ -63,6 +79,36 @@ func Register(router fiber.Router) {
 			c.Close()
 		}()
 
+		// Configure Ping/Pong heartbeat for Game WS
+		c.SetPingHandler(func(appData string) error {
+			return c.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(5*time.Second))
+		})
+
+		// Start server-side ping ticker
+		pingTicker := time.NewTicker(30 * time.Second)
+		pingDone := make(chan struct{})
+		go func() {
+			defer pingTicker.Stop()
+			for {
+				select {
+				case <-pingTicker.C:
+					if err := c.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(5*time.Second)); err != nil {
+						log.Printf("Game WS ping failed for %s: %v", playerID, err)
+						return
+					}
+				case <-pingDone:
+					return
+				}
+			}
+		}()
+
+		// Set read deadline — if no message (including pong) received in 90s, close
+		c.SetReadDeadline(time.Now().Add(90 * time.Second))
+		c.SetPongHandler(func(appData string) error {
+			c.SetReadDeadline(time.Now().Add(90 * time.Second))
+			return nil
+		})
+
 		for {
 			mt, msg, err := c.ReadMessage()
 			if err != nil {
@@ -72,10 +118,15 @@ func Register(router fiber.Router) {
 				break
 			}
 
+			// Reset read deadline on any message
+			c.SetReadDeadline(time.Now().Add(90 * time.Second))
+
 			if mt == websocket.TextMessage {
 				room.HandleMessage(client.ID, msg)
 			}
 		}
+
+		close(pingDone)
 	}))
 
 	// Lobby WebSocket endpoint
@@ -106,22 +157,56 @@ func Register(router fiber.Router) {
 			c.Close()
 		}()
 
-		// Keep connection alive
+		// Configure Ping/Pong heartbeat for Lobby WS
+		c.SetPingHandler(func(appData string) error {
+			return c.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(5*time.Second))
+		})
+
+		// Start server-side ping ticker
+		pingTicker := time.NewTicker(30 * time.Second)
+		pingDone := make(chan struct{})
+		go func() {
+			defer pingTicker.Stop()
+			for {
+				select {
+				case <-pingTicker.C:
+					if err := c.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(5*time.Second)); err != nil {
+						log.Printf("Lobby WS ping failed for %s: %v", playerID, err)
+						return
+					}
+				case <-pingDone:
+					return
+				}
+			}
+		}()
+
+		// Set read deadline — if no message (including pong) received in 90s, close
+		c.SetReadDeadline(time.Now().Add(90 * time.Second))
+		c.SetPongHandler(func(appData string) error {
+			c.SetReadDeadline(time.Now().Add(90 * time.Second))
+			return nil
+		})
+
 		for {
 			mt, msg, err := c.ReadMessage()
 			if err != nil || mt == websocket.CloseMessage {
 				break
 			}
+
+			// Reset read deadline on any message
+			c.SetReadDeadline(time.Now().Add(90 * time.Second))
+
 			if mt == websocket.TextMessage {
 				var action map[string]interface{}
 				if err := json.Unmarshal(msg, &action); err == nil {
-					if action["type"] == "dismiss_room" {
+					if action["type"] == "ping" {
+						// Application-level ping: respond with pong
+						player.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
+					} else if action["type"] == "dismiss_room" {
 						if roomID, ok := action["roomId"].(string); ok && roomID != "" {
 							wsManager.DismissRoom(roomID, playerID)
 						}
 					} else if action["type"] == "broadcast" {
-						// Pass through the broadcast to all clients
-						// Optionally enrich with sender info
 						action["senderId"] = playerID
 						action["senderName"] = username
 						action["timestamp"] = time.Now().UnixMilli()
@@ -130,5 +215,7 @@ func Register(router fiber.Router) {
 				}
 			}
 		}
+
+		close(pingDone)
 	}))
 }

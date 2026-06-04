@@ -19,6 +19,14 @@ type LobbyPlayer struct {
 	mu       sync.Mutex
 }
 
+// WriteMessage securely writes to the lobby player's websocket connection
+func (p *LobbyPlayer) WriteMessage(messageType int, data []byte) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.Conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	return p.Conn.WriteMessage(messageType, data)
+}
+
 // GlobalLobby manages all online players and available rooms
 type GlobalLobby struct {
 	Players map[string]*LobbyPlayer

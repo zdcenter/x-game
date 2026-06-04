@@ -1,4 +1,4 @@
-import { Injectable, signal, effect, untracked, inject } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CrossGameJoinService } from './cross-game-join.service';
@@ -22,6 +22,16 @@ export class WebSocketService {
   
   private reconnectTimeout: any = null;
   private lobbyReconnectTimeout: any = null;
+  private gameHeartbeatInterval: any = null;
+  private lobbyHeartbeatInterval: any = null;
+  
+  // Track reconnect attempts for exponential backoff
+  private gameReconnectAttempts = 0;
+  private lobbyReconnectAttempts = 0;
+  
+  // Track if disconnect was intentional
+  private gameDisconnectIntentional = false;
+  private lobbyDisconnectIntentional = false;
   
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
@@ -40,12 +50,20 @@ export class WebSocketService {
   // Triggered when the room is dismissed
   readonly roomDismissedEvent = signal<number>(0);
   readonly kickedEvent = signal<number>(0);
+  
+  // Triggered when host changes
+  readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  connect(gameId: string, roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '') {
+  connect(gameId: string, roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '', action: string = '') {
+    // Mark any previous disconnect as intentional to prevent old onclose from reconnecting
+    this.gameDisconnectIntentional = true;
+    
     if (this.socket) {
       this.socket.onclose = null;
       this.socket.close();
     }
+    
+    this.clearGameHeartbeat();
     
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -57,29 +75,49 @@ export class WebSocketService {
     this.roomDismissedEvent.set(0);
     this.kickedEvent.set(0);
     this.unexpectedDisconnectEvent.set(0);
+    this.gameReconnectAttempts = 0;
+    this.gameDisconnectIntentional = false;
 
     const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
-    const url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${cleanHostId}`;
+    let url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${cleanHostId}`;
+    if (action) {
+      url += `&action=${action}`;
+    }
     this.socket = new WebSocket(url);
     this.currentGameId = gameId;
 
     this.socket.onopen = () => {
       this.isConnected.set(true);
-      console.log('WS Connected');
+      this.gameReconnectAttempts = 0;
+      console.log('Game WS Connected');
+      this.startGameHeartbeat();
     };
 
     this.socket.onmessage = (event) => {
       const msg: any = JSON.parse(event.data);
+      if (msg.type === 'pong') {
+        // Heartbeat response, connection is alive
+        return;
+      }
       if (msg.type === 'gameState' && msg.state) {
-        msg.state.host = msg.host; // Inject host into the state object for the store
-        msg.state.readyPlayers = msg.readyPlayers || {}; // Inject readyPlayers
+        msg.state.host = msg.host;
+        msg.state.readyPlayers = msg.readyPlayers || {};
         this.gameState.set(msg.state);
       } else if (msg.type === 'room_dismissed' || (msg.type === 'error' && (msg.message === 'room has been dismissed' || (msg.error && msg.error.includes('room has been dismissed'))))) {
+        this.gameDisconnectIntentional = true;
         this.roomDismissedEvent.update(v => v + 1);
-        this.disconnect(gameId); // prevent reconnection loop
+        this.disconnect(gameId);
       } else if (msg.type === 'kicked') {
+        this.gameDisconnectIntentional = true;
         this.kickedEvent.update(v => v + 1);
-        this.disconnect(gameId); // prevent reconnection loop
+        this.disconnect(gameId);
+      } else if (msg.type === 'error') {
+        // Server rejected us (e.g. room not found, kicked cooldown)
+        console.warn('Game WS error:', msg.message);
+        this.gameDisconnectIntentional = true;
+        this.disconnect(gameId);
+      } else if (msg.type === 'host_changed') {
+        this.hostChangedEvent.set({ newHost: msg.newHost, oldHost: msg.oldHost });
       } else if (msg.type === 'room_game_changed') {
         this.crossGameJoin.setPendingJoin({
           game: msg.game,
@@ -92,7 +130,6 @@ export class WebSocketService {
         console.log('Room changed game:', msg.game);
         const targetUrl = '/games/' + msg.game;
         if (this.router.url === targetUrl) {
-          // Force reload component by navigating away and back
           this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
             this.router.navigate([targetUrl]);
           });
@@ -105,18 +142,25 @@ export class WebSocketService {
     this.socket.onclose = () => {
       this.isConnected.set(false);
       this.socket = null;
+      this.clearGameHeartbeat();
       console.log('Game WS Disconnected');
       
-      // Auto reconnect after 2 seconds
-      this.unexpectedDisconnectEvent.update(v => v + 1);
+      if (this.gameDisconnectIntentional) {
+        // Intentional disconnect (leave room, kicked, dismissed): do NOT reconnect
+        return;
+      }
       
-      // Auto reconnect after 2 seconds for all modes
+      // Unexpected disconnect: reconnect with exponential backoff
+      this.unexpectedDisconnectEvent.update(v => v + 1);
+      const delay = Math.min(2000 * Math.pow(2, this.gameReconnectAttempts), 30000);
+      this.gameReconnectAttempts++;
+      
+      console.log(`Game WS reconnecting in ${delay}ms (attempt ${this.gameReconnectAttempts})`);
       this.reconnectTimeout = setTimeout(() => {
-        if (!this.isConnected()) {
-          console.log('Attempting to reconnect Game WS...');
-          this.connect(gameId, roomId, playerId, mode, difficulty, hostId);
+        if (!this.isConnected() && !this.gameDisconnectIntentional) {
+          this.connect(gameId, roomId, playerId, mode, difficulty, hostId, 'join');
         }
-      }, 2000);
+      }, delay);
     };
   }
 
@@ -126,33 +170,43 @@ export class WebSocketService {
           this.lobbySocket.url.includes(`playerId=${playerId}`)) {
         return;
       }
+      this.lobbyDisconnectIntentional = true;
       this.lobbySocket.onclose = null;
       this.lobbySocket.close();
     }
+
+    this.clearLobbyHeartbeat();
 
     if (this.lobbyReconnectTimeout) {
       clearTimeout(this.lobbyReconnectTimeout);
       this.lobbyReconnectTimeout = null;
     }
 
+    this.lobbyReconnectAttempts = 0;
+    this.lobbyDisconnectIntentional = false;
+
     const url = `${environment.wsUrl}/ws/lobby?playerId=${playerId}&username=${encodeURIComponent(username)}`;
     this.lobbySocket = new WebSocket(url);
 
     this.lobbySocket.onopen = () => {
       this.isLobbyConnected.set(true);
+      this.lobbyReconnectAttempts = 0;
       console.log('Lobby WS Connected');
+      this.startLobbyHeartbeat();
     };
 
     this.lobbySocket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
+      if (msg.type === 'pong') {
+        return;
+      }
       if (msg.type === 'lobby_update') {
-        console.log('Lobby Update Received:', msg.rooms);
         this.onlinePlayers.set(msg.players || []);
         this.activeRooms.set(msg.rooms || []);
       } else if (msg.type === 'broadcast') {
         this.broadcastMessages.update(msgs => {
           const newMsgs = [msg, ...msgs];
-          return newMsgs.slice(0, 3); // keep latest 3
+          return newMsgs.slice(0, 3);
         });
         setTimeout(() => {
           this.broadcastMessages.update(msgs => msgs.filter(m => m !== msg));
@@ -163,15 +217,23 @@ export class WebSocketService {
     this.lobbySocket.onclose = () => {
       this.isLobbyConnected.set(false);
       this.lobbySocket = null;
+      this.clearLobbyHeartbeat();
       console.log('Lobby WS Disconnected');
       
-      // Auto reconnect after 2 seconds
+      if (this.lobbyDisconnectIntentional) {
+        return;
+      }
+      
+      // Reconnect with exponential backoff
+      const delay = Math.min(2000 * Math.pow(2, this.lobbyReconnectAttempts), 30000);
+      this.lobbyReconnectAttempts++;
+      
+      console.log(`Lobby WS reconnecting in ${delay}ms (attempt ${this.lobbyReconnectAttempts})`);
       this.lobbyReconnectTimeout = setTimeout(() => {
-        if (!this.isLobbyConnected()) {
-          console.log('Attempting to reconnect Lobby WS...');
+        if (!this.isLobbyConnected() && !this.lobbyDisconnectIntentional) {
           this.connectLobby(playerId, username);
         }
-      }, 2000);
+      }, delay);
     };
   }
 
@@ -193,9 +255,12 @@ export class WebSocketService {
 
   disconnect(gameId?: string) {
     if (gameId && this.currentGameId !== gameId) {
-      return; // Ignore if the socket has already been taken over by another game during routing
+      return;
     }
     
+    this.gameDisconnectIntentional = true;
+    this.clearGameHeartbeat();
+
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
@@ -208,11 +273,13 @@ export class WebSocketService {
       this.isConnected.set(false);
       this.currentGameId = null;
     }
-    // Clear game state so no stale data leaks to the next game
     this.gameState.set(null);
   }
 
   disconnectLobby() {
+    this.lobbyDisconnectIntentional = true;
+    this.clearLobbyHeartbeat();
+
     if (this.lobbyReconnectTimeout) {
       clearTimeout(this.lobbyReconnectTimeout);
       this.lobbyReconnectTimeout = null;
@@ -223,6 +290,48 @@ export class WebSocketService {
       this.lobbySocket.close();
       this.lobbySocket = null;
       this.isLobbyConnected.set(false);
+    }
+  }
+  
+  // --- Heartbeat ---
+  
+  private startGameHeartbeat() {
+    this.clearGameHeartbeat();
+    this.gameHeartbeatInterval = setInterval(() => {
+      if (this.socket && this.isConnected()) {
+        try {
+          this.socket.send(JSON.stringify({ type: 'ping' }));
+        } catch {
+          // Will be caught by onclose
+        }
+      }
+    }, 25000); // Every 25 seconds
+  }
+  
+  private clearGameHeartbeat() {
+    if (this.gameHeartbeatInterval) {
+      clearInterval(this.gameHeartbeatInterval);
+      this.gameHeartbeatInterval = null;
+    }
+  }
+  
+  private startLobbyHeartbeat() {
+    this.clearLobbyHeartbeat();
+    this.lobbyHeartbeatInterval = setInterval(() => {
+      if (this.lobbySocket && this.isLobbyConnected()) {
+        try {
+          this.lobbySocket.send(JSON.stringify({ type: 'ping' }));
+        } catch {
+          // Will be caught by onclose
+        }
+      }
+    }, 25000); // Every 25 seconds
+  }
+  
+  private clearLobbyHeartbeat() {
+    if (this.lobbyHeartbeatInterval) {
+      clearInterval(this.lobbyHeartbeatInterval);
+      this.lobbyHeartbeatInterval = null;
     }
   }
 }

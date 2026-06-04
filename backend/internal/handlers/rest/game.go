@@ -4,7 +4,14 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
+	wsManager "github.com/x-game/backend/pkg/ws"
 )
+
+// GetRooms returns the current list of active rooms (HTTP polling fallback)
+func GetRooms(c fiber.Ctx) error {
+	rooms := wsManager.GetActiveRooms()
+	return c.JSON(rooms)
+}
 
 func GetGames(c fiber.Ctx) error {
 	var games []domain.GameConfig

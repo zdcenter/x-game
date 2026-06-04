@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
@@ -8,6 +9,7 @@ import { CrossGameJoinService } from '../../../core/services/cross-game-join.ser
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { getLocalizedField } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { environment } from '../../../../environments/environment';
 
 export interface GameMode {
   id: string;
@@ -324,14 +326,19 @@ export interface GameDifficulty {
     }
   `
 })
-export class GameLobbyPanelComponent {
+export class GameLobbyPanelComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
   private router = inject(Router);
+  private http = inject(HttpClient);
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
+  
+  private pollingInterval: any = null;
+  private readonly POLL_INTERVAL_NORMAL = 10000; // 10s when WS is connected
+  private readonly POLL_INTERVAL_FAST = 3000;    // 3s when WS is disconnected
 
   @Input() currentGameId: string = '';
   @Input() currentRoomId: string = '';
@@ -361,6 +368,42 @@ export class GameLobbyPanelComponent {
   myRooms = computed(() => this.gameRooms().filter((r: any) => r.host === this.playerId()));
   otherRooms = computed(() => this.gameRooms().filter((r: any) => r.host !== this.playerId()));
   otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId()));
+
+  ngOnInit() {
+    this.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.stopPolling();
+  }
+
+  private startPolling() {
+    this.stopPolling();
+    this.pollRooms(); // Immediate first poll
+    this.pollingInterval = setInterval(() => {
+      this.pollRooms();
+    }, this.wsService.isLobbyConnected() ? this.POLL_INTERVAL_NORMAL : this.POLL_INTERVAL_FAST);
+  }
+
+  private stopPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+  }
+
+  private pollRooms() {
+    this.http.get<any[]>(`${environment.apiUrl}/rooms`).subscribe({
+      next: (rooms) => {
+        if (rooms) {
+          this.wsService.activeRooms.set(rooms);
+        }
+      },
+      error: () => {
+        // Silently fail — WS is the primary source
+      }
+    });
+  }
 
   t(key: string): string {
     return this.i18n.t(key)();
