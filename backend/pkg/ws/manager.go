@@ -234,7 +234,7 @@ func (r *Room) AddClient(client *Client) error {
 	if kickTime, kicked := r.KickedPlayers[client.ID]; kicked {
 		if time.Since(kickTime) < 30*time.Second {
 			remaining := 30 - int(time.Since(kickTime).Seconds())
-			return fmt.Errorf("you were kicked, please wait %d seconds", remaining)
+			return fmt.Errorf("kick_cooldown:%d", remaining)
 		}
 		delete(r.KickedPlayers, client.ID)
 	}

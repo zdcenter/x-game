@@ -2,6 +2,8 @@ import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { CrossGameJoinService } from './cross-game-join.service';
+import { ToastService } from './toast.service';
+import { I18nService } from '../i18n/i18n.service';
 
 export interface WSMessage {
   type: string;
@@ -15,6 +17,8 @@ export interface WSMessage {
 export class WebSocketService {
   private router = inject(Router);
   private crossGameJoin = inject(CrossGameJoinService);
+  private toastService = inject(ToastService);
+  private i18n = inject(I18nService);
   
   private socket: WebSocket | null = null;
   private lobbySocket: WebSocket | null = null;
@@ -113,7 +117,9 @@ export class WebSocketService {
         this.disconnect(gameId);
       } else if (msg.type === 'error') {
         // Server rejected us (e.g. room not found, kicked cooldown)
-        console.warn('Game WS error:', msg.message);
+        const errorMsg = msg.message || msg.error || 'Connection rejected';
+        console.warn('Game WS error:', errorMsg);
+        this.toastService.show(this.parseServerError(errorMsg), 'error');
         this.gameDisconnectIntentional = true;
         this.disconnect(gameId);
       } else if (msg.type === 'host_changed') {
@@ -333,5 +339,31 @@ export class WebSocketService {
       clearInterval(this.lobbyHeartbeatInterval);
       this.lobbyHeartbeatInterval = null;
     }
+  }
+  
+  /**
+   * Parse structured error codes from the backend into localized messages.
+   * Backend sends codes like "kick_cooldown:25", "room not found", "game already started"
+   */
+  private parseServerError(errorMsg: string): string {
+    // kick_cooldown:25 → "你已被踢出，请等待 25 秒后再加入"
+    if (errorMsg.startsWith('kick_cooldown:')) {
+      const seconds = errorMsg.split(':')[1];
+      const template = this.i18n.t('game.kick_cooldown_msg')();
+      return template ? template.replace('{seconds}', seconds) : `Kicked. Please wait ${seconds}s before rejoining.`;
+    }
+    if (errorMsg === 'room not found') {
+      return this.i18n.t('game.room_not_found_msg')() || 'Room not found.';
+    }
+    if (errorMsg === 'game already started') {
+      return this.i18n.t('game.game_already_started_msg')() || 'Game already started.';
+    }
+    if (errorMsg === 'room has been dismissed') {
+      return this.i18n.t('game.room_dismissed_msg')() || 'Room has been dismissed.';
+    }
+    if (errorMsg === 'room already exists') {
+      return this.i18n.t('game.room_already_exists_msg')() || 'Room already exists.';
+    }
+    return errorMsg;
   }
 }
