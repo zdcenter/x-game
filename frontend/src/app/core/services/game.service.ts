@@ -10,6 +10,7 @@ export interface GameConfig {
   rules: string;
   config: string;
   isActive: boolean;
+  visitCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +24,10 @@ export class GameService {
 
   getGames(): Observable<GameConfig[]> {
     return this.http.get<GameConfig[]>(`${this.baseUrl}/games`);
+  }
+
+  visitGame(id: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/games/${id}/visit`, {});
   }
 }
 

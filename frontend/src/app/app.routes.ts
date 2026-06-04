@@ -85,7 +85,7 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     data: { seo: { titleKey: 'seo.admin.title', descKey: 'seo.admin.desc', keywordsKey: 'seo.admin.keywords' } },
     children: [
-      { path: '', redirectTo: 'users', pathMatch: 'full' },
+      { path: '', redirectTo: 'realtime', pathMatch: 'full' },
       {
         path: 'users',
         loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
@@ -93,6 +93,10 @@ export const routes: Routes = [
       {
         path: 'games',
         loadComponent: () => import('./features/admin/admin-games.component').then(m => m.AdminGamesComponent)
+      },
+      {
+        path: 'realtime',
+        loadComponent: () => import('./features/admin/admin-realtime.component').then(m => m.AdminRealtimeComponent)
       }
     ]
   },

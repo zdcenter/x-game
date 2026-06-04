@@ -13,6 +13,7 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
+import { GameService } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -39,6 +40,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   ws = inject(WebSocketService);
   store = inject(CodebreakerStore);
   gameTimer = inject(GameTimerService);
+  gameService = inject(GameService);
   toastService = inject(ToastService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
@@ -94,6 +96,10 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.gameService.visitGame('codebreaker').subscribe({
+      error: err => console.error('Failed to update visit count', err)
+    });
+
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     this.ws.connectLobby(playerId, playerId);
 

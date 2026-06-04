@@ -413,8 +413,12 @@ import { environment as appEnvironment } from '../../../environments/environment
               }
             </div>
             <!-- Card Content -->
-            <div class="p-6">
-              <h2 class="text-2xl font-bold mb-2">{{ getLocalized(game.name) }}</h2>
+            <div class="p-6 relative">
+              <h2 class="text-2xl font-bold mb-2 pr-16">{{ getLocalized(game.name) }}</h2>
+              <div class="absolute top-6 right-6 flex items-center gap-1 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-main)] px-2 py-1 rounded-full border border-[var(--color-border-card)] shadow-sm">
+                <span class="text-xs">🔥</span>
+                <span class="font-bold">{{ game.visitCount || 0 }}</span>
+              </div>
               <p class="opacity-70 text-sm line-clamp-2">
                 {{ getLocalized(game.overview) }}
               </p>
@@ -435,7 +439,7 @@ import { environment as appEnvironment } from '../../../environments/environment
           <div class="flex items-center gap-4 mt-2 font-mono text-xs">
             <span>Frontend: {{ frontendVersion }}</span>
             <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
-            <span>Backend: {{ backendVersion }}</span>
+            <span>Backend: {{ backendVersion() }}</span>
           </div>
         </div>
       </div>
@@ -475,12 +479,12 @@ export class LobbyComponent implements OnInit, OnDestroy {
   games = signal<BackendGameConfig[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
-  backendVersion = 'loading...';
+  backendVersion = signal('loading...');
 
   ngOnInit() {
     this.http.get<{version: string}>(`${appEnvironment.apiUrl}/version`).subscribe({
-      next: (res) => this.backendVersion = res.version,
-      error: () => this.backendVersion = 'unknown'
+      next: (res) => this.backendVersion.set(res.version),
+      error: () => this.backendVersion.set('unknown')
     });
 
     this.gameService.getGames().subscribe({

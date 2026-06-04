@@ -2,6 +2,7 @@ import { Directive, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
+import { GameService } from '../services/game.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -14,6 +15,7 @@ import { WebSocketService } from '../services/websocket.service';
 export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected gameTimer = inject(GameTimerService);
   protected wsService = inject(WebSocketService);
+  protected gameService = inject(GameService);
   private _baseRoute = inject(ActivatedRoute);
   private _baseRouter = inject(Router);
   
@@ -29,6 +31,15 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    */
   ngOnInit(): void {
     this.wsService.connectLobby(this.playerId, this.playerId);
+
+    // Extract gameId from URL (e.g. /games/sudoku?foo=bar -> sudoku)
+    const urlPath = this._baseRouter.url.split('?')[0];
+    const gameId = urlPath.split('/')[2];
+    if (gameId) {
+      this.gameService.visitGame(gameId).subscribe({
+        error: err => console.error('Failed to update visit count', err)
+      });
+    }
 
     // Deep link check for PK invites
     const q = this._baseRoute.snapshot.queryParams;

@@ -11,12 +11,14 @@ import (
 
 // LobbyPlayer represents a player connected to the global lobby
 type LobbyPlayer struct {
-	ID       string // This is the unique connection ID (e.g. remote address)
-	PlayerID string // The actual user ID
-	Username string
-	Conn     *websocket.Conn
-	Status   string // "idle", "playing", "spectating"
-	mu       sync.Mutex
+	ID          string // This is the unique connection ID (e.g. remote address)
+	PlayerID    string // The actual user ID
+	Username    string
+	IP          string
+	ConnectedAt int64
+	Conn        *websocket.Conn
+	Status      string // "idle", "playing", "spectating"
+	mu          sync.Mutex
 }
 
 // WriteMessage securely writes to the lobby player's websocket connection
@@ -132,8 +134,16 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 	// Snapshot player pointers
 	l.mu.RLock()
 	playersCopy := make([]*LobbyPlayer, 0, len(l.Players))
+	var adminPlayersData []map[string]interface{}
 	for _, p := range l.Players {
 		playersCopy = append(playersCopy, p)
+		adminPlayersData = append(adminPlayersData, map[string]interface{}{
+			"id":          p.PlayerID,
+			"username":    p.Username,
+			"ip":          p.IP,
+			"connectedAt": p.ConnectedAt,
+			"status":      p.Status,
+		})
 	}
 	l.mu.RUnlock()
 
@@ -157,6 +167,36 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 		}
 		l.mu.Unlock()
 	}
+
+	// Broadcast to admins (rich payload)
+	go func() {
+		AdminLobby.mu.RLock()
+		hasAdmins := len(AdminLobby.Clients) > 0
+		AdminLobby.mu.RUnlock()
+
+		if hasAdmins {
+			var activeRooms []map[string]interface{}
+			safeRooms := GetActiveRooms()
+			for _, r := range safeRooms {
+				activeRooms = append(activeRooms, map[string]interface{}{
+					"id":         r.ID,
+					"game":       r.Game,
+					"host":       r.Host,
+					"players":    r.PlayerCount,
+					"mode":       r.Mode,
+					"difficulty": r.Difficulty,
+					"status":     r.Status,
+					"createdAt":  r.CreatedAt,
+				})
+			}
+			adminPayload, _ := json.Marshal(map[string]interface{}{
+				"type":    "admin_realtime_update",
+				"players": adminPlayersData,
+				"rooms":   activeRooms,
+			})
+			AdminLobby.Broadcast(adminPayload)
+		}
+	}()
 }
 
 // BroadcastMessage sends an arbitrary JSON message to all connected lobby players

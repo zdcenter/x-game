@@ -12,16 +12,24 @@ var jwtSecret = []byte("my_super_secret_key") // Match the one in auth.go
 func Protected() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
-		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing authorization header"})
+		var tokenString string
+
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = parts[1]
+			}
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid authorization header format"})
+		// Fallback to query parameter for WebSockets
+		if tokenString == "" {
+			tokenString = c.Query("token")
 		}
 
-		tokenString := parts[1]
+		if tokenString == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing or invalid authorization token"})
+		}
+
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fiber.ErrUnauthorized

@@ -41,7 +41,13 @@
 ## Personal Records & Global Achievements (个人记录与成就系统)
 - **Persistent Local Records**: Tracks best time, best score, play count, and win rate across all single-player game modes.
 - **Global Achievements Profile (`/profile`)**: A unified, centralized dashboard displaying all historical personal records.
+- **Game Popularity Tracking**: Each game tracks and displays its visit count (🔥) in real time in the game lobby.
 - **In-Game Display**: Real-time display of the player's personal best inline within the game interface to promote engagement.
+
+### 3. Super Admin Panel
+- **Real-time Monitoring**: Pure WebSocket-driven dashboard for live view of online players (with IPs, connection time) and active game rooms without page polling.
+- **Role-based Authentication**: Strict JWT middleware protecting all backend admin APIs.
+- **User Management**: View, search, and toggle ban/unban status of any user.
 
 ## UI/UX Design System (UI/UX 规范)
 

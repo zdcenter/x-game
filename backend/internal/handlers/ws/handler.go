@@ -9,18 +9,50 @@ import (
 
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
+	"github.com/x-game/backend/pkg/middleware"
 	wsManager "github.com/x-game/backend/pkg/ws"
 )
 
 func Register(router fiber.Router) {
-	// Middleware to upgrade connection
-	router.Use("/join/:roomId", func(c fiber.Ctx) error {
+	// Middleware to upgrade connection for all ws routes
+	router.Use("/", func(c fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
 			return c.Next()
 		}
 		return fiber.ErrUpgradeRequired
 	})
+
+	adminGroup := router.Group("/admin")
+	adminGroup.Use(middleware.Protected())
+	adminGroup.Use(middleware.AdminProtected())
+	
+	adminGroup.Get("/", websocket.New(func(c *websocket.Conn) {
+		client := &wsManager.AdminClient{
+			ID:   fmt.Sprintf("admin-%d", time.Now().UnixNano()),
+			Conn: c,
+		}
+		wsManager.AdminLobby.AddClient(client)
+
+		// Trigger initial state send by doing a broadcast
+		go wsManager.Lobby.BroadcastLobbyUpdate()
+
+		defer func() {
+			wsManager.AdminLobby.RemoveClient(client.ID)
+			c.Close()
+		}()
+
+		c.SetPingHandler(func(appData string) error {
+			return c.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(5*time.Second))
+		})
+
+		for {
+			_, _, err := c.ReadMessage()
+			if err != nil {
+				break
+			}
+		}
+	}))
 
 	router.Get("/join/:roomId", websocket.New(func(c *websocket.Conn) {
 		rawRoomID := c.Params("roomId")
@@ -131,24 +163,20 @@ func Register(router fiber.Router) {
 	}))
 
 	// Lobby WebSocket endpoint
-	router.Use("/lobby", func(c fiber.Ctx) error {
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("allowed", true)
-			return c.Next()
-		}
-		return fiber.ErrUpgradeRequired
-	})
+	// We already apply upgrade middleware globally above, so we don't need this specific one.
 
 	router.Get("/lobby", websocket.New(func(c *websocket.Conn) {
 		playerID := c.Query("playerId", "anonymous")
 		username := c.Query("username", "Anonymous")
 
 		player := &wsManager.LobbyPlayer{
-			ID:       fmt.Sprintf("%s-%d", playerID, time.Now().UnixNano()),
-			PlayerID: playerID,
-			Username: username,
-			Conn:     c,
-			Status:   "idle",
+			ID:          fmt.Sprintf("%s-%d", playerID, time.Now().UnixNano()),
+			PlayerID:    playerID,
+			Username:    username,
+			IP:          c.IP(),
+			ConnectedAt: time.Now().Unix(),
+			Conn:        c,
+			Status:      "idle",
 		}
 
 		wsManager.Lobby.AddPlayer(player)

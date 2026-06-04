@@ -11,6 +11,7 @@ type GameConfig struct {
 	Rules     string    `gorm:"type:text" json:"rules"`
 	Config    string    `gorm:"type:jsonb" json:"config"`
 	IsActive  bool      `gorm:"default:true" json:"isActive"`
+	VisitCount int      `gorm:"default:0" json:"visitCount"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }

@@ -28,6 +28,10 @@ import { ThemeService } from '../theme/theme.service';
 
         <!-- Navigation Links -->
         <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+          <a routerLink="/admin/realtime" routerLinkActive="bg-emerald-500/20 text-emerald-400 border-emerald-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>📊</span>
+            <span>{{ i18n.t('admin.menu.realtime')() }}</span>
+          </a>
           <a routerLink="/admin/users" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>👥</span>
             <span>{{ i18n.t('admin.menu.users')() }}</span>
@@ -35,10 +39,6 @@ import { ThemeService } from '../theme/theme.service';
           <a routerLink="/admin/games" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>⚙️</span>
             <span>{{ i18n.t('admin.menu.games')() }}</span>
-          </a>
-          <a class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent opacity-50 cursor-not-allowed text-sm font-bold tracking-wide">
-            <span>📊</span>
-            <span>{{ i18n.t('admin.menu.logs')() }}</span>
           </a>
         </nav>
 

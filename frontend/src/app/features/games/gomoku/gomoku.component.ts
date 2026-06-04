@@ -13,6 +13,7 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { GameService } from '../../../core/services/game.service';
 
 @Component({
   selector: 'app-gomoku',
@@ -30,6 +31,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   ws = inject(WebSocketService);
   store = inject(GomokuStore);
   gameTimer = inject(GameTimerService);
+  gameService = inject(GameService);
   
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
@@ -74,6 +76,10 @@ export class GomokuComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.gameService.visitGame('gomoku').subscribe({
+      error: err => console.error('Failed to update visit count', err)
+    });
+
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     this.ws.connectLobby(playerId, playerId);
 

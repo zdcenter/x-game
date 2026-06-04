@@ -73,3 +73,11 @@ func UpdateGame(c fiber.Ctx) error {
 	db.DB.First(&game, "id = ?", id)
 	return c.JSON(game)
 }
+
+func VisitGame(c fiber.Ctx) error {
+	id := c.Params("id")
+	if err := db.DB.Model(&domain.GameConfig{}).Where("id = ?", id).UpdateColumn("visit_count", db.DB.Raw("visit_count + ?", 1)).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update visit count"})
+	}
+	return c.JSON(fiber.Map{"success": true})
+}

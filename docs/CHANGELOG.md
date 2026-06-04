@@ -17,6 +17,13 @@
 - **Lobby Icons**: Replaced the generic hamburger menu icon with a semantic "User Group" (People) icon across all game views to intuitively represent multiplayer rooms and lobbies.
 
 ## [Unreleased]
+### Added
+- Added pure WebSocket-driven real-time admin dashboard (在线玩家/活跃房间监控).
+- Upgraded JWT auth middleware to support `?token=` query param parsing for WebSocket connections.
+- **Game Visit Counter**: Added a mechanism to track game visits.
+  - Backend: Added `visit_count` to `GameConfig` and a new `POST /api/v1/games/:id/visit` endpoint.
+  - Frontend: Games now automatically record a visit on launch, and the lobby displays a 🔥 badge with the current visit count for each game.
+
 - **私密房间密码保护 (Private Room Password)**: 
   - 玩家在创建房间时可以设置 4 位纯数字密码，建立私密好友房。
   - 大厅中的私密房间会显示锁定图标 🔒，其他玩家点击加入时会弹出美观的毛玻璃质感密码输入框。
