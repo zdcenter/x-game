@@ -158,18 +158,12 @@
               </div>
             }
 
-            <div #boardContainer class="p-4 bg-[var(--color-bg-card)] shadow-inner flex-grow overflow-hidden flex justify-center items-center">
-            
-              <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
-                   [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
-            
-
-            
             <!-- Starting Overlay -->
             @if (store.status() === GameStatus.Starting) {
               <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
             }
 
+            <!-- Result Overlay -->
             @if (store.status() === 'finished') {
               <app-game-result-overlay
                 currentGameId="minesweeper"
@@ -188,7 +182,7 @@
 
             <!-- Frozen Overlay (PK Steal Penalty) -->
             @if (isFrozen()) {
-              <div class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
+              <div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
                   <div class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
                     {{ gameTimer.formatTime(frozenRemaining()) }}
                   </div>
@@ -196,8 +190,11 @@
               </div>
             }
 
-
-
+            <div #boardContainer class="p-4 bg-[var(--color-bg-card)] shadow-inner flex-grow overflow-hidden flex justify-center items-center">
+            
+              <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
+                   [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
+            
             @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
               <div #board class="inline-flex flex-col gap-1 relative z-0 m-auto will-change-transform origin-center transition-transform duration-75"
                    [class.opacity-50]="isFrozen()" 
