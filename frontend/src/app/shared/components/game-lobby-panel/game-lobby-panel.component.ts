@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -361,7 +361,7 @@ export interface GameDifficulty {
     }
   `
 })
-export class GameLobbyPanelComponent implements OnInit, OnDestroy {
+export class GameLobbyPanelComponent implements OnInit {
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
@@ -370,10 +370,7 @@ export class GameLobbyPanelComponent implements OnInit, OnDestroy {
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
-  
-  private pollingInterval: any = null;
-  private readonly POLL_INTERVAL_NORMAL = 10000; // 10s when WS is connected
-  private readonly POLL_INTERVAL_FAST = 3000;    // 3s when WS is disconnected
+
 
   @Input() currentGameId: string = '';
   @Input() currentRoomId: string = '';
@@ -415,29 +412,8 @@ export class GameLobbyPanelComponent implements OnInit, OnDestroy {
   otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId()));
 
   ngOnInit() {
-    this.startPolling();
-  }
-
-  ngOnDestroy() {
-    this.stopPolling();
-  }
-
-  private startPolling() {
-    this.stopPolling();
-    this.pollRooms(); // Immediate first poll
-    this.pollingInterval = setInterval(() => {
-      this.pollRooms();
-    }, this.wsService.isLobbyConnected() ? this.POLL_INTERVAL_NORMAL : this.POLL_INTERVAL_FAST);
-  }
-
-  private stopPolling() {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
-    }
-  }
-
-  private pollRooms() {
+    // One-time initial fetch as fallback before WS connects.
+    // After this, all room updates come via WebSocket lobby_update push.
     this.http.get<any[]>(`${environment.apiUrl}/rooms`).subscribe({
       next: (rooms) => {
         if (rooms) {

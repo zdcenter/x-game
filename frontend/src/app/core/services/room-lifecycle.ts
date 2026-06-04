@@ -132,13 +132,21 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
         };
       }
 
-      // 2. Check for reconnect from sessionStorage
+      // 2. Check for reconnect from sessionStorage (e.g. page refresh)
       const room = sessionStorage.getItem(`${prefix}_room`);
       const mode = sessionStorage.getItem(`${prefix}_mode`);
       const diff = sessionStorage.getItem(`${prefix}_diff`);
       const host = sessionStorage.getItem(`${prefix}_host`) || undefined;
 
       if (room && mode) {
+        // Validate the room still exists on the server (prevents stale reconnect after backend restart)
+        const roomStillExists = wsService.activeRooms().some((r: any) => r.id === room || r.roomId === room);
+        if (!roomStillExists) {
+          // Room no longer exists (backend restarted or room was dismissed) — clean up stale data
+          clearReconnectInfo();
+          return null;
+        }
+
         if (mode !== 'single') {
           wsService.setPendingAction('join');
         }
