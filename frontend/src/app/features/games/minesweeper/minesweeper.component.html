@@ -160,7 +160,7 @@
 
             <!-- Starting Overlay -->
             @if (store.status() === GameStatus.Starting) {
-              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()" class="absolute inset-0 z-50"></app-game-starting-overlay>
             }
 
             <!-- Result Overlay -->
@@ -176,7 +176,8 @@
                 [showLeave]="currentRoomMode() === 'single' || store.host() !== playerId"
                 (leave)="goBack()"
                 (restart)="store.restartGame()"
-                (dismiss)="dismissRoom()">
+                (dismiss)="dismissRoom()"
+                class="absolute inset-0 z-50 rounded-3xl overflow-hidden pointer-events-auto">
               </app-game-result-overlay>
             }
 

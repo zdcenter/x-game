@@ -136,6 +136,22 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 		}
 	}
 
+	if actionType == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.Board = NewBoard(e.Board.Width, e.Board.Height, e.Board.Mines)
+		if e.Mode != "single" {
+			e.Board.Status = engine.StateWaiting
+			e.Board.GenerateMines(-1, -1)
+		}
+		for pid := range e.Scores {
+			e.Scores[pid] = 0
+			e.Errors[pid] = 0
+		}
+		e.Cooldowns = make(map[string]int64)
+		e.Broadcast()
+		return e.State, nil
+	}
+
 	if e.Board.Status != engine.StatePlaying {
 		log.Printf("[DEBUG] Rejecting %s: Game state is %s", playerID, e.Board.Status)
 		return e.State, errors.New("game is not in playing state")
