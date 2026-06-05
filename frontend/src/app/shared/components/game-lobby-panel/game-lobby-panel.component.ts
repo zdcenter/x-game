@@ -72,7 +72,7 @@ export interface GameDifficulty {
             </button>
           </div>
 
-          <div class="space-y-6 flex-grow">
+          <div class="space-y-6 flex-grow pb-12 md:pb-4">
             <!-- My Rooms -->
             @if (myRooms().length > 0) {
               <div>
@@ -232,7 +232,7 @@ export interface GameDifficulty {
     <!-- Create Room Modal Overlay -->
     @if (isCreateModalOpen()) {
       <div class="fixed inset-0 z-50 flex items-start justify-center px-4 pb-4 pt-0 bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity overflow-y-auto">
-        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-t-none rounded-b-2xl md:rounded-b-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] h-fit max-h-[95vh] md:max-h-[90vh] flex flex-col">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-t-none rounded-b-2xl md:rounded-b-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] h-fit max-h-[80vh] md:max-h-[90vh] flex flex-col">
           <div class="flex justify-between items-center mb-4 md:mb-6 shrink-0">
             <h2 class="text-xl md:text-2xl font-bold">
               {{ isUpdateMode() ? (t('game.update_settings') || 'Update Room') : t('game.create_room_title') }}
@@ -325,7 +325,7 @@ export interface GameDifficulty {
             }
 
             <!-- Action Buttons -->
-            <div class="pt-2 pb-2 flex gap-3 shrink-0">
+            <div class="pt-2 pb-6 md:pb-2 flex gap-3 shrink-0 mt-2">
               <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] transition-colors">
                 {{ t('game.cancel') }}
               </button>
