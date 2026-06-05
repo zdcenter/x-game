@@ -32,15 +32,26 @@ import { I18nService } from '../../../core/i18n/i18n.service';
             {{ isMe ? (i18n.t('game.you')() || 'You') : $any(playerName) }}
           </span>
           
-          <div class="flex items-end gap-1 mt-0.5 truncate">
+          <div class="flex items-end gap-2 mt-0.5 truncate flex-wrap">
             <ng-container *ngIf="score !== undefined">
-              <span class="text-lg font-black leading-none text-[var(--color-text-main)]">{{ score }}</span>
-              <span class="text-[10px] text-[var(--color-text-muted)] font-bold mb-0.5">pts</span>
+              <div class="flex items-end gap-0.5">
+                <span class="text-lg font-black leading-none text-[var(--color-text-main)]">{{ score }}</span>
+                <span class="text-[10px] text-[var(--color-text-muted)] font-bold mb-0.5">pts</span>
+              </div>
+            </ng-container>
+            <ng-container *ngIf="stats && stats.length > 0">
+              <div class="flex items-center gap-2 shrink-0">
+                <div *ngFor="let stat of stats" class="flex items-center gap-1 bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded shadow-inner border border-[var(--color-border-card)]" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
+                  <span *ngIf="stat.icon" class="text-[10px] opacity-80" [title]="stat.label || ''">{{ stat.icon }}</span>
+                  <span class="text-xs font-mono font-bold">{{ stat.value }}</span>
+                  <span *ngIf="stat.label && !stat.icon" class="text-[8px] font-bold opacity-70 uppercase">{{ stat.label }}</span>
+                </div>
+              </div>
             </ng-container>
             <ng-container *ngIf="subText">
               <span class="text-xs font-mono font-bold text-[var(--color-text-main)] truncate">{{ subText }}</span>
             </ng-container>
-            <ng-container *ngIf="score === undefined && !subText">
+            <ng-container *ngIf="score === undefined && !subText && (!stats || stats.length === 0)">
                <span class="text-xs text-transparent">.</span>
             </ng-container>
           </div>
@@ -105,6 +116,7 @@ export class PlayerBadgeComponent {
   @Input() isHost: boolean = false;
   @Input() isMe: boolean = false;
   @Input() score?: number;
+  @Input() stats?: { icon?: string, value: string | number, label?: string, colorClass?: string }[];
   @Input() progress?: { current: number, total: number };
   @Input() subText?: string;
   @Input() status?: 'playing' | 'frozen' | 'finished' | 'spectating' | string = 'playing';

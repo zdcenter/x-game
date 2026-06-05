@@ -15,6 +15,7 @@ import { Math24LobbyComponent } from './components/math24-lobby/math24-lobby.com
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-math24',
@@ -29,7 +30,8 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
     Math24BoardComponent,
     GameResultOverlayComponent,
     Math24LobbyComponent,
-    GameStartingOverlayComponent
+    GameStartingOverlayComponent,
+    PlayerBadgeComponent
   ],
   templateUrl: './math24.component.html'
 })

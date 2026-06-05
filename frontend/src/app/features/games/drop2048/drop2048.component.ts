@@ -15,13 +15,11 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-drop2048',
   standalone: true,
-  host: {
-    class: 'flex-1 flex flex-col w-full overflow-hidden'
-  },
   imports: [
     CommonModule, 
     GameLobbyPanelComponent, 
@@ -42,8 +40,16 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   private router = inject(Router);
   i18n = inject(I18nService);
   private crossGameJoin = inject(CrossGameJoinService);
+  private gameRegistry = inject(GameRegistryService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+
+  getModeName(): string {
+    const mode = this.store.currentMode();
+    if (mode === 'single') return this.i18n.t('game.single_mode')();
+    const key = this.gameRegistry.getModeLabel('drop2048', mode);
+    return key ? this.i18n.t(key)() : mode;
+  }
 
   get playerId(): string {
     return this.store.playerId;
@@ -108,10 +114,9 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
         this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
       } else {
         this.view.set('play');
-        this.store.startGame();
       }
     } else {
-      // Automatically start a single-player game when entering
+      // Create a single-player room without auto-starting
       this.onJoinSinglePlayer('standard');
     }
   }
@@ -124,7 +129,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   onJoinSinglePlayer(diff: any) {
     this.view.set('play');
     this.store.joinGame('single_room', this.playerId, 'single', diff);
-    this.store.startGame();
   }
 
   joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {

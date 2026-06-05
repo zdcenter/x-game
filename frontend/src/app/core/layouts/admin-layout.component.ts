@@ -10,7 +10,7 @@ import { ThemeService } from '../theme/theme.service';
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
   template: `
-    <div class="min-h-screen flex bg-[var(--color-bg-main)] text-[var(--color-text-main)] font-sans">
+    <div class="h-[100dvh] overflow-hidden w-full flex bg-[var(--color-bg-main)] text-[var(--color-text-main)] font-sans">
       
       <!-- Left Sidebar -->
       <aside class="w-64 flex-shrink-0 bg-[var(--color-bg-card)] border-r border-[var(--color-border-card)] flex flex-col">

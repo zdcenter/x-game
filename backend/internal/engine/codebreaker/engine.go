@@ -123,6 +123,17 @@ func (e *CodebreakerEngine) HandleAction(playerID string, action string, payload
 		return e.State, nil
 	}
 
+	if action == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.Winners = []string{}
+		for _, p := range e.Players {
+			p.Finished = false
+			p.Guesses = make([]*GuessRecord, 0)
+		}
+		e.SecretCode = generateSecretCode(e.DigitLength)
+		return e.State, nil
+	}
+
 	if e.State != engine.StatePlaying {
 		return e.State, nil
 	}

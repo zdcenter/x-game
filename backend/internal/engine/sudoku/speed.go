@@ -111,6 +111,26 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 		return e.State, nil
 	}
 
+	if action == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.Winners = []string{}
+		for _, p := range e.Players {
+			p.Progress = 0
+			p.Finished = false
+		}
+		// Fetch a new puzzle
+		var puzzles []domain.SudokuPuzzle
+		if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
+			e.Puzzle = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"
+			e.Solution = "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
+		} else {
+			p := puzzles[rand.Intn(len(puzzles))]
+			e.Puzzle = p.Puzzle
+			e.Solution = p.Solution
+		}
+		return e.State, nil
+	}
+
 	if e.State != engine.StatePlaying {
 		return e.State, nil
 	}

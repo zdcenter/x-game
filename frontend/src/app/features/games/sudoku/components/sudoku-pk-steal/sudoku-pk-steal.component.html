@@ -17,34 +17,35 @@
       }
 
       <!-- Top Navigation Bar -->
-      <div class="flex justify-between items-center bg-[var(--color-bg-card)] p-3 md:p-4 rounded-xl border border-[var(--color-border-card)] shadow-md shrink-0 w-full max-w-[500px] md:max-w-none mx-auto mb-2 md:mb-0">
-        <button (click)="store.leaveRoom()" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm md:text-base">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-          </svg>
-          {{ i18n.t('game.leave')() }}
-        </button>
-        <div class="flex items-center justify-center gap-1.5 md:gap-2">
-          <span class="text-[var(--color-text-main)] font-bold opacity-90 uppercase tracking-widest text-sm md:text-base">
-            {{ getModeName() }}
-          </span>
-          @if (getDiffName()) {
-            <span class="text-[var(--color-text-muted)] opacity-50 text-xs md:text-sm">/</span>
-            <span class="text-[var(--color-accent-from)] font-bold uppercase tracking-widest text-sm md:text-base">
-              {{ getDiffName() }}
-            </span>
-          }
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="font-mono text-lg md:text-xl font-bold text-emerald-400 font-digital tracking-widest bg-black/40 px-3 py-1 rounded-md opacity-0">
-            00:00
-          </div>
-          <button (click)="openLobby.emit()" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-card)]">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </button>
-        </div>
+      <div class="flex flex-col shrink-0 w-full max-w-[500px] md:max-w-none mx-auto mb-2 md:mb-0">
+        <app-game-header
+          [title]="'Sudoku'"
+          [subtitle]="getModeName() + (getDiffName() ? ' - ' + getDiffName() : '')"
+          iconGradientClass="from-blue-500 to-emerald-500"
+          titleGradientClass="from-blue-400 to-emerald-400"
+          shadowClass="shadow-emerald-500/20"
+          headerBgClass="bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)]"
+          (back)="store.leaveRoom()">
+          
+          <span game-icon class="text-2xl sm:text-3xl">🔢</span>
+
+          <ng-container header-right>
+            <div class="flex items-center gap-1 sm:gap-2">
+              <button (click)="store.leaveRoom()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="hidden sm:inline">{{ i18n.t('game.leave')() || 'Leave' }}</span>
+              </button>
+              
+              <button (click)="openLobby.emit()" class="p-1.5 lg:p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+            </div>
+          </ng-container>
+        </app-game-header>
       </div>
 
       <!-- Top Progress Bars -->
@@ -60,17 +61,14 @@
         </div>
       }
 
-      <div class="w-full flex gap-4 overflow-x-auto pb-2">
+      <div class="w-full max-w-[800px] mx-auto flex gap-4 overflow-x-auto pb-2 custom-scrollbar px-2 snap-x">
         @for (player of getSortedPlayers(); track player.id) {
-          <div class="flex-1 min-w-[150px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] p-3 shadow-md flex items-center justify-between"
-               [class.border-[var(--color-accent-from)]]="player.id === store.playerId()"
-               [class.bg-slate-800]="player.id === store.playerId()">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">{{ player.id === store.host() ? '👑' : '👤' }}</span>
-              <span class="font-bold truncate max-w-[80px] text-sm">{{ player.id }}</span>
-            </div>
-            <div class="font-mono text-lg font-black text-emerald-400">{{ player.score }}</div>
-          </div>
+          <app-player-badge class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0" layout="card"
+            [playerName]="player.id"
+            [isHost]="player.id === store.host()"
+            [isMe]="player.id === store.playerId()"
+            [score]="player.score"
+            [status]="'playing'"></app-player-badge>
         }
       </div>
 

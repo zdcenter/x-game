@@ -18,6 +18,7 @@
 
 ## [Unreleased]
 ### Added
+- **Google AdSense Integration**: 增加了全局的 Google AdSense 支持，并在前端封装了可高度复用的 `AdsenseComponent` 组件，便于在平台（如大厅、游戏结算等）各处无缝植入广告位，为商业化变现打好基础。
 - **System Settings Module**: Added a new settings page in the Admin Dashboard to control global website configurations.
   - Added Site Maintenance mode toggle with custom message support.
   - Added Global Announcement banner for the game lobby.

@@ -10,10 +10,10 @@ import { AuthStore } from '../auth/auth.store';
   standalone: true,
   imports: [RouterOutlet, RouterLink, CommonModule],
   template: `
-    <div class="min-h-screen flex flex-col font-sans transition-colors duration-300">
+    <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
       
       <!-- Global Navbar -->
-      <header class="sticky top-0 z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+      <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
           <!-- Logo & Brand -->
@@ -113,7 +113,7 @@ import { AuthStore } from '../auth/auth.store';
       </header>
 
       <!-- Main Content Area -->
-      <main class="flex-grow flex flex-col">
+      <main class="flex-1 flex flex-col overflow-y-auto relative min-h-0 overscroll-none">
         <router-outlet></router-outlet>
       </main>
     </div>

@@ -27,6 +27,7 @@ export class GomokuStore {
   private localGameStatus = signal<GameStatus>({ status: 'waiting' });
   private localPlayers = signal<string[]>([]);
   private localLastMove = signal<number[] | null>(null);
+  private localWinningLine = signal<number[][] | null>(null);
 
   // Public computed states (reactive derivation from ws state or local state)
   board = computed<GomokuColor[][]>(() => {
@@ -42,6 +43,11 @@ export class GomokuStore {
   lastMove = computed<number[] | null>(() => {
     if (this.singlePlayerMode) return this.localLastMove();
     return this.rawState()?.lastMove || null;
+  });
+
+  winningLine = computed<number[][] | null>(() => {
+    if (this.singlePlayerMode) return this.localWinningLine();
+    return this.rawState()?.winningLine || null;
   });
 
   playerColors = computed<Record<string, GomokuColor>>(() => {
@@ -144,6 +150,7 @@ export class GomokuStore {
       this.localGameStatus.set({ status: 'playing', winner: undefined });
       this.localCurrentTurn.set(this.myPlayerId());
       this.localLastMove.set(null);
+      this.localWinningLine.set(null);
       if (this.ai) {
         this.ai = new GomokuAI(2, this.aiDifficulty);
       }
@@ -207,6 +214,7 @@ export class GomokuStore {
       this.audio.playDrop();
       
       if (this.checkWin(y, x, currentB[y][x])) {
+        this.localWinningLine.set(this.checkWin(y, x, currentB[y][x]));
         this.localGameStatus.set({ status: 'finished', winner: this.myPlayerId() });
         this.submitSinglePlayerStats(true);
         return;
@@ -233,6 +241,7 @@ export class GomokuStore {
             this.audio.playDrop();
             
             if (this.checkWin(aiY, aiX, aiB[aiY][aiX])) {
+              this.localWinningLine.set(this.checkWin(aiY, aiX, aiB[aiY][aiX]));
               this.localGameStatus.set({ status: 'finished', winner: 'AI' });
               this.submitSinglePlayerStats(false);
               return;
@@ -253,27 +262,32 @@ export class GomokuStore {
     }
   }
 
-  private checkWin(y: number, x: number, color: GomokuColor): boolean {
+  private checkWin(y: number, x: number, color: GomokuColor): number[][] | null {
     const b = this.board();
     const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
     
     for (const [dy, dx] of dirs) {
       let count = 1;
+      const line = [[y, x]];
       for (let i = 1; i < 5; i++) {
         const ny = y + dy * i;
         const nx = x + dx * i;
-        if (ny >= 0 && ny < 15 && nx >= 0 && nx < 15 && b[ny][nx] === color) count++;
-        else break;
+        if (ny >= 0 && ny < 15 && nx >= 0 && nx < 15 && b[ny][nx] === color) {
+          count++;
+          line.push([ny, nx]);
+        } else break;
       }
       for (let i = 1; i < 5; i++) {
         const ny = y - dy * i;
         const nx = x - dx * i;
-        if (ny >= 0 && ny < 15 && nx >= 0 && nx < 15 && b[ny][nx] === color) count++;
-        else break;
+        if (ny >= 0 && ny < 15 && nx >= 0 && nx < 15 && b[ny][nx] === color) {
+          count++;
+          line.push([ny, nx]);
+        } else break;
       }
-      if (count >= 5) return true;
+      if (count >= 5) return line;
     }
-    return false;
+    return null;
   }
 
   private checkDraw(b: GomokuColor[][]): boolean {

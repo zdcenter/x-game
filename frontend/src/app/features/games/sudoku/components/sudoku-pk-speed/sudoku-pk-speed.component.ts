@@ -7,11 +7,13 @@ import { SudokuToolsComponent } from '../sudoku-tools/sudoku-tools.component';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { GameResultOverlayComponent } from '../../../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRegistryService } from '../../../../../core/services/game-registry.service';
+import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
+import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-sudoku-pk-speed',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent],
   templateUrl: './sudoku-pk-speed.component.html',
   styleUrl: './sudoku-pk-speed.component.css'})
 export class SudokuPkSpeedComponent {

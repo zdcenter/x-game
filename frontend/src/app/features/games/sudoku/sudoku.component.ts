@@ -14,12 +14,14 @@ import { SudokuPkStealComponent } from './components/sudoku-pk-steal/sudoku-pk-s
 import { SudokuPkSpeedComponent } from './components/sudoku-pk-speed/sudoku-pk-speed.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { AudioService } from '../../../core/services/audio.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-sudoku',
@@ -34,7 +36,9 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
     SudokuPkStealComponent,
     SudokuPkSpeedComponent,
     GameResultOverlayComponent,
-    GameLobbyPanelComponent
+    GameLobbyPanelComponent,
+    GameHeaderComponent,
+    PlayerBadgeComponent
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,

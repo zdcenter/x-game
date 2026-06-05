@@ -50,11 +50,19 @@ export class GomokuComponent implements OnInit, OnDestroy {
       } else {
         this.gameTimer.stopCountdown();
       }
+      
+      // Delay result overlay so players can see the winning line
+      if (status === 'finished') {
+        setTimeout(() => this.showResultOverlay.set(true), 2000);
+      } else {
+        this.showResultOverlay.set(false);
+      }
     });
   }
 
   showRules = signal(false);
   isMobileSidebarOpen = signal(false);
+  showResultOverlay = signal(false);
 
   // Computed state
   board = this.store.board;
@@ -139,6 +147,30 @@ export class GomokuComponent implements OnInit, OnDestroy {
 
   get myColor(): number {
     return this.playerColors()[this.myPlayerId()] || 1;
+  }
+
+  get currentTurnColor(): number {
+    const turnId = this.currentTurn();
+    if (!turnId) return 1;
+    return this.playerColors()[turnId] || 1;
+  }
+
+  get turnText(): string {
+    if (this.isSpectator()) {
+      return this.currentTurnColor === 1 
+        ? (this.i18n.t('gomoku.turn.black')() || "Black's Turn")
+        : (this.i18n.t('gomoku.turn.white')() || "White's Turn");
+    }
+    return this.isMyTurn 
+      ? (this.i18n.t('gomoku.turn.yours')() || "Your Turn")
+      : (this.i18n.t('gomoku.turn.opponent')() || "Opponent's Turn");
+  }
+
+
+  isWinningPiece(y: number, x: number): boolean {
+    const line = this.store.winningLine();
+    if (!line) return false;
+    return line.some(p => p[0] === y && p[1] === x);
   }
 
   onCellClick(y: number, x: number) {

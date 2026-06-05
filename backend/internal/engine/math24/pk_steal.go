@@ -82,6 +82,20 @@ func (e *PKStealEngine) HandleAction(playerID string, actionType string, payload
 		return e.State, nil
 	}
 
+	if actionType == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.Winners = []string{}
+		puzzles := getRandomPuzzles(e.Difficulty, 1)
+		if len(puzzles) > 0 {
+			e.CurrentPuzzle = &puzzles[0]
+		}
+		for _, p := range e.Players {
+			p.Score = 0
+			p.FreezeUntil = 0
+		}
+		return e.State, nil
+	}
+
 	if e.State != engine.StatePlaying {
 		return e.State, nil
 	}

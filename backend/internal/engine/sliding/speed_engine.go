@@ -129,7 +129,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		return e.State, nil
 	}
 
-	if baseAction.Action == "restart_game" && e.State == engine.StateFinished {
+	if (actionType == "restart_game" || baseAction.Action == "restart_game") && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		for _, b := range e.Boards {

@@ -1,4 +1,4 @@
-import { Directive, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Directive, inject, signal, OnInit, OnDestroy, HostBinding } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
@@ -20,6 +20,10 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   private _baseRouter = inject(Router);
   
   isMobileSidebarOpen = signal<boolean>(false);
+
+  @HostBinding('class') get hostClass() {
+    return 'flex-1 flex flex-col w-full overflow-hidden min-h-0';
+  }
 
   // Each subclass must implement these to hook into the base room logic
   abstract get store(): any; 

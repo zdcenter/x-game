@@ -26,6 +26,7 @@ type ClassicEngine struct {
 	Winner       string          `json:"winner"`
 	Players      []string        `json:"players"`
 	LastMove     []int           `json:"lastMove"` // [y, x]
+	WinningLine  [][]int         `json:"winningLine"`
 }
 
 func NewClassicEngine() engine.GameEngine {
@@ -49,6 +50,7 @@ func (e *ClassicEngine) InitGame(options interface{}) error {
 	}
 	e.Winner = ""
 	e.LastMove = nil
+	e.WinningLine = nil
 	return nil
 }
 
@@ -114,6 +116,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		}
 		e.Winner = ""
 		e.LastMove = nil
+		e.WinningLine = nil
 
 		// First player is Black, second is White
 		e.PlayerColors[e.Players[0]] = Black
@@ -121,6 +124,19 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		e.CurrentTurn = e.Players[0]
 
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		return e.State, nil
+	}
+
+	if action == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.Winner = ""
+		e.LastMove = nil
+		e.WinningLine = nil
+		for i := 0; i < Size; i++ {
+			for j := 0; j < Size; j++ {
+				e.Board[i][j] = Empty
+			}
+		}
 		return e.State, nil
 	}
 
@@ -194,6 +210,7 @@ func (e *ClassicEngine) GetState() interface{} {
 		"status":       e.State,
 		"players":      e.Players,
 		"lastMove":     e.LastMove,
+		"winningLine":  e.WinningLine,
 	}
 }
 
@@ -220,10 +237,12 @@ func (e *ClassicEngine) checkWin(x, y, color int) bool {
 
 	for _, d := range dirs {
 		count := 1
+		line := [][]int{{y, x}}
 		for i := 1; i < 5; i++ {
 			nx, ny := x+d[0]*i, y+d[1]*i
 			if nx >= 0 && nx < Size && ny >= 0 && ny < Size && e.Board[ny][nx] == color {
 				count++
+				line = append(line, []int{ny, nx})
 			} else {
 				break
 			}
@@ -232,12 +251,14 @@ func (e *ClassicEngine) checkWin(x, y, color int) bool {
 			nx, ny := x-d[0]*i, y-d[1]*i
 			if nx >= 0 && nx < Size && ny >= 0 && ny < Size && e.Board[ny][nx] == color {
 				count++
+				line = append(line, []int{ny, nx})
 			} else {
 				break
 			}
 		}
 
 		if count >= 5 {
+			e.WinningLine = line
 			return true
 		}
 	}
