@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
 )
 
@@ -31,6 +32,12 @@ func init() {
 
 // Start runs the background tasks for traffic simulation
 func Start() {
+	// Sync Enabled state from DB
+	var setting domain.SystemSetting
+	if err := db.DB.Where(domain.SystemSetting{Key: "simulator_enabled"}).First(&setting).Error; err == nil {
+		Enabled = setting.Value == "true"
+	}
+
 	go func() {
 		// Update rooms and players every 3 minutes to simulate churn
 		ticker := time.NewTicker(3 * time.Minute)
@@ -114,15 +121,26 @@ func refreshFakeData() {
 		
 		roomID := fmt.Sprintf("room-%08x", rand.Intn(0xFFFFFFFF))
 		
+		hasPassword := rand.Intn(100) < 20
+		
+		// Randomize players (1 or 2)
+		playersCount := rand.Intn(2) + 1
+		
+		// Randomize creation time (between 1 minute and 60 minutes ago)
+		// to make the list look naturally formed over time.
+		pastSeconds := rand.Intn(3600) + 60
+		createdAt := time.Now().Unix() - int64(pastSeconds)
+		
 		newRooms = append(newRooms, map[string]interface{}{
-			"id":         roomID,
-			"game":       game,
-			"host":       hostID,
-			"players":    2,          // Always show them as full
-			"mode":       mode,
-			"difficulty": diff,
-			"status":     "playing",  // Prevent real players from joining
-			"createdAt":  time.Now().Unix(),
+			"id":          roomID,
+			"game":        game,
+			"host":        hostID,
+			"players":     playersCount,
+			"mode":        mode,
+			"difficulty":  diff,
+			"status":      "playing",  // Prevent real players from joining
+			"hasPassword": hasPassword,
+			"createdAt":   createdAt,
 		})
 	}
 	fakeRooms = newRooms

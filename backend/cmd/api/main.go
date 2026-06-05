@@ -58,6 +58,10 @@ func main() {
 	v1.Post("/login", rest.Login)
 	v1.Post("/guest-login", rest.GuestLogin)
 
+	// Public config and active settings
+	v1.Get("/settings", rest.GetPublicSettings)
+	v1.Get("/announcements", rest.GetActiveAnnouncements)
+
 	v1.Get("/version", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"version": Version,
@@ -97,6 +101,16 @@ func main() {
 	admin.Put("/users/:id/status", rest.ToggleUserStatus)
 	admin.Get("/games", rest.GetAdminGames)
 	admin.Put("/games/:id", rest.UpdateGame)
+	admin.Get("/settings", rest.GetAdminSettings)
+	admin.Put("/settings", rest.UpdateSettings)
+
+	// Announcements CRUD
+	admin.Get("/announcements", rest.AdminGetAllAnnouncements)
+	admin.Post("/announcements", rest.AdminCreateAnnouncement)
+	admin.Put("/announcements/:id", rest.AdminUpdateAnnouncement)
+	admin.Delete("/announcements/:id", rest.AdminDeleteAnnouncement)
+
+	// Legacy simulator endpoints (can be removed later or kept for backwards compatibility)
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)
 

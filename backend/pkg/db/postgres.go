@@ -45,6 +45,8 @@ func InitPostgres() {
 		&domain.UserGameStat{},
 		&domain.Math24Puzzle{},
 		&domain.UserMath24Progress{},
+		&domain.SystemSetting{},
+		&domain.Announcement{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -54,6 +56,7 @@ func InitPostgres() {
 	Seed()
 	SeedSudoku()
 	SeedMath24()
+	SeedSettings()
 
 	log.Println("Database connected and migrated successfully")
 }
@@ -167,6 +170,19 @@ func Seed() {
 		} else {
 			log.Printf("Failed to hash password for default admin: %v", err)
 		}
+	}
+}
+
+func SeedSettings() {
+	defaultSettings := []domain.SystemSetting{
+		{Key: "site_maintenance", Value: "false"},
+		{Key: "maintenance_message", Value: ""},
+		{Key: "simulator_enabled", Value: "true"},
+		{Key: "registration_enabled", Value: "true"},
+	}
+
+	for _, setting := range defaultSettings {
+		DB.Where(domain.SystemSetting{Key: setting.Key}).FirstOrCreate(&setting)
 	}
 }
 

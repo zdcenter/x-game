@@ -18,6 +18,14 @@
 
 ## [Unreleased]
 ### Added
+- **System Settings Module**: Added a new settings page in the Admin Dashboard to control global website configurations.
+  - Added Site Maintenance mode toggle with custom message support.
+  - Added Global Announcement banner for the game lobby.
+  - Migrated Simulator toggle to the database-backed settings system.
+
+### Changed
+- Improved traffic simulator to randomize player counts and room creation times for a more natural look.
+### Added
 - Added pure WebSocket-driven real-time admin dashboard (在线玩家/活跃房间监控).
 - Upgraded JWT auth middleware to support `?token=` query param parsing for WebSocket connections.
 - **Game Visit Counter**: Added a mechanism to track game visits.

@@ -11,6 +11,8 @@ import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-pane
 import { HttpClient } from '@angular/common/http';
 import { environment as versionEnv } from '../../../environments/version';
 import { environment as appEnvironment } from '../../../environments/environment';
+import { SettingsService } from '../../core/services/settings.service';
+import { AnnouncementService, Announcement } from '../../core/services/announcement.service';
 
 @Component({
   selector: 'app-lobby',
@@ -20,9 +22,24 @@ import { environment as appEnvironment } from '../../../environments/environment
     <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-[var(--color-bg-main)]">
       
       <!-- LEFT: Main Games Content -->
-      <div class="flex-grow flex flex-col items-center p-4 lg:p-8 overflow-y-auto custom-scrollbar">
+      <div class="flex-grow flex flex-col items-center p-4 lg:p-8 overflow-y-auto custom-scrollbar relative">
+        
+        <!-- Global Announcement Marquee -->
+        @if (activeAnnouncements().length > 0) {
+          <div class="w-full max-w-6xl mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden">
+            <span class="mr-3 text-xl shrink-0 animate-pulse z-20 bg-[var(--color-bg-card)] pr-2">📣</span>
+            <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
+              <div class="animate-marquee inline-block text-sm font-bold text-blue-400">
+                @for (ann of activeAnnouncements(); track ann.id) {
+                  <span class="mx-8">✨ {{ ann.content }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
         <!-- Welcome Header -->
-        <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-4 lg:mt-8 relative max-w-6xl">
+        <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-2 lg:mt-4 relative max-w-6xl">
           <div class="text-center">
         <h1 class="text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent"
             style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
@@ -475,8 +492,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
   private crossGameJoin = inject(CrossGameJoinService);
   private http = inject(HttpClient);
   router = inject(Router);
+  settingsService = inject(SettingsService);
+  announcementService = inject(AnnouncementService);
   
   games = signal<BackendGameConfig[]>([]);
+  activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
   backendVersion = signal('loading...');
@@ -487,13 +507,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
       error: () => this.backendVersion.set('unknown')
     });
 
-    this.gameService.getGames().subscribe({
-      next: (data) => {
-        this.games.set(data);
-      },
-      error: (err) => {
-        console.error('Failed to load games', err);
-      }
+    // Fetch active games
+    this.gameService.getGames().subscribe(games => {
+      this.games.set(games);
+    });
+
+    // Fetch active announcements
+    this.announcementService.getActiveAnnouncements().subscribe(anns => {
+      this.activeAnnouncements.set(anns);
     });
 
     const player = this.authStore.currentUser()?.username || this.authStore.guestId;

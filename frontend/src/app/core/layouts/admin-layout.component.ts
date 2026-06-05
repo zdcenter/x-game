@@ -38,7 +38,15 @@ import { ThemeService } from '../theme/theme.service';
           </a>
           <a routerLink="/admin/games" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>⚙️</span>
-            <span>{{ i18n.t('admin.menu.games')() }}</span>
+            <span>{{ i18n.t('admin.menu.games')() || 'Games' }}</span>
+          </a>
+          <a routerLink="/admin/announcements" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>📢</span>
+            <span>{{ i18n.t('admin.menu.announcements')() }}</span>
+          </a>
+          <a routerLink="/admin/settings" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>🛠️</span>
+            <span>{{ i18n.t('admin.menu.settings')() || 'System Settings' }}</span>
           </a>
         </nav>
 

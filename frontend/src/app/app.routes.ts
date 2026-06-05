@@ -95,8 +95,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/admin-games.component').then(m => m.AdminGamesComponent)
       },
       {
+        path: 'announcements',
+        loadComponent: () => import('./features/admin/admin-announcements.component').then(m => m.AdminAnnouncementsComponent)
+      },
+      {
         path: 'realtime',
         loadComponent: () => import('./features/admin/admin-realtime.component').then(m => m.AdminRealtimeComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/admin/admin-settings.component').then(m => m.AdminSettingsComponent)
       }
     ]
   },

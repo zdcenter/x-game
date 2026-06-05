@@ -41,6 +41,15 @@ export class AdminService {
     return this.http.put(`${this.baseUrl}/games/${gameId}`, { overview, rules, config, isActive, sortOrder });
   }
 
+  // System Settings
+  getSettings(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/settings`);
+  }
+
+  updateSettings(settings: Record<string, string>): Observable<any> {
+    return this.http.put(`${this.baseUrl}/settings`, { settings });
+  }
+
   connectRealtimeWS(): Observable<any> {
     const wsUrl = environment.wsUrl || environment.apiUrl.replace('http', 'ws');
     const token = this.authStore.token();
