@@ -12,6 +12,7 @@ export interface PendingJoin {
   difficulty: string;
   host: string;
   password?: string;  // Optional room password for protected rooms
+  action?: 'create' | 'join';  // Whether this is a room creation or join
 }
 
 /**

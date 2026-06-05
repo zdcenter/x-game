@@ -23,6 +23,10 @@
 - **Game Visit Counter**: Added a mechanism to track game visits.
   - Backend: Added `visit_count` to `GameConfig` and a new `POST /api/v1/games/:id/visit` endpoint.
   - Frontend: Games now automatically record a visit on launch, and the lobby displays a 🔥 badge with the current visit count for each game.
+- **Manual Game Sorting (SortOrder)**: 
+  - Added a `SortOrder` field to the backend `GameConfig` model.
+  - Games in the Lobby are now systematically sorted by `SortOrder ASC` (highest priority first), falling back to `VisitCount DESC` for ties.
+  - Added a UI input in the Admin Games Dashboard to manually override the sort order.
 
 - **私密房间密码保护 (Private Room Password)**: 
   - 玩家在创建房间时可以设置 4 位纯数字密码，建立私密好友房。

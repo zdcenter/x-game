@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
+	"github.com/x-game/backend/pkg/simulator"
 )
 
 type ToggleStatusRequest struct {
@@ -46,4 +47,25 @@ func ToggleUserStatus(c fiber.Ctx) error {
 	db.DB.Save(&user)
 
 	return c.JSON(fiber.Map{"message": "User status updated", "user": user})
+}
+
+func GetSimulatorStatus(c fiber.Ctx) error {
+	return c.JSON(fiber.Map{"enabled": simulator.Enabled})
+}
+
+func ToggleSimulator(c fiber.Ctx) error {
+	var req struct {
+		Enabled bool `json:"enabled"`
+	}
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	simulator.Enabled = req.Enabled
+	// If enabled, refresh data immediately
+	if simulator.Enabled {
+		simulator.ForceRefresh()
+	}
+
+	return c.JSON(fiber.Map{"enabled": simulator.Enabled, "message": "Simulator status updated"})
 }

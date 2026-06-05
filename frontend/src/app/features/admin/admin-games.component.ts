@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../core/services/admin.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameConfig, getLocalizedField } from '../../core/services/game.service';
+import { ToastService } from '../../core/services/toast.service';
 
 interface AdminGame extends GameConfig {
   parsedOverview: { en: string; zh: string };
@@ -27,30 +28,28 @@ interface AdminGame extends GameConfig {
         </div>
       </div>
 
-      @if (errorMsg()) {
-        <div class="bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm flex items-center justify-between">
-          <span>{{ errorMsg() }}</span>
-          <button (click)="errorMsg.set('')" class="hover:text-white">✕</button>
-        </div>
-      }
-
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @for (game of games(); track game.id) {
           <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 shadow-inner flex flex-col">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-xl font-bold">{{ getLocalized(game.name) }}</h3>
-              <div class="flex items-center space-x-2">
-                <span class="text-xs font-bold uppercase tracking-wider" [class.text-emerald-400]="game.isActive" [class.text-red-400]="!game.isActive">
-                  {{ game.isActive ? i18n.t('admin.games.status.active')() : i18n.t('admin.games.status.offline')() }}
-                </span>
-                <button (click)="toggleGameStatus(game)"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
-                        [class.bg-[var(--color-accent-to)]]="game.isActive" [class.bg-[var(--color-bg-main)]]="!game.isActive"
-                        [class.border]="!game.isActive" [class.border-[var(--color-border-card)]]="!game.isActive">
-                  <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm"
-                        [class.translate-x-6]="game.isActive" [class.translate-x-1]="!game.isActive"></span>
-                </button>
-              </div>
+                <div class="flex items-center space-x-3">
+                  <div class="flex items-center space-x-1">
+                    <label class="text-xs font-bold opacity-70">Sort:</label>
+                    <input type="number" min="1" [(ngModel)]="game.sortOrder" 
+                           class="w-14 bg-black/20 border border-white/10 rounded-lg px-2 py-1 text-sm text-center font-mono focus:outline-none focus:border-[var(--color-accent-to)] focus:ring-1 focus:ring-[var(--color-accent-to)] transition-all">
+                  </div>
+                  <span class="text-xs font-bold uppercase tracking-wider" [class.text-emerald-400]="game.isActive" [class.text-red-400]="!game.isActive">
+                    {{ game.isActive ? i18n.t('admin.games.status.active')() : i18n.t('admin.games.status.offline')() }}
+                  </span>
+                  <button (click)="toggleGameStatus(game)"
+                          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                          [class.bg-[var(--color-accent-to)]]="game.isActive" [class.bg-[var(--color-bg-main)]]="!game.isActive"
+                          [class.border]="!game.isActive" [class.border-[var(--color-border-card)]]="!game.isActive">
+                    <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm"
+                          [class.translate-x-6]="game.isActive" [class.translate-x-1]="!game.isActive"></span>
+                  </button>
+                </div>
             </div>
             <div class="flex-grow flex flex-col">
               <div class="flex items-center justify-between mb-2">
@@ -144,12 +143,12 @@ interface AdminGame extends GameConfig {
   `
 })
 export class AdminGamesComponent implements OnInit {
-  adminService = inject(AdminService);
+  private adminService = inject(AdminService);
   i18n = inject(I18nService);
+  private toastService = inject(ToastService);
   
   games = signal<AdminGame[]>([]);
   isUpdating = signal(false);
-  errorMsg = signal('');
   selectedGameForSettings = signal<AdminGame | null>(null);
 
   ngOnInit() {
@@ -192,7 +191,7 @@ export class AdminGamesComponent implements OnInit {
         }));
       },
       error: (err) => {
-        this.errorMsg.set('Failed to load games: ' + (err.error?.error || err.message));
+        this.toastService.show('Failed to load games: ' + (err.error?.error || err.message), 'error');
       }
     });
   }
@@ -200,14 +199,16 @@ export class AdminGamesComponent implements OnInit {
   toggleGameStatus(game: AdminGame) {
     this.isUpdating.set(true);
     const newStatus = !game.isActive;
-    this.adminService.updateGame(game.id, game.overview, game.rules, game.config, newStatus).subscribe({
+    const sortVal = game.sortOrder !== undefined && game.sortOrder !== null ? Number(game.sortOrder) : 0;
+    this.adminService.updateGame(game.id, game.overview, game.rules, game.config, newStatus, sortVal).subscribe({
       next: (res) => {
         const updated = this.games().map(g => g.id === game.id ? { ...g, isActive: newStatus, rules: game.rules } : g);
         this.games.set(updated);
         this.isUpdating.set(false);
+        this.toastService.show(`Game ${newStatus ? 'activated' : 'deactivated'}`, 'success');
       },
       error: (err) => {
-        this.errorMsg.set('Update failed: ' + (err.error?.error || err.message));
+        this.toastService.show('Update failed: ' + (err.error?.error || err.message), 'error');
         this.isUpdating.set(false);
       }
     });
@@ -217,14 +218,14 @@ export class AdminGamesComponent implements OnInit {
     this.isUpdating.set(true);
     const rulesJson = JSON.stringify(game.parsedRules);
     const overviewJson = JSON.stringify(game.parsedOverview);
-    this.adminService.updateGame(game.id, overviewJson, rulesJson, game.config, game.isActive).subscribe({
+    const sortVal = game.sortOrder !== undefined && game.sortOrder !== null ? Number(game.sortOrder) : 0;
+    this.adminService.updateGame(game.id, overviewJson, rulesJson, game.config, game.isActive, sortVal).subscribe({
       next: (res) => {
-        this.errorMsg.set('Rules saved successfully!');
-        setTimeout(() => this.errorMsg.set(''), 3000);
+        this.toastService.show('Rules saved successfully!', 'success');
         this.isUpdating.set(false);
       },
       error: (err) => {
-        this.errorMsg.set('Update failed: ' + (err.error?.error || err.message));
+        this.toastService.show('Update failed: ' + (err.error?.error || err.message), 'error');
         this.isUpdating.set(false);
       }
     });
@@ -247,16 +248,16 @@ export class AdminGamesComponent implements OnInit {
     
     // Update local config reference so next saveGameRules doesn't overwrite it with old one
     game.config = configJson;
+    const sortVal = game.sortOrder !== undefined && game.sortOrder !== null ? Number(game.sortOrder) : 0;
     
-    this.adminService.updateGame(game.id, game.overview, game.rules, configJson, game.isActive).subscribe({
+    this.adminService.updateGame(game.id, game.overview, game.rules, configJson, game.isActive, sortVal).subscribe({
       next: (res) => {
-        this.errorMsg.set('Settings saved successfully!');
-        setTimeout(() => this.errorMsg.set(''), 3000);
+        this.toastService.show('Settings saved successfully!', 'success');
         this.isUpdating.set(false);
         this.closeSettings();
       },
       error: (err) => {
-        this.errorMsg.set('Update failed: ' + (err.error?.error || err.message));
+        this.toastService.show('Update failed: ' + (err.error?.error || err.message), 'error');
         this.isUpdating.set(false);
       }
     });

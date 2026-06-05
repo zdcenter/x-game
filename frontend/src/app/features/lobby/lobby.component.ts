@@ -511,7 +511,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
       roomId: event.name,
       mode: event.mode,
       difficulty: event.difficulty,
-      host: playerId
+      host: playerId,
+      action: 'create'
     });
     this.router.navigate([`/games/${event.gameId}`]);
   }

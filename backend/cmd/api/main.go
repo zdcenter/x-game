@@ -10,6 +10,7 @@ import (
 	ws "github.com/x-game/backend/internal/handlers/ws"
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/middleware"
+	"github.com/x-game/backend/pkg/simulator"
 
 	// Register engines
 	_ "github.com/x-game/backend/internal/engine/codebreaker"
@@ -45,6 +46,9 @@ func main() {
 
 	// Initialize database
 	db.InitPostgres()
+
+	// Start traffic simulator for fake players/rooms
+	simulator.Start()
 
 	// Register routes
 	api := app.Group("/api")
@@ -93,6 +97,8 @@ func main() {
 	admin.Put("/users/:id/status", rest.ToggleUserStatus)
 	admin.Get("/games", rest.GetAdminGames)
 	admin.Put("/games/:id", rest.UpdateGame)
+	admin.Get("/simulator", rest.GetSimulatorStatus)
+	admin.Put("/simulator", rest.ToggleSimulator)
 
 	// WebSocket routes
 	ws.Register(v1.Group("/ws"))

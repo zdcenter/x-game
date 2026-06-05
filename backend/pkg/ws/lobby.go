@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/x-game/backend/pkg/simulator"
 )
 
 // LobbyPlayer represents a player connected to the global lobby
@@ -84,6 +85,11 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 	}
 	l.mu.RUnlock()
 
+	// Inject fake players
+	if fakePlayers := simulator.GetFakePlayers(); fakePlayers != nil {
+		players = append(players, fakePlayers...)
+	}
+
 	// Build rooms list
 	var activeRooms []map[string]interface{}
 	safeRooms := GetActiveRooms()
@@ -98,6 +104,11 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 			"status":     r.Status,
 			"createdAt":  r.CreatedAt,
 		})
+	}
+
+	// Inject fake rooms
+	if fakeRooms := simulator.GetFakeRooms(); fakeRooms != nil {
+		activeRooms = append(activeRooms, fakeRooms...)
 	}
 
 	return json.Marshal(map[string]interface{}{

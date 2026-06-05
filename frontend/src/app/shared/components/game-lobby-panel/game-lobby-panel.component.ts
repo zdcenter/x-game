@@ -73,68 +73,6 @@ export interface GameDifficulty {
           </div>
 
           <div class="space-y-6 flex-grow">
-            <!-- Other Active Rooms -->
-            <div>
-              <div class="flex items-center justify-between mb-3 px-1">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t('game.active_rooms') }} ({{ otherRooms().length }})</h3>
-              </div>
-              <div class="space-y-3">
-                @for (room of otherRooms(); track room.id) {
-                  <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
-                    <div class="flex justify-between items-center mb-2">
-                      <div class="flex items-center gap-2">
-                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0 flex items-center gap-1"
-                              [class.text-blue-400]="room.game === 'sudoku'"
-                              [class.text-green-400]="room.game === 'minesweeper'"
-                              [class.text-purple-400]="room.game === 'hexa'"
-                              [class.text-orange-400]="room.game === 'sliding'"
-                              [class.text-indigo-400]="room.game === 'tetris'"
-                              [class.text-emerald-400]="room.game === 'codebreaker'"
-                              [class.text-amber-400]="room.game === 'gomoku'">
-                          <span>{{ getGameIconEmoji(room.game) }}</span>
-                          <span>{{ getGameLabel(room.game) }}</span>
-                        </span>
-                        @if (room.hasPassword) { <span class="text-amber-400" title="Password protected">🔒</span> }
-                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] sm:max-w-[180px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }}</span>
-                      </div>
-                      <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
-                            [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
-                            [class.bg-[var(--color-accent-to)]]="room.status === 'waiting'" [class.text-[var(--color-bg-main)]]="room.status === 'waiting'">
-                        {{ room.status }}
-                      </span>
-                    </div>
-                    <div class="flex justify-between items-end">
-                      <div class="text-[10px] opacity-70 uppercase tracking-wider flex items-center gap-2">
-                        <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold" [title]="room.host">{{ formatHost(room.host) }}</span></span>
-                        @if (room.createdAt) {
-                          <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
-                          <span>{{ room.createdAt * 1000 | date:'HH:mm:ss' }}</span>
-                        }
-                        <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
-                        <span>{{ t('game.mode') }}: <span class="text-inherit">{{ getModeLabel(room.mode, room.game) }}</span></span>
-                        <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
-                        <span>{{ t('game.diff') }}: <span class="text-yellow-500">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <span class="text-xs text-slate-400">{{ room.players }} {{ t('game.players_count') }}</span>
-                        @if (currentRoomId === room.id) {
-                          <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.joined') }}</button>
-                        } @else if (room.status === 'waiting') {
-                          <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ room.hasPassword ? '🔒 ' + t('game.join') : t('game.join') }}</button>
-                        } @else {
-                          <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.started') }}</button>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                } @empty {
-                  <div class="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-700 rounded-xl">
-                    {{ t('game.no_rooms') }}<br>{{ t('game.create_one') }}
-                  </div>
-                }
-              </div>
-            </div>
-
             <!-- My Rooms -->
             @if (myRooms().length > 0) {
               <div>
@@ -197,6 +135,68 @@ export interface GameDifficulty {
                 </div>
               </div>
             }
+
+            <!-- Other Active Rooms -->
+            <div>
+              <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">{{ t('game.active_rooms') }} ({{ otherRooms().length }})</h3>
+              </div>
+              <div class="space-y-3">
+                @for (room of otherRooms(); track room.id) {
+                  <div class="p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] transition-colors">
+                    <div class="flex justify-between items-center mb-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] shadow-sm shrink-0 flex items-center gap-1"
+                              [class.text-blue-400]="room.game === 'sudoku'"
+                              [class.text-green-400]="room.game === 'minesweeper'"
+                              [class.text-purple-400]="room.game === 'hexa'"
+                              [class.text-orange-400]="room.game === 'sliding'"
+                              [class.text-indigo-400]="room.game === 'tetris'"
+                              [class.text-emerald-400]="room.game === 'codebreaker'"
+                              [class.text-amber-400]="room.game === 'gomoku'">
+                          <span>{{ getGameIconEmoji(room.game) }}</span>
+                          <span>{{ getGameLabel(room.game) }}</span>
+                        </span>
+                        @if (room.hasPassword) { <span class="text-amber-400" title="Password protected">🔒</span> }
+                        <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] sm:max-w-[180px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }}</span>
+                      </div>
+                      <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
+                            [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
+                            [class.bg-[var(--color-accent-to)]]="room.status === 'waiting'" [class.text-[var(--color-bg-main)]]="room.status === 'waiting'">
+                        {{ room.status }}
+                      </span>
+                    </div>
+                    <div class="flex justify-between items-end">
+                      <div class="text-[10px] opacity-70 uppercase tracking-wider flex items-center gap-2">
+                        <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold" [title]="room.host">{{ formatHost(room.host) }}</span></span>
+                        @if (room.createdAt) {
+                          <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                          <span>{{ room.createdAt * 1000 | date:'HH:mm:ss' }}</span>
+                        }
+                        <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                        <span>{{ t('game.mode') }}: <span class="text-inherit">{{ getModeLabel(room.mode, room.game) }}</span></span>
+                        <span class="w-1 h-1 rounded-full bg-[var(--color-border-card)]"></span>
+                        <span>{{ t('game.diff') }}: <span class="text-yellow-500">{{ getDifficultyLabel(room.difficulty, room.game) }}</span></span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-400">{{ room.players }} {{ t('game.players_count') }}</span>
+                        @if (currentRoomId === room.id) {
+                          <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.joined') }}</button>
+                        } @else if (room.status === 'waiting') {
+                          <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ room.hasPassword ? '🔒 ' + t('game.join') : t('game.join') }}</button>
+                        } @else {
+                          <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.started') }}</button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="text-center py-6 text-slate-500 text-xs border border-dashed border-slate-700 rounded-xl">
+                    {{ t('game.no_rooms') }}<br>{{ t('game.create_one') }}
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         </div>
       }

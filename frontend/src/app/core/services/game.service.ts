@@ -10,6 +10,7 @@ export interface GameConfig {
   rules: string;
   config: string;
   isActive: boolean;
+  sortOrder?: number;
   visitCount?: number;
   createdAt: string;
   updatedAt: string;

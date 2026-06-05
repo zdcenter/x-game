@@ -37,8 +37,8 @@ export class AdminService {
     return this.http.get<any[]>(`${this.baseUrl}/games`);
   }
 
-  updateGame(gameId: string, overview: string, rules: string, config: string, isActive: boolean): Observable<any> {
-    return this.http.put(`${this.baseUrl}/games/${gameId}`, { overview, rules, config, isActive });
+  updateGame(gameId: string, overview: string, rules: string, config: string, isActive: boolean, sortOrder: number): Observable<any> {
+    return this.http.put(`${this.baseUrl}/games/${gameId}`, { overview, rules, config, isActive, sortOrder });
   }
 
   connectRealtimeWS(): Observable<any> {

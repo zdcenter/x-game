@@ -42,6 +42,7 @@
 - **Persistent Local Records**: Tracks best time, best score, play count, and win rate across all single-player game modes.
 - **Global Achievements Profile (`/profile`)**: A unified, centralized dashboard displaying all historical personal records.
 - **Game Popularity Tracking**: Each game tracks and displays its visit count (🔥) in real time in the game lobby.
+- **Manual Game Sorting**: Administrators can override popularity sorting by manually assigning a `SortOrder` (priority) to games via the Admin Dashboard. Games are strictly ordered by `SortOrder` (ascending) first, breaking ties with `VisitCount` (descending).
 - **In-Game Display**: Real-time display of the player's personal best inline within the game interface to promote engagement.
 
 ### 3. Super Admin Panel

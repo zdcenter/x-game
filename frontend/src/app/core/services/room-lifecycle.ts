@@ -123,7 +123,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
     consumePendingOrReconnect(): PendingJoinInfo | null {
       const joinInfo = crossGameJoin.consumePendingJoin(config.gameId);
       if (joinInfo) {
-        wsService.setPendingAction('join');
+        wsService.setPendingAction(joinInfo.action || 'join');
         return {
           roomId: joinInfo.roomId,
           mode: joinInfo.mode,
