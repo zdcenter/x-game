@@ -25,7 +25,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 })
 export class AdsenseComponent implements AfterViewInit {
   // 用户的发布商ID，建议从环境配置读取或传入
-  @Input() adClient: string = 'ca-pub-YOUR_PUBLISHER_ID'; 
+  @Input() adClient: string = 'ca-pub-8428944074138941'; 
   @Input() adSlot: string = ''; 
   @Input() adFormat: string = 'auto';
   @Input() fullWidthResponsive: boolean = true;
