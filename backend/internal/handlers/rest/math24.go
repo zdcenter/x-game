@@ -11,22 +11,22 @@ import (
 // GetMath24Levels returns all puzzles for a given difficulty and the user's progress.
 func GetMath24Levels(c fiber.Ctx) error {
 	difficulty := c.Params("difficulty")
-	userID := uint(c.Locals("user_id").(float64))
 
 	var puzzles []domain.Math24Puzzle
 	if err := db.DB.Where("difficulty = ?", difficulty).Find(&puzzles).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch puzzles"})
 	}
 
-	var progresses []domain.UserMath24Progress
-	if err := db.DB.Where("user_id = ?", userID).Find(&progresses).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch progress"})
-	}
-
-	// Merge progress into puzzle list
 	progressMap := make(map[string]domain.UserMath24Progress)
-	for _, p := range progresses {
-		progressMap[p.PuzzleID] = p
+
+	if userIDStr := c.Locals("user_id"); userIDStr != nil {
+		userID := uint(userIDStr.(float64))
+		var progresses []domain.UserMath24Progress
+		if err := db.DB.Where("user_id = ?", userID).Find(&progresses).Error; err == nil {
+			for _, p := range progresses {
+				progressMap[p.PuzzleID] = p
+			}
+		}
 	}
 
 	type LevelResponse struct {
@@ -55,7 +55,6 @@ func GetMath24Levels(c fiber.Ctx) error {
 // GetMath24Puzzle returns the puzzle string, and creates/fetches progress.
 func GetMath24Puzzle(c fiber.Ctx) error {
 	puzzleID := c.Params("id")
-	userID := uint(c.Locals("user_id").(float64))
 
 	var puzzle domain.Math24Puzzle
 	if err := db.DB.Where("id = ?", puzzleID).First(&puzzle).Error; err != nil {
@@ -63,14 +62,17 @@ func GetMath24Puzzle(c fiber.Ctx) error {
 	}
 
 	var progress domain.UserMath24Progress
-	if err := db.DB.Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).First(&progress).Error; err != nil {
-		// Create new progress if not exists
-		progress = domain.UserMath24Progress{
-			UserID:   userID,
-			PuzzleID: puzzleID,
-			Status:   domain.Math24StatusPlaying,
+	if userIDStr := c.Locals("user_id"); userIDStr != nil {
+		userID := uint(userIDStr.(float64))
+		if err := db.DB.Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).First(&progress).Error; err != nil {
+			// Create new progress if not exists
+			progress = domain.UserMath24Progress{
+				UserID:   userID,
+				PuzzleID: puzzleID,
+				Status:   domain.Math24StatusPlaying,
+			}
+			db.DB.Create(&progress)
 		}
-		db.DB.Create(&progress)
 	}
 
 	return c.JSON(fiber.Map{
@@ -86,7 +88,13 @@ type FinishMath24ProgressReq struct {
 
 func FinishMath24(c fiber.Ctx) error {
 	puzzleID := c.Params("id")
-	userID := uint(c.Locals("user_id").(float64))
+	userIDStr := c.Locals("user_id")
+
+	if userIDStr == nil {
+		return c.JSON(fiber.Map{"status": "ok", "message": "guest progress finished locally"})
+	}
+
+	userID := uint(userIDStr.(float64))
 
 	var req FinishMath24ProgressReq
 	if err := c.Bind().Body(&req); err != nil {

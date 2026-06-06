@@ -53,3 +53,41 @@ func Protected() fiber.Handler {
 		return c.Next()
 	}
 }
+
+// OptionalProtected tries to parse the token but does not return 401 if missing or invalid.
+// It just sets locals if valid.
+func OptionalProtected() fiber.Handler {
+	return func(c fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
+		var tokenString string
+
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = parts[1]
+			}
+		}
+
+		if tokenString == "" {
+			tokenString = c.Query("token")
+		}
+
+		if tokenString != "" {
+			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fiber.ErrUnauthorized
+				}
+				return jwtSecret, nil
+			})
+
+			if err == nil && token.Valid {
+				if claims, ok := token.Claims.(jwt.MapClaims); ok {
+					c.Locals("user_id", claims["user_id"])
+					c.Locals("role", claims["role"])
+				}
+			}
+		}
+
+		return c.Next()
+	}
+}
