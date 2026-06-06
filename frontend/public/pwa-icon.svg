@@ -19,6 +19,6 @@
       }
     </style>
   </defs>
-  <text x="256" y="190" class="text-puzzle" text-anchor="middle" fill="url(#grad)">PUZZLE</text>
+  <text x="256" y="190" class="text-puzzle" text-anchor="middle" fill="url(#grad)">Puzzle</text>
   <text x="256" y="410" class="text-pk" text-anchor="middle" fill="url(#grad)">PK</text>
 </svg>
