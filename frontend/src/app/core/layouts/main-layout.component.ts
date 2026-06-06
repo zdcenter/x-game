@@ -17,12 +17,18 @@ import { PwaService } from '../services/pwa.service';
       <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
-          <a routerLink="/lobby" class="flex items-center cursor-pointer group">
-            <span class="text-2xl sm:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
-                  style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-              Puzzle PK
-            </span>
-          </a>
+          <div class="flex items-center gap-4 sm:gap-8">
+            <a routerLink="/lobby" class="flex items-center cursor-pointer group">
+              <span class="text-2xl sm:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
+                    style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                Puzzle PK
+              </span>
+            </a>
+            
+            <a routerLink="/blog" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📖 Blog
+            </a>
+          </div>
 
           <!-- Controls -->
           <div class="flex items-center space-x-2 sm:space-x-4">

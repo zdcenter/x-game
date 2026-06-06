@@ -577,8 +577,14 @@ export class SudokuStore {
     }).subscribe();
   }
 
+  pauseAndSave() {
+    if (this.currentMode() === 'single') {
+      this.stopTimer();
+      this.saveStateToBackend();
+    }
+  }
+
   destroy() {
-    this.stopTimer();
-    this.saveStateToBackend();
+    this.pauseAndSave();
   }
 }

@@ -26,6 +26,15 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'seo.lobby.title', descKey: 'seo.lobby.desc', keywordsKey: 'seo.lobby.keywords' } }
       },
       {
+        path: 'blog',
+        loadComponent: () => import('./features/blog/blog-list/blog-list.component').then(m => m.BlogListComponent),
+        data: { seo: { title: 'Puzzle PK Blog - Educational Games & Brain Training', desc: 'Read our latest articles on brain games, child development, and how to make learning fun.', keywords: 'blog, brain training, educational games, puzzle pk' } }
+      },
+      {
+        path: 'blog/:id',
+        loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent)
+      },
+      {
         path: 'games/minesweeper',
         loadComponent: () => import('./features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent),
         data: { seo: { titleKey: 'seo.minesweeper.title', descKey: 'seo.minesweeper.desc', keywordsKey: 'seo.minesweeper.keywords' } }

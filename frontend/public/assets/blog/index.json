@@ -1,0 +1,62 @@
+[
+  {
+    "id": "why-math24-is-the-best-brain-training-game-for-kids",
+    "date": "2026-06-06",
+    "en": {
+      "title": "Why Math 24 is the Best Brain Training Game for Elementary Students",
+      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
+      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
+      "readTime": "5 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["Education", "Math", "Parenting"]
+    },
+    "zh": {
+      "title": "为什么24点是小学生最好的脑力训练游戏",
+      "description": "发现经典的24点游戏如何通过竞技的方式大幅提升孩子的口算和逻辑思维能力。",
+      "keywords": "24点游戏, 脑力训练, 儿童教育游戏, 小学数学, 口算能力",
+      "readTime": "5分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["教育", "数学", "育儿"]
+    }
+  },
+  {
+    "id": "sudoku-for-kids-a-beginners-guide",
+    "date": "2026-06-05",
+    "en": {
+      "title": "Sudoku for Kids: How to Introduce Logic Puzzles to Your Children",
+      "description": "A step-by-step guide for parents to introduce Sudoku to kids. Learn why this number puzzle is the ultimate tool for developing deductive reasoning.",
+      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
+      "readTime": "4 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["Logic", "Sudoku", "Beginners"]
+    },
+    "zh": {
+      "title": "儿童数独入门：如何无痛引导孩子爱上逻辑推理",
+      "description": "一份写给家长的儿童数独入门指南。了解为什么这款数字谜题是培养孩子演绎推理能力的终极工具，以及如何避免让孩子产生挫败感。",
+      "keywords": "儿童数独, 逻辑谜题, 益智游戏, 儿童发展, 演绎推理",
+      "readTime": "4分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["逻辑", "数独", "入门"]
+    }
+  },
+  {
+    "id": "benefits-of-multiplayer-educational-games",
+    "date": "2026-06-04",
+    "en": {
+      "title": "The Hidden Benefits of Multiplayer Educational Games for Kids",
+      "description": "Co-op and competitive puzzle games aren't just for fun. Find out how multiplayer challenges like Codebreaker and Sweeper PK can boost your child's social and cognitive skills.",
+      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
+      "readTime": "6 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["Multiplayer", "Social Skills", "Education"]
+    },
+    "zh": {
+      "title": "双人互动益智游戏：被家长忽视的隐藏教育红利",
+      "description": "合作与竞技类的解谜游戏不仅仅是为了好玩。了解像密码破译和扫雷大作战这样的多人挑战，如何同时提升孩子的社交情商和认知能力。",
+      "keywords": "双人教育游戏, 合作解谜游戏, 竞技学习, 儿童游戏, 认知能力",
+      "readTime": "6分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["多人游戏", "社交技能", "教育"]
+    }
+  }
+]
