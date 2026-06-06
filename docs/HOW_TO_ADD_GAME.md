@@ -342,4 +342,11 @@ ngOnInit() {
   ```
 - **例外情况**：如果你的游戏需要在对手面板里渲染缩微版的小棋盘（例如俄罗斯方块、扫雷），由于结构差异过大，允许单独手写对手 UI 结构，但也请尽量复用现有的视觉规范。
 
-遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉上达到最顶级的体验！
+### 18. 新游戏的双语 SEO 配置 (Bilingual SEO Configuration)
+- **避免隐患**：如果新增游戏时忘记配置 SEO，当用户或搜索引擎（Google/Bing）通过特定 URL 访问或分享该游戏时，网页将只能显示 `index.html` 中基础的默认标题，错失了特定游戏长尾关键字的流量。
+- **标准做法**：
+  1. 在 `frontend/src/app/app.routes.ts` 中的游戏路由配置里，必须加上对应的 SEO 数据绑定：
+     `data: { seo: { titleKey: 'seo.your_game.title', descKey: 'seo.your_game.desc', keywordsKey: 'seo.your_game.keywords' } }`
+  2. 在 `frontend/src/app/core/i18n/core.translations.ts` 中，必须为新增游戏提供**英文**和**中文**两套完整的 SEO 词条（包含 `title`, `desc`, `keywords`），确保动态切换语言时能完美覆盖搜索关键词。
+
+遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉和流量获取上达到最顶级的体验！
