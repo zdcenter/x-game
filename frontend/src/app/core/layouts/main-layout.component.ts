@@ -17,15 +17,10 @@ import { PwaService } from '../services/pwa.service';
       <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
-          <!-- Logo & Brand -->
-          <a routerLink="/lobby" class="flex items-center space-x-2 cursor-pointer group">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-lg transition-transform group-hover:scale-110"
-                 style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
-              P
-            </div>
-            <span class="text-xl font-extrabold tracking-widest bg-clip-text text-transparent transition-all"
+          <a routerLink="/lobby" class="flex items-center cursor-pointer group">
+            <span class="text-2xl sm:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
                   style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-              PUZZLE PK
+              Puzzle PK
             </span>
           </a>
 
@@ -34,10 +29,10 @@ import { PwaService } from '../services/pwa.service';
             
             @if (pwa.canInstall()) {
               <button (click)="pwa.install()" 
-                      class="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow-lg transition-all hover:scale-105 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-400/50 hover:shadow-blue-500/25 shrink-0"
+                      class="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded-lg shadow-lg transition-all hover:scale-105 backdrop-blur-md border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10 shrink-0"
                       title="Install Desktop App">
-                <span class="hidden sm:inline">⬇️ {{ i18n.t('nav.installApp')() }}</span>
-                <span class="sm:hidden">⬇️ App</span>
+                <span class="hidden sm:inline">💻 {{ i18n.t('nav.installApp')() }}</span>
+                <span class="sm:hidden">💻 App</span>
               </button>
             }
 

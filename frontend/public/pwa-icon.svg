@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0f172a" />
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <style>
+      .text-puzzle {
+        font-family: Arial, sans-serif;
+        font-weight: 900;
+        font-size: 80px;
+      }
+      .text-pk {
+        font-family: Arial, sans-serif;
+        font-weight: 900;
+        font-style: italic;
+        font-size: 240px;
+      }
+    </style>
+  </defs>
+  <text x="256" y="190" class="text-puzzle" text-anchor="middle" fill="url(#grad)">PUZZLE</text>
+  <text x="256" y="410" class="text-pk" text-anchor="middle" fill="url(#grad)">PK</text>
+</svg>
