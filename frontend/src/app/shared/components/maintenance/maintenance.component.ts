@@ -15,7 +15,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       </p>
       
       <div class="mt-12 text-sm opacity-50">
-        X-Game Platform
+        Puzzle PK Platform
       </div>
     </div>
   `

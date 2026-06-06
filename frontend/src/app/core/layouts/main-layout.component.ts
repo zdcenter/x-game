@@ -20,11 +20,11 @@ import { AuthStore } from '../auth/auth.store';
           <a routerLink="/lobby" class="flex items-center space-x-2 cursor-pointer group">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-lg transition-transform group-hover:scale-110"
                  style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
-              X
+              P
             </div>
             <span class="text-xl font-extrabold tracking-widest bg-clip-text text-transparent transition-all"
                   style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-              GAME
+              PUZZLE PK
             </span>
           </a>
 

@@ -3,7 +3,7 @@ import { Lang } from '../../../../core/i18n/translations';
 export const minesweeperTranslations: Record<Lang, Record<string, string>> = {
   en: {
     // SEO
-    'seo.minesweeper.title': 'Play Minesweeper Online - X-Game',
+    'seo.minesweeper.title': 'Play Minesweeper Online - Puzzle PK',
     'seo.minesweeper.desc': 'Play classic Minesweeper or challenge players in multiplayer PK mode. Free online web game.',
     'seo.minesweeper.keywords': 'minesweeper, play minesweeper, multiplayer minesweeper, online game',
     'app.title': 'Minesweeper',
@@ -66,7 +66,7 @@ export const minesweeperTranslations: Record<Lang, Record<string, string>> = {
   },
   zh: {
     // SEO
-    'seo.minesweeper.title': '在线扫雷大作战 - X-Game',
+    'seo.minesweeper.title': '在线扫雷大作战 - Puzzle PK',
     'seo.minesweeper.desc': '免费在线玩经典扫雷游戏，或在多人对战模式中挑战其他玩家，支持抢雷和竞速模式。',
     'seo.minesweeper.keywords': '扫雷, 在线扫雷, 网页扫雷, 扫雷对战, 多人扫雷',
     'app.title': '扫雷',

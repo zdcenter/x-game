@@ -452,7 +452,7 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
 
         <!-- Copyright & Version Footer -->
         <div class="w-full mt-auto pt-16 pb-8 flex flex-col items-center justify-center text-[var(--color-text-muted)] text-sm opacity-60">
-          <p>© 2026 X-Game. All rights reserved.</p>
+          <p>© 2026 Puzzle PK. All rights reserved.</p>
           <div class="flex items-center gap-4 mt-2 font-mono text-xs">
             <span>Frontend: {{ frontendVersion }}</span>
             <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>

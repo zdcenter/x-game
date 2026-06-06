@@ -3,7 +3,7 @@ import { Lang } from '../../../../core/i18n/translations';
 export const sudokuTranslations: Record<Lang, Record<string, string>> = {
   en: {
     // SEO
-    'seo.sudoku.title': 'Play Sudoku Online - X-Game',
+    'seo.sudoku.title': 'Play Sudoku Online - Puzzle PK',
     'seo.sudoku.desc': 'Play classic Sudoku online. Test your logic or race against others in multiplayer Sudoku PK mode.',
     'seo.sudoku.keywords': 'sudoku, play sudoku, sudoku online, multiplayer sudoku',
     // Sudoku Specific
@@ -22,7 +22,7 @@ export const sudokuTranslations: Record<Lang, Record<string, string>> = {
   },
   zh: {
     // SEO
-    'seo.sudoku.title': '在线数独对战 - X-Game',
+    'seo.sudoku.title': '在线数独对战 - Puzzle PK',
     'seo.sudoku.desc': '免费在线玩经典数独游戏，锻炼逻辑思维，或在多人竞技模式中与他人竞速。',
     'seo.sudoku.keywords': '数独, 在线数独, 网页数独, 数独对战, 多人数独',
     // Sudoku Specific

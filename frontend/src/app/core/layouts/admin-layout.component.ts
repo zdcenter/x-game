@@ -72,7 +72,7 @@ import { ThemeService } from '../theme/theme.service';
         <!-- Top Header -->
         <header class="h-16 bg-[var(--color-bg-card)] backdrop-blur-md border-b border-[var(--color-border-card)] flex items-center justify-between px-8">
           <div class="text-sm font-medium opacity-70">
-            X-Game Platform / <span class="font-bold">{{ i18n.t('admin.header.breadcrumb')() }}</span>
+            Puzzle PK Platform / <span class="font-bold">{{ i18n.t('admin.header.breadcrumb')() }}</span>
           </div>
           
           <div class="flex items-center space-x-2 sm:space-x-4">

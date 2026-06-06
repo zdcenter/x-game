@@ -1,7 +1,7 @@
 export const gomokuTranslations: Record<'en' | 'zh', Record<string, string>> = {
   en: {
     // SEO
-    'seo.gomoku.title': 'Play Gomoku Online - X-Game',
+    'seo.gomoku.title': 'Play Gomoku Online - Puzzle PK',
     'seo.gomoku.desc': 'Play classic Gomoku (Five in a Row) against AI or challenge friends online.',
     'seo.gomoku.keywords': 'gomoku, five in a row, play gomoku online, multiplayer board game',
     
@@ -25,7 +25,7 @@ export const gomokuTranslations: Record<'en' | 'zh', Record<string, string>> = {
   },
   zh: {
     // SEO
-    'seo.gomoku.title': '在线五子棋对战 - X-Game',
+    'seo.gomoku.title': '在线五子棋对战 - Puzzle PK',
     'seo.gomoku.desc': '免费在线玩五子棋，挑战不同难度的 AI，或者与好友进行联机对战。',
     'seo.gomoku.keywords': '五子棋, 在线五子棋, 五子连珠, 双人五子棋, 五子棋大战',
     
