@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { I18nService } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
 import { AuthStore } from '../auth/auth.store';
+import { PwaService } from '../services/pwa.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -31,6 +32,15 @@ import { AuthStore } from '../auth/auth.store';
           <!-- Controls -->
           <div class="flex items-center space-x-2 sm:space-x-4">
             
+            @if (pwa.canInstall()) {
+              <button (click)="pwa.install()" 
+                      class="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow-lg transition-all hover:scale-105 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border border-blue-400/50 hover:shadow-blue-500/25 shrink-0"
+                      title="Install Desktop App">
+                <span class="hidden sm:inline">⬇️ {{ i18n.t('nav.installApp')() }}</span>
+                <span class="sm:hidden">⬇️ App</span>
+              </button>
+            }
+
             <!-- Settings Dropdown (Language & Theme) -->
             <div class="relative">
               <button (click)="isSettingsOpen.set(!isSettingsOpen())" 
@@ -124,6 +134,7 @@ export class MainLayoutComponent {
   theme = inject(ThemeService);
   authStore = inject(AuthStore);
   router = inject(Router);
+  pwa = inject(PwaService);
 
   isSettingsOpen = signal(false);
 
