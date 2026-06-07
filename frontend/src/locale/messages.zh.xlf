@@ -4,6 +4,7 @@
     <body>
       <trans-unit id="admin.title" datatype="html">
         <source>admin.title</source>
+        <target>管理后台</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">24,25</context>
@@ -11,6 +12,7 @@
       </trans-unit>
       <trans-unit id="admin.menu.realtime" datatype="html">
         <source>admin.menu.realtime</source>
+        <target>实时数据</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">33,34</context>
@@ -18,6 +20,7 @@
       </trans-unit>
       <trans-unit id="admin.menu.users" datatype="html">
         <source>admin.menu.users</source>
+        <target>用户管理</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">37,38</context>
@@ -25,6 +28,7 @@
       </trans-unit>
       <trans-unit id="admin.menu.games" datatype="html">
         <source>Games</source>
+        <target>游戏参数配置</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">41,42</context>
@@ -32,6 +36,7 @@
       </trans-unit>
       <trans-unit id="admin.menu.announcements" datatype="html">
         <source>admin.menu.announcements</source>
+        <target>系统公告</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">45,47</context>
@@ -39,6 +44,7 @@
       </trans-unit>
       <trans-unit id="admin.menu.settings" datatype="html">
         <source>System Settings</source>
+        <target>系统设置 (建设中)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">49,50</context>
@@ -46,6 +52,7 @@
       </trans-unit>
       <trans-unit id="auth.logout" datatype="html">
         <source>auth.logout</source>
+        <target>退出登录</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">65,66</context>
@@ -53,6 +60,7 @@
       </trans-unit>
       <trans-unit id="admin.header.breadcrumb" datatype="html">
         <source>admin.header.breadcrumb</source>
+        <target>超级管理控制台</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/admin-layout.component.ts</context>
           <context context-type="linenumber">75,76</context>
@@ -60,6 +68,7 @@
       </trans-unit>
       <trans-unit id="nav.installApp" datatype="html">
         <source>nav.installApp</source>
+        <target>安装桌面版</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
           <context context-type="linenumber">40,41</context>
@@ -67,6 +76,7 @@
       </trans-unit>
       <trans-unit id="nav.profile" datatype="html">
         <source>nav.profile</source>
+        <target>成就</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
           <context context-type="linenumber">95,96</context>
@@ -74,6 +84,7 @@
       </trans-unit>
       <trans-unit id="nav.guest" datatype="html">
         <source>nav.guest</source>
+        <target>游客</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
           <context context-type="linenumber">100,101</context>
@@ -81,6 +92,7 @@
       </trans-unit>
       <trans-unit id="nav.signin" datatype="html">
         <source>nav.signin</source>
+        <target>登录 / 注册</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
           <context context-type="linenumber">118,119</context>
@@ -88,6 +100,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.title" datatype="html">
         <source>admin.announcements.title</source>
+        <target>系统公告管理</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">16,17</context>
@@ -95,6 +108,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.subtitle" datatype="html">
         <source>admin.announcements.subtitle</source>
+        <target>管理游戏大厅顶部的滚动跑马灯公告</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">17,19</context>
@@ -102,6 +116,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.add" datatype="html">
         <source>admin.announcements.add</source>
+        <target>新增公告</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">23,25</context>
@@ -109,6 +124,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.col.content" datatype="html">
         <source>admin.announcements.col.content</source>
+        <target>公告内容</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">33,34</context>
@@ -120,6 +136,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.col.status" datatype="html">
         <source>admin.announcements.col.status</source>
+        <target>状态</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">34,35</context>
@@ -131,6 +148,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.col.order" datatype="html">
         <source>admin.announcements.col.order</source>
+        <target>排序权重</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">35,36</context>
@@ -142,6 +160,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.col.actions" datatype="html">
         <source>admin.announcements.col.actions</source>
+        <target>操作</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">36,38</context>
@@ -149,6 +168,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.cancel" datatype="html">
         <source>admin.announcements.cancel</source>
+        <target>取消</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">108,110</context>
@@ -156,6 +176,7 @@
       </trans-unit>
       <trans-unit id="admin.announcements.save" datatype="html">
         <source>admin.announcements.save</source>
+        <target>保存</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-announcements.component.ts</context>
           <context context-type="linenumber">111,113</context>
@@ -163,6 +184,7 @@
       </trans-unit>
       <trans-unit id="admin.games.title" datatype="html">
         <source>admin.games.title</source>
+        <target>游戏参数配置</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-games.component.ts</context>
           <context context-type="linenumber">26,27</context>
@@ -170,6 +192,7 @@
       </trans-unit>
       <trans-unit id="admin.games.subtitle" datatype="html">
         <source>admin.games.subtitle</source>
+        <target>管理游戏规则和激活状态</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-games.component.ts</context>
           <context context-type="linenumber">27,29</context>
@@ -177,6 +200,7 @@
       </trans-unit>
       <trans-unit id="admin.games.rules.label" datatype="html">
         <source>admin.games.rules.label</source>
+        <target>规则 (Markdown)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-games.component.ts</context>
           <context context-type="linenumber">56,57</context>
@@ -184,6 +208,7 @@
       </trans-unit>
       <trans-unit id="admin.games.save" datatype="html">
         <source>admin.games.save</source>
+        <target>保存更改</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-games.component.ts</context>
           <context context-type="linenumber">92,93</context>
@@ -191,6 +216,7 @@
       </trans-unit>
       <trans-unit id="admin.games.no_games" datatype="html">
         <source>admin.games.no_games</source>
+        <target>数据库中未配置任何游戏。</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-games.component.ts</context>
           <context context-type="linenumber">98,100</context>
@@ -198,6 +224,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.title" datatype="html">
         <source>admin.realtime.title</source>
+        <target>实时监控大盘</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">43,45</context>
@@ -205,6 +232,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.subtitle" datatype="html">
         <source>admin.realtime.subtitle</source>
+        <target>通过 WebSocket 实时查看在线玩家与活跃房间状态</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">45,47</context>
@@ -212,6 +240,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.players" datatype="html">
         <source>admin.realtime.players</source>
+        <target>在线玩家</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">49,50</context>
@@ -223,6 +252,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.rooms" datatype="html">
         <source>admin.realtime.rooms</source>
+        <target>活跃房间</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">53,54</context>
@@ -234,6 +264,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.col.username" datatype="html">
         <source>admin.realtime.col.username</source>
+        <target>用户名</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -241,6 +272,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.col.ip" datatype="html">
         <source>admin.realtime.col.ip</source>
+        <target>IP 地址</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">67,68</context>
@@ -248,6 +280,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.col.status" datatype="html">
         <source>admin.realtime.col.status</source>
+        <target>当前状态</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">68,69</context>
@@ -255,6 +288,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.col.connectedAt" datatype="html">
         <source>admin.realtime.col.connectedAt</source>
+        <target>连接时间</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">69,71</context>
@@ -262,6 +296,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.players.empty" datatype="html">
         <source>admin.realtime.players.empty</source>
+        <target>暂无在线玩家</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">75,77</context>
@@ -269,6 +304,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.rooms.empty" datatype="html">
         <source>admin.realtime.rooms.empty</source>
+        <target>暂无活跃房间</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">103,105</context>
@@ -276,6 +312,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.popularity" datatype="html">
         <source>admin.realtime.popularity</source>
+        <target>游戏热度分析</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">134,135</context>
@@ -283,6 +320,7 @@
       </trans-unit>
       <trans-unit id="admin.realtime.col.visits" datatype="html">
         <source>admin.realtime.col.visits</source>
+        <target>历史总访问量</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-realtime.component.ts</context>
           <context context-type="linenumber">140,141</context>
@@ -290,6 +328,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.title" datatype="html">
         <source>admin.settings.title</source>
+        <target>系统设置</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">16,17</context>
@@ -297,6 +336,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.subtitle" datatype="html">
         <source>admin.settings.subtitle</source>
+        <target>配置全局平台行为与网站维护</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">17,19</context>
@@ -304,6 +344,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.maintenance.title" datatype="html">
         <source>admin.settings.maintenance.title</source>
+        <target>维护模式 (关闭网站)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">29,30</context>
@@ -311,6 +352,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.maintenance.desc" datatype="html">
         <source>admin.settings.maintenance.desc</source>
+        <target>关闭网站的公共访问。管理员仍然可以登录并访问后台。</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">30,32</context>
@@ -318,6 +360,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.maintenance.message_label" datatype="html">
         <source>admin.settings.maintenance.message_label</source>
+        <target>维护文案 (可选)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">39,40</context>
@@ -325,6 +368,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.simulator.title" datatype="html">
         <source>admin.settings.simulator.title</source>
+        <target>虚拟流量模拟器</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">49,50</context>
@@ -332,6 +376,7 @@
       </trans-unit>
       <trans-unit id="admin.settings.simulator.desc" datatype="html">
         <source>admin.settings.simulator.desc</source>
+        <target>生成虚拟玩家和房间，让游戏大厅看起来更活跃。</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin-settings.component.ts</context>
           <context context-type="linenumber">50,52</context>
@@ -339,6 +384,7 @@
       </trans-unit>
       <trans-unit id="admin.users.title" datatype="html">
         <source>admin.users.title</source>
+        <target>全站用户档案库</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">19,20</context>
@@ -346,6 +392,7 @@
       </trans-unit>
       <trans-unit id="admin.users.subtitle" datatype="html">
         <source>admin.users.subtitle</source>
+        <target>管理平台玩家、执行账号封禁与解封</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">20,22</context>
@@ -353,6 +400,7 @@
       </trans-unit>
       <trans-unit id="admin.users.total" datatype="html">
         <source>admin.users.total</source>
+        <target>注册总人数</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">23,24</context>
@@ -360,6 +408,7 @@
       </trans-unit>
       <trans-unit id="admin.users.col.id" datatype="html">
         <source>admin.users.col.id</source>
+        <target>编号</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">40,41</context>
@@ -367,6 +416,7 @@
       </trans-unit>
       <trans-unit id="admin.users.col.username" datatype="html">
         <source>admin.users.col.username</source>
+        <target>玩家昵称</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">41,42</context>
@@ -374,6 +424,7 @@
       </trans-unit>
       <trans-unit id="admin.users.col.role" datatype="html">
         <source>admin.users.col.role</source>
+        <target>系统角色</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">42,43</context>
@@ -381,6 +432,7 @@
       </trans-unit>
       <trans-unit id="admin.users.col.status" datatype="html">
         <source>admin.users.col.status</source>
+        <target>账号状态</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">43,44</context>
@@ -388,6 +440,7 @@
       </trans-unit>
       <trans-unit id="admin.users.col.actions" datatype="html">
         <source>admin.users.col.actions</source>
+        <target>执行操作</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">44,45</context>
@@ -395,6 +448,7 @@
       </trans-unit>
       <trans-unit id="admin.users.loading" datatype="html">
         <source>admin.users.loading</source>
+        <target>正在拉取用户档案数据...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">51,52</context>
@@ -402,6 +456,7 @@
       </trans-unit>
       <trans-unit id="admin.users.action.ban" datatype="html">
         <source>admin.users.action.ban</source>
+        <target>封号</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">80,81</context>
@@ -409,6 +464,7 @@
       </trans-unit>
       <trans-unit id="admin.users.action.unban" datatype="html">
         <source>admin.users.action.unban</source>
+        <target>解封</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">85,86</context>
@@ -416,6 +472,7 @@
       </trans-unit>
       <trans-unit id="admin.users.protected" datatype="html">
         <source>admin.users.protected</source>
+        <target>系统保护</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/admin/admin.component.ts</context>
           <context context-type="linenumber">89,90</context>
@@ -423,6 +480,7 @@
       </trans-unit>
       <trans-unit id="auth.login.title" datatype="html">
         <source>auth.login.title</source>
+        <target>欢迎回来</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">23,24</context>
@@ -430,6 +488,7 @@
       </trans-unit>
       <trans-unit id="auth.login.subtitle" datatype="html">
         <source>auth.login.subtitle</source>
+        <target>请输入您的凭据进入大厅</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">25,27</context>
@@ -437,6 +496,7 @@
       </trans-unit>
       <trans-unit id="auth.login.username" datatype="html">
         <source>auth.login.username</source>
+        <target>账号</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">35,36</context>
@@ -444,6 +504,7 @@
       </trans-unit>
       <trans-unit id="auth.login.password" datatype="html">
         <source>auth.login.password</source>
+        <target>密码</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">41,42</context>
@@ -451,6 +512,7 @@
       </trans-unit>
       <trans-unit id="auth.play_as_guest" datatype="html">
         <source>auth.play_as_guest</source>
+        <target>游客直接游玩</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">61,62</context>
@@ -462,6 +524,7 @@
       </trans-unit>
       <trans-unit id="auth.login.no_account" datatype="html">
         <source>auth.login.no_account</source>
+        <target>还没有账号？</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">65,66</context>
@@ -469,6 +532,7 @@
       </trans-unit>
       <trans-unit id="auth.login.create" datatype="html">
         <source>auth.login.create</source>
+        <target>立即注册</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/login.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -476,6 +540,7 @@
       </trans-unit>
       <trans-unit id="auth.register.title" datatype="html">
         <source>auth.register.title</source>
+        <target>加入 Puzzle PK</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/register.component.ts</context>
           <context context-type="linenumber">23,25</context>
@@ -483,6 +548,7 @@
       </trans-unit>
       <trans-unit id="auth.register.subtitle" datatype="html">
         <source>auth.register.subtitle</source>
+        <target>为自己注册一个响亮的代号</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/register.component.ts</context>
           <context context-type="linenumber">25,27</context>
@@ -490,6 +556,7 @@
       </trans-unit>
       <trans-unit id="auth.register.username" datatype="html">
         <source>auth.register.username</source>
+        <target>账号</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/register.component.ts</context>
           <context context-type="linenumber">35,36</context>
@@ -497,6 +564,7 @@
       </trans-unit>
       <trans-unit id="auth.register.password" datatype="html">
         <source>auth.register.password</source>
+        <target>密码</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/register.component.ts</context>
           <context context-type="linenumber">41,42</context>
@@ -504,6 +572,7 @@
       </trans-unit>
       <trans-unit id="auth.register.has_account" datatype="html">
         <source>auth.register.has_account</source>
+        <target>已有账号？</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/register.component.ts</context>
           <context context-type="linenumber">65,66</context>
@@ -511,6 +580,7 @@
       </trans-unit>
       <trans-unit id="auth.register.signin" datatype="html">
         <source>auth.register.signin</source>
+        <target>点此登录</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/auth/register.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -518,6 +588,7 @@
       </trans-unit>
       <trans-unit id="lobby.codebreaker" datatype="html">
         <source>Codebreaker</source>
+        <target>1A2B 密码破译</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">12,13</context>
@@ -525,6 +596,7 @@
       </trans-unit>
       <trans-unit id="game.diff_easy" datatype="html">
         <source>Easy</source>
+        <target>简单</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">32,33</context>
@@ -532,6 +604,7 @@
       </trans-unit>
       <trans-unit id="game.diff_medium" datatype="html">
         <source>Medium</source>
+        <target>中等</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">33,34</context>
@@ -539,6 +612,7 @@
       </trans-unit>
       <trans-unit id="game.diff_hard" datatype="html">
         <source>Hard</source>
+        <target>困难</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">34,35</context>
@@ -546,6 +620,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.guess_history" datatype="html">
         <source>codebreaker.guess_history</source>
+        <target>我的猜测记录</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">53,54</context>
@@ -553,6 +628,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.guess" datatype="html">
         <source>codebreaker.guess</source>
+        <target>确认猜测</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">54,55</context>
@@ -564,6 +640,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.how_to_play" datatype="html">
         <source>codebreaker.how_to_play</source>
+        <target>游戏规则</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">72,73</context>
@@ -571,6 +648,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_intro_pre" datatype="html">
         <source>codebreaker.rules_intro_pre</source>
+        <target>系统生成了 </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">73</context>
@@ -578,6 +656,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_intro_strong" datatype="html">
         <source>codebreaker.rules_intro_strong</source>
+        <target>位不重复</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">73</context>
@@ -585,6 +664,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_intro_post" datatype="html">
         <source>codebreaker.rules_intro_post</source>
+        <target> 的数字密码。</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">73,74</context>
@@ -592,6 +672,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_a" datatype="html">
         <source>codebreaker.rules_a</source>
+        <target>A: 数字且位置对</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">75,76</context>
@@ -599,6 +680,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_b" datatype="html">
         <source>codebreaker.rules_b</source>
+        <target>B: 仅数字对</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">76,77</context>
@@ -606,6 +688,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_ex_title" datatype="html">
         <source>codebreaker.rules_ex_title</source>
+        <target>例如: 密码是 1234</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">79,80</context>
@@ -613,6 +696,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.rules_ex_guess" datatype="html">
         <source>codebreaker.rules_ex_guess</source>
+        <target>猜 1543 -> 提示</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">80</context>
@@ -620,6 +704,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.input_hint_pre" datatype="html">
         <source>codebreaker.input_hint_pre</source>
+        <target>请输入你猜测的 </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">113</context>
@@ -627,6 +712,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.input_hint_post" datatype="html">
         <source>codebreaker.input_hint_post</source>
+        <target> 位不重复数字</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">113,115</context>
@@ -634,6 +720,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.keyboard.submit" datatype="html">
         <source>codebreaker.keyboard.submit</source>
+        <target>确定</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">136,138</context>
@@ -641,6 +728,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.helper_board" datatype="html">
         <source>codebreaker.helper_board</source>
+        <target>逻辑备忘录</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">144,146</context>
@@ -648,6 +736,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.helper_desc" datatype="html">
         <source>codebreaker.helper_desc</source>
+        <target>点击数字: 排除(划掉) / 确定(绿底)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">146,147</context>
@@ -655,6 +744,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.helper_global" datatype="html">
         <source>codebreaker.helper_global</source>
+        <target>全局</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">152,153</context>
@@ -662,6 +752,7 @@
       </trans-unit>
       <trans-unit id="codebreaker.opponent_history" datatype="html">
         <source>codebreaker.opponent_history</source>
+        <target>对手猜测进度</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">193,194</context>
@@ -669,6 +760,7 @@
       </trans-unit>
       <trans-unit id="game.room_info" datatype="html">
         <source>game.room_info</source>
+        <target>房间信息</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">299,300</context>
@@ -708,6 +800,7 @@
       </trans-unit>
       <trans-unit id="lobby.drop2048" datatype="html">
         <source>lobby.drop2048</source>
+        <target>2048 下落合成</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/drop2048/drop2048.component.html</context>
           <context context-type="linenumber">13,14</context>
@@ -715,6 +808,7 @@
       </trans-unit>
       <trans-unit id="game.spectating" datatype="html">
         <source>game.spectating</source>
+        <target>观战中...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/drop2048/drop2048.component.html</context>
           <context context-type="linenumber">94,95</context>
@@ -730,6 +824,7 @@
       </trans-unit>
       <trans-unit id="game.start_match" datatype="html">
         <source>START</source>
+        <target>开始游戏</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/drop2048/drop2048.component.html</context>
           <context context-type="linenumber">106,107</context>
@@ -749,6 +844,7 @@
       </trans-unit>
       <trans-unit id="game.gomoku" datatype="html">
         <source>Gomoku</source>
+        <target>五子棋</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/gomoku/gomoku.component.html</context>
           <context context-type="linenumber">12</context>
@@ -756,6 +852,7 @@
       </trans-unit>
       <trans-unit id="gomoku.diff.easy" datatype="html">
         <source>Easy</source>
+        <target>简单 (新手)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/gomoku/gomoku.component.html</context>
           <context context-type="linenumber">31,32</context>
@@ -763,6 +860,7 @@
       </trans-unit>
       <trans-unit id="gomoku.diff.medium" datatype="html">
         <source>Medium</source>
+        <target>中等 (进阶)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/gomoku/gomoku.component.html</context>
           <context context-type="linenumber">32,33</context>
@@ -770,6 +868,7 @@
       </trans-unit>
       <trans-unit id="gomoku.diff.hard" datatype="html">
         <source>Hard</source>
+        <target>困难 (大师)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/gomoku/gomoku.component.html</context>
           <context context-type="linenumber">33,34</context>
@@ -777,6 +876,7 @@
       </trans-unit>
       <trans-unit id="game.prev_level" datatype="html">
         <source>game.prev_level</source>
+        <target>上一关</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">23,24</context>
@@ -784,6 +884,7 @@
       </trans-unit>
       <trans-unit id="game.level" datatype="html">
         <source>game.level</source>
+        <target>等级</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">28</context>
@@ -791,6 +892,7 @@
       </trans-unit>
       <trans-unit id="game.next_level" datatype="html">
         <source>game.next_level</source>
+        <target>下一关</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">34</context>
@@ -802,6 +904,7 @@
       </trans-unit>
       <trans-unit id="game.frozen" datatype="html">
         <source>Frozen Penalty</source>
+        <target>冻结</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">46,47</context>
@@ -809,6 +912,7 @@
       </trans-unit>
       <trans-unit id="game.hint_ad" datatype="html">
         <source>game.hint_ad</source>
+        <target>提醒Ad</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">97,98</context>
@@ -816,6 +920,7 @@
       </trans-unit>
       <trans-unit id="game.undo" datatype="html">
         <source>game.undo</source>
+        <target>撤销</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">105,106</context>
@@ -827,6 +932,7 @@
       </trans-unit>
       <trans-unit id="game.reset" datatype="html">
         <source>game.reset</source>
+        <target>重置</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
           <context context-type="linenumber">109,110</context>
@@ -834,6 +940,7 @@
       </trans-unit>
       <trans-unit id="lobby.math24" datatype="html">
         <source>lobby.math24</source>
+        <target>24点</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-lobby/math24-lobby.component.html</context>
           <context context-type="linenumber">5,6</context>
@@ -849,6 +956,7 @@
       </trans-unit>
       <trans-unit id="lobby.select_level" datatype="html">
         <source>lobby.select_level</source>
+        <target>请选择难度和关卡开始游戏</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-lobby/math24-lobby.component.html</context>
           <context context-type="linenumber">6,7</context>
@@ -860,6 +968,7 @@
       </trans-unit>
       <trans-unit id="game.single_mode" datatype="html">
         <source>game.single_mode</source>
+        <target>单机</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/math24.component.html</context>
           <context context-type="linenumber">33,34</context>
@@ -867,6 +976,7 @@
       </trans-unit>
       <trans-unit id="app.title" datatype="html">
         <source>Minesweeper</source>
+        <target>扫雷</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">13,14</context>
@@ -874,6 +984,7 @@
       </trans-unit>
       <trans-unit id="game.difficulty" datatype="html">
         <source>game.difficulty</source>
+        <target>游戏等级</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">27,28</context>
@@ -881,6 +992,7 @@
       </trans-unit>
       <trans-unit id="game.leave" datatype="html">
         <source>game.leave</source>
+        <target>离开</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">47,48</context>
@@ -908,6 +1020,7 @@
       </trans-unit>
       <trans-unit id="game.frozen_msg" datatype="html">
         <source>game.frozen_msg</source>
+        <target>你踩到雷了！等待3秒...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">196,197</context>
@@ -915,6 +1028,7 @@
       </trans-unit>
       <trans-unit id="game.settings_title" datatype="html">
         <source>game.settings_title</source>
+        <target>游戏难度</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">265,266</context>
@@ -922,6 +1036,7 @@
       </trans-unit>
       <trans-unit id="game.diff_custom" datatype="html">
         <source>game.diff_custom</source>
+        <target>自定义</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">293,294</context>
@@ -929,6 +1044,7 @@
       </trans-unit>
       <trans-unit id="game.width" datatype="html">
         <source>game.width</source>
+        <target>宽度</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">302,303</context>
@@ -936,6 +1052,7 @@
       </trans-unit>
       <trans-unit id="game.height" datatype="html">
         <source>game.height</source>
+        <target>高度</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">311,312</context>
@@ -943,6 +1060,7 @@
       </trans-unit>
       <trans-unit id="game.mines" datatype="html">
         <source>game.mines</source>
+        <target>地雷</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">320,321</context>
@@ -950,6 +1068,7 @@
       </trans-unit>
       <trans-unit id="game.apply" datatype="html">
         <source>game.apply</source>
+        <target>应用</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
           <context context-type="linenumber">336,337</context>
@@ -957,6 +1076,7 @@
       </trans-unit>
       <trans-unit id="game.play_again" datatype="html">
         <source>game.play_again</source>
+        <target>再来一局</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sliding/sliding.component.html</context>
           <context context-type="linenumber">212,213</context>
@@ -968,6 +1088,7 @@
       </trans-unit>
       <trans-unit id="lobby.sudoku" datatype="html">
         <source>Sudoku</source>
+        <target>数独</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/components/sudoku-lobby/sudoku-lobby.component.html</context>
           <context context-type="linenumber">8</context>
@@ -975,6 +1096,7 @@
       </trans-unit>
       <trans-unit id="game.clear" datatype="html">
         <source>game.clear</source>
+        <target>重开</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/components/sudoku-tools/sudoku-tools.component.html</context>
           <context context-type="linenumber">9,10</context>
@@ -982,6 +1104,7 @@
       </trans-unit>
       <trans-unit id="game.erase" datatype="html">
         <source>game.erase</source>
+        <target>擦除</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/components/sudoku-tools/sudoku-tools.component.html</context>
           <context context-type="linenumber">27,28</context>
@@ -989,6 +1112,7 @@
       </trans-unit>
       <trans-unit id="game.notes" datatype="html">
         <source>game.notes</source>
+        <target>笔记</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/components/sudoku-tools/sudoku-tools.component.html</context>
           <context context-type="linenumber">47,48</context>
@@ -996,6 +1120,7 @@
       </trans-unit>
       <trans-unit id="game.get_ready" datatype="html">
         <source>game.get_ready</source>
+        <target>准备就绪！</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
           <context context-type="linenumber">21,22</context>
@@ -1003,6 +1128,7 @@
       </trans-unit>
       <trans-unit id="game.mode" datatype="html">
         <source>game.mode</source>
+        <target>模式</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
           <context context-type="linenumber">23,24</context>
@@ -1014,6 +1140,7 @@
       </trans-unit>
       <trans-unit id="game.win" datatype="html">
         <source>game.win</source>
+        <target>恭喜！你赢了。</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
           <context context-type="linenumber">98,99</context>
@@ -1021,6 +1148,7 @@
       </trans-unit>
       <trans-unit id="game.sudoku.next_level_prompt" datatype="html">
         <source>Level cleared! Play next?</source>
+        <target>闯关成功，是否需要玩下一关？</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
           <context context-type="linenumber">99,100</context>
@@ -1028,6 +1156,7 @@
       </trans-unit>
       <trans-unit id="tetris.title" datatype="html">
         <source>Tetris</source>
+        <target>俄罗斯方块</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/tetris/tetris.component.html</context>
           <context context-type="linenumber">13</context>
@@ -1035,6 +1164,7 @@
       </trans-unit>
       <trans-unit id="lobby.title" datatype="html">
         <source>lobby.title</source>
+        <target>终极脑力竞技场</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
           <context context-type="linenumber">48,49</context>
@@ -1050,6 +1180,7 @@
       </trans-unit>
       <trans-unit id="lobby.subtitle" datatype="html">
         <source>lobby.subtitle</source>
+        <target>从逻辑推理到空间解谜，挑战自我极限，或与全球玩家在线竞技。</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -1057,6 +1188,7 @@
       </trans-unit>
       <trans-unit id="lobby.ready" datatype="html">
         <source>lobby.ready</source>
+        <target>已就绪</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
           <context context-type="linenumber">453,454</context>
@@ -1064,6 +1196,7 @@
       </trans-unit>
       <trans-unit id="profile.title" datatype="html">
         <source>Global Achievements</source>
+        <target>个人成就档案</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
           <context context-type="linenumber">27,28</context>
@@ -1071,6 +1204,7 @@
       </trans-unit>
       <trans-unit id="profile.no_stats" datatype="html">
         <source>No records found</source>
+        <target>暂无游戏记录</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
           <context context-type="linenumber">40,41</context>
@@ -1078,6 +1212,7 @@
       </trans-unit>
       <trans-unit id="profile.no_stats_desc" datatype="html">
         <source>Play some games to build up your profile!</source>
+        <target>去大厅玩几局游戏，点亮你的成就吧！</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
           <context context-type="linenumber">41,42</context>
@@ -1085,6 +1220,7 @@
       </trans-unit>
       <trans-unit id="profile.best_time" datatype="html">
         <source>profile.best_time</source>
+        <target>最佳时间</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
           <context context-type="linenumber">86,87</context>
@@ -1092,6 +1228,7 @@
       </trans-unit>
       <trans-unit id="profile.best_score" datatype="html">
         <source>profile.best_score</source>
+        <target>最高分数</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
           <context context-type="linenumber">93,94</context>
@@ -1099,6 +1236,7 @@
       </trans-unit>
       <trans-unit id="game.play_now" datatype="html">
         <source>game.play_now</source>
+        <target>去游玩</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
           <context context-type="linenumber">107,108</context>
@@ -1106,6 +1244,7 @@
       </trans-unit>
       <trans-unit id="game.restart" datatype="html">
         <source>Play Again</source>
+        <target>再来一局</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
           <context context-type="linenumber">53,54</context>
@@ -1113,6 +1252,7 @@
       </trans-unit>
       <trans-unit id="game.dismiss_room" datatype="html">
         <source>Dismiss Room</source>
+        <target>解散房间</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
           <context context-type="linenumber">67,68</context>
@@ -1120,6 +1260,7 @@
       </trans-unit>
       <trans-unit id="game.recommendations" datatype="html">
         <source>You might also like</source>
+        <target>你可能也喜欢</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
           <context context-type="linenumber">77,79</context>
@@ -1127,6 +1268,7 @@
       </trans-unit>
       <trans-unit id="game.rules.title" datatype="html">
         <source>game.rules.title</source>
+        <target>玩法说明</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-rules-modal/game-rules-modal.component.ts</context>
           <context context-type="linenumber">40,41</context>
@@ -1134,6 +1276,7 @@
       </trans-unit>
       <trans-unit id="game.rules.got_it" datatype="html">
         <source>game.rules.got_it</source>
+        <target>明白啦！</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-rules-modal/game-rules-modal.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -1141,6 +1284,7 @@
       </trans-unit>
       <trans-unit id="game.starting" datatype="html">
         <source>game.starting</source>
+        <target>即将开始...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-starting-overlay/game-starting-overlay.component.ts</context>
           <context context-type="linenumber">16,17</context>
@@ -1148,6 +1292,7 @@
       </trans-unit>
       <trans-unit id="game.waiting_room" datatype="html">
         <source>game.waiting_room</source>
+        <target>等待大厅</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">19,21</context>
@@ -1155,6 +1300,7 @@
       </trans-unit>
       <trans-unit id="game.room_name" datatype="html">
         <source>game.room_name</source>
+        <target>房间名称</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -1162,6 +1308,7 @@
       </trans-unit>
       <trans-unit id="game.copied" datatype="html">
         <source>Copied!</source>
+        <target>复制成功！快去粘贴分享给好友吧</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">32,33</context>
@@ -1169,6 +1316,7 @@
       </trans-unit>
       <trans-unit id="game.host" datatype="html">
         <source>game.host</source>
+        <target>房主</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">53,54</context>
@@ -1176,6 +1324,7 @@
       </trans-unit>
       <trans-unit id="game.change_settings" datatype="html">
         <source>Change Settings</source>
+        <target>切换游戏</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">72,73</context>
@@ -1183,6 +1332,7 @@
       </trans-unit>
       <trans-unit id="game.waiting_for_players_ready" datatype="html">
         <source>Waiting for all players to ready...</source>
+        <target>等待所有玩家准备...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">77,79</context>
@@ -1190,6 +1340,7 @@
       </trans-unit>
       <trans-unit id="game.cancel_ready" datatype="html">
         <source>Cancel Ready</source>
+        <target>取消准备</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">87,88</context>
@@ -1197,6 +1348,7 @@
       </trans-unit>
       <trans-unit id="game.ready" datatype="html">
         <source>Ready</source>
+        <target>准备战斗</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
           <context context-type="linenumber">91,92</context>
@@ -1204,6 +1356,7 @@
       </trans-unit>
       <trans-unit id="maintenance.title" datatype="html">
         <source>maintenance.title</source>
+        <target>系统维护中</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/maintenance/maintenance.component.ts</context>
           <context context-type="linenumber">11,13</context>

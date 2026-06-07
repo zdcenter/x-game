@@ -6,7 +6,7 @@ import { GameService, GameConfig as BackendGameConfig, getLocalizedField } from 
 import { WebSocketService } from '../../core/services/websocket.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
-import { GameConfig as RegistryGameConfig } from '../../core/services/game-registry.service';
+import { GameConfig as RegistryGameConfig, GameRegistryService } from '../../core/services/game-registry.service';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { HttpClient } from '@angular/common/http';
 import { environment as versionEnv } from '../../../environments/version';
@@ -441,13 +441,13 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
             </div>
             <!-- Card Content -->
             <div class="p-6 relative">
-              <h2 class="text-2xl font-bold mb-2 pr-16">{{ getLocalized(game.name) }}</h2>
+              <h2 class="text-2xl font-bold mb-2 pr-16">{{ getGameTitle(game.id) }}</h2>
               <div class="absolute top-6 right-6 flex items-center gap-1 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-main)] px-2 py-1 rounded-full border border-[var(--color-border-card)] shadow-sm">
                 <span class="text-xs">🔥</span>
                 <span class="font-bold">{{ game.visitCount || 0 }}</span>
               </div>
               <p class="opacity-70 text-sm line-clamp-2">
-                {{ getLocalized(game.overview) }}
+                {{ getGameDesc(game.id) }}
               </p>
               <div class="mt-4 flex flex-wrap gap-2">
                 <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-emerald-500"><ng-container i18n="@@lobby.ready">lobby.ready</ng-container></span>
@@ -576,7 +576,17 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }
   }
 
-  getLocalized(field: string): string {
-    return getLocalizedField(field, this.i18n.currentLang());
+  gameRegistry = inject(GameRegistryService);
+
+  getGameTitle(gameId: string): string {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config && config.titleKey) return this.i18n.t(config.titleKey)();
+    return this.i18n.t('app.title')();
+  }
+
+  getGameDesc(gameId: string): string {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config && config.titleKey) return this.i18n.t(config.titleKey + '.desc')();
+    return '';
   }
 }

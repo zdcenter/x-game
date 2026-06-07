@@ -13,7 +13,7 @@ function generateXlf(lang) {
 
   let translatedXml = baseXml;
   
-  translatedXml = translatedXml.replace(/<trans-unit id="@@([^"]+)" datatype="html">([\s\S]*?)<\/trans-unit>/g, (match, key, inner) => {
+  translatedXml = translatedXml.replace(/<trans-unit id="([^"]+)" datatype="html">([\s\S]*?)<\/trans-unit>/g, (match, key, inner) => {
     let translation = dict[key];
     if (translation === undefined) {
       console.warn(`Missing translation for ${lang}: ${key}`);
@@ -24,7 +24,7 @@ function generateXlf(lang) {
     const sourceRegex = /(<source>[\s\S]*?<\/source>)/;
     if (sourceRegex.test(inner)) {
       const replacedInner = inner.replace(sourceRegex, `$1\n        <target>${translation}</target>`);
-      return `<trans-unit id="@@${key}" datatype="html">${replacedInner}</trans-unit>`;
+      return `<trans-unit id="${key}" datatype="html">${replacedInner}</trans-unit>`;
     } else {
       return match;
     }

@@ -55,9 +55,9 @@ export interface GameDifficulty {
                   <div class="flex items-center gap-3 overflow-hidden">
                     <span class="text-2xl animate-pulse shrink-0">📢</span>
                     <div class="text-sm font-bold text-[var(--color-text-main)] truncate">
-                      👑 玩家【<span class="text-yellow-500">{{ msg.senderName || msg.senderId }}</span>】在《{{ getGameLabel(msg.room.game) }}》{{ getModeLabel(msg.room.mode, msg.room.game) }}摆下擂台，
+                      {{ t('game.broadcast_msg').replace('{player}', msg.senderName || msg.senderId).replace('{game}', getGameLabel(msg.room.game)).replace('{mode}', getModeLabel(msg.room.mode, msg.room.game)) }}
                       <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host, msg.room.hasPassword)" class="text-amber-400 hover:text-amber-300 underline decoration-amber-400/50 hover:decoration-amber-300 font-black cursor-pointer ml-1 transition-colors">
-                        [点击此处] 立即应战！
+                        {{ t('game.broadcast_join') }}
                       </button>
                     </div>
                   </div>
@@ -121,7 +121,7 @@ export interface GameDifficulty {
                           }
                           @if (room.host === playerId()) {
                             <button (click)="sendHeroBroadcast(room)" class="px-3 py-1 bg-amber-600/20 text-amber-400 border border-amber-500/50 text-xs font-bold rounded shadow hover:bg-amber-600 hover:text-white transition-colors ml-2">
-                              📢 发英雄帖
+                              {{ t('game.broadcast_btn') }}
                             </button>
                             <button (click)="openUpdateRoomModal(room)" class="px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/50 text-xs font-bold rounded shadow hover:bg-blue-600 hover:text-white transition-colors ml-2">
                               {{ t('game.change_settings') || 'Change Game' }}
@@ -589,7 +589,7 @@ export class GameLobbyPanelComponent implements OnInit {
         host: room.host
       }
     });
-    this.toastService.show('广播发送成功！', 'success');
+    this.toastService.show(this.t('game.broadcast_success'), 'success');
   }
 
   getModeLabel(modeId: string, gameId?: string): string {
