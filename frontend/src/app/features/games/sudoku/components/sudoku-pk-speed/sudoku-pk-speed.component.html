@@ -1,5 +1,5 @@
 
-    <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto custom-scrollbar md:overflow-hidden relative">
+    <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-hidden relative">
       
       @if (store.isFinished() || store.gameStatus() === 'finished') {
         <app-game-result-overlay
@@ -78,7 +78,7 @@
       </div>
 
       <div class="flex-grow flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-start md:justify-center md:content-start items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto">
-        <div class="order-1 relative min-w-0 w-full" [class.animate-board-shake]="store.isFinished() || store.gameStatus() === 'finished'">
+        <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-280px))] mx-auto" [class.animate-board-shake]="store.isFinished() || store.gameStatus() === 'finished'">
           <app-sudoku-board class="w-full"></app-sudoku-board>
         </div>
 

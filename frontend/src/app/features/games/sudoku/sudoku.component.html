@@ -33,7 +33,7 @@
           <app-sudoku-pk-speed (openLobby)="isMobileSidebarOpen.set(true)"></app-sudoku-pk-speed>
         } @else {
           <!-- Single Player -->
-          <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto custom-scrollbar md:overflow-hidden relative">
+          <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-hidden relative">
             
             <!-- Top Navigation Bar with Progress -->
             <div class="flex flex-col shrink-0 w-full max-w-[500px] md:max-w-none mx-auto mb-2 md:mb-0">
@@ -105,7 +105,7 @@
               </app-game-result-overlay>
             }
 
-              <div class="order-1 relative min-w-0 w-full" [class.animate-board-shake]="store.isFinished() && store.currentMode() === 'single'">
+              <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-280px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentMode() === 'single'">
                 <app-sudoku-board class="w-full"></app-sudoku-board>
               </div>
 

@@ -35,9 +35,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           </div>
           
           <div class="flex items-center gap-1 shrink-0 justify-end flex-nowrap overflow-hidden">
-            <ng-container *ngIf="stats && stats.length > 0">
+            <ng-container *ngIf="filteredStats.length > 0">
               <div class="flex items-center gap-1 shrink-0">
-                <div *ngFor="let stat of stats" class="flex items-center gap-0.5 bg-[var(--color-bg-main)] px-1 py-0.5 rounded shadow-inner border border-[var(--color-border-card)] leading-none truncate max-w-[60px] md:max-w-none" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
+                <div *ngFor="let stat of filteredStats" class="flex items-center gap-0.5 bg-[var(--color-bg-main)] px-1 py-0.5 rounded shadow-inner border border-[var(--color-border-card)] leading-none truncate max-w-[60px] md:max-w-none" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
                   <span *ngIf="stat.icon" class="text-[10px] opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
                   <span class="text-[11px] font-mono font-bold truncate">{{ stat.value }}</span>
                   <span *ngIf="stat.label && !stat.icon" class="text-[9px] font-bold opacity-70 uppercase hidden md:inline">{{ stat.label }}</span>
@@ -128,6 +128,10 @@ export class PlayerBadgeComponent {
   get progressPercent(): number {
     if (!this.progress || this.progress.total === 0) return 0;
     return Math.min(100, Math.max(0, (this.progress.current / this.progress.total) * 100));
+  }
+
+  get filteredStats() {
+    return (this.stats || []).filter(s => !!s);
   }
 
   isSpectating(): boolean {

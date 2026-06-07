@@ -61,7 +61,7 @@
         </app-game-header>
 
         <!-- Main Content Area -->
-        <div class="flex-grow flex flex-col relative min-h-0 overflow-y-auto bg-[var(--color-bg-base)] rounded-b-2xl lg:rounded-b-3xl">
+        <div class="flex-grow flex flex-col relative min-h-0 overflow-hidden bg-[var(--color-bg-base)] rounded-b-2xl lg:rounded-b-3xl">
           
           @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
             <app-game-waiting-room
@@ -119,9 +119,9 @@
             </div>
 
             <!-- The Grid Area -->
-            <div class="flex-1 flex flex-col items-center justify-start lg:justify-center min-h-[300px] py-4 relative w-full" #boardArea>
+            <div class="flex-1 flex flex-col items-center justify-start lg:justify-center min-h-0 py-4 relative w-full" #boardArea>
               
-              <div class="relative min-h-[300px] max-h-[55vh] lg:max-h-[500px] w-full max-w-[500px] flex items-center justify-center">
+              <div class="relative min-h-0 max-h-[55vh] lg:max-h-[500px] w-full max-w-[500px] flex items-center justify-center">
                 <app-hexa-board
                   class="w-full h-full"
                   [cells]="store.cells()"

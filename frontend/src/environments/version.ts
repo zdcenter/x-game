@@ -1,3 +1,3 @@
 export const environment = {
-  version: 'v2026.06.07.1441'
+  version: 'v2026.06.07.1451'
 };

@@ -99,12 +99,12 @@ func SaveSudokuProgress(c fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	err := db.DB.Model(&domain.UserSudokuProgress{}).
-		Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).
-		Updates(map[string]interface{}{
-			"current_state": req.CurrentState,
-			"time_spent":    req.TimeSpent,
-		}).Error
+	var progress domain.UserSudokuProgress
+	err := db.DB.Where(domain.UserSudokuProgress{UserID: userID, PuzzleID: puzzleID}).
+		Assign(domain.UserSudokuProgress{
+			CurrentState: req.CurrentState,
+			TimeSpent:    req.TimeSpent,
+		}).FirstOrCreate(&progress).Error
 
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to save progress"})
@@ -134,13 +134,13 @@ func FinishSudoku(c fiber.Ctx) error {
 	}
 
 	// Verify solution server side optionally, but for now just update status
-	err := db.DB.Model(&domain.UserSudokuProgress{}).
-		Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).
-		Updates(map[string]interface{}{
-			"status":     domain.SudokuStatusFinished,
-			"time_spent": req.TimeSpent,
-			"stars":      req.Stars,
-		}).Error
+	var progress domain.UserSudokuProgress
+	err := db.DB.Where(domain.UserSudokuProgress{UserID: userID, PuzzleID: puzzleID}).
+		Assign(domain.UserSudokuProgress{
+			Status:    domain.SudokuStatusFinished,
+			TimeSpent: req.TimeSpent,
+			Stars:     req.Stars,
+		}).FirstOrCreate(&progress).Error
 
 	if err != nil {
 		log.Println("Error updating:", err)

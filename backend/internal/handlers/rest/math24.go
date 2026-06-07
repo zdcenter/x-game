@@ -101,13 +101,13 @@ func FinishMath24(c fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	err := db.DB.Model(&domain.UserMath24Progress{}).
-		Where("user_id = ? AND puzzle_id = ?", userID, puzzleID).
-		Updates(map[string]interface{}{
-			"status":     domain.Math24StatusFinished,
-			"time_spent": req.TimeSpent,
-			"stars":      req.Stars,
-		}).Error
+	var progress domain.UserMath24Progress
+	err := db.DB.Where(domain.UserMath24Progress{UserID: userID, PuzzleID: puzzleID}).
+		Assign(domain.UserMath24Progress{
+			Status:    domain.Math24StatusFinished,
+			TimeSpent: req.TimeSpent,
+			Stars:     req.Stars,
+		}).FirstOrCreate(&progress).Error
 
 	if err != nil {
 		log.Println("Error updating:", err)
