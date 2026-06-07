@@ -79,10 +79,10 @@
 
       <!-- Players / Opponents (Top) -->
       <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
-        <div class="w-full max-w-[800px] mx-auto flex gap-4 overflow-x-auto pb-2 custom-scrollbar px-2 snap-x" [class.justify-center]="currentRoomMode() === 'single'">
+        <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === 'single'">
           
           <!-- Local Player (You) -->
-          <app-player-badge class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0" layout="card"
+          <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
             [playerName]="playerId"
             [isHost]="playerId === store.host()"
             [isMe]="true"
@@ -94,34 +94,42 @@
             ]"
             [status]="store.status() === 'finished' ? 'finished' : 'playing'"></app-player-badge>
 
-          @if (currentRoomMode() === 'pk_speed' && store.speedOpponents().length > 0) {
-            @for (opp of store.speedOpponents(); track opp.id) {
-              <app-player-badge class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0" layout="card"
-                [playerName]="opp.id"
-                [isHost]="opp.id === store.host()"
-                [isMe]="false"
-                [stats]="[
-                  { label: 'PROG', value: (opp.progress | number:'1.0-0') + '%' },
-                  (opp.errors > 0 ? { icon: '❌', value: opp.errors, colorClass: 'text-red-400' } : $any(null))
-                ]"
-                [status]="opp.progress === 100 ? 'finished' : 'playing'"></app-player-badge>
-            }
-          }
+          @if (currentRoomMode() !== 'single') {
+            <app-player-list-container 
+              [opponentsCount]="currentRoomMode() === 'pk_speed' ? store.speedOpponents().length : (getPlayerScores().length - 1)" 
+              class="flex-1 min-w-0 flex justify-end lg:justify-start">
+              <ng-template #opponentsList>
+                @if (currentRoomMode() === 'pk_speed' && store.speedOpponents().length > 0) {
+                  @for (opp of store.speedOpponents(); track opp.id) {
+                    <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                      [playerName]="opp.id"
+                      [isHost]="opp.id === store.host()"
+                      [isMe]="false"
+                      [stats]="[
+                        { label: 'PROG', value: (opp.progress | number:'1.0-0') + '%' },
+                        (opp.errors > 0 ? { icon: '❌', value: opp.errors, colorClass: 'text-red-400' } : $any(null))
+                      ]"
+                      [status]="opp.progress === 100 ? 'finished' : 'playing'"></app-player-badge>
+                  }
+                }
 
-          @if (currentRoomMode() === 'pk_steal') {
-            @for (player of getPlayerScores(); track player.id) {
-              @if (player.id !== playerId) {
-                <app-player-badge class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0" layout="card"
-                  [playerName]="player.id"
-                  [isHost]="player.id === store.host()"
-                  [isMe]="false"
-                  [score]="player.score"
-                  [stats]="[
-                    (store.opponentErrors() > 0 ? { icon: '❌', value: store.opponentErrors(), colorClass: 'text-red-400' } : $any(null))
-                  ]"
-                  [status]="store.status() === 'finished' ? 'finished' : 'playing'"></app-player-badge>
-              }
-            }
+                @if (currentRoomMode() === 'pk_steal') {
+                  @for (player of getPlayerScores(); track player.id) {
+                    @if (player.id !== playerId) {
+                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                        [playerName]="player.id"
+                        [isHost]="player.id === store.host()"
+                        [isMe]="false"
+                        [score]="player.score"
+                        [stats]="[
+                          (store.opponentErrors() > 0 ? { icon: '❌', value: store.opponentErrors(), colorClass: 'text-red-400' } : $any(null))
+                        ]"
+                        [status]="store.status() === 'finished' ? 'finished' : 'playing'"></app-player-badge>
+                    }
+                  }
+                }
+              </ng-template>
+            </app-player-list-container>
           }
         </div>
       </div>
@@ -212,9 +220,6 @@
           </div>
         </div>
       </div>
-      <!-- Rules Modal -->
-      <app-game-rules-modal [gameId]="'minesweeper'" [isOpen]="showRules()"
-        (closed)="showRules.set(false)"></app-game-rules-modal>
     </div>
   </div>
 
@@ -240,6 +245,9 @@
       (dismissRoom)="dismissRoom()"></app-game-lobby-panel>
   </div>
 
+  <!-- Rules Modal -->
+  <app-game-rules-modal [gameId]="'minesweeper'" [isOpen]="showRules()"
+    (closed)="showRules.set(false)"></app-game-rules-modal>
 </div>
 
 <!-- Difficulty Settings Modal (Only used for single player now) -->

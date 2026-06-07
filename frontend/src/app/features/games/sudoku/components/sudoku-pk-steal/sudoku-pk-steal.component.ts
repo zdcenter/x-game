@@ -10,10 +10,12 @@ import { GameRegistryService } from '../../../../../core/services/game-registry.
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
+import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
+
 @Component({
   selector: 'app-sudoku-pk-steal',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent],
   templateUrl: './sudoku-pk-steal.component.html',
   styleUrl: './sudoku-pk-steal.component.css'})
 export class SudokuPkStealComponent {

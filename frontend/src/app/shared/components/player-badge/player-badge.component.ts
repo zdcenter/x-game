@@ -9,7 +9,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   template: `
     <!-- Card Layout (used for Steal, Hexa, Sliding, Codebreaker) -->
     <ng-container *ngIf="layout === 'card'">
-      <div class="flex items-center gap-3 px-3 py-2 rounded-xl border transition-all duration-300 relative overflow-hidden"
+      <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg border transition-all duration-300 relative overflow-hidden"
            [ngClass]="{
              'border-blue-500 bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.15)]': isMe,
              'border-[var(--color-border-card)] bg-[var(--color-bg-card)]': !isMe,
@@ -18,54 +18,53 @@ import { I18nService } from '../../../core/i18n/i18n.service';
            }">
         
         <!-- Avatar -->
-        <div class="w-10 h-10 rounded-full bg-[var(--color-bg-main)] flex items-center justify-center font-bold text-lg border border-[var(--color-border-card)] shadow-inner relative z-10 shrink-0">
-          <span *ngIf="isHost && !isSpectating()" class="absolute -top-2 -right-2 text-base drop-shadow-md z-20">👑</span>
-          <span *ngIf="isSpectating()" class="absolute -top-2 -right-2 text-base drop-shadow-md z-20">👁️</span>
+        <div class="w-8 h-8 rounded-full bg-[var(--color-bg-main)] flex items-center justify-center font-bold text-sm border border-[var(--color-border-card)] shadow-inner relative z-10 shrink-0">
+          <span *ngIf="isHost && !isSpectating()" class="absolute -top-1.5 -right-1.5 text-xs drop-shadow-md z-20">👑</span>
+          <span *ngIf="isSpectating()" class="absolute -top-1.5 -right-1.5 text-xs drop-shadow-md z-20">👁️</span>
           {{ avatarChar }}
         </div>
         
-        <!-- Info Column -->
-        <div class="flex flex-col min-w-0 z-10 flex-1">
-          <span class="text-sm font-bold truncate" 
-                [class.text-blue-400]="isMe"
-                [class.text-[var(--color-text-muted)]]="!isMe">
-            {{ isMe ? (i18n.t('game.you')() || 'You') : $any(playerName) }}
-          </span>
+        <!-- Info Row -->
+        <div class="flex items-center min-w-0 z-10 flex-1 justify-between gap-1.5">
+          <div class="flex items-center gap-1 shrink w-12 md:w-auto">
+            <span class="text-xs md:text-sm font-bold truncate" 
+                  [class.text-blue-400]="isMe"
+                  [class.text-[var(--color-text-muted)]]="!isMe">
+              {{ isMe ? (i18n.t('game.you')() || 'You') : $any(playerName) }}
+            </span>
+          </div>
           
-          <div class="flex items-end gap-2 mt-0.5 truncate flex-wrap">
-            <ng-container *ngIf="score !== undefined">
-              <div class="flex items-end gap-0.5">
-                <span class="text-lg font-black leading-none text-[var(--color-text-main)]">{{ score }}</span>
-                <span class="text-[10px] text-[var(--color-text-muted)] font-bold mb-0.5">pts</span>
-              </div>
-            </ng-container>
+          <div class="flex items-center gap-1 shrink-0 justify-end flex-nowrap overflow-hidden">
             <ng-container *ngIf="stats && stats.length > 0">
-              <div class="flex items-center gap-2 shrink-0">
-                <div *ngFor="let stat of stats" class="flex items-center gap-1 bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded shadow-inner border border-[var(--color-border-card)]" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
-                  <span *ngIf="stat.icon" class="text-[10px] opacity-80" [title]="stat.label || ''">{{ stat.icon }}</span>
-                  <span class="text-xs font-mono font-bold">{{ stat.value }}</span>
-                  <span *ngIf="stat.label && !stat.icon" class="text-[8px] font-bold opacity-70 uppercase">{{ stat.label }}</span>
+              <div class="flex items-center gap-1 shrink-0">
+                <div *ngFor="let stat of stats" class="flex items-center gap-0.5 bg-[var(--color-bg-main)] px-1 py-0.5 rounded shadow-inner border border-[var(--color-border-card)] leading-none truncate max-w-[60px] md:max-w-none" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
+                  <span *ngIf="stat.icon" class="text-[10px] opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
+                  <span class="text-[11px] font-mono font-bold truncate">{{ stat.value }}</span>
+                  <span *ngIf="stat.label && !stat.icon" class="text-[9px] font-bold opacity-70 uppercase hidden md:inline">{{ stat.label }}</span>
                 </div>
               </div>
             </ng-container>
             <ng-container *ngIf="subText">
-              <span class="text-xs font-mono font-bold text-[var(--color-text-main)] truncate">{{ subText }}</span>
+              <span class="text-[10px] md:text-xs font-mono font-bold text-[var(--color-text-main)] truncate max-w-[50px] md:max-w-[100px]">{{ subText }}</span>
             </ng-container>
-            <ng-container *ngIf="score === undefined && !subText && (!stats || stats.length === 0)">
-               <span class="text-xs text-transparent">.</span>
+            
+            <ng-container *ngIf="score !== undefined">
+              <div class="flex items-baseline gap-0.5 shrink-0 ml-1">
+                <span class="text-sm md:text-base font-black leading-none text-[var(--color-text-main)] truncate max-w-[40px] md:max-w-none">{{ score }}</span>
+              </div>
             </ng-container>
           </div>
         </div>
 
         <!-- Finished State Overlay -->
-        <div *ngIf="status === 'finished'" class="absolute inset-0 bg-emerald-500/10 flex items-center justify-center z-0">
-          <span class="text-2xl opacity-20 transform -rotate-12 whitespace-nowrap font-black">{{ $any(i18n.t('game.finished')()) || 'FINISHED' }}</span>
+        <div *ngIf="status === 'finished'" class="absolute inset-0 bg-emerald-500/10 flex items-center justify-center z-0 pointer-events-none">
+          <span class="text-xl opacity-20 transform -rotate-12 whitespace-nowrap font-black">{{ $any(i18n.t('game.finished')()) || 'FINISHED' }}</span>
         </div>
 
         <!-- Frozen Overlay -->
         <div *ngIf="status === 'frozen'" class="absolute inset-0 flex flex-col items-center justify-center bg-blue-900/60 backdrop-blur-[2px] z-20">
-          <span class="text-xl animate-pulse">🥶</span>
-          <span *ngIf="freezeCountdown !== undefined" class="text-xs text-white font-bold mt-0.5">{{ freezeCountdown }}s</span>
+          <span class="text-lg animate-pulse">🥶</span>
+          <span *ngIf="freezeCountdown !== undefined" class="text-[10px] text-white font-bold mt-0.5">{{ freezeCountdown }}s</span>
         </div>
       </div>
     </ng-container>

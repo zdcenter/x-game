@@ -2,6 +2,9 @@ import { Component, inject, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store, Math24Card, Operator } from '../../store/math24.store';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
+import { AdService } from '../../../../../core/services/ad.service';
+import { ToastService } from '../../../../../core/services/toast.service';
+import { Math24Solver } from '../../utils/math24-solver';
 
 @Component({
   selector: 'app-math24-board',
@@ -140,6 +143,8 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 export class Math24BoardComponent {
   store = inject(Math24Store);
   i18n = inject(I18nService);
+  adService = inject(AdService);
+  toastService = inject(ToastService);
 
   operators: Operator[] = ['+', '-', '*', '/'];
   
@@ -216,7 +221,16 @@ export class Math24BoardComponent {
   }
 
   showHintAd() {
-    alert("Ad integration placeholder! Here you would show a rewarded video ad, then give a hint to the user.");
+    this.adService.showRewardedAd(() => {
+      const cards = this.store.boardCards();
+      const solution = Math24Solver.solve(cards);
+      if (solution) {
+        const msg = (this.i18n.t('game.hint_result')() || 'Hint: {hint}').replace('{hint}', solution);
+        this.toastService.show(msg, 'success');
+      } else {
+        this.toastService.show(this.i18n.t('game.no_solution')() || 'No solution', 'error');
+      }
+    });
   }
 
   getPreviewText(): string {

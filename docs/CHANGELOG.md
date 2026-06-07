@@ -19,6 +19,7 @@
 ## [Unreleased]
 ### Added
 - **Google AdSense Integration**: 增加了全局的 Google AdSense 支持，并在前端封装了可高度复用的 `AdsenseComponent` 组件，便于在平台（如大厅、游戏结算等）各处无缝植入广告位，为商业化变现打好基础。
+- **24点智能提示 (Math 24 Hint Ad)**：接入 Google H5 Games Ads（激励视频广告），当玩家遇到不会解的局面时，点击提示观看广告即可获取由回溯算法实时算出的动态解题步骤。
 - **System Settings Module**: Added a new settings page in the Admin Dashboard to control global website configurations.
   - Added Site Maintenance mode toggle with custom message support.
   - Added Global Announcement banner for the game lobby.
@@ -26,7 +27,7 @@
 
 ### Changed
 - Improved traffic simulator to randomize player counts and room creation times for a more natural look.
-### Added
+- **Tetris**: Fixed a bug where restarting a single-player game incorrectly displayed the 'Spectating' overlay.
 - Added pure WebSocket-driven real-time admin dashboard (在线玩家/活跃房间监控).
 - Upgraded JWT auth middleware to support `?token=` query param parsing for WebSocket connections.
 - **Game Visit Counter**: Added a mechanism to track game visits.

@@ -203,6 +203,7 @@ export class TetrisStore {
     this.holdPiece.set(null);
     this.canHold.set(true);
     this.localGarbageApplied = 0;
+    this.isDead.set(false);
     
     if (this.mode() === 'single') {
       this.prng = new PRNG(Date.now());

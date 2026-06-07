@@ -49,11 +49,11 @@
               <div class="flex-1 overflow-y-auto flex flex-col relative bg-[var(--color-bg-base)] p-4">
           
           <!-- Top Opponents Panel in PK Mode / Local Player Panel in Single -->
-          <div class="flex-none pb-4 mb-4 border-b border-[var(--color-border-card)]">
-            <div class="w-full max-w-4xl mx-auto flex gap-4 overflow-x-auto pb-2" [class.justify-center]="store.currentMode() === 'single'">
+          <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)]">
+            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="store.currentMode() === 'single'">
               <!-- Local Player (You) -->
               <app-player-badge
-                class="flex-1 min-w-[200px] max-w-[300px]"
+                class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0"
                 layout="card"
                 [playerName]="playerId"
                 [isHost]="playerId === store.host()"
@@ -62,17 +62,22 @@
                 [status]="store.status() === 'finished' ? 'finished' : 'playing'"
               ></app-player-badge>
 
-              @if (store.currentMode() !== 'single' && store.otherPlayers().length > 0) {
-                @for (opp of store.otherPlayers(); track opp.id) {
-                  <app-player-badge
-                    class="flex-1 min-w-[200px] max-w-[300px]"
-                    layout="card"
-                    [playerName]="opp.id"
-                    [isHost]="opp.id === store.host()"
-                    [score]="opp.score"
-                    [status]="opp.finished ? 'finished' : 'playing'"
-                  ></app-player-badge>
-                }
+              @if (store.currentMode() !== 'single') {
+                <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                  <ng-template #opponentsList>
+                    @for (opp of store.otherPlayers(); track opp.id) {
+                      <app-player-badge
+                        class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0"
+                        layout="card"
+                        [playerName]="opp.id"
+                        [isHost]="opp.id === store.host()"
+                        [isMe]="false"
+                        [score]="opp.score"
+                        [status]="opp.finished ? 'finished' : 'playing'"
+                      ></app-player-badge>
+                    }
+                  </ng-template>
+                </app-player-list-container>
               }
             </div>
           </div>

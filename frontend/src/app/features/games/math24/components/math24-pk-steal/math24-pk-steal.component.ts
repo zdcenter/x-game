@@ -3,27 +3,44 @@ import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
 import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
+import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
 
 @Component({
   selector: 'app-math24-pk-steal',
   standalone: true,
-  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent],
+  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent, PlayerListContainerComponent],
   template: `
     <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
       
       <!-- Top Scoreboard -->
-      <div class="flex-none p-4 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)]">
-        <div class="flex flex-wrap gap-4 justify-center items-center max-w-4xl mx-auto">
-          <app-player-badge
-            *ngFor="let kv of store.players() | keyvalue"
-            layout="card"
-            [playerName]="$any(kv.key)"
-            [isHost]="kv.key === hostId"
-            [isMe]="kv.key === playerId"
-            [score]="kv.value.score"
-            [status]="isFrozen(kv.value) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
-            [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
+      <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)]">
+        <div class="flex items-center gap-2 lg:gap-4 max-w-4xl mx-auto px-2">
+          
+          <!-- Local Player -->
+          <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+            [playerName]="playerId"
+            [isHost]="playerId === hostId"
+            [isMe]="true"
+            [score]="store.players()[playerId]?.score || 0"
+            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+            [freezeCountdown]="isFrozen(store.players()[playerId]) ? getFrozenRemaining(store.players()[playerId]) : undefined"
           ></app-player-badge>
+
+          <!-- Opponents -->
+          <app-player-list-container [opponentsCount]="store.players() ? (store.players() | keyvalue)?.length! - 1 : 0" class="flex-1 min-w-0 flex justify-end lg:justify-start">
+            <ng-template #opponentsList>
+              <ng-container *ngFor="let kv of store.players() | keyvalue">
+                <app-player-badge *ngIf="kv.key !== playerId" class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                  [playerName]="$any(kv.key)"
+                  [isHost]="kv.key === hostId"
+                  [isMe]="false"
+                  [score]="kv.value.score"
+                  [status]="isFrozen(kv.value) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+                  [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
+                ></app-player-badge>
+              </ng-container>
+            </ng-template>
+          </app-player-list-container>
         </div>
       </div>
 

@@ -1,8 +1,10 @@
 import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 /**
  * Reusable game rules modal — any game can use this by providing its gameId.
@@ -14,22 +16,35 @@ import { marked } from 'marked';
 @Component({
   selector: 'app-game-rules-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DragDropModule],
   template: `
     @if (isOpen) {
-      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm"
+      <!-- Overlay Container: Centers on mobile, floats top-right on PC. 
+           On PC (lg), it has no backdrop and does not block clicks (pointer-events-none). -->
+      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4
+                  lg:justify-end lg:items-start lg:p-8 lg:pt-24
+                  bg-[var(--color-overlay)] backdrop-blur-sm lg:bg-transparent lg:backdrop-blur-none
+                  pointer-events-auto lg:pointer-events-none"
            (click)="onBackdropClick($event)">
-        <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden relative">
-          <!-- Header -->
-          <div class="flex items-center justify-between p-5 border-b border-[var(--color-border-card)]">
+        
+        <!-- Draggable Modal Window -->
+        <div cdkDrag
+             class="pointer-events-auto bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-2xl 
+                    w-full max-w-2xl lg:max-w-md max-h-[80vh] flex flex-col overflow-hidden relative">
+          
+          <!-- Header (Drag Handle) -->
+          <div cdkDragHandle 
+               class="flex items-center justify-between p-5 border-b border-[var(--color-border-card)] 
+                      lg:cursor-move lg:active:cursor-grabbing hover:bg-[var(--color-border-card)]/30 transition-colors">
             <h3 class="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
               📖 {{ i18n.t('game.rules.title')() }}
             </h3>
             <button (click)="closed.emit()"
-                    class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
+                    class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] z-10">
               ✕
             </button>
           </div>
+          
           <!-- Content -->
           <div class="p-5 overflow-y-auto prose prose-invert prose-sm max-w-none
                       [&_h1]:text-xl [&_h1]:font-bold [&_h1]:text-[var(--color-text-primary)] [&_h1]:mb-3
@@ -43,6 +58,7 @@ import { marked } from 'marked';
                       [&_code]:bg-[var(--color-bg-main)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs"
                [innerHTML]="parsedRulesHTML()">
           </div>
+          
           <!-- Footer -->
           <div class="p-4 border-t border-[var(--color-border-card)]">
             <button (click)="closed.emit()"
@@ -58,13 +74,14 @@ import { marked } from 'marked';
 export class GameRulesModalComponent implements OnChanges {
   i18n = inject(I18nService);
   private gameService = inject(GameService);
+  private sanitizer = inject(DomSanitizer);
 
   @Input({ required: true }) gameId!: string;
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
 
   private rulesMarkdown = signal('');
-  parsedRulesHTML = signal('');
+  parsedRulesHTML = signal<SafeHtml>('');
 
   private loaded = false;
 
@@ -75,15 +92,15 @@ export class GameRulesModalComponent implements OnChanges {
   }
 
   private loadRules() {
-    this.parsedRulesHTML.set(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string);
+    this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string));
     this.gameService.getGames().subscribe(games => {
       const game = games.find(g => g.id === this.gameId);
       if (game) {
         const md = getLocalizedField(game.rules, this.i18n.currentLang());
         this.rulesMarkdown.set(md);
-        this.parsedRulesHTML.set(marked.parse(md, { async: false }) as string);
+        this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(md, { async: false }) as string));
       } else {
-        this.parsedRulesHTML.set(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string);
+        this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string));
       }
       this.loaded = true;
     });

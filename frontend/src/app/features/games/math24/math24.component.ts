@@ -16,6 +16,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+
+import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 
 @Component({
   selector: 'app-math24',
@@ -31,7 +34,8 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
     GameResultOverlayComponent,
     Math24LobbyComponent,
     GameStartingOverlayComponent,
-    PlayerBadgeComponent
+    PlayerBadgeComponent,
+    GameRulesModalComponent
   ],
   templateUrl: './math24.component.html'
 })
@@ -46,6 +50,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   startingCountdown = signal(3);
+  showRules = signal(false);
   private countdownInterval: any;
 
   get playerId(): string {

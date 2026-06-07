@@ -10,6 +10,7 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -29,7 +30,8 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     Drop2048BoardComponent,
-    GameRulesModalComponent
+    GameRulesModalComponent,
+    PlayerListContainerComponent
   ],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html'

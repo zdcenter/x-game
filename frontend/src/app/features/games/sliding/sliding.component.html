@@ -85,12 +85,11 @@
           } @else {
 
           <!-- Players / Opponents (Top) -->
-          <div class="flex-none pt-4 pb-2 mb-2 border-b border-[var(--color-border-card)] shrink-0">
-            <div class="w-full max-w-[800px] mx-auto flex gap-4 overflow-x-auto pb-2 custom-scrollbar px-2 snap-x" [class.justify-center]="currentRoomMode() === 'single'">
+          <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
+            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === 'single'">
               
               <!-- Local Player (You) -->
-              <div class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0">
-                <app-player-badge class="block w-full" layout="card"
+              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                 [playerName]="playerId"
                 [isHost]="playerId === store.host()"
                 [isMe]="true"
@@ -98,20 +97,25 @@
                   { icon: '⏱️', value: formatTime(getElapsedMs(currentRoomMode() === 'single' ? (store.myBoard()?.startAt || 0) : store.globalStartAt())), colorClass: store.status() === 'playing' ? 'text-pink-400' : '' },
                   { icon: '🔄', value: store.myBoard()?.moves || 0 }
                 ]"
-                [status]="store.myBoard()?.status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
-              </div>
+                [status]="store.myBoard()?.status === 'finished' ? 'finished' : 'playing'">
+              </app-player-badge>
 
               @if (currentRoomMode() !== 'single') {
-                @for (opp of store.otherPlayers(); track opp.id) {
-                <div class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0">
-                  <app-player-badge class="block w-full" layout="card" [playerName]="opp.id"
-                  [isHost]="opp.id === store.host()" [isMe]="false"
-                  [stats]="[
-                    { icon: '🔄', value: opp.board?.moves || 0 }
-                  ]"
-                  [status]="opp.board?.status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
-                </div>
-                }
+                <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                  <ng-template #opponentsList>
+                    @for (opp of store.otherPlayers(); track opp.id) {
+                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" 
+                        [playerName]="opp.id"
+                        [isHost]="opp.id === store.host()" 
+                        [isMe]="false"
+                        [stats]="[
+                          { icon: '🔄', value: opp.board?.moves || 0 }
+                        ]"
+                        [status]="opp.board?.status === 'finished' ? 'finished' : 'playing'">
+                      </app-player-badge>
+                    }
+                  </ng-template>
+                </app-player-list-container>
               }
             </div>
           </div>

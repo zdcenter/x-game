@@ -39,7 +39,7 @@
                   <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
                 </button>
               }
-              <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
+              <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -71,11 +71,11 @@
           } @else {
 
             <!-- Players / Opponents (Top) -->
-            <div class="flex-none pt-2 lg:pt-4 pb-2 mb-2 border-b border-[var(--color-border-card)] shrink-0">
-              <div class="w-full max-w-[800px] mx-auto flex gap-4 overflow-x-auto pb-2 custom-scrollbar px-2 snap-x" [class.justify-center]="currentRoomMode() === 'single'">
+            <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === 'single'">
                 
                 <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0" layout="card"
+                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                   [playerName]="playerId"
                   [isHost]="playerId === store.host()"
                   [isMe]="true"
@@ -86,12 +86,16 @@
                   [status]="store.status() === 'finished' ? 'finished' : 'playing'"></app-player-badge>
 
                 @if (currentRoomMode() !== 'single') {
-                  @for (opp of store.opponents(); track opp.id) {
-                    <app-player-badge class="flex-1 min-w-[200px] max-w-[300px] snap-center shrink-0" layout="card" [playerName]="opp.id"
-                      [isHost]="opp.id === store.host()" [isMe]="false"
-                      [score]="opp.score"
-                      [status]="opp.finished ? 'finished' : 'playing'"></app-player-badge>
-                  }
+                  <app-player-list-container [opponentsCount]="store.opponents().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                    <ng-template #opponentsList>
+                      @for (opp of store.opponents(); track opp.id) {
+                        <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" [playerName]="opp.id"
+                          [isHost]="opp.id === store.host()" [isMe]="false"
+                          [score]="opp.score"
+                          [status]="opp.finished ? 'finished' : 'playing'"></app-player-badge>
+                      }
+                    </ng-template>
+                  </app-player-list-container>
                 }
               </div>
             </div>

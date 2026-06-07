@@ -20,6 +20,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { AudioService } from '../../../core/services/audio.service';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 
 @Component({
   selector: 'app-hexa',
@@ -34,7 +35,8 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     GameHeaderComponent,
-    PlayerBadgeComponent],
+    PlayerBadgeComponent,
+    PlayerListContainerComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html'
 })

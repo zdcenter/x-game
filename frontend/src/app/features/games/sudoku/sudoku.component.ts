@@ -23,6 +23,8 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
+import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+
 @Component({
   selector: 'app-sudoku',
   standalone: true,

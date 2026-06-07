@@ -17,10 +17,12 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES } from './models/tetris.model';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
+import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent],
+  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]

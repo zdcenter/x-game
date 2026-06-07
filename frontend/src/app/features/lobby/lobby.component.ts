@@ -40,21 +40,31 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
 
         <!-- Welcome Header -->
         <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-2 lg:mt-4 relative max-w-6xl">
-          <div class="text-center">
-        <h1 class="text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent"
-            style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-          {{ i18n.t('lobby.title')() }}
-        </h1>
-        <p class="text-lg opacity-80 max-w-2xl mx-auto">
-          {{ i18n.t('lobby.subtitle')() }}
-        </p>
+          
+          <!-- Mobile Title & Toggle Lobby Button -->
+          <div class="flex items-center justify-between w-full lg:hidden px-2 mb-4">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent"
+                style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              {{ i18n.t('lobby.title')() }}
+            </h1>
+            <button (click)="isGlobalLobbyOpen.set(true)" class="p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-main)] z-10 flex shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
           </div>
-          <!-- Toggle Lobby Button (Mobile Only) -->
-          <button (click)="isGlobalLobbyOpen.set(true)" class="absolute right-0 top-0 p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg text-emerald-400 shadow-sm active:scale-95 transition-all lg:hidden hover:bg-[var(--color-bg-main)] z-10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </button>
+
+          <!-- Desktop Title -->
+          <div class="hidden lg:block text-center">
+            <h1 class="text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent"
+                style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              {{ i18n.t('lobby.title')() }}
+            </h1>
+          </div>
+          
+          <p class="text-sm sm:text-lg opacity-80 max-w-2xl mx-auto text-center px-4">
+            {{ i18n.t('lobby.subtitle')() }}
+          </p>
         </div>
 
         <!-- Games Grid -->

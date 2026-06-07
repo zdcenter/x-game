@@ -35,7 +35,8 @@
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
           headerBgClass="bg-transparent"
-          (back)="view.set('lobby')">
+          (back)="view.set('lobby')"
+          (rules)="showRules.set(true)">
           <span game-icon class="text-2xl sm:text-3xl">🃏</span>
           <div header-right class="flex items-center gap-2">
             <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
@@ -55,7 +56,8 @@
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
           headerBgClass="bg-transparent"
-          (back)="returnToLobby()">
+          (back)="returnToLobby()"
+          (rules)="showRules.set(true)">
           <span game-icon class="text-2xl sm:text-3xl">🃏</span>
           <div header-right class="flex items-center gap-2">
             <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
@@ -146,4 +148,7 @@
       (dismissRoom)="handleDismissRoom()">
     </app-game-lobby-panel>
   </div>
+  
+  <!-- Rules Modal -->
+  <app-game-rules-modal [gameId]="'math24'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 </div>
