@@ -9,6 +9,11 @@ export interface PublicSettings {
   maintenance_message: string;
   global_announcement: string;
   registration_enabled: string;
+  ad_interstitial_frequency: string;
+  ad_interstitial_daily_limit: string;
+  ad_pc_left_slot: string;
+  ad_pc_right_slot: string;
+  ad_mobile_lobby_slot: string;
   [key: string]: string;
 }
 
@@ -22,7 +27,12 @@ export class SettingsService {
     site_maintenance: 'false',
     maintenance_message: '',
     global_announcement: '',
-    registration_enabled: 'true'
+    registration_enabled: 'true',
+    ad_interstitial_frequency: '3',
+    ad_interstitial_daily_limit: '3',
+    ad_pc_left_slot: '',
+    ad_pc_right_slot: '',
+    ad_mobile_lobby_slot: ''
   });
 
   loadSettings() {

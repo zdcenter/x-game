@@ -183,6 +183,11 @@ func SeedSettings() {
 		{Key: "maintenance_message", Value: ""},
 		{Key: "simulator_enabled", Value: "true"},
 		{Key: "registration_enabled", Value: "true"},
+		{Key: "ad_interstitial_frequency", Value: "3"},
+		{Key: "ad_interstitial_daily_limit", Value: "3"},
+		{Key: "ad_pc_left_slot", Value: ""},
+		{Key: "ad_pc_right_slot", Value: ""},
+		{Key: "ad_mobile_lobby_slot", Value: ""},
 	}
 
 	for _, setting := range defaultSettings {

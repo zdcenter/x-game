@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
+import { SettingsService } from './settings.service';
 
 declare var adbreak: any;
 
@@ -10,6 +11,12 @@ declare var adbreak: any;
 export class AdService {
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+
+  private settingsService = inject(SettingsService);
+
+  private readonly LAST_AD_DATE_KEY = 'xgame_last_ad_date';
+  private readonly DAILY_AD_COUNT_KEY = 'xgame_daily_ad_count';
+  private readonly GAMES_SINCE_LAST_AD_KEY = 'xgame_games_since_last_ad';
 
   /**
    * Shows a rewarded video ad. If the environment does not support it
@@ -46,5 +53,69 @@ export class AdService {
     setTimeout(() => {
       onRewarded();
     }, 3000);
+  }
+
+  /**
+   * Tries to show an interstitial ad between games (e.g., on "Play Again").
+   * Adheres to frequency capping and daily limits from Admin Settings.
+   */
+  tryShowInterstitial(onComplete: () => void) {
+    this.checkAndResetDailyCount();
+
+    const frequency = parseInt(this.settingsService.settings().ad_interstitial_frequency || '3', 10);
+    const dailyLimit = parseInt(this.settingsService.settings().ad_interstitial_daily_limit || '3', 10);
+
+    let gamesPlayed = parseInt(localStorage.getItem(this.GAMES_SINCE_LAST_AD_KEY) || '0', 10);
+    let dailyViews = parseInt(localStorage.getItem(this.DAILY_AD_COUNT_KEY) || '0', 10);
+
+    gamesPlayed++;
+    localStorage.setItem(this.GAMES_SINCE_LAST_AD_KEY, gamesPlayed.toString());
+
+    // If conditions are not met, skip ad
+    if (gamesPlayed < frequency || dailyViews >= dailyLimit) {
+      onComplete();
+      return;
+    }
+
+    // Attempt to show H5 Games Ads interstitial
+    if (typeof adbreak === 'function') {
+      try {
+        adbreak({
+          type: 'next',
+          name: 'between_games',
+          adBreakDone: (placementInfo: any) => {
+            // adBreakDone triggers regardless of success, fill, or failure
+            if (placementInfo && placementInfo.breakStatus === 'viewed') {
+               this.recordAdShown();
+            }
+            onComplete();
+          }
+        });
+      } catch (e) {
+        console.warn('AdSense adbreak next failed', e);
+        onComplete();
+      }
+    } else {
+      // No adbreak available (dev env or adblocker)
+      console.log(`[Simulated Interstitial] Ad shown! Daily view count will increase.`);
+      this.recordAdShown();
+      onComplete();
+    }
+  }
+
+  private recordAdShown() {
+    let dailyViews = parseInt(localStorage.getItem(this.DAILY_AD_COUNT_KEY) || '0', 10);
+    localStorage.setItem(this.DAILY_AD_COUNT_KEY, (dailyViews + 1).toString());
+    localStorage.setItem(this.GAMES_SINCE_LAST_AD_KEY, '0');
+  }
+
+  private checkAndResetDailyCount() {
+    const today = new Date().toDateString();
+    const lastDate = localStorage.getItem(this.LAST_AD_DATE_KEY);
+
+    if (lastDate !== today) {
+      localStorage.setItem(this.LAST_AD_DATE_KEY, today);
+      localStorage.setItem(this.DAILY_AD_COUNT_KEY, '0');
+    }
   }
 }

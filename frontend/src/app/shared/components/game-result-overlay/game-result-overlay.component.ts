@@ -4,6 +4,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { Router } from '@angular/router';
 import { GameRegistryService, GameConfig } from '../../../core/services/game-registry.service';
+import { AdService } from '../../../core/services/ad.service';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -43,19 +44,19 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
         <!-- Actions -->
         <div class="w-full flex flex-col sm:flex-row gap-3 relative z-10">
           @if (showLeave) {
-            <button (click)="leave.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
+            <button (click)="handleLeave()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
               <ng-container i18n="@@game.leave">Leave</ng-container>
             </button>
           }
           
           @if (showRestart) {
-            <button (click)="restart.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+            <button (click)="handleRestart()" class="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
               <ng-container i18n="@@game.restart">Play Again</ng-container>
             </button>
           }
 
           @if (showNextLevel) {
-            <button (click)="nextLevel.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transform sm:hover:scale-105 transition-all">
+            <button (click)="handleNextLevel()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transform sm:hover:scale-105 transition-all">
               <ng-container i18n="@@game.next_level">game.next_level</ng-container>
             </button>
           }
@@ -63,7 +64,7 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
         
         <div class="w-full flex gap-3 mt-3 relative z-10">
             @if (showDismiss) {
-              <button (click)="dismiss.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 transition-colors">
+              <button (click)="handleDismiss()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 transition-colors">
                 <ng-container i18n="@@game.dismiss_room">Dismiss Room</ng-container>
               </button>
             }
@@ -78,7 +79,7 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
           </div>
           <div class="flex gap-3 w-full overflow-x-auto pb-4 px-2 custom-scrollbar snap-x justify-center">
             @for (game of recommendedGames; track game.id) {
-              <div (click)="goToGame(game.id)" class="shrink-0 w-[140px] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all hover:scale-105 hover:shadow-xl hover:-translate-y-1 snap-center group">
+              <div (click)="handleGoToGame(game.id)" class="shrink-0 w-[140px] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all hover:scale-105 hover:shadow-xl hover:-translate-y-1 snap-center group">
                 <div class="text-4xl group-hover:scale-110 transition-transform">{{ game.iconEmoji }}</div>
                 <div class="font-bold text-sm text-center text-[var(--color-text-main)] group-hover:text-[var(--color-accent-to)] transition-colors">{{ i18n.t(game.titleKey)() }}</div>
               </div>
@@ -95,6 +96,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   audio = inject(AudioService);
   private router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
+  private adService = inject(AdService);
 
   @Input() currentGameId?: string;
 
@@ -134,8 +136,26 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     }
   }
 
-  goToGame(gameId: string) {
-    this.router.navigate(['/games', gameId]);
+  handleLeave() {
+    this.adService.tryShowInterstitial(() => this.leave.emit());
+  }
+
+  handleRestart() {
+    this.adService.tryShowInterstitial(() => this.restart.emit());
+  }
+
+  handleNextLevel() {
+    this.adService.tryShowInterstitial(() => this.nextLevel.emit());
+  }
+
+  handleDismiss() {
+    this.adService.tryShowInterstitial(() => this.dismiss.emit());
+  }
+
+  handleGoToGame(gameId: string) {
+    this.adService.tryShowInterstitial(() => {
+      this.router.navigate(['/games', gameId]);
+    });
   }
 
   // Play effect only once per component lifecycle to avoid double-playing

@@ -13,11 +13,12 @@ import { environment as versionEnv } from '../../../environments/version';
 import { environment as appEnvironment } from '../../../environments/environment';
 import { SettingsService } from '../../core/services/settings.service';
 import { AnnouncementService, Announcement } from '../../core/services/announcement.service';
+import { AdsenseComponent } from '../../shared/components/adsense/adsense.component';
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent],
   template: `
     <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-[var(--color-bg-main)]">
       
@@ -459,6 +460,18 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
           </a>
         }
         </div>
+
+        <!-- Mobile Lobby Horizontal Ad (hidden on desktop) -->
+        @if (settingsService.settings().ad_mobile_lobby_slot) {
+          <div class="w-full max-w-6xl mt-4 lg:hidden">
+            <app-adsense
+              [adSlot]="settingsService.settings().ad_mobile_lobby_slot"
+              adFormat="horizontal"
+              [fullWidthResponsive]="true"
+              class="w-full min-h-[100px] rounded-xl overflow-hidden flex justify-center items-center">
+            </app-adsense>
+          </div>
+        }
 
         <!-- Copyright & Version Footer -->
         <div class="w-full mt-auto pt-16 pb-8 flex flex-col items-center justify-center text-[var(--color-text-muted)] text-sm opacity-60">

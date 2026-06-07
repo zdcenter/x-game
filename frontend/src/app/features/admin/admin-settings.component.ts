@@ -55,6 +55,39 @@ import { I18nService } from '../../core/i18n/i18n.service';
             </label>
           </div>
         </div>
+
+        <!-- AdSense Configuration -->
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)] col-span-1 md:col-span-2">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-lg font-bold">AdSense Settings</h3>
+              <p class="text-xs opacity-70 mt-1">Configure AdSense slot IDs and interstitial ad frequency.</p>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label class="block text-xs font-bold opacity-70 mb-2">Interstitial Frequency (Games between ads)</label>
+              <input type="number" [(ngModel)]="settings.ad_interstitial_frequency" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
+            </div>
+            <div>
+              <label class="block text-xs font-bold opacity-70 mb-2">Interstitial Daily Limit (Max ads per day)</label>
+              <input type="number" [(ngModel)]="settings.ad_interstitial_daily_limit" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
+            </div>
+            <div>
+              <label class="block text-xs font-bold opacity-70 mb-2">PC Left Banner Slot ID</label>
+              <input type="text" [(ngModel)]="settings.ad_pc_left_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
+            </div>
+            <div>
+              <label class="block text-xs font-bold opacity-70 mb-2">PC Right Banner Slot ID</label>
+              <input type="text" [(ngModel)]="settings.ad_pc_right_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold opacity-70 mb-2">Mobile Lobby Banner Slot ID</label>
+              <input type="text" [(ngModel)]="settings.ad_mobile_lobby_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `
@@ -69,7 +102,12 @@ export class AdminSettingsComponent implements OnInit {
     site_maintenance: false,
     maintenance_message: '',
     global_announcement: '',
-    simulator_enabled: true
+    simulator_enabled: true,
+    ad_interstitial_frequency: 3,
+    ad_interstitial_daily_limit: 3,
+    ad_pc_left_slot: '',
+    ad_pc_right_slot: '',
+    ad_mobile_lobby_slot: ''
   };
 
   ngOnInit() {
@@ -80,6 +118,11 @@ export class AdminSettingsComponent implements OnInit {
         this.settings.maintenance_message = res.maintenance_message || '';
         this.settings.global_announcement = res.global_announcement || '';
         this.settings.simulator_enabled = res.simulator_enabled === 'true';
+        this.settings.ad_interstitial_frequency = parseInt(res.ad_interstitial_frequency || '3', 10);
+        this.settings.ad_interstitial_daily_limit = parseInt(res.ad_interstitial_daily_limit || '3', 10);
+        this.settings.ad_pc_left_slot = res.ad_pc_left_slot || '';
+        this.settings.ad_pc_right_slot = res.ad_pc_right_slot || '';
+        this.settings.ad_mobile_lobby_slot = res.ad_mobile_lobby_slot || '';
       },
       error: () => this.toast.show('Failed to load settings', 'error')
     });
@@ -92,7 +135,12 @@ export class AdminSettingsComponent implements OnInit {
       site_maintenance: this.settings.site_maintenance ? 'true' : 'false',
       maintenance_message: this.settings.maintenance_message,
       global_announcement: this.settings.global_announcement,
-      simulator_enabled: this.settings.simulator_enabled ? 'true' : 'false'
+      simulator_enabled: this.settings.simulator_enabled ? 'true' : 'false',
+      ad_interstitial_frequency: String(this.settings.ad_interstitial_frequency),
+      ad_interstitial_daily_limit: String(this.settings.ad_interstitial_daily_limit),
+      ad_pc_left_slot: this.settings.ad_pc_left_slot,
+      ad_pc_right_slot: this.settings.ad_pc_right_slot,
+      ad_mobile_lobby_slot: this.settings.ad_mobile_lobby_slot
     };
 
     this.adminService.updateSettings(payload).subscribe({
