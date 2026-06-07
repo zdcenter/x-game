@@ -27,16 +27,12 @@ const rootHtml = `<!DOCTYPE html>
       path = path.slice(0, -1);
     }
     
-    if (lang && lang.toLowerCase().startsWith('zh')) {
-      // Don't prepend /zh if already there
-      if (!path.startsWith('/zh')) {
-        window.location.replace('/zh' + path + window.location.search);
-      }
+    if (path.startsWith('/zh/') || path.startsWith('/en/')) {
+      // Already has a language prefix, do not redirect
+    } else if (lang && lang.toLowerCase().startsWith('zh')) {
+      window.location.replace('/zh' + path + window.location.search);
     } else {
-      // Don't prepend /en if already there
-      if (!path.startsWith('/en')) {
-        window.location.replace('/en' + path + window.location.search);
-      }
+      window.location.replace('/en' + path + window.location.search);
     }
   </script>
 </head>
