@@ -313,6 +313,16 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.broadcast_success': 'Broadcast sent successfully!',
     'game.broadcast_btn': '📢 Broadcast to Lobby',
     'game.invite_btn': 'Invite Friends',
+    
+    // Blog
+    'blog.title': 'Puzzle PK Blog',
+    'blog.subtitle': 'Insights on brain games, child development, and how to make learning math and logic fun for kids.',
+    'blog.no_articles': 'No articles found. Check back soon!',
+    'blog.back_to_blog': 'Back to Blog',
+    'blog.not_found_title': 'Post not found',
+    'blog.not_found_desc': 'The article you are looking for does not exist or has been removed.',
+    'blog.cta_title': 'Ready to put your brain to the test?',
+    'blog.cta_btn': 'Play Free Educational Games',
   },
   zh: {
     // SEO
@@ -628,5 +638,15 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.broadcast_success': '广播发送成功！',
     'game.broadcast_btn': '📢 发英雄帖',
     'game.invite_btn': '邀请好友',
+
+    // Blog
+    'blog.title': 'Puzzle PK 官方博客',
+    'blog.subtitle': '分享益智游戏开发心得、儿童大脑发育研究，以及如何让孩子们在快乐中学习数学与逻辑。',
+    'blog.no_articles': '暂无文章，敬请期待！',
+    'blog.back_to_blog': '返回博客',
+    'blog.not_found_title': '文章未找到',
+    'blog.not_found_desc': '您要寻找的文章不存在或已被删除。',
+    'blog.cta_title': '准备好挑战您的大脑了吗？',
+    'blog.cta_btn': '立即试玩免费益智游戏',
   },
 };

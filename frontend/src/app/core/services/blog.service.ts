@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Location } from '@angular/common';
 import { Observable } from 'rxjs';
 
 export interface BlogLanguageMeta {
@@ -23,16 +24,19 @@ export interface BlogPostMeta {
 })
 export class BlogService {
   private http = inject(HttpClient);
+  private location = inject(Location);
   
   // Fetch the list of all blog posts metadata
   getBlogPosts(): Observable<BlogPostMeta[]> {
     // Adding timestamp to prevent aggressive caching
-    return this.http.get<BlogPostMeta[]>(`/assets/blog/index.json?t=${new Date().getTime()}`);
+    const url = this.location.prepareExternalUrl('assets/blog/index.json');
+    return this.http.get<BlogPostMeta[]>(`${url}?t=${new Date().getTime()}`);
   }
 
   // Fetch the markdown content of a specific post based on language
   getPostContent(id: string, lang: string): Observable<string> {
     const fileSuffix = lang === 'zh' ? '_zh' : '_en';
-    return this.http.get(`/assets/blog/posts/${id}${fileSuffix}.md`, { responseType: 'text' });
+    const url = this.location.prepareExternalUrl(`assets/blog/posts/${id}${fileSuffix}.md`);
+    return this.http.get(url, { responseType: 'text' });
   }
 }

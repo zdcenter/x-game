@@ -15,7 +15,7 @@ import { marked } from 'marked';
       <div class="max-w-3xl mx-auto">
         <a routerLink="/blog" class="inline-flex items-center text-sm font-medium text-blue-400 hover:text-blue-300 mb-8 transition-colors">
           <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          Back to Blog
+          {{ i18n.t('blog.back_to_blog')() }}
         </a>
 
         @if (loading()) {
@@ -24,8 +24,8 @@ import { marked } from 'marked';
           </div>
         } @else if (error()) {
           <div class="text-center py-20 text-red-400">
-            <h2 class="text-2xl font-bold mb-2">Post not found</h2>
-            <p>The article you are looking for does not exist or has been removed.</p>
+            <h2 class="text-2xl font-bold mb-2">{{ i18n.t('blog.not_found_title')() }}</h2>
+            <p>{{ i18n.t('blog.not_found_desc')() }}</p>
           </div>
         } @else {
           <article class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 sm:p-10 shadow-xl">
@@ -60,9 +60,9 @@ import { marked } from 'marked';
             </div>
             
             <div class="mt-12 pt-8 border-t border-[var(--color-border-card)] text-center">
-              <h3 class="text-xl font-bold mb-4">Ready to put your brain to the test?</h3>
+              <h3 class="text-xl font-bold mb-4">{{ i18n.t('blog.cta_title')() }}</h3>
               <a routerLink="/lobby" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
-                Play Free Educational Games
+                {{ i18n.t('blog.cta_btn')() }}
               </a>
             </div>
           </article>

@@ -13,10 +13,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       <div class="max-w-4xl mx-auto">
         <header class="text-center mb-16">
           <h1 class="text-4xl sm:text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-            Puzzle PK Blog
+            {{ i18n.t('blog.title')() }}
           </h1>
           <p class="text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-            Insights on brain games, child development, and how to make learning math and logic fun for kids.
+            {{ i18n.t('blog.subtitle')() }}
           </p>
         </header>
 
@@ -45,7 +45,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 
           @if (displayPosts().length === 0 && !loading()) {
             <div class="col-span-full text-center py-12 text-[var(--color-text-muted)]">
-              No articles found. Check back soon!
+              {{ i18n.t('blog.no_articles')() }}
             </div>
           }
           
