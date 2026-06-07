@@ -34,9 +34,15 @@ const rootHtml = `<!DOCTYPE html>
     }
     
     if (lang && lang.toLowerCase().startsWith('zh')) {
-      window.location.replace('/zh' + path + window.location.search);
+      // Don't prepend /zh if already there
+      if (!path.startsWith('/zh')) {
+        window.location.replace('/zh' + path + window.location.search);
+      }
     } else {
-      window.location.replace('/en' + path + window.location.search);
+      // Don't prepend /en if already there
+      if (!path.startsWith('/en')) {
+        window.location.replace('/en' + path + window.location.search);
+      }
     }
   </script>
 </head>
