@@ -45,7 +45,7 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
           <div class="flex items-center justify-between w-full lg:hidden px-2 mb-4">
             <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent"
                 style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-              {{ i18n.t('lobby.title')() }}
+              <ng-container i18n="@@lobby.title">lobby.title</ng-container>
             </h1>
             <button (click)="isGlobalLobbyOpen.set(true)" class="p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-main)] z-10 flex shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -58,12 +58,12 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
           <div class="hidden lg:block text-center">
             <h1 class="text-5xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent"
                 style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-              {{ i18n.t('lobby.title')() }}
+              <ng-container i18n="@@lobby.title">lobby.title</ng-container>
             </h1>
           </div>
           
           <p class="text-sm sm:text-lg opacity-80 max-w-2xl mx-auto text-center px-4">
-            {{ i18n.t('lobby.subtitle')() }}
+            <ng-container i18n="@@lobby.subtitle">lobby.subtitle</ng-container>
           </p>
         </div>
 
@@ -450,7 +450,7 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
                 {{ getLocalized(game.overview) }}
               </p>
               <div class="mt-4 flex flex-wrap gap-2">
-                <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-emerald-500">{{ i18n.t('lobby.ready')() }}</span>
+                <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-emerald-500"><ng-container i18n="@@lobby.ready">lobby.ready</ng-container></span>
                 @for (mode of getGameModes(game.id); track mode) {
                   <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-[var(--color-accent-from)]">{{ mode }}</span>
                 }

@@ -8,7 +8,7 @@
   <!-- Header -->
   <div class="w-full">
     <app-game-header
-      [title]="i18n.t('game.gomoku')() || 'Gomoku'"
+      i18n-title="@@game.gomoku" title="Gomoku"
       [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.pk_classic')()"
       iconGradientClass="from-emerald-500 to-teal-600"
       titleGradientClass="from-emerald-400 to-teal-500"
@@ -28,9 +28,9 @@
                 <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
                 <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
                         class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
-                  <option value="easy">{{ i18n.t('gomoku.diff.easy')() || 'Easy' }}</option>
-                  <option value="medium">{{ i18n.t('gomoku.diff.medium')() || 'Medium' }}</option>
-                  <option value="hard">{{ i18n.t('gomoku.diff.hard')() || 'Hard' }}</option>
+                  <option value="easy"><ng-container i18n="@@gomoku.diff.easy">Easy</ng-container></option>
+                  <option value="medium"><ng-container i18n="@@gomoku.diff.medium">Medium</ng-container></option>
+                  <option value="hard"><ng-container i18n="@@gomoku.diff.hard">Hard</ng-container></option>
                 </select>
               }
             </div>
@@ -180,7 +180,7 @@
          'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
        }">
     <div class="flex justify-between items-center mb-4 lg:hidden">
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
     </div>
     <app-game-lobby-panel
       #lobbyPanel

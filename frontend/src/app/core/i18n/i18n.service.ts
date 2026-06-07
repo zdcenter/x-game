@@ -1,20 +1,27 @@
-import { Injectable, signal, computed, Signal } from '@angular/core';
+import { Injectable, signal, computed, Signal, Inject, LOCALE_ID } from '@angular/core';
 import { TRANSLATIONS, Lang } from './translations';
 
 @Injectable({
   providedIn: 'root'
 })
 export class I18nService {
-  // Store current language in a Signal, try to load from localStorage first
-  private readonly defaultLang: Lang = (localStorage.getItem('lang') as Lang) || 'zh';
-  readonly currentLang = signal<Lang>(this.defaultLang);
+  readonly currentLang = signal<Lang>('zh');
+
+  constructor(@Inject(LOCALE_ID) private locale: string) {
+    const lang = locale.startsWith('en') ? 'en' : 'zh';
+    this.currentLang.set(lang);
+  }
 
   // Expose the current translation dictionary as a computed signal
   private readonly dict = computed(() => TRANSLATIONS[this.currentLang()]);
 
   setLang(lang: Lang) {
-    this.currentLang.set(lang);
-    localStorage.setItem('lang', lang);
+    if (this.currentLang() !== lang) {
+      localStorage.setItem('lang_preference', lang);
+      // Hard redirect to the localized URL prefix
+      const basePath = window.location.pathname.replace(/^\/(zh|en)/, '');
+      window.location.href = `/${lang}${basePath}${window.location.search}`;
+    }
   }
 
   toggleLang() {

@@ -44,19 +44,19 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
         <div class="w-full flex flex-col sm:flex-row gap-3 relative z-10">
           @if (showLeave) {
             <button (click)="leave.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
-              {{ i18n.t('game.leave')() || 'Leave' }}
+              <ng-container i18n="@@game.leave">Leave</ng-container>
             </button>
           }
           
           @if (showRestart) {
             <button (click)="restart.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-              {{ i18n.t('game.restart')() || 'Play Again' }}
+              <ng-container i18n="@@game.restart">Play Again</ng-container>
             </button>
           }
 
           @if (showNextLevel) {
             <button (click)="nextLevel.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transform sm:hover:scale-105 transition-all">
-              {{ i18n.t('game.next_level')() }}
+              <ng-container i18n="@@game.next_level">game.next_level</ng-container>
             </button>
           }
         </div>
@@ -64,7 +64,7 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
         <div class="w-full flex gap-3 mt-3 relative z-10">
             @if (showDismiss) {
               <button (click)="dismiss.emit()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 transition-colors">
-                {{ i18n.t('game.dismiss_room')() || 'Dismiss Room' }}
+                <ng-container i18n="@@game.dismiss_room">Dismiss Room</ng-container>
               </button>
             }
         </div>
@@ -74,7 +74,7 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
       @if (recommendedGames.length > 0) {
         <div class="w-full max-w-md mt-2 flex flex-col items-center animate-fade-in shrink-0 pb-8">
           <div class="text-[10px] text-white/70 uppercase tracking-widest font-bold mb-3 bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
-            {{ i18n.t('game.recommendations')() || 'You might also like' }}
+            <ng-container i18n="@@game.recommendations">You might also like</ng-container>
           </div>
           <div class="flex gap-3 w-full overflow-x-auto pb-4 px-2 custom-scrollbar snap-x justify-center">
             @for (game of recommendedGames; track game.id) {

@@ -2,8 +2,8 @@
   <div class="flex-grow flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0">
     <!-- Lobby Header -->
     <app-game-header
-      [title]="i18n.t('lobby.math24')()"
-      [subtitle]="i18n.t('lobby.select_level')()"
+      i18n-title="@@lobby.math24" title="lobby.math24"
+      i18n-subtitle="@@lobby.select_level" subtitle="lobby.select_level"
       iconGradientClass="from-blue-500 to-indigo-600"
       titleGradientClass="from-blue-400 to-indigo-500"
       shadowClass="shadow-blue-500/20"

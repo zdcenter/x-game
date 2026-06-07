@@ -9,6 +9,19 @@
   "projects": {
     "frontend": {
       "projectType": "application",
+      "i18n": {
+        "sourceLocale": "en-US",
+        "locales": {
+          "en": {
+            "translation": "src/locale/messages.en.xlf",
+            "baseHref": "/en/"
+          },
+          "zh": {
+            "translation": "src/locale/messages.zh.xlf",
+            "baseHref": "/zh/"
+          }
+        }
+      },
       "schematics": {
         "@schematics/angular:component": {
           "type": "component",
@@ -56,6 +69,9 @@
             ],
             "styles": [
               "src/styles.css"
+            ],
+            "polyfills": [
+              "@angular/localize/init"
             ]
           },
           "configurations": {
@@ -84,6 +100,12 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "en": {
+              "localize": ["en"]
+            },
+            "zh": {
+              "localize": ["zh"]
             }
           },
           "defaultConfiguration": "production"
@@ -99,12 +121,24 @@
             },
             "development": {
               "buildTarget": "frontend:build:development"
+            },
+            "en": {
+              "buildTarget": "frontend:build:development,en"
+            },
+            "zh": {
+              "buildTarget": "frontend:build:development,zh"
             }
           },
           "defaultConfiguration": "development"
         },
         "test": {
           "builder": "@angular/build:unit-test"
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n",
+          "options": {
+            "buildTarget": "frontend:build"
+          }
         }
       }
     }

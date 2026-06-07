@@ -10,7 +10,7 @@
       style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
 
       <!-- Header -->
-      <app-game-header [title]="i18n.t('app.title')() || 'Minesweeper'"
+      <app-game-header i18n-title="@@app.title" title="Minesweeper"
         [subtitle]="currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')())"
         iconGradientClass="from-rose-500 to-orange-500" titleGradientClass="from-rose-400 to-orange-400"
         shadowClass="shadow-orange-500/20"
@@ -24,8 +24,7 @@
 
             @if (currentRoomMode() === 'single') {
             <div class="flex flex-col items-center">
-              <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest">{{
-                i18n.t('game.difficulty')() }}</span>
+              <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest"><ng-container i18n="@@game.difficulty">game.difficulty</ng-container></span>
               <button (click)="openDifficultySettings('single')"
                 class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
                 <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentDifficulty()) }}</span>
@@ -45,7 +44,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
+              <span class="hidden sm:inline"><ng-container i18n="@@game.leave">game.leave</ng-container></span>
             </button>
             }
 
@@ -163,7 +162,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {{ i18n.t('game.start_match')() || 'START' }}
+            <ng-container i18n="@@game.start_match">START</ng-container>
           </button>
         </div>
         }
@@ -194,7 +193,7 @@
             class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
             {{ gameTimer.formatTime(frozenRemaining()) }}
           </div>
-          <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
+          <p class="text-red-300 font-bold text-sm mt-2"><ng-container i18n="@@game.frozen_msg">game.frozen_msg</ng-container></p>
         </div>
         }
 
@@ -238,7 +237,7 @@
 
     <div class="flex justify-between items-center mb-4"
       [class.lg:hidden]="currentRoomId() === '' || currentRoomId() === 'local'">
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
     </div>
     <app-game-lobby-panel #lobbyPanel [currentGameId]="'minesweeper'" [currentRoomId]="currentRoomId()"
       (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)"
@@ -263,7 +262,7 @@
     <!-- Header -->
     <div
       class="p-6 pb-4 border-b border-[var(--color-border-card)] flex justify-between items-center bg-[var(--color-bg-card)]">
-      <h2 class="text-xl font-bold">{{ i18n.t('game.settings_title')() }}</h2>
+      <h2 class="text-xl font-bold"><ng-container i18n="@@game.settings_title">game.settings_title</ng-container></h2>
       <button (click)="isDifficultyModalOpen.set(false)"
         class="opacity-50 hover:opacity-100 transition-opacity p-2 -mr-2">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -291,8 +290,7 @@
         [class.border-[var(--color-accent-to)]]="selectedDifficulty() === 'custom'"
         [class.bg-[var(--color-bg-card)]]="selectedDifficulty() === 'custom'">
         <button (click)="selectedDifficulty.set('custom')" class="w-full flex items-center justify-between px-4 py-3">
-          <span class="font-bold text-sm" [class.text-[var(--color-accent-to)]]="selectedDifficulty() === 'custom'">{{
-            i18n.t('game.diff_custom')() }}</span>
+          <span class="font-bold text-sm" [class.text-[var(--color-accent-to)]]="selectedDifficulty() === 'custom'"><ng-container i18n="@@game.diff_custom">game.diff_custom</ng-container></span>
           <span class="text-xs opacity-60 font-mono" *ngIf="selectedDifficulty() === 'custom'">{{ customWidth() }}x{{
             customHeight() }}, {{ customMines() }}</span>
         </button>
@@ -301,7 +299,7 @@
         <div class="px-4 pb-4 space-y-4">
           <div class="pt-2 border-t border-[var(--color-border-card)]">
             <div class="flex justify-between mb-1">
-              <label class="text-xs font-bold opacity-70">{{ i18n.t('game.width')() }}</label>
+              <label class="text-xs font-bold opacity-70"><ng-container i18n="@@game.width">game.width</ng-container></label>
               <span class="text-xs font-mono">{{ customWidth() }}</span>
             </div>
             <input type="range" [min]="9" [max]="30" [value]="customWidth()"
@@ -310,7 +308,7 @@
           </div>
           <div>
             <div class="flex justify-between mb-1">
-              <label class="text-xs font-bold opacity-70">{{ i18n.t('game.height')() }}</label>
+              <label class="text-xs font-bold opacity-70"><ng-container i18n="@@game.height">game.height</ng-container></label>
               <span class="text-xs font-mono">{{ customHeight() }}</span>
             </div>
             <input type="range" [min]="9" [max]="24" [value]="customHeight()"
@@ -319,7 +317,7 @@
           </div>
           <div>
             <div class="flex justify-between mb-1">
-              <label class="text-xs font-bold opacity-70">{{ i18n.t('game.mines')() }}</label>
+              <label class="text-xs font-bold opacity-70"><ng-container i18n="@@game.mines">game.mines</ng-container></label>
               <span class="text-xs font-mono">{{ customMines() }}</span>
             </div>
             <input type="range" [min]="10" [max]="customWidth() * customHeight() - 15" [value]="customMines()"
@@ -335,7 +333,7 @@
     <div class="p-4 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
       <button (click)="applyDifficultySettings()"
         class="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
-        {{ i18n.t('game.apply')() }}
+        <ng-container i18n="@@game.apply">game.apply</ng-container>
       </button>
     </div>
   </div>

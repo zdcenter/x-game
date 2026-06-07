@@ -23,8 +23,8 @@ interface AdminGame extends GameConfig {
     <div class="w-full max-w-6xl mx-auto flex flex-col transition-colors duration-300">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-bold">{{ i18n.t('admin.games.title')() }}</h2>
-          <p class="opacity-70 text-sm mt-1">{{ i18n.t('admin.games.subtitle')() }}</p>
+          <h2 class="text-2xl font-bold"><ng-container i18n="@@admin.games.title">admin.games.title</ng-container></h2>
+          <p class="opacity-70 text-sm mt-1"><ng-container i18n="@@admin.games.subtitle">admin.games.subtitle</ng-container></p>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ interface AdminGame extends GameConfig {
             </div>
             <div class="flex-grow flex flex-col">
               <div class="flex items-center justify-between mb-2">
-                <label class="text-xs font-bold opacity-70 uppercase tracking-wider">{{ i18n.t('admin.games.rules.label')() }}</label>
+                <label class="text-xs font-bold opacity-70 uppercase tracking-wider"><ng-container i18n="@@admin.games.rules.label">admin.games.rules.label</ng-container></label>
                 <div class="flex space-x-2">
                   <button (click)="game.activeRuleTab = 'en'" [class.text-[var(--color-accent-to)]]="game.activeRuleTab === 'en'" [class.opacity-50]="game.activeRuleTab !== 'en'" class="text-xs font-bold transition-colors">EN</button>
                   <button (click)="game.activeRuleTab = 'zh'" [class.text-[var(--color-accent-to)]]="game.activeRuleTab === 'zh'" [class.opacity-50]="game.activeRuleTab !== 'zh'" class="text-xs font-bold transition-colors">ZH</button>
@@ -89,13 +89,13 @@ interface AdminGame extends GameConfig {
               </button>
               <button (click)="saveGameRules(game)" [disabled]="isUpdating()"
                       class="px-6 py-2 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] hover:shadow-lg transition-all disabled:opacity-50">
-                {{ i18n.t('admin.games.save')() }}
+                <ng-container i18n="@@admin.games.save">admin.games.save</ng-container>
               </button>
             </div>
           </div>
         } @empty {
           <div class="col-span-full text-center py-12 text-slate-500 border border-slate-700 border-dashed rounded-2xl">
-            {{ i18n.t('admin.games.no_games')() }}
+            <ng-container i18n="@@admin.games.no_games">admin.games.no_games</ng-container>
           </div>
         }
       </div>

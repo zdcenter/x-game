@@ -9,7 +9,7 @@
     <!-- Header -->
     <div class="w-full">
       <app-game-header
-        [title]="i18n.t('lobby.codebreaker')() || 'Codebreaker'"
+        i18n-title="@@lobby.codebreaker" title="Codebreaker"
         [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
         iconGradientClass="from-teal-500 to-emerald-500"
         titleGradientClass="from-teal-400 to-emerald-400"
@@ -29,9 +29,9 @@
                 <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
                 <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
                         class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
-                  <option value="easy">{{ i18n.t('game.diff_easy')() || 'Easy' }}</option>
-                  <option value="medium">{{ i18n.t('game.diff_medium')() || 'Medium' }}</option>
-                  <option value="hard">{{ i18n.t('game.diff_hard')() || 'Hard' }}</option>
+                  <option value="easy"><ng-container i18n="@@game.diff_easy">Easy</ng-container></option>
+                  <option value="medium"><ng-container i18n="@@game.diff_medium">Medium</ng-container></option>
+                  <option value="hard"><ng-container i18n="@@game.diff_hard">Hard</ng-container></option>
                 </select>
               }
             </div>
@@ -50,8 +50,8 @@
       <!-- Left Panel: My Guess History (Scrollable) -->
       <div class="flex-grow lg:flex-1 min-h-[250px] lg:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
         <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
-          <span>{{ i18n.t('codebreaker.guess_history')() }}</span>
-          <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() }}</span>
+          <span><ng-container i18n="@@codebreaker.guess_history">codebreaker.guess_history</ng-container></span>
+          <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} <ng-container i18n="@@codebreaker.guess">codebreaker.guess</ng-container></span>
         </h3>
         
         <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
@@ -69,15 +69,15 @@
           } @else {
             <div class="h-full flex flex-col items-center justify-center text-center p-4 text-[var(--color-text-muted)] text-sm space-y-2">
               <span class="text-3xl mb-1">🕵️</span>
-              <p class="font-bold text-[var(--color-text-main)]">{{ i18n.t('codebreaker.how_to_play')() }}</p>
-              <p class="text-xs">{{ i18n.t('codebreaker.rules_intro_pre')() }}<strong>{{ digitLength() }}{{ i18n.t('codebreaker.rules_intro_strong')() }}</strong>{{ i18n.t('codebreaker.rules_intro_post')() }}</p>
+              <p class="font-bold text-[var(--color-text-main)]"><ng-container i18n="@@codebreaker.how_to_play">codebreaker.how_to_play</ng-container></p>
+              <p class="text-xs"><ng-container i18n="@@codebreaker.rules_intro_pre">codebreaker.rules_intro_pre</ng-container><strong>{{ digitLength() }}<ng-container i18n="@@codebreaker.rules_intro_strong">codebreaker.rules_intro_strong</ng-container></strong><ng-container i18n="@@codebreaker.rules_intro_post">codebreaker.rules_intro_post</ng-container></p>
               <div class="flex gap-2">
-                <span class="text-[10px] sm:text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded whitespace-nowrap">{{ i18n.t('codebreaker.rules_a')() }}</span>
-                <span class="text-[10px] sm:text-xs text-amber-500 font-bold bg-amber-500/10 px-2 py-1 rounded whitespace-nowrap">{{ i18n.t('codebreaker.rules_b')() }}</span>
+                <span class="text-[10px] sm:text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded whitespace-nowrap"><ng-container i18n="@@codebreaker.rules_a">codebreaker.rules_a</ng-container></span>
+                <span class="text-[10px] sm:text-xs text-amber-500 font-bold bg-amber-500/10 px-2 py-1 rounded whitespace-nowrap"><ng-container i18n="@@codebreaker.rules_b">codebreaker.rules_b</ng-container></span>
               </div>
               <div class="mt-4 p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] w-full text-left shadow-inner">
-                <p class="text-[10px] opacity-80 mb-1">{{ i18n.t('codebreaker.rules_ex_title')() }}</p>
-                <p class="text-[10px] opacity-80">{{ i18n.t('codebreaker.rules_ex_guess')() }} <span class="text-emerald-500 font-bold ml-1">1A</span><span class="text-amber-500 font-bold ml-1">2B</span></p>
+                <p class="text-[10px] opacity-80 mb-1"><ng-container i18n="@@codebreaker.rules_ex_title">codebreaker.rules_ex_title</ng-container></p>
+                <p class="text-[10px] opacity-80"><ng-container i18n="@@codebreaker.rules_ex_guess">codebreaker.rules_ex_guess</ng-container> <span class="text-emerald-500 font-bold ml-1">1A</span><span class="text-amber-500 font-bold ml-1">2B</span></p>
               </div>
             </div>
           }
@@ -110,7 +110,7 @@
           </div>
           <span class="text-xs font-bold tracking-wider transition-all duration-500"
                 [ngClass]="myState()?.guesses?.length === 0 && currentInput().length === 0 ? 'text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]' : 'text-[var(--color-text-muted)]'">
-            {{ i18n.t('codebreaker.input_hint_pre')() }}<strong class="text-[var(--color-text-main)] text-sm mx-1">{{ digitLength() }}</strong>{{ i18n.t('codebreaker.input_hint_post')() }}
+            <ng-container i18n="@@codebreaker.input_hint_pre">codebreaker.input_hint_pre</ng-container><strong class="text-[var(--color-text-main)] text-sm mx-1">{{ digitLength() }}</strong><ng-container i18n="@@codebreaker.input_hint_post">codebreaker.input_hint_post</ng-container>
           </span>
         </div>
 
@@ -133,7 +133,7 @@
           <button (click)="submitGuess()" 
                   [disabled]="currentInput().length !== digitLength()"
                   class="py-3 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] text-xs md:text-sm font-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:pointer-events-none">
-            {{ i18n.t('codebreaker.keyboard.submit')() }}
+            <ng-container i18n="@@codebreaker.keyboard.submit">codebreaker.keyboard.submit</ng-container>
           </button>
         </div>
 
@@ -141,15 +141,15 @@
         <div class="bg-[var(--color-bg-main)] rounded-xl p-3 border border-dashed border-[var(--color-border-card)] mx-auto w-full max-w-sm mt-4 select-none">
           <div class="flex items-center justify-between mb-3 border-b border-[var(--color-border-card)] pb-2">
             <span class="text-xs font-bold text-[var(--color-text-main)] flex items-center gap-1.5">
-              📝 {{ i18n.t('codebreaker.helper_board')() }}
+              📝 <ng-container i18n="@@codebreaker.helper_board">codebreaker.helper_board</ng-container>
             </span>
-            <span class="text-[10px] text-[var(--color-text-muted)] opacity-80">{{ i18n.t('codebreaker.helper_desc')() }}</span>
+            <span class="text-[10px] text-[var(--color-text-muted)] opacity-80"><ng-container i18n="@@codebreaker.helper_desc">codebreaker.helper_desc</ng-container></span>
           </div>
           
           <div class="flex flex-col gap-2 w-full">
             <!-- Global row -->
             <div class="flex items-center justify-between w-full">
-               <span class="text-[10px] text-[var(--color-text-muted)] w-8 text-center shrink-0 font-bold">{{ i18n.t('codebreaker.helper_global')() }}</span>
+               <span class="text-[10px] text-[var(--color-text-muted)] w-8 text-center shrink-0 font-bold"><ng-container i18n="@@codebreaker.helper_global">codebreaker.helper_global</ng-container></span>
                @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
                  <div (click)="cycleHelperMark('global-' + num)"
                       class="cursor-pointer w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs sm:text-sm font-mono font-bold transition-all shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
@@ -190,7 +190,7 @@
         <div class="flex-grow lg:flex-1 min-h-[200px] lg:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
           <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
             <span class="flex items-center gap-1.5">
-              <span>{{ i18n.t('codebreaker.opponent_history')() }}</span>
+              <span><ng-container i18n="@@codebreaker.opponent_history">codebreaker.opponent_history</ng-container></span>
               @if (opponentState()) {
                 <span class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full font-bold">
                   {{ opponentState()?.id === hostId() ? '👑' : '👤' }} {{ opponentState()?.id }}
@@ -198,7 +198,7 @@
               }
             </span>
             @if (opponentState()) {
-              <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ opponentState()!.guesses.length }} {{ i18n.t('codebreaker.guess')() }}</span>
+              <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ opponentState()!.guesses.length }} <ng-container i18n="@@codebreaker.guess">codebreaker.guess</ng-container></span>
             }
           </h3>
 
@@ -296,7 +296,7 @@
          'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
        }">
     <div class="flex justify-between items-center mb-4 lg:hidden">
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">game.room_info</ng-container></h3>
     </div>
     <app-game-lobby-panel
       #lobbyPanel

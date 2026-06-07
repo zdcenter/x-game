@@ -1,84 +1,228 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
-  <!-- Homepage / Lobby -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://www.puzzlepk.com/</loc>
-    <changefreq>daily</changefreq>
+    <loc>https://www.puzzlepk.com/en/lobby</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/lobby"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/lobby"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/lobby"/>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/lobby</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <loc>https://www.puzzlepk.com/zh/lobby</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/lobby"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/lobby"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/lobby"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
-
-  <!-- Games -->
   <url>
-    <loc>https://www.puzzlepk.com/games/sudoku</loc>
+    <loc>https://www.puzzlepk.com/en/login</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/login"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/login"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/login"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/minesweeper</loc>
+    <loc>https://www.puzzlepk.com/zh/login</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/login"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/login"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/login"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/gomoku</loc>
+    <loc>https://www.puzzlepk.com/en/register</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/register"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/register"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/register"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/codebreaker</loc>
+    <loc>https://www.puzzlepk.com/zh/register</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/register"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/register"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/register"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/hexa</loc>
+    <loc>https://www.puzzlepk.com/en/profile</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/profile"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/profile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/profile"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/sliding</loc>
+    <loc>https://www.puzzlepk.com/zh/profile</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/profile"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/profile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/profile"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/tetris</loc>
+    <loc>https://www.puzzlepk.com/en/blog</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/math24</loc>
+    <loc>https://www.puzzlepk.com/zh/blog</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/games/drop2048</loc>
+    <loc>https://www.puzzlepk.com/en/games/minesweeper</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/minesweeper"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/minesweeper"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/minesweeper"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Blog -->
   <url>
-    <loc>https://www.puzzlepk.com/blog</loc>
+    <loc>https://www.puzzlepk.com/zh/games/minesweeper</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/minesweeper"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/minesweeper"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/minesweeper"/>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/blog/why-math24-is-the-best-brain-training-game-for-kids</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://www.puzzlepk.com/en/games/sudoku</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/sudoku"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/sudoku"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/sudoku"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/blog/sudoku-for-kids-a-beginners-guide</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://www.puzzlepk.com/zh/games/sudoku</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/sudoku"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/sudoku"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/sudoku"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/blog/benefits-of-multiplayer-educational-games</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://www.puzzlepk.com/en/games/sliding</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/sliding"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/sliding"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/sliding"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
-
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/sliding</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/sliding"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/sliding"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/sliding"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/hexa</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/hexa"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/hexa"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/hexa"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/hexa</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/hexa"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/hexa"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/hexa"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/tetris</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/tetris"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/tetris"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/tetris"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/tetris</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/tetris"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/tetris"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/tetris"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/gomoku</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/gomoku"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/gomoku"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/gomoku"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/gomoku</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/gomoku"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/gomoku"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/gomoku"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/codebreaker</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/codebreaker"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/codebreaker"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/codebreaker"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/codebreaker</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/codebreaker"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/codebreaker"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/codebreaker"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/math24</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/math24"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/math24"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/math24"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/math24</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/math24"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/math24"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/math24"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/drop2048</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/drop2048"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/drop2048"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/drop2048"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/drop2048</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/drop2048"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/drop2048"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/drop2048"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

@@ -16,11 +16,11 @@ import { GameConfig } from '../../core/services/game.service';
       
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-2xl font-bold">{{ i18n.t('admin.users.title')() }}</h2>
-          <p class="opacity-70 text-sm mt-1">{{ i18n.t('admin.users.subtitle')() }}</p>
+          <h2 class="text-2xl font-bold"><ng-container i18n="@@admin.users.title">admin.users.title</ng-container></h2>
+          <p class="opacity-70 text-sm mt-1"><ng-container i18n="@@admin.users.subtitle">admin.users.subtitle</ng-container></p>
         </div>
         <div class="flex items-center space-x-3 bg-[var(--color-bg-card)] px-4 py-2 rounded-xl border border-[var(--color-border-card)] shadow-inner">
-          <span class="text-xs opacity-70 font-bold uppercase">{{ i18n.t('admin.users.total')() }}</span>
+          <span class="text-xs opacity-70 font-bold uppercase"><ng-container i18n="@@admin.users.total">admin.users.total</ng-container></span>
           <span class="text-xl font-mono text-inherit font-bold">{{ users().length }}</span>
         </div>
       </div>
@@ -37,18 +37,18 @@ import { GameConfig } from '../../core/services/game.service';
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-[var(--color-bg-main)] opacity-90 text-sm uppercase tracking-wider border-b border-[var(--color-border-card)]">
-                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.id')() }}</th>
-                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.username')() }}</th>
-                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.role')() }}</th>
-                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.users.col.status')() }}</th>
-                <th class="px-6 py-4 font-semibold text-right">{{ i18n.t('admin.users.col.actions')() }}</th>
+                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.users.col.id">admin.users.col.id</ng-container></th>
+                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.users.col.username">admin.users.col.username</ng-container></th>
+                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.users.col.role">admin.users.col.role</ng-container></th>
+                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.users.col.status">admin.users.col.status</ng-container></th>
+                <th class="px-6 py-4 font-semibold text-right"><ng-container i18n="@@admin.users.col.actions">admin.users.col.actions</ng-container></th>
               </tr>
             </thead>
             <tbody class="text-inherit">
               @if (isLoading()) {
                 <tr>
                   <td colspan="5" class="px-6 py-12 text-center opacity-70 animate-pulse">
-                    {{ i18n.t('admin.users.loading')() }}
+                    <ng-container i18n="@@admin.users.loading">admin.users.loading</ng-container>
                   </td>
                 </tr>
               } @else {
@@ -77,16 +77,16 @@ import { GameConfig } from '../../core/services/game.service';
                         @if (user.status === 'active') {
                           <button (click)="toggleStatus(user, 'banned')" [disabled]="isUpdating()"
                                   class="px-4 py-2 text-xs font-bold rounded bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50">
-                            {{ i18n.t('admin.users.action.ban')() }}
+                            <ng-container i18n="@@admin.users.action.ban">admin.users.action.ban</ng-container>
                           </button>
                         } @else {
                           <button (click)="toggleStatus(user, 'active')" [disabled]="isUpdating()"
                                   class="px-4 py-2 text-xs font-bold rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50">
-                            {{ i18n.t('admin.users.action.unban')() }}
+                            <ng-container i18n="@@admin.users.action.unban">admin.users.action.unban</ng-container>
                           </button>
                         }
                       } @else {
-                        <span class="text-xs text-slate-500 font-bold uppercase">{{ i18n.t('admin.users.protected')() }}</span>
+                        <span class="text-xs text-slate-500 font-bold uppercase"><ng-container i18n="@@admin.users.protected">admin.users.protected</ng-container></span>
                       }
                     </td>
                   </tr>

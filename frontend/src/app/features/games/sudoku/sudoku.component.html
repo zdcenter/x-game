@@ -18,9 +18,9 @@
             <h2 class="text-8xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] animate-pulse">
               {{ gameTimer.countdownDisplay() }}
             </h2>
-            <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base">{{ i18n.t('game.get_ready')() }}</p>
+            <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base"><ng-container i18n="@@game.get_ready">game.get_ready</ng-container></p>
             <div class="flex items-center gap-3 mt-4">
-              <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{{ i18n.t('game.mode')() }}:</span>
+              <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider"><ng-container i18n="@@game.mode">game.mode</ng-container>:</span>
               <span class="text-sm font-bold text-[var(--color-accent-from)]">{{ store.currentMode() === 'pk_steal' ? i18n.t('game.sudoku_pk_steal_label')() : i18n.t('game.sudoku_pk_speed_label')() }}</span>
             </div>
           </div>
@@ -95,8 +95,8 @@
               <app-game-result-overlay
                 currentGameId="sudoku"
                 [status]="'win'"
-                [title]="i18n.t('game.win')()"
-                [promptText]="i18n.t('game.sudoku.next_level_prompt')() || 'Level cleared! Play next?'"
+                i18n-title="@@game.win" title="game.win"
+                i18n-promptText="@@game.sudoku.next_level_prompt" promptText="Level cleared! Play next?"
                 [stats]="getSinglePlayerStats()"
                 [showCancel]="true"
                 [showNextLevel]="true"
@@ -137,7 +137,7 @@
            }">
            
            <div class="flex justify-between items-center mb-4" [class.lg:hidden]="store.roomId() === ''">
-             <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
+             <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
            </div>
         <app-game-lobby-panel
           #lobbyPanel

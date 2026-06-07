@@ -20,18 +20,18 @@ import { Math24Solver } from '../../utils/math24-solver';
                 (click)="store.loadPrevLevel()"
                 [disabled]="store.localLevelIndex() <= 0"
                 [ngClass]="{'opacity-30 cursor-not-allowed': store.localLevelIndex() <= 0}">
-          <span class="mr-1">«</span> {{ i18n.t('game.prev_level')() }}
+          <span class="mr-1">«</span> <ng-container i18n="@@game.prev_level">game.prev_level</ng-container>
         </button>
         
         <!-- Level Badge -->
         <div class="px-5 py-1.5 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-sm sm:text-base font-black text-blue-400 -translate-y-2">
-          {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
+          <ng-container i18n="@@game.level">game.level</ng-container> {{ store.localLevelIndex() + 1 }}
         </div>
 
         <!-- Next Level -->
         <button class="text-[var(--color-text-muted)] hover:text-blue-400 font-bold transition-colors px-2 py-1"
                 (click)="store.loadNextLevel()">
-          {{ i18n.t('game.next_level')() }} <span class="ml-1">»</span>
+          <ng-container i18n="@@game.next_level">game.next_level</ng-container> <span class="ml-1">»</span>
         </button>
       </div>
 
@@ -43,7 +43,7 @@ import { Math24Solver } from '../../utils/math24-solver';
           <div class="absolute inset-0 z-50 bg-blue-900/40 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-blue-400/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
             <span class="text-6xl sm:text-8xl animate-pulse drop-shadow-lg">❄️</span>
             <div class="mt-4 text-2xl font-black text-white tracking-widest">{{ freezeRemaining() }}s</div>
-            <div class="text-sm font-bold text-blue-200 mt-2 uppercase">{{ i18n.t('game.frozen')() || 'Frozen Penalty' }}</div>
+            <div class="text-sm font-bold text-blue-200 mt-2 uppercase"><ng-container i18n="@@game.frozen">Frozen Penalty</ng-container></div>
           </div>
         }
 
@@ -94,7 +94,7 @@ import { Math24Solver } from '../../utils/math24-solver';
         <!-- Hint Ad Button -->
         <button class="px-3 sm:px-4 py-2 sm:py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-xl font-bold transition-all flex items-center gap-1 sm:gap-2 shadow-sm shrink-0"
                 (click)="showHintAd()">
-          <span>💡</span> <span class="text-sm sm:text-base">{{ i18n.t('game.hint_ad')() }}</span>
+          <span>💡</span> <span class="text-sm sm:text-base"><ng-container i18n="@@game.hint_ad">game.hint_ad</ng-container></span>
         </button>
         
         <div class="flex gap-2 sm:gap-4">
@@ -102,11 +102,11 @@ import { Math24Solver } from '../../utils/math24-solver';
                   (click)="undo()"
                   [disabled]="store.boardHistory().length <= 1"
                   [ngClass]="{'opacity-50 cursor-not-allowed': store.boardHistory().length <= 1}">
-            <span>↩️</span> {{ i18n.t('game.undo')() }}
+            <span>↩️</span> <ng-container i18n="@@game.undo">game.undo</ng-container>
           </button>
           <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
                   (click)="reset()">
-            <span>🔄</span> {{ i18n.t('game.reset')() }}
+            <span>🔄</span> <ng-container i18n="@@game.reset">game.reset</ng-container>
           </button>
         </div>
       </div>

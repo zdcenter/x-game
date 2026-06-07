@@ -24,7 +24,7 @@ import { AuthStore } from '../../core/auth/auth.store';
               {{ authStore.currentUser()?.username || 'Player' }}
             </h1>
             <p class="text-sm md:text-base font-bold text-[var(--color-text-muted)] uppercase tracking-widest mt-1">
-              🏆 {{ i18n.t('profile.title')() || 'Global Achievements' }}
+              🏆 <ng-container i18n="@@profile.title">Global Achievements</ng-container>
             </p>
           </div>
         </div>
@@ -37,10 +37,10 @@ import { AuthStore } from '../../core/auth/auth.store';
         } @else if (gamesWithStats().length === 0) {
           <div class="flex flex-col items-center justify-center h-64 bg-[var(--color-bg-card)] rounded-3xl border border-[var(--color-border-card)] p-8 text-center shadow-lg">
             <span class="text-6xl mb-4 opacity-50">🎮</span>
-            <h2 class="text-2xl font-bold mb-2">{{ i18n.t('profile.no_stats')() || 'No records found' }}</h2>
-            <p class="text-[var(--color-text-muted)] mb-6">{{ i18n.t('profile.no_stats_desc')() || 'Play some games to build up your profile!' }}</p>
+            <h2 class="text-2xl font-bold mb-2"><ng-container i18n="@@profile.no_stats">No records found</ng-container></h2>
+            <p class="text-[var(--color-text-muted)] mb-6"><ng-container i18n="@@profile.no_stats_desc">Play some games to build up your profile!</ng-container></p>
             <a routerLink="/" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95">
-              {{ i18n.t('lobby.title')() || 'Go to Lobby' }}
+              <ng-container i18n="@@lobby.title">Go to Lobby</ng-container>
             </a>
           </div>
         } @else {
@@ -83,14 +83,14 @@ import { AuthStore } from '../../core/auth/auth.store';
                       <div class="flex justify-around items-center pt-1">
                         @if (isTimeGame(game.id)) {
                           <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">{{ i18n.t('profile.best_time')() }}</span>
+                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1"><ng-container i18n="@@profile.best_time">profile.best_time</ng-container></span>
                             <span class="font-mono text-xl md:text-2xl font-black text-[var(--color-accent-to)] drop-shadow-sm">
                               {{ stat.BestTime > 0 ? formatTime(stat.BestTime) : '--:--' }}
                             </span>
                           </div>
                         } @else {
                           <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1">{{ i18n.t('profile.best_score')() }}</span>
+                            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase mb-1"><ng-container i18n="@@profile.best_score">profile.best_score</ng-container></span>
                             <span class="font-mono text-xl md:text-2xl font-black text-amber-500 drop-shadow-sm">
                               {{ stat.BestScore > 0 ? stat.BestScore : '0' }}
                             </span>
@@ -104,7 +104,7 @@ import { AuthStore } from '../../core/auth/auth.store';
 
                 <div class="mt-6 flex justify-end relative z-10">
                   <a [routerLink]="['/games', game.id]" class="text-sm font-bold text-[var(--color-accent-to)] hover:text-[var(--color-accent-from)] transition-colors flex items-center gap-1 group/btn">
-                    {{ i18n.t('game.play_now')() }}
+                    <ng-container i18n="@@game.play_now">game.play_now</ng-container>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>

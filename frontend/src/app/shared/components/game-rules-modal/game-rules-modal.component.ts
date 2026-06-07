@@ -37,7 +37,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                class="flex items-center justify-between p-5 border-b border-[var(--color-border-card)] 
                       lg:cursor-move lg:active:cursor-grabbing hover:bg-[var(--color-border-card)]/30 transition-colors">
             <h3 class="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-              📖 {{ i18n.t('game.rules.title')() }}
+              📖 <ng-container i18n="@@game.rules.title">game.rules.title</ng-container>
             </h3>
             <button (click)="closed.emit()"
                     class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] z-10">
@@ -63,7 +63,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
           <div class="p-4 border-t border-[var(--color-border-card)]">
             <button (click)="closed.emit()"
                     class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95">
-              {{ i18n.t('game.rules.got_it')() }}
+              <ng-container i18n="@@game.rules.got_it">game.rules.got_it</ng-container>
             </button>
           </div>
         </div>
