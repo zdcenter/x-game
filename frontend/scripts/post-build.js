@@ -8,13 +8,7 @@ if (!fs.existsSync(browserDir)) {
   process.exit(0);
 }
 
-// 1. Copy _redirects to root
-const redirectsSrc = path.join(__dirname, '../public/_redirects');
-const redirectsDest = path.join(browserDir, '_redirects');
-if (fs.existsSync(redirectsSrc)) {
-  fs.copyFileSync(redirectsSrc, redirectsDest);
-  console.log('Copied _redirects to root of browser directory.');
-}
+// 1. (Removed _redirects copying, now using Cloudflare Functions)
 
 // 2. Generate root index.html for language redirection
 const rootHtml = `<!DOCTYPE html>
