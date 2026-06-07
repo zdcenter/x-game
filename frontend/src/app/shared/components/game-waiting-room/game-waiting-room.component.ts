@@ -9,38 +9,42 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
   imports: [CommonModule],
   template: `
     <div class="flex-grow flex items-center justify-center p-4 sm:p-6 h-full w-full">
-      <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] p-6 sm:p-8 max-w-2xl w-full text-center relative overflow-hidden">
+      <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] p-4 sm:p-8 max-w-2xl w-full max-h-full flex flex-col text-center relative overflow-hidden">
         <!-- Decorative bg -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--color-accent-from)] opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-accent-to)] opacity-5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
         
-        <div class="relative z-10">
-          <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">
-            {{ i18n.t('lobby.' + gameId)() }} - <ng-container i18n="@@game.waiting_room">game.waiting_room</ng-container>
-          </h2>
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-8 text-sm sm:text-base">
-            <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm"><ng-container i18n="@@game.mode">game.mode</ng-container>: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
-            <div class="flex items-center gap-2">
-              <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm"><ng-container i18n="@@game.room_name">game.room_name</ng-container>: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
-              @if (mode !== 'single') {
-                <button (click)="copyInviteLink()" class="relative group p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/50 transition-all active:scale-95 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)]" [title]="i18n.t('game.copy_invite_link')() || 'Copy Invite Link'">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                  @if (showCopiedToast()) {
-                    <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-[var(--color-accent-from)] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap animate-fade-in-up">
-                      <ng-container i18n="@@game.copied">Copied!</ng-container>
-                    </span>
-                  }
-                </button>
-              }
+        <div class="relative z-10 flex flex-col h-full overflow-hidden">
+          <!-- Header (Title & Room Info) -->
+          <div class="shrink-0">
+            <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">
+              {{ i18n.t('lobby.' + gameId)() }} - <ng-container i18n="@@game.waiting_room">game.waiting_room</ng-container>
+            </h2>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-8 text-sm sm:text-base">
+              <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm"><ng-container i18n="@@game.mode">game.mode</ng-container>: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
+              <div class="flex items-center gap-2">
+                <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm"><ng-container i18n="@@game.room_name">game.room_name</ng-container>: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
+                @if (mode !== 'single') {
+                  <button (click)="copyInviteLink()" class="relative group p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/50 transition-all active:scale-95 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)]" [title]="i18n.t('game.copy_invite_link')() || 'Copy Invite Link'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    @if (showCopiedToast()) {
+                      <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-[var(--color-accent-from)] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap animate-fade-in-up">
+                        <ng-container i18n="@@game.copied">Copied!</ng-container>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
             </div>
           </div>
 
-          <div class="flex flex-wrap justify-center gap-4 sm:gap-6 mb-10">
+          <!-- Players List (Scrollable) -->
+          <div class="flex-grow overflow-y-auto custom-scrollbar my-2 min-h-[100px] flex flex-wrap justify-center gap-4 sm:gap-6 py-2 px-2">
             @for (player of sortedPlayers; track player.id) {
-              <div class="w-32 sm:w-40 flex flex-col items-center p-4 sm:p-6 bg-[var(--color-bg-main)] rounded-2xl border border-[var(--color-border-card)] shadow-inner relative group">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--color-bg-card)] border-2 border-[var(--color-border-card)] mb-3 flex items-center justify-center text-3xl shadow-lg group-hover:scale-105 transition-transform text-[var(--color-text-main)] relative">
+              <div class="w-28 sm:w-40 flex flex-col items-center p-3 sm:p-6 bg-[var(--color-bg-main)] rounded-2xl border border-[var(--color-border-card)] shadow-inner relative group">
+                <div class="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[var(--color-bg-card)] border-2 border-[var(--color-border-card)] mb-2 sm:mb-3 flex items-center justify-center text-2xl sm:text-3xl shadow-lg group-hover:scale-105 transition-transform text-[var(--color-text-main)] relative shrink-0">
                   @if (player.id === hostId) { 👑 } @else { 👤 }
                   @if (readyPlayers[player.id]) {
                     <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-xs sm:text-base animate-bounce">
@@ -48,13 +52,13 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                     </div>
                   }
                 </div>
-                <span class="font-bold text-[var(--color-text-main)] truncate w-full text-center">{{ player.id }}</span>
+                <span class="font-bold text-xs sm:text-base text-[var(--color-text-main)] truncate w-full text-center">{{ player.id }}</span>
                 @if (player.id === hostId) {
                   <span class="absolute -top-3 bg-yellow-500 text-black text-[10px] font-black uppercase px-2 py-1 rounded-full shadow-md shadow-yellow-500/20"><ng-container i18n="@@game.host">game.host</ng-container></span>
                 }
                 
                 @if (currentUserId === hostId && player.id !== hostId) {
-                  <button (click)="kick.emit(player.id)" class="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 flex items-center justify-center transition-colors shadow-sm" title="Kick Player">
+                  <button (click)="kick.emit(player.id)" class="absolute top-1 right-1 sm:top-2 sm:right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 flex items-center justify-center transition-colors shadow-sm" title="Kick Player">
                     ✕
                   </button>
                 }
@@ -62,7 +66,8 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
             }
           </div>
 
-          <div class="flex flex-col sm:flex-row justify-center gap-4">
+          <!-- Actions Footer -->
+          <div class="shrink-0 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 mt-auto">
             <button (click)="leave.emit()" class="px-8 py-3.5 rounded-xl border-2 border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold transition-all active:scale-95 shadow-sm">
               <ng-container i18n="@@game.leave">game.leave</ng-container>
             </button>
