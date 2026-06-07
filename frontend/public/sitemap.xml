@@ -81,6 +81,59 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Blog Posts -->
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/why-math24-is-the-best-brain-training-game-for-kids</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/why-math24-is-the-best-brain-training-game-for-kids"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/why-math24-is-the-best-brain-training-game-for-kids"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/why-math24-is-the-best-brain-training-game-for-kids"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/why-math24-is-the-best-brain-training-game-for-kids</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/why-math24-is-the-best-brain-training-game-for-kids"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/why-math24-is-the-best-brain-training-game-for-kids"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/why-math24-is-the-best-brain-training-game-for-kids"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/sudoku-for-kids-a-beginners-guide</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sudoku-for-kids-a-beginners-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sudoku-for-kids-a-beginners-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sudoku-for-kids-a-beginners-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/sudoku-for-kids-a-beginners-guide</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sudoku-for-kids-a-beginners-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sudoku-for-kids-a-beginners-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sudoku-for-kids-a-beginners-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/benefits-of-multiplayer-educational-games"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/benefits-of-multiplayer-educational-games</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/benefits-of-multiplayer-educational-games"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <url>
     <loc>https://www.puzzlepk.com/en/games/minesweeper</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/minesweeper"/>
