@@ -19,8 +19,16 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
         <div class="relative z-10">
-          <h2 class="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 text-center">
-            <ng-container i18n="@@auth.login.title">auth.login.title</ng-container>
+          <!-- Back to Lobby Button -->
+          <a routerLink="/lobby" class="absolute -top-6 -left-6 sm:-top-4 sm:-left-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors flex items-center gap-1 text-sm font-medium z-20 p-2 rounded-lg hover:bg-[var(--color-bg-main)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <ng-container i18n="@@nav.lobby">Lobby</ng-container>
+          </a>
+
+          <h2 class="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 text-center cursor-pointer">
+            <a routerLink="/lobby" class="hover:opacity-80 transition-opacity"><ng-container i18n="@@auth.login.title">auth.login.title</ng-container></a>
           </h2>
           <p class="text-slate-400 text-center mb-8 font-medium tracking-wide"><ng-container i18n="@@auth.login.subtitle">auth.login.subtitle</ng-container></p>
 
@@ -56,7 +64,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
 
           <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
-                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-slate-800 text-white font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             <ng-container i18n="@@auth.play_as_guest">auth.play_as_guest</ng-container>
           </button>
