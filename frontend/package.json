@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "node scripts/generate-version.js && ng serve --port 4201 --host 0.0.0.0",
-    "build": "node scripts/generate-version.js && ng build",
+    "build": "node scripts/generate-version.js && ng build && node scripts/post-build.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
