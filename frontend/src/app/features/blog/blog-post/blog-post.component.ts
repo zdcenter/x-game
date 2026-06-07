@@ -136,7 +136,7 @@ export class BlogPostComponent implements OnInit {
   private titleService = inject(Title);
   private metaService = inject(Meta);
   private sanitizer = inject(DomSanitizer);
-  private i18n = inject(I18nService);
+  i18n = inject(I18nService);
 
   rawMeta = signal<BlogPostMeta | null>(null);
   displayMeta = computed(() => {
