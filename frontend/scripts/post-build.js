@@ -42,3 +42,14 @@ const rootHtml = `<!DOCTYPE html>
 
 fs.writeFileSync(path.join(browserDir, 'index.html'), rootHtml);
 console.log('Generated root index.html for language sniffing.');
+
+// 3. Copy root static files from public/ (or en/) to the root of browser/ so Cloudflare Pages can serve them
+const filesToCopy = ['ads.txt', 'robots.txt', 'sitemap.xml', 'favicon.ico', 'favicon.svg', 'manifest.webmanifest'];
+filesToCopy.forEach(file => {
+  const src = path.join(browserDir, 'en', file);
+  const dest = path.join(browserDir, file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    console.log(`Copied ${file} to root.`);
+  }
+});
