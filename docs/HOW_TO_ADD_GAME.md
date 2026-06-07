@@ -219,8 +219,31 @@ ngOnInit() {
 }
 ```
 
-### 6. 更新多语言配置 (i18n)
-在 `frontend/src/app/core/i18n/translations.ts` 中增加新游戏的翻译词条，尤其是大厅中会显示的游戏名、模式名及规则。
+### 6. 更新多语言配置 (i18n) 🚨 全新原生编译架构
+本项目已全量重构为基于 **Angular 原生 `@angular/localize`** 的编译时多语言架构，以换取极致的加载性能与 SEO 效果。
+开发新游戏时，处理多语言必须遵循以下标准工作流：
+
+1. **HTML 模板中的静态文本：**
+   必须使用 `i18n` 属性，并指定带有 `@@` 前缀的唯一 ID。
+   ```html
+   <button i18n="@@game.ready">Ready</button>
+   ```
+2. **TypeScript / Signal 逻辑中的动态文本：**
+   使用注入的 `I18nService` 配合 `t()` 方法获取 Signal 包装的翻译值：
+   ```typescript
+   i18n = inject(I18nService);
+   // 必须带括号调用，因为 t() 返回的是一个 computed Signal
+   const title = this.i18n.t('game.defeat')(); 
+   ```
+3. **录入词典库：**
+   将你新增的 key（例如 `game.ready`, `game.defeat`）和对应的中英文内容，统一录入到 `frontend/src/app/core/i18n/core.translations.ts` 的 `en` 和 `zh` 字典对象中。
+
+4. **一键生成 XLF 物理文件（关键）：**
+   在编写完代码后，进入 `frontend` 目录，执行自定义提取脚本：
+   ```bash
+   node generate-xlf.js
+   ```
+   这个脚本会扫描全站的 `core.translations.ts`，自动为你生成并补全 `src/locale/messages.zh.xlf` 和 `messages.en.xlf`。Angular 在执行 `npm run build` 时，就是靠这两个 `.xlf` 文件在底层把文本物理刻录进 HTML 里的！
 
 ---
 
@@ -249,7 +272,8 @@ ngOnInit() {
 - 单机模式（Single）自动将进度保存到浏览器的 `LocalStorage`。但在用户主动**手动切换难度/等级**时，必须强制开启新局（清除旧存档并覆盖），**只有在重新进入页面或刷新时**才去读取存档恢复棋盘状态。避免出现切换难度却依然读取了旧难度存档的 Bug。
 
 ### 5. i18n 多语言抽离 (Translation)
-- **绝不允许硬编码任何 UI 文本**（尤其是 `GAME.YOU_LOSE` 这种）。所有新增的文案（如 `Moves`, `Play Again` 等）如果具有跨游戏通用性，必须写进 `core.translations.ts` 中；如果是某游戏独占，必须写进该游戏的 `*.translations.ts` 并注册到全局。
+- **绝不允许硬编码任何中文 UI 文本**（尤其是 `重新开始`, `您已失败` 这种）。
+- 由于我们采用了 Angular AOT 原生编译模式（提取文本生成 XLF 字典库），所有新增的文案都**必须统一集中写进 `core.translations.ts` 中**，不再分散在各个游戏目录下。这确保了 `generate-xlf.js` 脚本能一次性无遗漏地把全站词条提取并注入到生产环境的双语包中。
 
 ### 6. 主题适配 (Dark/Light Theme)
 - **绝不允许使用硬编码的 Tailwind 颜色**（如 `bg-slate-900`, `text-white`，或带有透明度的 `bg-white/10`）作为主背景和主文本色。

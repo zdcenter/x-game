@@ -1,6 +1,22 @@
 ## [2026-06-04] WebSocket 房间系统大规模重构
 # Changelog
 
+## [2026-06-07] - 🚀 重大重构：Cloudflare 边缘路由优化与全站 Angular 编译级多语言
+
+### 🌟 架构重构 (Architecture & Refactoring)
+- **全面迁移至 Angular 原生多语言架构 (`@angular/localize`)**：废弃了原有的动态加载 JSON 字典方案，改用编译时 AOT 方案。大大提升了首屏加载速度，并实现了纯正的 SEO 支持。
+- **自研 XLF 提取引擎**：开发了轻量级的 `generate-xlf.js` 脚本，可一键扫描前端 `core.translations.ts` 并自动生成/更新供 Angular 编译器使用的 `.xlf` 物理字典包。
+- **边缘网络重写 (Cloudflare Functions)**：新增了 `functions/[[path]].js` 中间件，拦截并智能分发 `/zh/` 和 `/en/` 流量。彻底解决了 Cloudflare Pages SPA Auto-Routing 机制导致的多语言子路径 404 及无限重定向死循环问题。
+
+### ✨ 新功能 (Features)
+- **全站 SEO URL 规范化**：现已支持 `www.puzzlepk.com/zh/lobby` 与 `www.puzzlepk.com/en/lobby` 纯静态物理隔离的 URL 结构，并已更新 `sitemap.xml` 支持 Google hreflang 抓取规范。
+- **国际化博客系统 (i18n Markdown Blog)**：引入了全新的纯静态 Markdown 博客引擎，支持 `_zh.md` 和 `_en.md` 语言级隔离。使用 `Location` 服务自动动态适配 BaseHref，解决了深层级路由下图片与资产加载 404 的问题。
+- **游戏元数据深度国际化**：改造了 `GameRegistryService` 和后端下发的数据库标题。现在大厅的所有游戏名、游戏规则介绍全部通过统一的 `I18nService` 即时翻译。
+
+### 🐛 体验优化与 Bug 修复 (Bug Fixes)
+- 修复了竞技大厅“发英雄帖”广播组件部分文本未被翻译的遗留问题。
+- 重写了 `GameWaitingRoomComponent` (等待大厅) 的移动端自适应 Flex 布局结构，解决了在小屏或多玩家情况下，底部的“Ready (准备)” 按钮被挤出屏幕且无法滚动的问题。
+
 ### 🔧 核心重构 - WebSocket 房间系统
 - **三重保障机制**：实现了心跳保活（Ping/Pong 30 秒检测）+ 实时推送 + HTTP 轮询兜底（10 秒间隔），彻底解决了"其他玩家看不到房间"的致命 Bug。
 - **拆分房间创建/加入**：将 `GetOrCreateRoom` 拆分为 `CreateRoom` 和 `JoinRoom` 两个独立操作，消灭了断线重连意外创建幽灵房间的问题。
