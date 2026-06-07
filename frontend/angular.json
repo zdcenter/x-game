@@ -94,7 +94,8 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "localize": ["zh", "en"]
             },
             "development": {
               "optimization": false,
