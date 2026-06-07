@@ -42,47 +42,27 @@ import { PwaService } from '../services/pwa.service';
               </button>
             }
 
-            <!-- Settings Dropdown (Language & Theme) -->
-            <div class="relative">
-              <button (click)="isSettingsOpen.set(!isSettingsOpen())" 
-                      class="p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
-                      title="Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-
-              @if (isSettingsOpen()) {
-                <div class="fixed inset-0 z-40" (click)="isSettingsOpen.set(false)"></div>
-                
-                <div class="absolute right-0 mt-2 w-40 sm:w-48 rounded-xl shadow-xl z-50 overflow-hidden border border-[var(--color-border-card)] backdrop-blur-xl bg-[var(--color-bg-card)]/95 flex flex-col p-2 gap-1">
-                  
-                  <!-- Theme Toggle -->
-                  <button (click)="theme.cycleTheme(); isSettingsOpen.set(false)" class="flex items-center justify-between w-full p-2 rounded-lg hover:bg-[var(--color-bg-main)] transition-colors text-xs sm:text-sm font-bold text-[var(--color-text-main)]">
-                    <span class="flex items-center gap-2">
-                      @if (theme.currentTheme() === 'dark') {
-                        <span>☀️</span> <span>Light Mode</span>
-                      } @else {
-                        <span>🌙</span> <span>Dark Mode</span>
-                      }
-                    </span>
-                  </button>
-
-                  <!-- Language Toggle -->
-                  <button (click)="i18n.toggleLang(); isSettingsOpen.set(false)" class="flex items-center justify-between w-full p-2 rounded-lg hover:bg-[var(--color-bg-main)] transition-colors text-xs sm:text-sm font-bold text-[var(--color-text-main)]">
-                    <span class="flex items-center gap-2">
-                      @if (i18n.currentLang() === 'zh') {
-                        <span>🇬🇧</span> <span>English</span>
-                      } @else {
-                        <span>🇨🇳</span> <span>中文</span>
-                      }
-                    </span>
-                  </button>
-
-                </div>
+            <!-- Theme Toggle -->
+            <button (click)="theme.cycleTheme()" 
+                    class="p-1.5 sm:p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
+                    title="Toggle Theme">
+              @if (theme.currentTheme() === 'dark') {
+                <span class="text-xl leading-none block">☀️</span>
+              } @else {
+                <span class="text-xl leading-none block">🌙</span>
               }
-            </div>
+            </button>
+
+            <!-- Language Toggle -->
+            <button (click)="i18n.toggleLang()" 
+                    class="p-1.5 sm:p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
+                    title="Toggle Language">
+              @if (i18n.currentLang() === 'zh') {
+                <span class="text-xl leading-none block">🇬🇧</span>
+              } @else {
+                <span class="text-xl leading-none block">🇨🇳</span>
+              }
+            </button>
             
             <!-- Auth Info -->
             @if (authStore.isAuthenticated()) {
