@@ -11,7 +11,7 @@ import { Math24Solver } from '../../utils/math24-solver';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex flex-col items-center justify-center w-full max-w-md mx-auto h-full gap-2 sm:gap-4 py-2 sm:py-4">
+    <div class="flex flex-col items-center justify-center w-full max-w-[min(90vw,400px,calc(100vh-320px))] mx-auto h-full gap-2 sm:gap-3 py-1 sm:py-2">
       
       <!-- Top controls above board -->
       <div class="flex justify-between items-end w-full px-2 mb-2">

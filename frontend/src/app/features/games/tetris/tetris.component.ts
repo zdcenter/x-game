@@ -150,12 +150,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.store.hardDrop();
         event.preventDefault();
         break;
-      case 'ShiftLeft':
-      case 'ShiftRight':
-      case 'KeyC':
-        this.store.hold();
-        event.preventDefault();
-        break;
     }
   }
 

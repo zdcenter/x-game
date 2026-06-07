@@ -291,28 +291,40 @@ export class Drop2048Store {
     }
   }
 
+  private lastDropTime: number = 0;
+
   private startGravity() {
     this.stopGravity();
-    const speed = this.getDropSpeed();
-    this.gravityInterval = setInterval(() => {
-      if (!this.activeBlock() || this.isDead()) {
+    this.lastDropTime = performance.now();
+    
+    const loop = (timestamp: number) => {
+      if (this.isDead() || !this.activeBlock()) {
         this.stopGravity();
         return;
       }
-      const curr = this.activeBlock()!;
-      // Check if we can move down
-      if (curr.r >= this.ROWS - 1 || this.board().some(b => b.c === curr.c && b.r === curr.r + 1)) {
-        // Can't move down, so drop/lock it in place
-        this.dropActive();
-      } else {
-        this.activeBlock.set({ ...curr, r: curr.r + 1 });
+      
+      const speed = this.getDropSpeed();
+      const progress = timestamp - this.lastDropTime;
+      
+      if (progress >= speed) {
+        const curr = this.activeBlock()!;
+        if (curr.r >= this.ROWS - 1 || this.board().some(b => b.c === curr.c && b.r === curr.r + 1)) {
+          this.dropActive();
+        } else {
+          this.activeBlock.set({ ...curr, r: curr.r + 1 });
+        }
+        this.lastDropTime = timestamp;
       }
-    }, speed);
+      
+      this.gravityInterval = requestAnimationFrame(loop);
+    };
+    
+    this.gravityInterval = requestAnimationFrame(loop);
   }
 
   private stopGravity() {
     if (this.gravityInterval) {
-      clearInterval(this.gravityInterval);
+      cancelAnimationFrame(this.gravityInterval);
       this.gravityInterval = null;
     }
   }

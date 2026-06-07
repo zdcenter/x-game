@@ -69,7 +69,7 @@
         </app-game-header>
       </ng-template>
 
-      <div class="flex-1 overflow-y-auto relative p-4 h-full">
+      <div class="flex-1 overflow-y-auto relative p-2 lg:p-4 h-full flex flex-col items-center justify-start lg:justify-center">
         <!-- Result Overlay -->
         @if (store.isFinished()) {
           <app-game-result-overlay

@@ -105,25 +105,7 @@
               <!-- Classic Layout: [Hold+Stats] | [Board] -->
               <div class="absolute inset-0 flex items-stretch justify-center gap-4 lg:gap-8 w-full max-w-4xl mx-auto px-2 lg:px-0 py-2">
                 
-                <!-- LEFT: Hold + Stats -->
-                <div class="flex flex-col gap-3 lg:gap-5 w-20 sm:w-24 lg:w-32 shrink-0 self-center">
-                  <!-- Hold -->
-                  <div class="bg-[var(--color-bg-card)] p-2.5 lg:p-4 rounded-xl border-2 border-[var(--color-border-card)] flex flex-col items-center shadow-lg backdrop-blur-sm">
-                    <div class="text-[10px] lg:text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2 lg:mb-3">{{ i18n.t('tetris.hold')() }}</div>
-                    <div class="w-16 h-16 lg:w-20 lg:h-20 flex items-center justify-center">
-                      @if (store.holdPiece()) {
-                        <div class="grid gap-[2px]" [style.gridTemplateColumns]="'repeat(' + getShapeArray(store.holdPiece()!).length + ', minmax(0, 1fr))'">
-                          @for (row of getShapeArray(store.holdPiece()!); track $index) {
-                            @for (cell of row; track $index) {
-                              <div class="w-3.5 h-3.5 lg:w-4.5 lg:h-4.5 rounded-[3px] shadow-sm" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'" [class.opacity-0]="!cell"></div>
-                            }
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
 
-                </div>
 
                 <!-- CENTER: Main Board -->
                 <div class="relative h-full flex-shrink-0 touch-none" style="aspect-ratio: 1/2;"
