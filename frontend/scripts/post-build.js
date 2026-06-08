@@ -43,13 +43,18 @@ const rootHtml = `<!DOCTYPE html>
 fs.writeFileSync(path.join(browserDir, 'index.html'), rootHtml);
 console.log('Generated root index.html for language sniffing.');
 
-// 3. Copy root static files from public/ (or en/) to the root of browser/ so Cloudflare Pages can serve them
-const filesToCopy = ['ads.txt', 'robots.txt', 'sitemap.xml', 'favicon.ico', 'favicon.svg', 'manifest.webmanifest'];
-filesToCopy.forEach(file => {
-  const src = path.join(browserDir, 'en', file);
-  const dest = path.join(browserDir, file);
-  if (fs.existsSync(src)) {
-    fs.copyFileSync(src, dest);
-    console.log(`Copied ${file} to root.`);
-  }
-});
+// 3. Automatically copy all root static files from public/ to the root of browser/ 
+// so Cloudflare Pages can serve them directly without redirect loops.
+const publicDir = path.join(__dirname, '../public');
+if (fs.existsSync(publicDir)) {
+  const filesToCopy = fs.readdirSync(publicDir);
+  filesToCopy.forEach(file => {
+    const src = path.join(publicDir, file);
+    // Only copy files (not directories)
+    if (fs.statSync(src).isFile()) {
+      const dest = path.join(browserDir, file);
+      fs.copyFileSync(src, dest);
+      console.log(`Copied ${file} to root from public/.`);
+    }
+  });
+}

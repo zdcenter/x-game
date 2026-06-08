@@ -3,6 +3,11 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  // 1. Rewrite shared assets: point /assets/* directly to /en/assets/*
+  if (pathname.startsWith('/assets/')) {
+    return env.ASSETS.fetch(new Request(new URL('/en' + pathname, request.url)));
+  }
+
   // Check if it's a static file (has an extension like .js, .css, .png, etc.)
   // We consider it a static file if the last segment contains a dot.
   const lastSegment = pathname.split('/').pop();
