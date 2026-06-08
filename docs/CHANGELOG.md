@@ -46,6 +46,7 @@
   - Migrated Simulator toggle to the database-backed settings system.
 
 ### Changed
+- **Block Puzzle & Hexa Puzzle**: 完善多语言 (i18n) 适配，彻底修复并抽离了游戏组件中遗留的硬编码文本（包含 SCORE、COMBO、BEST 和大厅界面标签等），并为 Block Puzzle 新建了独立的翻译字典，全面接入 `I18nService` 动态多语言引擎。
 - Improved traffic simulator to randomize player counts and room creation times for a more natural look.
 - **Tetris**: Fixed a bug where restarting a single-player game incorrectly displayed the 'Spectating' overlay.
 - Added pure WebSocket-driven real-time admin dashboard (在线玩家/活跃房间监控).

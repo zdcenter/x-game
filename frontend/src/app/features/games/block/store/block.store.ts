@@ -222,13 +222,8 @@ export class BlockStore {
 
     // Update hand
     const newHand = [...this.localHand()];
-    newHand[handIndex] = null;
-    
-    if (newHand.every(s => s === null)) {
-      this.localHand.set(getRandomShapes(3));
-    } else {
-      this.localHand.set(newHand);
-    }
+    newHand[handIndex] = getRandomShapes(1)[0];
+    this.localHand.set(newHand);
 
     this.checkGameOver();
     

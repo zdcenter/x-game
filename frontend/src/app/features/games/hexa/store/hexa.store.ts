@@ -119,10 +119,12 @@ export class HexaStore {
               this.updateSignals();
               
               // Advance PRNG to match their progress
-              const draws = Math.floor(this.piecesPlaced / 3);
-              for (let i = 0; i < draws; i++) {
-                this.drawPieces();
+              this.drawPieces(); // initial 3
+              for (let i = 0; i < this.piecesPlaced; i++) {
+                generatePieces(1, this.prng);
               }
+              // Generate current hand
+              this.drawPieces();
             }
           }
         }
@@ -180,18 +182,10 @@ export class HexaStore {
         this.audio.playDrop();
       }
 
-      // Remove the used piece but keep the slot
+      // Replace the used piece with a new one
       const pieces = [...this.availablePieces()];
-      pieces[pieceIndex] = null as any;
-      
-      const remainingPieces = pieces.filter(p => p !== null);
-      
-      // If all pieces used, draw 3 new ones
-      if (remainingPieces.length === 0) {
-        this.drawPieces();
-      } else {
-        this.availablePieces.set(pieces);
-      }
+      pieces[pieceIndex] = generatePieces(1, this.prng)[0];
+      this.availablePieces.set(pieces);
 
       // Check Game Over
       const currentPieces = this.availablePieces().filter(p => p !== null);

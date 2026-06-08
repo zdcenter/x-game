@@ -6,6 +6,7 @@ import { hexaTranslations } from '../../features/games/hexa/i18n/hexa.translatio
 import { tetrisTranslations } from '../../features/games/tetris/i18n/tetris.translations';
 import { gomokuTranslations } from '../../features/games/gomoku/i18n/gomoku.translations';
 import { codebreakerTranslations } from '../../features/games/codebreaker/i18n/codebreaker.translations';
+import { blockTranslations } from '../../features/games/block/i18n/block.translations';
 
 export type Lang = 'en' | 'zh';
 
@@ -18,6 +19,7 @@ const gameTranslations: Record<Lang, Record<string, string>>[] = [
   tetrisTranslations,
   gomokuTranslations,
   codebreakerTranslations,
+  blockTranslations,
 ];
 
 // Auto-merge core + all game translations

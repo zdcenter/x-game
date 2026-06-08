@@ -142,7 +142,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   get resultStats() {
     return [
-      { label: 'SCORE', value: this.store.score() }
+      { label: this.i18n.t('block.score')() || 'SCORE', value: this.store.score() }
     ];
   }
 

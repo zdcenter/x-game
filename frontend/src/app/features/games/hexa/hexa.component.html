@@ -94,7 +94,7 @@
                   [isMe]="true"
                   [score]="store.score()"
                   [stats]="[
-                    { icon: '🔄', value: store.combo() + 'x', label: 'COMBO', colorClass: store.combo() > 1 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : '' }
+                    { icon: '🔄', value: store.combo() + 'x', label: t('hexa.combo')() || 'COMBO', colorClass: store.combo() > 1 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : '' }
                   ]"
                   [status]="store.status() === 'finished' ? 'finished' : 'playing'"></app-player-badge>
 
@@ -153,7 +153,7 @@
                     currentGameId="hexa"
                     [status]="store.status() === 'finished' ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"
                     [title]="currentRoomMode() === 'single' ? t('game.you_lose')() : (store.status() === 'finished' ? (store.winners().includes(playerId) ? t('game.you_win')() : t('game.you_lose')()) : t('game.waiting_for_others')())"
-                    [stats]="currentRoomMode() === 'single' ? [{label: 'SCORE', value: store.score()}, {label: 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: 'SCORE', value: store.score()}]"
+                    [stats]="currentRoomMode() === 'single' ? [{label: t('hexa.score')() || 'SCORE', value: store.score()}, {label: t('hexa.best')() || 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: t('hexa.score')() || 'SCORE', value: store.score()}]"
                     [showRestart]="currentRoomMode() === 'single' || (store.status() === 'finished' && store.host() === playerId)"
                     [showDismiss]="currentRoomMode() !== 'single' && store.status() === 'finished' && store.host() === playerId"
                     (restart)="store.playAgain()"
@@ -208,7 +208,7 @@
            }">
       
       <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomId() === 'local'">
-        <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+        <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ t('game.room_info')() || 'Room Info' }}</h3>
       </div>
 
       <!-- PK Lobby Panel -->
