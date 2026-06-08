@@ -20,10 +20,10 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
   standalone: true,
   imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent],
   template: `
-    <div class="flex flex-col lg:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-[var(--color-bg-main)]">
+    <div class="flex flex-col lg:flex-row min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)]">
       
       <!-- LEFT: Main Games Content -->
-      <div class="flex-grow flex flex-col items-center p-4 lg:p-8 overflow-y-auto custom-scrollbar relative">
+      <div class="flex-grow flex flex-col items-center p-4 lg:p-8 relative">
         
         <!-- Global Announcement Marquee -->
         @if (activeAnnouncements().length > 0) {
@@ -492,13 +492,13 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
       }
 
       <!-- Sidebar Container -->
-      <div class="fixed lg:static top-[64px] lg:top-0 right-0 h-[calc(100vh-64px)] lg:h-full w-[300px] sm:w-[350px] lg:w-[350px] xl:w-[400px] z-50 lg:z-auto transition-transform duration-300 ease-in-out shrink-0 flex flex-col p-0 lg:p-4 bg-[var(--color-bg-main)] lg:bg-transparent border-l border-[var(--color-border-card)] lg:border-none"
+      <div class="fixed lg:sticky top-[64px] lg:top-0 right-0 h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)] w-[300px] sm:w-[350px] lg:w-[350px] xl:w-[400px] z-50 lg:z-10 transition-transform duration-300 ease-in-out shrink-0 flex flex-col p-0 lg:p-4 bg-[var(--color-bg-main)] lg:bg-transparent border-l border-[var(--color-border-card)] lg:border-none"
            [class.translate-x-0]="isGlobalLobbyOpen()"
            [class.translate-x-full]="!isGlobalLobbyOpen()"
            [class.lg:translate-x-0]="true">
 
         <app-game-lobby-panel
-          class="flex-grow flex w-full h-full min-h-0 lg:h-full lg:bg-transparent"
+          class="flex-grow flex w-full h-full min-h-0 lg:bg-transparent"
           [isGlobal]="true"
           (createRoom)="handleGlobalCreateRoom($event)">
         </app-game-lobby-panel>
