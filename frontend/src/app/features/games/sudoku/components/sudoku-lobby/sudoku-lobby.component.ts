@@ -40,7 +40,7 @@ export class SudokuLobbyComponent implements OnInit {
   showRules = signal(false);
 
   @Output() openLobby = new EventEmitter<void>();
-  @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, savedState?: string, timeSpent?: number}>();
+  @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}>();
 
   sudokuModes = [
     { id: 'pk_steal', labelKey: 'game.sudoku_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_pk_steal_desc' },
@@ -48,10 +48,10 @@ export class SudokuLobbyComponent implements OnInit {
   ];
 
   difficulties = [
-    { id: 'easy', labelKey: 'game.diff_easy', desc: 'A gentle start' },
-    { id: 'medium', labelKey: 'game.diff_medium', desc: 'A fair challenge' },
-    { id: 'hard', labelKey: 'game.diff_hard', desc: 'For experienced players' },
-    { id: 'expert', labelKey: 'game.diff_expert', desc: 'True test of skill' }
+    { id: 'easy', labelKey: 'game.diff_sudoku_easy', desc: 'A gentle start' },
+    { id: 'medium', labelKey: 'game.diff_sudoku_medium', desc: 'A fair challenge' },
+    { id: 'hard', labelKey: 'game.diff_sudoku_hard', desc: 'For experienced players' },
+    { id: 'expert', labelKey: 'game.diff_sudoku_expert', desc: 'True test of skill' }
   ];
 
   activeTab = signal<string>('easy');
@@ -86,6 +86,7 @@ export class SudokuLobbyComponent implements OnInit {
       this.levelSelect.emit({
         id: res.puzzle.id,
         puzzle: res.puzzle.puzzle,
+        solution: res.puzzle.solution,
         savedState: res.progress?.current_state,
         timeSpent: res.progress?.time_spent
       });

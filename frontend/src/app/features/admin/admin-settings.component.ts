@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../core/services/admin.service';
@@ -60,30 +60,30 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)] col-span-1 md:col-span-2">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-lg font-bold">AdSense Settings</h3>
-              <p class="text-xs opacity-70 mt-1">Configure AdSense slot IDs and interstitial ad frequency.</p>
+              <h3 class="text-lg font-bold">{{ i18n.t('admin.settings.adsense.title')() }}</h3>
+              <p class="text-xs opacity-70 mt-1">{{ i18n.t('admin.settings.adsense.desc')() }}</p>
             </div>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="block text-xs font-bold opacity-70 mb-2">Interstitial Frequency (Games between ads)</label>
+              <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.freq_label')() }}</label>
               <input type="number" [(ngModel)]="settings.ad_interstitial_frequency" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
             </div>
             <div>
-              <label class="block text-xs font-bold opacity-70 mb-2">Interstitial Daily Limit (Max ads per day)</label>
+              <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.daily_limit_label')() }}</label>
               <input type="number" [(ngModel)]="settings.ad_interstitial_daily_limit" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
             </div>
             <div>
-              <label class="block text-xs font-bold opacity-70 mb-2">PC Left Banner Slot ID</label>
+              <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.pc_left_label')() }}</label>
               <input type="text" [(ngModel)]="settings.ad_pc_left_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
             </div>
             <div>
-              <label class="block text-xs font-bold opacity-70 mb-2">PC Right Banner Slot ID</label>
+              <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.pc_right_label')() }}</label>
               <input type="text" [(ngModel)]="settings.ad_pc_right_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
             </div>
             <div class="md:col-span-2">
-              <label class="block text-xs font-bold opacity-70 mb-2">Mobile Lobby Banner Slot ID</label>
+              <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.mobile_lobby_label')() }}</label>
               <input type="text" [(ngModel)]="settings.ad_mobile_lobby_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
             </div>
           </div>
@@ -95,6 +95,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 export class AdminSettingsComponent implements OnInit {
   private adminService = inject(AdminService);
   private toast = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef);
   i18n = inject(I18nService);
 
   isSaving = signal(false);
@@ -123,6 +124,7 @@ export class AdminSettingsComponent implements OnInit {
         this.settings.ad_pc_left_slot = res.ad_pc_left_slot || '';
         this.settings.ad_pc_right_slot = res.ad_pc_right_slot || '';
         this.settings.ad_mobile_lobby_slot = res.ad_mobile_lobby_slot || '';
+        this.cdr.detectChanges();
       },
       error: () => this.toast.show('Failed to load settings', 'error')
     });

@@ -166,6 +166,17 @@ export class CodebreakerStore {
     }
   }
 
+  getSecretCode(): string {
+    return this.localSecretCode;
+  }
+
+  restoreSave(secretCode: string, guesses: GuessRecord[]) {
+    this.localSecretCode = secretCode;
+    this.localGuesses.set(guesses);
+    this.localStatus.set('playing');
+    this.localFinished.set(false);
+  }
+
   submitGuess(guess: string) {
     if (this.status() !== 'playing') return;
 
@@ -252,5 +263,16 @@ export class CodebreakerStore {
       }
     }
     return matches - aCount;
+  }
+
+  applyHint(): { success: boolean; pos?: number; val?: string; message?: string } {
+    if (!this.singlePlayerMode || this.status() !== 'playing') {
+      return { success: false, message: 'game.hint_unavailable' };
+    }
+    
+    // Pick a random index
+    const idx = Math.floor(Math.random() * this.digitLength());
+    const val = this.localSecretCode[idx];
+    return { success: true, pos: idx, val, message: 'game.hint_result' };
   }
 }

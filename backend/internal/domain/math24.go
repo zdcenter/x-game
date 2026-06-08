@@ -10,6 +10,7 @@ const (
 	Math24DifficultyEasy   Math24Difficulty = "easy"
 	Math24DifficultyMedium Math24Difficulty = "medium"
 	Math24DifficultyHard   Math24Difficulty = "hard"
+	Math24DifficultyExpert Math24Difficulty = "expert"
 )
 
 // Math24Puzzle represents a pre-generated Math24 puzzle.

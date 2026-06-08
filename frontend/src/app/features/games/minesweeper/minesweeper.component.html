@@ -23,16 +23,22 @@
           <div class="flex space-x-2 lg:space-x-6 flex-1 justify-end items-center z-10">
 
             @if (currentRoomMode() === 'single') {
-            <div class="flex flex-col items-center">
-              <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest"><ng-container i18n="@@game.difficulty">game.difficulty</ng-container></span>
-              <button (click)="openDifficultySettings('single')"
-                class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
-                <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentDifficulty()) }}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4 shrink-0" fill="none"
-                  viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+            <div class="flex items-center gap-2 lg:gap-4">
+              <!-- Hint Button -->
+              <app-hint-button layout="minesweeper" (hintApplied)="store.applyHint()"></app-hint-button>
+
+              <!-- Difficulty Button -->
+              <div class="flex flex-col items-center">
+                <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest"><ng-container i18n="@@game.difficulty">game.difficulty</ng-container></span>
+                <button (click)="openDifficultySettings('single')"
+                  class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                  <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentDifficulty()) }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4 shrink-0" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
             </div>
             }
 

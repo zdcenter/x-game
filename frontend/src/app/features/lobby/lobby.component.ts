@@ -39,6 +39,18 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
           </div>
         }
 
+        <!-- Lobby Top Banner Ad (Visible on all devices) -->
+        @if (settingsService.settings().ad_mobile_lobby_slot) {
+          <div class="w-full max-w-6xl mb-4">
+            <app-adsense
+              [adSlot]="settingsService.settings().ad_mobile_lobby_slot"
+              adFormat="horizontal"
+              [fullWidthResponsive]="true"
+              class="w-full min-h-[100px] rounded-xl overflow-hidden flex justify-center items-center">
+            </app-adsense>
+          </div>
+        }
+
         <!-- Welcome Header -->
         <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-2 lg:mt-4 relative max-w-6xl">
           
@@ -460,18 +472,6 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
           </a>
         }
         </div>
-
-        <!-- Mobile Lobby Horizontal Ad (hidden on desktop) -->
-        @if (settingsService.settings().ad_mobile_lobby_slot) {
-          <div class="w-full max-w-6xl mt-4 lg:hidden">
-            <app-adsense
-              [adSlot]="settingsService.settings().ad_mobile_lobby_slot"
-              adFormat="horizontal"
-              [fullWidthResponsive]="true"
-              class="w-full min-h-[100px] rounded-xl overflow-hidden flex justify-center items-center">
-            </app-adsense>
-          </div>
-        }
 
         <!-- Copyright & Version Footer -->
         <div class="w-full mt-auto pt-16 pb-8 flex flex-col items-center justify-center text-[var(--color-text-muted)] text-sm opacity-60">

@@ -5,11 +5,12 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../../core/services/ad.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { Math24Solver } from '../../utils/math24-solver';
+import { HintButtonComponent } from '../../../../../shared/components/hint-button/hint-button.component';
 
 @Component({
   selector: 'app-math24-board',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HintButtonComponent],
   template: `
     <div class="flex flex-col items-center justify-center w-full max-w-[min(90vw,400px,calc(100vh-320px))] mx-auto h-full gap-2 sm:gap-3 py-1 sm:py-2">
       
@@ -44,6 +45,25 @@ import { Math24Solver } from '../../utils/math24-solver';
             <span class="text-6xl sm:text-8xl animate-pulse drop-shadow-lg">❄️</span>
             <div class="mt-4 text-2xl font-black text-white tracking-widest">{{ freezeRemaining() }}s</div>
             <div class="text-sm font-bold text-blue-200 mt-2 uppercase"><ng-container i18n="@@game.frozen">Frozen Penalty</ng-container></div>
+          </div>
+        }
+
+        <!-- Hint Overlay -->
+        @if (hintSolution()) {
+          <div class="absolute inset-0 z-[60] bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-orange-500/50 shadow-[0_0_50px_rgba(249,115,22,0.2)] animate-scale-in">
+            <div class="text-5xl sm:text-6xl mb-4 animate-bounce drop-shadow-lg">💡</div>
+            <div class="text-sm font-bold text-orange-500 uppercase tracking-widest mb-2"><ng-container i18n="@@game.hint_title">Hint</ng-container></div>
+            <div class="w-full max-w-[280px] bg-[var(--color-bg-main)] px-4 sm:px-6 py-4 rounded-xl border border-[var(--color-border-card)] shadow-inner mb-8 flex flex-col gap-2">
+              @for (step of hintSolution(); track $index) {
+                <div class="text-2xl sm:text-3xl font-black font-mono text-[var(--color-text-main)] text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
+                  {{ step }}
+                </div>
+              }
+            </div>
+            <button class="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all text-sm sm:text-base w-full max-w-[200px]"
+                    (click)="hintSolution.set(null)">
+              <ng-container i18n="@@game.close">Close</ng-container>
+            </button>
           </div>
         }
 
@@ -92,10 +112,7 @@ import { Math24Solver } from '../../utils/math24-solver';
       <!-- Controls -->
       <div class="flex justify-between w-full px-2 mt-4">
         <!-- Hint Ad Button -->
-        <button class="px-3 sm:px-4 py-2 sm:py-3 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded-xl font-bold transition-all flex items-center gap-1 sm:gap-2 shadow-sm shrink-0"
-                (click)="showHintAd()">
-          <span>💡</span> <span class="text-sm sm:text-base"><ng-container i18n="@@game.hint_ad">game.hint_ad</ng-container></span>
-        </button>
+        <app-hint-button layout="math24" (hintApplied)="applyHint()"></app-hint-button>
         
         <div class="flex gap-2 sm:gap-4">
           <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
@@ -152,6 +169,7 @@ export class Math24BoardComponent {
   selectedOp: Operator | null = null;
 
   freezeRemaining = signal<number>(0);
+  hintSolution = signal<string[] | null>(null);
   private freezeInterval: any;
 
   constructor() {
@@ -220,17 +238,14 @@ export class Math24BoardComponent {
     }
   }
 
-  showHintAd() {
-    this.adService.showRewardedAd(() => {
-      const cards = this.store.boardCards();
-      const solution = Math24Solver.solve(cards);
-      if (solution) {
-        const msg = (this.i18n.t('game.hint_result')() || 'Hint: {hint}').replace('{hint}', solution);
-        this.toastService.show(msg, 'success');
-      } else {
-        this.toastService.show(this.i18n.t('game.no_solution')() || 'No solution', 'error');
-      }
-    });
+  applyHint() {
+    const cards = this.store.boardCards();
+    const solution = Math24Solver.solve(cards);
+    if (solution) {
+      this.hintSolution.set(solution);
+    } else {
+      this.toastService.show(this.i18n.t('game.no_solution')() || 'No solution', 'error');
+    }
   }
 
   getPreviewText(): string {

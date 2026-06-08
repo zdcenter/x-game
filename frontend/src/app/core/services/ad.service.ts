@@ -25,24 +25,39 @@ export class AdService {
   showRewardedAd(onRewarded: () => void, onCanceled?: () => void) {
     // Check if Google H5 Games Ads API is available
     if (typeof adbreak === 'function') {
+      let isHandled = false;
+      const fallbackTimeout = setTimeout(() => {
+        if (!isHandled) {
+          isHandled = true;
+          console.warn('[AdSense] Rewarded ad timeout, falling back to simulated ad.');
+          this.toast.show(this.i18n.t('game.ad_loading')() || 'Simulated Ad (Testing Mode)...', 'info');
+          setTimeout(() => onRewarded(), 3000);
+        }
+      }, 1500);
+
       try {
         adbreak({
           type: 'reward',
           name: 'hint_ad',
           beforeReward: (showAdFn: () => void) => {
+            isHandled = true;
+            clearTimeout(fallbackTimeout);
             showAdFn();
           },
           adDismissed: () => {
+            if (!isHandled) { isHandled = true; clearTimeout(fallbackTimeout); }
             if (onCanceled) onCanceled();
             this.toast.show(this.i18n.t('game.ad_canceled')() || 'Ad canceled.', 'error');
           },
           adViewed: () => {
+            if (!isHandled) { isHandled = true; clearTimeout(fallbackTimeout); }
             onRewarded();
           }
         });
         return;
       } catch (e) {
         console.warn('AdSense adbreak failed, falling back to simulated ad.', e);
+        if (!isHandled) { isHandled = true; clearTimeout(fallbackTimeout); }
       }
     }
 
@@ -79,11 +94,31 @@ export class AdService {
 
     // Attempt to show H5 Games Ads interstitial
     if (typeof adbreak === 'function') {
+      let isHandled = false;
+      const fallbackTimeout = setTimeout(() => {
+        if (!isHandled) {
+          isHandled = true;
+          console.warn('[AdSense] Interstitial timeout, falling back to simulated ad.');
+          this.toast.show(this.i18n.t('game.ad_loading')() || 'Simulated Ad (Testing Mode)...', 'info');
+          this.recordAdShown();
+          setTimeout(() => onComplete(), 1500);
+        }
+      }, 1500);
+
       try {
         adbreak({
           type: 'next',
           name: 'between_games',
+          beforeAd: () => {
+            // Google acknowledged the ad and is starting it
+            isHandled = true;
+            clearTimeout(fallbackTimeout);
+          },
           adBreakDone: (placementInfo: any) => {
+            if (!isHandled) {
+               isHandled = true;
+               clearTimeout(fallbackTimeout);
+            }
             // adBreakDone triggers regardless of success, fill, or failure
             if (placementInfo && placementInfo.breakStatus === 'viewed') {
                this.recordAdShown();
@@ -93,13 +128,19 @@ export class AdService {
         });
       } catch (e) {
         console.warn('AdSense adbreak next failed', e);
+        if (!isHandled) { isHandled = true; clearTimeout(fallbackTimeout); }
         onComplete();
       }
     } else {
       // No adbreak available (dev env or adblocker)
       console.log(`[Simulated Interstitial] Ad shown! Daily view count will increase.`);
+      this.toast.show(this.i18n.t('game.ad_loading')() || 'Simulated Ad (Testing Mode)...', 'info');
       this.recordAdShown();
-      onComplete();
+      
+      // Simulate 1.5 second ad display for testing
+      setTimeout(() => {
+        onComplete();
+      }, 1500);
     }
   }
 

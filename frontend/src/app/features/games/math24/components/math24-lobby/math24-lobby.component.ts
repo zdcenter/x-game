@@ -35,7 +35,8 @@ export class Math24LobbyComponent implements OnInit {
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_math24_easy' },
     { id: 'medium', labelKey: 'game.diff_math24_medium' },
-    { id: 'hard', labelKey: 'game.diff_math24_hard' }
+    { id: 'hard', labelKey: 'game.diff_math24_hard' },
+    { id: 'expert', labelKey: 'game.diff_math24_expert' }
   ];
 
   activeTab = signal<string>('easy');

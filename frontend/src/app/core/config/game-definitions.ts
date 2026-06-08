@@ -31,9 +31,10 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner friendly' },
-      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_sudoku_medium', desc: 'Standard challenge' },
-      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_sudoku_hard', desc: 'For experts' }
+      { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner' },
+      { id: 'medium', labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium', desc: 'Intermediate' },
+      { id: 'hard', labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard', desc: 'Advanced' },
+      { id: 'expert', labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert', desc: 'Professional' }
     ],
     recommendations: ['minesweeper', 'math24']
   },
@@ -118,8 +119,10 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'First to solve gets the point!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_math24_easy', desc: 'Basic math' },
-      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_math24_hard', desc: 'Fractional & Complex' }
+      { id: 'easy', labelKey: 'game.diff_math24_easy', descKey: 'game.diff_math24_easy', desc: 'Beginner' },
+      { id: 'medium', labelKey: 'game.diff_math24_medium', descKey: 'game.diff_math24_medium', desc: 'Intermediate' },
+      { id: 'hard', labelKey: 'game.diff_math24_hard', descKey: 'game.diff_math24_hard', desc: 'Advanced' },
+      { id: 'expert', labelKey: 'game.diff_math24_expert', descKey: 'game.diff_math24_expert', desc: 'Professional' }
     ],
     recommendations: ['sudoku', 'codebreaker']
   },

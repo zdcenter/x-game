@@ -157,11 +157,10 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
-  startLevel(level: {id: string, puzzle: string, savedState?: string, timeSpent?: number}) {
-    this.store.currentMode.set('single');
-    this.store.currentPuzzleId.set(level.id);
-    this.store.initBoard(level.puzzle, level.savedState, level.timeSpent);
+  startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}) {
     this.view.set('play');
+    this.store.currentPuzzleId.set(level.id);
+    this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);
   }
 
   playNextLevel() {
@@ -180,7 +179,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${nextId}`).subscribe({
       next: (res) => {
         this.store.currentPuzzleId.set(res.puzzle.id);
-        this.store.initBoard(res.puzzle.puzzle, res.progress?.current_state, res.progress?.time_spent);
+        this.store.initBoard(res.puzzle.puzzle, res.puzzle.solution, res.progress?.current_state, res.progress?.time_spent);
       },
       error: () => {
         // Next level doesn't exist, back to lobby

@@ -39,8 +39,14 @@
     </div>
 
     <!-- Level Grid -->
-    <div #scrollContainer class="flex-grow p-4 sm:p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
-      <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 sm:gap-4 shrink-0">
+    <div class="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2">
+      <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+        总关卡: {{ levels().length }}
+      </span>
+    </div>
+    
+    <div #scrollContainer class="flex-grow px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+      <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 shrink-0">
         @for (level of paginatedLevels(); track level.id; let i = $index) {
           <button 
             (click)="playLevel(level, (currentPage() - 1) * pageSize + i)"
@@ -50,7 +56,7 @@
               'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:text-white': level.progress?.status !== 'finished'
             }">
             
-            <span class="z-10 relative">{{ (currentPage() - 1) * pageSize + i + 1 }}</span>
+            <span class="z-10 relative text-sm sm:text-base whitespace-nowrap">关卡 {{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
             
             @if (level.progress?.status === 'finished') {
               <div class="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
@@ -71,18 +77,18 @@
             (click)="prevPage()" 
             [disabled]="currentPage() === 1"
             class="px-4 py-2 rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-card)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg-card)] transition-colors">
-            Previous
+            {{ i18n.t('game.prev_page')() }}
           </button>
           
           <span class="text-sm font-medium text-[var(--color-text-muted)]">
-            Page {{ currentPage() }} of {{ totalPages() }}
+            {{ i18n.t('game.page_info')().replace('{current}', currentPage().toString()).replace('{total}', totalPages().toString()) }}
           </span>
           
           <button 
             (click)="nextPage()" 
             [disabled]="currentPage() === totalPages()"
             class="px-4 py-2 rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-card)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-bg-card)] transition-colors">
-            Next
+            {{ i18n.t('game.next_page')() }}
           </button>
         </div>
       }

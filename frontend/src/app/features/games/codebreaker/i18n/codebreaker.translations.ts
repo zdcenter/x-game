@@ -29,7 +29,9 @@ export const codebreakerTranslations: Record<Lang, Record<string, string>> = {
     'codebreaker.rules_ex_title': 'Example: Code is 1234',
     'codebreaker.rules_ex_guess': 'Guess 1543 -> Hint',
     'codebreaker.input_hint_pre': 'Please enter your guessed ',
-    'codebreaker.input_hint_post': '-digit unique code'
+    'codebreaker.input_hint_post': '-digit unique code',
+    'codebreaker.hint_msg': 'Hint: Position {pos} is {val}',
+    'codebreaker.hint_memo_marked': '✓ Automatically marked on your Memo'
   },
   zh: {
     'codebreaker.enter_guess': '请输入猜测的数字...',
@@ -59,6 +61,8 @@ export const codebreakerTranslations: Record<Lang, Record<string, string>> = {
     'codebreaker.rules_ex_title': '例如: 密码是 1234',
     'codebreaker.rules_ex_guess': '猜 1543 -> 提示',
     'codebreaker.input_hint_pre': '请输入你猜测的 ',
-    'codebreaker.input_hint_post': ' 位不重复数字'
+    'codebreaker.input_hint_post': ' 位不重复数字',
+    'codebreaker.hint_msg': '提示：第 {pos} 位数字是 {val}',
+    'codebreaker.hint_memo_marked': '✓ 已自动在逻辑备忘录中为您标记此线索'
   }
 };

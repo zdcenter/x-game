@@ -6,7 +6,9 @@
     "start": "node scripts/generate-version.js && ng serve --port 4201 --host 0.0.0.0",
     "build": "node scripts/generate-version.js && ng build && node scripts/post-build.js",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "zh": "ng serve --configuration=zh --port 4201 --host 0.0.0.0",
+    "en": "ng serve --configuration=en --port 4202 --host 0.0.0.0"
   },
   "private": true,
   "dependencies": {

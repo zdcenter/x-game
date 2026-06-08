@@ -5,6 +5,7 @@ import { AudioService } from '../../../core/services/audio.service';
 import { Router } from '@angular/router';
 import { GameRegistryService, GameConfig } from '../../../core/services/game-registry.service';
 import { AdService } from '../../../core/services/ad.service';
+import { AuthStore } from '../../../core/auth/auth.store';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -41,6 +42,18 @@ import { AdService } from '../../../core/services/ad.service';
           </div>
         }
 
+        <!-- Guest Prompt -->
+        @if (!authStore.isAuthenticated()) {
+          <div class="w-full mb-6 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col items-center text-center shadow-inner relative z-10">
+            <div class="text-2xl mb-1">💡</div>
+            <p class="text-sm text-blue-400 mb-1 font-bold">{{ t('game.guest_prompt_title') || 'Save Your Progress' }}</p>
+            <p class="text-xs text-[var(--color-text-muted)] mb-3 leading-relaxed">{{ t('game.guest_prompt_desc') || 'Register for free to save your progress and sync data across devices.' }}</p>
+            <button (click)="goToLogin()" class="px-5 py-2 bg-blue-500/20 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/50 text-xs font-bold rounded-xl transition-all shadow-sm">
+              {{ t('nav.login_register') || 'Login / Register' }}
+            </button>
+          </div>
+        }
+
         <!-- Actions -->
         <div class="w-full flex flex-col sm:flex-row gap-3 relative z-10">
           @if (showLeave) {
@@ -50,7 +63,12 @@ import { AdService } from '../../../core/services/ad.service';
           }
           
           @if (showRestart) {
-            <button (click)="handleRestart()" class="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+            <button (click)="handleRestart()" 
+              [ngClass]="{
+                'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-lg hover:shadow-xl': !showNextLevel,
+                'bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)]': showNextLevel
+              }"
+              class="flex-1 px-4 py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all">
               <ng-container i18n="@@game.restart">Play Again</ng-container>
             </button>
           }
@@ -97,6 +115,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
   private adService = inject(AdService);
+  authStore = inject(AuthStore);
 
   @Input() currentGameId?: string;
 
@@ -134,6 +153,14 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
         .map(id => this.gameRegistry.getConfig(id))
         .filter((c): c is GameConfig => !!c);
     }
+  }
+
+  t(key: string): string {
+    return this.i18n.t(key)();
+  }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 
   handleLeave() {

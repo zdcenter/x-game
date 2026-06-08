@@ -5,14 +5,12 @@ import { I18nService } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
 import { AuthStore } from '../auth/auth.store';
 import { PwaService } from '../services/pwa.service';
-import { GlobalSideAdsComponent } from '../../shared/components/adsense/global-side-ads.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, GlobalSideAdsComponent],
+  imports: [RouterOutlet, RouterLink, CommonModule],
   template: `
-    <app-global-side-ads></app-global-side-ads>
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
       
       <!-- Global Navbar -->

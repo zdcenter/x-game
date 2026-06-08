@@ -191,4 +191,49 @@ export class LocalMinesweeperEngine {
   private isValid(x: number, y: number): boolean {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;
   }
+
+  applyHint(): { success: boolean, message: string } {
+    if (this.status === GameStatus.Finished) {
+      return { success: false, message: 'game.already_finished' };
+    }
+
+    if (!this.isMinesPlaced) {
+      // If first click hasn't happened, just reveal a random cell
+      const rx = Math.floor(Math.random() * this.width);
+      const ry = Math.floor(Math.random() * this.height);
+      this.revealCell(rx, ry);
+      return { success: true, message: 'game.hint_safe_revealed' };
+    }
+
+    const unflaggedMines: {x: number, y: number}[] = [];
+    const hiddenSafeCells: {x: number, y: number}[] = [];
+
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const cell = this.cells[y][x] as any;
+        if (cell.state === CellState.Hidden) {
+          if (cell.isMine) {
+            unflaggedMines.push({x, y});
+          } else {
+            hiddenSafeCells.push({x, y});
+          }
+        }
+      }
+    }
+
+    if (unflaggedMines.length > 0) {
+      // Randomly pick an unflagged mine and flag it
+      const target = unflaggedMines[Math.floor(Math.random() * unflaggedMines.length)];
+      this.cells[target.y][target.x].state = CellState.Flagged;
+      this.checkWinCondition();
+      return { success: true, message: 'game.hint_mine_flagged' };
+    } else if (hiddenSafeCells.length > 0) {
+      // All mines are flagged, reveal a safe cell
+      const target = hiddenSafeCells[Math.floor(Math.random() * hiddenSafeCells.length)];
+      this.revealCell(target.x, target.y);
+      return { success: true, message: 'game.hint_safe_revealed' };
+    }
+
+    return { success: false, message: 'game.no_hint_available' };
+  }
 }

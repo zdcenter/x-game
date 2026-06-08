@@ -44,7 +44,12 @@
       </div>
 
       <!-- Level Grid -->
-      <div class="flex-grow p-6 overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between px-6 pt-4 pb-2">
+        <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+          总关卡: {{ levels().length }}
+        </span>
+      </div>
+      <div class="flex-grow px-6 pb-6 overflow-y-auto custom-scrollbar">
         @if (loading()) {
           <div class="flex justify-center items-center h-full">
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-accent-from)]"></div>
@@ -62,8 +67,8 @@
                   <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
                 }
                 
-                <span class="text-2xl font-black text-slate-300 group-hover:text-white transition-colors mb-2">
-                  {{ i + 1 | number:'2.0' }}
+                <span class="text-sm sm:text-lg font-black text-slate-300 group-hover:text-white transition-colors mb-2 whitespace-nowrap">
+                  关卡 {{ i + 1 | number:'3.0-0' }}
                 </span>
                 
                 <!-- Stars -->

@@ -15,6 +15,8 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameService } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AudioService } from '../../../core/services/audio.service';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 
 @Component({
   selector: 'app-codebreaker',
@@ -26,7 +28,8 @@ import { ToastService } from '../../../core/services/toast.service';
     GameWaitingRoomComponent,
     GameLobbyPanelComponent,
     GameStartingOverlayComponent,
-    GameHeaderComponent
+    GameHeaderComponent,
+    HintButtonComponent
   ],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
@@ -42,6 +45,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   gameTimer = inject(GameTimerService);
   gameService = inject(GameService);
   toastService = inject(ToastService);
+  audio = inject(AudioService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
@@ -55,6 +59,8 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   // Helper scratchpad: tracks digit markers (none, cross, check)
   // mapped to 0-9
   helperMarks = signal<Record<string, 'none' | 'cross' | 'check'>>({});
+  
+  hintResult = signal<{pos: number, val: string} | null>(null);
 
   // Computed state
   status = this.store.status;
@@ -88,6 +94,25 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
+      }
+    });
+
+    effect(() => {
+      // Auto-save logic
+      if (this.currentRoomMode() !== 'single') return;
+      const status = this.status();
+      const diff = this.currentDifficulty();
+      if (status === 'playing') {
+        const state = {
+          status,
+          secretCode: this.store.getSecretCode(),
+          guesses: this.myState()?.guesses || [],
+          helperMarks: this.helperMarks(),
+          timestamp: Date.now()
+        };
+        localStorage.setItem(`codebreaker_save_${diff}`, JSON.stringify(state));
+      } else if (status === 'finished') {
+        localStorage.removeItem(`codebreaker_save_${diff}`);
       }
     });
   }
@@ -144,6 +169,22 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     // Reset local helpers on join
     this.currentInput.set('');
     this.helperMarks.set({});
+    
+    // Try to load save if single player
+    if (mode === 'single') {
+      try {
+        const saved = localStorage.getItem(`codebreaker_save_${difficulty}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.status === 'playing' && (Date.now() - parsed.timestamp) < 24 * 60 * 60 * 1000) {
+            this.store.restoreSave(parsed.secretCode, parsed.guesses);
+            this.helperMarks.set(parsed.helperMarks || {});
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load save', e);
+      }
+    }
     
     if (mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
@@ -248,6 +289,23 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     }
     this.store.submitGuess(val);
     this.currentInput.set('');
+  }
+
+  // Hint logic
+  applyHint() {
+    const result = this.store.applyHint();
+    if (result.success && result.pos !== undefined && result.val !== undefined) {
+      // Mark it on the helper
+      this.helperMarks.update(record => ({
+        ...record,
+        [`pos${result.pos}-${result.val}`]: 'check'
+      }));
+      // Show overlay
+      this.hintResult.set({ pos: result.pos, val: result.val });
+      this.audio.playClick();
+    } else {
+      this.toastService.show(this.i18n.t(result.message || '')() || 'No hint available', 'info');
+    }
   }
 
   // Scratchpad toggle

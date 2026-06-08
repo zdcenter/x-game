@@ -8,6 +8,7 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
+import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
 
 export interface SudokuCell {
@@ -30,6 +31,7 @@ export class SudokuStore {
   private auth = inject(AuthStore);
   private audio = inject(AudioService);
   private i18n = inject(I18nService);
+  private adService = inject(AdService);
   ws = inject(WebSocketService);
   private statsService = inject(GameStatsService);
 
@@ -43,6 +45,7 @@ export class SudokuStore {
 
   // Board state (Local)
   board = signal<SudokuCell[][]>([]);
+  solution = signal<string>('');
   selectedCell = signal<{ r: number, c: number } | null>(null);
   pencilMode = signal<boolean>(false);
 
@@ -211,10 +214,11 @@ export class SudokuStore {
   }
 
   // --- SINGLE PLAYER INIT ---
-  initBoard(puzzleStr: string, savedState?: string, savedTime?: number) {
+  initBoard(puzzleStr: string, solutionStr: string = '', savedState?: string, savedTime?: number) {
     if (savedTime) this.timeSpent.set(savedTime);
     else this.timeSpent.set(0);
 
+    this.solution.set(solutionStr);
     this.isFinished.set(false);
     this.history = [];
 
@@ -336,6 +340,44 @@ export class SudokuStore {
     }
 
     this.triggerSave();
+  }
+
+  applyHint() {
+    if (this.currentMode() !== 'single' || this.isFinished()) return;
+    const sel = this.selectedCell();
+    if (!sel) {
+      this.toast.show(this.i18n.t('game.select_cell_first')() || 'Please select an empty cell first', 'info');
+      return;
+    }
+
+    const b = this.board();
+    if (b[sel.r][sel.c].fixed || b[sel.r][sel.c].val !== 0) {
+      this.toast.show(this.i18n.t('game.cell_already_filled')() || 'Cell is already filled', 'info');
+      return;
+    }
+
+    const solution = this.solution();
+    if (!solution || solution.length !== 81) return;
+
+    const targetVal = parseInt(solution[sel.r * 9 + sel.c], 10);
+    
+    this.audio.playClick();
+    this.saveHistory();
+    
+    const newB = this.board();
+    const cell = newB[sel.r][sel.c];
+    cell.val = targetVal;
+    // Optionally make it fixed so they know it's 100% correct and can't erase it easily
+    cell.fixed = true; 
+    cell.notes.clear();
+    this.autoEraseNotes(sel.r, sel.c, targetVal);
+    
+    this.board.set([...newB]);
+    this.checkErrors();
+    this.checkWinCondition();
+    this.triggerSave();
+    
+    this.toast.show(this.i18n.t('game.hint_sudoku')() || 'Hint applied!', 'success');
   }
 
   private countFilledCells(): number {

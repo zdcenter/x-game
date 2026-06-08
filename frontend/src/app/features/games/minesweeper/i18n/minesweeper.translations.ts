@@ -63,6 +63,10 @@ export const minesweeperTranslations: Record<Lang, Record<string, string>> = {
     'game.stepped_mine': 'You stepped on a mine.',
     'game.steal_victory': 'You flagged the most mines!',
     'game.steal_defeat': 'Opponent flagged more mines.',
+    'game.hint_safe_revealed': 'A safe cell was revealed!',
+    'game.hint_mine_flagged': 'A mine was automatically flagged!',
+    'game.no_hint_available': 'No hints available.',
+    'game.already_finished': 'Game already finished.',
   },
   zh: {
     // SEO
@@ -126,5 +130,9 @@ export const minesweeperTranslations: Record<Lang, Record<string, string>> = {
     'game.stepped_mine': '你踩到了地雷。',
     'game.steal_victory': '你成功排除了最多的地雷！',
     'game.steal_defeat': '对手排除了更多的地雷。',
+    'game.hint_safe_revealed': '已为您扫开一个安全方块！',
+    'game.hint_mine_flagged': '已为您自动标记一颗地雷！',
+    'game.no_hint_available': '没有可用的提示了。',
+    'game.already_finished': '游戏已结束。',
   }
 };

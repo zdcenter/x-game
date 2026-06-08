@@ -4,6 +4,9 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { LocalMinesweeperEngine } from './minesweeper-engine';
+import { AdService } from '../../../../core/services/ad.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 export enum CellState {
   Hidden = 0,
@@ -49,6 +52,9 @@ export class MinesweeperStore {
   private audio = inject(AudioService);
   private auth = inject(AuthStore);
   private statsService = inject(GameStatsService);
+  private adService = inject(AdService);
+  private toast = inject(ToastService);
+  private i18n = inject(I18nService);
   
   private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
@@ -311,6 +317,26 @@ export class MinesweeperStore {
       }
     } else {
       this.ws.send({ type: 'flag', x, y });
+    }
+  }
+
+  applyHint() {
+    if (this.currentMode() !== 'single' || this.status() !== GameStatus.Playing) {
+      return;
+    }
+
+    const engine = this.localEngine();
+    if (engine) {
+      const result = engine.applyHint();
+      if (result.success) {
+        this.audio.playClick();
+        this.tick.set(this.tick() + 1);
+        const msg = this.i18n.t(result.message)() || 'Hint applied';
+        this.toast.show(msg, 'success');
+      } else {
+        const msg = this.i18n.t(result.message)() || 'No hint available';
+        this.toast.show(msg, 'info');
+      }
     }
   }
 }
