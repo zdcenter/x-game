@@ -203,7 +203,28 @@ openChangeSettings() {
 如果不遵守此项配置，房主切换游戏时房客将无法进行自动路由跳转，且点击“更改设置”按钮会报错/无响应。
 
 
-### 5. 跨游戏跳转配置
+### 5. 游戏排版与 CSS 布局规范 (🚨 极其重要！防跳动与 Safari 兼容)
+在编写游戏的棋盘布局（特别是棋盘在上方、碎片/操作盘在下方的游戏）时，**绝对禁止**使用 `flex-1`、`flex-grow` 配合 `h-full` 来自动推算棋盘的高度。这会在移动端、不同浏览器（特别是 Safari）的前端路由跳转（CSR）与直接刷新时，由于 Flexbox 的内容固有高度计算逻辑差异，导致致命的布局跳动、棋盘间隙极其巨大、以及将底部元素挤出屏幕外（需滑动滚动条才能看到）。
+
+**唯一受支持的响应式完美布局范式**：
+1. **废弃 Flex 自动伸缩**：移除所有可能产生高度伸缩不可控的弹性盒子包裹层（棋盘和操作盘容器不要加 `flex-1`）。
+2. **绝对物理尺寸锁定 (vmin)**：利用 `vmin` 结合物理像素强行限制棋盘的最大尺寸，使浏览器失去重新计算的余地。例如：
+   ```html
+   <!-- 容器不要包含任何导致高度拉伸的属性 -->
+   <div class="w-full flex flex-col items-center justify-start py-4 shrink-0">
+     <!-- 严格使用 vmin 锁定物理尺寸 -->
+     <div class="relative flex items-center justify-center shrink-0"
+          style="width: min(85vmin, 600px); height: min(85vmin, 600px);">
+       <app-your-game-board class="w-full h-full"></app-your-game-board>
+     </div>
+     
+     <!-- 底部操作盘紧贴其下 -->
+     <div class="w-full h-24 shrink-0 mt-4">...</div>
+   </div>
+   ```
+3. **自上而下的绝对堆叠**：内部的元素严格从上到下挨着排列，不要在中间插入任何 `flex-1` 占位符。多余的屏幕高度会自动被留在屏幕最底部，绝不会强行撑开组件内部的间距。
+
+### 6. 跨游戏跳转配置
 在新游戏组件的 `ngOnInit` 中加入 `CrossGameJoinService` 消费逻辑，以支持从全局大厅点击“加入”直接跨游戏跳转：
 ```typescript
 import { CrossGameJoinService } from '../../../../core/services/cross-game-join.service';
@@ -219,7 +240,7 @@ ngOnInit() {
 }
 ```
 
-### 6. 更新多语言配置 (i18n) 🚨 全新原生编译架构
+### 7. 更新多语言配置 (i18n) 🚨 全新原生编译架构
 本项目已全量重构为基于 **Angular 原生 `@angular/localize`** 的编译时多语言架构，以换取极致的加载性能与 SEO 效果。
 开发新游戏时，处理多语言必须遵循以下标准工作流：
 
