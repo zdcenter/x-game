@@ -119,15 +119,18 @@
             </div>
 
             <!-- The Grid Area -->
-            <div class="flex-1 flex flex-col items-center justify-start lg:justify-center min-h-0 py-4 relative w-full" #boardArea>
+            <div class="w-full flex flex-col items-center justify-start py-4 shrink-0" #boardArea>
               
-              <div class="relative min-h-0 max-h-[55vh] lg:max-h-[500px] w-full max-w-[500px] flex items-center justify-center">
-                <app-hexa-board
-                  class="w-full h-full"
-                  [cells]="store.cells()"
-                  [previewPiece]="draggedPiece"
-                  [previewOrigin]="previewOrigin">
-                </app-hexa-board>
+              <div class="relative flex items-center justify-center shrink-0"
+                   style="width: min(80vmin, 500px); height: min(80vmin, 500px);">
+                <div class="w-full h-full relative flex items-center justify-center">
+                  <app-hexa-board
+                    class="block w-[90%] h-[90%]"
+                    [cells]="store.cells()"
+                    [previewPiece]="draggedPiece"
+                    [previewOrigin]="previewOrigin">
+                  </app-hexa-board>
+                </div>
 
                 @if (store.status() === 'starting') {
                   <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>

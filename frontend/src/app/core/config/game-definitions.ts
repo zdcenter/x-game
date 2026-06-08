@@ -138,6 +138,22 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
     ],
     recommendations: ['tetris', 'hexa']
+  },
+  {
+    id: 'block',
+    route: '/games/block',
+    titleKey: 'app.title.block',
+    iconEmoji: '🟩',
+    modes: [
+      { id: 'single', labelKey: 'game.single_player_endless', descKey: 'game.single_player_endless', desc: 'Survival', icon: '👤' },
+      { id: 'block_pk_score', labelKey: 'game.pk_score_label', descKey: 'game.pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '8x8 Board' },
+      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '10x10 Board' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '12x12 Board' }
+    ],
+    recommendations: ['tetris', 'hexa']
   }
 ];
 

@@ -101,15 +101,17 @@
         <!-- Single Player Mode -->
         <ng-container *ngIf="store.currentMode() === 'single'">
           <!-- Local Player (You) -->
-          <div class="flex justify-center w-full mb-4">
-            <app-player-badge class="w-full max-w-[300px]" layout="card"
-              [playerName]="playerId"
-              [isHost]="true"
-              [isMe]="true"
-              [stats]="[
-                { icon: '⏱️', value: store.timeSpent() + 's', colorClass: store.isFinished() ? '' : 'text-pink-400' }
-              ]"
-              [status]="store.isFinished() ? 'finished' : 'playing'"></app-player-badge>
+          <div class="flex-none py-2 border-b border-[var(--color-border-card)] shrink-0 w-full mb-4 mt-[-8px]">
+            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 justify-center">
+              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                [playerName]="playerId"
+                [isHost]="true"
+                [isMe]="true"
+                [stats]="[
+                  { icon: '⏱️', value: store.timeSpent() + 's', colorClass: store.isFinished() ? '' : 'text-pink-400' }
+                ]"
+                [status]="store.isFinished() ? 'finished' : 'playing'"></app-player-badge>
+            </div>
           </div>
           <app-math24-board></app-math24-board>
         </ng-container>

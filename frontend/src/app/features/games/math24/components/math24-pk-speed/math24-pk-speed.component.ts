@@ -13,8 +13,8 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
     <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
       
       <!-- Top Progress Board -->
-      <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)]">
-        <div class="flex items-center gap-2 lg:gap-4 max-w-4xl mx-auto px-2">
+      <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full">
+        <div class="flex items-center gap-2 lg:gap-4 max-w-[800px] mx-auto px-2">
           
           <!-- Local Player -->
           <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"

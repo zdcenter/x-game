@@ -349,24 +349,50 @@ ngOnInit() {
 - **原理解析**：在同房间切换不同游戏时，前端会经历“销毁旧页面 -> 断开 WebSocket -> 加载新页面 -> 重连新 WebSocket”的过程。在这 0.5 秒的间隙，如果不做特殊处理，后端会认为“房主跑路了”，从而把房主身份转让给别人，甚至解散房间。
 - **开发者须知**：为了完美解决这个时序竞争，后端的 WebSocket Manager 中已经加入了 `GameChangedAt` 的防抖时间戳。只要你是正常点击“切换游戏”，后端会自动开启 **5 秒的免死金牌**，拦截这 5 秒内的房主转移和房间销毁惩罚。因此，前端开发新游戏时无需惧怕断线，在 `ngOnDestroy` 中安心调用 `disconnectWS()` 即可。
 
-### 17. PK 模式对手卡片封装 (PK Player Badge)
-- **避免冗余**：如果在 PK 模式下需要渲染对手的分数、进度条或状态，**严禁**手写包含头像、皇冠、分数、冰冻效果等重复的 UI 代码。
-- **标准做法**：全局已经抽离了跨游戏的公共组件 `<app-player-badge>`。只需导入 `PlayerBadgeComponent` 并在模板中直接循环渲染。该组件原生支持 `👑` (房主)、`👁️` (观战者)、高亮 "You" 等统一视觉：
+### 17. 玩家信息栏与对手卡片封装标准化 (Player Badge UI Standard)
+- **视觉要求**：为了极致节省纵向屏幕空间并统一全站设计美学，**所有在顶部展示玩家状态（含单机/PK）的游戏，必须采用“横向通栏细长条 + 底部极简分割线”的高端排版规范**，严禁随意手写内外边距导致顶部区域过于臃肿。
+- **标准外层结构规范**：请务必将 `<app-player-badge>` 放置在如下规定的 Flex 容器内，以保证它在全端能完美展现为细长的卡片条：
   ```html
-  <app-player-badge
-    *ngFor="let opp of opponents"
-    layout="card" <!-- 或 "bar" 进度条模式 -->
-    [playerName]="opp.id"
-    [isHost]="opp.id === hostId"
-    [isMe]="opp.id === playerId"
-    [score]="opp.score"
-    [status]="opp.finished ? 'finished' : (opp.isFrozen ? 'frozen' : 'playing')"
-    [freezeCountdown]="opp.freezeCountdown"
-  ></app-player-badge>
-  ```
-- **例外情况**：如果你的游戏需要在对手面板里渲染缩微版的小棋盘（例如俄罗斯方块、扫雷），由于结构差异过大，允许单独手写对手 UI 结构，但也请尽量复用现有的视觉规范。
+  <!-- 标准玩家信息通栏结构 -->
+  <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full">
+    <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentMode() === 'single'">
+      
+      <!-- Local Player (You) -->
+      <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+        [playerName]="playerId"
+        [isHost]="true"
+        [isMe]="true"
+        [score]="store.score()"
+        [status]="store.status() === 'finished' ? 'finished' : 'playing'"
+      ></app-player-badge>
 
-### 18. 新游戏的双语 SEO 配置 (Bilingual SEO Configuration)
+      <!-- Opponents -->
+      @for (opp of opponents; track opp.id) {
+        <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" ...></app-player-badge>
+      }
+    </div>
+  </div>
+  ```
+- **避免冗余**：如果在 PK 模式下需要渲染对手的分数、进度条或状态，**严禁**手写包含头像、皇冠、分数、冰冻效果等重复的 UI 代码。全局已经抽离了跨游戏的公共组件 `<app-player-badge>`，原生支持 `👑` (房主)、`👁️` (观战者)、高亮 "You" 等统一视觉。
+- **例外情况**：如果你的游戏属于沉浸式画板（如《五子棋》）或者需要在对手面板里渲染缩微版小棋盘（如《俄罗斯方块》），由于结构差异过大，允许单独手写对手 UI 或使用浮动 Overlay 结构，但也请尽量复用现有的视觉与色彩规范。
+
+### 18. 正方形棋盘的自适应缩放陷阱 (Responsive Square Board Layout)
+- **避免隐患**：在开发《俄罗斯方块》、《六边形消除》等拥有正方形（或固定宽高比）棋盘的游戏时，如果直接在 HTML 模板的 `style` 属性中写死 `max-width: min(100%, 600px, calc(100dvh - 320px))` 等复杂 CSS 表达式，**Angular 的模板解析器（Sanitizer）会悄悄将不认识的复杂 CSS 表达式直接剔除！** 而如果试图通过 Tailwind CSS 任意值语法（如 `max-w-[min(100%,600px,calc(100dvh-320px))]`）来编写，由于存在逗号和嵌套，Tailwind JIT 编译器大概率会**解析失败并直接吞掉该类名**。最终导致棋盘失去了所有 max-width 保护，变成一个无边无际的 1920x1920 巨型方块，甚至把其他元素挤出屏幕！
+- **标准做法**：
+  **直接使用 Angular 原生的属性绑定语法 `[style.maxWidth]`，绝对 100% 绕开所有的解析陷阱！**
+  属性绑定不会经过 HTML 解析器清洗，而是直接由 JavaScript 调用浏览器底层的 DOM API (`element.style.maxWidth`) 赋值，原汁原味，万无一失：
+  ```html
+  <!-- 外层只负责居中对齐，不干涉棋盘大小计算 -->
+  <div class="relative flex-grow flex items-center justify-center min-h-0 w-full shrink py-2">
+    <!-- 内部实际棋盘：直接使用 Angular 属性绑定，填入原生 CSS 的 min() 表达式 -->
+    <div class="relative flex items-center justify-center w-full aspect-square"
+         [style.maxWidth]="'min(100%, 600px, calc(100dvh - 320px))'">
+       <app-your-game-board></app-your-game-board>
+    </div>
+  </div>
+  ```
+
+### 19. 新游戏的双语 SEO 配置 (Bilingual SEO Configuration)
 - **避免隐患**：如果新增游戏时忘记配置 SEO，当用户或搜索引擎（Google/Bing）通过特定 URL 访问或分享该游戏时，网页将只能显示 `index.html` 中基础的默认标题，错失了特定游戏长尾关键字的流量。
 - **标准做法**：
   1. 在 `frontend/src/app/app.routes.ts` 中的游戏路由配置里，必须加上对应的 SEO 数据绑定：

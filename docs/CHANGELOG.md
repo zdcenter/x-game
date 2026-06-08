@@ -9,11 +9,15 @@
 - **边缘网络重写 (Cloudflare Functions)**：新增了 `functions/[[path]].js` 中间件，拦截并智能分发 `/zh/` 和 `/en/` 流量。彻底解决了 Cloudflare Pages SPA Auto-Routing 机制导致的多语言子路径 404 及无限重定向死循环问题。
 
 ### ✨ 新功能 (Features)
+- **海量题库扩充与难度对齐**：使用后台脚本离线生成了 2000 道优质《数独》关卡和 1362 道《24点》关卡，剔除无解或多解的残次盘面。同时统一将题库分为四大金刚（初级、中级、高级、专业），并在前端的 PK 房间创建面板中实现了 1 比 1 的精准难度映射，保证竞技绝对公平。
+- **游客进度保存提示**：在《数独》和《24点》单机闯关成功后的结算界面（GameResultOverlay），新增了专门针对未登录游客的精美温馨提示卡片，引导游客一键注册账号，支持多端数据同步。
 - **全站 SEO URL 规范化**：现已支持 `www.puzzlepk.com/zh/lobby` 与 `www.puzzlepk.com/en/lobby` 纯静态物理隔离的 URL 结构，并已更新 `sitemap.xml` 支持 Google hreflang 抓取规范。
 - **国际化博客系统 (i18n Markdown Blog)**：引入了全新的纯静态 Markdown 博客引擎，支持 `_zh.md` 和 `_en.md` 语言级隔离。使用 `Location` 服务自动动态适配 BaseHref，解决了深层级路由下图片与资产加载 404 的问题。
 - **游戏元数据深度国际化**：改造了 `GameRegistryService` 和后端下发的数据库标题。现在大厅的所有游戏名、游戏规则介绍全部通过统一的 `I18nService` 即时翻译。
 
 ### 🐛 体验优化与 Bug 修复 (Bug Fixes)
+- **修复桌面端大厅无法使用鼠标滚轮滚动的问题**：彻底重构了 `LobbyComponent` 的 CSS Flex 嵌套布局，废弃了局部的 `overflow-y-auto` 双重嵌套，改用全局原生的 Document `main` 级滚动，并将右侧竞技大厅替换为 CSS 原生的 `sticky` (粘性悬停) 机制。现在桌面端左侧长列表滚动极其丝滑，且右侧竞技大厅完美驻留视口。
+- **修复 PWA 更新导致的 ChunkLoadError**：新增了底层 `GlobalErrorHandler`，精准拦截 Angular 懒加载模块报错与浏览器 `MIME text/html` 回退异常。在检测到新旧版本哈希冲突时，自动注入 `?version_update=1` 查询参数并瞬间强制 `location.reload()`，彻底消除了用户因为未清空 Service Worker 缓存导致的点击游戏白屏报错的灵异现象。
 - 修复了竞技大厅“发英雄帖”广播组件部分文本未被翻译的遗留问题。
 - 重写了 `GameWaitingRoomComponent` (等待大厅) 的移动端自适应 Flex 布局结构，解决了在小屏或多玩家情况下，底部的“Ready (准备)” 按钮被挤出屏幕且无法滚动的问题。
 

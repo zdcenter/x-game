@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZonelessChangeDetection, isDevMode, ErrorHandler } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 
@@ -29,7 +29,7 @@ class GlobalErrorHandler implements ErrorHandler {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(), 
-    provideRouter(routes),
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

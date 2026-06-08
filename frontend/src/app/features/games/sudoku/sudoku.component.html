@@ -76,16 +76,18 @@
               </div>
 
               <!-- Local Player (You) -->
-              <div class="flex justify-center w-full mb-2">
-                <app-player-badge class="w-full max-w-[300px]" layout="card"
-                  [playerName]="store.playerId()"
-                  [isHost]="true"
-                  [isMe]="true"
-                  [stats]="[
-                    { icon: '⏱️', value: store.isFinished() ? gameTimer.formatTime(store.timeSpent()) : gameTimer.formatTime(store.timeSpent()), colorClass: !store.isFinished() ? 'text-pink-400' : '' },
-                    (store.bestTime() > 0 ? { icon: '👑', value: gameTimer.formatTime(store.bestTime()), label: 'BEST' } : $any(null))
-                  ]"
-                  [status]="store.isFinished() ? 'finished' : 'playing'"></app-player-badge>
+              <div class="flex-none py-2 border-b border-[var(--color-border-card)] shrink-0 w-full mb-2">
+                <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 justify-center">
+                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                    [playerName]="store.playerId()"
+                    [isHost]="true"
+                    [isMe]="true"
+                    [stats]="[
+                      { icon: '⏱️', value: store.isFinished() ? gameTimer.formatTime(store.timeSpent()) : gameTimer.formatTime(store.timeSpent()), colorClass: !store.isFinished() ? 'text-pink-400' : '' },
+                      (store.bestTime() > 0 ? { icon: '👑', value: gameTimer.formatTime(store.bestTime()), label: 'BEST' } : $any(null))
+                    ]"
+                    [status]="store.isFinished() ? 'finished' : 'playing'"></app-player-badge>
+                </div>
               </div>
             </div>
 
