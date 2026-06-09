@@ -401,7 +401,10 @@ export class GameLobbyPanelComponent implements OnInit {
   passwordInput = signal('');
 
   allGames = computed(() => this.gameRegistry.getAllConfigs());
-  availableModes = computed(() => this.gameRegistry.getConfig(this.newRoomGameId())?.modes || []);
+  availableModes = computed(() => {
+    const modes = this.gameRegistry.getConfig(this.newRoomGameId())?.modes || [];
+    return modes.filter(m => m.id !== 'single');
+  });
   availableDifficulties = computed(() => this.gameRegistry.getConfig(this.newRoomGameId())?.difficulties || []);
   
   // Show all active rooms across all games
@@ -473,12 +476,16 @@ export class GameLobbyPanelComponent implements OnInit {
 
   selectGameForNewRoom(gameId: string) {
     this.newRoomGameId.set(gameId);
-    const config = this.gameRegistry.getConfig(gameId);
-    if (config) {
-      this.newRoomMode.set(config.modes[0]?.id || '');
-      this.newRoomDifficulty.set(config.difficulties[0]?.id || '');
+    const modes = this.availableModes();
+    if (modes.length > 0) {
+      this.newRoomMode.set(modes[0].id);
     } else {
       this.newRoomMode.set('');
+    }
+    const diffs = this.availableDifficulties();
+    if (diffs.length > 0) {
+      this.newRoomDifficulty.set(diffs[0].id);
+    } else {
       this.newRoomDifficulty.set('');
     }
   }

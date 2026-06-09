@@ -18,12 +18,12 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
           <!-- Header (Title & Room Info) -->
           <div class="shrink-0">
             <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">
-              {{ i18n.t('lobby.' + gameId)() }} - <ng-container i18n="@@game.waiting_room">game.waiting_room</ng-container>
+              {{ i18n.t('lobby.' + gameId)() }} - {{ i18n.t('game.waiting_room')() }}
             </h2>
             <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-8 text-sm sm:text-base">
-              <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm"><ng-container i18n="@@game.mode">game.mode</ng-container>: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
+              <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
               <div class="flex items-center gap-2">
-                <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm"><ng-container i18n="@@game.room_name">game.room_name</ng-container>: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
+                <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
                 @if (mode !== 'single') {
                   <button (click)="copyInviteLink()" class="relative group p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/50 transition-all active:scale-95 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)]" [title]="i18n.t('game.copy_invite_link')() || 'Copy Invite Link'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,7 +31,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                     </svg>
                     @if (showCopiedToast()) {
                       <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-[var(--color-accent-from)] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap animate-fade-in-up">
-                        <ng-container i18n="@@game.copied">Copied!</ng-container>
+                        {{ i18n.t('game.copied')() || 'Copied!' }}
                       </span>
                     }
                   </button>
@@ -54,7 +54,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
                 </div>
                 <span class="font-bold text-xs sm:text-base text-[var(--color-text-main)] truncate w-full text-center">{{ player.id }}</span>
                 @if (player.id === hostId) {
-                  <span class="absolute -top-3 bg-yellow-500 text-black text-[10px] font-black uppercase px-2 py-1 rounded-full shadow-md shadow-yellow-500/20"><ng-container i18n="@@game.host">game.host</ng-container></span>
+                  <span class="absolute -top-3 bg-yellow-500 text-black text-[10px] font-black uppercase px-2 py-1 rounded-full shadow-md shadow-yellow-500/20">{{ i18n.t('game.host')() }}</span>
                 }
                 
                 @if (currentUserId === hostId && player.id !== hostId) {
@@ -69,31 +69,31 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
           <!-- Actions Footer -->
           <div class="shrink-0 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 mt-auto">
             <button (click)="leave.emit()" class="px-8 py-3.5 rounded-xl border-2 border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold transition-all active:scale-95 shadow-sm">
-              <ng-container i18n="@@game.leave">game.leave</ng-container>
+              {{ i18n.t('game.leave')() }}
             </button>
             
             @if (currentUserId === hostId) {
               <button (click)="changeSettings.emit()" class="px-8 py-3.5 rounded-xl border-2 border-blue-500/50 text-blue-400 hover:text-white hover:bg-blue-600 font-bold transition-all active:scale-95 shadow-sm">
-                <ng-container i18n="@@game.change_settings">Change Settings</ng-container>
+                {{ i18n.t('game.change_settings')() || 'Change Settings' }}
               </button>
               <button (click)="start.emit()" [disabled]="!allGuestsReady" [class.opacity-50]="!allGuestsReady" [class.cursor-not-allowed]="!allGuestsReady" class="px-10 py-3.5 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black uppercase tracking-wider hover:opacity-90 shadow-lg transition-all active:scale-95 border border-transparent flex flex-col items-center justify-center">
-                <span><ng-container i18n="@@game.start_match">game.start_match</ng-container></span>
+                <span>{{ i18n.t('game.start_match')() }}</span>
                 @if (!allGuestsReady) {
-                  <span class="text-[10px] opacity-80 normal-case"><ng-container i18n="@@game.waiting_for_players_ready">Waiting for all players to ready...</ng-container></span>
+                  <span class="text-[10px] opacity-80 normal-case">{{ i18n.t('game.waiting_for_players_ready')() || 'Waiting for all players to ready...' }}</span>
                 }
               </button>
             } @else {
               @if (isSpectator) {
                 <button class="px-10 py-3.5 rounded-xl bg-[var(--color-bg-card)] text-[var(--color-text-muted)] font-black uppercase tracking-wider shadow-inner transition-all border border-[var(--color-border-card)] cursor-default">
-                  <ng-container i18n="@@game.spectating">Spectating...</ng-container>
+                  {{ i18n.t('game.spectating')() || 'Spectating...' }}
                 </button>
               } @else if (readyPlayers[currentUserId]) {
                 <button (click)="cancelReady.emit()" class="px-10 py-3.5 rounded-xl bg-amber-500 text-black font-black uppercase tracking-wider hover:bg-amber-400 shadow-lg transition-all active:scale-95 border border-transparent">
-                  <ng-container i18n="@@game.cancel_ready">Cancel Ready</ng-container>
+                  {{ i18n.t('game.cancel_ready')() || 'Cancel Ready' }}
                 </button>
               } @else {
                 <button (click)="ready.emit()" class="px-10 py-3.5 rounded-xl bg-emerald-500 text-white font-black uppercase tracking-wider hover:bg-emerald-400 shadow-lg transition-all active:scale-95 border border-transparent animate-pulse">
-                  <ng-container i18n="@@game.ready">Ready</ng-container>
+                  {{ i18n.t('game.ready')() || 'Ready' }}
                 </button>
               }
             }

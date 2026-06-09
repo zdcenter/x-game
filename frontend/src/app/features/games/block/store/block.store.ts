@@ -52,6 +52,13 @@ export class BlockStore {
     return Object.keys(this.rawState()?.players || {});
   });
 
+  allPlayers = computed(() => {
+    if (this.currentMode() === 'single') return [{ id: 'local' }];
+    const state = this.rawState() as any;
+    if (!state || !state.players) return [];
+    return Object.values(state.players);
+  });
+
   hostId = computed(() => {
     if (this.currentMode() === 'single') return this.playerId();
     return (this.rawState() as any)?.host || '';
@@ -120,7 +127,12 @@ export class BlockStore {
   }
 
   leaveRoom() {
-    this.ws.send({ type: 'leave_game' });
+    if (this.currentMode() !== 'single') {
+      this.ws.send({ type: 'leave_game' });
+      setTimeout(() => {
+        this.ws.disconnect('block');
+      }, 100);
+    }
     this._roomId.set('local');
     this.currentMode.set('single');
   }
@@ -286,8 +298,7 @@ export class BlockStore {
   kickPlayer(playerId: string) { this.ws.send({ type: 'kick_player', target: playerId }); }
   dismissRoom() { this.ws.send({ type: 'dismiss_room' }); }
   leaveGame() {
-    this.ws.send({ type: 'leave_game' });
-    this.ws.disconnect('block');
+    this.leaveRoom();
   }
   startGame() { this.ws.send({ action: 'start' }); }
   restartGame() { this.ws.send({ type: 'restart_game' }); }
