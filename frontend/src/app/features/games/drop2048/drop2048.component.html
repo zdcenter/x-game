@@ -12,7 +12,7 @@
           (rules)="showRules.set(true)"
           i18n-title="@@lobby.drop2048" title="lobby.drop2048"
           [subtitle]="getModeName()">
-          <span game-icon class="text-2xl sm:text-3xl">🟦</span>
+          <img game-icon src="/assets/games/icons/drop2048.svg" alt="Drop2048" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
           <ng-container header-right>
               <button (click)="isMobileSidebarOpen.set(true)" class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

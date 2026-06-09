@@ -20,7 +20,7 @@
           headerBgClass="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-t-2xl lg:rounded-t-3xl -mx-4 lg:-mx-6 -mt-4 lg:-mt-6 px-4 lg:px-6 pb-4 mb-4 lg:mb-6"
           (back)="goBack()" (rules)="showRules.set(true)">
 
-          <span game-icon class="text-2xl sm:text-3xl">🧩</span>
+          <img game-icon src="/assets/games/icons/sliding.svg" alt="Sliding" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
 
           <ng-container header-center>
             @if (store.status() !== 'waiting' || currentRoomMode() === 'single') {
