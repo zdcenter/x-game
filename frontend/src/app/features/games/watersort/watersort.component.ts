@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ViewChild, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -15,6 +15,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 
 @Component({
   selector: 'app-watersort',
@@ -22,7 +23,8 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
   imports: [
     CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
-    GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent
+    GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
+    HintButtonComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
@@ -150,15 +152,32 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
               }
 
               <!-- My Board -->
-              <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto" [class.mt-32]="currentRoomMode() !== 'single'">
+              <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto relative" [class.mt-32]="currentRoomMode() !== 'single'">
                 @for (tube of myTubes(); track $index) {
-                  <app-tube 
-                    class="transform transition-transform hover:scale-105"
+                  <app-tube #tubeElements
+                    class="transform transition-transform hover:scale-105 z-10"
                     [colors]="tube.colors" 
                     [capacity]="4"
                     [selected]="selectedTubeIndex === $index"
                     (tubeClick)="onTubeClick($index)"
                   ></app-tube>
+                }
+
+                <!-- Pouring Transition Drops (SVG Stream) -->
+                @if (pourAnimations.length > 0) {
+                  <svg class="fixed inset-0 w-full h-full pointer-events-none z-[100]" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
+                    @for (anim of pourAnimations; track anim.id) {
+                      <path 
+                        [attr.d]="anim.path"
+                        fill="none"
+                        [attr.stroke]="anim.color"
+                        stroke-width="20"
+                        stroke-linecap="round"
+                        class="anim-water-stream opacity-90"
+                        [style.--path-length]="anim.length"
+                      />
+                    }
+                  </svg>
                 }
               </div>
 
@@ -186,11 +205,11 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
                 </app-game-result-overlay>
               }
 
-              <!-- Restart Floating Button -->
+              <!-- Hint Floating Button -->
               @if (status === 'playing' && currentRoomMode() === 'single') {
-                <button (click)="restart()" class="absolute bottom-4 right-4 z-20 w-12 h-12 rounded-full bg-slate-800 text-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all">
-                  ↻
-                </button>
+                <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-3 items-end">
+                  <app-hint-button layout="compact" class="block shadow-lg hover:scale-105 active:scale-95 transition-all bg-[var(--color-bg-main)] rounded-lg" (hintApplied)="applyHint()"></app-hint-button>
+                </div>
               }
 
             </div>
@@ -231,10 +250,23 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
   </div>
   
   <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
-  `
+  `,
+  styles: [`
+    .anim-water-stream {
+      stroke-dasharray: var(--path-length);
+      stroke-dashoffset: var(--path-length);
+      animation: water-stream-anim 0.35s ease-in-out forwards;
+    }
+    @keyframes water-stream-anim {
+      0% { stroke-dashoffset: var(--path-length); }
+      40% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: calc(var(--path-length) * -1); }
+    }
+  `]
 })
 export class WatersortComponent extends BaseGameComponent implements OnInit, OnDestroy {
   @ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
+  @ViewChildren('tubeElements', { read: ElementRef }) tubeElements!: QueryList<ElementRef>;
   public i18n = inject(I18nService);
   public _store = inject(WatersortStore);
   private authStore = inject(AuthStore);
@@ -245,6 +277,9 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
   get store() { return this._store; }
   override get playerId() { return this.authStore.currentUser()?.username || this.authStore.guestId; }
+  
+  pourAnimations: { id: number, color: string, path: string, length: number }[] = [];
+  animCounter = 0;
   
   private roomLifecycle = setupRoomLifecycle({
     gameId: 'watersort',
@@ -366,6 +401,51 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     return this._store.winners().includes(this.myId);
   }
 
+  isValidPour(from: number, to: number): boolean {
+    const fromTube = this.myTubes()[from];
+    const toTube = this.myTubes()[to];
+    if (from === to || fromTube.colors.length === 0 || toTube.colors.length === 4) return false;
+    if (toTube.colors.length === 0) return true;
+    return fromTube.colors[fromTube.colors.length - 1] === toTube.colors[toTube.colors.length - 1];
+  }
+
+  triggerPourAnimation(fromIndex: number, toIndex: number) {
+    const fromEl = this.tubeElements.get(fromIndex)?.nativeElement;
+    const toEl = this.tubeElements.get(toIndex)?.nativeElement;
+    if (fromEl && toEl) {
+      const fromRect = fromEl.getBoundingClientRect();
+      const toRect = toEl.getBoundingClientRect();
+      
+      const fromTube = this.myTubes()[fromIndex];
+      const color = fromTube.colors[fromTube.colors.length - 1];
+
+      // Start at the top center of the source tube
+      const startX = fromRect.left + fromRect.width / 2;
+      const startY = fromRect.top + 10; // Slightly inside the tube
+      
+      // End at the top center of the target tube
+      const endX = toRect.left + toRect.width / 2;
+      const endY = toRect.top + 20; // Deeper into the tube
+
+      // Arc curve control point
+      const cpX = (startX + endX) / 2;
+      const cpY = Math.min(startY, endY) - 100; // Control point high above
+      
+      const pathD = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
+      
+      // Approximate path length
+      const dist = Math.hypot(endX - startX, endY - startY);
+      const length = dist * 1.5 + 100;
+
+      const id = this.animCounter++;
+      this.pourAnimations.push({ id, color, path: pathD, length });
+      
+      setTimeout(() => {
+        this.pourAnimations = this.pourAnimations.filter(a => a.id !== id);
+      }, 350);
+    }
+  }
+
   onTubeClick(index: number) {
     if (this.status !== 'playing') return;
     
@@ -376,9 +456,58 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       }
     } else {
       if (this.selectedTubeIndex !== index) {
-        this._store.pour(this.selectedTubeIndex, index);
+        if (this.isValidPour(this.selectedTubeIndex, index)) {
+          this.triggerPourAnimation(this.selectedTubeIndex, index);
+          this._store.pour(this.selectedTubeIndex, index);
+        }
       }
       this.selectedTubeIndex = null;
+    }
+  }
+
+  applyHint() {
+    if (this.status !== 'playing') return;
+    const myTubes = this.myTubes();
+    let bestMove: { from: number, to: number } | null = null;
+    let fallbackMove: { from: number, to: number } | null = null;
+
+    for (let i = 0; i < myTubes.length; i++) {
+      const source = myTubes[i];
+      if (source.colors.length === 0) continue;
+      
+      const isSolid = source.colors.every(c => c === source.colors[0]);
+      if (isSolid && source.colors.length === 4) continue;
+
+      const topColor = source.colors[source.colors.length - 1];
+
+      for (let j = 0; j < myTubes.length; j++) {
+        if (i === j) continue;
+        const target = myTubes[j];
+        if (target.colors.length === 4) continue;
+
+        if (target.colors.length === 0) {
+          if (!isSolid) {
+            fallbackMove = { from: i, to: j };
+          }
+        } else {
+          const targetTop = target.colors[target.colors.length - 1];
+          if (topColor === targetTop) {
+            bestMove = { from: i, to: j };
+            break;
+          }
+        }
+      }
+      if (bestMove) break;
+    }
+
+    const move = bestMove || fallbackMove;
+    if (move) {
+      this.triggerPourAnimation(move.from, move.to);
+      this._store.pour(move.from, move.to);
+    } else {
+      // Use existing toast or standard alert
+      const msg = this.i18n.t('game.no_solution')() || 'No moves available!';
+      alert(msg);
     }
   }
 
