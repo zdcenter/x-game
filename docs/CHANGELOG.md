@@ -35,6 +35,7 @@
 ### Changed / Improved
 - **Global Arena Lobby (Homepage)**: The arena lobby has been promoted to the homepage (`LobbyComponent`). Players can now view all active rooms across all games directly from the main index. On desktop, it is a permanent sidebar; on mobile, it uses a smooth overlay drawer.
 - **Lobby Icons**: Replaced the generic hamburger menu icon with a semantic "User Group" (People) icon across all game views to intuitively represent multiplayer rooms and lobbies.
+- **3D SVG Game Icons**: 全面移除了竞技大厅面板（房间列表、创建房间弹出框）以及游戏结算推荐面板（You might also like）中的原生 Emoji（如 💣, 🔢）。现已全部无缝升级为高清 3D 拟物化 SVG 图标（位于 `frontend/public/assets/games/icons/*.svg`），在所有设备与分辨率下带来顶级的视觉与高极感。
 
 ## [Unreleased]
 ### Added

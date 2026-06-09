@@ -188,7 +188,7 @@ export class HexaStore {
       this.availablePieces.set(pieces);
 
       // Check Game Over
-      const currentPieces = this.availablePieces().filter(p => p !== null);
+      const currentPieces = this.availablePieces().filter(p => p !== null && p !== undefined);
       if (this.engine.checkGameOver(currentPieces)) {
         this.gameOver.set(true);
         if (this.currentMode() !== 'single') {
@@ -301,6 +301,15 @@ export class HexaStore {
         this.engine.loadState(data.state.cells, data.state.score, data.state.combo);
         this.availablePieces.set(data.pieces);
         this.piecesPlaced = data.piecesPlaced || 0;
+        
+        // Restore game over state if the loaded board is already dead
+        const currentPieces = data.pieces.filter((p: any) => p !== null && p !== undefined);
+        if (this.engine.checkGameOver(currentPieces)) {
+          this.gameOver.set(true);
+        } else {
+          this.gameOver.set(false);
+        }
+
         this.updateSignals();
         return true;
       } catch (e) {

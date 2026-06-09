@@ -58,7 +58,7 @@ export class BlockStore {
   });
 
   readyPlayers = computed(() => {
-    return (this.rawState() as any)?.readyPlayers || [];
+    return (this.rawState() as any)?.readyPlayers || {};
   });
 
   // Derived state for rendering

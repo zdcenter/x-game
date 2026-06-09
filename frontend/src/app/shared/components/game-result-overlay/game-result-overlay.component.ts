@@ -98,7 +98,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
           <div class="flex gap-3 w-full overflow-x-auto pb-4 px-2 custom-scrollbar snap-x justify-center">
             @for (game of recommendedGames; track game.id) {
               <div (click)="handleGoToGame(game.id)" class="shrink-0 w-[140px] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all hover:scale-105 hover:shadow-xl hover:-translate-y-1 snap-center group">
-                <div class="text-4xl group-hover:scale-110 transition-transform">{{ game.iconEmoji }}</div>
+                <img [src]="'/assets/games/icons/' + game.id + '.svg'" class="w-10 h-10 object-contain drop-shadow-md group-hover:scale-110 transition-transform" alt="icon">
                 <div class="font-bold text-sm text-center text-[var(--color-text-main)] group-hover:text-[var(--color-accent-to)] transition-colors">{{ i18n.t(game.titleKey)() }}</div>
               </div>
             }

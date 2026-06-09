@@ -182,12 +182,15 @@
 
           @if (store.status() === 'finished') {
             <app-game-result-overlay
+              currentGameId="block"
               [status]="resultStatus"
               [title]="resultTitle"
               [stats]="resultStats"
-              [showRestart]="true"
+              [showRestart]="store.currentMode() === 'single' || (store.status() === 'finished' && hostId() === playerId)"
+              [showDismiss]="store.currentMode() !== 'single' && store.status() === 'finished' && hostId() === playerId"
               [showLeave]="store.currentMode() !== 'single'"
               (restart)="store.currentMode() === 'single' ? store.startLocalGame() : store.restartGame()"
+              (dismiss)="store.dismissRoom()"
               (leave)="store.leaveGame()">
             </app-game-result-overlay>
           }

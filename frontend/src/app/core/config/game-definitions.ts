@@ -146,7 +146,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     iconEmoji: '🟩',
     modes: [
       { id: 'single', labelKey: 'game.single_player_endless', descKey: 'game.single_player_endless', desc: 'Survival', icon: '👤' },
-      { id: 'block_pk_score', labelKey: 'game.pk_score_label', descKey: 'game.pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
+      { id: 'pk_score', labelKey: 'game.pk_score_label', descKey: 'game.pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '8x8 Board' },

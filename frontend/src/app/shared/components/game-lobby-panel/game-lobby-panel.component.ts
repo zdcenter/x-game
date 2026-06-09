@@ -92,7 +92,7 @@ export interface GameDifficulty {
                                 [class.text-indigo-400]="room.game === 'tetris'"
                                 [class.text-emerald-400]="room.game === 'codebreaker'"
                                 [class.text-amber-400]="room.game === 'gomoku'">
-                            <span>{{ getGameIconEmoji(room.game) }}</span>
+                            <img [src]="'/assets/games/icons/' + room.game + '.svg'" class="w-3 h-3 object-contain" alt="icon">
                             <span>{{ getGameLabel(room.game) }}</span>
                           </span>
                           @if (room.hasPassword) { <span class="text-amber-400" title="Password protected">🔒</span> }
@@ -154,7 +154,7 @@ export interface GameDifficulty {
                               [class.text-indigo-400]="room.game === 'tetris'"
                               [class.text-emerald-400]="room.game === 'codebreaker'"
                               [class.text-amber-400]="room.game === 'gomoku'">
-                          <span>{{ getGameIconEmoji(room.game) }}</span>
+                          <img [src]="'/assets/games/icons/' + room.game + '.svg'" class="w-3 h-3 object-contain" alt="icon">
                           <span>{{ getGameLabel(room.game) }}</span>
                         </span>
                         @if (room.hasPassword) { <span class="text-amber-400" title="Password protected">🔒</span> }
@@ -265,7 +265,7 @@ export interface GameDifficulty {
                             [class.bg-[var(--color-accent-to)]]="newRoomGameId() === game.id" [class.text-[var(--color-bg-main)]]="newRoomGameId() === game.id" [class.border-[var(--color-accent-to)]]="newRoomGameId() === game.id"
                             [class.bg-[var(--color-bg-card)]]="newRoomGameId() !== game.id" [class.hover:border-[var(--color-accent-to)]]="newRoomGameId() !== game.id"
                             class="px-2 pt-3 pb-2 rounded-xl border border-[var(--color-border-card)] font-bold text-xs transition-all flex flex-col items-center justify-start text-center gap-1 min-h-[72px]">
-                      <span class="text-lg">{{ game.iconEmoji }}</span>
+                      <img [src]="'/assets/games/icons/' + game.id + '.svg'" class="w-6 h-6 object-contain drop-shadow-md mb-1" alt="icon">
                       <span class="leading-tight">{{ t(game.titleKey) }}</span>
                     </button>
                   }
@@ -624,15 +624,6 @@ export class GameLobbyPanelComponent implements OnInit {
   }
 
   getGameIconEmoji(gameId: string): string {
-    switch (gameId) {
-      case 'minesweeper': return '💣';
-      case 'sudoku': return '🔢';
-      case 'sliding': return '🔲';
-      case 'hexa': return '🔶';
-      case 'tetris': return '🧱';
-      case 'gomoku': return '⚫';
-      case 'codebreaker': return '🔐';
-      default: return '🎮';
-    }
+    return `/assets/games/icons/${gameId}.svg`;
   }
 }
