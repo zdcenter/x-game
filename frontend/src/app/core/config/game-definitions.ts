@@ -170,6 +170,22 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '6x6 Board' }
     ],
     recommendations: ['minesweeper', 'sudoku']
+  },
+  {
+    id: 'watersort',
+    route: '/games/watersort',
+    titleKey: 'app.title.watersort',
+    iconEmoji: '🧪',
+    modes: [
+      { id: 'single', labelKey: 'game.single_player_endless', descKey: 'game.single_player_endless', desc: 'Survival', icon: '👤' },
+      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '5 Tubes (3 Colors)' },
+      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '9 Tubes (7 Colors)' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '14 Tubes (12 Colors)' }
+    ],
+    recommendations: ['lightsout', 'sliding']
   }
 ];
 

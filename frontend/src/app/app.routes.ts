@@ -90,6 +90,11 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'app.title.lightsout', descKey: 'app.title.lightsout.desc', keywordsKey: 'app.title.lightsout' } }
       },
       {
+        path: 'games/watersort',
+        loadComponent: () => import('./features/games/watersort/watersort.component').then(m => m.WatersortComponent),
+        data: { seo: { titleKey: 'app.title.watersort', descKey: 'app.title.watersort.desc', keywordsKey: 'app.title.watersort' } }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }

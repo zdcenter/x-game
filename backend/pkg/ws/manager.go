@@ -78,6 +78,7 @@ func GetActiveRooms() []RoomSnapshot {
 		game := r.Game
 		host := r.Host
 		mode := r.Mode
+
 		diff := r.Difficulty
 		hasPassword := r.Password != ""
 		var status string
@@ -249,8 +250,8 @@ func (r *Room) AddClient(client *Client, password string) error {
 		delete(r.KickedPlayers, client.ID)
 	}
 
-	// Reject if game started and player is new
-	if r.Engine.GetStatus() != engine.StateWaiting && !r.Engine.HasPlayer(client.ID) {
+	// Reject if game started and player is new (allow host to bypass in case of InitGame race condition)
+	if r.Engine.GetStatus() != engine.StateWaiting && !r.Engine.HasPlayer(client.ID) && r.Host != client.ID {
 		return fmt.Errorf("game already started")
 	}
 

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- Glass Reflection -->
+    <linearGradient id="glassReflection" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.4)" />
+      <stop offset="20%" stop-color="rgba(255,255,255,0.1)" />
+      <stop offset="80%" stop-color="rgba(255,255,255,0)" />
+      <stop offset="100%" stop-color="rgba(0,0,0,0.2)" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="160" height="160" rx="32" fill="url(#bg)" />
+  <rect x="0" y="0" width="160" height="160" rx="32" fill="none" stroke="#334155" stroke-width="4" />
+
+  <!-- Left Tube (Tilted, Pouring) -->
+  <g transform="translate(50, 40) rotate(-45)">
+    <!-- Liquids -->
+    <path d="M 0 50 L 30 50 L 30 90 A 15 15 0 0 1 0 90 Z" fill="#3b82f6" />
+    <path d="M 0 30 L 30 30 L 30 50 L 0 50 Z" fill="#ef4444" />
+    <path d="M 0 10 L 30 10 L 30 30 L 0 30 Z" fill="#facc15" />
+    
+    <!-- Glass Outline -->
+    <path d="M 0 0 V 90 A 15 15 0 0 0 30 90 V 0" fill="none" stroke="#cbd5e1" stroke-width="4" opacity="0.8" />
+    <path d="M -5 0 H 35" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" opacity="0.8" />
+    <path d="M 0 0 V 90 A 15 15 0 0 0 30 90 V 0" fill="url(#glassReflection)" />
+  </g>
+
+  <!-- Water Drop -->
+  <path d="M 80 50 Q 80 70 85 70 Q 90 70 90 50 Q 90 35 85 25 Q 80 35 80 50 Z" fill="#facc15" transform="rotate(15 85 50)"/>
+
+  <!-- Right Tube (Standing) -->
+  <g transform="translate(85, 55)">
+    <!-- Liquids -->
+    <path d="M 0 40 L 30 40 L 30 80 A 15 15 0 0 1 0 80 Z" fill="#facc15" />
+    
+    <!-- Glass Outline -->
+    <path d="M 0 0 V 80 A 15 15 0 0 0 30 80 V 0" fill="none" stroke="#cbd5e1" stroke-width="4" opacity="0.8" />
+    <path d="M -5 0 H 35" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round" opacity="0.8" />
+    <path d="M 0 0 V 80 A 15 15 0 0 0 30 80 V 0" fill="url(#glassReflection)" />
+  </g>
+</svg>

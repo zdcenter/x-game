@@ -67,7 +67,6 @@ func Register(router fiber.Router) {
 		action := c.Query("action", "")             // "create" or "join"
 		password := c.Query("password", "")           // Optional 4-digit room password
 		playerID := c.Query("playerId", "anonymous")
-
 		var room *wsManager.Room
 
 		if action == "create" {

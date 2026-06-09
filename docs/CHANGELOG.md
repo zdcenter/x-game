@@ -1,5 +1,14 @@
-## [2026-06-04] WebSocket 房间系统大规模重构
 # Changelog
+
+## [2026-06-09] - 🚀 新增游戏《水管分色》(Water Sort Puzzle)
+### ✨ 新功能 (Features)
+- **全新益智游戏《水管分色》上线**：基于经典的倒水逻辑，加入了全新的 1v1 PK 竞速模式与单人闯关模式。
+- **全屏响应式与多主题适配**：适配了深色/浅色模式，并针对 iPad 和平板的大屏环境优化了试管阵列的布局与缩放体验。
+- **标准化引擎集成**：水管分色完全采用最新版本的 `GameEngine` 接口开发，严格遵照 `CheckGameOver` 与 `GetState` 通用生命周期规范，成为后续新游戏接入的最佳参考范本。
+
+### 🐛 体验优化与 Bug 修复 (Bug Fixes)
+- 修复了《水管分色》在部分情况下由于未绑定公共 `<app-game-waiting-room>` 和生命周期管理器而导致的"开始不了游戏"和"房间已不存在"的 Bug，现在可以正常触发 3 秒倒计时及结算面板了。
+- 为《水管分色》增加了标准的顶部 `<app-game-header>` 导航栏和右侧信息侧边栏，支持完整的断线重连体验。
 
 ## [2026-06-07] - 🚀 重大重构：Cloudflare 边缘路由优化与全站 Angular 编译级多语言
 
@@ -39,6 +48,7 @@
 
 ## [Unreleased]
 ### Added
+- **Water Sort Puzzle (水管分色)**: Added a highly addictive new puzzle game! Features include a dynamic Single Player survival mode and a real-time PK Speed mode. Implemented with a custom "Reverse Shuffle" backend algorithm ensuring 100% solvable puzzles without needing a static puzzle bank. Built with stunning glassmorphic UI, fluid CSS pouring animations, and fully integrated with the Party Room (综合包厢) system.
 - **Google AdSense Integration**: 增加了全局的 Google AdSense 支持，并在前端封装了可高度复用的 `AdsenseComponent` 组件，便于在平台（如大厅、游戏结算等）各处无缝植入广告位，为商业化变现打好基础。
 - **24点智能提示 (Math 24 Hint Ad)**：接入 Google H5 Games Ads（激励视频广告），当玩家遇到不会解的局面时，点击提示观看广告即可获取由回溯算法实时算出的动态解题步骤。
 - **System Settings Module**: Added a new settings page in the Admin Dashboard to control global website configurations.

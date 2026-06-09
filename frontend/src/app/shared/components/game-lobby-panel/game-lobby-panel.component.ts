@@ -407,8 +407,8 @@ export class GameLobbyPanelComponent implements OnInit {
   });
   availableDifficulties = computed(() => this.gameRegistry.getConfig(this.newRoomGameId())?.difficulties || []);
   
-  // Show all active rooms across all games
-  gameRooms = computed(() => this.wsService.activeRooms());
+  // Show all active rooms across all games (exclude single-player)
+  gameRooms = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== 'single'));
   
   myRooms = computed(() => this.gameRooms().filter((r: any) => r.host === this.playerId()));
   otherRooms = computed(() => this.gameRooms().filter((r: any) => r.host !== this.playerId()));

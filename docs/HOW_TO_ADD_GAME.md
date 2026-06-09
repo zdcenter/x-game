@@ -34,17 +34,19 @@ func init() {
 然后在 `backend/cmd/api/main.go` 中空白导入该包（`_ "github.com/x-game/backend/internal/engine/tetris"`），使注册逻辑在程序启动时自动执行。这彻底避免了侵入和修改 `pkg/ws/manager.go`。
 
 ### 2. 实现 `GameEngine` interface
-你需要实现以下核心方法：
+你需要实现以下核心方法（如果嵌入了 `BaseEngine` 则自动获得了状态和广播等基础方法）：
 - `InitGame(options interface{}) error`：初始化游戏参数与棋盘配置。
 - `AddPlayer(playerID string)`：玩家加入房间时触发。
 - `RemovePlayer(playerID string)`：玩家彻底离开房间时触发（注意：由于我们支持断线重连，只有在游戏未开始时，引擎框架才会主动调用此方法。若游戏进行中掉线，数据会被保留）。
 - `HasPlayer(playerID string) bool`：判断玩家是否存在。
-- `HandleAction(playerID string, actionType string, payload []byte) (interface{}, error)`：处理玩家具体操作（如点击、落子等）。
-- `GetState() interface{}`：返回要广播给客户端的当前游戏状态。
+- `HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error)`：处理玩家具体操作（如点击、落子等），并返回当前的游戏状态（如 `engine.StatePlaying`）。
+- `CheckGameOver() (bool, []string)`：检查游戏是否结束，返回是否结束以及胜利者的 playerID 数组。
+- `GetState() interface{}`：返回要广播给客户端的当前游戏状态结构体。
 
 **🚨 后端防坑指南：**
-- **PK 模式下的 CheckGameOver**：在竞速或抢分模式下，切记需要在这个函数里对比所有玩家的状态，并且当有人胜利时，通过 WS Manager 向房间发送 `game_over` 广播。
-- **状态同步 (GetState)**：每次客户端进行操作（如翻开卡片、消除方块）后，WebSocket Manager 都会自动调用每个玩家的 `GetState`，所以你需要确保该方法返回的数据是脱敏且最新的。
+- **PK 模式下的 CheckGameOver**：每次客户端执行核心逻辑计算之后，切记需要在这个函数里对比所有玩家的状态，并且当有人胜利时，通过 WS Manager 向房间发送 `game_over` 广播（或者在 `HandleAction` 中调用 `Broadcast()`）。
+- **状态同步 (GetState)**：每次客户端进行操作（如翻开卡片、消除方块）后，WebSocket Manager 都会自动调用每个房间的 `BroadcastStateLocked()` 获取 `GetState()`，所以你需要确保该方法返回的数据是脱敏且最新的。
+- **单机模式无缝开局 (Single Player Auto Start)**：如果你的游戏在单机模式下也复用了后端的 Engine（如水管分色），那么在 `InitGame` 结束前，应当判断 `if mode == "single"` 并直接将游戏状态设为 `playing` 从而跳过倒计时。只有在联机对战模式下，才调用 `engine.StartWithCountdown` 触发经典的 3秒倒计时 动画。这能保证单机玩家进入游戏瞬间直接开玩，不再需要点击 START 按钮。
 
 ---
 
@@ -123,6 +125,29 @@ leaveRoom() {
 // 游戏开始，注意用 action 触发后端引擎逻辑
 startGame() { this.ws.send({ action: 'start' }); }
 ```
+
+### 3.1 联机生命周期的避坑指南 (Anti-Pitfalls for Refresh & Entering Bug) 🚨
+在集成前端生命周期时，经常遇到**刷新后全屏白屏**或**点击单机开始按钮无效**的致命Bug（例如方块消消和水管分色最初集成时都出现过），遇到此类情况请务必检查以下两点：
+
+1. **`playersList` 对象解析崩溃（导致白屏）**：
+   从 WebSocket 收到的 `this.ws.gameState()?.players` 在 JSON 中是一个以 `playerId` 为 Key 的**对象 (Object)**，而不是数组！如果你的等待大厅 `<app-game-waiting-room>` 的 `[players]` 属性接收到了一个对象，Angular 在解构 `[...this.players]` 时会抛出致命异常 `TypeError: this.players is not iterable`，导致你的组件在 `waiting` 状态下局部渲染中断，从而表现为全屏白屏！
+   **正确规范**：在 `Store` 中暴露给大厅的 `playersList` 必须强制转换为数组：
+   ```typescript
+   // 必须使用 Object.values() 来确保其为数组
+   readonly playersList = computed(() => Object.values(this.ws.gameState()?.players || {}));
+   ```
+
+2. **单机模式必须传递真实的 `hostId`（导致“开始”点不动）**：
+   当用户直接进入游戏或刷新页面时，通常会初始化为单人模式 (`single`)。如果你的游戏对单人模式依然依赖后端引擎（即即使是单机你也调用了 `this.ws.connect`），你**绝对不能**在主组件的 `ngOnInit()` 里调用 `joinRoom` 时漏传 `hostId`（或传空字符串 `""`）！
+   后端在处理没有 `hostId` 的房间时会直接返回 `"room not found"` 并强行断开连接。这会导致前端依然显示 START 按钮，但由于 Socket 已经死亡，你点击开始不会有任何反应！
+   **正确规范**：在主组件的回退/单机初始化逻辑中，必须强制传入 `this.playerId` 作为 `hostId`：
+   ```typescript
+   // ❌ 错误示例：漏传或传空字符串，导致后端报错断开
+   this.store.joinRoom('local', 'single', 'easy', ''); 
+   
+   // ✅ 正确规范：必须传入当前用户的 playerId 作为单机房间的房主
+   this.store.joinRoom('local', 'single', 'easy', this.playerId);
+   ```
 
 ### 4. 编写主组件 (强制继承 `BaseGameComponent` 与使用 Standalone 组件)
 主组件必须继承 `BaseGameComponent`，从而免费获得以下极其强大的能力：

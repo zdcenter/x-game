@@ -17,7 +17,7 @@ var (
 	fakePlayers []map[string]interface{}
 	fakeRooms   []map[string]interface{}
 
-	games = []string{"minesweeper", "sudoku", "sliding", "hexa", "tetris", "gomoku", "codebreaker", "drop2048", "math24"}
+	games = []string{"minesweeper", "sudoku", "sliding", "hexa", "tetris", "gomoku", "codebreaker", "watersort", "drop2048", "math24"}
 	modes = []string{"pk_speed", "pk_steal"}
 	diffs = []string{"easy", "medium", "hard"}
 )
