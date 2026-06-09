@@ -149,6 +149,19 @@ startGame() { this.ws.send({ action: 'start' }); }
    this.store.joinRoom('local', 'single', 'easy', this.playerId);
    ```
 
+3. **状态解构陷阱：虚无缥缈的 `.engine_state` 属性（导致游戏画面完全不更新或白屏）**：
+   在 Go 后端的 `manager.go` 中，`BroadcastStateLocked()` 广播的消息结构大致为 `{ "type": "state", "state": r.Engine.GetState(), ... }`。
+   而在前端的 `WebSocketService` 中，`this.ws.gameState()` 获取到的**已经是**后端 `GetState()` 返回的那个**对象本身**（即 `msg.state`）！
+   **绝对不要**画蛇添足地去访问 `this.ws.gameState()?.engine_state` 或者 `this.ws.gameState()?.state`！这是个极其容易踩坑的低级错误，会导致你永远拿不到真实数据，从而导致整个游戏面板白屏或没有任何状态更新（例如数组始终为空）。
+   **正确规范**：直接从 `this.ws.gameState()` 中读取你的引擎状态属性：
+   ```typescript
+   // ❌ 错误示例：试图访问不存在的嵌套属性
+   const myTubes = this.ws.gameState()?.engine_state?.players?.[this.myId]?.tubes; 
+   
+   // ✅ 正确规范：gameState() 就是你在 Go 里 GetState() 返回的结构体！
+   const myTubes = this.ws.gameState()?.players?.[this.myId]?.tubes;
+   ```
+
 ### 4. 编写主组件 (强制继承 `BaseGameComponent` 与使用 Standalone 组件)
 主组件必须继承 `BaseGameComponent`，从而免费获得以下极其强大的能力：
 - **公共服务与变量注**：自动拥有 `wsService`、`gameTimer`、`isMobileSidebarOpen`、`hostClass` 等属性，子类**绝对不要重复声明**它们（否则会发生属性遮蔽与状态不同步的 Bug）。

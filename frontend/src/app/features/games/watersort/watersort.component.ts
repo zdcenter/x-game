@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, effect } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { setupRoomLifecycle } from '../../../core/services/room-lifecycle';
@@ -34,18 +35,47 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
         <!-- Header -->
         <app-game-header
           [title]="i18n.t('app.title.watersort')()"
-          [subtitle]="currentRoomMode() === 'pk_speed' ? i18n.t('game.mode.pk_speed')() : i18n.t('game.mode.single')()"
+          [subtitle]="currentRoomMode() === 'pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.mode_single_player')()"
           iconGradientClass="from-blue-500 to-cyan-500"
           titleGradientClass="from-blue-400 to-cyan-400"
           shadowClass="shadow-cyan-500/20"
           headerBgClass="bg-gradient-to-r from-blue-900/20 to-cyan-900/20 rounded-t-2xl lg:rounded-t-3xl -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
-          (back)="returnToLobby()"
+          (back)="goBack()"
           (rules)="showRules.set(true)">
           
           <img game-icon src="/assets/games/icons/watersort.svg" alt="Water Sort" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
 
           <ng-container header-right>
-            <div class="flex items-center gap-1 sm:gap-2">
+            <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
+              @if (currentRoomMode() === 'single') {
+                <!-- Difficulty Button -->
+                <div class="flex flex-col items-center relative">
+                  <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest"><ng-container i18n="@@game.difficulty">game.difficulty</ng-container></span>
+                  <button (click)="isDifficultyModalOpen.set(!isDifficultyModalOpen())"
+                    class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
+                    <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentRoomMode() === 'single' ? _store.localDifficulty() : currentDifficulty()) }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4 shrink-0 transition-transform" [class.rotate-180]="isDifficultyModalOpen()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  <!-- Dropdown Menu -->
+                  @if (isDifficultyModalOpen()) {
+                    <div class="absolute top-full right-0 mt-2 w-48 bg-[var(--color-bg-main)] rounded-xl shadow-2xl border border-[var(--color-border-card)] overflow-hidden z-50">
+                      @for (diff of predefinedDifficulties; track diff.id) {
+                        <button (click)="changeSingleDifficulty(diff.id); isDifficultyModalOpen.set(false)"
+                          class="w-full text-left px-4 py-3 hover:bg-[var(--color-bg-card)] transition-colors border-b border-[var(--color-border-card)] last:border-0 flex flex-col"
+                          [class.text-[var(--color-accent-to)]]="_store.localDifficulty() === diff.id"
+                          [class.font-bold]="_store.localDifficulty() === diff.id">
+                          <span class="text-sm">{{ i18n.t($any(diff.labelKey))() }}</span>
+                          <span class="text-[10px] opacity-60 font-mono mt-0.5" [class.text-[var(--color-text-main)]]="_store.localDifficulty() !== diff.id">{{ diff.desc }}</span>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
               <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -87,7 +117,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
                   [isMe]="true"
                   [score]="0"
                   [stats]="[
-                    { icon: '🔄', value: myMoves(), label: 'MOVES' }
+                    { icon: '🔄', value: myMoves(), label: i18n.t('game.moves')() }
                   ]"
                   [status]="status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
 
@@ -98,7 +128,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
                     [isMe]="false"
                     [score]="0"
                     [stats]="[
-                      { icon: '🔄', value: opponentMoves(), label: 'MOVES' }
+                      { icon: '🔄', value: opponentMoves(), label: i18n.t('game.moves')() }
                     ]"
                     [status]="status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
                 }
@@ -145,7 +175,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
                   currentGameId="watersort"
                   [status]="didIWin() ? 'win' : 'lose'"
                   [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-                  [stats]="[{ label: 'Moves', value: myMoves() }]"
+                  [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
                   [showLeave]="currentRoomMode() === 'single' || !isHost()"
                   [showRestart]="currentRoomMode() === 'single' || isHost()"
                   [showDismiss]="currentRoomMode() !== 'single' && isHost()"
@@ -184,7 +214,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
          }">
       
       <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomMode() === 'single'">
-        <h3 class="font-bold text-lg text-[var(--color-text-main)]">Room Info</h3>
+        <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">game.room_info</ng-container></h3>
       </div>
 
       <!-- PK Lobby Panel -->
@@ -209,6 +239,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   public _store = inject(WatersortStore);
   private authStore = inject(AuthStore);
   public timerService = inject(GameTimerService);
+  private router = inject(Router);
   
   showRules = signal(false);
 
@@ -231,6 +262,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   
   currentRoomMode() { return this._store.currentRoomMode(); }
   currentRoomId() { return this._store.roomId(); }
+  currentDifficulty() { return this._store.currentDifficulty(); }
 
   constructor() {
     super();
@@ -254,14 +286,42 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
+      const savedDiff = localStorage.getItem('watersort_single_diff') || 'easy';
       const uniqueLocalRoom = 'local_' + this.myId;
-      this._store.joinRoom(uniqueLocalRoom, 'single', 'easy', this.myId, this.myId);
+      this._store.joinRoom(uniqueLocalRoom, 'single', savedDiff, this.myId, this.myId);
     }
   }
 
   override ngOnDestroy() {
     super.ngOnDestroy();
     this._store.leaveRoom();
+  }
+
+  isDifficultyModalOpen = signal(false);
+  selectedDifficulty = signal('easy');
+  predefinedDifficulties = [
+    { id: 'easy', labelKey: 'game.diff_watersort_easy', desc: '5 Tubes (3 Colors)' },
+    { id: 'medium', labelKey: 'game.diff_watersort_medium', desc: '9 Tubes (7 Colors)' },
+    { id: 'hard', labelKey: 'game.diff_watersort_hard', desc: '14 Tubes (12 Colors)' }
+  ];
+
+  openDifficultySettings() {
+    this.selectedDifficulty.set(this._store.currentDifficulty() || 'easy');
+    this.isDifficultyModalOpen.set(true);
+  }
+
+  changeSingleDifficulty(diff: string) {
+    localStorage.setItem('watersort_single_diff', diff);
+    this._store.leaveRoom();
+    setTimeout(() => {
+      const uniqueLocalRoom = 'local_' + this.myId + '_' + Date.now();
+      this.wsService.setPendingAction('create');
+      this._store.joinRoom(uniqueLocalRoom, 'single', diff, this.myId, this.myId);
+    }, 100);
+  }
+
+  getDifficultyText(diff: string) {
+    return this.i18n.t(`game.diff_watersort_${diff}`)();
   }
 
   isHost(): boolean {
@@ -330,7 +390,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   playAgain() {
-    this._store.startGame();
+    this._store.restartGame();
   }
 
   returnToLobby() {
@@ -338,6 +398,13 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this.roomLifecycle.clearReconnectInfo();
     const uniqueLocalRoom = 'local_' + this.myId;
     this._store.joinRoom(uniqueLocalRoom, 'single', 'easy', this.myId, this.myId);
+  }
+
+  goBack() {
+    if (this.currentRoomMode() !== 'single') {
+      this._store.leaveRoom();
+    }
+    this.router.navigate(['/lobby']);
   }
 
   override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}): void {

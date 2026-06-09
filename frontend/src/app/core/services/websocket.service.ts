@@ -102,12 +102,12 @@ export class WebSocketService {
     this.gameDisconnectIntentional = false;
 
     const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
-    let url = `${environment.wsUrl}/ws/join/${roomId}?game=${gameId}&playerId=${playerId}&mode=${mode}&difficulty=${difficulty}&hostId=${cleanHostId}`;
+    let url = `${environment.wsUrl}/ws/join/${encodeURIComponent(roomId)}?game=${encodeURIComponent(gameId)}&playerId=${encodeURIComponent(playerId)}&mode=${encodeURIComponent(mode)}&difficulty=${encodeURIComponent(difficulty)}&hostId=${encodeURIComponent(cleanHostId)}`;
     if (action) {
-      url += `&action=${action}`;
+      url += `&action=${encodeURIComponent(action)}`;
     }
     if (password) {
-      url += `&password=${password}`;
+      url += `&password=${encodeURIComponent(password)}`;
     }
     this.socket = new WebSocket(url);
     this.currentGameId = gameId;

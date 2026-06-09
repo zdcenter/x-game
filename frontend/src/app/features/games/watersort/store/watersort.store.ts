@@ -33,7 +33,7 @@ export class WatersortStore {
 
   // Raw state mapped from websocket
   private readonly rawState = computed(() => {
-    const raw = this.ws.gameState()?.engine_state as WatersortState | undefined;
+    const raw = this.ws.gameState() as WatersortState | undefined;
     if (raw) return raw;
     return {
       players: {},
@@ -73,6 +73,10 @@ export class WatersortStore {
 
   startGame() {
     this.ws.send({ action: 'start' });
+  }
+
+  restartGame() {
+    this.ws.send({ type: 'restart_game' });
   }
 
   kickPlayer(playerId: string) {

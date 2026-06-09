@@ -12,8 +12,8 @@ import (
 const Capacity = 4
 
 var Colors = []string{
-	"#EF476F", "#F78C6B", "#FFD166", "#06D6A0", "#118AB2", "#073B4C",
-	"#8338EC", "#FF006E", "#00F5D4", "#9C6644", "#8D99AE", "#023E8A",
+	"#FF3366", "#FF8800", "#FFDD00", "#88EE00", "#00AA44", "#00DDFF",
+	"#0066FF", "#6600FF", "#CC00FF", "#FF0088", "#995522", "#8899AA",
 }
 
 type Tube struct {
@@ -173,6 +173,60 @@ func (e *WatersortEngine) CheckGameOver() (bool, []string) {
 func (e *WatersortEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+
+	if action == "start" && e.status == engine.StateWaiting {
+		engine.StartWithCountdown(&e.mu, &e.status, e.broadcastFn, func() {
+			e.state.Status = "playing"
+			e.state.Winners = []string{}
+			e.startTime = time.Now()
+		})
+		return e.status, nil
+	}
+
+	if action == "restart_game" && e.status == engine.StateFinished {
+		e.state.Winners = []string{}
+		
+		// Generate new puzzle
+		numColors := 3
+		switch e.difficulty {
+		case "easy":
+			numColors = 3
+		case "medium":
+			numColors = 7
+		case "hard":
+			numColors = 12
+		}
+		if numColors > len(Colors) {
+			numColors = len(Colors)
+		}
+
+		initialTubes := generatePuzzle(numColors)
+		e.state.InitialTubes = initialTubes
+
+		for _, p := range e.state.Players {
+			p.Tubes = make([]Tube, len(initialTubes))
+			for i, t := range initialTubes {
+				p.Tubes[i] = Tube{Colors: make([]string, len(t.Colors))}
+				copy(p.Tubes[i].Colors, t.Colors)
+			}
+			p.Moves = 0
+			p.Finished = false
+		}
+
+		if e.mode == "single" {
+			e.status = engine.StatePlaying
+			e.state.Status = "playing"
+			e.startTime = time.Now()
+		} else {
+			e.status = engine.StateWaiting
+			e.state.Status = "waiting"
+		}
+		
+		if e.broadcastFn != nil {
+			e.broadcastFn()
+		}
+		return e.status, nil
+	}
 
 	if e.status != engine.StatePlaying {
 		return e.status, nil
