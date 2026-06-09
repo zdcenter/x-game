@@ -3,6 +3,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { BlockStore } from './store/block.store';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -51,22 +52,54 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
+  private roomLifecycle!: RoomLifecycleHandle;
+
+  constructor() {
+    super();
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'block',
+      getCurrentMode: () => this.store.currentMode(),
+      onLeaveRoom: () => {
+        this.store.leaveGame();
+        this.roomLifecycle.clearReconnectInfo();
+      },
+    });
+  }
+
   override ngOnInit(): void {
     super.ngOnInit();
     
-    const pending = this.crossGameJoin.consumePendingJoin('block');
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      this.handleJoinRoom({
-        roomId: pending.roomId, 
-        mode: pending.mode, 
-        difficulty: pending.difficulty, 
-        host: pending.host
-      });
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      }
     } else {
       if (!this.roomId() || this.roomId() === 'local') {
         this.store.joinRoom('local', 'single', 'medium', this.playerId);
       }
     }
+  }
+
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    super.handleCreateRoom(event);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
+    }
+  }
+
+  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+    super.handleJoinRoom(params);
+    if (params.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
+    }
+  }
+
+  override handleDismissRoom() {
+    super.handleDismissRoom();
+    this.roomLifecycle.clearReconnectInfo();
   }
 
   override ngOnDestroy(): void {

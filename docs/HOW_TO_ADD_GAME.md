@@ -87,14 +87,18 @@ players = computed<string[]>(() => {
 ```typescript
 // 必须提供这几个状态，供 BaseGameComponent 使用
 roomId = signal('');
-hostId = signal('');
 currentRoomMode = signal('single');
+
+// 💡 注意：hostId 必须通过计算信号动态提取，不可用静态 signal，否则会导致作为房主时看不到皇冠！
+hostId = computed(() => {
+  if (this.currentRoomMode() === 'single') return this.auth.currentUser()?.username || this.auth.guestId;
+  return (this.rawState() as any)?.host || '';
+});
 
 // 1. 建立与后端的连接 (注意命名必须为 joinRoom)
 joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
   // 设置本地状态...
   this.roomId.set(roomId);
-  this.hostId.set(hostId || '');
   this.currentRoomMode.set(mode);
   
   if (mode !== 'single') {
@@ -136,6 +140,8 @@ import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../../core/auth/auth.store';
+// 💡 必须引入 room-lifecycle 相关的工具函数
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../../core/services/room-lifecycle';
 // 必须明确按需导入 Standalone 组件
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
@@ -151,16 +157,62 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   // 必须实现父类的抽象属性
   override store = inject(TetrisStore);
   private authStore = inject(AuthStore);
+  private roomLifecycle!: RoomLifecycleHandle;
   
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
+  }
+
+  // 💡 在构造函数中注册 roomLifecycle 生命周期钩子（这是解决大厅建房丢失 action 进而导致“房间不存在” bug 的关键！）
+  constructor() {
+    super();
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'tetris', // 你的游戏 ID
+      getCurrentMode: () => this.store.currentRoomMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
+    });
   }
 
   // 注意：不要在此处重复声明 gameTimer、isMobileSidebarOpen！父类已提供！
 
   override ngOnInit() {
     super.ngOnInit(); // ← 必须！自动连接竞技大厅 WebSocket
-    // 你的游戏初始化逻辑...
+    
+    // 💡 必须使用 roomLifecycle 处理断线重连或大厅跨游戏加入
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    if (pending) {
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      }
+    } else {
+      // 本地初始化逻辑，例如创建单人模式
+      this.store.joinRoom('single_room', 'single', 'medium');
+    }
+  }
+
+  // 💡 必须重写以下三个方法，确保从大厅建房/加房时能正确保存断线重连信息
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    super.handleCreateRoom(event);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
+    }
+  }
+
+  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+    super.handleJoinRoom(params);
+    if (params.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
+    }
+  }
+
+  override handleDismissRoom() {
+    super.handleDismissRoom();
+    this.roomLifecycle.clearReconnectInfo();
   }
 
   override ngOnDestroy() {

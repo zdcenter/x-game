@@ -4,6 +4,7 @@ import { LightsoutStore } from './store/lightsout.store';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -59,18 +60,52 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     return key ? this.i18n.t(key)() : diff;
   }
 
+  private roomLifecycle!: RoomLifecycleHandle;
+
+  constructor() {
+    super();
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: 'lightsout',
+      getCurrentMode: () => this.store.currentRoomMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
+    });
+  }
+
   override ngOnInit() {
     super.ngOnInit();
 
-    const pending = this.crossGameJoin.consumePendingJoin('lightsout');
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      this.handleJoinRoom({ roomId: pending.roomId, mode: pending.mode, difficulty: pending.difficulty, host: pending.host });
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.mode !== 'single') {
+        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      }
     } else {
       this.store.joinRoom('single_room', 'single', 'medium');
     }
+  }
 
-    // Timer effect - wait, we don't use registerAutoStart
-    // Timer is not needed for lights out single player? Or we can just start it manually when status becomes playing.
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    super.handleCreateRoom(event);
+    if (event.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
+    }
+  }
+
+  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+    super.handleJoinRoom(params);
+    if (params.mode !== 'single') {
+      this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
+    }
+  }
+
+  override handleDismissRoom() {
+    super.handleDismissRoom();
+    this.roomLifecycle.clearReconnectInfo();
   }
 
   override ngOnDestroy() {

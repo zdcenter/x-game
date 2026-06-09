@@ -13,7 +13,10 @@ export class LightsoutStore {
   readonly localDifficulty = signal<string>('medium');
   readonly currentRoomMode = signal<string>('single');
   readonly roomId = signal<string>('');
-  readonly hostId = signal<string>('');
+  readonly hostId = computed(() => {
+    if (this.currentRoomMode() === 'single') return this.me();
+    return (this.rawState() as any)?.host || '';
+  });
   readonly localStatus = signal<'waiting' | 'starting' | 'playing' | 'finished'>('playing');
 
   private rawState = computed(() => this.ws.gameState());
@@ -110,7 +113,6 @@ export class LightsoutStore {
     this.currentRoomMode.set(mode);
     this.localDifficulty.set(difficulty);
     this.roomId.set(roomId);
-    if (hostId) this.hostId.set(hostId);
 
     if (mode === 'single') {
       this.initSinglePlayerBoard(difficulty);
@@ -121,7 +123,6 @@ export class LightsoutStore {
 
   leaveRoom() {
     this.roomId.set('');
-    this.hostId.set('');
     if (this.currentRoomMode() !== 'single') {
       this.ws.send({ type: 'leave_game' });
       this.ws.disconnect('lightsout');
