@@ -85,6 +85,11 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'seo.drop2048.title', descKey: 'seo.drop2048.desc', keywordsKey: 'seo.drop2048.keywords' } }
       },
       {
+        path: 'games/lightsout',
+        loadComponent: () => import('./features/games/lightsout/lightsout.component').then(m => m.LightsoutComponent),
+        data: { seo: { titleKey: 'app.title.lightsout', descKey: 'app.title.lightsout.desc', keywordsKey: 'app.title.lightsout' } }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }

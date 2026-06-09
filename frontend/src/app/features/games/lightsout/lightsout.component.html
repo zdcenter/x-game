@@ -1,0 +1,191 @@
+<div class="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)]">
+  
+  <!-- Main Game Area -->
+  <div class="flex-grow flex flex-col relative min-w-0 bg-[var(--color-bg-main)] transition-colors duration-300 overflow-y-auto overflow-x-hidden custom-scrollbar">
+    
+    <!-- Lobby Toggle Button (Mobile) -->
+    @if (store.currentRoomMode() !== 'single') {
+      <button 
+        class="lg:hidden fixed bottom-6 right-6 z-50 p-4 bg-primary text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
+        (click)="isMobileSidebarOpen.set(!isMobileSidebarOpen())"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </button>
+    }
+
+    <!-- Header -->
+    <app-game-header
+      [title]="i18n.t('lobby.lightsout')() || 'Lights Out'"
+      [subtitle]="getModeName() + ' - ' + getDifficultyName()"
+      iconGradientClass="from-amber-400 to-orange-500"
+      titleGradientClass="from-amber-300 to-orange-400"
+      shadowClass="shadow-orange-500/20"
+      headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30"
+      (back)="onLeaveClick()"
+      (rules)="showRules.set(true)"
+    >
+      <div game-icon class="text-xl sm:text-2xl md:text-3xl text-white drop-shadow-md">💡</div>
+      <div header-center class="flex items-center gap-2">
+        @if (!isConnected() && store.currentRoomMode() !== 'single') {
+          <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg animate-pulse border border-red-500/30 font-bold whitespace-nowrap hidden sm:inline-block">Offline</span>
+        }
+        @if (store.currentRoomMode() === 'single') {
+          <select 
+            [value]="store.localDifficulty()"
+            (change)="changeDifficulty($event)"
+            class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-md px-3 py-1 text-sm font-medium text-[var(--color-text-main)] hover:border-orange-500/50 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer appearance-none shadow-sm"
+          >
+            <option value="easy" i18n="@@game.diff_easy">Easy</option>
+            <option value="medium" i18n="@@game.diff_medium">Medium</option>
+            <option value="hard" i18n="@@game.diff_hard">Hard</option>
+          </select>
+        }
+      </div>
+      <div header-right>
+        <button (click)="openChangeSettings()" class="p-1.5 sm:p-2 bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] rounded-xl transition-all border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-orange-400 shadow-sm active:scale-95" [title]="i18n.t('game.change_difficulty')() || 'Settings'">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+    </app-game-header>
+
+    @if (store.status() === 'waiting' && store.currentRoomMode() !== 'single') {
+      <app-game-waiting-room
+        gameId="lightsout"
+        [mode]="store.currentRoomMode()"
+        [roomId]="store.roomId()"
+        [difficulty]="store.size() === 4 ? 'easy' : store.size() === 6 ? 'hard' : 'medium'"
+        [players]="store.playersList()"
+        [hostId]="store.hostId()"
+        [currentUserId]="playerId"
+        [readyPlayers]="store.readyPlayers()"
+        (start)="store.startGame()"
+        (leave)="onLeaveClick()"
+        (changeSettings)="openChangeSettings()"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+        (kick)="store.kickPlayer($event)"
+      ></app-game-waiting-room>
+    } @else {
+      
+      <!-- Starting Overlay -->
+      @if (store.status() === 'starting') {
+        <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+      }
+
+      <div class="flex-grow flex flex-col items-center justify-start p-2 lg:p-4 w-full h-full relative">
+        
+        <!-- Players Info Row -->
+        <div class="flex-none py-2 mb-2 w-full max-w-[800px] border-b border-[var(--color-border-card)]">
+          <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === 'single'">
+            <!-- Local Player -->
+            <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+              [playerName]="playerId"
+              [isHost]="store.hostId() === playerId"
+              [isMe]="true"
+              [stats]="[{ label: i18n.t('game.moves')() || 'Moves', value: store.moves() }]"
+              [status]="store.isFinished() ? 'finished' : 'playing'"
+            ></app-player-badge>
+
+            <!-- Opponents -->
+            @for (opp of store.opponents(); track opp.id) {
+              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                [playerName]="opp.id"
+                [isHost]="store.hostId() === opp.id"
+                [stats]="[{ icon: '💡', value: opp.remainingLights }]"
+                [status]="opp.finished ? 'finished' : 'playing'"
+              ></app-player-badge>
+            }
+          </div>
+        </div>
+
+        <!-- Board Area (Strict Aspect Square) -->
+        <div class="relative flex-grow flex items-center justify-center min-h-0 w-full shrink py-2">
+          
+          <!-- Board -->
+          <div class="relative flex flex-col items-center justify-center w-full aspect-square bg-[var(--color-bg-card)] rounded-xl border-4 border-[var(--color-border-card)] shadow-2xl p-2 sm:p-4"
+               [style.maxWidth]="'min(100%, 600px, calc(100dvh - 300px))'">
+            
+            <div class="w-full h-full grid gap-1.5 sm:gap-2 lg:gap-3"
+                 [style.gridTemplateColumns]="'repeat(' + store.size() + ', minmax(0, 1fr))'"
+                 [style.gridTemplateRows]="'repeat(' + store.size() + ', minmax(0, 1fr))'">
+              
+              @for (row of store.board(); track rIndex; let rIndex = $index) {
+                @for (cell of row; track cIndex; let cIndex = $index) {
+                  <button 
+                    class="w-full h-full rounded-md sm:rounded-xl transition-all duration-300 relative overflow-hidden active:scale-90 touch-manipulation focus:outline-none"
+                    [class.bg-slate-800]="!cell"
+                    [class.shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]]="!cell"
+                    [class.bg-yellow-400]="cell"
+                    [class.shadow-[0_0_10px_rgba(250,204,21,0.5),inset_0_2px_4px_rgba(255,255,255,0.4)]]="cell"
+                    [class.sm:shadow-[0_0_20px_rgba(250,204,21,0.6),inset_0_2px_8px_rgba(255,255,255,0.4)]]="cell"
+                    (click)="store.toggle(rIndex, cIndex)"
+                    [disabled]="store.status() !== 'playing' || store.isFinished()"
+                  >
+                    <!-- Bulb Inner Glow -->
+                    <div class="absolute inset-1 rounded-full opacity-30"
+                         [class.bg-black]="!cell"
+                         [class.bg-yellow-100]="cell">
+                    </div>
+                  </button>
+                }
+              }
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    }
+
+    <!-- Game Over Overlay -->
+    @if (store.status() === 'finished') {
+      <app-game-result-overlay
+        currentGameId="lightsout"
+        [status]="getOverlayStatus()"
+        [title]="getOverlayTitle()"
+        [subtitle]="getOverlaySubtitle()"
+        [stats]="getOverlayStats()"
+        [showRestart]="true"
+        [showLeave]="store.currentRoomMode() !== 'single'"
+        (restart)="store.restartGame()"
+        (leave)="onLeaveClick()"
+      ></app-game-result-overlay>
+    }
+
+  </div>
+
+  <!-- Rules Modal -->
+  <app-game-rules-modal
+    [gameId]="'lightsout'"
+    [isOpen]="showRules()"
+    (closed)="showRules.set(false)"
+  ></app-game-rules-modal>
+
+  <!-- Right Sidebar (Lobby Panel) -->
+  <div class="w-80 border-l border-[var(--color-border-card)] bg-[var(--color-bg-card)] flex-shrink-0 transition-transform duration-300 fixed lg:static right-0 top-0 h-full z-40"
+       [class.translate-x-full]="!isMobileSidebarOpen()"
+       [class.lg:translate-x-0]="true"
+       [class.!hidden]="store.currentRoomMode() !== 'single' && store.status() !== 'waiting' && !isMobileSidebarOpen()">
+    <app-game-lobby-panel
+      #lobbyPanel
+      currentGameId="lightsout"
+      [currentRoomId]="store.roomId()"
+      (joinRoom)="handleJoinRoom($event)"
+      (createRoom)="handleCreateRoom($event)"
+      (closeSidebar)="isMobileSidebarOpen.set(false)">
+    </app-game-lobby-panel>
+  </div>
+  
+  <!-- Mobile Sidebar Backdrop -->
+  @if (isMobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-black/50 z-30 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+  }
+
+</div>

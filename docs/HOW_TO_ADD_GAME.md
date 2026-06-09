@@ -82,15 +82,24 @@ players = computed<string[]>(() => {
 - **effect 的正确用法**：在 Store 的构造函数里只允许用 `effect()` 触发不修改信号的**副作用行为**，例如当对局状态变为 finished 时调用 `audio.playWin()`。
 
 ### 3. 实现联机必须的核心 WS 生命周期接口 (Store Network Lifecycle) 🚨 极其重要！
-如果你的游戏支持 PK 模式，你的 `Store` 必须提供以下方法，并且**绝不能漏掉 `ws.connect`**，否则你创建的房间会变成无人知晓的“幽灵单机房间”：
+如果你的游戏支持 PK 模式，你的 `Store` 必须提供以下状态与方法，并且**绝不能漏掉 `ws.connect`**，否则你创建的房间会变成无人知晓的“幽灵单机房间”：
 
 ```typescript
-// 1. 建立与后端的连接
-joinGame(roomId: string, playerId: string, mode: string, diff: string, hostId?: string) {
+// 必须提供这几个状态，供 BaseGameComponent 使用
+roomId = signal('');
+hostId = signal('');
+currentRoomMode = signal('single');
+
+// 1. 建立与后端的连接 (注意命名必须为 joinRoom)
+joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
   // 设置本地状态...
+  this.roomId.set(roomId);
+  this.hostId.set(hostId || '');
+  this.currentRoomMode.set(mode);
+  
   if (mode !== 'single') {
     // 【关键】必须调用此方法，后端才会真正创建/加入房间！
-    this.ws.connect('your_game', roomId, playerId, mode, diff, hostId);
+    this.ws.connect('your_game', roomId, this.auth.currentUser()?.username || this.auth.guestId, mode, diff, hostId);
   }
 }
 
@@ -99,29 +108,42 @@ ready() { this.ws.send({ type: 'ready' }); }
 cancelReady() { this.ws.send({ type: 'cancel_ready' }); }
 kickPlayer(playerId: string) { this.ws.send({ type: 'kick_player', target: playerId }); }
 dismissRoom() { this.ws.send({ type: 'dismiss_room' }); }
-leaveGame() {
+
+// 离开房间 (注意命名必须为 leaveRoom)
+leaveRoom() {
   this.ws.send({ type: 'leave_game' });
   this.ws.disconnect('your_game');
+  this.roomId.set('');
 }
+
 // 游戏开始，注意用 action 触发后端引擎逻辑
 startGame() { this.ws.send({ action: 'start' }); }
 ```
 
-### 4. 编写主组件 (强制继承 `BaseGameComponent`)
-主组件必须继承 `BaseGameComponent`，从而免费获得以下能力：
-- **竞技大厅 WebSocket 自动连接**：`BaseGameComponent.ngOnInit()` 会自动调用 `connectLobby()`，确保右侧竞技大厅面板能收到房间和在线玩家数据。
-- **建房 / 加入房间 / 房间销毁监听**等通用逻辑。
+### 4. 编写主组件 (强制继承 `BaseGameComponent` 与使用 Standalone 组件)
+主组件必须继承 `BaseGameComponent`，从而免费获得以下极其强大的能力：
+- **公共服务与变量注**：自动拥有 `wsService`、`gameTimer`、`isMobileSidebarOpen`、`hostClass` 等属性，子类**绝对不要重复声明**它们（否则会发生属性遮蔽与状态不同步的 Bug）。
+- **竞技大厅 WebSocket 自动连接**：`BaseGameComponent.ngOnInit()` 会自动调用 `connectLobby()`，确保右侧竞技大厅面板能收到房间数据。
+- **建房 / 加入房间 / 房间销毁监听**等通用逻辑（`handleJoinRoom`, `handleCreateRoom`, `dismissRoom` 等已默认提供，会自动调用 `this.store.joinRoom` / `leaveRoom` 等生命周期方法）。
 
-**关键规则**：如果你的子组件需要覆写 `ngOnInit()` 或 `ngOnDestroy()`，**必须调用 `super.ngOnInit()` / `super.ngOnDestroy()`**，否则大厅功能会失效！
+**关键规则**：
+1. 如果你的子组件需要覆写 `ngOnInit()` 或 `ngOnDestroy()`，**必须调用 `super.ngOnInit()` / `super.ngOnDestroy()`**，否则大厅功能会失效！
+2. 本项目使用 Angular Standalone Components 架构，不再有 `SharedModule`。主组件需要在 `imports` 数组中单独导入所需的共享组件库（如 `GameHeaderComponent`, `PlayerBadgeComponent`, `GameResultOverlayComponent`, `GameRulesModalComponent`, `GameWaitingRoomComponent` 等）。
 
 ```typescript
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../../core/auth/auth.store';
+// 必须明确按需导入 Standalone 组件
+import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 @Component({
   selector: 'app-tetris',
+  standalone: true,
+  imports: [CommonModule, GameHeaderComponent, PlayerBadgeComponent /* 其他组件 */],
   templateUrl: './tetris.component.html',
   // ...
 })
@@ -129,9 +151,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   // 必须实现父类的抽象属性
   override store = inject(TetrisStore);
   private authStore = inject(AuthStore);
+  
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
+
+  // 注意：不要在此处重复声明 gameTimer、isMobileSidebarOpen！父类已提供！
 
   override ngOnInit() {
     super.ngOnInit(); // ← 必须！自动连接竞技大厅 WebSocket
@@ -140,7 +165,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   override ngOnDestroy() {
     super.ngOnDestroy(); // ← 必须！
-    this.store.leaveGame();
+    this.store.leaveRoom(); // 使用 leaveRoom()
   }
 }
 ```
@@ -321,13 +346,31 @@ ngOnInit() {
 - **避免硬编码**：在编写 PK 模式或者等待界面的顶部 Header 时，**绝不允许**将模式名称或难度写死（例如写死成 `{{ i18n.t('game.pk_steal_label')() }}`）。必须注入 `GameRegistryService` 并在 TS 类中动态获取：
   ```typescript
   getModeName() {
-    const mode = this.store.currentMode();
+    const mode = this.store.currentRoomMode();
     const key = this.gameRegistry.getModeLabel('your_game', mode);
     return key ? this.i18n.t(key)() : mode;
   }
   // 难度同理，使用 getDifficultyLabel
   ```
-- **视觉排版**：对于模式和难度的展示，标准做法是采用水平并列的形式（例如：`同盘抢分 / 中等`），并利用半透明的斜杠 `/` 进行分隔。避免使用上下两排文字堆叠，以节省垂直空间。
+- **视觉排版与 `GameHeaderComponent` 传参**：
+  `app-game-header` 不再接收 `[mode]` 和 `[isOffline]`。现在你需要直接向其传递计算好的 `[title]` 和 `[subtitle]`，并自行配置主题色的渐变 Class。这极大地提升了灵活性。
+  ```html
+  <app-game-header
+    [title]="i18n.t('lobby.your_game')()"
+    [subtitle]="getModeName() + ' - ' + getDifficultyName()"
+    iconGradientClass="from-blue-400 to-emerald-500"
+    titleGradientClass="from-blue-300 to-emerald-400"
+    shadowClass="shadow-emerald-500/20"
+    headerBgClass="bg-gradient-to-r from-blue-900/30 to-emerald-900/30"
+    (back)="onLeaveClick()"
+    (rules)="showRules.set(true)"
+  >
+    <div game-icon>💡</div>
+    <div header-center>
+      <!-- 可以放离线标志，或者单人模式的难度选择 select -->
+    </div>
+  </app-game-header>
+  ```
 - **单机下拉切换**：对于单机模式，强烈推荐直接复用公共组件 `<app-game-header>`，并在 `header-center` 插槽中放入一个原生下拉选择框 `<select>`，允许玩家在游戏内直接点击顶部切换难度，并绑定 `changeDifficulty()` 重新发牌/重置。
 
 ### 11. 更改房间设置与同路由刷新机制 (Room Settings Change & Router Reload)
@@ -380,26 +423,30 @@ ngOnInit() {
   ```html
   <!-- 标准玩家信息通栏结构 -->
   <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full">
-    <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentMode() === 'single'">
+    <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === 'single'">
       
       <!-- Local Player (You) -->
       <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
         [playerName]="playerId"
         [isHost]="true"
         [isMe]="true"
-        [score]="store.score()"
+        [stats]="[{ label: 'Score', value: store.score() }]"
         [status]="store.status() === 'finished' ? 'finished' : 'playing'"
       ></app-player-badge>
 
       <!-- Opponents -->
       @for (opp of opponents; track opp.id) {
-        <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" ...></app-player-badge>
+        <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+          [playerName]="opp.id"
+          [isHost]="opp.isHost"
+          [stats]="[{ icon: '💡', value: opp.score }]"
+          [status]="opp.status"
+        ></app-player-badge>
       }
     </div>
   </div>
   ```
-- **避免冗余**：如果在 PK 模式下需要渲染对手的分数、进度条或状态，**严禁**手写包含头像、皇冠、分数、冰冻效果等重复的 UI 代码。全局已经抽离了跨游戏的公共组件 `<app-player-badge>`，原生支持 `👑` (房主)、`👁️` (观战者)、高亮 "You" 等统一视觉。
-- **例外情况**：如果你的游戏属于沉浸式画板（如《五子棋》）或者需要在对手面板里渲染缩微版小棋盘（如《俄罗斯方块》），由于结构差异过大，允许单独手写对手 UI 或使用浮动 Overlay 结构，但也请尽量复用现有的视觉与色彩规范。
+- **避免冗余**：如果在 PK 模式下需要渲染对手的分数、进度条或状态，**严禁**手写包含头像、皇冠、分数、冰冻效果等重复的 UI 代码。公共组件 `<app-player-badge>` 原生支持 `👑` (房主)、`👁️` (观战者)、冰冻 `🥶` 状态，并且可以通过 `[stats]` 数组传入极其丰富的图标、文本和颜色。
 
 ### 18. 正方形棋盘的自适应缩放陷阱 (Responsive Square Board Layout)
 - **避免隐患**：在开发《俄罗斯方块》、《六边形消除》等拥有正方形（或固定宽高比）棋盘的游戏时，如果直接在 HTML 模板的 `style` 属性中写死 `max-width: min(100%, 600px, calc(100dvh - 320px))` 等复杂 CSS 表达式，**Angular 的模板解析器（Sanitizer）会悄悄将不认识的复杂 CSS 表达式直接剔除！** 而如果试图通过 Tailwind CSS 任意值语法（如 `max-w-[min(100%,600px,calc(100dvh-320px))]`）来编写，由于存在逗号和嵌套，Tailwind JIT 编译器大概率会**解析失败并直接吞掉该类名**。最终导致棋盘失去了所有 max-width 保护，变成一个无边无际的 1920x1920 巨型方块，甚至把其他元素挤出屏幕！
