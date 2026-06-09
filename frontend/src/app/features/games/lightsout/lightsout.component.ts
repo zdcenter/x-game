@@ -102,8 +102,8 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     this.gameTimer.stopCountdown();
     if (this.store.currentRoomMode() !== 'single') {
       this.store.leaveRoom();
-      this.store.joinRoom('single_room', 'single', 'medium');
     }
+    this.router.navigate(['/lobby']);
   }
 
   isConnected() {

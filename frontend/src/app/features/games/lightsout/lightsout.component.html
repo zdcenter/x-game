@@ -19,14 +19,37 @@
     <app-game-header
       [title]="i18n.t('lobby.lightsout')() || 'Lights Out'"
       [subtitle]="getModeName() + ' - ' + getDifficultyName()"
-      iconGradientClass="from-amber-400 to-orange-500"
+      iconGradientClass="from-slate-800 to-slate-900"
       titleGradientClass="from-amber-300 to-orange-400"
-      shadowClass="shadow-orange-500/20"
+      shadowClass="shadow-amber-500/20"
       headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30"
       (back)="onLeaveClick()"
       (rules)="showRules.set(true)"
     >
-      <div game-icon class="text-xl sm:text-2xl md:text-3xl text-white drop-shadow-md">💡</div>
+      <div game-icon class="w-full h-full flex items-center justify-center p-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="w-full h-full drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+          <defs>
+            <radialGradient id="glassGlow-logo" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stop-color="#fef3c7" stop-opacity="1" />
+              <stop offset="40%" stop-color="#fde68a" stop-opacity="0.8" />
+              <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="32" cy="22" r="22" class="fill-amber-400 blur-md opacity-30" />
+          <path d="M 32 4 A 18 18 0 0 0 14 22 C 14 31 22 36 25 42 L 39 42 C 42 36 50 31 50 22 A 18 18 0 0 0 32 4 Z" class="fill-amber-400 stroke-amber-500" stroke-width="1" />
+          <path d="M 32 4 A 18 18 0 0 0 14 22 C 14 31 22 36 25 42 L 39 42 C 42 36 50 31 50 22 A 18 18 0 0 0 32 4 Z" fill="url(#glassGlow-logo)" class="opacity-100" />
+          <path d="M 18 20 A 12 12 0 0 1 28 8" class="stroke-white opacity-50" stroke-width="2" stroke-linecap="round" fill="none" />
+          <path d="M 29 42 L 29 28 M 35 42 L 35 28" class="stroke-amber-600" stroke-width="1.5" stroke-linecap="round" />
+          <path d="M 29 28 L 30 21 L 31 25 L 32 21 L 33 25 L 34 21 L 35 28" class="stroke-amber-100 opacity-100" fill="none" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+          <path d="M 25 42 L 39 42 L 37 54 L 27 54 Z" class="fill-slate-400" />
+          <path d="M 39 42 L 37 54 L 32 54 L 32 42 Z" class="fill-slate-500 opacity-40" />
+          <path d="M 24 45 Q 32 48 40 45" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
+          <path d="M 25 49 Q 32 52 39 49" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
+          <path d="M 26 53 Q 32 56 38 53" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
+          <path d="M 28 54 L 36 54 C 36 58 34 60 32 60 C 30 60 28 58 28 54 Z" class="fill-slate-700" />
+          <path d="M 32 60 C 34 60 36 58 36 54 L 32 54 Z" class="fill-slate-800 opacity-40" />
+        </svg>
+      </div>
       <div header-center class="flex items-center gap-2">
         @if (!isConnected() && store.currentRoomMode() !== 'single') {
           <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg animate-pulse border border-red-500/30 font-bold whitespace-nowrap hidden sm:inline-block">Offline</span>
@@ -107,7 +130,7 @@
         <div class="relative flex-grow flex items-center justify-center min-h-0 w-full shrink py-2">
           
           <!-- Board -->
-          <div class="relative flex flex-col items-center justify-center w-full aspect-square bg-[var(--color-bg-card)] rounded-xl border-4 border-[var(--color-border-card)] shadow-2xl p-2 sm:p-4"
+          <div class="relative flex flex-col items-center justify-center w-full aspect-square bg-gradient-to-br from-amber-900/20 to-orange-900/20 rounded-xl border border-orange-500/20 shadow-[0_0_40px_rgba(245,158,11,0.1)] p-2 sm:p-4 backdrop-blur-sm"
                [style.maxWidth]="'min(100%, 600px, calc(100dvh - 300px))'">
             
             <div class="w-full h-full grid gap-1.5 sm:gap-2 lg:gap-3"
@@ -117,19 +140,93 @@
               @for (row of store.board(); track rIndex; let rIndex = $index) {
                 @for (cell of row; track cIndex; let cIndex = $index) {
                   <button 
-                    class="w-full h-full rounded-md sm:rounded-xl transition-all duration-300 relative overflow-hidden active:scale-90 touch-manipulation focus:outline-none"
-                    [class.bg-slate-800]="!cell"
-                    [class.shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]]="!cell"
-                    [class.bg-yellow-400]="cell"
-                    [class.shadow-[0_0_10px_rgba(250,204,21,0.5),inset_0_2px_4px_rgba(255,255,255,0.4)]]="cell"
-                    [class.sm:shadow-[0_0_20px_rgba(250,204,21,0.6),inset_0_2px_8px_rgba(255,255,255,0.4)]]="cell"
+                    class="group w-full h-full rounded-md sm:rounded-xl relative overflow-hidden active:scale-[0.95] touch-manipulation focus:outline-none flex items-center justify-center bg-slate-800/80 border border-slate-700/50 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] transition-transform duration-300"
                     (click)="store.toggle(rIndex, cIndex)"
                     [disabled]="store.status() !== 'playing' || store.isFinished()"
                   >
-                    <!-- Bulb Inner Glow -->
-                    <div class="absolute inset-1 rounded-full opacity-30"
-                         [class.bg-black]="!cell"
-                         [class.bg-yellow-100]="cell">
+                    <!-- ON State Background Layer (Animated Opacity) -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-400/30 shadow-[inset_0_0_15px_rgba(245,158,11,0.2),0_0_15px_rgba(245,158,11,0.15)] transition-opacity duration-500 ease-in-out pointer-events-none"
+                         [class.opacity-0]="!cell"
+                         [class.opacity-100]="cell">
+                    </div>
+
+                    <!-- Custom Illustrated Bulb Icon (Matches User Design perfectly) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" 
+                         class="relative z-10 w-[65%] h-[65%] transition-all duration-500 ease-in-out pointer-events-none select-none"
+                         [class.scale-75]="!cell"
+                         [class.opacity-60]="!cell"
+                         [class.scale-100]="cell"
+                         [class.opacity-100]="cell"
+                         [style.filter]="cell ? 'drop-shadow(0 0 8px rgba(251,191,36,0.5))' : 'none'">
+                         
+                      <defs>
+                        <radialGradient id="glassGlow-{{rIndex}}-{{cIndex}}" cx="50%" cy="40%" r="50%">
+                          <stop offset="0%" stop-color="#fef3c7" stop-opacity="1" />
+                          <stop offset="40%" stop-color="#fde68a" stop-opacity="0.8" />
+                          <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+                        </radialGradient>
+                      </defs>
+
+                      <!-- Outer glowing aura for ON state -->
+                      <circle cx="32" cy="22" r="22" class="fill-amber-400 blur-md transition-opacity duration-500" [class.opacity-30]="cell" [class.opacity-0]="!cell" />
+
+                      <!-- Bulb Glass -->
+                      <path d="M 32 4 A 18 18 0 0 0 14 22 C 14 31 22 36 25 42 L 39 42 C 42 36 50 31 50 22 A 18 18 0 0 0 32 4 Z" 
+                            class="transition-colors duration-500"
+                            stroke-width="1"
+                            [class.fill-slate-700]="!cell"
+                            [class.stroke-slate-600]="!cell"
+                            [class.fill-amber-400]="cell"
+                            [class.stroke-amber-500]="cell" />
+                      
+                      <!-- Inner Glow -->
+                      <path d="M 32 4 A 18 18 0 0 0 14 22 C 14 31 22 36 25 42 L 39 42 C 42 36 50 31 50 22 A 18 18 0 0 0 32 4 Z" 
+                            [attr.fill]="'url(#glassGlow-' + rIndex + '-' + cIndex + ')'" class="transition-opacity duration-500"
+                            [class.opacity-100]="cell" [class.opacity-0]="!cell" />
+
+                      <!-- Specular Highlight (Reflection) -->
+                      <path d="M 18 20 A 12 12 0 0 1 28 8" class="stroke-white transition-opacity duration-500" stroke-width="2" stroke-linecap="round" fill="none"
+                            [class.opacity-50]="cell" [class.opacity-10]="!cell" />
+
+                      <!-- Filament Posts -->
+                      <path d="M 29 42 L 29 28 M 35 42 L 35 28" 
+                            class="transition-colors duration-500"
+                            [class.stroke-amber-600]="cell" [class.stroke-slate-800]="!cell"
+                            stroke-width="1.5" stroke-linecap="round" />
+
+                      <!-- Filament Wire (3 Loops) -->
+                      <path d="M 29 28 L 30 21 L 31 25 L 32 21 L 33 25 L 34 21 L 35 28" 
+                            class="transition-all duration-500" fill="none"
+                            [class.stroke-amber-100]="cell" [class.stroke-slate-500]="!cell"
+                            [class.opacity-100]="cell" [class.opacity-40]="!cell"
+                            stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+
+                      <!-- Bulb Base (Screw part) -->
+                      <!-- Main metal cylinder -->
+                      <path d="M 25 42 L 39 42 L 37 54 L 27 54 Z" class="fill-slate-400" />
+                      
+                      <!-- Base Shadow -->
+                      <path d="M 39 42 L 37 54 L 32 54 L 32 42 Z" class="fill-slate-500 opacity-40" />
+
+                      <!-- Threads (Dark ridges) -->
+                      <path d="M 24 45 Q 32 48 40 45" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
+                      <path d="M 25 49 Q 32 52 39 49" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
+                      <path d="M 26 53 Q 32 56 38 53" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
+
+                      <!-- Bottom Contact (Black/Dark grey tip) -->
+                      <path d="M 28 54 L 36 54 C 36 58 34 60 32 60 C 30 60 28 58 28 54 Z" class="fill-slate-700" />
+                      <path d="M 32 60 C 34 60 36 58 36 54 L 32 54 Z" class="fill-slate-800 opacity-40" />
+
+                    </svg>
+
+                    <!-- Empty Cavity for OFF state -->
+                    <div class="absolute inset-1 rounded-full pointer-events-none transition-all duration-500 ease-in-out"
+                         [class.bg-black/40]="!cell"
+                         [class.scale-100]="!cell"
+                         [class.opacity-100]="!cell"
+                         [class.bg-black/0]="cell"
+                         [class.scale-125]="cell"
+                         [class.opacity-0]="cell">
                     </div>
                   </button>
                 }

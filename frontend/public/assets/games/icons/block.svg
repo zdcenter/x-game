@@ -5,104 +5,65 @@
     </pattern>
     <linearGradient id="b-orange" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#fbbf24" />
-      <stop offset="100%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#ea580c" />
     </linearGradient>
+    <g id="blk">
+      <!-- 3D drop shadow/bevel -->
+      <rect x="0" y="1" width="6" height="5.5" rx="1" fill="#7c2d12" />
+      <!-- Top surface -->
+      <rect x="0" y="0" width="6" height="5.5" rx="1" fill="url(#b-orange)" />
+      <!-- Top highlight -->
+      <rect x="0.5" y="0.5" width="5" height="4" rx="0.5" fill="none" stroke="#ffffff" stroke-width="0.3" stroke-opacity="0.5" />
+    </g>
     <filter id="b-shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000" flood-opacity="0.6"/>
     </filter>
   </defs>
 
   <g filter="url(#b-shadow)">
-    <!-- Board container -->
-    <rect x="13" y="4.5" width="73" height="73" rx="4" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+    <!-- Glassmorphic Board container -->
+    <rect x="13" y="4.5" width="73" height="73" rx="4" fill="#0f172a" fill-opacity="0.7" stroke="#334155" stroke-width="1.5" />
     <!-- Empty Cells -->
-    <rect x="15" y="6.5" width="69" height="69" fill="url(#grid)" />
+    <rect x="15" y="6.5" width="69" height="69" fill="url(#grid)" opacity="0.5" />
 
-    <!-- Placed Orange Blocks -->
-    <g fill="url(#b-orange)" stroke="#fcd34d" stroke-width="0.5">
+    <!-- Placed Orange Blocks (Using the 3D block definition) -->
+    <g>
       <!-- R9 -->
-      <rect x="15" y="69.5" width="6" height="6" rx="1" />
-      <rect x="22" y="69.5" width="6" height="6" rx="1" />
-      <rect x="29" y="69.5" width="6" height="6" rx="1" />
-      <rect x="36" y="69.5" width="6" height="6" rx="1" />
-      <rect x="43" y="69.5" width="6" height="6" rx="1" />
-      <rect x="50" y="69.5" width="6" height="6" rx="1" />
-      <rect x="57" y="69.5" width="6" height="6" rx="1" />
-      <rect x="64" y="69.5" width="6" height="6" rx="1" />
-      <rect x="71" y="69.5" width="6" height="6" rx="1" />
-      
+      <use href="#blk" x="15" y="69.5" /><use href="#blk" x="22" y="69.5" /><use href="#blk" x="29" y="69.5" />
+      <use href="#blk" x="36" y="69.5" /><use href="#blk" x="43" y="69.5" /><use href="#blk" x="50" y="69.5" />
+      <use href="#blk" x="57" y="69.5" /><use href="#blk" x="64" y="69.5" /><use href="#blk" x="71" y="69.5" />
       <!-- R8 -->
-      <rect x="15" y="62.5" width="6" height="6" rx="1" />
-      <rect x="22" y="62.5" width="6" height="6" rx="1" />
-      <rect x="29" y="62.5" width="6" height="6" rx="1" />
-      <rect x="36" y="62.5" width="6" height="6" rx="1" />
-      <rect x="43" y="62.5" width="6" height="6" rx="1" />
-      <rect x="50" y="62.5" width="6" height="6" rx="1" />
-      <rect x="64" y="62.5" width="6" height="6" rx="1" />
-      <rect x="71" y="62.5" width="6" height="6" rx="1" />
-      <rect x="78" y="62.5" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="15" y="62.5" /><use href="#blk" x="22" y="62.5" /><use href="#blk" x="29" y="62.5" />
+      <use href="#blk" x="36" y="62.5" /><use href="#blk" x="43" y="62.5" /><use href="#blk" x="50" y="62.5" />
+      <use href="#blk" x="64" y="62.5" /><use href="#blk" x="71" y="62.5" /><use href="#blk" x="78" y="62.5" />
       <!-- R7 -->
-      <rect x="22" y="55.5" width="6" height="6" rx="1" />
-      <rect x="29" y="55.5" width="6" height="6" rx="1" />
-      <rect x="36" y="55.5" width="6" height="6" rx="1" />
-      <rect x="43" y="55.5" width="6" height="6" rx="1" />
-      <rect x="50" y="55.5" width="6" height="6" rx="1" />
-      <rect x="57" y="55.5" width="6" height="6" rx="1" />
-      <rect x="64" y="55.5" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="22" y="55.5" /><use href="#blk" x="29" y="55.5" /><use href="#blk" x="36" y="55.5" />
+      <use href="#blk" x="43" y="55.5" /><use href="#blk" x="50" y="55.5" /><use href="#blk" x="57" y="55.5" /><use href="#blk" x="64" y="55.5" />
       <!-- R6 -->
-      <rect x="22" y="48.5" width="6" height="6" rx="1" />
-      <rect x="29" y="48.5" width="6" height="6" rx="1" />
-      <rect x="43" y="48.5" width="6" height="6" rx="1" />
-      <rect x="50" y="48.5" width="6" height="6" rx="1" />
-      <rect x="57" y="48.5" width="6" height="6" rx="1" />
-      <rect x="71" y="48.5" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="22" y="48.5" /><use href="#blk" x="29" y="48.5" /><use href="#blk" x="43" y="48.5" />
+      <use href="#blk" x="50" y="48.5" /><use href="#blk" x="57" y="48.5" /><use href="#blk" x="71" y="48.5" />
       <!-- R5 -->
-      <rect x="15" y="41.5" width="6" height="6" rx="1" />
-      <rect x="22" y="41.5" width="6" height="6" rx="1" />
-      <rect x="29" y="41.5" width="6" height="6" rx="1" />
-      <rect x="36" y="41.5" width="6" height="6" rx="1" />
-      <rect x="43" y="41.5" width="6" height="6" rx="1" />
-      <rect x="57" y="41.5" width="6" height="6" rx="1" />
-      <rect x="64" y="41.5" width="6" height="6" rx="1" />
-      <rect x="71" y="41.5" width="6" height="6" rx="1" />
-      <rect x="78" y="41.5" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="15" y="41.5" /><use href="#blk" x="22" y="41.5" /><use href="#blk" x="29" y="41.5" />
+      <use href="#blk" x="36" y="41.5" /><use href="#blk" x="43" y="41.5" /><use href="#blk" x="57" y="41.5" />
+      <use href="#blk" x="64" y="41.5" /><use href="#blk" x="71" y="41.5" /><use href="#blk" x="78" y="41.5" />
       <!-- R4 -->
-      <rect x="22" y="34.5" width="6" height="6" rx="1" />
-      <rect x="29" y="34.5" width="6" height="6" rx="1" />
-      <rect x="36" y="34.5" width="6" height="6" rx="1" />
-      <rect x="43" y="34.5" width="6" height="6" rx="1" />
-      <rect x="57" y="34.5" width="6" height="6" rx="1" />
-      <rect x="64" y="34.5" width="6" height="6" rx="1" />
-      <rect x="71" y="34.5" width="6" height="6" rx="1" />
-      <rect x="78" y="34.5" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="22" y="34.5" /><use href="#blk" x="29" y="34.5" /><use href="#blk" x="36" y="34.5" />
+      <use href="#blk" x="43" y="34.5" /><use href="#blk" x="57" y="34.5" /><use href="#blk" x="64" y="34.5" />
+      <use href="#blk" x="71" y="34.5" /><use href="#blk" x="78" y="34.5" />
       <!-- R3 -->
-      <rect x="22" y="27.5" width="6" height="6" rx="1" />
-      <rect x="43" y="27.5" width="6" height="6" rx="1" />
-      <rect x="57" y="27.5" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="22" y="27.5" /><use href="#blk" x="43" y="27.5" /><use href="#blk" x="57" y="27.5" />
       <!-- R2 -->
-      <rect x="43" y="20.5" width="6" height="6" rx="1" />
+      <use href="#blk" x="43" y="20.5" />
     </g>
 
     <!-- Bottom pieces (Hand) -->
-    <g fill="url(#b-orange)" stroke="#fcd34d" stroke-width="0.5">
+    <g>
       <!-- 3x1 -->
-      <rect x="19" y="84" width="6" height="6" rx="1" />
-      <rect x="26" y="84" width="6" height="6" rx="1" />
-      <rect x="33" y="84" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="19" y="84" /><use href="#blk" x="26" y="84" /><use href="#blk" x="33" y="84" />
       <!-- L shape -->
-      <rect x="47" y="80" width="6" height="6" rx="1" />
-      <rect x="54" y="80" width="6" height="6" rx="1" />
-      <rect x="54" y="87" width="6" height="6" rx="1" />
-
+      <use href="#blk" x="47" y="80" /><use href="#blk" x="54" y="80" /><use href="#blk" x="54" y="87" />
       <!-- 1x1 -->
-      <rect x="74" y="84" width="6" height="6" rx="1" />
+      <use href="#blk" x="74" y="84" />
     </g>
   </g>
 </svg>

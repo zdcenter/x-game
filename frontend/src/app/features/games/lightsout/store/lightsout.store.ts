@@ -14,7 +14,7 @@ export class LightsoutStore {
   readonly currentRoomMode = signal<string>('single');
   readonly roomId = signal<string>('');
   readonly hostId = signal<string>('');
-  readonly localStatus = signal<'waiting' | 'starting' | 'playing' | 'finished'>('waiting');
+  readonly localStatus = signal<'waiting' | 'starting' | 'playing' | 'finished'>('playing');
 
   private rawState = computed(() => this.ws.gameState());
   private me = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
@@ -196,7 +196,7 @@ export class LightsoutStore {
   private checkWin(board: boolean[][]): boolean {
     for (const row of board) {
       for (const cell of row) {
-        if (cell) return false;
+        if (cell) return false; // If any light is ON, haven't won yet
       }
     }
     return true;
@@ -204,6 +204,7 @@ export class LightsoutStore {
 
   private initSinglePlayerBoard(difficulty: string) {
     const s = difficulty === 'easy' ? 4 : difficulty === 'hard' ? 6 : 5;
+    // Start with all lights OFF, then randomize, to ensure it's solvable to an all-OFF state
     const board: boolean[][] = Array(s).fill(null).map(() => Array(s).fill(false));
     
     // Reverse random clicks
@@ -221,6 +222,6 @@ export class LightsoutStore {
 
     this.localBoard.set(board);
     this.localMoves.set(0);
-    this.localStatus.set('waiting');
+    this.localStatus.set('playing');
   }
 }
