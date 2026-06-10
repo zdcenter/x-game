@@ -46,7 +46,6 @@ import { CommonModule } from '@angular/common';
     }
     .glass-tube {
       box-shadow: inset 0 -4px 10px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
-      backdrop-filter: blur(2px);
     }
     .dark .glass-tube {
       box-shadow: inset 0 -4px 10px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.4);

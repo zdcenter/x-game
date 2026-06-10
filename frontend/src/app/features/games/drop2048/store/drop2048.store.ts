@@ -337,7 +337,7 @@ export class Drop2048Store {
     
     if (nc >= 0 && nc < this.COLS) {
       this.activeBlock.set({ ...curr, c: nc });
-      this.audio.playClick();
+      this.audio.playDrop2048('move');
     }
   }
 
@@ -365,7 +365,7 @@ export class Drop2048Store {
     const newBlock: DropBlock = { id: curr.id, val: curr.val, r: targetR, c: curr.c, isNew: true };
     this.board.update(b => [...b, newBlock]);
     
-    this.audio.playDrop();
+    this.audio.playDrop2048('drop');
     if (navigator.vibrate) navigator.vibrate(10); // Light haptic
 
     // Start merge checking cycle
@@ -442,7 +442,7 @@ export class Drop2048Store {
       }
       
       // Pitch up audio based on combo
-      this.audio.playClear(); 
+      this.audio.playDrop2048('merge', comboCount); 
       
       // Show combo text & particles
       if (comboCount > 0) {

@@ -14,6 +14,7 @@ import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-p
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameService } from '../../../core/services/game.service';
+import { AudioService } from '../../../core/services/audio.service';
 
 @Component({
   selector: 'app-gomoku',
@@ -32,6 +33,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   store = inject(GomokuStore);
   gameTimer = inject(GameTimerService);
   gameService = inject(GameService);
+  audio = inject(AudioService);
   
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
@@ -53,6 +55,11 @@ export class GomokuComponent implements OnInit, OnDestroy {
       
       // Delay result overlay so players can see the winning line
       if (status === 'finished') {
+        if (this.gameStatus().winner && this.gameStatus().winner !== 'tie') {
+          this.audio.playGomoku('stoneWin');
+        } else if (this.gameStatus().winner === 'tie') {
+          this.audio.playLose(); // fallback for tie or surrender
+        }
         setTimeout(() => this.showResultOverlay.set(true), 2000);
       } else {
         this.showResultOverlay.set(false);

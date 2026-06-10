@@ -3,6 +3,7 @@ export type TetrisGameStatus = 'waiting' | 'starting' | 'playing' | 'finished' |
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
+import { AudioService } from '../../../../core/services/audio.service';
 import { getEmptyGrid, Piece, rotateMatrix, Tetromino, TETROMINO_SHAPES, TETRIS_COLS, TETRIS_ROWS } from '../models/tetris.model';
 import { PRNG } from '../../../../core/utils/prng';
 
@@ -21,6 +22,7 @@ export class TetrisStore {
   gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
   private authStore = inject(AuthStore);
+  private audio = inject(AudioService);
 
   // Connection & Room state
   status = computed(() => {
@@ -275,6 +277,7 @@ export class TetrisStore {
     if (!p) return;
     if (!this.checkCollision(p.x - 1, p.y, p.shape, this.grid())) {
       this.currentPiece.update(curr => ({ ...curr!, x: curr!.x - 1 }));
+      this.audio.playTetris('move');
     }
   }
 
@@ -283,6 +286,7 @@ export class TetrisStore {
     if (!p) return;
     if (!this.checkCollision(p.x + 1, p.y, p.shape, this.grid())) {
       this.currentPiece.update(curr => ({ ...curr!, x: curr!.x + 1 }));
+      this.audio.playTetris('move');
     }
   }
 
@@ -292,6 +296,7 @@ export class TetrisStore {
     const rotated = rotateMatrix(p.shape);
     if (!this.checkCollision(p.x, p.y, rotated, this.grid())) {
       this.currentPiece.update(curr => ({ ...curr!, shape: rotated }));
+      this.audio.playTetris('rotate');
     }
   }
 
@@ -315,6 +320,7 @@ export class TetrisStore {
       this.score.update(s => s + 2);
     }
     this.currentPiece.update(curr => ({ ...curr!, y }));
+    this.audio.playTetris('land');
     this.lockPiece();
   }
 
@@ -367,6 +373,7 @@ export class TetrisStore {
       this.score.update(s => s + lineScores[linesCleared] * this.level());
       this.level.set(Math.floor(this.lines() / 10) + 1);
       this.updateDropSpeed();
+      this.audio.playTetris('clear');
 
       if (this.mode() === 'pk_attack' && linesCleared >= 2) {
         // Send garbage (1 line for 2 lines, 2 for 3, 4 for Tetris)

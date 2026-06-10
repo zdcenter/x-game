@@ -11,7 +11,8 @@ import { SokobanStore } from '../../store/sokoban.store';
          (touchstart)="onTouchStart($event)"
          (touchend)="onTouchEnd($event)">
       
-      <div class="grid relative shadow-[0_10px_30px_rgba(0,0,0,0.5)] bg-sky-200/50"
+      <div class="grid relative bg-[#3b82f6]"
+           style="box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 4px 4px 10px rgba(0,0,0,0.6), inset -2px -2px 5px rgba(255,255,255,0.2); background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' width=\'60\' height=\'60\'%3E%3Cline x1=\'0\' y1=\'25\' x2=\'100\' y2=\'25\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'0\' y1=\'50\' x2=\'100\' y2=\'50\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'0\' y1=\'75\' x2=\'100\' y2=\'75\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'50\' y1=\'0\' x2=\'50\' y2=\'25\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'25\' y1=\'25\' x2=\'25\' y2=\'50\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'75\' y1=\'25\' x2=\'75\' y2=\'50\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'50\' y1=\'50\' x2=\'50\' y2=\'75\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'25\' y1=\'75\' x2=\'25\' y2=\'100\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'75\' y1=\'75\' x2=\'75\' y2=\'100\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3C/svg%3E');"
            [style.grid-template-columns]="'repeat(' + cols() + ', minmax(0, 1fr))'"
            [style.grid-template-rows]="'repeat(' + rows() + ', minmax(0, 1fr))'"
            [style.width]="boardWidth()"
@@ -19,12 +20,13 @@ import { SokobanStore } from '../../store/sokoban.store';
         
         @for (row of store.myBoard(); track $index; let r = $index) {
           @for (cell of row; track $index; let c = $index) {
-            <div class="flex items-center justify-center w-full h-full relative" [ngClass]="getCellClass(cell)">
+            <div class="flex items-center justify-center w-full h-full relative"
+                 [ngClass]="getFloorClass(r, c)">
               
               @if (cell === '#') {
                 <!-- Grey/White Brick Wall -->
                 <div class="absolute inset-0 bg-[#cbd5e1] z-10"
-                     style="box-shadow: inset 4px 4px 0px rgba(255,255,255,0.9), inset -4px -4px 0px rgba(71,85,105,0.9), 4px 4px 8px rgba(0,0,0,0.7);">
+                     [ngStyle]="getWallStyle(r, c)">
                   <svg class="w-full h-full opacity-40 absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <line x1="0" y1="25" x2="100" y2="25" stroke="#334155" stroke-width="3"/>
                     <line x1="0" y1="50" x2="100" y2="50" stroke="#334155" stroke-width="3"/>
@@ -38,23 +40,6 @@ import { SokobanStore } from '../../store/sokoban.store';
                     <line x1="75" y1="75" x2="75" y2="100" stroke="#334155" stroke-width="3"/>
                   </svg>
                 </div>
-              } @else {
-                <!-- Blue Brick Floor -->
-                <div class="absolute inset-0 bg-[#3b82f6] z-0"
-                     style="box-shadow: inset 4px 4px 10px rgba(0,0,0,0.6), inset -2px -2px 5px rgba(255,255,255,0.2);">
-                  <svg class="w-full h-full opacity-50 absolute inset-0 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <line x1="0" y1="25" x2="100" y2="25" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="0" y1="50" x2="100" y2="50" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="0" y1="75" x2="100" y2="75" stroke="#1e3a8a" stroke-width="3"/>
-                    
-                    <line x1="50" y1="0" x2="50" y2="25" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="25" y1="25" x2="25" y2="50" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="75" y1="25" x2="75" y2="50" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="50" y1="50" x2="50" y2="75" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="25" y1="75" x2="25" y2="100" stroke="#1e3a8a" stroke-width="3"/>
-                    <line x1="75" y1="75" x2="75" y2="100" stroke="#1e3a8a" stroke-width="3"/>
-                  </svg>
-                </div>
               }
 
               @if (cell === '.' || cell === '*' || cell === '+') {
@@ -66,21 +51,21 @@ import { SokobanStore } from '../../store/sokoban.store';
 
               @if (cell === '$' || cell === '*') {
                 <!-- Box -->
-                <div class="w-[85%] h-[85%] bg-[#fef08a] relative flex items-center justify-center z-20"
-                     [ngClass]="{'shadow-[0_0_20px_rgba(34,197,94,0.8)] bg-[#fde047]': cell === '*'}"
-                     style="box-shadow: inset 3px 3px 0px rgba(255,255,255,0.9), inset -3px -3px 0px rgba(202,138,4,0.9), 3px 3px 6px rgba(0,0,0,0.6);">
-                  <!-- Green X and border -->
-                  <div class="absolute inset-0 m-[3px] border-[3px] border-[#166534] flex items-center justify-center">
+                <div class="w-[85%] h-[85%] relative flex items-center justify-center z-20 transition-all duration-300"
+                     [ngStyle]="getBoxStyle(cell)">
+                  <!-- Inner Border and X -->
+                  <div class="absolute inset-0 m-[3px] border-[3px] flex items-center justify-center transition-colors duration-300"
+                       [ngClass]="cell === '*' ? 'border-white' : 'border-[#166534]'">
                     <svg width="100%" height="100%" viewBox="0 0 100 100">
-                      <line x1="0" y1="0" x2="100" y2="100" stroke="#166534" stroke-width="15"/>
-                      <line x1="100" y1="0" x2="0" y2="100" stroke="#166534" stroke-width="15"/>
+                      <line x1="0" y1="0" x2="100" y2="100" stroke-width="15" [attr.stroke]="cell === '*' ? 'white' : '#166534'" class="transition-colors duration-300"/>
+                      <line x1="100" y1="0" x2="0" y2="100" stroke-width="15" [attr.stroke]="cell === '*' ? 'white' : '#166534'" class="transition-colors duration-300"/>
                     </svg>
                   </div>
-                  <!-- Red Dots -->
-                  <div class="absolute top-[2px] left-[2px] w-[18%] h-[18%] bg-red-600 rounded-full"></div>
-                  <div class="absolute top-[2px] right-[2px] w-[18%] h-[18%] bg-red-600 rounded-full"></div>
-                  <div class="absolute bottom-[2px] left-[2px] w-[18%] h-[18%] bg-red-600 rounded-full"></div>
-                  <div class="absolute bottom-[2px] right-[2px] w-[18%] h-[18%] bg-red-600 rounded-full"></div>
+                  <!-- Corner Dots -->
+                  <div class="absolute top-[2px] left-[2px] w-[18%] h-[18%] rounded-full transition-colors duration-300" [ngClass]="cell === '*' ? 'bg-yellow-300' : 'bg-red-600'"></div>
+                  <div class="absolute top-[2px] right-[2px] w-[18%] h-[18%] rounded-full transition-colors duration-300" [ngClass]="cell === '*' ? 'bg-yellow-300' : 'bg-red-600'"></div>
+                  <div class="absolute bottom-[2px] left-[2px] w-[18%] h-[18%] rounded-full transition-colors duration-300" [ngClass]="cell === '*' ? 'bg-yellow-300' : 'bg-red-600'"></div>
+                  <div class="absolute bottom-[2px] right-[2px] w-[18%] h-[18%] rounded-full transition-colors duration-300" [ngClass]="cell === '*' ? 'bg-yellow-300' : 'bg-red-600'"></div>
                 </div>
               }
 
@@ -147,8 +132,51 @@ export class SokobanBoardComponent {
   private touchStartX = 0;
   private touchStartY = 0;
 
-  getCellClass(cell: string): string {
-    return 'bg-transparent';
+  getFloorClass(r: number, c: number): string {
+    return (r + c) % 2 === 0 ? 'bg-white/5' : 'bg-black/10';
+  }
+
+  getWallStyle(r: number, c: number) {
+    const board = this.store.myBoard();
+    const rowStr = board[r] || '';
+    const topStr = board[r - 1] || '';
+    const bottomStr = board[r + 1] || '';
+
+    const isTopOuter = r === 0 || topStr[c] !== '#';
+    const isBottomOuter = r === board.length - 1 || bottomStr[c] !== '#';
+    const isLeftOuter = c === 0 || rowStr[c - 1] !== '#';
+    const isRightOuter = c === rowStr.length - 1 || rowStr[c + 1] !== '#';
+    
+    const shadows = [];
+    
+    if (isTopOuter) shadows.push('inset 0 4px 0px rgba(255,255,255,0.9)');
+    if (isLeftOuter) shadows.push('inset 4px 0 0px rgba(255,255,255,0.9)');
+    if (isBottomOuter) shadows.push('inset 0 -4px 0px rgba(71,85,105,0.9)');
+    if (isRightOuter) shadows.push('inset -4px 0 0px rgba(71,85,105,0.9)');
+    
+    if (isBottomOuter || isRightOuter) {
+      shadows.push('4px 4px 6px rgba(0,0,0,0.6)');
+    }
+
+    return {
+      'box-shadow': shadows.join(', ')
+    };
+  }
+
+  getBoxStyle(cell: string) {
+    if (cell === '*') {
+      // Box on target: Bright Green box, intense green glow
+      return {
+        'background-color': '#22c55e', // green-500
+        'box-shadow': 'inset 3px 3px 0px rgba(255,255,255,0.8), inset -3px -3px 0px rgba(20,83,45,0.8), 0 0 20px 5px rgba(34,197,94,0.9)'
+      };
+    } else {
+      // Normal box: Yellow box, normal drop shadow
+      return {
+        'background-color': '#fef08a', // yellow-200
+        'box-shadow': 'inset 3px 3px 0px rgba(255,255,255,0.9), inset -3px -3px 0px rgba(202,138,4,0.9), 3px 3px 6px rgba(0,0,0,0.6)'
+      };
+    }
   }
 
   @HostListener('window:keydown', ['$event'])

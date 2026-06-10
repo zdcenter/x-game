@@ -101,7 +101,7 @@ export class GomokuStore {
       if (state && state.board && this.gameStatus().status === 'playing') {
         const turn = state.currentTurn || '';
         if (lastTurn && turn && turn !== lastTurn) {
-          this.audio.playDrop();
+          this.audio.playGomoku('stoneDrop');
         }
         lastTurn = turn;
       }
@@ -211,7 +211,7 @@ export class GomokuStore {
       currentB[y][x] = this.playerColors()[this.myPlayerId()];
       this.localBoard.set([...currentB]);
       this.localLastMove.set([y, x]);
-      this.audio.playDrop();
+      this.audio.playGomoku('stoneDrop');
       
       if (this.checkWin(y, x, currentB[y][x])) {
         this.localWinningLine.set(this.checkWin(y, x, currentB[y][x]));
@@ -238,7 +238,7 @@ export class GomokuStore {
             aiB[aiY][aiX] = this.playerColors()['AI'];
             this.localBoard.set([...aiB]);
             this.localLastMove.set([aiY, aiX]);
-            this.audio.playDrop();
+            this.audio.playGomoku('stoneDrop');
             
             if (this.checkWin(aiY, aiX, aiB[aiY][aiX])) {
               this.localWinningLine.set(this.checkWin(aiY, aiX, aiB[aiY][aiX]));

@@ -180,9 +180,9 @@
         }
 
         <!-- Result Overlay -->
-        @if (store.status() === 'finished') {
+        @if (store.status() === 'finished' && showOverlay()) {
         <app-game-result-overlay currentGameId="minesweeper" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
-          [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()"
+          [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()" [disableAudio]="true"
           [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
           [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
           [showLeave]="currentRoomMode() === 'single' || store.host() !== playerId" (leave)="goBack()"

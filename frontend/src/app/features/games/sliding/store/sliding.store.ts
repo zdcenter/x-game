@@ -106,9 +106,9 @@ export class SlidingStore {
     effect(() => {
       const s = this.status();
       if (s === GameStatus.Finished) {
-        this.audio.playWin();
+        this.audio.playPuzzle('success');
       } else if (s === GameStatus.Starting) {
-        this.audio.playClick();
+        this.audio.playPuzzle('move');
       }
     });
   }
@@ -172,7 +172,7 @@ export class SlidingStore {
     if (this.currentMode() === 'single') {
       const le = this.localEngine();
       if (le && le.move(idx)) {
-        this.audio.playClick(); // optional, but good for feedback
+        this.audio.playPuzzle('move'); // optional, but good for feedback
         le.saveToStorage(this.currentDifficulty());
         
         // Submit stat if finished
@@ -196,7 +196,7 @@ export class SlidingStore {
       }
     } else {
       this.ws.send({ type: 'game_action', action: 'move', idx });
-      this.audio.playClick(); // Optimistic audio
+      this.audio.playPuzzle('move'); // Optimistic audio
     }
   }
 

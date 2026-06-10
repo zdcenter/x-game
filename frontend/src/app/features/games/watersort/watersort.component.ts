@@ -17,6 +17,7 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { AudioService } from '../../../core/services/audio.service';
 
 @Component({
   selector: 'app-watersort',
@@ -270,7 +271,7 @@ import { ToastService } from '../../../core/services/toast.service';
   `]
 })
 export class WatersortComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  @ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
+@ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
   @ViewChildren('tubeElements', { read: ElementRef }) tubeElements!: QueryList<ElementRef>;
   public i18n = inject(I18nService);
   public _store = inject(WatersortStore);
@@ -278,6 +279,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   public timerService = inject(GameTimerService);
   private router = inject(Router);
   private toastService = inject(ToastService);
+  private audioService = inject(AudioService);
   
   showRules = signal(false);
 
@@ -531,6 +533,8 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
         if (this.pouringState) this.pouringState.step = 'pouring';
         this.cdr.markForCheck();
         
+        this.audioService.playWaterSort('pour');
+
         // Trigger actual state change so liquid level changes
         this._store.pour(fromIndex, toIndex);
 
@@ -542,6 +546,10 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
           // Step 4: done
           setTimeout(() => {
             if (this.pouringState?.step === 'returning') {
+              const toTube = this.myTubes()[toIndex];
+              if (toTube && toTube.colors.length === 4 && toTube.colors.every((c: string) => c === toTube.colors[0])) {
+                this.audioService.playWaterSort('bottle_full');
+              }
               this.pouringState = null;
               this.cdr.markForCheck();
             }
@@ -559,13 +567,17 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       const tube = this.myTubes()[index];
       if (tube && tube.colors.length > 0) {
         this.selectedTubeIndex = index;
+        this.audioService.playWaterSort('clink');
       }
     } else {
       if (this.selectedTubeIndex !== index) {
         if (this.isValidPour(this.selectedTubeIndex, index)) {
           this.triggerPourAnimation(this.selectedTubeIndex, index);
-          // this._store.pour(this.selectedTubeIndex, index); // Handled in triggerPourAnimation
+        } else {
+          this.audioService.playWaterSort('clink'); // Play clink on deselect/invalid target
         }
+      } else {
+        this.audioService.playWaterSort('clink'); // Play clink on deselecting same tube
       }
       this.selectedTubeIndex = null;
     }

@@ -177,9 +177,9 @@ export class HexaStore {
       
       // Play sound effects
       if (result.linesCleared > 0) {
-        this.audio.playClear();
+        this.audio.playBlock('clear');
       } else {
-        this.audio.playDrop();
+        this.audio.playBlock('place');
       }
 
       // Replace the used piece with a new one

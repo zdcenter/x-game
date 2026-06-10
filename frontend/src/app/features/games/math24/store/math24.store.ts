@@ -172,7 +172,7 @@ export class Math24Store {
     this.boardHistory.update(h => [...h, next]);
     this.boardCards.set(next);
 
-    this.audio.playClick();
+    this.audio.playMath24('flip');
 
     if (next.length === 1) {
       this.checkWin(next[0]);
@@ -186,7 +186,7 @@ export class Math24Store {
       history.pop();
       this.boardHistory.set([...history]);
       this.boardCards.set(history[history.length - 1]);
-      this.audio.playClick();
+      this.audio.playMath24('flip');
     }
   }
 
@@ -196,7 +196,7 @@ export class Math24Store {
     // For 24 Game, we usually want exactly 24.
     // Floating point precision issue workaround:
     if (Math.abs(finalCard.value - 24) < 0.0001) {
-      this.audio.playWin();
+      this.audio.playMath24('correct');
       if (this.currentMode() === 'single') {
         this.stopTimer();
         this.localStatus.set('finished');
@@ -220,7 +220,7 @@ export class Math24Store {
         });
       }
     } else {
-      this.audio.playExplosion(); // Error sound
+      this.audio.playMath24('error'); // Error sound
       if (this.currentMode() !== 'single') {
         this.ws.send({
           type: 'action',

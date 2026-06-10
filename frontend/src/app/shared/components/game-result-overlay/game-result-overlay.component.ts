@@ -124,8 +124,8 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() subtitle?: string;
   @Input() promptText?: string;
   @Input() stats?: { label: string, value: string | number }[];
-
   @Input() showNextLevel = false;
+  @Input() disableAudio: boolean = false;
   @Input() showRestart = false;
   @Input() showCancel = false;
   @Input() showDismiss = false;
@@ -187,7 +187,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   // Play effect only once per component lifecycle to avoid double-playing
   private playEffect() {
-    if (this.audioPlayed) return;
+    if (this.audioPlayed || this.disableAudio) return;
     this.audioPlayed = true;
 
     if (this.status === 'win') {

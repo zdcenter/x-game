@@ -101,7 +101,7 @@ export class BlockStore {
           const delay = Math.max(0, st.globalStartAt - Date.now());
           this.timer.startCountdown();
           setTimeout(() => {
-            this.audio.playClick();
+            this.audio.playBlock('error');
             this.startLocalGame(st.seed);
           }, delay);
         }
@@ -224,9 +224,9 @@ export class BlockStore {
     if (linesCleared > 0) {
       // 1 line = 20, 2 lines = 40, 3 lines = 80, 4 lines = 160... (exponential doubling)
       points += 20 * Math.pow(2, linesCleared - 1);
-      this.audio.playClear();
+      this.audio.playBlock('clear');
     } else {
-      this.audio.playDrop();
+      this.audio.playBlock('place');
     }
 
     this.localScore.update(s => s + points);
@@ -274,7 +274,7 @@ export class BlockStore {
 
     if (!canPlaceAny && hand.some(s => s !== null)) {
       this.isDead.set(true);
-      this.audio.playLose();
+      // gameover sound handled elsewhere, or keep it out if GameResultOverlay does it
       if (this.currentMode() !== 'single') {
         this.ws.send({ action: 'game_over', score: this.localScore(), matrix: this.localBoard() });
       } else {

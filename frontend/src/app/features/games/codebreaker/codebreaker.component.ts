@@ -302,7 +302,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
       }));
       // Show overlay
       this.hintResult.set({ pos: result.pos, val: result.val });
-      this.audio.playClick();
+      this.audio.playPuzzle('guess');
     } else {
       this.toastService.show(this.i18n.t(result.message || '')() || 'No hint available', 'info');
     }

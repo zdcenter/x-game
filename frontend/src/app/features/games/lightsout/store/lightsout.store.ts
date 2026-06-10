@@ -1,11 +1,13 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
+import { AudioService } from '../../../../core/services/audio.service';
 
 @Injectable()
 export class LightsoutStore {
   private ws = inject(WebSocketService);
   private authStore = inject(AuthStore);
+  private audio = inject(AudioService);
 
   // Local State for Single Player Mode
   readonly localBoard = signal<boolean[][]>([]);
@@ -161,12 +163,15 @@ export class LightsoutStore {
       this.toggleCell(board, s, row, col);
       this.localBoard.set(board);
       this.localMoves.update(m => m + 1);
+      this.audio.playPuzzle('toggle');
 
       if (this.checkWin(board)) {
         this.localStatus.set('finished');
+        this.audio.playPuzzle('success');
       }
     } else {
       this.ws.send({ action: 'toggle', row, col });
+      this.audio.playPuzzle('toggle');
     }
   }
 

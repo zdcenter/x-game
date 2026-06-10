@@ -294,7 +294,7 @@ export class SudokuStore {
     const cell = b[sel.r][sel.c];
     if (cell.fixed) return;
 
-    this.audio.playClick();
+    this.audio.playSudoku('input');
 
     if (this.currentMode() === 'pk_steal') {
       const myPlayer = this.players()[this.playerId()];
@@ -361,7 +361,7 @@ export class SudokuStore {
 
     const targetVal = parseInt(solution[sel.r * 9 + sel.c], 10);
     
-    this.audio.playClick();
+    this.audio.playSudoku('success');
     this.saveHistory();
     
     const newB = this.board();
@@ -399,7 +399,7 @@ export class SudokuStore {
     const cell = b[sel.r][sel.c];
     if (cell.fixed) return;
 
-    this.audio.playClick();
+    this.audio.playSudoku('clear');
 
     if (this.currentMode() === 'pk_steal') {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
@@ -418,7 +418,7 @@ export class SudokuStore {
     if (this.isFinished()) return;
     if (this.currentMode() === 'pk_steal') return;
 
-    this.audio.playClick();
+    this.audio.playSudoku('clear');
     this.saveHistory();
 
     const b = this.board();
@@ -440,7 +440,7 @@ export class SudokuStore {
     if (this.currentMode() === 'pk_steal') return;
     if (this.history.length === 0) return;
 
-    this.audio.playClick();
+    this.audio.playSudoku('input');
 
     const prevState = this.history.pop()!;
     this.board.set(prevState.board);

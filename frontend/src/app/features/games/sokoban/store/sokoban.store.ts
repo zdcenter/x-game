@@ -4,6 +4,7 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { LocalSokobanEngine } from './local-sokoban-engine';
 import { environment } from '../../../../../environments/environment';
+import { AudioService } from '../../../../core/services/audio.service';
 
 export interface SokobanPlayerState {
   id: string;
@@ -25,6 +26,7 @@ export class SokobanStore {
   private ws = inject(WebSocketService);
   private auth = inject(AuthStore);
   private http = inject(HttpClient);
+  private audio = inject(AudioService);
 
   roomId = signal('');
   currentRoomMode = signal('single');
@@ -125,6 +127,7 @@ export class SokobanStore {
       const saved = LocalSokobanEngine.loadFromStorage();
       if (saved) {
         this.localDifficulty.set(saved.difficulty);
+        saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
         this.localEngine.set(saved.engine);
         this.fetchLevelsAndLoad(saved.difficulty, saved.engine.levelStr, true);
       } else {
@@ -141,10 +144,12 @@ export class SokobanStore {
     
     const saved = LocalSokobanEngine.loadFromStorage(levelId);
     if (saved && saved.engine) {
+      saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(saved.engine);
       this.fetchLevelsAndLoad(difficulty, saved.engine.levelStr, true);
     } else {
       const newEngine = new LocalSokobanEngine(levelId, difficulty, puzzle);
+      newEngine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(newEngine);
       newEngine.saveToStorage();
       this.fetchLevelsAndLoad(difficulty, puzzle, true);
@@ -247,6 +252,7 @@ export class SokobanStore {
     const saved = LocalSokobanEngine.loadFromStorage(id);
     if (saved && saved.engine) {
       this.currentLevelId.set(id);
+      saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(saved.engine);
       this.localDifficulty.set(saved.difficulty);
       return;
@@ -254,9 +260,10 @@ export class SokobanStore {
 
     this.http.get<any>(`${environment.apiUrl}/sokoban/puzzle/${id}`).subscribe(res => {
       this.currentLevelId.set(res.puzzle.id);
-      const engine = new LocalSokobanEngine(res.puzzle.id, this.localDifficulty(), res.puzzle.puzzle);
-      this.localEngine.set(engine);
-      engine.saveToStorage();
+      const newEngine = new LocalSokobanEngine(res.puzzle.id, this.localDifficulty(), res.puzzle.puzzle);
+      newEngine.onSound = (sound) => this.audio.playSokoban(sound);
+      this.localEngine.set(newEngine);
+      newEngine.saveToStorage();
     });
   }
 

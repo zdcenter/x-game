@@ -106,7 +106,7 @@ export class CodebreakerStore {
       if (myGuesses.length > lastGuessCount) {
         const last = myGuesses[myGuesses.length - 1];
         if (last.a === this.digitLength()) {
-          this.audio.playWin();
+          this.audio.playPuzzle('success');
           // Log stats on win
           if (this.singlePlayerMode) {
             this.statsService.submitStat('codebreaker', {
@@ -118,7 +118,7 @@ export class CodebreakerStore {
             }).subscribe();
           }
         } else {
-          this.audio.playDrop(); // play a neutral feedback sound
+          this.audio.playPuzzle('error'); // play a neutral feedback sound
         }
         lastGuessCount = myGuesses.length;
       }

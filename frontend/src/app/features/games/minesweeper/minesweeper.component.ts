@@ -144,6 +144,24 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       });
     });
 
+    effect((onCleanup) => {
+      const status = this.store.status();
+      if (status === GameStatus.Finished) {
+        if (this.isDefeat()) {
+           this.audioService.playMinesweeper('explosion');
+        } else {
+           this.audioService.playMinesweeper('win');
+        }
+        
+        const timer = setTimeout(() => {
+          this.showOverlay.set(true);
+        }, 1500); // 1.5 seconds delay
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
+
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'minesweeper',
       getCurrentMode: () => this.currentRoomMode(),
@@ -155,6 +173,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   elapsedTime = signal<string>('00:00');
   private elapsedInterval: any;
+  
+  showOverlay = signal(false);
 
   override ngOnInit() {
     super.ngOnInit(); // connects lobby WS

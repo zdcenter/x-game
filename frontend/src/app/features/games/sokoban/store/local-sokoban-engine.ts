@@ -8,10 +8,13 @@ export class LocalSokobanEngine {
   levelStr: string;
 
   levelId: string;
+  onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void;
 
-  constructor(levelId: string, difficulty: string, levelStr: string, existingData?: any) {
+  constructor(levelId: string, difficulty: string, levelStr: string, existingData?: any, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void) {
     this.levelId = levelId;
     this.difficulty = difficulty;
+    this.levelStr = levelStr;
+    this.onSound = onSound;
     this.levelStr = levelStr;
     
     if (existingData && existingData.levelStr === levelStr) {
@@ -106,13 +109,17 @@ export class LocalSokobanEngine {
 
     const targetCell = this.board[nr][nc];
 
-    if (targetCell === '#') return;
+    if (targetCell === '#') {
+      if (this.onSound) this.onSound('bump');
+      return;
+    }
 
     if (targetCell === ' ' || targetCell === '.') {
       this.history.push(this.copyBoard(this.board));
       this.moves++;
       this.board[nr][nc] = this.movePlayer(targetCell);
       this.board[pr][pc] = this.leaveCell(this.board[pr][pc]);
+      if (this.onSound) this.onSound('move');
       this.checkWin();
       this.saveToStorage();
       return;
@@ -131,9 +138,17 @@ export class LocalSokobanEngine {
         this.board[nnr][nnc] = this.pushBox(pushCell);
         this.board[nr][nc] = this.movePlayer(this.leaveCell(targetCell));
         this.board[pr][pc] = this.leaveCell(this.board[pr][pc]);
+        
+        if (this.onSound) {
+          if (pushCell === '.') this.onSound('target');
+          else this.onSound('push');
+        }
+
         this.checkWin();
         this.saveToStorage();
         return;
+      } else {
+        if (this.onSound) this.onSound('bump');
       }
     }
   }
