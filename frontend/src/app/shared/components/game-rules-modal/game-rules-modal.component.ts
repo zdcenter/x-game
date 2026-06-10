@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -37,7 +37,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
                class="flex items-center justify-between p-5 border-b border-[var(--color-border-card)] 
                       lg:cursor-move lg:active:cursor-grabbing hover:bg-[var(--color-border-card)]/30 transition-colors">
             <h3 class="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-              📖 <ng-container i18n="@@game.rules.title">game.rules.title</ng-container>
+              📖 {{ i18n.t('game.rules.title')() }}
             </h3>
             <button (click)="closed.emit()"
                     class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] z-10">
@@ -63,7 +63,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
           <div class="p-4 border-t border-[var(--color-border-card)]">
             <button (click)="closed.emit()"
                     class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95">
-              <ng-container i18n="@@game.rules.got_it">game.rules.got_it</ng-container>
+              {{ i18n.t('game.rules.got_it')() }}
             </button>
           </div>
         </div>
@@ -80,10 +80,21 @@ export class GameRulesModalComponent implements OnChanges {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
 
-  private rulesMarkdown = signal('');
-  parsedRulesHTML = signal<SafeHtml>('');
+  private rawGameRules = signal<string | null>(null);
 
   private loaded = false;
+
+  parsedRulesHTML = computed(() => {
+    const rawRules = this.rawGameRules();
+    if (rawRules === null) {
+      return this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string);
+    }
+    if (rawRules === 'NOT_FOUND') {
+      return this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string);
+    }
+    const md = getLocalizedField(rawRules, this.i18n.currentLang());
+    return this.sanitizer.bypassSecurityTrustHtml(marked.parse(md, { async: false }) as string);
+  });
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isOpen'] && this.isOpen && !this.loaded) {
@@ -92,15 +103,12 @@ export class GameRulesModalComponent implements OnChanges {
   }
 
   private loadRules() {
-    this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string));
     this.gameService.getGames().subscribe(games => {
       const game = games.find(g => g.id === this.gameId);
       if (game) {
-        const md = getLocalizedField(game.rules, this.i18n.currentLang());
-        this.rulesMarkdown.set(md);
-        this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(md, { async: false }) as string));
+        this.rawGameRules.set(game.rules);
       } else {
-        this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string));
+        this.rawGameRules.set('NOT_FOUND');
       }
       this.loaded = true;
     });

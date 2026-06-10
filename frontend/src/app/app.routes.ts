@@ -95,6 +95,11 @@ export const routes: Routes = [
         data: { seo: { titleKey: 'app.title.watersort', descKey: 'app.title.watersort.desc', keywordsKey: 'app.title.watersort' } }
       },
       {
+        path: 'games/sokoban',
+        loadComponent: () => import('./features/games/sokoban/sokoban.component').then(m => m.SokobanComponent),
+        data: { seo: { titleKey: 'app.title.sokoban', descKey: 'app.title.sokoban.desc', keywordsKey: 'seo.default.keywords' } }
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }

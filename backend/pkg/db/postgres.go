@@ -159,6 +159,14 @@ func Seed() {
 			Config:   `{}`,
 			IsActive: true,
 		},
+		{
+			ID:       "sokoban",
+			Name:     `{"en": "Sokoban", "zh": "推箱子"}`,
+			Overview: `{"en": "Classic box-pushing puzzle game. Can you solve it?", "zh": "经典的推箱子解谜游戏。你能在限定空间里完成挑战吗？"}`,
+			Rules:    `{"en": "# 📦 Sokoban Rules\n\nSokoban is a classic puzzle game. Your goal is to push all the boxes onto the designated target spots.\n\n## 🎮 Basic Controls\n- **Move**: Click the virtual D-Pad buttons or use the **W/A/S/D** / **Arrow Keys** on your keyboard to move the player.\n- **Push**: When facing a box and moving towards it, you will push it one square forward, provided the space behind it is empty or a target.\n- **Restrictions**:\n  - You can only push boxes, not pull them!\n  - You can only push one box at a time.\n  - You cannot push a box into a wall or another box.\n- **Undo**: Made a mistake? Use the \"Undo\" button to revert your last move.\n- **Restart**: Stuck in a dead-end? Click \"Restart\" to reset the level.\n\n## 👤 Single Player Mode\n- **Fully Local**: Enjoy zero-latency puzzle solving without needing an internet connection.\n- **Difficulties**: Choose between Easy, Medium, and Hard using the selector in the top right.\n- **Auto-save**: Your progress is automatically saved to your browser, so you can resume anytime.\n\n## 🏎️ PK Speed Mode (Multiplayer)\n- **Speed Race**: Compete against friends or online players on the exact same challenging layout.\n- **Independent Boards**: Everyone plays on their own board. The first player to place all boxes on the targets wins!\n- **Real-time Pressure**: Keep an eye on your opponents' move counts in real-time, adding competitive thrill!", "zh": "# 📦 推箱子 玩法手册\n\n推箱子是一款经典的逻辑解谜游戏。你的目标是将所有的箱子推到指定的发光目标点上。\n\n## 🎮 基础操作\n- **移动**：点击虚拟摇杆的上、下、左、右按钮，或使用键盘的 **W/A/S/D** 或 **方向键** 移动主角。\n- **推箱子**：主角面朝箱子并向其移动时，如果箱子后方是空地或目标点，就可以将箱子向前推动一格。\n- **限制**：\n  - 主角不能拉箱子，只能推！\n  - 一次只能推一个箱子。\n  - 不能将箱子推到墙上或其他箱子上。\n- **撤销**：如果你不小心走错了一步，可以点击“撤销”按钮回到上一步。\n- **重玩**：如果陷入了死胡同无法过关，可以点击“重新开始”按钮重置当前关卡。\n\n## 👤 单机解谜模式\n- **纯本地运行**：享受无延迟、无需网络的纯净解谜体验。\n- **难度分级**：提供“简单”、“中等”、“困难”三种不同挑战。可以在顶部导航栏右侧自由切换。\n- **自动存档**：游戏进度会自动保存在本地，随时退出随时继续。\n\n## 🏎️ PK 竞速模式 (联机)\n- **速度比拼**：与在线好友或匹配到的玩家在同一个高难度关卡中进行竞速。\n- **互不干扰**：每个玩家拥有自己独立的棋盘，谁先将所有箱子归位即可获胜！\n- **实时观战**：你可以随时看到对手当前推了多少步，带来极致的压迫感与竞技快感。"}`,
+			Config:   `{}`,
+			IsActive: true,
+		},
 	}
 
 	for _, game := range games {

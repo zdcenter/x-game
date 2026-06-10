@@ -53,7 +53,7 @@ import { ToastService } from '../../../core/services/toast.service';
               @if (currentRoomMode() === 'single') {
                 <!-- Difficulty Button -->
                 <div class="flex flex-col items-center relative">
-                  <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest"><ng-container i18n="@@game.difficulty">game.difficulty</ng-container></span>
+                  <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest">{{ i18n.t('game.difficulty')() }}</span>
                   <button (click)="isDifficultyModalOpen.set(!isDifficultyModalOpen())"
                     class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
                     <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentRoomMode() === 'single' ? _store.localDifficulty() : currentDifficulty()) }}</span>

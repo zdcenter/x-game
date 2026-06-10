@@ -38,6 +38,8 @@
 - **Drop 2048 (Number Merge)**
 - **Water Sort Puzzle (水管分色)**
   - Modes: Single Player (单机模式), PK Speed (竞速对决)
+- **Sokoban (推箱子)**
+  - Modes: Single Player (单机解谜), PK Speed (竞速对决)
 
 
 ## Global Features: Single Player (3/4/5 位数难度练习), PK Speed (同屏竞速破译)

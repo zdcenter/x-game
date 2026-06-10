@@ -1,0 +1,51 @@
+--- frontend/src/app/shared/components/game-rules-modal/game-rules-modal.component.ts
++++ frontend/src/app/shared/components/game-rules-modal/game-rules-modal.component.ts
+@@ -1,5 +1,5 @@
+-import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges } from '@angular/core';
++import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges, computed } from '@angular/core';
+ import { CommonModule } from '@angular/common';
+ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+ import { I18nService } from '../../../core/i18n/i18n.service';
+@@ -80,28 +80,31 @@
+   @Input() isOpen = false;
+   @Output() closed = new EventEmitter<void>();
+ 
+-  private rulesMarkdown = signal('');
+-  parsedRulesHTML = signal<SafeHtml>('');
++  private rawGameRules = signal<string | null>(null);
+ 
+   private loaded = false;
++
++  parsedRulesHTML = computed(() => {
++    const rawRules = this.rawGameRules();
++    if (rawRules === null) {
++      return this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string);
++    }
++    if (rawRules === 'NOT_FOUND') {
++      return this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string);
++    }
++    const md = getLocalizedField(rawRules, this.i18n.currentLang());
++    return this.sanitizer.bypassSecurityTrustHtml(marked.parse(md, { async: false }) as string);
++  });
+ 
+   ngOnChanges(changes: SimpleChanges) {
+     if (changes['isOpen'] && this.isOpen && !this.loaded) {
+       this.loadRules();
+     }
+   }
+ 
+   private loadRules() {
+-    this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string));
+     this.gameService.getGames().subscribe(games => {
+       const game = games.find(g => g.id === this.gameId);
+       if (game) {
+-        const md = getLocalizedField(game.rules, this.i18n.currentLang());
+-        this.rulesMarkdown.set(md);
+-        this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(md, { async: false }) as string));
++        this.rawGameRules.set(game.rules);
+       } else {
+-        this.parsedRulesHTML.set(this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.not_found')(), { async: false }) as string));
++        this.rawGameRules.set('NOT_FOUND');
+       }
+       this.loaded = true;
+     });

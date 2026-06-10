@@ -185,7 +185,22 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
       { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
     ],
-    recommendations: ['lightsout', 'sliding']
+  },
+  {
+    id: 'sokoban',
+    route: '/games/sokoban',
+    titleKey: 'app.title.sokoban',
+    iconEmoji: '📦',
+    modes: [
+      { id: 'single', labelKey: 'game.mode_single_player', descKey: 'game.single_player_desc', desc: 'Single Player', icon: '👤' },
+      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sokoban_easy', desc: 'Easy' },
+      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_sokoban_medium', desc: 'Medium' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_sokoban_hard', desc: 'Hard' }
+    ],
+    recommendations: ['sliding', 'lightsout']
   }
 ];
 

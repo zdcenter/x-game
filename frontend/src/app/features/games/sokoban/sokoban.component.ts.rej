@@ -1,0 +1,14 @@
+--- sokoban.component.ts
++++ sokoban.component.ts
+@@ -171,6 +173,11 @@
+ 
+   private roomLifecycle!: RoomLifecycleHandle;
+ 
+   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+ 
++  isDifficultyModalOpen = signal(false);
++  showRules = signal(false);
++
++  predefinedDifficulties = this.gameRegistry.getGame('sokoban')?.difficulties || [];
++
+   override get playerId(): string {
