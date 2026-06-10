@@ -7,7 +7,7 @@ import { SokobanStore } from '../../store/sokoban.store';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="relative w-full h-full bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] shadow-inner overflow-hidden flex items-center justify-center"
+    <div class="relative w-full h-full bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] shadow-inner overflow-hidden flex items-center justify-center touch-none select-none"
          (touchstart)="onTouchStart($event)"
          (touchend)="onTouchEnd($event)">
       

@@ -97,6 +97,14 @@ func main() {
 	math24.Get("/puzzle/:id", rest.GetMath24Puzzle)
 	math24.Post("/puzzle/:id/finish", rest.FinishMath24)
 
+	// Sokoban routes (Optional auth for guests)
+	sokoban := v1.Group("/sokoban")
+	sokoban.Use(middleware.OptionalProtected())
+	sokoban.Get("/levels/:difficulty", rest.GetSokobanLevels)
+	sokoban.Get("/puzzle/:id", rest.GetSokobanPuzzle)
+	sokoban.Post("/puzzle/:id/save", rest.SaveSokobanProgress)
+	sokoban.Post("/puzzle/:id/finish", rest.FinishSokoban)
+
 	// Admin routes
 	admin := v1.Group("/admin")
 	admin.Use(middleware.Protected())

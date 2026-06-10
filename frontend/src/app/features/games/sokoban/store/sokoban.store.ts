@@ -1,7 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { LocalSokobanEngine } from './local-sokoban-engine';
+import { environment } from '../../../../../environments/environment';
 
 export interface SokobanPlayerState {
   id: string;
@@ -22,13 +24,29 @@ export interface SokobanGameState {
 export class SokobanStore {
   private ws = inject(WebSocketService);
   private auth = inject(AuthStore);
+  private http = inject(HttpClient);
 
   roomId = signal('');
   currentRoomMode = signal('single');
   isDead = signal(false);
   
-  localDifficulty = signal('easy');
+  localDifficulty = signal('beginner');
   localEngine = signal<LocalSokobanEngine | null>(null, { equal: () => false });
+  currentLevelId = signal<string>('');
+  levelsList = signal<any[]>([]);
+  hasNextLevel = computed(() => {
+    const list = this.levelsList() || [];
+    const curr = this.currentLevelId();
+    if (!list.length || !curr) return false;
+    const idx = list.findIndex(l => l.id === curr);
+    return idx >= 0 && idx < list.length - 1;
+  });
+  currentLevelNum = computed(() => {
+    const list = this.levelsList() || [];
+    const curr = this.currentLevelId();
+    const level = list.find(l => l.id === curr);
+    return level ? level.level_num : 1;
+  });
 
   private rawState = computed(() => this.ws.gameState() as any);
 
@@ -52,7 +70,7 @@ export class SokobanStore {
 
   currentDifficulty = computed(() => {
     if (this.currentRoomMode() === 'single') return this.localDifficulty();
-    return (this.rawState()?.state as SokobanGameState)?.difficulty || 'easy';
+    return (this.rawState()?.state as SokobanGameState)?.difficulty || 'beginner';
   });
 
   myPlayerState = computed(() => {
@@ -97,7 +115,8 @@ export class SokobanStore {
       }));
   });
 
-  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'easy', hostId?: string) {
+  joinRoom(roomId: string, mode: string = 'single', difficulty: string = 'beginner', hostId?: string) {
+    const playerId = this.auth.currentUser()?.username || this.auth.guestId;
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.isDead.set(false);
@@ -107,15 +126,22 @@ export class SokobanStore {
       if (saved) {
         this.localDifficulty.set(saved.difficulty);
         this.localEngine.set(saved.engine);
+        this.fetchLevelsAndLoad(saved.difficulty, saved.engine.levelStr, true);
       } else {
-        this.localDifficulty.set(difficulty);
-        const engine = new LocalSokobanEngine(difficulty);
-        this.localEngine.set(engine);
-        engine.saveToStorage();
+        this.fetchLevelsAndLoad(difficulty, '', false);
       }
     } else {
       this.ws.connect('sokoban', roomId, playerId, mode, difficulty, hostId);
     }
+  }
+
+  loadLevelFromLobby(difficulty: string, puzzle: string, levelId: string) {
+    this.localDifficulty.set(difficulty);
+    this.currentLevelId.set(levelId);
+    const newEngine = new LocalSokobanEngine(difficulty, puzzle);
+    this.localEngine.set(newEngine);
+    newEngine.saveToStorage();
+    this.fetchLevelsAndLoad(difficulty, puzzle, true);
   }
 
   leaveGame() {
@@ -134,11 +160,26 @@ export class SokobanStore {
 
   move(dir: 'up' | 'down' | 'left' | 'right') {
     if (this.currentRoomMode() === 'single') {
-      this.localEngine()?.move(dir);
-      this.localEngine.set(this.localEngine()); // Trigger reactivity
+      const eng = this.localEngine();
+      if (!eng) return;
+      eng.move(dir);
+      this.localEngine.set(eng); // Trigger reactivity
+      if (eng.status === 'finished') {
+        this.submitFinish();
+      }
       return;
     }
     this.ws.send({ action: 'move', dir });
+  }
+
+  private submitFinish() {
+    const eng = this.localEngine();
+    if (!eng || !this.currentLevelId()) return;
+    this.http.post(`${environment.apiUrl}/sokoban/puzzle/${this.currentLevelId()}/finish`, {
+      moves: eng.moves,
+      time_spent: 0,
+      stars: 3
+    }).subscribe();
   }
 
   undo() {
@@ -159,10 +200,66 @@ export class SokobanStore {
     this.ws.send({ action: 'restart' });
   }
 
+  applyHint(): { success: boolean; message: string } {
+    if (this.currentRoomMode() === 'single') {
+      const engine = this.localEngine();
+      if (engine) return engine.applyHint();
+    }
+    return { success: false, message: 'game.no_hint_available' };
+  }
+
   changeSingleDifficulty(diff: string) {
     this.localDifficulty.set(diff);
-    const engine = new LocalSokobanEngine(diff);
-    this.localEngine.set(engine);
-    engine.saveToStorage();
+    this.fetchLevelsAndLoad(diff);
+  }
+
+  fetchLevelsAndLoad(difficulty: string, retainCurrentStr?: string, avoidNewLoad?: boolean) {
+    this.http.get<any[]>(`${environment.apiUrl}/sokoban/levels/${difficulty}`).subscribe(res => {
+      const levels = res || [];
+      this.levelsList.set(levels);
+      
+      if (!levels.length) return;
+
+      if (avoidNewLoad && this.localEngine()) {
+        const found = levels.find(l => l.puzzle === retainCurrentStr || l.id === this.currentLevelId());
+        if (found) this.currentLevelId.set(found.id);
+        return;
+      }
+
+      // Find first unfinished level
+      let targetLevel = levels.find(l => !l.progress || l.progress.status !== 'finished');
+      if (!targetLevel) targetLevel = levels[levels.length - 1]; // All finished, pick last
+
+      if (targetLevel) {
+        this.loadLevel(targetLevel.id);
+      }
+    });
+  }
+
+  loadLevel(id: string) {
+    this.http.get<any>(`${environment.apiUrl}/sokoban/puzzle/${id}`).subscribe(res => {
+      this.currentLevelId.set(res.puzzle.id);
+      const engine = new LocalSokobanEngine(this.localDifficulty(), res.puzzle.puzzle);
+      this.localEngine.set(engine);
+      engine.saveToStorage();
+    });
+  }
+
+  nextLevel() {
+    const list = this.levelsList();
+    const curr = this.currentLevelId();
+    const idx = list.findIndex(l => l.id === curr);
+    if (idx >= 0 && idx < list.length - 1) {
+      this.loadLevel(list[idx + 1].id);
+    }
+  }
+
+  prevLevel() {
+    const list = this.levelsList();
+    const curr = this.currentLevelId();
+    const idx = list.findIndex(l => l.id === curr);
+    if (idx > 0) {
+      this.loadLevel(list[idx - 1].id);
+    }
   }
 }

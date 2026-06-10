@@ -196,9 +196,10 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sokoban_easy', desc: 'Easy' },
-      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_sokoban_medium', desc: 'Medium' },
-      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_sokoban_hard', desc: 'Hard' }
+      { id: 'beginner', labelKey: 'game.diff_beginner', descKey: 'game.diff_sokoban_beginner', desc: 'Beginner' },
+      { id: 'intermediate', labelKey: 'game.diff_intermediate', descKey: 'game.diff_sokoban_intermediate', desc: 'Intermediate' },
+      { id: 'advanced', labelKey: 'game.diff_advanced', descKey: 'game.diff_sokoban_advanced', desc: 'Advanced' },
+      { id: 'professional', labelKey: 'game.diff_professional', descKey: 'game.diff_sokoban_professional', desc: 'Professional' }
     ],
     recommendations: ['sliding', 'lightsout']
   }

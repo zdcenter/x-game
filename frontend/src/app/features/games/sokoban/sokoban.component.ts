@@ -8,11 +8,14 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { ToastService } from '../../../core/services/toast.service';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { SokobanBoardComponent } from './components/board/sokoban-board.component';
+import { SokobanLobbyComponent } from './components/sokoban-lobby/sokoban-lobby.component';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
@@ -25,20 +28,25 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
     GameHeaderComponent,
     PlayerBadgeComponent,
     GameResultOverlayComponent,
+    HintButtonComponent,
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     GameLobbyPanelComponent,
     SokobanBoardComponent,
+    SokobanLobbyComponent,
     GameRulesModalComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
     <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
+      @if (showLobby()) {
+        <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0" (openLobby)="isMobileSidebarOpen.set(true)" (levelSelect)="onLevelSelect($event)"></app-sokoban-lobby>
+      } @else {
       <div class="w-full h-full flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-3 lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <app-game-header
         [title]="i18n.t('lobby.sokoban')()"
-        [subtitle]="getModeName() + ' - ' + getDifficultyName()"
+        [subtitle]="getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === 'single' ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : '')"
         iconGradientClass="from-amber-400 to-orange-500"
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-orange-500/20"
@@ -51,15 +59,13 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
             @if (store.currentRoomMode() === 'single') {
-              <div class="flex flex-col items-center relative">
-                <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest">{{ i18n.t('game.difficulty')() }}</span>
-                <select [value]="store.currentDifficulty()" (change)="changeDifficulty($event)"
-                  class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-md lg:rounded-lg px-1 py-0.5 lg:px-3 lg:py-1.5 text-xs lg:text-base font-bold cursor-pointer outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-inner text-[var(--color-text-main)]">
-                  @for (diff of predefinedDifficulties; track diff.id) {
-                    <option [value]="diff.id">{{ i18n.t($any(diff.labelKey))() }}</option>
-                  }
-                </select>
-              </div>
+              <button (click)="showLobby.set(true)" 
+                      class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
+                <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span class="hidden sm:inline"><ng-container i18n="@@game.levels_lobby">Lobby</ng-container></span>
+              </button>
             }
             <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,37 +131,61 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         <div class="relative flex-grow flex flex-col items-center justify-start min-h-0 w-full shrink py-2 px-2 z-10">
           
           <div class="relative flex items-center justify-center shrink-0 w-full"
-               style="width: min(95vw, calc(100vh - 220px), 600px); height: min(95vw, calc(100vh - 220px), 600px);">
+               style="width: min(95vw, calc(100vh - 280px), 600px); height: min(95vw, calc(100vh - 280px), 600px);">
             <app-sokoban-board class="w-full h-full"></app-sokoban-board>
-
-            <!-- Floating Action Buttons -->
-            <div class="absolute bottom-1 lg:bottom-4 left-1 lg:left-4 z-20">
-              <button class="px-4 lg:px-6 py-2 lg:py-2 rounded-lg font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-slate-600/50"
-                      (click)="store.undo()">
-                {{ i18n.t('game.undo')() }}
-              </button>
-            </div>
-            <div class="absolute bottom-1 lg:bottom-4 right-1 lg:right-4 z-20">
-              <button class="px-4 lg:px-6 py-2 lg:py-2 rounded-lg font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-red-500/50"
-                      (click)="store.restart()">
-                {{ i18n.t('game.restart')() }}
-              </button>
-            </div>
 
             @if (store.status() === 'finished') {
               <app-game-result-overlay
                 currentGameId="sokoban"
                 [status]="getGameResult()"
                 [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
+                [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === 'single'"
                 [showRestart]="store.currentRoomMode() === 'single' || store.hostId() === playerId"
                 [showLeave]="store.currentRoomMode() === 'single' || store.hostId() !== playerId"
                 [showDismiss]="store.currentRoomMode() !== 'single' && store.hostId() === playerId"
+                (nextLevel)="handleNextLevel()"
                 (restart)="handleRestart()"
                 (leave)="onLeaveClick()"
                 (dismiss)="handleDismissRoom()"
                 class="absolute inset-0 z-30 rounded-xl lg:rounded-2xl overflow-hidden backdrop-blur-md">
               </app-game-result-overlay>
             }
+          </div>
+
+          <!-- Action Buttons Bar underneath the board -->
+          <div class="flex flex-wrap items-center justify-center w-full max-w-[600px] gap-2 mt-4 z-20 px-2">
+            <button class="px-3 lg:px-6 py-2 rounded-lg font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-slate-600/50"
+                    (click)="store.undo()">
+              {{ i18n.t('game.undo')() }}
+            </button>
+            
+            @if (store.currentRoomMode() === 'single') {
+              <button class="px-3 lg:px-6 py-2 rounded-lg font-bold text-white shadow-lg transition-all bg-indigo-600/80 hover:bg-indigo-500 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-indigo-500/50 flex-1 lg:flex-none"
+                      (click)="store.prevLevel()"
+                      [disabled]="store.currentLevelNum() <= 1"
+                      [class.opacity-50]="store.currentLevelNum() <= 1">
+                {{ i18n.t('game.prev_level')() }}
+              </button>
+              <button class="px-3 lg:px-6 py-2 rounded-lg font-bold text-white shadow-lg transition-all bg-indigo-600/80 hover:bg-indigo-500 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-indigo-500/50 flex-1 lg:flex-none"
+                      (click)="store.nextLevel()"
+                      [disabled]="!store.hasNextLevel()"
+                      [class.opacity-50]="!store.hasNextLevel()">
+                {{ i18n.t('game.next_level')() }}
+              </button>
+            }
+            @if (store.currentRoomMode() === 'single') {
+              <app-hint-button layout="compact" (hintApplied)="applyHint()"></app-hint-button>
+            }
+            
+            <div class="flex-grow hidden lg:block"></div>
+            
+            <button class="flex items-center justify-center px-3 lg:px-4 py-2 rounded-lg font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-red-500/50"
+                    title="{{ i18n.t('game.restart')() }}"
+                    (click)="store.restart()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
           </div>
 
         </div>
@@ -169,10 +199,33 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         }
       }
       </div>
+      }
     </div>
 
-    <div class="hidden lg:flex w-[400px] flex-col shrink-0 transition-all duration-300 relative z-20"
-         [class.!hidden]="store.status() === 'playing' && store.currentRoomMode() !== 'single' && !isMobileSidebarOpen()">
+    <!-- Mobile Sidebar Overlay Backdrop -->
+    @if (isMobileSidebarOpen()) {
+      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40" 
+           [class.lg:hidden]="!(store.status() === 'playing' && store.currentRoomMode() !== 'single')"
+           (click)="isMobileSidebarOpen.set(false)"></div>
+    }
+
+    <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
+    <div class="flex-shrink-0 transition-transform duration-300"
+         [ngClass]="{
+           'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+           'translate-x-0': isMobileSidebarOpen(),
+           'translate-x-full': !isMobileSidebarOpen(),
+           'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': !(store.status() === 'playing' && store.currentRoomMode() !== 'single')
+         }">
+      <div class="flex justify-between items-center mb-4 lg:hidden"
+           [class.lg:flex]="store.status() === 'playing' && store.currentRoomMode() !== 'single'">
+        <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+        <button (click)="isMobileSidebarOpen.set(false)" class="p-2 bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
       <app-game-lobby-panel
         #lobbyPanel
         class="flex-grow flex"
@@ -194,11 +247,13 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   private gameRegistry = inject(GameRegistryService);
   private router = inject(Router);
   i18n = inject(I18nService);
+  toastService = inject(ToastService);
   
   private roomLifecycle!: RoomLifecycleHandle;
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
-
+  override isMobileSidebarOpen = signal(false);
+  showLobby = signal(true);
   showRules = signal(false);
 
   predefinedDifficulties = this.gameRegistry.getConfig('sokoban')?.difficulties || [];
@@ -225,7 +280,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     const pendingCross = this.crossGameJoin.consumePendingJoin('sokoban');
     if (pendingCross) {
       if (pendingCross.password) this.wsService.setPendingPassword(pendingCross.password);
-      this.store.joinGame(pendingCross.roomId, this.playerId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
+      this.store.joinRoom(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
       if (pendingCross.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
       }
@@ -235,12 +290,12 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinGame(pending.roomId, this.playerId, pending.mode, pending.difficulty, pending.host || '');
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       if (pending.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinGame('', this.playerId, 'single', 'easy', this.playerId);
+      this.store.joinRoom('', 'single', 'beginner', this.playerId);
     }
   }
 
@@ -258,6 +313,11 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   changeSingleDifficulty(diff: string) {
     this.store.changeSingleDifficulty(diff);
+  }
+
+  onLevelSelect(level: {id: string, puzzle: string, difficulty: string, levelNum: number}) {
+    this.store.loadLevelFromLobby(level.difficulty, level.puzzle, level.id);
+    this.showLobby.set(false);
   }
 
   changeDifficulty(event: Event) {
@@ -312,6 +372,16 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     } else {
       this.wsService.send({ type: 'restart_game' });
     }
+  }
+
+  handleNextLevel() {
+    this.store.nextLevel();
+  }
+
+  applyHint() {
+    const result = this.store.applyHint();
+    const msg = this.i18n.t(result.message)() || result.message;
+    this.toastService.show(msg, result.success ? 'success' : 'info');
   }
 
   onLeaveClick() {

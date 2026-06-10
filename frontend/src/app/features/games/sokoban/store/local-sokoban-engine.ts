@@ -5,40 +5,13 @@ export class LocalSokobanEngine {
   status: 'playing' | 'finished' = 'playing';
   difficulty: string;
 
-  private levels: Record<string, string> = {
-    'easy': `
-  ###
-  #.#
-  # #
-###$###
-#.@.$.#
-###$###
-  # #
-  #.#
-  ###`,
-    'medium': `
-#######
-#     #
-# .$. #
-###$###
-# .@. #
-#######`,
-    'hard': `
-  #####
-###   #
-#.@$  #
-### $.#
-#.##$ #
-# # . ##
-#$ *$$.#
-#   .  #
-########`
-  };
+  levelStr: string;
 
-  constructor(difficulty: string = 'easy', existingData?: any) {
+  constructor(difficulty: string, levelStr: string, existingData?: any) {
     this.difficulty = difficulty;
+    this.levelStr = levelStr;
     
-    if (existingData) {
+    if (existingData && existingData.levelStr === levelStr) {
       this.board = existingData.board;
       this.history = existingData.history || [];
       this.moves = existingData.moves || 0;
@@ -75,8 +48,7 @@ export class LocalSokobanEngine {
   }
 
   private initBoard() {
-    const levelStr = this.levels[this.difficulty] || this.levels['easy'];
-    this.board = this.parseLevel(levelStr);
+    this.board = this.parseLevel(this.levelStr);
     this.history = [];
     this.moves = 0;
     this.status = 'playing';
@@ -176,21 +148,40 @@ export class LocalSokobanEngine {
   }
 
   private checkWin() {
-    let finished = true;
-    for (const row of this.board) {
-      for (const val of row) {
-        if (val === '$') {
-          finished = false;
+    let win = true;
+    for (let r = 0; r < this.board.length; r++) {
+      for (let c = 0; c < this.board[r].length; c++) {
+        if (this.board[r][c] === '$') {
+          win = false;
           break;
         }
       }
-      if (!finished) break;
+      if (!win) break;
     }
-
-    if (finished) {
+    if (win) {
       this.status = 'finished';
       localStorage.removeItem('sokoban_save');
     }
+  }
+
+  applyHint(): { success: boolean; message: string } {
+    if (this.status === 'finished') return { success: false, message: 'game.no_hint_available' };
+
+    for (let r = 1; r < this.board.length - 1; r++) {
+      for (let c = 1; c < this.board[r].length - 1; c++) {
+        if (this.board[r][c] === '$') {
+          const top = this.board[r - 1][c] === '#';
+          const bottom = this.board[r + 1][c] === '#';
+          const left = this.board[r][c - 1] === '#';
+          const right = this.board[r][c + 1] === '#';
+          
+          if ((top || bottom) && (left || right)) {
+            return { success: true, message: 'sokoban.hint_stuck_corner' };
+          }
+        }
+      }
+    }
+    return { success: true, message: 'sokoban.hint_keep_pushing' };
   }
 
   saveToStorage() {
@@ -203,7 +194,8 @@ export class LocalSokobanEngine {
       history: this.history,
       moves: this.moves,
       status: this.status,
-      difficulty: this.difficulty
+      difficulty: this.difficulty,
+      levelStr: this.levelStr
     };
     localStorage.setItem('sokoban_save', JSON.stringify(data));
   }
@@ -213,7 +205,14 @@ export class LocalSokobanEngine {
     if (!saved) return null;
     try {
       const data = JSON.parse(saved);
-      const engine = new LocalSokobanEngine(data.difficulty, data);
+      if (!data.levelStr) return null;
+      
+      // Migrate legacy difficulties
+      if (data.difficulty === 'easy') data.difficulty = 'beginner';
+      if (data.difficulty === 'medium') data.difficulty = 'intermediate';
+      if (data.difficulty === 'hard') data.difficulty = 'advanced';
+
+      const engine = new LocalSokobanEngine(data.difficulty, data.levelStr, data);
       return { engine, difficulty: data.difficulty };
     } catch (e) {
       return null;
