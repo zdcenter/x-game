@@ -12,8 +12,9 @@ import (
 const Capacity = 4
 
 var Colors = []string{
-	"#FF3366", "#FF8800", "#FFDD00", "#88EE00", "#00AA44", "#00DDFF",
-	"#0066FF", "#6600FF", "#CC00FF", "#FF0088", "#995522", "#8899AA",
+	"#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#9B59B6", "#1ABC9C",
+	"#E67E22", "#E74C3C", "#34495E", "#2ECC71", "#3498DB", "#FD79A8",
+	"#8E44AD", "#D35400", "#C0392B", "#16A085", "#7F8C8D", "#F39C12",
 }
 
 type Tube struct {
@@ -190,11 +191,11 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		numColors := 3
 		switch e.difficulty {
 		case "easy":
-			numColors = 3
+			numColors = 5
 		case "medium":
-			numColors = 7
+			numColors = 9
 		case "hard":
-			numColors = 12
+			numColors = 14
 		}
 		if numColors > len(Colors) {
 			numColors = len(Colors)

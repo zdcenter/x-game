@@ -23,12 +23,15 @@ import { CommonModule } from '@angular/common';
         <!-- Liquids -->
         @for (liquid of liquidLayers; track $index) {
           <div 
-            class="liquid-layer w-full transition-all duration-300 ease-in-out relative"
+            class="liquid-layer w-full transition-all duration-300 ease-in-out relative flex items-center justify-center overflow-hidden"
             [style.height.%]="liquid.heightPercent"
-            [style.background-color]="liquid.color"
+            [style.background-color]="liquid.isHidden ? null : liquid.color"
+            [ngClass]="{'bg-slate-300 dark:bg-slate-700 border-t border-slate-400/30 dark:border-slate-800/50': liquid.isHidden}"
           >
             <!-- Surface reflection -->
-            <div *ngIf="$index === 0" class="absolute top-0 left-0 right-0 h-2 bg-white/20 rounded-full scale-110 -translate-y-1"></div>
+            <div *ngIf="$index === 0 && !liquid.isHidden" class="absolute top-0 left-0 right-0 h-2 bg-white/20 rounded-full scale-110 -translate-y-1"></div>
+            <!-- Mystery Question Mark -->
+            <div *ngIf="liquid.isHidden" class="text-slate-500/50 dark:text-slate-400/50 font-bold text-lg select-none">?</div>
           </div>
         }
       </div>
@@ -54,10 +57,11 @@ export class TubeComponent implements OnChanges {
   @Input() colors: string[] = [];
   @Input() capacity: number = 4;
   @Input() selected: boolean = false;
+  @Input() isBlindMode: boolean = false;
   
   @Output() tubeClick = new EventEmitter<void>();
 
-  liquidLayers: { color: string, heightPercent: number }[] = [];
+  liquidLayers: { color: string, heightPercent: number, isHidden: boolean }[] = [];
 
   ngOnChanges() {
     this.updateLayers();
@@ -78,7 +82,7 @@ export class TubeComponent implements OnChanges {
     // Actually, rendering them as individual blocks is fine, but if we want seamless, 
     // it's easier to group same colors to avoid 1px gaps between divs.
     
-    const layers: { color: string, heightPercent: number }[] = [];
+    const layers: { color: string, heightPercent: number, isHidden: boolean }[] = [];
     if (reversed.length === 0) {
       this.liquidLayers = [];
       return;
@@ -94,7 +98,8 @@ export class TubeComponent implements OnChanges {
       } else {
         layers.push({
           color: currentColor,
-          heightPercent: currentCount * blockHeight
+          heightPercent: currentCount * blockHeight,
+          isHidden: false
         });
         currentColor = reversed[i];
         currentCount = 1;
@@ -102,8 +107,16 @@ export class TubeComponent implements OnChanges {
     }
     layers.push({
       color: currentColor,
-      heightPercent: currentCount * blockHeight
+      heightPercent: currentCount * blockHeight,
+      isHidden: false
     });
+
+    // In blind mode, all layers except the top contiguous block are hidden
+    if (this.isBlindMode && layers.length > 1) {
+      for (let i = 1; i < layers.length; i++) {
+        layers[i].isHidden = true;
+      }
+    }
 
     this.liquidLayers = layers;
   }

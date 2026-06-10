@@ -181,9 +181,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_watersort_easy', desc: '5 Tubes (3 Colors)' },
-      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_watersort_medium', desc: '9 Tubes (7 Colors)' },
-      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_watersort_hard', desc: '14 Tubes (12 Colors)' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
+      { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
     ],
     recommendations: ['lightsout', 'sliding']
   }

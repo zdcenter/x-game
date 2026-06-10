@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -16,6 +16,7 @@ import { GameHeaderComponent } from '../../../shared/components/game-header/game
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-watersort',
@@ -73,6 +74,14 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
                           <span class="text-[10px] opacity-60 font-mono mt-0.5" [class.text-[var(--color-text-main)]]="_store.localDifficulty() !== diff.id">{{ diff.desc }}</span>
                         </button>
                       }
+                      
+                      <!-- Blind Mode Toggle -->
+                      <div class="px-4 py-3 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="isBlindMode()" (change)="toggleBlindMode($event)" class="w-4 h-4 rounded border-[var(--color-border-card)] text-[var(--color-accent-to)] focus:ring-[var(--color-accent-to)] bg-transparent">
+                          <span class="text-xs font-bold text-[var(--color-text-main)]">开启盲猜模式</span>
+                        </label>
+                      </div>
                     </div>
                   }
                 </div>
@@ -155,29 +164,17 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
               <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto relative" [class.mt-32]="currentRoomMode() !== 'single'">
                 @for (tube of myTubes(); track $index) {
                   <app-tube #tubeElements
-                    class="transform transition-transform hover:scale-105 z-10"
+                    class="transform z-10 transition-all duration-300 ease-in-out"
+                    [class.is-receiving]="pouringState?.step === 'pouring' && pouringState?.to === $index"
+                    [class.hover:scale-105]="pouringState === null"
+                    [style.transform]="getTubeTransform($index)"
+                    [style.z-index]="getTubeZIndex($index)"
                     [colors]="tube.colors" 
                     [capacity]="4"
                     [selected]="selectedTubeIndex === $index"
+                    [isBlindMode]="isBlindMode()"
                     (tubeClick)="onTubeClick($index)"
                   ></app-tube>
-                }
-
-                <!-- Pouring Transition Drops (SVG Stream) -->
-                @if (pourAnimations.length > 0) {
-                  <svg class="fixed inset-0 w-full h-full pointer-events-none z-[100]" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">
-                    @for (anim of pourAnimations; track anim.id) {
-                      <path 
-                        [attr.d]="anim.path"
-                        fill="none"
-                        [attr.stroke]="anim.color"
-                        stroke-width="20"
-                        stroke-linecap="round"
-                        class="anim-water-stream opacity-90"
-                        [style.--path-length]="anim.length"
-                      />
-                    }
-                  </svg>
                 }
               </div>
 
@@ -252,15 +249,23 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
   <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
   `,
   styles: [`
-    .anim-water-stream {
-      stroke-dasharray: var(--path-length);
-      stroke-dashoffset: var(--path-length);
-      animation: water-stream-anim 0.35s ease-in-out forwards;
+    .is-receiving {
+      animation: pour-vibrate 0.1s linear infinite;
     }
-    @keyframes water-stream-anim {
-      0% { stroke-dashoffset: var(--path-length); }
-      40% { stroke-dashoffset: 0; }
-      100% { stroke-dashoffset: calc(var(--path-length) * -1); }
+    ::ng-deep .is-receiving .liquid-layer:first-child {
+      animation: liquid-wave 0.15s infinite alternate;
+      transform-origin: bottom;
+    }
+    @keyframes pour-vibrate {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(-0.5px, 0.5px); }
+      50% { transform: translate(0.5px, -0.5px); }
+      75% { transform: translate(0.5px, 0.5px); }
+      100% { transform: translate(0, 0); }
+    }
+    @keyframes liquid-wave {
+      0% { transform: scaleY(1); }
+      100% { transform: scaleY(1.05); filter: brightness(1.2); }
     }
   `]
 })
@@ -272,14 +277,27 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   private authStore = inject(AuthStore);
   public timerService = inject(GameTimerService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
   
   showRules = signal(false);
 
   get store() { return this._store; }
   override get playerId() { return this.authStore.currentUser()?.username || this.authStore.guestId; }
   
-  pourAnimations: { id: number, color: string, path: string, length: number }[] = [];
-  animCounter = 0;
+  private cdr = inject(ChangeDetectorRef);
+
+  pouringState: {
+    from: number,
+    to: number,
+    color: string,
+    step: 'flying' | 'pouring' | 'returning',
+    deltaX: number,
+    deltaY: number,
+    angle: number,
+    streamX: number,
+    streamY: number,
+    streamHeight: number
+  } | null = null;
   
   private roomLifecycle = setupRoomLifecycle({
     gameId: 'watersort',
@@ -334,10 +352,11 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
   isDifficultyModalOpen = signal(false);
   selectedDifficulty = signal('easy');
+  isBlindMode = signal(false);
   predefinedDifficulties = [
-    { id: 'easy', labelKey: 'game.diff_watersort_easy', desc: '5 Tubes (3 Colors)' },
-    { id: 'medium', labelKey: 'game.diff_watersort_medium', desc: '9 Tubes (7 Colors)' },
-    { id: 'hard', labelKey: 'game.diff_watersort_hard', desc: '14 Tubes (12 Colors)' }
+    { id: 'easy', labelKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
+    { id: 'medium', labelKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
+    { id: 'hard', labelKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
   ];
 
   openDifficultySettings() {
@@ -353,6 +372,11 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       this.wsService.setPendingAction('create');
       this._store.joinRoom(uniqueLocalRoom, 'single', diff, this.myId, this.myId);
     }, 100);
+  }
+
+  toggleBlindMode(event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.isBlindMode.set(checked);
   }
 
   getDifficultyText(diff: string) {
@@ -409,45 +433,127 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     return fromTube.colors[fromTube.colors.length - 1] === toTube.colors[toTube.colors.length - 1];
   }
 
+  getTubeTransform(index: number): string {
+    if (this.pouringState?.from === index) {
+      if (this.pouringState.step !== 'returning') {
+        return `translate(${this.pouringState.deltaX}px, ${this.pouringState.deltaY}px) rotate(${this.pouringState.angle}deg)`;
+      } else {
+        return `translate(0px, 0px) rotate(0deg)`;
+      }
+    }
+    return '';
+  }
+
+  getTubeZIndex(index: number): number {
+    if (this.pouringState?.from === index) return 50;
+    if (this.pouringState?.to === index) return 20;
+    return 10;
+  }
+
   triggerPourAnimation(fromIndex: number, toIndex: number) {
+    if (this.pouringState) return; // Wait for current animation to finish
+
     const fromEl = this.tubeElements.get(fromIndex)?.nativeElement;
     const toEl = this.tubeElements.get(toIndex)?.nativeElement;
     if (fromEl && toEl) {
-      const fromRect = fromEl.getBoundingClientRect();
-      const toRect = toEl.getBoundingClientRect();
+      const fromWrapper = fromEl.querySelector('.tube-wrapper') || fromEl;
+      const toWrapper = toEl.querySelector('.tube-wrapper') || toEl;
+
+      const fromRect = fromWrapper.getBoundingClientRect();
+      const toRect = toWrapper.getBoundingClientRect();
       
       const fromTube = this.myTubes()[fromIndex];
       const color = fromTube.colors[fromTube.colors.length - 1];
 
-      // Start at the top center of the source tube
-      const startX = fromRect.left + fromRect.width / 2;
-      const startY = fromRect.top + 10; // Slightly inside the tube
-      
-      // End at the top center of the target tube
-      const endX = toRect.left + toRect.width / 2;
-      const endY = toRect.top + 20; // Deeper into the tube
+      const w = fromRect.width;
+      const h = fromRect.height;
+      const C0_x = fromRect.left + w / 2;
+      const C0_y = fromRect.top + h / 2;
 
-      // Arc curve control point
-      const cpX = (startX + endX) / 2;
-      const cpY = Math.min(startY, endY) - 100; // Control point high above
+      const deltaX = toRect.left - fromRect.left;
+      const isRight = deltaX >= 0;
       
-      const pathD = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
-      
-      // Approximate path length
-      const dist = Math.hypot(endX - startX, endY - startY);
-      const length = dist * 1.5 + 100;
+      const angleDeg = isRight ? 105 : -105;
+      const a = angleDeg * Math.PI / 180;
 
-      const id = this.animCounter++;
-      this.pourAnimations.push({ id, color, path: pathD, length });
+      // Target mouth position
+      const M_target_x = toRect.left + toRect.width / 2;
+      const M_target_y = toRect.top - 15;
+
+      // The pouring point is the lower corner of the tilted mouth
+      const cornerX = isRight ? w / 2 : -w / 2;
+      const cornerY = -h / 2;
+
+      const rotX = cornerX * Math.cos(a) - cornerY * Math.sin(a);
+      const rotY = cornerX * Math.sin(a) + cornerY * Math.cos(a);
+
+      const C1_x = M_target_x - rotX;
+      const C1_y = M_target_y - rotY;
+
+      const tx = C1_x - C0_x;
+      const ty = C1_y - C0_y;
+
+      const toTube = this.myTubes()[toIndex];
       
+      // Calculate how many layers will be poured
+      let pourCount = 0;
+      for (let i = fromTube.colors.length - 1; i >= 0; i--) {
+        if (fromTube.colors[i] === color) pourCount++;
+        else break;
+      }
+      const availableSpace = 4 - toTube.colors.length;
+      pourCount = Math.min(pourCount, availableSpace);
+
+      // Target tube's empty space fraction AFTER pouring
+      const newLen = toTube.colors.length + pourCount;
+      const emptyRatio = (4 - newLen) / 4;
+      
+      // Precise calculation: the liquid container has 8px top margin and 4px bottom margin.
+      // Tube inner height is toRect.height - 12.
+      // Stream starts 15px above the tube top, so it travels 15 + 8 + empty space + 10px (to penetrate surface slightly)
+      const streamLen = 33 + ((toRect.height - 12) * emptyRatio);
+
+      this.pouringState = {
+        from: fromIndex,
+        to: toIndex,
+        color: color,
+        step: 'flying',
+        deltaX: tx,
+        deltaY: ty,
+        angle: angleDeg,
+        streamX: M_target_x,
+        streamY: M_target_y,
+        streamHeight: streamLen
+      };
+
+      // Step 2: pouring
       setTimeout(() => {
-        this.pourAnimations = this.pourAnimations.filter(a => a.id !== id);
-      }, 350);
+        if (this.pouringState) this.pouringState.step = 'pouring';
+        this.cdr.markForCheck();
+        
+        // Trigger actual state change so liquid level changes
+        this._store.pour(fromIndex, toIndex);
+
+        // Step 3: returning
+        setTimeout(() => {
+          if (this.pouringState) this.pouringState.step = 'returning';
+          this.cdr.markForCheck();
+          
+          // Step 4: done
+          setTimeout(() => {
+            if (this.pouringState?.step === 'returning') {
+              this.pouringState = null;
+              this.cdr.markForCheck();
+            }
+          }, 300);
+        }, 350); // Pouring duration
+      }, 300); // Flying duration
     }
   }
 
   onTubeClick(index: number) {
     if (this.status !== 'playing') return;
+    if (this.pouringState) return; // Prevent clicking while animating
     
     if (this.selectedTubeIndex === null) {
       const tube = this.myTubes()[index];
@@ -458,7 +564,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       if (this.selectedTubeIndex !== index) {
         if (this.isValidPour(this.selectedTubeIndex, index)) {
           this.triggerPourAnimation(this.selectedTubeIndex, index);
-          this._store.pour(this.selectedTubeIndex, index);
+          // this._store.pour(this.selectedTubeIndex, index); // Handled in triggerPourAnimation
         }
       }
       this.selectedTubeIndex = null;
@@ -503,11 +609,17 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     const move = bestMove || fallbackMove;
     if (move) {
       this.triggerPourAnimation(move.from, move.to);
-      this._store.pour(move.from, move.to);
+      // this._store.pour(move.from, move.to); // Handled in triggerPourAnimation
     } else {
-      // Use existing toast or standard alert
+      // Use friendly toast instead of native alert
       const msg = this.i18n.t('game.no_solution')() || 'No moves available!';
-      alert(msg);
+      this.toastService.show(msg, 'error');
+      
+      // Auto restart after a short delay
+      setTimeout(() => {
+        this._store.restart();
+        this.selectedTubeIndex = null;
+      }, 2000);
     }
   }
 
