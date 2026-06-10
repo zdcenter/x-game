@@ -138,10 +138,17 @@ export class SokobanStore {
   loadLevelFromLobby(difficulty: string, puzzle: string, levelId: string) {
     this.localDifficulty.set(difficulty);
     this.currentLevelId.set(levelId);
-    const newEngine = new LocalSokobanEngine(difficulty, puzzle);
-    this.localEngine.set(newEngine);
-    newEngine.saveToStorage();
-    this.fetchLevelsAndLoad(difficulty, puzzle, true);
+    
+    const saved = LocalSokobanEngine.loadFromStorage(levelId);
+    if (saved && saved.engine) {
+      this.localEngine.set(saved.engine);
+      this.fetchLevelsAndLoad(difficulty, saved.engine.levelStr, true);
+    } else {
+      const newEngine = new LocalSokobanEngine(levelId, difficulty, puzzle);
+      this.localEngine.set(newEngine);
+      newEngine.saveToStorage();
+      this.fetchLevelsAndLoad(difficulty, puzzle, true);
+    }
   }
 
   leaveGame() {
@@ -237,9 +244,17 @@ export class SokobanStore {
   }
 
   loadLevel(id: string) {
+    const saved = LocalSokobanEngine.loadFromStorage(id);
+    if (saved && saved.engine) {
+      this.currentLevelId.set(id);
+      this.localEngine.set(saved.engine);
+      this.localDifficulty.set(saved.difficulty);
+      return;
+    }
+
     this.http.get<any>(`${environment.apiUrl}/sokoban/puzzle/${id}`).subscribe(res => {
       this.currentLevelId.set(res.puzzle.id);
-      const engine = new LocalSokobanEngine(this.localDifficulty(), res.puzzle.puzzle);
+      const engine = new LocalSokobanEngine(res.puzzle.id, this.localDifficulty(), res.puzzle.puzzle);
       this.localEngine.set(engine);
       engine.saveToStorage();
     });

@@ -7,7 +7,10 @@ export class LocalSokobanEngine {
 
   levelStr: string;
 
-  constructor(difficulty: string, levelStr: string, existingData?: any) {
+  levelId: string;
+
+  constructor(levelId: string, difficulty: string, levelStr: string, existingData?: any) {
+    this.levelId = levelId;
     this.difficulty = difficulty;
     this.levelStr = levelStr;
     
@@ -190,6 +193,7 @@ export class LocalSokobanEngine {
       return;
     }
     const data = {
+      levelId: this.levelId,
       board: this.board,
       history: this.history,
       moves: this.moves,
@@ -200,19 +204,28 @@ export class LocalSokobanEngine {
     localStorage.setItem('sokoban_save', JSON.stringify(data));
   }
 
-  static loadFromStorage(): { engine: LocalSokobanEngine, difficulty: string } | null {
+  static loadFromStorage(levelId?: string): { engine: LocalSokobanEngine, difficulty: string } | null {
     const saved = localStorage.getItem('sokoban_save');
     if (!saved) return null;
+    
     try {
       const data = JSON.parse(saved);
       if (!data.levelStr) return null;
       
+      // If a specific levelId was requested, and it doesn't match the saved one, return null
+      if (levelId && data.levelId && data.levelId !== levelId) {
+        return null;
+      }
+      
+      // If no levelId was requested, use the saved one
+      const targetLevelId = levelId || data.levelId;
+
       // Migrate legacy difficulties
       if (data.difficulty === 'easy') data.difficulty = 'beginner';
       if (data.difficulty === 'medium') data.difficulty = 'intermediate';
       if (data.difficulty === 'hard') data.difficulty = 'advanced';
 
-      const engine = new LocalSokobanEngine(data.difficulty, data.levelStr, data);
+      const engine = new LocalSokobanEngine(targetLevelId, data.difficulty, data.levelStr, data);
       return { engine, difficulty: data.difficulty };
     } catch (e) {
       return null;
