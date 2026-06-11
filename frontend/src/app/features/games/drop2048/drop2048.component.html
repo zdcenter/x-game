@@ -125,7 +125,7 @@
         }
 
         <!-- Game Over Result Overlay -->
-        @if (store.status() === 'finished') {
+        @if (store.status() === 'finished' && showOverlay()) {
           <app-game-result-overlay
             currentGameId="drop2048"
             [status]="getResultTitle() === 'game.you_lose' ? 'lose' : 'win'"

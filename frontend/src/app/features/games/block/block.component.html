@@ -180,7 +180,7 @@
             <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
           }
 
-          @if (store.status() === 'finished') {
+          @if (store.status() === 'finished' && showOverlay()) {
             <app-game-result-overlay
               currentGameId="block"
               [status]="resultStatus"

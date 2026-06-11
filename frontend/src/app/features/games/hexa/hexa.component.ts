@@ -51,6 +51,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   private gameRegistry = inject(GameRegistryService);
 
   showRules = signal(false);
+  showOverlay = signal(false);
 
   get t() {
     return this.i18n.t.bind(this.i18n);
@@ -102,14 +103,21 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     });
 
     // Handle PK Start countdown
-    effect(() => {
+    effect((onCleanup) => {
       const status = this.store.status();
       if (status === GameStatus.STARTING) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
-    });
+      
+      if (status === GameStatus.FINISHED || this.store.gameOver()) {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
   }
 
   override ngOnInit(): void {

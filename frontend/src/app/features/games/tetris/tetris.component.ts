@@ -44,6 +44,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   currentRoomMode = this.store.mode;
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
   showRules = signal(false);
+  showOverlay = signal(false);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -61,14 +62,21 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   constructor() {
     super();
-    effect(() => {
+    effect((onCleanup) => {
       const status = this.store.status();
       if (status === 'starting') {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
-    });
+
+      if (status === 'finished') {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'tetris',

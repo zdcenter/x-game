@@ -148,7 +148,7 @@
                   </div>
                 }
 
-                @if (store.status() === 'finished' || store.gameOver()) {
+                @if ((store.status() === 'finished' || store.gameOver()) && showOverlay()) {
                   <app-game-result-overlay
                     currentGameId="hexa"
                     [status]="store.status() === 'finished' ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"

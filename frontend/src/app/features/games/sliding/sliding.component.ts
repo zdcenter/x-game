@@ -39,6 +39,7 @@ export class SlidingComponent extends BaseGameComponent {
 
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
+  showOverlay = signal<boolean>(false);
   Math = Math;
 
   get difficulties() {
@@ -108,16 +109,19 @@ export class SlidingComponent extends BaseGameComponent {
       }
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       const status = this.store.status();
       if (status === GameStatus.Finished) {
         if (!this.finishedAt()) {
           this.finishedAt.set(Date.now());
         }
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
       } else {
         this.finishedAt.set(null);
+        this.showOverlay.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
 
     effect(() => {
       const status = this.store.status();

@@ -242,7 +242,7 @@
     }
 
     <!-- Game Over Overlay -->
-    @if (store.status() === 'finished') {
+    @if (store.status() === 'finished' && showOverlay()) {
       <app-game-result-overlay
         currentGameId="lightsout"
         [status]="getOverlayStatus()"

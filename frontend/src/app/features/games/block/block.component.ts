@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { BlockStore } from './store/block.store';
@@ -47,6 +47,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   previewShadow = signal<{ row: number, col: number, shape: BlockShape } | null>(null);
   
   showRules = signal(false);
+  showOverlay = signal(false);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -64,6 +65,15 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
         this.roomLifecycle.clearReconnectInfo();
       },
     });
+
+    effect((onCleanup) => {
+      if (this.store.status() === 'finished') {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
   }
 
   override ngOnInit(): void {

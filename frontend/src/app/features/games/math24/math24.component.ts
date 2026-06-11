@@ -51,6 +51,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   startingCountdown = signal(3);
   showRules = signal(false);
+  showOverlay = signal(false);
   private countdownInterval: any;
 
   get playerId(): string {
@@ -68,7 +69,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       },
     });
     
-    effect(() => {
+    effect((onCleanup) => {
       const status = this.store.gameStatus();
       if (this.store.currentMode() !== 'single') {
         if (status === 'starting') {
@@ -92,7 +93,15 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
           });
         }
       }
-    });
+      
+      const isFin = this.store.isFinished() || this.store.gameStatus() === 'finished';
+      if (isFin) {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
   }
 
   override ngOnInit() {

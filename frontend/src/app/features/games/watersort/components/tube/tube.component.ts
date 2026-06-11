@@ -14,8 +14,8 @@ import { CommonModule } from '@angular/common';
       <!-- Glass Tube -->
       <div class="glass-tube absolute inset-0 rounded-b-full overflow-hidden border-x-2 border-b-2 border-slate-300/30 dark:border-slate-500/30 z-10 pointer-events-none">
         <!-- Highlights -->
-        <div class="absolute left-1 top-0 bottom-2 w-1.5 bg-gradient-to-r from-white/40 to-transparent rounded-full mix-blend-overlay"></div>
-        <div class="absolute right-0 top-0 bottom-2 w-2 bg-gradient-to-l from-black/10 to-transparent rounded-full mix-blend-overlay"></div>
+        <div class="absolute left-1 top-0 bottom-2 w-1.5 bg-gradient-to-r from-white/30 to-transparent rounded-full"></div>
+        <div class="absolute right-0 top-0 bottom-2 w-2 bg-gradient-to-l from-black/10 to-transparent rounded-full"></div>
       </div>
       
       <!-- Liquid Container -->
@@ -26,7 +26,10 @@ import { CommonModule } from '@angular/common';
             class="liquid-layer w-full transition-all duration-300 ease-in-out relative flex items-center justify-center overflow-hidden"
             [style.height.%]="liquid.heightPercent"
             [style.background-color]="liquid.isHidden ? null : liquid.color"
-            [ngClass]="{'bg-slate-300 dark:bg-slate-700 border-t border-slate-400/30 dark:border-slate-800/50': liquid.isHidden}"
+            [ngClass]="{
+              'bg-slate-300 dark:bg-slate-700 border-t border-slate-400/30 dark:border-slate-800/50': liquid.isHidden,
+              'border-t border-black/5': !liquid.isHidden && $index > 0
+            }"
           >
             <!-- Surface reflection -->
             <div *ngIf="$index === 0 && !liquid.isHidden" class="absolute top-0 left-0 right-0 h-2 bg-white/20 rounded-full scale-110 -translate-y-1"></div>

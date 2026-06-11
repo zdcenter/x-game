@@ -42,6 +42,7 @@ export class SudokuPkStealComponent {
   frozenCountdownDisplay = signal<number>(0);
   freezeTimer: any = null;
   freezeInterval: any = null;
+  showOverlay = signal(false);
 
   getSortedPlayers() {
     const players = Object.values(this.store.players() as any) as any[];
@@ -68,11 +69,14 @@ export class SudokuPkStealComponent {
   }
 
   constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       if (this.store.isFinished() || this.store.gameStatus() === 'finished') {
-        // Overlay handles the UI
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
 
     // Handle freeze countdown
     effect(() => {

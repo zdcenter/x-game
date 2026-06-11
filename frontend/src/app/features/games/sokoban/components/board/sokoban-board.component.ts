@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, inject } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SokobanStore } from '../../store/sokoban.store';
 
@@ -6,6 +6,57 @@ import { SokobanStore } from '../../store/sokoban.store';
   selector: 'app-sokoban-board',
   standalone: true,
   imports: [CommonModule],
+  styles: [`
+    .player-wrapper {
+      transition: transform 0.2s ease;
+    }
+    .player-wrapper.facing-left {
+      transform: scaleX(-1);
+    }
+    
+    @keyframes walk-leg-l {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes walk-leg-r {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes push-arm-l {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-4px) scaleY(1.1); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes push-arm-r {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-4px) scaleY(1.1); }
+      100% { transform: translateY(0); }
+    }
+
+    .action-walk .leg-l {
+      animation: walk-leg-l 0.25s ease-in-out;
+    }
+    .action-walk .leg-r {
+      animation: walk-leg-r 0.25s ease-in-out 0.12s;
+    }
+    
+    .action-push .leg-l {
+      animation: walk-leg-l 0.25s ease-in-out;
+    }
+    .action-push .leg-r {
+      animation: walk-leg-r 0.25s ease-in-out 0.12s;
+    }
+    .action-push .arm-l {
+      animation: push-arm-l 0.25s ease-in-out;
+      transform-origin: center top;
+    }
+    .action-push .arm-r {
+      animation: push-arm-r 0.25s ease-in-out;
+      transform-origin: center top;
+    }
+`],
   template: `
     <div class="relative w-full h-full bg-sky-200 rounded-xl border-[4px] border-slate-700 shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center touch-none select-none"
          (touchstart)="onTouchStart($event)"
@@ -71,32 +122,44 @@ import { SokobanStore } from '../../store/sokoban.store';
 
               @if (cell === '@' || cell === '+') {
                 <!-- Player -->
-                <div class="w-[90%] h-[90%] z-30 relative flex items-center justify-center drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)]">
+                <div class="w-[90%] h-[90%] z-30 relative flex items-center justify-center drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)] player-wrapper"
+                     [ngClass]="[playerDir() === 'left' ? 'facing-left' : 'facing-right', 'action-' + playerAction()]">
                   <svg viewBox="0 0 100 100" class="w-full h-full">
-                    <!-- Hair -->
-                    <path d="M 20 30 Q 50 -5 80 30 L 80 40 L 20 40 Z" fill="#111827" />
-                    <!-- Face -->
-                    <rect x="30" y="30" width="40" height="25" rx="5" fill="#fcd34d" />
-                    <!-- Glasses/Mask -->
-                    <rect x="25" y="35" width="50" height="12" rx="3" fill="#e5e7eb" stroke="#4b5563" stroke-width="2"/>
-                    <circle cx="40" cy="41" r="3" fill="#000" />
-                    <circle cx="60" cy="41" r="3" fill="#000" />
-                    <!-- Body (Red shirt) -->
-                    <path d="M 35 55 L 65 55 L 70 85 L 30 85 Z" fill="#ef4444" />
-                    <!-- White shirt collar -->
-                    <polygon points="45,55 55,55 50,65" fill="#fff" />
-                    <!-- Arms -->
-                    <path d="M 35 60 L 20 70" stroke="#ef4444" stroke-width="10" stroke-linecap="round" />
-                    <path d="M 65 60 L 80 70" stroke="#ef4444" stroke-width="10" stroke-linecap="round" />
-                    <!-- Hands -->
-                    <circle cx="17" cy="72" r="6" fill="#fff" />
-                    <circle cx="83" cy="72" r="6" fill="#fff" />
-                    <!-- Legs -->
-                    <rect x="40" y="80" width="8" height="10" fill="#1f2937" />
-                    <rect x="52" y="80" width="8" height="10" fill="#1f2937" />
-                    <!-- Shoes -->
-                    <ellipse cx="44" cy="94" rx="8" ry="4" fill="#fff" />
-                    <ellipse cx="56" cy="94" rx="8" ry="4" fill="#fff" />
+                    <!-- Head & Body Group -->
+                    <g class="body-head">
+                      <!-- Hair -->
+                      <path d="M 20 30 Q 50 -5 80 30 L 80 40 L 20 40 Z" fill="#111827" />
+                      <!-- Face -->
+                      <rect x="30" y="30" width="40" height="25" rx="5" fill="#fcd34d" />
+                      <!-- Glasses/Mask -->
+                      <rect x="25" y="35" width="50" height="12" rx="3" fill="#e5e7eb" stroke="#4b5563" stroke-width="2"/>
+                      <circle cx="40" cy="41" r="3" fill="#000" />
+                      <circle cx="60" cy="41" r="3" fill="#000" />
+                      <!-- Body (Red shirt) -->
+                      <path d="M 35 55 L 65 55 L 70 85 L 30 85 Z" fill="#ef4444" />
+                      <!-- White shirt collar -->
+                      <polygon points="45,55 55,55 50,65" fill="#fff" />
+                    </g>
+                    <!-- Left Arm & Hand -->
+                    <g class="arm-l">
+                      <path d="M 35 60 L 20 70" stroke="#ef4444" stroke-width="10" stroke-linecap="round" />
+                      <circle cx="17" cy="72" r="6" fill="#fff" />
+                    </g>
+                    <!-- Right Arm & Hand -->
+                    <g class="arm-r">
+                      <path d="M 65 60 L 80 70" stroke="#ef4444" stroke-width="10" stroke-linecap="round" />
+                      <circle cx="83" cy="72" r="6" fill="#fff" />
+                    </g>
+                    <!-- Left Leg & Shoe -->
+                    <g class="leg-l">
+                      <rect x="40" y="80" width="8" height="10" fill="#1f2937" />
+                      <ellipse cx="44" cy="94" rx="8" ry="4" fill="#fff" />
+                    </g>
+                    <!-- Right Leg & Shoe -->
+                    <g class="leg-r">
+                      <rect x="52" y="80" width="8" height="10" fill="#1f2937" />
+                      <ellipse cx="56" cy="94" rx="8" ry="4" fill="#fff" />
+                    </g>
                   </svg>
                 </div>
               }
@@ -109,6 +172,51 @@ import { SokobanStore } from '../../store/sokoban.store';
   `
 })
 export class SokobanBoardComponent {
+  playerDir = signal<'up' | 'down' | 'left' | 'right'>('right');
+  playerAction = signal<'idle' | 'walk' | 'push'>('idle');
+  private actionTimeout: any;
+
+  triggerMove(dir: 'up' | 'down' | 'left' | 'right') {
+    if (dir === 'left' || dir === 'right') {
+      this.playerDir.set(dir);
+    }
+    
+    const board = this.store.myBoard();
+    let pr = -1, pc = -1;
+    for (let r = 0; r < board.length; r++) {
+      for (let c = 0; c < board[r].length; c++) {
+        if (board[r][c] === '@' || board[r][c] === '+') { pr = r; pc = c; break; }
+      }
+      if (pr !== -1) break;
+    }
+    
+    let nextCell = '';
+    if (pr !== -1) {
+      if (dir === 'up' && pr > 0) nextCell = board[pr-1][pc];
+      if (dir === 'down' && pr < board.length-1) nextCell = board[pr+1][pc];
+      if (dir === 'left' && pc > 0) nextCell = board[pr][pc-1];
+      if (dir === 'right' && pc < board[pr].length-1) nextCell = board[pr][pc+1];
+    }
+
+    const isBox = nextCell === '$' || nextCell === '*';
+    const state = this.store.myPlayerState();
+    const preMoves = state ? state.moves : 0;
+    
+    this.store.move(dir);
+    
+    // Check if move was successful by observing state again (synchronous execution assumed for local store)
+    const newState = this.store.myPlayerState();
+    const postMoves = newState ? newState.moves : 0;
+    
+    if (postMoves > preMoves) {
+      this.playerAction.set(isBox ? 'push' : 'walk');
+      if (this.actionTimeout) clearTimeout(this.actionTimeout);
+      this.actionTimeout = setTimeout(() => {
+        this.playerAction.set('idle');
+      }, 250);
+    }
+  }
+
   store = inject(SokobanStore);
 
   rows = computed(() => this.store.myBoard().length || 1);
@@ -187,25 +295,25 @@ export class SokobanBoardComponent {
       case 'ArrowUp':
       case 'w':
       case 'W':
-        this.store.move('up');
+        this.triggerMove('up');
         event.preventDefault();
         break;
       case 'ArrowDown':
       case 's':
       case 'S':
-        this.store.move('down');
+        this.triggerMove('down');
         event.preventDefault();
         break;
       case 'ArrowLeft':
       case 'a':
       case 'A':
-        this.store.move('left');
+        this.triggerMove('left');
         event.preventDefault();
         break;
       case 'ArrowRight':
       case 'd':
       case 'D':
-        this.store.move('right');
+        this.triggerMove('right');
         event.preventDefault();
         break;
       case 'z':
@@ -235,12 +343,12 @@ export class SokobanBoardComponent {
       
       if (Math.abs(dx) > Math.abs(dy)) {
         if (Math.abs(dx) > 30) {
-          this.store.move(dx > 0 ? 'right' : 'left');
+          this.triggerMove(dx > 0 ? 'right' : 'left');
           event.preventDefault();
         }
       } else {
         if (Math.abs(dy) > 30) {
-          this.store.move(dy > 0 ? 'down' : 'up');
+          this.triggerMove(dy > 0 ? 'down' : 'up');
           event.preventDefault();
         }
       }

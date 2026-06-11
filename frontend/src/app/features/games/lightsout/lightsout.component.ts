@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -43,6 +43,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
   showRules = signal(false);
+  showOverlay = signal(false);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -72,6 +73,16 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.clearReconnectInfo();
       },
     });
+
+    effect((onCleanup) => {
+      const isFin = this.store.status() === 'finished';
+      if (isFin) {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
   }
 
   override ngOnInit() {

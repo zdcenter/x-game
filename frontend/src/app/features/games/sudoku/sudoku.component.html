@@ -93,7 +93,7 @@
 
             <div class="flex-grow flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-start md:justify-center md:content-start items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto">
               <!-- Victory Overlay -->
-              @if (store.isFinished() && store.currentMode() === 'single') {
+              @if (store.isFinished() && store.currentMode() === 'single' && showOverlay()) {
               <app-game-result-overlay
                 currentGameId="sudoku"
                 [status]="'win'"

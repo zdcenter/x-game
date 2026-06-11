@@ -187,7 +187,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
 
               <!-- Game Over Overlay -->
-              @if (status === 'finished') {
+              @if (status === 'finished' && showOverlay()) {
                 <app-game-result-overlay
                   currentGameId="watersort"
                   [status]="didIWin() ? 'win' : 'lose'"
@@ -282,6 +282,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   private audioService = inject(AudioService);
   
   showRules = signal(false);
+  showOverlay = signal(false);
 
   get store() { return this._store; }
   override get playerId() { return this.authStore.currentUser()?.username || this.authStore.guestId; }
@@ -321,14 +322,21 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
   constructor() {
     super();
-    effect(() => {
+    effect((onCleanup) => {
       const status = this._store.status();
       if (status === 'starting') {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
-    });
+
+      if (status === 'finished') {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
   }
 
   override ngOnInit() {

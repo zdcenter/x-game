@@ -148,7 +148,7 @@
               </div>
               }
 
-              @if (store.status() === 'finished') {
+              @if (store.status() === 'finished' && showOverlay()) {
               <app-game-result-overlay currentGameId="sliding" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
                 [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()"
                 [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"

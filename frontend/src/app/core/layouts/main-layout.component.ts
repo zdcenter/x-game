@@ -104,7 +104,7 @@ import { PwaService } from '../services/pwa.service';
       </header>
 
       <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col overflow-y-auto relative min-h-0 overscroll-none">
+      <main class="flex-1 flex flex-col overflow-y-auto custom-scrollbar relative min-h-0">
         <router-outlet></router-outlet>
       </main>
     </div>

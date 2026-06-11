@@ -57,6 +57,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   
   view = this.store.view;
+  showOverlay = signal(false);
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
@@ -65,12 +66,20 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     super();
 
     // Watch for countdown trigger
-    effect(() => {
+    effect((onCleanup) => {
       const status = this.store.gameStatus();
       if (status === 'starting') {
         untracked(() => this.gameTimer.startCountdown());
       }
-    });
+      
+      const isFin = this.store.isFinished() || status === 'finished';
+      if (isFin) {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
 
     // Room lifecycle: cross-game join, reconnect, room dismissed handling
     this.roomLifecycle = setupRoomLifecycle({

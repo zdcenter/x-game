@@ -52,6 +52,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   showRules = signal(false);
   isMobileSidebarOpen = signal(false);
+  showOverlay = signal(false);
 
   // User input signals
   currentInput = signal<string>('');
@@ -88,14 +89,21 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
       onLeaveRoom: () => this.returnToLobby(),
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       const status = this.status();
       if (status === 'starting') {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
-    });
+
+      if (status === 'finished') {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
 
     effect(() => {
       // Auto-save logic

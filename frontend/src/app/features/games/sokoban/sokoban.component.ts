@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, ViewChild, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -64,7 +64,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                 <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <span class="hidden sm:inline"><ng-container i18n="@@game.levels_lobby">Lobby</ng-container></span>
+                <span class="hidden sm:inline">{{ i18n.t('game.levels_lobby')() }}</span>
               </button>
             }
             <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95">
@@ -134,7 +134,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                style="width: min(95vw, calc(100vh - 280px), 600px); height: min(95vw, calc(100vh - 280px), 600px);">
             <app-sokoban-board class="w-full h-full"></app-sokoban-board>
 
-            @if (store.status() === 'finished') {
+            @if (store.status() === 'finished' && showOverlay()) {
               <app-game-result-overlay
                 currentGameId="sokoban"
                 [status]="getGameResult()"
@@ -255,6 +255,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   override isMobileSidebarOpen = signal(false);
   showLobby = signal(true);
   showRules = signal(false);
+  showOverlay = signal(false);
 
   predefinedDifficulties = this.gameRegistry.getConfig('sokoban')?.difficulties || [];
 
@@ -264,6 +265,15 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   constructor() {
     super();
+    effect((onCleanup) => {
+      if (this.store.status() === 'finished') {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
+
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sokoban',
       getCurrentMode: () => this.store.currentRoomMode(),

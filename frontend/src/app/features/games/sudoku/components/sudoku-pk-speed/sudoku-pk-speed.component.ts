@@ -1,4 +1,4 @@
-import { Component, inject, effect, Output, EventEmitter } from '@angular/core';
+import { Component, inject, effect, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
 import { SudokuBoardComponent } from '../sudoku-board/sudoku-board.component';
@@ -24,6 +24,7 @@ export class SudokuPkSpeedComponent {
   gameRegistry = inject(GameRegistryService);
 
   @Output() openLobby = new EventEmitter<void>();
+  showOverlay = signal(false);
 
   getModeName() {
     const mode = this.store.currentMode();
@@ -63,10 +64,13 @@ export class SudokuPkSpeedComponent {
   }
 
   constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       if (this.store.isFinished() || this.store.gameStatus() === 'finished') {
-        // Overlay handles the UI
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 }

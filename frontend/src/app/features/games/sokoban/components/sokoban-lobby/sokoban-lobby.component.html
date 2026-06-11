@@ -3,8 +3,8 @@
   <div class="flex-grow flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0">
   <!-- Lobby Header -->
   <app-game-header
-    i18n-title="@@lobby.sokoban" title="Sokoban"
-    i18n-subtitle="@@lobby.select_level" subtitle="Select Level"
+    [title]="i18n.t('lobby.sokoban')()"
+    [subtitle]="i18n.t('lobby.select_level')()"
     iconGradientClass="from-amber-500 to-orange-500"
     titleGradientClass="from-amber-400 to-orange-400"
     shadowClass="shadow-orange-500/20"
@@ -43,7 +43,7 @@
   <!-- Level Grid -->
   <div class="flex items-center justify-between px-6 pt-4 pb-2">
     <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-      <ng-container i18n="@@game.total_levels">Total Levels</ng-container>: {{ levels().length }}
+      {{ i18n.t('game.total_levels')() }}: {{ levels().length }}
     </span>
   </div>
   <div class="flex-grow px-6 pb-6 overflow-y-auto custom-scrollbar">
@@ -70,15 +70,15 @@
             }
             
             <span class="text-sm sm:text-lg font-black text-slate-300 group-hover:text-white transition-colors mb-2 whitespace-nowrap">
-              <ng-container i18n="@@game.level">Level</ng-container> {{ level.level_num | number:'1.0-0' }}
+              {{ i18n.t('game.level')() }} {{ level.level_num | number:'1.0-0' }}
             </span>
             
             @if (level.progress && level.progress.status === 'playing') {
-              <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider text-center" i18n="@@game.in_progress">In Progress</span>
+              <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.in_progress')() }}</span>
             } @else if (level.progress && level.progress.status === 'finished') {
-              <span class="text-[10px] text-green-500 font-bold mt-2 uppercase tracking-wider text-center" i18n="@@game.finished">Finished</span>
+              <span class="text-[10px] text-green-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.finished')() }}</span>
             } @else {
-              <span class="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-wider text-center" i18n="@@game.unplayed">Unplayed</span>
+              <span class="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.unplayed')() }}</span>
             }
           </button>
         }

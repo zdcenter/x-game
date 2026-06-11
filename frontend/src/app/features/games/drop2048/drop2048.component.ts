@@ -59,6 +59,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   showRules = signal(false);
+  showOverlay = signal(false);
   currentRoomId = computed(() => this.store.roomId());
 
   constructor() {
@@ -99,6 +100,15 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
         }
       });
     });
+
+    effect((onCleanup) => {
+      if (this.store.status() === 'finished') {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    }, { allowSignalWrites: true });
   }
 
   override ngOnInit() {
