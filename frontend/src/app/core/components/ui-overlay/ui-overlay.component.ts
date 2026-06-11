@@ -7,7 +7,7 @@ import { ToastService } from '../../services/toast.service';
   imports: [CommonModule],
   template: `
     <!-- Toasts -->
-    <div class="fixed top-20 right-4 z-[60] flex flex-col gap-2">
+    <div class="fixed top-20 right-4 z-[9999] flex flex-col gap-2">
       @for (toast of toastService.toasts(); track toast.id) {
         <div class="px-4 py-3 rounded-lg shadow-lg text-sm font-bold text-white transition-all transform animate-slide-in"
              [class.bg-emerald-500]="toast.type === 'success'"
@@ -20,7 +20,7 @@ import { ToastService } from '../../services/toast.service';
 
     <!-- Confirm Dialog -->
     @if (toastService.currentConfirm(); as dialog) {
-      <div class="fixed inset-0 z-[60] bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="fixed inset-0 z-[9999] bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform animate-scale-in text-[var(--color-text-main)]">
           <div class="p-6">
             <h3 class="text-lg font-bold mb-2">{{ dialog.title }}</h3>

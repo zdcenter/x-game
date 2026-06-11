@@ -14,6 +14,7 @@ import { environment as appEnvironment } from '../../../environments/environment
 import { SettingsService } from '../../core/services/settings.service';
 import { AnnouncementService, Announcement } from '../../core/services/announcement.service';
 import { AdsenseComponent } from '../../shared/components/adsense/adsense.component';
+import { ShareService } from '../../core/services/share.service';
 
 @Component({
   selector: 'app-lobby',
@@ -98,9 +99,18 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
             <!-- Card Content -->
             <div class="p-6 relative">
               <h2 class="text-2xl font-bold mb-2 pr-16">{{ getGameTitle(game.id) }}</h2>
-              <div class="absolute top-6 right-6 flex items-center gap-1 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-main)] px-2 py-1 rounded-full border border-[var(--color-border-card)] shadow-sm">
-                <span class="text-xs">🔥</span>
-                <span class="font-bold">{{ game.visitCount || 0 }}</span>
+              <div class="absolute top-6 right-6 flex items-center gap-2">
+                <div class="flex items-center gap-1 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-main)] px-2 py-1 rounded-full border border-[var(--color-border-card)] shadow-sm">
+                  <span class="text-xs">🔥</span>
+                  <span class="font-bold">{{ game.visitCount || 0 }}</span>
+                </div>
+                <button (click)="shareGame($event, game.id)" 
+                        class="p-1.5 bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-[var(--color-text-muted)] hover:text-blue-400 shadow-sm transition-all hover:scale-110"
+                        title="Share this game">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
               </div>
               <p class="opacity-70 text-sm line-clamp-2">
                 {{ getGameDesc(game.id) }}
@@ -160,6 +170,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   router = inject(Router);
   settingsService = inject(SettingsService);
   announcementService = inject(AnnouncementService);
+  shareService = inject(ShareService);
   
   games = signal<BackendGameConfig[]>([]);
   activeAnnouncements = signal<Announcement[]>([]);
@@ -259,4 +270,19 @@ export class LobbyComponent implements OnInit, OnDestroy {
       parent.appendChild(span);
     }
   }
+
+  shareGame(event: Event, gameId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    const url = `${window.location.origin}/games/${gameId}`;
+    const title = this.getGameTitle(gameId);
+    const desc = this.getGameDesc(gameId);
+    
+    this.shareService.share({
+      title: `${title} - Puzzle PK`,
+      text: `${this.i18n.t('share.game_invite')() || 'Play this awesome game with me!'} ${title}\n${desc}`,
+      url: url
+    });
+  }
 }
+

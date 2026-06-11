@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { TRANSLATIONS } = require('./dist_tmp_cjs/core/i18n/translations.js');
+const { TRANSLATIONS } = require('./dist_i18n/core/i18n/translations.js');
 
 const baseXml = fs.readFileSync('messages.xlf', 'utf-8');
 

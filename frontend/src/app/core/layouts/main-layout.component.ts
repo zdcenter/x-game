@@ -5,11 +5,12 @@ import { I18nService } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
 import { AuthStore } from '../auth/auth.store';
 import { PwaService } from '../services/pwa.service';
+import { ShareModalComponent } from '../../shared/components/share-modal/share-modal.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule],
+  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
       
@@ -106,6 +107,7 @@ import { PwaService } from '../services/pwa.service';
       <!-- Main Content Area -->
       <main class="flex-1 flex flex-col overflow-y-auto custom-scrollbar relative min-h-0">
         <router-outlet></router-outlet>
+        <app-share-modal></app-share-modal>
       </main>
     </div>
   `

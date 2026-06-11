@@ -71,7 +71,7 @@
         <target>Install App</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
-          <context context-type="linenumber">40,41</context>
+          <context context-type="linenumber">41,42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="nav.profile" datatype="html">
@@ -79,7 +79,7 @@
         <target>Profile</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
-          <context context-type="linenumber">75,76</context>
+          <context context-type="linenumber">76,77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="nav.guest" datatype="html">
@@ -87,7 +87,7 @@
         <target>Guest</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
-          <context context-type="linenumber">80,81</context>
+          <context context-type="linenumber">81,82</context>
         </context-group>
       </trans-unit>
       <trans-unit id="nav.signin" datatype="html">
@@ -95,7 +95,7 @@
         <target>Sign In / Register</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/layouts/main-layout.component.ts</context>
-          <context context-type="linenumber">98,99</context>
+          <context context-type="linenumber">99,100</context>
         </context-group>
       </trans-unit>
       <trans-unit id="admin.announcements.title" datatype="html">
@@ -613,6 +613,10 @@
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">32,33</context>
         </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/games/lightsout/lightsout.component.html</context>
+          <context context-type="linenumber">63,64</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="game.diff_medium" datatype="html">
         <source>Medium</source>
@@ -621,6 +625,10 @@
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">33,34</context>
         </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/games/lightsout/lightsout.component.html</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="game.diff_hard" datatype="html">
         <source>Hard</source>
@@ -628,6 +636,10 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
           <context context-type="linenumber">34,35</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/games/lightsout/lightsout.component.html</context>
+          <context context-type="linenumber">65,66</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.guess_history" datatype="html">
@@ -647,7 +659,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">206,207</context>
+          <context context-type="linenumber">211,212</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.how_to_play" datatype="html">
@@ -719,7 +731,7 @@
         <target>Please enter your guessed </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">114</context>
+          <context context-type="linenumber">117</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.input_hint_post" datatype="html">
@@ -727,7 +739,7 @@
         <target>-digit unique code</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">114,116</context>
+          <context context-type="linenumber">117,119</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.keyboard.submit" datatype="html">
@@ -735,7 +747,7 @@
         <target>OK</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">141,143</context>
+          <context context-type="linenumber">144,146</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.helper_board" datatype="html">
@@ -743,7 +755,7 @@
         <target>Memo</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">149,151</context>
+          <context context-type="linenumber">153,155</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.helper_desc" datatype="html">
@@ -751,7 +763,7 @@
         <target>Tap: Exclude (crossed) / Include (green)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">151,152</context>
+          <context context-type="linenumber">155,156</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.helper_global" datatype="html">
@@ -759,7 +771,7 @@
         <target>ALL</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">157,158</context>
+          <context context-type="linenumber">162,163</context>
         </context-group>
       </trans-unit>
       <trans-unit id="codebreaker.opponent_history" datatype="html">
@@ -767,7 +779,7 @@
         <target>Opponent Progress</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">198,199</context>
+          <context context-type="linenumber">203,204</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.hint_title" datatype="html">
@@ -775,7 +787,7 @@
         <target>Hint Result</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">250,251</context>
+          <context context-type="linenumber">255,256</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
@@ -787,7 +799,7 @@
         <target>Close</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">261,262</context>
+          <context context-type="linenumber">266,267</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/components/math24-board/math24-board.component.ts</context>
@@ -799,7 +811,7 @@
         <target>Room Info</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/codebreaker/codebreaker.component.html</context>
-          <context context-type="linenumber">324,325</context>
+          <context context-type="linenumber">329,330</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/drop2048/drop2048.component.html</context>
@@ -810,12 +822,8 @@
           <context context-type="linenumber">183,184</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">src/app/features/games/hexa/hexa.component.html</context>
-          <context context-type="linenumber">208,209</context>
-        </context-group>
-        <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/math24/math24.component.html</context>
-          <context context-type="linenumber">139,140</context>
+          <context context-type="linenumber">141,142</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/minesweeper/minesweeper.component.html</context>
@@ -826,12 +834,20 @@
           <context context-type="linenumber">203,204</context>
         </context-group>
         <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/games/sokoban/sokoban.component.ts</context>
+          <context context-type="linenumber">251,252</context>
+        </context-group>
+        <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
-          <context context-type="linenumber">140,141</context>
+          <context context-type="linenumber">142,143</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/tetris/tetris.component.html</context>
           <context context-type="linenumber">244,245</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/games/watersort/watersort.component.ts</context>
+          <context context-type="linenumber">234,235</context>
         </context-group>
       </trans-unit>
       <trans-unit id="lobby.drop2048" datatype="html">
@@ -853,10 +869,6 @@
           <context context-type="sourcefile">src/app/features/games/tetris/tetris.component.html</context>
           <context context-type="linenumber">173,174</context>
         </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">88,89</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="game.start_match" datatype="html">
         <source>START</source>
@@ -872,10 +884,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/tetris/tetris.component.html</context>
           <context context-type="linenumber">164,165</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">80,81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.gomoku" datatype="html">
@@ -935,7 +943,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
-          <context context-type="linenumber">60,61</context>
+          <context context-type="linenumber">78,79</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.frozen" datatype="html">
@@ -1039,11 +1047,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
-          <context context-type="linenumber">48,49</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">72,73</context>
+          <context context-type="linenumber">61,62</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.frozen_msg" datatype="html">
@@ -1161,17 +1165,13 @@
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
           <context context-type="linenumber">23,24</context>
         </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">24</context>
-        </context-group>
       </trans-unit>
       <trans-unit id="game.win" datatype="html">
         <source>game.win</source>
         <target>You won!</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
-          <context context-type="linenumber">98,99</context>
+          <context context-type="linenumber">100,101</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.sudoku.next_level_prompt" datatype="html">
@@ -1179,7 +1179,7 @@
         <target>Level cleared! Do you want to play the next level?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/games/sudoku/sudoku.component.html</context>
-          <context context-type="linenumber">99,100</context>
+          <context context-type="linenumber">101,102</context>
         </context-group>
       </trans-unit>
       <trans-unit id="tetris.title" datatype="html">
@@ -1195,11 +1195,11 @@
         <target>The Ultimate Challenge Arena</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
-          <context context-type="linenumber">61,62</context>
+          <context context-type="linenumber">62,63</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
-          <context context-type="linenumber">74,75</context>
+          <context context-type="linenumber">75,76</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/profile/profile.component.ts</context>
@@ -1211,7 +1211,7 @@
         <target>From logical deduction to spatial puzzles, challenge yourself or compete with players globally.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
-          <context context-type="linenumber">79,80</context>
+          <context context-type="linenumber">80,81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="lobby.ready" datatype="html">
@@ -1219,7 +1219,7 @@
         <target>Ready</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/lobby/lobby.component.ts</context>
-          <context context-type="linenumber">466,467</context>
+          <context context-type="linenumber">119,120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="profile.title" datatype="html">
@@ -1275,7 +1275,7 @@
         <target>Play Again</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
-          <context context-type="linenumber">54,55</context>
+          <context context-type="linenumber">72,73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.dismiss_room" datatype="html">
@@ -1283,7 +1283,7 @@
         <target>Dismiss Room</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
-          <context context-type="linenumber">68,69</context>
+          <context context-type="linenumber">86,87</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.recommendations" datatype="html">
@@ -1291,23 +1291,7 @@
         <target>You might also like</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-result-overlay/game-result-overlay.component.ts</context>
-          <context context-type="linenumber">78,80</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.rules.title" datatype="html">
-        <source>game.rules.title</source>
-        <target>How to Play</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-rules-modal/game-rules-modal.component.ts</context>
-          <context context-type="linenumber">40,41</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.rules.got_it" datatype="html">
-        <source>game.rules.got_it</source>
-        <target>Got it!</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-rules-modal/game-rules-modal.component.ts</context>
-          <context context-type="linenumber">66,67</context>
+          <context context-type="linenumber">96,98</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.starting" datatype="html">
@@ -1316,70 +1300,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/game-starting-overlay/game-starting-overlay.component.ts</context>
           <context context-type="linenumber">16,17</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.waiting_room" datatype="html">
-        <source>game.waiting_room</source>
-        <target>Waiting Room</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">21,22</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.room_name" datatype="html">
-        <source>game.room_name</source>
-        <target>Room Name</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">26</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.copied" datatype="html">
-        <source>Copied!</source>
-        <target>Copied successfully!</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">34,35</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.host" datatype="html">
-        <source>game.host</source>
-        <target>Host</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">57,58</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.change_settings" datatype="html">
-        <source>Change Settings</source>
-        <target>Switch Game</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">77,78</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.waiting_for_players_ready" datatype="html">
-        <source>Waiting for all players to ready...</source>
-        <target>Waiting for all players to ready...</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">82,84</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.cancel_ready" datatype="html">
-        <source>Cancel Ready</source>
-        <target>Cancel Ready</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">92,93</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="game.ready" datatype="html">
-        <source>Ready</source>
-        <target>Ready for Battle</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/game-waiting-room/game-waiting-room.component.ts</context>
-          <context context-type="linenumber">96,97</context>
         </context-group>
       </trans-unit>
       <trans-unit id="game.hint_ad" datatype="html">
@@ -1397,6 +1317,14 @@
           <context context-type="sourcefile">src/app/shared/components/hint-button/hint-button.component.ts</context>
           <context context-type="linenumber">37,38</context>
         </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/components/hint-button/hint-button.component.ts</context>
+          <context context-type="linenumber">55,56</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/components/hint-button/hint-button.component.ts</context>
+          <context context-type="linenumber">64,65</context>
+        </context-group>
       </trans-unit>
       <trans-unit id="maintenance.title" datatype="html">
         <source>maintenance.title</source>
@@ -1404,6 +1332,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/components/maintenance/maintenance.component.ts</context>
           <context context-type="linenumber">11,13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="share.title" datatype="html">
+        <source>share.title</source>
+        <target>Share</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/components/share-modal/share-modal.component.ts</context>
+          <context context-type="linenumber">27,28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="share.scan" datatype="html">
+        <source>share.scan</source>
+        <target>Scan QR Code</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/components/share-modal/share-modal.component.ts</context>
+          <context context-type="linenumber">48,49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="share.scan_hint" datatype="html">
+        <source>Scan with any camera or QR reader</source>
+        <target>Scan with any camera or QR reader</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/components/share-modal/share-modal.component.ts</context>
+          <context context-type="linenumber">53,54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="share.copy" datatype="html">
+        <source>share.copy</source>
+        <target>Copy Link</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/components/share-modal/share-modal.component.ts</context>
+          <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
     </body>

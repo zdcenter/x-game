@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { ShareService } from '../../../core/services/share.service';
 
 @Component({
   selector: 'app-game-waiting-room',
@@ -123,6 +124,8 @@ export class GameWaitingRoomComponent {
   @Output() ready = new EventEmitter<void>();
   @Output() cancelReady = new EventEmitter<void>();
 
+  shareService = inject(ShareService);
+
   get sortedPlayers() {
     if (!this.players) return [];
     return [...this.players].sort((a, b) => {
@@ -171,46 +174,13 @@ export class GameWaitingRoomComponent {
     url.searchParams.set('host', this.hostId);
     
     const gameName = this.i18n.t('lobby.' + this.gameId)() || this.gameId;
-    let message = this.i18n.t('game.invite_message')() || `I am playing [game]! Join my room [room]:\n[url]`;
-    message = message.replace('[game]', gameName).replace('[room]', this.roomId).replace('[url]', url.toString());
+    let text = this.i18n.t('share.room_invite')() || `I am waiting for you in [game]! Click the link to join my room [room] directly and let's play!`;
+    text = text.replace('[game]', gameName).replace('[room]', this.roomId);
     
-    const showSuccess = () => {
-      this.showCopiedToast.set(true);
-      setTimeout(() => this.showCopiedToast.set(false), 3000);
-    };
-
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(message).then(showSuccess).catch(err => {
-        console.warn('Clipboard API failed, using fallback.', err);
-        this.fallbackCopyTextToClipboard(message, showSuccess);
-      });
-    } else {
-      this.fallbackCopyTextToClipboard(message, showSuccess);
-    }
-  }
-
-  private fallbackCopyTextToClipboard(text: string, onSuccess: () => void) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    // Avoid scrolling to bottom
-    textArea.style.top = '0';
-    textArea.style.left = '0';
-    textArea.style.position = 'fixed';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        onSuccess();
-      } else {
-        alert('Failed to copy. Please manually copy the link: ' + text);
-      }
-    } catch (err) {
-      console.error('Fallback: Oops, unable to copy', err);
-      alert('Failed to copy. Please manually copy the link: ' + text);
-    }
-    document.body.removeChild(textArea);
+    this.shareService.share({
+      title: `${gameName} - Puzzle PK`,
+      text: text,
+      url: url.toString()
+    });
   }
 }

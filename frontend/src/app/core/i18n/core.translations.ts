@@ -90,6 +90,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'lobby.math24.desc': 'Use all 4 numbers to make 24. Math brain training!',
     'lobby.drop2048': 'Drop 2048',
     'lobby.drop2048.desc': 'Drop and merge blocks to reach 2048.',
+    'lobby.block.desc': 'Drag and drop blocks to clear lines in this classic 1010! style puzzle.',
     'app.title.drop2048': 'Drop 2048',
     'app.title.drop2048.desc': 'Drop blocks and merge matching numbers to reach 2048!',
     'app.title.block': 'Block Puzzle',
@@ -378,6 +379,13 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.broadcast_success': 'Broadcast sent successfully!',
     'game.broadcast_btn': '📢 Broadcast to Lobby',
     'game.invite_btn': 'Invite Friends',
+    'share.title': 'Share',
+    'share.scan': 'Scan QR Code',
+    'share.scan_hint': 'Scan with any camera or QR reader',
+    'share.copy': 'Copy Link',
+    'share.copied': 'Link copied to clipboard!',
+    'share.game_invite': 'Play this awesome game with me!',
+    'share.room_invite': "I am waiting for you in [game]! Click the link to join my room [room] directly and let's play!",
     
     // Blog
     'blog.title': 'Puzzle PK Blog',
@@ -479,6 +487,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'lobby.math24.desc': '利用加减乘除将4个数字计算为24。绝佳的脑力心算训练！',
     'lobby.drop2048': '2048 下落合成',
     'lobby.drop2048.desc': '下落并合成相同的数字方块，直到拼出 2048。',
+    'lobby.block.desc': '经典的方块消除游戏。将方块拖放到网格中，填满行或列即可消除得分。',
     'app.title.drop2048': '数字合成 2048',
     'app.title.drop2048.desc': '下落式数字合成！让相同数字碰撞合并，挑战 2048！',
     'app.title.block': '方块消除',
@@ -770,6 +779,13 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.broadcast_success': '广播发送成功！',
     'game.broadcast_btn': '📢 发英雄帖',
     'game.invite_btn': '邀请好友',
+    'share.title': '分享',
+    'share.scan': '扫码分享',
+    'share.scan_hint': '支持微信、系统相机及任意扫码工具',
+    'share.copy': '复制链接',
+    'share.copied': '链接已复制到剪贴板！',
+    'share.game_invite': '快来和我一起玩这个超赞的游戏吧！',
+    'share.room_invite': '我正在【[game]】等你！点击链接直接加入我的房间 [room] 一起PK吧！',
 
     // Blog
     'blog.title': 'Puzzle PK 官方博客',

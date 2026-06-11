@@ -52,9 +52,21 @@ export class SeoService {
       this.title.setTitle(title);
       this.meta.updateTag({ name: 'description', content: desc });
       this.meta.updateTag({ name: 'keywords', content: keywords });
-    });
 
-    // Listen to router navigation to extract SEO data from the active route
+      // Apply Open Graph and Twitter tags
+      this.meta.updateTag({ property: 'og:title', content: title });
+      this.meta.updateTag({ property: 'og:description', content: desc });
+      
+      // Extract gameId from route path if it's a game route, otherwise use default icon
+      const url = this.router.url;
+      const match = url.match(/^\/games\/([a-zA-Z0-9_-]+)/);
+      const iconPath = match ? `/assets/games/icons/${match[1]}.svg` : `/assets/icons/icon-512x512.png`;
+      const fullImageUrl = `${window.location.origin}${iconPath}`;
+      
+      this.meta.updateTag({ property: 'og:image', content: fullImageUrl });
+      this.meta.updateTag({ name: 'twitter:image', content: fullImageUrl });
+      this.meta.updateTag({ property: 'og:url', content: window.location.href });
+    });
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       map(() => this.activatedRoute),
