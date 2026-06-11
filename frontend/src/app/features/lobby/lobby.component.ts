@@ -87,12 +87,12 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
           <a [routerLink]="['/games', game.id]" class="group relative overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
             <!-- Card Image Gradient Banner -->
-            <div class="h-56 w-full opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center relative"
+            <div class="aspect-square w-full opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center relative"
                  style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
               
               <img [src]="'/assets/games/icons/' + game.id + '.svg?v=3'"
                    [alt]="getGameTitle(game.id)"
-                   class="w-[150px] h-[150px] drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform duration-500"
+                   class="w-[85%] h-[85%] object-contain drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform duration-500"
                    (error)="handleIconError($event, game.id)" />
             </div>
             <!-- Card Content -->

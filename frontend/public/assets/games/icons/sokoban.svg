@@ -1,75 +1,264 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fbbf24"/>
-      <stop offset="100%" stop-color="#d97706"/>
+    <!-- Background Tray Shadow -->
+    <filter id="board-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+
+    <filter id="player-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+
+    <linearGradient id="target-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#eab308" />
     </linearGradient>
-    
-    <!-- Box Gradients -->
-    <linearGradient id="box-top" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fcd34d"/>
-      <stop offset="100%" stop-color="#f59e0b"/>
-    </linearGradient>
-    <linearGradient id="box-front" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#d97706"/>
+
+    <!-- Player Gradients (Copied 100% from Game Source) -->
+    <radialGradient id="skinHead" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="60%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </radialGradient>
+    <linearGradient id="skinBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="25%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#fde68a"/>
+      <stop offset="75%" stop-color="#f59e0b"/>
       <stop offset="100%" stop-color="#b45309"/>
     </linearGradient>
-    <linearGradient id="box-side" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#b45309"/>
+    <linearGradient id="skinArm" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#92400e"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
       <stop offset="100%" stop-color="#92400e"/>
     </linearGradient>
-
-    <!-- Floor Gradient -->
-    <linearGradient id="floor" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#0f172a"/>
+    <radialGradient id="skinFist" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="60%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </radialGradient>
+    <linearGradient id="pants" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
     </linearGradient>
-
-    <!-- Wall Gradients -->
-    <linearGradient id="wall-top" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#94a3b8"/>
-      <stop offset="100%" stop-color="#64748b"/>
+    <linearGradient id="belt" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#44403c"/>
+      <stop offset="100%" stop-color="#0c0a09"/>
     </linearGradient>
-    <linearGradient id="wall-front" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#475569"/>
-      <stop offset="100%" stop-color="#334155"/>
+    <radialGradient id="buckle" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </radialGradient>
+    <linearGradient id="shoe" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#57534e"/>
+      <stop offset="100%" stop-color="#1c1917"/>
     </linearGradient>
+    <radialGradient id="hair" cx="40%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#44403c"/>
+      <stop offset="50%" stop-color="#1c1917"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
 
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000000" flood-opacity="0.4"/>
-    </filter>
+    <!-- Floor Patterns -->
+    <pattern id="checkers" width="100" height="100" patternUnits="userSpaceOnUse" patternTransform="translate(50, 50)">
+      <rect x="0" y="0" width="50" height="50" fill="rgba(255,255,255,0.05)" />
+      <rect x="50" y="50" width="50" height="50" fill="rgba(255,255,255,0.05)" />
+      <rect x="50" y="0" width="50" height="50" fill="rgba(0,0,0,0.1)" />
+      <rect x="0" y="50" width="50" height="50" fill="rgba(0,0,0,0.1)" />
+    </pattern>
+
+    <pattern id="floor-tech" width="50" height="50" patternUnits="userSpaceOnUse" patternTransform="translate(50, 50)">
+      <svg viewBox="0 0 100 100" opacity="0.6">
+        <line x1="0" y1="25" x2="100" y2="25" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="0" y1="50" x2="100" y2="50" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="0" y1="75" x2="100" y2="75" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="50" y1="0" x2="50" y2="25" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="25" y1="25" x2="25" y2="50" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="75" y1="25" x2="75" y2="50" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="50" y1="50" x2="50" y2="75" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="25" y1="75" x2="25" y2="100" stroke="#1e3a8a" stroke-width="3"/>
+        <line x1="75" y1="75" x2="75" y2="100" stroke="#1e3a8a" stroke-width="3"/>
+      </svg>
+    </pattern>
+
+    <!-- Wall (100% Match) -->
+    <g id="wall">
+      <rect x="2" y="2" width="50" height="50" fill="rgba(0,0,0,0.6)" filter="blur(3px)" />
+      <rect x="0" y="0" width="50" height="50" fill="#cbd5e1" />
+      <g stroke="#334155" stroke-width="1.5" opacity="0.4">
+        <line x1="0" y1="12.5" x2="50" y2="12.5"/>
+        <line x1="0" y1="25" x2="50" y2="25"/>
+        <line x1="0" y1="37.5" x2="50" y2="37.5"/>
+        <line x1="25" y1="0" x2="25" y2="12.5"/>
+        <line x1="12.5" y1="12.5" x2="12.5" y2="25"/>
+        <line x1="37.5" y1="12.5" x2="37.5" y2="25"/>
+        <line x1="25" y1="25" x2="25" y2="37.5"/>
+        <line x1="12.5" y1="37.5" x2="12.5" y2="50"/>
+        <line x1="37.5" y1="37.5" x2="37.5" y2="50"/>
+      </g>
+      <rect x="0" y="0" width="50" height="4" fill="rgba(255,255,255,0.9)" />
+      <rect x="0" y="0" width="4" height="50" fill="rgba(255,255,255,0.9)" />
+      <rect x="0" y="46" width="50" height="4" fill="rgba(71,85,105,0.9)" />
+      <rect x="46" y="0" width="4" height="50" fill="rgba(71,85,105,0.9)" />
+    </g>
+
+    <!-- Target (100% Match) -->
+    <g id="target">
+      <circle cx="25" cy="25" r="8.5" fill="#eab308" filter="blur(5px)" opacity="0.9" />
+      <circle cx="25" cy="25" r="8.5" fill="url(#target-grad)" stroke="#ca8a04" stroke-width="1" />
+    </g>
+
+    <!-- Box Normal (100% Match) -->
+    <g id="box">
+      <rect x="2" y="2" width="46" height="46" fill="rgba(0,0,0,0.6)" filter="blur(2px)" />
+      <rect x="3.5" y="3.5" width="43" height="43" fill="#fef08a" />
+      <rect x="3.5" y="3.5" width="43" height="3" fill="rgba(255,255,255,0.9)" />
+      <rect x="3.5" y="3.5" width="3" height="43" fill="rgba(255,255,255,0.9)" />
+      <rect x="3.5" y="43.5" width="43" height="3" fill="rgba(202,138,4,0.9)" />
+      <rect x="43.5" y="3.5" width="3" height="43" fill="rgba(202,138,4,0.9)" />
+      <rect x="7.5" y="7.5" width="35" height="35" fill="none" stroke="#166534" stroke-width="2.5" />
+      <path d="M 7.5 7.5 L 42.5 42.5 M 42.5 7.5 L 7.5 42.5" stroke="#166534" stroke-width="3.5" />
+      <circle cx="9.5" cy="9.5" r="2.5" fill="#dc2626" />
+      <circle cx="40.5" cy="9.5" r="2.5" fill="#dc2626" />
+      <circle cx="9.5" cy="40.5" r="2.5" fill="#dc2626" />
+      <circle cx="40.5" cy="40.5" r="2.5" fill="#dc2626" />
+    </g>
+
+    <!-- Box Done (100% Match) -->
+    <g id="box-done">
+      <rect x="0" y="0" width="50" height="50" fill="rgba(34,197,94,0.8)" filter="blur(5px)" />
+      <rect x="3.5" y="3.5" width="43" height="43" fill="#22c55e" />
+      <rect x="3.5" y="3.5" width="43" height="3" fill="rgba(255,255,255,0.8)" />
+      <rect x="3.5" y="3.5" width="3" height="43" fill="rgba(255,255,255,0.8)" />
+      <rect x="3.5" y="43.5" width="43" height="3" fill="rgba(20,83,45,0.8)" />
+      <rect x="43.5" y="3.5" width="3" height="43" fill="rgba(20,83,45,0.8)" />
+      <rect x="7.5" y="7.5" width="35" height="35" fill="none" stroke="#ffffff" stroke-width="2.5" />
+      <path d="M 7.5 7.5 L 42.5 42.5 M 42.5 7.5 L 7.5 42.5" stroke="#ffffff" stroke-width="3.5" />
+      <circle cx="9.5" cy="9.5" r="2.5" fill="#fde047" />
+      <circle cx="40.5" cy="9.5" r="2.5" fill="#fde047" />
+      <circle cx="9.5" cy="40.5" r="2.5" fill="#fde047" />
+      <circle cx="40.5" cy="40.5" r="2.5" fill="#fde047" />
+    </g>
+
+    <!-- Player Right-Facing (100% match with push animation transform applied) -->
+    <g id="player-right" filter="url(#player-shadow)">
+      <g transform="translate(2.5, 2.5) scale(0.45)">
+        <g transform="rotate(-65 42 42)">
+          <path d="M 42 42 L 42 72" fill="none" stroke="#92400e" stroke-width="13" stroke-linecap="round"/>
+          <circle cx="42" cy="72" r="7" fill="#92400e"/>
+        </g>
+        <g transform="rotate(30 44 78)">
+          <path d="M 44 78 L 44 94" fill="none" stroke="#92400e" stroke-width="11" stroke-linecap="round"/>
+          <rect x="38" y="90" width="14" height="8" rx="3" fill="#1c1917"/>
+        </g>
+        <g transform="translate(3 0) rotate(10 50 58)">
+          <path d="M 34 38 Q 66 30 68 52 L 58 72 L 38 72 Z" fill="url(#skinBody)"/>
+          <path d="M 64 48 Q 58 52 54 46" fill="none" stroke="#92400e" stroke-width="1.5" opacity="0.6"/>
+          <rect x="36" y="70" width="24" height="6" rx="2" fill="url(#belt)"/>
+          <rect x="54" y="68" width="8" height="10" rx="2" fill="url(#buckle)"/>
+          <path d="M 38 76 L 58 76 L 56 86 L 40 86 Z" fill="url(#pants)"/>
+        </g>
+        <g transform="rotate(-30 54 78)">
+          <path d="M 54 78 L 54 94" fill="none" stroke="url(#skinArm)" stroke-width="11" stroke-linecap="round"/>
+          <rect x="47" y="90" width="14" height="8" rx="3" fill="url(#shoe)"/>
+        </g>
+        <g transform="translate(3 0) rotate(10 50 24)">
+          <circle cx="50" cy="24" r="15" fill="url(#skinHead)"/>
+          <path d="M 62 22 Q 70 24 64 28 Z" fill="url(#skinHead)"/>
+          <path d="M 36 26 Q 34 6 52 4 Q 66 6 64 18 Q 54 12 36 26 Z" fill="url(#hair)"/>
+          <path d="M 38 20 Q 42 20 42 30 L 38 28 Z" fill="url(#hair)"/>
+          <circle cx="58" cy="22" r="2.2" fill="#000"/>
+          <line x1="54" y1="18" x2="62" y2="19" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 62 32 Q 64 36 58 36 Q 58 34 60 32 Z" fill="url(#hair)"/>
+          <path d="M 58 28 Q 64 30 62 32" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+        </g>
+        <g transform="rotate(-65 50 42)">
+          <path d="M 50 42 L 50 72" fill="none" stroke="url(#skinArm)" stroke-width="13" stroke-linecap="round"/>
+          <circle cx="50" cy="72" r="7" fill="url(#skinFist)"/>
+        </g>
+      </g>
+    </g>
   </defs>
 
-  <!-- Background Base -->
-  <rect width="512" height="512" rx="100" fill="url(#bg-grad)"/>
+  <!-- ======================= -->
+  <!-- RENDER SCENE            -->
+  <!-- ======================= -->
+
+  <g filter="url(#board-shadow)">
+    <!-- Base Tray (Consistent with Block/Watersort) -->
+    <rect x="20" y="20" width="460" height="460" rx="30" fill="#1e293b" stroke="#334155" stroke-width="5" />
+    
+    <!-- Sokoban Game Board Area (400x400) -->
+    <!-- Matches actual game bg-sky-200 / bg-[#3b82f6] & patterns -->
+    <rect x="50" y="50" width="400" height="400" rx="10" fill="#3b82f6" stroke="#1e3a8a" stroke-width="3" />
+    <rect x="50" y="50" width="400" height="400" rx="10" fill="url(#floor-tech)" />
+    <rect x="50" y="50" width="400" height="400" rx="10" fill="url(#checkers)" />
+  </g>
+
+  <!-- Level Layout 8x8 (Z-sorted Top to Bottom) -->
   
-  <!-- Outer Floor area -->
-  <path d="M 80 256 L 256 120 L 432 256 L 256 392 Z" fill="url(#floor)" filter="url(#shadow)"/>
-  
-  <!-- Grid Lines for Floor -->
-  <path d="M 168 256 L 256 188 L 344 256 L 256 324 Z" fill="none" stroke="#334155" stroke-width="4"/>
-  <path d="M 212 222 L 300 290" fill="none" stroke="#334155" stroke-width="4"/>
-  <path d="M 300 222 L 212 290" fill="none" stroke="#334155" stroke-width="4"/>
+  <g transform="translate(0, 50)">
+    <use href="#wall" x="50" />
+    <use href="#wall" x="100" />
+    <use href="#wall" x="150" />
+    <use href="#wall" x="200" />
+    <use href="#wall" x="250" />
+    <use href="#wall" x="300" />
+    <use href="#wall" x="350" />
+    <use href="#wall" x="400" />
+  </g>
 
-  <!-- Back Wall -->
-  <path d="M 168 188 L 256 120 L 344 188 L 256 256 Z" fill="url(#wall-top)"/>
-  <path d="M 168 188 L 256 256 L 256 296 L 168 228 Z" fill="url(#wall-front)"/>
-  <path d="M 256 256 L 344 188 L 344 228 L 256 296 Z" fill="#1e293b"/>
+  <g transform="translate(0, 100)">
+    <use href="#wall" x="50" />
+    <use href="#wall" x="400" />
+  </g>
 
-  <!-- Target Indicator (Glowing Green dot) -->
-  <ellipse cx="256" cy="324" rx="25" ry="12" fill="#10b981" opacity="0.6"/>
-  <ellipse cx="256" cy="324" rx="15" ry="7" fill="#34d399"/>
+  <g transform="translate(0, 150)">
+    <use href="#target" x="150" />
+    <use href="#wall" x="50" />
+    <use href="#wall" x="400" />
+    
+    <use href="#box" x="200" />
+  </g>
 
-  <!-- Box 3D -->
-  <!-- Box Top -->
-  <path d="M 212 222 L 256 188 L 300 222 L 256 256 Z" fill="url(#box-top)"/>
-  <!-- Box Front Left -->
-  <path d="M 212 222 L 256 256 L 256 310 L 212 276 Z" fill="url(#box-front)"/>
-  <!-- Box Front Right -->
-  <path d="M 256 256 L 300 222 L 300 276 L 256 310 Z" fill="url(#box-side)"/>
+  <g transform="translate(0, 200)">
+    <use href="#target" x="300" />
+    <use href="#wall" x="50" />
+    <use href="#wall" x="400" />
+    
+    <use href="#box-done" x="250" />
+  </g>
 
-  <!-- Box details (Tape/Straps) -->
-  <path d="M 234 239 L 278 205 M 234 205 L 278 239" stroke="#92400e" stroke-width="4"/>
-  <path d="M 234 276 L 234 239 L 256 256" stroke="#fcd34d" stroke-width="3" fill="none" opacity="0.5"/>
+  <g transform="translate(0, 250)">
+    <use href="#target" x="300" />
+    <use href="#wall" x="50" />
+    <use href="#wall" x="400" />
+    
+    <use href="#box" x="250" />
+    <use href="#player-right" x="216" />
+  </g>
+
+  <g transform="translate(0, 300)">
+    <use href="#wall" x="50" />
+    <use href="#wall" x="100" />
+    <use href="#wall" x="150" />
+    <use href="#wall" x="300" />
+    <use href="#wall" x="350" />
+    <use href="#wall" x="400" />
+  </g>
+
+  <g transform="translate(0, 350)">
+    <use href="#wall" x="150" />
+    <use href="#wall" x="300" />
+  </g>
+
+  <g transform="translate(0, 400)">
+    <use href="#wall" x="150" />
+    <use href="#wall" x="200" />
+    <use href="#wall" x="250" />
+    <use href="#wall" x="300" />
+  </g>
+
 </svg>

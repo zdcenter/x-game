@@ -1,20 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 100 100">
-  <rect x="10" y="10" width="80" height="80" rx="4" fill="#fcd34d" />
-  <g stroke="#b45309" stroke-width="1.5">
-    <line x1="20" y1="20" x2="80" y2="20" />
-    <line x1="20" y1="35" x2="80" y2="35" />
-    <line x1="20" y1="50" x2="80" y2="50" />
-    <line x1="20" y1="65" x2="80" y2="65" />
-    <line x1="20" y1="80" x2="80" y2="80" />
-    <line x1="20" y1="20" x2="20" y2="80" />
-    <line x1="35" y1="20" x2="35" y2="80" />
-    <line x1="50" y1="20" x2="50" y2="80" />
-    <line x1="65" y1="20" x2="65" y2="80" />
-    <line x1="80" y1="20" x2="80" y2="80" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <!-- Background Tray Shadow -->
+    <filter id="board-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="stone-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="win-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#facc15" flood-opacity="0.8"/>
+    </filter>
+    <pattern id="grid8" width="56" height="56" patternUnits="userSpaceOnUse" patternTransform="translate(26, 26)">
+      <rect width="50" height="50" rx="8" fill="#0f172a" opacity="0.6" />
+    </pattern>
+
+    <!-- Stone Gradients -->
+    <linearGradient id="grad-black" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#374151" />
+      <stop offset="100%" stop-color="#000000" />
+    </linearGradient>
+    <linearGradient id="grad-white" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e5e7eb" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Tray -->
+  <g filter="url(#board-shadow)">
+    <rect x="20" y="20" width="460" height="460" rx="30" fill="#1e293b" stroke="#334155" stroke-width="5" />
+    <rect x="26" y="26" width="448" height="448" fill="url(#grid8)" opacity="0.3" />
   </g>
-  <circle cx="50" cy="50" r="2.5" fill="#b45309" />
-  <circle cx="35" cy="35" r="6" fill="#171717" />
-  <circle cx="50" cy="35" r="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.5" />
-  <circle cx="65" cy="50" r="6" fill="#171717" />
-  <circle cx="50" cy="65" r="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.5" />
+
+  <!-- Wood Board -->
+  <rect x="50" y="50" width="400" height="400" rx="8" fill="#d4a373" stroke="rgba(0,0,0,0.5)" stroke-width="2" />
+  <rect x="58" y="58" width="384" height="384" fill="transparent" stroke="rgba(0,0,0,0.3)" stroke-width="1" />
+  <line x1="70" y1="70" x2="430" y2="70" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="70" x2="70" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="95.71428571428572" x2="430" y2="95.71428571428572" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="95.71428571428572" y1="70" x2="95.71428571428572" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="121.42857142857143" x2="430" y2="121.42857142857143" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="121.42857142857143" y1="70" x2="121.42857142857143" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="147.14285714285714" x2="430" y2="147.14285714285714" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="147.14285714285714" y1="70" x2="147.14285714285714" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="172.85714285714286" x2="430" y2="172.85714285714286" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="172.85714285714286" y1="70" x2="172.85714285714286" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="198.57142857142858" x2="430" y2="198.57142857142858" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="198.57142857142858" y1="70" x2="198.57142857142858" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="224.28571428571428" x2="430" y2="224.28571428571428" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="224.28571428571428" y1="70" x2="224.28571428571428" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="250" x2="430" y2="250" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="250" y1="70" x2="250" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="275.7142857142857" x2="430" y2="275.7142857142857" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="275.7142857142857" y1="70" x2="275.7142857142857" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="301.42857142857144" x2="430" y2="301.42857142857144" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="301.42857142857144" y1="70" x2="301.42857142857144" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="327.14285714285717" x2="430" y2="327.14285714285717" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="327.14285714285717" y1="70" x2="327.14285714285717" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="352.8571428571429" x2="430" y2="352.8571428571429" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="352.8571428571429" y1="70" x2="352.8571428571429" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="378.57142857142856" x2="430" y2="378.57142857142856" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="378.57142857142856" y1="70" x2="378.57142857142856" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="404.2857142857143" x2="430" y2="404.2857142857143" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="404.2857142857143" y1="70" x2="404.2857142857143" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="70" y1="430" x2="430" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <line x1="430" y1="70" x2="430" y2="430" stroke="rgba(0,0,0,0.4)" stroke-width="1.5" />
+  <circle cx="147.14285714285714" cy="147.14285714285714" r="4" fill="rgba(0,0,0,0.7)" />
+  <circle cx="147.14285714285714" cy="352.8571428571429" r="4" fill="rgba(0,0,0,0.7)" />
+  <circle cx="352.8571428571429" cy="147.14285714285714" r="4" fill="rgba(0,0,0,0.7)" />
+  <circle cx="352.8571428571429" cy="352.8571428571429" r="4" fill="rgba(0,0,0,0.7)" />
+  <circle cx="250" cy="250" r="4" fill="rgba(0,0,0,0.7)" />
+  <circle cx="250" cy="250" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <circle cx="275.7142857142857" cy="275.7142857142857" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <circle cx="301.42857142857144" cy="301.42857142857144" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <circle cx="224.28571428571428" cy="224.28571428571428" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <!-- Winning Highlight -->
+    <circle cx="198.57142857142858" cy="198.57142857142858" r="13.8" fill="transparent" stroke="#facc15" stroke-width="3" filter="url(#win-glow)" />
+  <circle cx="198.57142857142858" cy="198.57142857142858" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <circle cx="198.57142857142858" cy="198.57142857142858" r="3" fill="#ef4444" />
+  <circle cx="224.28571428571428" cy="275.7142857142857" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <circle cx="250" cy="301.42857142857144" r="10.8" fill="url(#grad-black)" filter="url(#stone-shadow)" />
+  <circle cx="275.7142857142857" cy="250" r="10.8" fill="url(#grad-white)" filter="url(#stone-shadow)" />
+  <circle cx="250" cy="275.7142857142857" r="10.8" fill="url(#grad-white)" filter="url(#stone-shadow)" />
+  <circle cx="275.7142857142857" cy="224.28571428571428" r="10.8" fill="url(#grad-white)" filter="url(#stone-shadow)" />
+  <circle cx="224.28571428571428" cy="250" r="10.8" fill="url(#grad-white)" filter="url(#stone-shadow)" />
+  <circle cx="224.28571428571428" cy="198.57142857142858" r="10.8" fill="url(#grad-white)" filter="url(#stone-shadow)" />
+  <circle cx="224.28571428571428" cy="301.42857142857144" r="10.8" fill="url(#grad-white)" filter="url(#stone-shadow)" />
 </svg>
