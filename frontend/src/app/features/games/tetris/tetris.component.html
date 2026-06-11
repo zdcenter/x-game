@@ -148,49 +148,7 @@
                     </div>
                   </div>
 
-                  <!-- Starting Countdown Overlay -->
-                  @if (store.status() === 'starting') {
-                    <app-game-starting-overlay [countdown]="timerService.countdownDisplay()"></app-game-starting-overlay>
-                  }
 
-                  <!-- Single Player Start Overlay -->
-                  @if (store.mode() === 'single' && store.status() === 'waiting') {
-                    <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl lg:rounded-2xl">
-                      <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <ng-container i18n="@@game.start_match">START</ng-container>
-                      </button>
-                    </div>
-                  }
-
-                  <!-- Spectating Overlay -->
-                  @if (store.status() === 'playing' && store.isDead()) {
-                    <div class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl lg:rounded-2xl">
-                      <div class="text-3xl lg:text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest text-center">
-                        <ng-container i18n="@@game.spectating">Spectating...</ng-container>
-                      </div>
-                    </div>
-                  }
-
-                  <!-- Game Over Overlay -->
-                  @if (store.status() === 'finished' && showOverlay()) {
-                    <app-game-result-overlay
-                      currentGameId="tetris"
-                      [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
-                      [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.mode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-                      [stats]="getOverlayStats()"
-                      [showLeave]="store.mode() === 'single' || store.host() !== playerId"
-                      [showRestart]="store.mode() === 'single' || store.host() === playerId"
-                      [showDismiss]="store.mode() !== 'single' && store.host() === playerId"
-                      (leave)="goBack()"
-                      (restart)="store.playAgain()"
-                      (dismiss)="dismissRoom()"
-                      class="absolute inset-0 z-30 rounded-xl lg:rounded-2xl overflow-hidden">
-                    </app-game-result-overlay>
-                  }
                 </div>
 
                 <!-- RIGHT: Opponents -->
@@ -222,6 +180,46 @@
             </div>
             
 
+          }
+
+          <!-- Overlays -->
+          @if (store.status() === 'starting') {
+            <app-game-starting-overlay [countdown]="timerService.countdownDisplay()"></app-game-starting-overlay>
+          }
+
+          @if (store.mode() === 'single' && store.status() === 'waiting') {
+            <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl lg:rounded-2xl">
+              <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <ng-container i18n="@@game.start_match">START</ng-container>
+              </button>
+            </div>
+          }
+
+          @if (store.status() === 'playing' && store.isDead()) {
+            <div class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl lg:rounded-2xl">
+              <div class="text-3xl lg:text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-pulse uppercase tracking-widest text-center">
+                <ng-container i18n="@@game.spectating">Spectating...</ng-container>
+              </div>
+            </div>
+          }
+
+          @if (store.status() === 'finished' && showOverlay()) {
+            <app-game-result-overlay
+              currentGameId="tetris"
+              [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
+              [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.mode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
+              [stats]="getOverlayStats()"
+              [showLeave]="store.mode() === 'single' || store.host() !== playerId"
+              [showRestart]="store.mode() === 'single' || store.host() === playerId"
+              [showDismiss]="store.mode() !== 'single' && store.host() === playerId"
+              (leave)="goBack()"
+              (restart)="store.playAgain()"
+              (dismiss)="dismissRoom()">
+            </app-game-result-overlay>
           }
         </div>
       </div>

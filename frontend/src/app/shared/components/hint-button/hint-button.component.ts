@@ -65,6 +65,15 @@ import { AdService } from '../../../core/services/ad.service';
       </button>
     }
 
+    @if (layout === 'sokoban') {
+      <button class="flex flex-col items-center justify-center w-full h-full px-1 py-2 rounded-xl font-bold text-orange-400 shadow-lg transition-all bg-orange-500/10 hover:bg-orange-500/20 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              [disabled]="isAdLoading()"
+              (click)="onClick()">
+        <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 sm:h-6 sm:w-6 mb-1 text-orange-500' }"></ng-container>
+        <span class="truncate w-full text-center"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+      </button>
+    }
+
     <ng-template #iconTpl let-sizeClass="sizeClass" let-textClass="textClass">
       @if (isAdLoading()) {
         <svg class="animate-spin text-orange-500 {{ sizeClass || 'h-4 w-4 lg:h-5 lg:w-5' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -78,7 +87,7 @@ import { AdService } from '../../../core/services/ad.service';
   `
 })
 export class HintButtonComponent {
-  @Input() layout: 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'compact' = 'math24';
+  @Input() layout: 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'compact' | 'sokoban' = 'math24';
   @Output() hintApplied = new EventEmitter<void>();
 
   private adService = inject(AdService);

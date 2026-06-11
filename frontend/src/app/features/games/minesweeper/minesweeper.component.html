@@ -67,7 +67,8 @@
         </ng-container>
       </app-game-header>
 
-      <!-- Global Progress Bar -->
+      <!-- Main Content Wrapper -->
+      <div class="relative flex-grow flex flex-col min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden mt-2">
       <div
         class="absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-border-card)] group cursor-help translate-y-[2px]">
         <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
@@ -179,17 +180,7 @@
           class="absolute inset-0 z-50"></app-game-starting-overlay>
         }
 
-        <!-- Result Overlay -->
-        @if (store.status() === 'finished' && showOverlay()) {
-        <app-game-result-overlay currentGameId="minesweeper" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
-          [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()" [disableAudio]="true"
-          [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
-          [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
-          [showLeave]="currentRoomMode() === 'single' || store.host() !== playerId" (leave)="goBack()"
-          (restart)="store.restartGame()" (dismiss)="dismissRoom()"
-          class="absolute inset-0 z-50 rounded-3xl overflow-hidden pointer-events-auto">
-        </app-game-result-overlay>
-        }
+
 
         <!-- Frozen Overlay (PK Steal Penalty) -->
         @if (isFrozen()) {
@@ -224,6 +215,19 @@
             }
           </div>
         </div>
+      </div>
+
+        <!-- Result Overlay -->
+        @if (store.status() === 'finished' && showOverlay()) {
+        <app-game-result-overlay currentGameId="minesweeper" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
+          [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()" [disableAudio]="true"
+          [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
+          [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
+          [showLeave]="currentRoomMode() === 'single' || store.host() !== playerId" (leave)="goBack()"
+          (restart)="store.restartGame()" (dismiss)="dismissRoom()">
+        </app-game-result-overlay>
+        }
+        
       </div>
     </div>
   </div>

@@ -92,20 +92,7 @@
             </div>
 
             <div class="flex-grow flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-start md:justify-center md:content-start items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto">
-              <!-- Victory Overlay -->
-              @if (store.isFinished() && store.currentMode() === 'single' && showOverlay()) {
-              <app-game-result-overlay
-                currentGameId="sudoku"
-                [status]="'win'"
-                i18n-title="@@game.win" title="game.win"
-                i18n-promptText="@@game.sudoku.next_level_prompt" promptText="Level cleared! Play next?"
-                [stats]="getSinglePlayerStats()"
-                [showCancel]="true"
-                [showNextLevel]="true"
-                (cancel)="store.view.set('lobby')"
-                (nextLevel)="playNextLevel()">
-              </app-game-result-overlay>
-            }
+
 
               <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-280px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentMode() === 'single'">
                 <app-sudoku-board class="w-full"></app-sudoku-board>
@@ -119,6 +106,22 @@
                 <app-sudoku-tools class="w-full"></app-sudoku-tools>
               </div>
             </div>
+
+            <!-- Victory Overlay -->
+            @if (store.isFinished() && store.currentMode() === 'single' && showOverlay()) {
+              <app-game-result-overlay
+                currentGameId="sudoku"
+                [status]="'win'"
+                i18n-title="@@game.win" title="game.win"
+                i18n-promptText="@@game.sudoku.next_level_prompt" promptText="Level cleared! Play next?"
+                [stats]="getSinglePlayerStats()"
+                [showCancel]="true"
+                [showNextLevel]="true"
+                (cancel)="store.view.set('lobby')"
+                (nextLevel)="playNextLevel()"
+                class="absolute inset-0 z-50">
+              </app-game-result-overlay>
+            }
           </div>
         }
       }

@@ -98,7 +98,7 @@ import { AudioService } from '../../../core/services/audio.service';
         </app-game-header>
 
         <!-- Board Area -->
-        <div class="flex-1 flex flex-col min-h-0 overflow-hidden mt-2 w-full">
+        <div class="flex-1 flex flex-col relative min-h-0 overflow-hidden mt-2 w-full">
           @if (status === 'waiting' && currentRoomMode() !== 'single') {
             <app-game-waiting-room
               [gameId]="'watersort'"
@@ -186,22 +186,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
 
 
-              <!-- Game Over Overlay -->
-              @if (status === 'finished' && showOverlay()) {
-                <app-game-result-overlay
-                  currentGameId="watersort"
-                  [status]="didIWin() ? 'win' : 'lose'"
-                  [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-                  [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
-                  [showLeave]="currentRoomMode() === 'single' || !isHost()"
-                  [showRestart]="currentRoomMode() === 'single' || isHost()"
-                  [showDismiss]="currentRoomMode() !== 'single' && isHost()"
-                  (leave)="returnToLobby()"
-                  (restart)="playAgain()"
-                  (dismiss)="dismissRoom()"
-                  class="absolute inset-0 z-30 rounded-xl lg:rounded-2xl overflow-hidden">
-                </app-game-result-overlay>
-              }
+
 
               <!-- Hint Floating Button -->
               @if (status === 'playing' && currentRoomMode() === 'single') {
@@ -211,6 +196,22 @@ import { AudioService } from '../../../core/services/audio.service';
               }
 
             </div>
+          }
+          
+          <!-- Game Over Overlay -->
+          @if (status === 'finished' && showOverlay()) {
+            <app-game-result-overlay
+              currentGameId="watersort"
+              [status]="didIWin() ? 'win' : 'lose'"
+              [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
+              [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
+              [showLeave]="currentRoomMode() === 'single' || !isHost()"
+              [showRestart]="currentRoomMode() === 'single' || isHost()"
+              [showDismiss]="currentRoomMode() !== 'single' && isHost()"
+              (leave)="returnToLobby()"
+              (restart)="playAgain()"
+              (dismiss)="dismissRoom()">
+            </app-game-result-overlay>
           }
         </div>
       </div>

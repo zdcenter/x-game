@@ -56,12 +56,9 @@ import { AuthStore } from '../../../core/auth/auth.store';
 
         <!-- Actions -->
         <div class="w-full flex flex-col sm:flex-row gap-3 relative z-10">
-          @if (showLeave) {
-            <button (click)="handleLeave()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
-              <ng-container i18n="@@game.leave">Leave</ng-container>
-            </button>
-          }
-          
+          <button (click)="handleLeave()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
+            {{ t('game.return_lobby') || 'Return to Lobby' }}
+          </button>
           @if (showRestart) {
             <button (click)="handleRestart()" 
               [ngClass]="{
@@ -91,15 +88,15 @@ import { AuthStore } from '../../../core/auth/auth.store';
 
       <!-- Smart Recommendations -->
       @if (recommendedGames.length > 0) {
-        <div class="w-full max-w-md mt-2 flex flex-col items-center animate-fade-in shrink-0 pb-8">
-          <div class="text-[10px] text-white/70 uppercase tracking-widest font-bold mb-3 bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
+        <div class="w-full max-w-4xl mt-4 flex flex-col items-center animate-fade-in shrink-0 pb-8">
+          <div class="text-xs text-white/70 uppercase tracking-widest font-bold mb-4 bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-sm">
             <ng-container i18n="@@game.recommendations">You might also like</ng-container>
           </div>
-          <div class="flex gap-3 w-full overflow-x-auto pb-4 px-2 custom-scrollbar snap-x justify-center">
+          <div class="flex gap-4 w-full overflow-x-auto pb-6 px-4 custom-scrollbar snap-x justify-start md:justify-center">
             @for (game of recommendedGames; track game.id) {
-              <div (click)="handleGoToGame(game.id)" class="shrink-0 w-[140px] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-all hover:scale-105 hover:shadow-xl hover:-translate-y-1 snap-center group">
-                <img [src]="'/assets/games/icons/' + game.id + '.svg'" class="w-10 h-10 object-contain drop-shadow-md group-hover:scale-110 transition-transform" alt="icon">
-                <div class="font-bold text-sm text-center text-[var(--color-text-main)] group-hover:text-[var(--color-accent-to)] transition-colors">{{ i18n.t(game.titleKey)() }}</div>
+              <div (click)="handleGoToGame(game.id)" class="shrink-0 w-[140px] sm:w-[160px] md:w-[180px] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-to)] rounded-2xl p-4 sm:p-5 flex flex-col items-center gap-3 cursor-pointer transition-all hover:scale-105 hover:shadow-xl hover:-translate-y-1 snap-center group">
+                <img [src]="'/assets/games/icons/' + game.id + '.svg'" class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain drop-shadow-md group-hover:scale-110 transition-transform" alt="icon">
+                <div class="font-bold text-sm sm:text-base text-center text-[var(--color-text-main)] group-hover:text-[var(--color-accent-to)] transition-colors line-clamp-1">{{ i18n.t(game.titleKey)() }}</div>
               </div>
             }
           </div>
@@ -147,12 +144,26 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   private loadRecommendations() {
     if (!this.currentGameId) return;
+    const allGames = this.gameRegistry.getAllConfigs();
     const config = this.gameRegistry.getConfig(this.currentGameId);
+    
+    let recommendedIds: string[] = [];
     if (config && config.recommendations) {
-      this.recommendedGames = config.recommendations
-        .map(id => this.gameRegistry.getConfig(id))
-        .filter((c): c is GameConfig => !!c);
+      recommendedIds = [...config.recommendations];
     }
+    
+    const otherGames = allGames.filter(g => g.id !== this.currentGameId && !recommendedIds.includes(g.id));
+    for (let i = otherGames.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [otherGames[i], otherGames[j]] = [otherGames[j], otherGames[i]];
+    }
+    
+    const needed = Math.max(0, 6 - recommendedIds.length);
+    const toAdd = otherGames.slice(0, needed).map(g => g.id);
+    
+    this.recommendedGames = [...recommendedIds, ...toAdd]
+      .map(id => this.gameRegistry.getConfig(id))
+      .filter((c): c is GameConfig => !!c);
   }
 
   t(key: string): string {

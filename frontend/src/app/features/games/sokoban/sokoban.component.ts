@@ -85,6 +85,8 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         </ng-container>
       </app-game-header>
 
+      <div class="flex-grow flex flex-col relative min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden">
+
       @if (store.status() === 'waiting') {
         <app-game-waiting-room
           [gameId]="'sokoban'"
@@ -142,79 +144,67 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
           <div class="relative flex items-center justify-center shrink-0 w-full"
                style="width: min(95vw, calc(100vh - 350px), 600px); height: min(95vw, calc(100vh - 350px), 600px);">
             <app-sokoban-board class="w-full h-full"></app-sokoban-board>
-
-            @if (store.status() === 'finished' && showOverlay()) {
-              <app-game-result-overlay
-                currentGameId="sokoban"
-                [status]="getGameResult()"
-                [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
-                [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === 'single'"
-                [showRestart]="store.currentRoomMode() === 'single' || store.hostId() === playerId"
-                [showLeave]="store.currentRoomMode() === 'single' || store.hostId() !== playerId"
-                [showDismiss]="store.currentRoomMode() !== 'single' && store.hostId() === playerId"
-                (nextLevel)="handleNextLevel()"
-                (restart)="handleRestart()"
-                (leave)="onLeaveClick()"
-                (dismiss)="handleDismissRoom()"
-                class="absolute inset-0 z-30 rounded-xl lg:rounded-2xl overflow-hidden backdrop-blur-md">
-              </app-game-result-overlay>
-            }
           </div>
 
           <!-- Action Buttons Bar underneath the board -->
-          <div class="grid grid-cols-3 sm:flex sm:flex-wrap items-center justify-center w-full max-w-[600px] gap-2 mt-4 z-20 px-2 pb-6 shrink-0">
-            <!-- Back to Lobby -->
-            <button class="flex flex-col items-center justify-center px-2 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-xs lg:text-sm border border-slate-600/50"
-                    (click)="onLeaveClick()">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 lg:h-8 lg:w-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>{{ i18n.t('game.back')() }}</span>
-            </button>
+          <div class="flex flex-row items-center justify-center w-full max-w-[600px] gap-2 mt-4 z-20 px-2 pb-6 shrink-0">
+             <!-- Back to Lobby -->
+             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+                     (click)="onLeaveClick()">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+               </svg>
+               <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
+             </button>
 
-            <!-- Undo -->
-            <button class="flex flex-col items-center justify-center px-2 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-sky-600/80 hover:bg-sky-500 backdrop-blur-sm active:scale-95 text-xs lg:text-sm border border-sky-500/50"
-                    (click)="store.undo()">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 lg:h-8 lg:w-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-              </svg>
-              <span>{{ i18n.t('game.undo')() }}</span>
-            </button>
-            
-            <!-- Restart -->
-            <button class="flex flex-col items-center justify-center px-2 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-xs lg:text-sm border border-red-500/50"
-                    (click)="handleRestart()">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 lg:h-8 lg:w-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>{{ i18n.t('game.restart')() }}</span>
-            </button>
-            
-            @if (store.currentRoomMode() === 'single') {
-              <!-- Hint -->
-              <app-hint-button layout="compact" (hintApplied)="applyHint()" class="col-span-3 sm:col-auto mt-2 sm:mt-0 w-full sm:w-auto"></app-hint-button>
+             @if (store.currentRoomMode() === 'single') {
+               <!-- Prev Level -->
+               <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+                       (click)="store.prevLevel()"
+                       [disabled]="store.currentLevelNum() <= 1"
+                       [class.opacity-50]="store.currentLevelNum() <= 1">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                 </svg>
+                 <span class="truncate w-full text-center">{{ i18n.t('game.prev_level')() }}</span>
+               </button>
+             }
 
-              <div class="col-span-3 flex gap-2 w-full mt-2">
-                <button class="flex-1 flex justify-center items-center gap-1 px-3 py-3 rounded-xl font-bold text-white shadow-lg transition-all bg-indigo-600/80 hover:bg-indigo-500 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-indigo-500/50"
-                        (click)="store.prevLevel()"
-                        [disabled]="store.currentLevelNum() <= 1"
-                        [class.opacity-50]="store.currentLevelNum() <= 1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                  </svg>
-                  {{ i18n.t('game.prev_level')() }}
-                </button>
-                <button class="flex-1 flex justify-center items-center gap-1 px-3 py-3 rounded-xl font-bold text-white shadow-lg transition-all bg-indigo-600/80 hover:bg-indigo-500 backdrop-blur-sm active:scale-95 text-sm lg:text-base border border-indigo-500/50"
-                        (click)="store.nextLevel()"
-                        [disabled]="!store.hasNextLevel()"
-                        [class.opacity-50]="!store.hasNextLevel()">
-                  {{ i18n.t('game.next_level')() }}
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            }
+             <!-- Undo -->
+             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-sky-600/80 hover:bg-sky-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-sky-500/50"
+                     (click)="store.undo()">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+               </svg>
+               <span class="truncate w-full text-center">{{ i18n.t('game.undo')() }}</span>
+             </button>
+             
+             <!-- Restart (Retry) -->
+             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-red-500/50"
+                     (click)="handleRestart()">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+               </svg>
+               <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
+             </button>
+
+             @if (store.currentRoomMode() === 'single') {
+               <!-- Hint -->
+               <div class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center">
+                 <app-hint-button layout="sokoban" (hintApplied)="applyHint()" class="w-full h-full"></app-hint-button>
+               </div>
+
+               <!-- Next Level -->
+               <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+                       (click)="store.nextLevel()"
+                       [disabled]="!store.hasNextLevel()"
+                       [class.opacity-50]="!store.hasNextLevel()">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                 </svg>
+                 <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
+               </button>
+             }
           </div>
 
         </div>
@@ -227,6 +217,23 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
           </div>
         }
       }
+        @if (store.status() === 'finished' && showOverlay()) {
+          <app-game-result-overlay
+            currentGameId="sokoban"
+            [status]="getGameResult()"
+            [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
+            [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === 'single'"
+            [showRestart]="store.currentRoomMode() === 'single' || store.hostId() === playerId"
+            [showLeave]="store.currentRoomMode() === 'single' || store.hostId() !== playerId"
+            [showDismiss]="store.currentRoomMode() !== 'single' && store.hostId() === playerId"
+            (nextLevel)="handleNextLevel()"
+            (restart)="handleRestart()"
+            (leave)="onLeaveClick()"
+            (dismiss)="handleDismissRoom()">
+          </app-game-result-overlay>
+        }
+
+      </div>
       </div>
       }
     </div>
