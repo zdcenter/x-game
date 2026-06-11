@@ -561,4 +561,24 @@ ngOnInit() {
      `data: { seo: { titleKey: 'seo.your_game.title', descKey: 'seo.your_game.desc', keywordsKey: 'seo.your_game.keywords' } }`
   2. 在 `frontend/src/app/core/i18n/core.translations.ts` 中，必须为新增游戏提供**英文**和**中文**两套完整的 SEO 词条（包含 `title`, `desc`, `keywords`），确保动态切换语言时能完美覆盖搜索关键词。
 
+### 20. 房间大厅“隐身”与无法加入问题 (Room Visibility & State Initialization Bug) 🚨
+- **原理解析与隐患**：在测试新增游戏的联机 PK 模式时，如果发现“房主创建了房间，但其他玩家在大厅死活看不到这个房间（或者房间状态显示为‘已完成’导致无法加入）”，极有可能是以下两处状态初始化遗漏导致的：
+  1. **前端未设置兜底模式**：在创建房间组件（如 `game-lobby-panel`）触发 `joinRoom` 前，如果传递给后端的 `mode` 变量不小心为空（`""`），后端可能会将其错误判断为 `single` 模式，从而变成单机隐身房间。
+  2. **后端引擎状态未赋初值**：在后端引擎（如 `sokoban/engine.go`）的 `InitGame` 中，**必须显式地将 `e.State` 初始化为 `engine.StateWaiting`**。如果不进行初始化，`e.State` 会保持默认零值（空字符串）。而在 WebSocket 广播房间列表时，空状态的房间由于不满足 “waiting” 条件，会向大厅发送“Started”状态，或者干脆无法被正确筛选，最终导致其他玩家看不见你的房间或者只能看到一个不能点的灰色“加入”按钮。
+- **标准做法**：
+  在后端的 `InitGame` 函数第一行，永远不要忘记加上：`e.State = engine.StateWaiting`。如果是单机模式，再在后面将其覆盖为 `engine.StatePlaying`。
+
+### 21. “准备战斗”按钮点击无效的拼写陷阱 (Ready Button Unresponsive Bug)
+- **避免隐患**：如果你发现在联机等待大厅（`<app-game-waiting-room>`）中，点击了绿色的“准备战斗”按钮，按钮没有变成橘色的“取消准备”，旁边也没有出现绿色的 ✅ 对勾，但后端却确实收到了 ready 信号，这 100% 是前端 Store 在映射 WebSocket 状态时字段拼写错误导致的！
+- **原理解析**：WebSocket 下发的状态里，准备玩家的字段是小驼峰的 `readyPlayers` (例如 `{"userA": true, "userB": false}`)。如果在前端 Store（如 `sokoban.store.ts`）里错写成了下划线的 `ready_players`，或者在找不到时错误地提供了一个空数组 `[]`（而不是空对象 `{}`），就会导致等待室组件永远无法读取到玩家的准备状态，从而产生“按钮点不烂、状态不更新”的灵异现象。
+- **标准做法**：
+  必须准确无误地拼写 `readyPlayers` 字段，并提供 `{}` 作为兜底。
+  ```typescript
+  // ❌ 错误做法：拼写成了下划线，且使用了 []
+  readonly readyPlayers = computed(() => this.ws.gameState()?.ready_players || []);
+  
+  // ✅ 正确规范：准确匹配后端字段 readyPlayers，且兜底为空对象 {}
+  readonly readyPlayers = computed(() => (this.ws.gameState() as any)?.readyPlayers || {});
+  ```
+
 遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉和流量获取上达到最顶级的体验！

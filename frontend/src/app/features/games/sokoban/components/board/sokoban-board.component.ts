@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SokobanStore } from '../../store/sokoban.store';
 
@@ -150,7 +150,7 @@ import { SokobanStore } from '../../store/sokoban.store';
            [style.width]="boardWidth()"
            [style.height]="boardHeight()">
         
-        @for (row of store.myBoard(); track $index; let r = $index) {
+        @for (row of activeBoard(); track $index; let r = $index) {
           @for (cell of row; track $index; let c = $index) {
             <div class="flex items-center justify-center w-full h-full relative overflow-hidden"
                  [ngClass]="getFloorClass(r, c)">
@@ -417,15 +417,25 @@ import { SokobanStore } from '../../store/sokoban.store';
   `
 })
 export class SokobanBoardComponent {
+  @Input() boardData: string[][] | undefined;
+  @Input() readonly: boolean = false;
+
+  activeBoard = computed(() => {
+    if (this.boardData && this.boardData.length > 0) return this.boardData;
+    return this.store.myBoard();
+  });
+
   playerDir = signal<'up' | 'down' | 'left' | 'right'>('down');
   playerAction = signal<'idle' | 'walk' | 'push'>('idle');
   private actionTimeout: any;
 
   triggerMove(dir: 'up' | 'down' | 'left' | 'right') {
+    if (this.readonly) return;
+    
     // Always set direction for ALL four directions
     this.playerDir.set(dir);
     
-    const board = this.store.myBoard();
+    const board = this.activeBoard();
     let pr = -1, pc = -1;
     for (let r = 0; r < board.length; r++) {
       for (let c = 0; c < board[r].length; c++) {
@@ -462,9 +472,9 @@ export class SokobanBoardComponent {
 
   store = inject(SokobanStore);
 
-  rows = computed(() => this.store.myBoard().length || 1);
+  rows = computed(() => this.activeBoard().length || 1);
   cols = computed(() => {
-    const b = this.store.myBoard();
+    const b = this.activeBoard();
     return b.length > 0 ? b[0].length : 1;
   });
 
@@ -488,7 +498,7 @@ export class SokobanBoardComponent {
   }
 
   getWallStyle(r: number, c: number) {
-    const board = this.store.myBoard();
+    const board = this.activeBoard();
     const rowStr = board[r] || '';
     const topStr = board[r - 1] || '';
     const bottomStr = board[r + 1] || '';
@@ -532,6 +542,7 @@ export class SokobanBoardComponent {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
+    if (this.readonly) return;
     if (this.store.status() !== 'playing' || this.store.isDead()) return;
 
     switch (event.key) {
@@ -570,6 +581,7 @@ export class SokobanBoardComponent {
   }
 
   onTouchStart(event: TouchEvent) {
+    if (this.readonly) return;
     if (event.touches.length > 0) {
       this.touchStartX = event.touches[0].clientX;
       this.touchStartY = event.touches[0].clientY;
@@ -577,6 +589,7 @@ export class SokobanBoardComponent {
   }
 
   onTouchEnd(event: TouchEvent) {
+    if (this.readonly) return;
     if (event.changedTouches.length > 0) {
       const touchEndX = event.changedTouches[0].clientX;
       const touchEndY = event.changedTouches[0].clientY;

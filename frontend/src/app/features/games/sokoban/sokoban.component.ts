@@ -138,10 +138,12 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
           </div>
         </div>
 
-        <!-- Main Game Area -->
-        <div class="relative flex-grow flex flex-col items-center justify-start min-h-0 w-full shrink py-2 px-2 z-10 overflow-y-auto custom-scrollbar">
+        <!-- Main Game Area Container -->
+        <div class="relative flex-grow flex flex-col lg:flex-row items-center lg:items-start justify-center min-h-0 w-full shrink py-2 px-2 z-10 overflow-y-auto custom-scrollbar gap-8">
           
-          <div class="relative flex items-center justify-center shrink-0 w-full"
+          <!-- Local Player Board & Controls -->
+          <div class="flex flex-col items-center justify-start shrink-0">
+            <div class="relative flex items-center justify-center shrink-0 w-full"
                style="width: min(95vw, calc(100vh - 350px), 600px); height: min(95vw, calc(100vh - 350px), 600px);">
             <app-sokoban-board class="w-full h-full"></app-sokoban-board>
           </div>
@@ -205,7 +207,47 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                  <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
                </button>
              }
+           </div>
           </div>
+
+          <!-- Opponent Boards -->
+          @if (store.currentRoomMode() !== 'single' && store.opponents().length > 0) {
+            <div class="flex flex-row lg:flex-col items-center justify-center lg:justify-start gap-4 flex-wrap w-full lg:w-auto shrink-0 pb-10 lg:pb-0">
+              <h3 class="w-full lg:w-auto text-center font-bold text-[var(--color-text-muted)] text-sm mb-[-10px] lg:mb-0 uppercase tracking-widest bg-[var(--color-bg-card)] px-3 py-1 rounded-full border border-[var(--color-border-card)]">Opponents</h3>
+              @for (opp of store.opponents(); track opp.id) {
+                <div class="flex flex-col items-center shrink-0 bg-[var(--color-bg-card)] p-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.3)] border border-[var(--color-border-card)] relative overflow-hidden"
+                     [class.opacity-60]="opp.status === 'finished'">
+                  
+                  <!-- Finished Overlay -->
+                  @if (opp.status === 'finished') {
+                    <div class="absolute inset-0 bg-emerald-500/20 z-30 flex items-center justify-center backdrop-blur-[1px]">
+                      <span class="text-emerald-400 font-black text-xl transform -rotate-12 drop-shadow-md">FINISHED</span>
+                    </div>
+                  }
+
+                  <!-- Opponent Header -->
+                  <div class="w-full flex items-center justify-between px-1 mb-1 relative z-20">
+                    <div class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] flex items-center gap-1">
+                      @if (opp.isHost) { <span class="text-[10px]">👑</span> }
+                      {{ opp.id }}
+                    </div>
+                    <div class="text-[10px] text-[var(--color-text-muted)] font-mono font-bold bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded border border-[var(--color-border-card)]">
+                      🦶 {{ opp.moves }}
+                    </div>
+                  </div>
+
+                  <!-- Opponent Mini Board -->
+                  <div class="pointer-events-none opacity-90 relative z-10" style="width: min(40vw, 220px); height: min(40vw, 220px);">
+                    <app-sokoban-board 
+                      class="w-full h-full block"
+                      [boardData]="opp.board" 
+                      [readonly]="true">
+                    </app-sokoban-board>
+                  </div>
+                </div>
+              }
+            </div>
+          }
 
         </div>
 

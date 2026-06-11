@@ -97,7 +97,7 @@ import { ShareService } from '../../core/services/share.service';
               <div class="absolute inset-0 flex items-center justify-center">
                 <img [src]="'/assets/games/icons/' + game.id + '.svg?v=3'"
                      [alt]="getGameTitle(game.id)"
-                     class="w-[70%] h-[70%] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-500"
+                     class="w-[90%] h-[90%] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-all duration-500"
                      (error)="handleIconError($event, game.id)" />
               </div>
             </div>
