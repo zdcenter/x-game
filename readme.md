@@ -88,7 +88,6 @@ backend/
 │   ├── config/                     # 环境变量与配置加载
 │   ├── logger/                     # 统一日志处理
 │   └── response/                   # Fiber 统一 JSON 响应格式封装
-├── docker-compose.yml              # 用于本地快速拉起 PostgreSQL 数据库
 └── go.mod
 
 

@@ -7,63 +7,144 @@ import { SokobanStore } from '../../store/sokoban.store';
   standalone: true,
   imports: [CommonModule],
   styles: [`
-    .player-wrapper {
-      transition: transform 0.2s ease;
-    }
-    .player-wrapper.facing-left {
-      transform: scaleX(-1);
-    }
-    
-    @keyframes walk-leg-l {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-      100% { transform: translateY(0); }
-    }
-    @keyframes walk-leg-r {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-      100% { transform: translateY(0); }
-    }
-    @keyframes push-arm-l {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-4px) scaleY(1.1); }
-      100% { transform: translateY(0); }
-    }
-    @keyframes push-arm-r {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-4px) scaleY(1.1); }
-      100% { transform: translateY(0); }
+    /* ─── Player Wrapper ─── */
+    .player-wrapper { /* no transition on transform — instant direction flip */ }
+    .player-wrapper.facing-left { transform: scaleX(-1); }
+
+    /* Hide inactive views */
+    .view-down, .view-up, .view-side { display: none; }
+    .dir-down .view-down { display: block; }
+    .dir-up .view-up   { display: block; }
+    .dir-left .view-side, .dir-right .view-side { display: block; }
+
+    /* ─── Limb transition for idle return ─── */
+    .leg-l, .leg-r, .arm-l, .arm-r, .body-core, .head {
+      transition: transform 0.12s ease-out;
     }
 
-    .action-walk .leg-l {
-      animation: walk-leg-l 0.25s ease-in-out;
+    /* ═══════════════════════════════════════════
+       WALK — Down / Up  (vertical bounce legs)
+       ═══════════════════════════════════════════ */
+    @keyframes walk-bounce-l {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
     }
-    .action-walk .leg-r {
-      animation: walk-leg-r 0.25s ease-in-out 0.12s;
+    @keyframes walk-bounce-r {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
     }
-    
-    .action-push .leg-l {
-      animation: walk-leg-l 0.25s ease-in-out;
+    .action-walk.dir-down .leg-l, .action-walk.dir-up .leg-l {
+      animation: walk-bounce-l 0.25s ease-in-out infinite;
     }
-    .action-push .leg-r {
-      animation: walk-leg-r 0.25s ease-in-out 0.12s;
+    .action-walk.dir-down .leg-r, .action-walk.dir-up .leg-r {
+      animation: walk-bounce-r 0.25s ease-in-out infinite 0.12s;
     }
-    .action-push .arm-l {
-      animation: push-arm-l 0.25s ease-in-out;
-      transform-origin: center top;
+    .action-walk.dir-down .arm-l, .action-walk.dir-up .arm-l {
+      animation: walk-bounce-r 0.25s ease-in-out infinite;
     }
-    .action-push .arm-r {
-      animation: push-arm-r 0.25s ease-in-out;
-      transform-origin: center top;
+    .action-walk.dir-down .arm-r, .action-walk.dir-up .arm-r {
+      animation: walk-bounce-l 0.25s ease-in-out infinite 0.12s;
     }
-`],
+
+    /* ═══════════════════════════════════════════
+       WALK — Side  (rotate legs like scissors)
+       ═══════════════════════════════════════════ */
+    @keyframes walk-rot-fwd {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(30deg); }
+      75% { transform: rotate(-30deg); }
+    }
+    @keyframes walk-rot-back {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-30deg); }
+      75% { transform: rotate(30deg); }
+    }
+    .action-walk.dir-left .leg-l, .action-walk.dir-right .leg-l {
+      animation: walk-rot-fwd 0.28s ease-in-out infinite;
+    }
+    .action-walk.dir-left .leg-r, .action-walk.dir-right .leg-r {
+      animation: walk-rot-back 0.28s ease-in-out infinite;
+    }
+    .action-walk.dir-left .arm-l, .action-walk.dir-right .arm-l {
+      animation: walk-rot-back 0.28s ease-in-out infinite;
+    }
+    .action-walk.dir-left .arm-r, .action-walk.dir-right .arm-r {
+      animation: walk-rot-fwd 0.28s ease-in-out infinite;
+    }
+
+    /* ═══════════════════════════════════════════
+       PUSH — Down  (arms reach down, body leans)
+       ═══════════════════════════════════════════ */
+    @keyframes push-down-arm {
+      0%, 100% { transform: translateY(4px) scaleY(1.05); }
+      50%      { transform: translateY(6px) scaleY(1.08); }
+    }
+    @keyframes push-down-body {
+      0%, 100% { transform: translateY(2px); }
+      50%      { transform: translateY(4px); }
+    }
+    .action-push.dir-down .arm-l, .action-push.dir-down .arm-r {
+      animation: push-down-arm 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-down .body-core, .action-push.dir-down .head {
+      animation: push-down-body 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-down .leg-l { animation: walk-bounce-l 0.35s ease-in-out infinite; }
+    .action-push.dir-down .leg-r { animation: walk-bounce-r 0.35s ease-in-out infinite 0.17s; }
+
+    /* ═══════════════════════════════════════════
+       PUSH — Up  (arms reach up / overhead)
+       ═══════════════════════════════════════════ */
+    @keyframes push-up-arm {
+      0%, 100% { transform: translateY(-4px) scaleY(1.05); }
+      50%      { transform: translateY(-6px) scaleY(1.08); }
+    }
+    @keyframes push-up-body {
+      0%, 100% { transform: translateY(-2px); }
+      50%      { transform: translateY(-4px); }
+    }
+    .action-push.dir-up .arm-l, .action-push.dir-up .arm-r {
+      animation: push-up-arm 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-up .body-core, .action-push.dir-up .head {
+      animation: push-up-body 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-up .leg-l { animation: walk-bounce-l 0.35s ease-in-out infinite; }
+    .action-push.dir-up .leg-r { animation: walk-bounce-r 0.35s ease-in-out infinite 0.17s; }
+
+    /* ═══════════════════════════════════════════
+       PUSH — Side (lean forward, arms straight)
+       ═══════════════════════════════════════════ */
+    @keyframes push-side-arm {
+      0%, 100% { transform: rotate(-60deg); }
+      50%      { transform: rotate(-70deg); }
+    }
+    @keyframes push-side-body {
+      0%, 100% { transform: rotate(8deg) translateX(2px); }
+      50%      { transform: rotate(12deg) translateX(4px); }
+    }
+    .action-push.dir-left .arm-l, .action-push.dir-left .arm-r,
+    .action-push.dir-right .arm-l, .action-push.dir-right .arm-r {
+      animation: push-side-arm 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-left .body-core, .action-push.dir-left .head,
+    .action-push.dir-right .body-core, .action-push.dir-right .head {
+      animation: push-side-body 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-left .leg-l, .action-push.dir-right .leg-l {
+      animation: walk-rot-fwd 0.35s ease-in-out infinite;
+    }
+    .action-push.dir-left .leg-r, .action-push.dir-right .leg-r {
+      animation: walk-rot-back 0.35s ease-in-out infinite;
+    }
+  `],
   template: `
     <div class="relative w-full h-full bg-sky-200 rounded-xl border-[4px] border-slate-700 shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center touch-none select-none"
          (touchstart)="onTouchStart($event)"
          (touchend)="onTouchEnd($event)">
       
       <div class="grid relative bg-[#3b82f6]"
-           style="box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 4px 4px 10px rgba(0,0,0,0.6), inset -2px -2px 5px rgba(255,255,255,0.2); background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' width=\'60\' height=\'60\'%3E%3Cline x1=\'0\' y1=\'25\' x2=\'100\' y2=\'25\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'0\' y1=\'50\' x2=\'100\' y2=\'50\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'0\' y1=\'75\' x2=\'100\' y2=\'75\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'50\' y1=\'0\' x2=\'50\' y2=\'25\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'25\' y1=\'25\' x2=\'25\' y2=\'50\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'75\' y1=\'25\' x2=\'75\' y2=\'50\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'50\' y1=\'50\' x2=\'50\' y2=\'75\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'25\' y1=\'75\' x2=\'25\' y2=\'100\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3Cline x1=\'75\' y1=\'75\' x2=\'75\' y2=\'100\' stroke=\'%231e3a8a\' stroke-width=\'3\'/%3E%3C/svg%3E');"
+           style="box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 4px 4px 10px rgba(0,0,0,0.6), inset -2px -2px 5px rgba(255,255,255,0.2); background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\' width=\\'60\\' height=\\'60\\'%3E%3Cline x1=\\'0\\' y1=\\'25\\' x2=\\'100\\' y2=\\'25\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'0\\' y1=\\'50\\' x2=\\'100\\' y2=\\'50\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'0\\' y1=\\'75\\' x2=\\'100\\' y2=\\'75\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'50\\' y1=\\'0\\' x2=\\'50\\' y2=\\'25\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'25\\' y1=\\'25\\' x2=\\'25\\' y2=\\'50\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'75\\' y1=\\'25\\' x2=\\'75\\' y2=\\'50\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'50\\' y1=\\'50\\' x2=\\'50\\' y2=\\'75\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'25\\' y1=\\'75\\' x2=\\'25\\' y2=\\'100\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'75\\' y1=\\'75\\' x2=\\'75\\' y2=\\'100\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3C/svg%3E');"
            [style.grid-template-columns]="'repeat(' + cols() + ', minmax(0, 1fr))'"
            [style.grid-template-rows]="'repeat(' + rows() + ', minmax(0, 1fr))'"
            [style.width]="boardWidth()"
@@ -71,7 +152,7 @@ import { SokobanStore } from '../../store/sokoban.store';
         
         @for (row of store.myBoard(); track $index; let r = $index) {
           @for (cell of row; track $index; let c = $index) {
-            <div class="flex items-center justify-center w-full h-full relative"
+            <div class="flex items-center justify-center w-full h-full relative overflow-hidden"
                  [ngClass]="getFloorClass(r, c)">
               
               @if (cell === '#') {
@@ -123,46 +204,210 @@ import { SokobanStore } from '../../store/sokoban.store';
               @if (cell === '@' || cell === '+') {
                 <!-- Player -->
                 <div class="w-[90%] h-[90%] z-30 relative flex items-center justify-center drop-shadow-[0_4px_4px_rgba(0,0,0,0.6)] player-wrapper"
-                     [ngClass]="[playerDir() === 'left' ? 'facing-left' : 'facing-right', 'action-' + playerAction()]">
-                  <svg viewBox="0 0 100 100" class="w-full h-full">
-                    <!-- Head & Body Group -->
-                    <g class="body-head">
-                      <!-- Hair -->
-                      <path d="M 20 30 Q 50 -5 80 30 L 80 40 L 20 40 Z" fill="#111827" />
-                      <!-- Face -->
-                      <rect x="30" y="30" width="40" height="25" rx="5" fill="#fcd34d" />
-                      <!-- Glasses/Mask -->
-                      <rect x="25" y="35" width="50" height="12" rx="3" fill="#e5e7eb" stroke="#4b5563" stroke-width="2"/>
-                      <circle cx="40" cy="41" r="3" fill="#000" />
-                      <circle cx="60" cy="41" r="3" fill="#000" />
-                      <!-- Body (Red shirt) -->
-                      <path d="M 35 55 L 65 55 L 70 85 L 30 85 Z" fill="#ef4444" />
-                      <!-- White shirt collar -->
-                      <polygon points="45,55 55,55 50,65" fill="#fff" />
-                    </g>
-                    <!-- Left Arm & Hand -->
-                    <g class="arm-l">
-                      <path d="M 35 60 L 20 70" stroke="#ef4444" stroke-width="10" stroke-linecap="round" />
-                      <circle cx="17" cy="72" r="6" fill="#fff" />
-                    </g>
-                    <!-- Right Arm & Hand -->
-                    <g class="arm-r">
-                      <path d="M 65 60 L 80 70" stroke="#ef4444" stroke-width="10" stroke-linecap="round" />
-                      <circle cx="83" cy="72" r="6" fill="#fff" />
-                    </g>
-                    <!-- Left Leg & Shoe -->
-                    <g class="leg-l">
-                      <rect x="40" y="80" width="8" height="10" fill="#1f2937" />
-                      <ellipse cx="44" cy="94" rx="8" ry="4" fill="#fff" />
-                    </g>
-                    <!-- Right Leg & Shoe -->
-                    <g class="leg-r">
-                      <rect x="52" y="80" width="8" height="10" fill="#1f2937" />
-                      <ellipse cx="56" cy="94" rx="8" ry="4" fill="#fff" />
-                    </g>
-                  </svg>
+                     [ngClass]="[
+                       'dir-' + playerDir(),
+                       playerDir() === 'left' ? 'facing-left' : '',
+                       'action-' + playerAction()
+                     ]">
+                    <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg">
+                      <defs>
+                        <radialGradient id="skinHead" cx="35%" cy="35%" r="65%">
+                          <stop offset="0%" stop-color="#fde68a"/>
+                          <stop offset="60%" stop-color="#f59e0b"/>
+                          <stop offset="100%" stop-color="#b45309"/>
+                        </radialGradient>
+                        <linearGradient id="skinBody" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#b45309"/>
+                          <stop offset="25%" stop-color="#f59e0b"/>
+                          <stop offset="50%" stop-color="#fde68a"/>
+                          <stop offset="75%" stop-color="#f59e0b"/>
+                          <stop offset="100%" stop-color="#b45309"/>
+                        </linearGradient>
+                        <linearGradient id="skinArm" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#92400e"/>
+                          <stop offset="50%" stop-color="#f59e0b"/>
+                          <stop offset="100%" stop-color="#92400e"/>
+                        </linearGradient>
+                        <radialGradient id="skinFist" cx="30%" cy="30%" r="70%">
+                          <stop offset="0%" stop-color="#fde68a"/>
+                          <stop offset="60%" stop-color="#f59e0b"/>
+                          <stop offset="100%" stop-color="#92400e"/>
+                        </radialGradient>
+                        <linearGradient id="pants" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#1e3a8a"/>
+                          <stop offset="50%" stop-color="#2563eb"/>
+                          <stop offset="100%" stop-color="#1e3a8a"/>
+                        </linearGradient>
+                        <linearGradient id="belt" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#44403c"/>
+                          <stop offset="100%" stop-color="#0c0a09"/>
+                        </linearGradient>
+                        <radialGradient id="buckle" cx="30%" cy="30%" r="70%">
+                          <stop offset="0%" stop-color="#fef08a"/>
+                          <stop offset="50%" stop-color="#eab308"/>
+                          <stop offset="100%" stop-color="#854d0e"/>
+                        </radialGradient>
+                        <linearGradient id="shoe" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#57534e"/>
+                          <stop offset="100%" stop-color="#1c1917"/>
+                        </linearGradient>
+                        <radialGradient id="hair" cx="40%" cy="20%" r="80%">
+                          <stop offset="0%" stop-color="#44403c"/>
+                          <stop offset="50%" stop-color="#1c1917"/>
+                          <stop offset="100%" stop-color="#000"/>
+                        </radialGradient>
+                      </defs>
+
+                      <!-- ══════════ VIEW DOWN (front-facing) ══════════ -->
+                      <g class="view-down">
+                        <!-- Back arms (behind body) -->
+                        <g class="arm-l" style="transform-origin: 28px 42px;">
+                          <path d="M 28 42 Q 12 50 18 72" fill="none" stroke="url(#skinArm)" stroke-width="13" stroke-linecap="round"/>
+                          <circle cx="18" cy="72" r="7" fill="url(#skinFist)"/>
+                        </g>
+                        <g class="arm-r" style="transform-origin: 72px 42px;">
+                          <path d="M 72 42 Q 88 50 82 72" fill="none" stroke="url(#skinArm)" stroke-width="13" stroke-linecap="round"/>
+                          <circle cx="82" cy="72" r="7" fill="url(#skinFist)"/>
+                        </g>
+                        <!-- Legs -->
+                        <g class="leg-l" style="transform-origin: 40px 78px;">
+                          <path d="M 40 78 L 38 94" fill="none" stroke="url(#skinArm)" stroke-width="11" stroke-linecap="round"/>
+                          <rect x="32" y="90" width="13" height="8" rx="3" fill="url(#shoe)"/>
+                        </g>
+                        <g class="leg-r" style="transform-origin: 60px 78px;">
+                          <path d="M 60 78 L 62 94" fill="none" stroke="url(#skinArm)" stroke-width="11" stroke-linecap="round"/>
+                          <rect x="55" y="90" width="13" height="8" rx="3" fill="url(#shoe)"/>
+                        </g>
+                        <!-- Body — muscular V-shape torso -->
+                        <g class="body-core" style="transform-origin: 50px 58px;">
+                          <path d="M 24 38 Q 50 24 76 38 L 66 72 L 34 72 Z" fill="url(#skinBody)"/>
+                          <!-- pec line -->
+                          <path d="M 36 52 Q 44 58 50 52 Q 56 58 64 52" fill="none" stroke="#92400e" stroke-width="1.8" opacity="0.7"/>
+                          <!-- ab line -->
+                          <line x1="50" y1="56" x2="50" y2="68" stroke="#92400e" stroke-width="1.5" opacity="0.6"/>
+                          <line x1="43" y1="62" x2="57" y2="62" stroke="#92400e" stroke-width="1.5" opacity="0.5"/>
+                          <!-- Belt + pants -->
+                          <rect x="32" y="70" width="36" height="6" rx="2" fill="url(#belt)"/>
+                          <rect x="43" y="68" width="14" height="10" rx="3" fill="url(#buckle)"/>
+                          <path d="M 34 76 L 66 76 L 64 86 L 54 86 L 50 80 L 46 86 L 36 86 Z" fill="url(#pants)"/>
+                        </g>
+                        <!-- Head -->
+                        <g class="head" style="transform-origin: 50px 24px;">
+                          <circle cx="50" cy="24" r="15" fill="url(#skinHead)"/>
+                          <!-- Hair — pompadour -->
+                          <path d="M 35 24 Q 32 6 50 4 Q 68 6 65 24 Q 58 14 50 14 Q 42 14 35 24 Z" fill="url(#hair)"/>
+                          <!-- Thick eyebrows -->
+                          <line x1="38" y1="19" x2="46" y2="21" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round"/>
+                          <line x1="62" y1="19" x2="54" y2="21" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round"/>
+                          <!-- Eyes -->
+                          <circle cx="43" cy="24" r="2.2" fill="#000"/>
+                          <circle cx="57" cy="24" r="2.2" fill="#000"/>
+                          <!-- Confident grin -->
+                          <path d="M 44 31 Q 50 35 56 31" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+                          <!-- Goatee -->
+                          <path d="M 46 34 Q 50 40 54 34 Z" fill="url(#hair)"/>
+                        </g>
+                      </g>
+
+                      <!-- ══════════ VIEW UP (back-facing) ══════════ -->
+                      <g class="view-up">
+                        <!-- Arms behind back -->
+                        <g class="arm-l" style="transform-origin: 28px 42px;">
+                          <path d="M 28 42 Q 12 50 18 72" fill="none" stroke="url(#skinArm)" stroke-width="13" stroke-linecap="round"/>
+                          <circle cx="18" cy="72" r="7" fill="url(#skinFist)"/>
+                        </g>
+                        <g class="arm-r" style="transform-origin: 72px 42px;">
+                          <path d="M 72 42 Q 88 50 82 72" fill="none" stroke="url(#skinArm)" stroke-width="13" stroke-linecap="round"/>
+                          <circle cx="82" cy="72" r="7" fill="url(#skinFist)"/>
+                        </g>
+                        <!-- Legs -->
+                        <g class="leg-l" style="transform-origin: 40px 78px;">
+                          <path d="M 40 78 L 38 94" fill="none" stroke="url(#skinArm)" stroke-width="11" stroke-linecap="round"/>
+                          <rect x="32" y="90" width="13" height="8" rx="3" fill="url(#shoe)"/>
+                        </g>
+                        <g class="leg-r" style="transform-origin: 60px 78px;">
+                          <path d="M 60 78 L 62 94" fill="none" stroke="url(#skinArm)" stroke-width="11" stroke-linecap="round"/>
+                          <rect x="55" y="90" width="13" height="8" rx="3" fill="url(#shoe)"/>
+                        </g>
+                        <!-- Back body — wide lat muscles -->
+                        <g class="body-core" style="transform-origin: 50px 58px;">
+                          <path d="M 24 38 Q 50 24 76 38 L 66 72 L 34 72 Z" fill="url(#skinBody)"/>
+                          <!-- spine line -->
+                          <line x1="50" y1="40" x2="50" y2="68" stroke="#92400e" stroke-width="1.5" opacity="0.5"/>
+                          <!-- back muscle lines -->
+                          <path d="M 38 42 Q 44 55 44 68" fill="none" stroke="#92400e" stroke-width="1.2" opacity="0.4"/>
+                          <path d="M 62 42 Q 56 55 56 68" fill="none" stroke="#92400e" stroke-width="1.2" opacity="0.4"/>
+                          <!-- Belt + pants -->
+                          <rect x="32" y="70" width="36" height="6" rx="2" fill="url(#belt)"/>
+                          <path d="M 34 76 L 66 76 L 64 86 L 54 86 L 50 80 L 46 86 L 36 86 Z" fill="url(#pants)"/>
+                        </g>
+                        <!-- Head — back of head -->
+                        <g class="head" style="transform-origin: 50px 24px;">
+                          <circle cx="50" cy="24" r="15" fill="url(#skinHead)"/>
+                          <!-- Full hair covering back of head -->
+                          <path d="M 35 26 Q 32 4 50 2 Q 68 4 65 26 L 60 32 Q 50 36 40 32 Z" fill="url(#hair)"/>
+                          <!-- Red headband -->
+                          <path d="M 35 20 Q 50 14 65 20 L 65 23 Q 50 17 35 23 Z" fill="#dc2626"/>
+                          <!-- Headband knot tails -->
+                          <path d="M 35 20 L 28 16 M 35 23 L 30 22" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"/>
+                        </g>
+                      </g>
+
+                      <!-- ══════════ VIEW SIDE (right-facing; left is scaleX(-1)) ══════════ -->
+                      <g class="view-side">
+                        <!-- Back arm -->
+                        <g class="arm-l" style="transform-origin: 42px 42px;">
+                          <path d="M 42 42 L 42 72" fill="none" stroke="#92400e" stroke-width="13" stroke-linecap="round"/>
+                          <circle cx="42" cy="72" r="7" fill="#92400e"/>
+                        </g>
+                        <!-- Back leg -->
+                        <g class="leg-l" style="transform-origin: 44px 78px;">
+                          <path d="M 44 78 L 44 94" fill="none" stroke="#92400e" stroke-width="11" stroke-linecap="round"/>
+                          <rect x="38" y="90" width="14" height="8" rx="3" fill="#1c1917"/>
+                        </g>
+                        <!-- Body -->
+                        <g class="body-core" style="transform-origin: 50px 58px;">
+                          <path d="M 34 38 Q 66 30 68 52 L 58 72 L 38 72 Z" fill="url(#skinBody)"/>
+                          <!-- side pec -->
+                          <path d="M 64 48 Q 58 52 54 46" fill="none" stroke="#92400e" stroke-width="1.5" opacity="0.6"/>
+                          <!-- Belt + pants -->
+                          <rect x="36" y="70" width="24" height="6" rx="2" fill="url(#belt)"/>
+                          <rect x="54" y="68" width="8" height="10" rx="2" fill="url(#buckle)"/>
+                          <path d="M 38 76 L 58 76 L 56 86 L 40 86 Z" fill="url(#pants)"/>
+                        </g>
+                        <!-- Front leg -->
+                        <g class="leg-r" style="transform-origin: 54px 78px;">
+                          <path d="M 54 78 L 54 94" fill="none" stroke="url(#skinArm)" stroke-width="11" stroke-linecap="round"/>
+                          <rect x="47" y="90" width="14" height="8" rx="3" fill="url(#shoe)"/>
+                        </g>
+                        <!-- Head -->
+                        <g class="head" style="transform-origin: 50px 24px;">
+                          <circle cx="50" cy="24" r="15" fill="url(#skinHead)"/>
+                          <!-- Nose -->
+                          <path d="M 62 22 Q 70 24 64 28 Z" fill="url(#skinHead)"/>
+                          <!-- Hair -->
+                          <path d="M 36 26 Q 34 6 52 4 Q 66 6 64 18 Q 54 12 36 26 Z" fill="url(#hair)"/>
+                          <!-- Sideburn -->
+                          <path d="M 38 20 Q 42 20 42 30 L 38 28 Z" fill="url(#hair)"/>
+                          <!-- Eye -->
+                          <circle cx="58" cy="22" r="2.2" fill="#000"/>
+                          <!-- Eyebrow -->
+                          <line x1="54" y1="18" x2="62" y2="19" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round"/>
+                          <!-- Goatee on side -->
+                          <path d="M 62 32 Q 64 36 58 36 Q 58 34 60 32 Z" fill="url(#hair)"/>
+                          <!-- Grin -->
+                          <path d="M 58 28 Q 64 30 62 32" fill="none" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                        </g>
+                        <!-- Front arm -->
+                        <g class="arm-r" style="transform-origin: 50px 42px;">
+                          <path d="M 50 42 L 50 72" fill="none" stroke="url(#skinArm)" stroke-width="13" stroke-linecap="round"/>
+                          <circle cx="50" cy="72" r="7" fill="url(#skinFist)"/>
+                        </g>
+                      </g>
+                    </svg>
                 </div>
               }
+
             </div>
           }
         }
@@ -172,14 +417,13 @@ import { SokobanStore } from '../../store/sokoban.store';
   `
 })
 export class SokobanBoardComponent {
-  playerDir = signal<'up' | 'down' | 'left' | 'right'>('right');
+  playerDir = signal<'up' | 'down' | 'left' | 'right'>('down');
   playerAction = signal<'idle' | 'walk' | 'push'>('idle');
   private actionTimeout: any;
 
   triggerMove(dir: 'up' | 'down' | 'left' | 'right') {
-    if (dir === 'left' || dir === 'right') {
-      this.playerDir.set(dir);
-    }
+    // Always set direction for ALL four directions
+    this.playerDir.set(dir);
     
     const board = this.store.myBoard();
     let pr = -1, pc = -1;
@@ -204,7 +448,6 @@ export class SokobanBoardComponent {
     
     this.store.move(dir);
     
-    // Check if move was successful by observing state again (synchronous execution assumed for local store)
     const newState = this.store.myPlayerState();
     const postMoves = newState ? newState.moves : 0;
     
@@ -213,7 +456,7 @@ export class SokobanBoardComponent {
       if (this.actionTimeout) clearTimeout(this.actionTimeout);
       this.actionTimeout = setTimeout(() => {
         this.playerAction.set('idle');
-      }, 250);
+      }, 300);
     }
   }
 
