@@ -62,6 +62,7 @@ export class WebSocketService {
   // Triggered when the room is dismissed
   readonly roomDismissedEvent = signal<number>(0);
   readonly kickedEvent = signal<number>(0);
+  readonly connectionRejectedEvent = signal<number>(0);
   
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
@@ -143,6 +144,7 @@ export class WebSocketService {
         console.warn('Game WS error:', errorMsg);
         this.toastService.show(this.parseServerError(errorMsg), 'error');
         this.gameDisconnectIntentional = true;
+        this.connectionRejectedEvent.update(v => v + 1);
         this.disconnect(gameId);
       } else if (msg.type === 'host_changed') {
         this.hostChangedEvent.set({ newHost: msg.newHost, oldHost: msg.oldHost });
@@ -239,6 +241,12 @@ export class WebSocketService {
         setTimeout(() => {
           this.broadcastMessages.update(msgs => msgs.filter(m => m !== msg));
         }, 15000);
+      } else if (msg.type === 'error') {
+        console.warn('Lobby WS error:', msg.message);
+        this.lobbyDisconnectIntentional = true;
+        if (this.lobbySocket) {
+          this.lobbySocket.close();
+        }
       }
     };
 
@@ -388,6 +396,9 @@ export class WebSocketService {
     }
     if (errorMsg === 'wrong_password') {
       return this.i18n.t('game.wrong_password_msg')() || 'Wrong password, please try again.';
+    }
+    if (errorMsg === 'multiplayer_disabled') {
+      return this.i18n.t('game.multiplayer_disabled_msg')() || 'Multiplayer features are currently disabled for maintenance.';
     }
     return errorMsg;
   }

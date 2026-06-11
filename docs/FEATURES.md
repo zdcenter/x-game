@@ -53,10 +53,12 @@
 - **In-Game Display**: Real-time display of the player's personal best inline within the game interface to promote engagement.
 
 ### Admin Dashboard
-- User Management: View user lists, toggle active status, and track last login times.
-- System Settings: Global configuration panel to toggle site maintenance mode, set global announcements, and manage the fake traffic simulator dynamically.
+- User Management: View user lists, toggle active status, and track last login.
+- **Global System Settings (Auto-Save)**: Dynamic configuration system for announcements, ads, maintenance mode, and fake traffic simulator. All toggle switches auto-save on change; text/number inputs auto-save on blur. No manual "Save" button needed.
+- **Graceful Degradation (Multiplayer Kill Switch)**: Admins can instantly disable all multiplayer and matchmaking features to save server resources or perform maintenance. The system gracefully degrades to a pure local single-player experience without taking the site offline. All 13 games' Right Sidebar lobby panels, mobile toggle buttons, and the global lobby panel are hidden via `@if` conditional rendering. Backend WebSocket guard rejects any stale multiplayer requests with `multiplayer_disabled` error code.
 - Real-Time Monitoring: Live graphs and stats of currently active rooms and online players using WebSocket connections.
 - Fake Traffic Simulator: Generates random background rooms and players to create a lively lobby environment. Controllable via the Admin Settings panel.
+- **Responsive Lobby Grid**: The game lobby uses CSS Grid `auto-fill` to dynamically adjust column count based on available width (up to 5 columns on 4K screens). When the multiplayer sidebar is hidden, cards automatically expand to fill the freed space.
 
 ## UI/UX Design System (UI/UX 规范)
 

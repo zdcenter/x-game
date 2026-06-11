@@ -1,5 +1,14 @@
 # Changelog
 
+## [2026-06-11] - 🛡️ 联机总开关全面落地 & 管理后台自动保存 & 大厅智能流式布局
+### ✨ 新功能 (Features)
+- **联机总开关全面落地 (Multiplayer Kill Switch - Full Implementation)**：
+  - 后台管理面板的"多人联机系统"开关现已与全站所有游戏深度打通。关闭后，**所有 13 款游戏**的右侧竞技大厅面板（Right Sidebar）、手机端呼出大厅的小按钮、以及主页大厅的全局竞技面板，全部会被 `@if` 条件渲染彻底隐藏，玩家只能体验纯单机模式。
+  - 统一了所有游戏模板中侧边栏的 HTML 注释标识为 `<!-- Right Sidebar (Lobby Panel) -->`，方便后续全局搜索和批量维护。
+  - 后端 WebSocket 层增加了 `multiplayer_disabled` 错误码守卫：即使前端出现缓存残留导致用户意外进入联机等待大厅，后端也会在一瞬间将其弹回单机模式，做到滴水不漏。
+- **管理后台设置自动保存 (Admin Settings Auto-Save)**：移除了原先需要手动点击的"保存所有设置"大按钮，所有开关（维护模式、联机开关、模拟器）改为拨动即自动保存，所有输入框（广告 Slot ID、频率等）改为失焦/回车后自动保存。保存过程中右上角会显示脉冲式"保存中..."提示。
+- **大厅智能流式布局 (Responsive Lobby Grid)**：游戏大厅的卡片网格从写死的 3 列 (`xl:grid-cols-3`) 升级为 CSS Grid 的 `auto-fill` 智能计算。现在会根据可用宽度自动决定列数（大屏可达 4-5 列），关闭联机侧边栏后卡片自动舒展填满屏幕，最大宽度从 `max-w-6xl` 放宽至 `1600px`。
+
 ## [2026-06-11] - 🚀 新增全端社交分享与二维码推广功能
 ### ✨ 新功能 (Features)
 - **原生 Web Share API 集成**：支持移动端直接唤起系统级分享。
@@ -63,7 +72,9 @@
 
 ## [Unreleased]
 ### Added
-- **Water Sort Puzzle (水管分色)**: Added a highly addictive new puzzle game! Features include a dynamic Single Player survival mode and a real-time PK Speed mode. Implemented with a custom "Reverse Shuffle" backend algorithm ensuring 100% solvable puzzles without needing a static puzzle bank. Built with stunning glassmorphic UI, fluid CSS pouring animations, and fully integrated with the Party Room (综合包厢) system.
+- **Multiplayer Kill Switch**: Added a global `multiplayer_enabled` toggle in Admin settings. When disabled, all room creation, matchmaking, and PK UI elements are hidden globally, gracefully falling back to offline single-player modes to save server resources during maintenance.
+- **Sokoban PK Mode**: Implemented real-time Sokoban PK battles. Includes side-by-side opponent boards, ghost overlays, and real-time cursor/movement syncing.
+- **Dynamic Avatar Generation**: Removed static SVG avatars. Added dynamic DiceBear avatar generation (identicon/bottts/avataaars) using a custom `DiceBearService` connected to Cloudflare Workers for caching. 100% solvable puzzles without needing a static puzzle bank. Built with stunning glassmorphic UI, fluid CSS pouring animations, and fully integrated with the Party Room (综合包厢) system.
 - **Google AdSense Integration**: 增加了全局的 Google AdSense 支持，并在前端封装了可高度复用的 `AdsenseComponent` 组件，便于在平台（如大厅、游戏结算等）各处无缝植入广告位，为商业化变现打好基础。
 - **24点智能提示 (Math 24 Hint Ad)**：接入 Google H5 Games Ads（激励视频广告），当玩家遇到不会解的局面时，点击提示观看广告即可获取由回溯算法实时算出的动态解题步骤。
 - **System Settings Module**: Added a new settings page in the Admin Dashboard to control global website configurations.

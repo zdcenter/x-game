@@ -157,6 +157,8 @@ export class SokobanStore {
   }
 
   leaveGame() {
+    this.roomId.set("");
+    this.currentRoomMode.set("single");
     if (this.currentRoomMode() !== 'single') {
       this.ws.send({ type: 'leave_game' });
       this.ws.disconnect('sokoban');

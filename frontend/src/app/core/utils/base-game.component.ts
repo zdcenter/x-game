@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
 import { GameService } from '../services/game.service';
+import { SettingsService } from '../services/settings.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -16,6 +17,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected gameTimer = inject(GameTimerService);
   protected wsService = inject(WebSocketService);
   protected gameService = inject(GameService);
+  public settingsService = inject(SettingsService);
   private _baseRoute = inject(ActivatedRoute);
   private _baseRouter = inject(Router);
   

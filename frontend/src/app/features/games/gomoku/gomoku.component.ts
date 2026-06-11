@@ -1,6 +1,7 @@
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SettingsService } from '../../../core/services/settings.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -33,6 +34,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   store = inject(GomokuStore);
   gameTimer = inject(GameTimerService);
   gameService = inject(GameService);
+  settingsService = inject(SettingsService);
   audio = inject(AudioService);
   
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;

@@ -9,6 +9,7 @@ import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
 import { GameRulesModalComponent } from '../../../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { environment } from '../../../../../../environments/environment';
+import { SettingsService } from '../../../../../core/services/settings.service';
 
 interface LevelResponse {
   id: string;
@@ -36,8 +37,8 @@ export class SokobanLobbyComponent implements OnInit {
   store = inject(SokobanStore);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
-  
   playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+  settingsService = inject(SettingsService);
   showRules = signal(false);
 
   @Output() openLobby = new EventEmitter<void>();

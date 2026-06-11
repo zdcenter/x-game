@@ -9,6 +9,8 @@ import (
 
 	"github.com/gofiber/contrib/v3/websocket"
 	"github.com/gofiber/fiber/v3"
+	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/middleware"
 	wsManager "github.com/x-game/backend/pkg/ws"
 )
@@ -55,6 +57,15 @@ func Register(router fiber.Router) {
 	}))
 
 	router.Get("/join/:roomId", websocket.New(func(c *websocket.Conn) {
+		var setting domain.SystemSetting
+		if err := db.DB.Where("key = ?", "multiplayer_enabled").First(&setting).Error; err == nil {
+			if setting.Value == "false" {
+				c.WriteMessage(websocket.TextMessage, []byte(`{"type": "error", "message": "multiplayer_disabled"}`))
+				c.Close()
+				return
+			}
+		}
+
 		rawRoomID := c.Params("roomId")
 		roomID, err := url.PathUnescape(rawRoomID)
 		if err != nil {
@@ -165,6 +176,15 @@ func Register(router fiber.Router) {
 	// We already apply upgrade middleware globally above, so we don't need this specific one.
 
 	router.Get("/lobby", websocket.New(func(c *websocket.Conn) {
+		var setting domain.SystemSetting
+		if err := db.DB.Where("key = ?", "multiplayer_enabled").First(&setting).Error; err == nil {
+			if setting.Value == "false" {
+				c.WriteMessage(websocket.TextMessage, []byte(`{"type": "error", "message": "multiplayer_disabled"}`))
+				c.Close()
+				return
+			}
+		}
+
 		playerID := c.Query("playerId", "anonymous")
 		username := c.Query("username", "Anonymous")
 

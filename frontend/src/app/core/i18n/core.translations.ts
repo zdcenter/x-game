@@ -184,6 +184,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'admin.settings.maintenance.desc': 'Turn off public access to the website. Admins can still log in.',
     'admin.settings.maintenance.message_label': 'Maintenance Message (Optional)',
     'admin.settings.maintenance.message_placeholder': 'e.g., We are upgrading our servers until 10 PM.',
+    'admin.settings.multiplayer.title': 'Multiplayer System',
+    'admin.settings.multiplayer.desc': 'Enable or disable the global multiplayer and room creation system. If disabled, players can only play offline single player modes.',
     'admin.settings.simulator.title': 'Fake Traffic Simulator',
     'admin.settings.simulator.desc': 'Generates fake players and rooms to make the lobby look active.',
     'admin.settings.adsense.title': 'AdSense Settings',
@@ -388,6 +390,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'share.copied': 'Link copied to clipboard!',
     'share.game_invite': 'Play this awesome game with me!',
     'share.room_invite': "I am waiting for you in [game]! Click the link to join my room [room] directly and let's play!",
+    'game.multiplayer_disabled_msg': 'Multiplayer is currently disabled for maintenance.',
     
     // Blog
     'blog.title': 'Puzzle PK Blog',
@@ -585,6 +588,8 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'admin.settings.maintenance.desc': '关闭网站的公共访问。管理员仍然可以登录并访问后台。',
     'admin.settings.maintenance.message_label': '维护文案 (可选)',
     'admin.settings.maintenance.message_placeholder': '例如：我们正在升级服务器，预计晚上10点恢复。',
+    'admin.settings.multiplayer.title': '多人联机系统',
+    'admin.settings.multiplayer.desc': '开启或关闭全局的房间与联机系统。如果关闭，玩家只能在本地游玩纯单机模式。',
     'admin.settings.simulator.title': '虚拟流量模拟器',
     'admin.settings.simulator.desc': '生成虚拟玩家和房间，让游戏大厅看起来更活跃。',
     'admin.settings.adsense.title': 'AdSense 广告配置',
@@ -790,6 +795,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'share.copied': '链接已复制到剪贴板！',
     'share.game_invite': '快来和我一起玩这个超赞的游戏吧！',
     'share.room_invite': '我正在【[game]】等你！点击链接直接加入我的房间 [room] 一起PK吧！',
+    'game.multiplayer_disabled_msg': '系统维护中，暂时关闭了联机和房间功能，请游玩单机模式。',
 
     // Blog
     'blog.title': 'Puzzle PK 官方博客',

@@ -266,7 +266,8 @@
   ></app-game-rules-modal>
 
   <!-- Right Sidebar (Lobby Panel) -->
-  <div class="w-80 border-l border-[var(--color-border-card)] bg-[var(--color-bg-card)] flex-shrink-0 transition-transform duration-300 fixed lg:static right-0 top-0 h-full z-40"
+  @if (settingsService.settings().multiplayer_enabled === 'true') {
+<div class="w-80 border-l border-[var(--color-border-card)] bg-[var(--color-bg-card)] flex-shrink-0 transition-transform duration-300 fixed lg:static right-0 top-0 h-full z-40"
        [class.translate-x-full]="!isMobileSidebarOpen()"
        [class.lg:translate-x-0]="true"
        [class.!hidden]="store.currentRoomMode() !== 'single' && store.status() !== 'waiting' && !isMobileSidebarOpen()">
@@ -279,6 +280,8 @@
       (closeSidebar)="isMobileSidebarOpen.set(false)">
     </app-game-lobby-panel>
   </div>
+    }
+
   
   <!-- Mobile Sidebar Backdrop -->
   @if (isMobileSidebarOpen()) {

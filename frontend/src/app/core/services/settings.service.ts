@@ -9,6 +9,7 @@ export interface PublicSettings {
   maintenance_message: string;
   global_announcement: string;
   registration_enabled: string;
+  multiplayer_enabled: string;
   ad_interstitial_frequency: string;
   ad_interstitial_daily_limit: string;
   ad_pc_left_slot: string;
@@ -28,6 +29,7 @@ export class SettingsService {
     maintenance_message: '',
     global_announcement: '',
     registration_enabled: 'true',
+    multiplayer_enabled: 'true',
     ad_interstitial_frequency: '3',
     ad_interstitial_daily_limit: '3',
     ad_pc_left_slot: '',

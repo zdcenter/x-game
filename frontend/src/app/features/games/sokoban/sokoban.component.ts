@@ -76,11 +76,13 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                 <span class="hidden sm:inline">{{ i18n.t('game.levels_lobby')() }}</span>
               </button>
             }
-            <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95">
+            @if (settingsService.settings().multiplayer_enabled === 'true') {
+<button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </button>
+}
           </div>
         </ng-container>
       </app-game-header>
@@ -287,32 +289,34 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
            (click)="isMobileSidebarOpen.set(false)"></div>
     }
 
-    <!-- RIGHT: Social Lobby Sidebar (Drawer) -->
-    <div class="flex-shrink-0 transition-transform duration-300"
-         [ngClass]="{
-           'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
-           'translate-x-0': isMobileSidebarOpen(),
-           'translate-x-full': !isMobileSidebarOpen(),
-           'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': !(store.status() === 'playing' && store.currentRoomMode() !== 'single')
-         }">
-      <div class="flex justify-between items-center mb-4 lg:hidden"
-           [class.lg:flex]="store.status() === 'playing' && store.currentRoomMode() !== 'single'">
-        <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
-        <button (click)="isMobileSidebarOpen.set(false)" class="p-2 bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+    <!-- Right Sidebar (Lobby Panel) -->
+    @if (settingsService.settings().multiplayer_enabled === 'true') {
+      <div class="flex-shrink-0 transition-transform duration-300"
+           [ngClass]="{
+             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+             'translate-x-0': isMobileSidebarOpen(),
+             'translate-x-full': !isMobileSidebarOpen(),
+             'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': !(store.status() === 'playing' && store.currentRoomMode() !== 'single')
+           }">
+        <div class="flex justify-between items-center mb-4 lg:hidden"
+             [class.lg:flex]="store.status() === 'playing' && store.currentRoomMode() !== 'single'">
+          <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+          <button (click)="isMobileSidebarOpen.set(false)" class="p-2 bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <app-game-lobby-panel
+          #lobbyPanel
+          class="flex-grow flex"
+          [currentGameId]="'sokoban'"
+          [currentRoomId]="store.roomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+        </app-game-lobby-panel>
       </div>
-      <app-game-lobby-panel
-        #lobbyPanel
-        class="flex-grow flex"
-        [currentGameId]="'sokoban'"
-        [currentRoomId]="store.roomId()"
-        (joinRoom)="handleJoinRoom($event)"
-        (createRoom)="handleCreateRoom($event)">
-      </app-game-lobby-panel>
-    </div>
+    }
   </div>
 
   <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>

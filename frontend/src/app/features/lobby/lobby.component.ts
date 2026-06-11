@@ -28,7 +28,7 @@ import { ShareService } from '../../core/services/share.service';
         
         <!-- Global Announcement Marquee -->
         @if (activeAnnouncements().length > 0) {
-          <div class="w-full max-w-6xl mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden">
+          <div class="w-full max-w-[1600px] mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden">
             <span class="mr-3 text-xl shrink-0 animate-pulse z-20 bg-[var(--color-bg-card)] pr-2">📣</span>
             <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
               <div class="animate-marquee inline-block text-sm font-bold text-blue-400">
@@ -42,7 +42,7 @@ import { ShareService } from '../../core/services/share.service';
 
         <!-- Lobby Top Banner Ad (Visible on all devices) -->
         @if (settingsService.settings().ad_mobile_lobby_slot) {
-          <div class="w-full max-w-6xl mb-4">
+          <div class="w-full max-w-[1600px] mb-4">
             <app-adsense
               [adSlot]="settingsService.settings().ad_mobile_lobby_slot"
               adFormat="horizontal"
@@ -53,7 +53,7 @@ import { ShareService } from '../../core/services/share.service';
         }
 
         <!-- Welcome Header -->
-        <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-2 lg:mt-4 relative max-w-6xl">
+        <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-2 lg:mt-4 relative max-w-[1600px]">
           
           <!-- Mobile Title & Toggle Lobby Button -->
           <div class="flex items-center justify-between w-full lg:hidden px-2 mb-4">
@@ -61,11 +61,13 @@ import { ShareService } from '../../core/services/share.service';
                 style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
               <ng-container i18n="@@lobby.title">lobby.title</ng-container>
             </h1>
-            <button (click)="isGlobalLobbyOpen.set(true)" class="p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-main)] z-10 flex shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </button>
+            @if (settingsService.settings().multiplayer_enabled === 'true') {
+              <button (click)="isGlobalLobbyOpen.set(true)" class="p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-main)] z-10 flex shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+            }
           </div>
 
           <!-- Desktop Title -->
@@ -82,7 +84,7 @@ import { ShareService } from '../../core/services/share.service';
         </div>
 
         <!-- Games Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 max-w-6xl w-full pb-10">
+        <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
         @for (game of games(); track game.id) {
           <!-- Dynamic Game Card -->
           <a [routerLink]="['/games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
@@ -150,17 +152,19 @@ import { ShareService } from '../../core/services/share.service';
       }
 
       <!-- Sidebar Container -->
-      <div class="fixed lg:sticky top-[64px] lg:top-0 right-0 h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)] w-[300px] sm:w-[350px] lg:w-[350px] xl:w-[400px] z-50 lg:z-10 transition-transform duration-300 ease-in-out shrink-0 flex flex-col p-0 lg:p-4 bg-[var(--color-bg-main)] lg:bg-transparent border-l border-[var(--color-border-card)] lg:border-none"
-           [class.translate-x-0]="isGlobalLobbyOpen()"
-           [class.translate-x-full]="!isGlobalLobbyOpen()"
-           [class.lg:translate-x-0]="true">
+      @if (settingsService.settings().multiplayer_enabled === 'true') {
+        <div class="fixed lg:sticky top-[64px] lg:top-0 right-0 h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)] w-[300px] sm:w-[350px] lg:w-[350px] xl:w-[400px] z-50 lg:z-10 transition-transform duration-300 ease-in-out shrink-0 flex flex-col p-0 lg:p-4 bg-[var(--color-bg-main)] lg:bg-transparent border-l border-[var(--color-border-card)] lg:border-none"
+             [class.translate-x-0]="isGlobalLobbyOpen()"
+             [class.translate-x-full]="!isGlobalLobbyOpen()"
+             [class.lg:translate-x-0]="true">
 
-        <app-game-lobby-panel
-          class="flex-grow flex w-full h-full min-h-0 lg:bg-transparent"
-          [isGlobal]="true"
-          (createRoom)="handleGlobalCreateRoom($event)">
-        </app-game-lobby-panel>
-      </div>
+          <app-game-lobby-panel
+            class="flex-grow flex w-full h-full min-h-0 lg:bg-transparent"
+            [isGlobal]="true"
+            (createRoom)="handleGlobalCreateRoom($event)">
+          </app-game-lobby-panel>
+        </div>
+      }
 
     </div>
   `

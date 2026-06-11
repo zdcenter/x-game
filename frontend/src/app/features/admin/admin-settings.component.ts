@@ -16,9 +16,11 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <h2 class="text-2xl font-bold"><ng-container i18n="@@admin.settings.title">admin.settings.title</ng-container></h2>
           <p class="text-[var(--color-text-muted)] mt-1"><ng-container i18n="@@admin.settings.subtitle">admin.settings.subtitle</ng-container></p>
         </div>
-        <button (click)="saveSettings()" [disabled]="isSaving()" class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg disabled:opacity-50">
-          {{ isSaving() ? i18n.t('admin.settings.saving')() : i18n.t('admin.settings.save')() }}
-        </button>
+        <div>
+          @if (isSaving()) {
+            <span class="text-sm font-bold text-[var(--color-accent-from)] animate-pulse">{{ i18n.t('admin.settings.saving')() }}</span>
+          }
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -30,14 +32,14 @@ import { I18nService } from '../../core/i18n/i18n.service';
               <p class="text-xs opacity-70 mt-1"><ng-container i18n="@@admin.settings.maintenance.desc">admin.settings.maintenance.desc</ng-container></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.site_maintenance">
+              <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.site_maintenance" (ngModelChange)="saveSettings()">
               <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
             </label>
           </div>
           @if (settings.site_maintenance) {
             <div class="mt-4 animate-fade-in">
               <label class="block text-xs font-bold opacity-70 mb-2"><ng-container i18n="@@admin.settings.maintenance.message_label">admin.settings.maintenance.message_label</ng-container></label>
-              <textarea [(ngModel)]="settings.maintenance_message" rows="2" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--color-accent-to)] text-sm" [placeholder]="i18n.t('admin.settings.maintenance.message_placeholder')()"></textarea>
+              <textarea [(ngModel)]="settings.maintenance_message" (change)="saveSettings()" rows="2" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--color-accent-to)] text-sm" [placeholder]="i18n.t('admin.settings.maintenance.message_placeholder')()"></textarea>
             </div>
           }
         </div>
@@ -50,7 +52,21 @@ import { I18nService } from '../../core/i18n/i18n.service';
               <p class="text-xs opacity-70 mt-1"><ng-container i18n="@@admin.settings.simulator.desc">admin.settings.simulator.desc</ng-container></p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.simulator_enabled">
+              <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.simulator_enabled" (ngModelChange)="saveSettings()">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-accent-from)]"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Multiplayer Toggle -->
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)]">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-lg font-bold"><ng-container i18n="@@admin.settings.multiplayer.title">admin.settings.multiplayer.title</ng-container></h3>
+              <p class="text-xs opacity-70 mt-1"><ng-container i18n="@@admin.settings.multiplayer.desc">admin.settings.multiplayer.desc</ng-container></p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.multiplayer_enabled" (ngModelChange)="saveSettings()">
               <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-accent-from)]"></div>
             </label>
           </div>
@@ -68,23 +84,23 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.freq_label')() }}</label>
-              <input type="number" [(ngModel)]="settings.ad_interstitial_frequency" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
+              <input type="number" [(ngModel)]="settings.ad_interstitial_frequency" (change)="saveSettings()" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
             </div>
             <div>
               <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.daily_limit_label')() }}</label>
-              <input type="number" [(ngModel)]="settings.ad_interstitial_daily_limit" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
+              <input type="number" [(ngModel)]="settings.ad_interstitial_daily_limit" (change)="saveSettings()" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="3">
             </div>
             <div>
               <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.pc_left_label')() }}</label>
-              <input type="text" [(ngModel)]="settings.ad_pc_left_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
+              <input type="text" [(ngModel)]="settings.ad_pc_left_slot" (change)="saveSettings()" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
             </div>
             <div>
               <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.pc_right_label')() }}</label>
-              <input type="text" [(ngModel)]="settings.ad_pc_right_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
+              <input type="text" [(ngModel)]="settings.ad_pc_right_slot" (change)="saveSettings()" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
             </div>
             <div class="md:col-span-2">
               <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.adsense.mobile_lobby_label')() }}</label>
-              <input type="text" [(ngModel)]="settings.ad_mobile_lobby_slot" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
+              <input type="text" [(ngModel)]="settings.ad_mobile_lobby_slot" (change)="saveSettings()" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 1234567890">
             </div>
           </div>
         </div>
@@ -104,6 +120,7 @@ export class AdminSettingsComponent implements OnInit {
     maintenance_message: '',
     global_announcement: '',
     simulator_enabled: true,
+    multiplayer_enabled: true,
     ad_interstitial_frequency: 3,
     ad_interstitial_daily_limit: 3,
     ad_pc_left_slot: '',
@@ -119,6 +136,7 @@ export class AdminSettingsComponent implements OnInit {
         this.settings.maintenance_message = res.maintenance_message || '';
         this.settings.global_announcement = res.global_announcement || '';
         this.settings.simulator_enabled = res.simulator_enabled === 'true';
+        this.settings.multiplayer_enabled = res.multiplayer_enabled === 'true';
         this.settings.ad_interstitial_frequency = parseInt(res.ad_interstitial_frequency || '3', 10);
         this.settings.ad_interstitial_daily_limit = parseInt(res.ad_interstitial_daily_limit || '3', 10);
         this.settings.ad_pc_left_slot = res.ad_pc_left_slot || '';
@@ -138,6 +156,7 @@ export class AdminSettingsComponent implements OnInit {
       maintenance_message: this.settings.maintenance_message,
       global_announcement: this.settings.global_announcement,
       simulator_enabled: this.settings.simulator_enabled ? 'true' : 'false',
+      multiplayer_enabled: this.settings.multiplayer_enabled ? 'true' : 'false',
       ad_interstitial_frequency: String(this.settings.ad_interstitial_frequency),
       ad_interstitial_daily_limit: String(this.settings.ad_interstitial_daily_limit),
       ad_pc_left_slot: this.settings.ad_pc_left_slot,

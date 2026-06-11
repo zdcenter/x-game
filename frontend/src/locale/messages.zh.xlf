@@ -1366,6 +1366,14 @@
           <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="admin.settings.multiplayer.title" datatype="html">
+        <source>admin.settings.multiplayer.title</source>
+        <target>多人联机系统</target>
+      </trans-unit>
+      <trans-unit id="admin.settings.multiplayer.desc" datatype="html">
+        <source>admin.settings.multiplayer.desc</source>
+        <target>开启或关闭全局的房间与联机系统。如果关闭，玩家只能在本地游玩纯单机模式。</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

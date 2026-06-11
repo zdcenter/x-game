@@ -119,6 +119,14 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
     }
   });
 
+  effect(() => {
+    const rejected = wsService.connectionRejectedEvent();
+    if (rejected > 0 && untracked(() => config.getCurrentMode()) !== 'single') {
+      clearReconnectInfo();
+      config.onLeaveRoom();
+    }
+  });
+
   return {
     consumePendingOrReconnect(): PendingJoinInfo | null {
       const joinInfo = crossGameJoin.consumePendingJoin(config.gameId);

@@ -1366,6 +1366,14 @@
           <context context-type="linenumber">62,63</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="admin.settings.multiplayer.title" datatype="html">
+        <source>admin.settings.multiplayer.title</source>
+        <target>Multiplayer System</target>
+      </trans-unit>
+      <trans-unit id="admin.settings.multiplayer.desc" datatype="html">
+        <source>admin.settings.multiplayer.desc</source>
+        <target>Enable or disable the global multiplayer and room creation system. If disabled, players can only play offline single player modes.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

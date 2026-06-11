@@ -213,6 +213,7 @@ func SeedSettings() {
 	defaultSettings := []domain.SystemSetting{
 		{Key: "site_maintenance", Value: "false"},
 		{Key: "maintenance_message", Value: ""},
+		{Key: "multiplayer_enabled", Value: "true"},
 		{Key: "simulator_enabled", Value: "true"},
 		{Key: "registration_enabled", Value: "true"},
 		{Key: "ad_interstitial_frequency", Value: "3"},

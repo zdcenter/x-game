@@ -17,6 +17,7 @@ import { GameService } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
   selector: 'app-codebreaker',
@@ -46,6 +47,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   gameService = inject(GameService);
   toastService = inject(ToastService);
   audio = inject(AudioService);
+  settingsService = inject(SettingsService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;

@@ -88,11 +88,13 @@ import { AudioService } from '../../../core/services/audio.service';
                 </div>
               }
 
-              <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95">
+              @if (settingsService.settings().multiplayer_enabled === 'true') {
+<button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </button>
+}
             </div>
           </ng-container>
         </app-game-header>
@@ -222,29 +224,31 @@ import { AudioService } from '../../../core/services/audio.service';
       <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
     }
 
-    <!-- Sidebar -->
-    <div class="flex-shrink-0 transition-transform duration-300"
-         [ngClass]="{
-           'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
-           'translate-x-0': isMobileSidebarOpen(),
-           'translate-x-full': !isMobileSidebarOpen(),
-           'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': currentRoomId() === '' || currentRoomMode() === 'single'
-         }">
-      
-      <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomMode() === 'single'">
-        <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">game.room_info</ng-container></h3>
-      </div>
+    <!-- Right Sidebar (Lobby Panel) -->
+    @if (settingsService.settings().multiplayer_enabled === 'true') {
+      <div class="flex-shrink-0 transition-transform duration-300"
+           [ngClass]="{
+             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+             'translate-x-0': isMobileSidebarOpen(),
+             'translate-x-full': !isMobileSidebarOpen(),
+             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': currentRoomId() === '' || currentRoomMode() === 'single'
+           }">
+        
+        <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomMode() === 'single'">
+          <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">game.room_info</ng-container></h3>
+        </div>
 
-      <!-- PK Lobby Panel -->
-      <app-game-lobby-panel
-        #lobbyPanel
-        class="flex-grow flex"
-        [currentGameId]="'watersort'"
-        [currentRoomId]="currentRoomId()"
-        (joinRoom)="handleJoinRoom($event)"
-        (createRoom)="handleCreateRoom($event)">
-      </app-game-lobby-panel>
-    </div>
+        <!-- Right Sidebar (Lobby Panel) -->
+        <app-game-lobby-panel
+          #lobbyPanel
+          class="flex-grow flex"
+          [currentGameId]="'watersort'"
+          [currentRoomId]="currentRoomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+        </app-game-lobby-panel>
+      </div>
+    }
 
   </div>
   
