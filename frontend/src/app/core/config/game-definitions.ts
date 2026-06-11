@@ -7,8 +7,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.minesweeper',
     iconEmoji: '💣',
     modes: [
-      { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'Shared board. Race to flag mines!' },
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_steal', labelKey: 'game.same_pk_steal_mine', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Race to flag mines!' },
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
     ],
     difficulties: [
       { id: 'beginner', labelKey: 'game.diff_beginner', descKey: 'game.diff_mine_9x9', desc: '9x9 (10)' },
@@ -27,8 +28,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.sudoku',
     iconEmoji: '🔢',
     modes: [
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' },
-      { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' },
+      { id: 'same_pk_steal', labelKey: 'game.same_pk_steal_number', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner' },
@@ -44,7 +46,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.sliding',
     iconEmoji: '🔲',
     modes: [
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_slide_4x4', desc: '4x4 Grid' },
@@ -59,7 +62,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.hexa',
     iconEmoji: '🔶',
     modes: [
-      { id: 'pk_steal', labelKey: 'game.score_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'Shared board. Highest score wins!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_score', labelKey: 'game.same_pk_score_label', descKey: 'game.same_pk_score_desc', icon: '🏎️', desc: 'Same pieces for everyone!' },
+      { id: 'diff_pk_score', labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '⚡', desc: 'Shared board. Highest score wins!' }
     ],
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
@@ -72,7 +77,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.tetris',
     iconEmoji: '🧱',
     modes: [
-      { id: 'pk_attack', labelKey: 'game.battle_mode', descKey: 'game.pk_attack_desc', icon: '⚔️', desc: 'Send garbage lines to opponents!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'diff_pk_attack', labelKey: 'game.diff_pk_attack_label', descKey: 'game.diff_pk_attack_desc', icon: '⚔️', desc: 'Send garbage lines to opponents!' },
+      { id: 'diff_pk_score', labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
     ],
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
@@ -85,7 +92,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.gomoku',
     iconEmoji: '⚫⚪',
     modes: [
-      { id: 'pk_classic', labelKey: 'game.pk_classic', descKey: 'game.pk_classic_desc', icon: '⚔️', desc: 'Classic 1v1 PvP' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_classic', labelKey: 'game.same_pk_classic', descKey: 'game.same_pk_classic_desc', icon: '⚔️', desc: 'Classic 1v1 PvP' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_gomoku_easy', desc: 'Easy AI (15x15)' },
@@ -100,7 +108,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.codebreaker',
     iconEmoji: '🔐',
     modes: [
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_codebreaker_easy', desc: '3-digit code' },
@@ -115,8 +124,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.math24',
     iconEmoji: '🃏',
     modes: [
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'Solve 5 puzzles first!' },
-      { id: 'pk_steal', labelKey: 'game.steal_mode', descKey: 'game.pk_steal_desc', icon: '⚡', desc: 'First to solve gets the point!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Solve 5 puzzles first!' },
+      { id: 'same_pk_steal', labelKey: 'game.same_pk_steal_score', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'First to solve gets the point!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_math24_easy', descKey: 'game.diff_math24_easy', desc: 'Beginner' },
@@ -132,7 +142,8 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     titleKey: 'lobby.drop2048',
     iconEmoji: '🟦',
     modes: [
-      { id: 'pk_score', labelKey: 'game.score_mode', descKey: 'game.pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
+      { id: 'single', labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: 'diff_pk_score', labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
     ],
     difficulties: [
       { id: 'standard', labelKey: 'game.standard', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
@@ -146,7 +157,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     iconEmoji: '🟩',
     modes: [
       { id: 'single', labelKey: 'game.single_player_endless', descKey: 'game.single_player_endless', desc: 'Survival', icon: '👤' },
-      { id: 'pk_score', labelKey: 'game.pk_score_label', descKey: 'game.pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
+      { id: 'diff_pk_score', labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '8x8 Board' },
@@ -162,7 +173,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     iconEmoji: '💡',
     modes: [
       { id: 'single', labelKey: 'game.single_player_endless', descKey: 'game.single_player_endless', desc: 'Survival', icon: '👤' },
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '4x4 Board' },
@@ -178,7 +189,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     iconEmoji: '🧪',
     modes: [
       { id: 'single', labelKey: 'game.mode_single_player', descKey: 'game.mode_single_player_desc', desc: 'Single Player', icon: '👤' },
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
@@ -193,7 +204,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     iconEmoji: '📦',
     modes: [
       { id: 'single', labelKey: 'game.mode_single_player', descKey: 'game.single_player_desc', desc: 'Single Player', icon: '👤' },
-      { id: 'pk_speed', labelKey: 'game.speed_mode', descKey: 'game.pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
+      { id: 'same_pk_speed', labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
       { id: 'beginner', labelKey: 'game.diff_beginner', descKey: 'game.diff_sokoban_beginner', desc: 'Beginner' },

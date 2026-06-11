@@ -5,6 +5,6 @@ import (
 )
 
 func init() {
-	engine.Register("tetris_pk_attack", func() engine.GameEngine { return &PKAttackEngine{} })
-	engine.Register("tetris_pk_score", func() engine.GameEngine { return &PKAttackEngine{} })
+	engine.Register("tetris_diff_pk_attack", func() engine.GameEngine { return &PKAttackEngine{} })
+	engine.Register("tetris_diff_pk_score", func() engine.GameEngine { return &PKAttackEngine{} })
 }

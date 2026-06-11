@@ -23,7 +23,7 @@ type MinesweeperEngine struct {
 
 func init() {
 	engine.Register("minesweeper_single", func() engine.GameEngine { return &MinesweeperEngine{} })
-	engine.Register("minesweeper_pk_steal", func() engine.GameEngine { return &MinesweeperEngine{} })
+	engine.Register("minesweeper_same_pk_steal", func() engine.GameEngine { return &MinesweeperEngine{} })
 }
 
 // Action structure for incoming payloads

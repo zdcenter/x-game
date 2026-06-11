@@ -157,7 +157,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getOverlayStatus(): 'win' | 'lose' {
-    if (this.store.currentRoomMode() === 'pk_speed') {
+    if (this.store.currentRoomMode() === 'same_pk_speed') {
       return this.store.winners().includes(this.playerId) ? 'win' : 'lose';
     }
     return 'win'; // single player finishes when won
@@ -172,7 +172,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getOverlaySubtitle(): string {
-    if (this.store.currentRoomMode() === 'pk_speed') {
+    if (this.store.currentRoomMode() === 'same_pk_speed') {
       return this.getOverlayStatus() === 'win' 
         ? (this.i18n.t('game.cleared_first')() || 'You cleared the board first!') 
         : (this.i18n.t('game.opponent_finished')() || 'An opponent cleared the board first!');

@@ -53,7 +53,7 @@
       <ng-template #pkHeader>
         <app-game-header 
           i18n-title="@@lobby.math24" title="lobby.math24"
-          [subtitle]="store.currentMode() === 'pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
+          [subtitle]="store.currentMode() === 'same_pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
           iconGradientClass="from-blue-500 to-indigo-600"
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
@@ -93,12 +93,12 @@
         }
 
         <!-- PK Steal Mode -->
-        <ng-container *ngIf="store.currentMode() === 'pk_steal' && store.gameStatus() !== 'waiting'">
+        <ng-container *ngIf="store.currentMode() === 'same_pk_steal' && store.gameStatus() !== 'waiting'">
           <app-math24-pk-steal [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-steal>
         </ng-container>
 
         <!-- PK Speed Mode -->
-        <ng-container *ngIf="store.currentMode() === 'pk_speed' && store.gameStatus() !== 'waiting'">
+        <ng-container *ngIf="store.currentMode() === 'same_pk_speed' && store.gameStatus() !== 'waiting'">
           <app-math24-pk-speed [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-speed>
         </ng-container>
 

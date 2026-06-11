@@ -6,7 +6,7 @@ export const slidingTranslations: Record<Lang, Record<string, string>> = {
     'sliding.desc': 'Classic 15-Puzzle. Slide the tiles to order them sequentially.',
     
     'sliding.mode.single': 'Single Player',
-    'sliding.mode.pk_speed': 'PK Speed Mode',
+    'sliding.mode.same_pk_speed': 'PK Speed Mode',
     
     'sliding.difficulty.easy': 'Beginner (4x4)',
     'sliding.difficulty.medium': 'Intermediate (5x5)',
@@ -25,7 +25,7 @@ export const slidingTranslations: Record<Lang, Record<string, string>> = {
     'sliding.desc': '经典的数字滑块拼图游戏。滑动方块将其按顺序排列。',
     
     'sliding.mode.single': '单机模式',
-    'sliding.mode.pk_speed': 'PK 竞速',
+    'sliding.mode.same_pk_speed': 'PK 竞速',
     
     'sliding.difficulty.easy': '初级 (4x4)',
     'sliding.difficulty.medium': '中级 (5x5)',

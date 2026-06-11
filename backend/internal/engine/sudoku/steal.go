@@ -29,7 +29,7 @@ type StealEngine struct {
 }
 
 func init() {
-	engine.Register("sudoku_pk_steal", func() engine.GameEngine { return &StealEngine{} })
+	engine.Register("sudoku_same_pk_steal", func() engine.GameEngine { return &StealEngine{} })
 }
 
 func (e *StealEngine) InitGame(options interface{}) error {

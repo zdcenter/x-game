@@ -63,8 +63,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   isDefeat = computed(() => {
     if (this.currentRoomMode() === 'single') return this.hasLostSingleMode();
-    if (this.currentRoomMode() === 'pk_speed') return !this.hasWonSpeedMode();
-    if (this.currentRoomMode() === 'pk_steal') {
+    if (this.currentRoomMode() === 'same_pk_speed') return !this.hasWonSpeedMode();
+    if (this.currentRoomMode() === 'same_pk_steal') {
       const rawScores = this.store.scores();
       const myScore = rawScores[this.playerId] || 0;
       const otherScores = Object.keys(rawScores).filter(id => id !== this.playerId).map(id => rawScores[id]);
@@ -322,7 +322,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   getOverlayStatus(): 'win' | 'lose' {
-    if (this.currentRoomMode() === 'pk_speed') {
+    if (this.currentRoomMode() === 'same_pk_speed') {
       return this.hasWonSpeedMode() ? 'win' : 'lose';
     }
     return this.isDefeat() ? 'lose' : 'win';
@@ -331,13 +331,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   getOverlayTitle(): string {
     const status = this.getOverlayStatus();
     if (status === 'win') {
-      return this.currentRoomMode() === 'pk_speed' ? this.i18n.t('game.you_win')() : this.i18n.t('minesweeper.victory')();
+      return this.currentRoomMode() === 'same_pk_speed' ? this.i18n.t('game.you_win')() : this.i18n.t('minesweeper.victory')();
     }
     return this.i18n.t('game.defeat')();
   }
 
   getOverlaySubtitle(): string {
-    if (this.currentRoomMode() === 'pk_speed') {
+    if (this.currentRoomMode() === 'same_pk_speed') {
       return this.hasWonSpeedMode() ? this.i18n.t('game.cleared_first')() : this.i18n.t('game.opponent_finished')();
     }
     if (this.isDefeat()) {
@@ -350,7 +350,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     const stats: { label: string, value: string | number }[] = [];
 
     // Time spent is relevant for single and speed mode
-    if (this.currentRoomMode() !== 'pk_steal') {
+    if (this.currentRoomMode() !== 'same_pk_steal') {
       let timeStr = this.elapsedTime();
       if (this.currentRoomMode() === 'single') {
         const start = this.store.startAt();
@@ -377,7 +377,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
 
     // Score (flags) is relevant for steal mode
-    if (this.currentRoomMode() === 'pk_steal') {
+    if (this.currentRoomMode() === 'same_pk_steal') {
       const scores = this.store.scores();
       const myScore = scores[this.playerId] || 0;
       stats.push({ label: 'SCORE', value: myScore });

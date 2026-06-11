@@ -239,19 +239,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   getGameModes(id: string): string[] {
-    const isZh = this.i18n.currentLang() === 'zh';
-    switch (id) {
-      case 'minesweeper': return isZh ? ['⚡ 同盘抢雷', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
-      case 'sudoku': return isZh ? ['⚡ 同盘填数', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
-      case 'sliding': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
-      case 'hexa': return isZh ? ['⏱️ 异盘竞分'] : ['⏱️ PK Score'];
-      case 'gomoku': return isZh ? ['⚔️ 经典对战'] : ['⚔️ PK Classic'];
-      case 'math24': return isZh ? ['⚡ 同盘抢分', '⏱️ 异盘竞速'] : ['⚡ PK Steal', '⏱️ PK Speed'];
-      case 'codebreaker': return isZh ? ['⏱️ 异盘竞速'] : ['⏱️ PK Speed'];
-      case 'drop2048': return isZh ? ['⏱️ 积分赛'] : ['⏱️ PK Score'];
-      case 'block': return isZh ? ['⚔️ 积分乱斗'] : ['⚔️ PK Score'];
-      default: return [];
-    }
+    const config = this.gameRegistry.getConfig(id);
+    if (!config || !config.modes) return [];
+    
+    return config.modes.map(mode => {
+      const label = mode.labelKey ? this.i18n.t(mode.labelKey)() : mode.id;
+      const icon = mode.icon || '🎮';
+      return `${icon} ${label}`;
+    });
   }
 
   gameRegistry = inject(GameRegistryService);

@@ -49,7 +49,7 @@ export class Math24Store {
   
   // Single Player Local State
   roomId = signal<string>('');
-  private localMode = signal<'single' | 'pk_speed' | 'pk_steal'>('single');
+  private localMode = signal<'single' | 'same_pk_speed' | 'same_pk_steal'>('single');
   private localDifficulty = signal<string>('easy');
   private localCards = signal<Math24Card[]>([]);
   private localHistory = signal<Math24Card[][]>([]);
@@ -106,9 +106,9 @@ export class Math24Store {
       return { cards: this.localCards().map(c => c.value).join(',') };
     }
     const state = this.rawState();
-    if (this.currentMode() === 'pk_steal') {
+    if (this.currentMode() === 'same_pk_steal') {
       return state.puzzle;
-    } else if (this.currentMode() === 'pk_speed') {
+    } else if (this.currentMode() === 'same_pk_speed') {
       const p = state.players[this.playerId()];
       if (p && state.puzzles && p.progress < state.puzzles.length) {
         return state.puzzles[p.progress];

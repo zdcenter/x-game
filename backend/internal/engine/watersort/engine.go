@@ -47,7 +47,7 @@ type WatersortEngine struct {
 
 func init() {
 	engine.Register("watersort_single", func() engine.GameEngine { return NewEngine("single") })
-	engine.Register("watersort_pk_speed", func() engine.GameEngine { return NewEngine("pk_speed") })
+	engine.Register("watersort_same_pk_speed", func() engine.GameEngine { return NewEngine("same_pk_speed") })
 }
 
 func NewEngine(mode string) *WatersortEngine {

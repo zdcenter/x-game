@@ -9,7 +9,8 @@ import (
 
 type PKScoreEngine struct {
 	engine.BaseEngine
-	state *GameState
+	state   *GameState
+	useSeed bool
 }
 
 func (e *PKScoreEngine) InitGame(options interface{}) error {
@@ -68,7 +69,11 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 
 	// Handle Start
 	if actionType == "start" && e.State == engine.StateWaiting {
-		e.state.Seed = time.Now().UnixMilli()
+		if e.useSeed {
+			e.state.Seed = time.Now().UnixMilli()
+		} else {
+			e.state.Seed = 0
+		}
 		e.state.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
 		
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
@@ -201,7 +206,17 @@ func (e *PKScoreEngine) CheckGameOver() (bool, []string) {
 }
 
 func init() {
-	engine.Register("hexa_pk_steal", func() engine.GameEngine {
-		return &PKScoreEngine{}
+	// 异盘积分模式：不使用全局统一的 Seed，前端各自随机生成碎片
+	engine.Register("hexa_diff_pk_score", func() engine.GameEngine {
+		e := &PKScoreEngine{}
+		e.useSeed = false
+		return e
+	})
+	
+	// 同盘积分模式：使用全局统一的 Seed，前端基于此 Seed 生成完全一致的碎片序列
+	engine.Register("hexa_same_pk_score", func() engine.GameEngine {
+		e := &PKScoreEngine{}
+		e.useSeed = true
+		return e
 	})
 }

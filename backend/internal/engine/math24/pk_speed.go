@@ -16,7 +16,7 @@ type PKSpeedEngine struct {
 }
 
 func init() {
-	engine.Register("math24_pk_speed", func() engine.GameEngine {
+	engine.Register("math24_same_pk_speed", func() engine.GameEngine {
 		return &PKSpeedEngine{
 			Players: make(map[string]*Math24Player),
 			Winners: []string{},

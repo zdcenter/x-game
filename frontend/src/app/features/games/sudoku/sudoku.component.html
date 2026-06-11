@@ -21,15 +21,15 @@
             <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base"><ng-container i18n="@@game.get_ready">game.get_ready</ng-container></p>
             <div class="flex items-center gap-3 mt-4">
               <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider"><ng-container i18n="@@game.mode">game.mode</ng-container>:</span>
-              <span class="text-sm font-bold text-[var(--color-accent-from)]">{{ store.currentMode() === 'pk_steal' ? i18n.t('game.sudoku_pk_steal_label')() : i18n.t('game.sudoku_pk_speed_label')() }}</span>
+              <span class="text-sm font-bold text-[var(--color-accent-from)]">{{ store.currentMode() === 'same_pk_steal' ? i18n.t('game.sudoku_same_pk_steal_label')() : i18n.t('game.sudoku_same_pk_speed_label')() }}</span>
             </div>
           </div>
         </div>
       } @else {
         <!-- PLAY VIEW -->
-        @if (store.currentMode() === 'pk_steal') {
+        @if (store.currentMode() === 'same_pk_steal') {
           <app-sudoku-pk-steal (openLobby)="isMobileSidebarOpen.set(true)"></app-sudoku-pk-steal>
-        } @else if (store.currentMode() === 'pk_speed') {
+        } @else if (store.currentMode() === 'same_pk_speed') {
           <app-sudoku-pk-speed (openLobby)="isMobileSidebarOpen.set(true)"></app-sudoku-pk-speed>
         } @else {
           <!-- Single Player -->

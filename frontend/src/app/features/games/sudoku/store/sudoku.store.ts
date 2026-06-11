@@ -39,7 +39,7 @@ export class SudokuStore {
 
   playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
-  // Modes: 'single', 'pk_steal', 'pk_speed'
+  // Modes: 'single', 'same_pk_steal', 'same_pk_speed'
   currentMode = signal<string>('single');
   roomId = signal<string>('');
 
@@ -122,7 +122,7 @@ export class SudokuStore {
 
     // Effect to auto-sync Steal mode board
     effect(() => {
-      if (this.currentMode() === 'pk_steal') {
+      if (this.currentMode() === 'same_pk_steal') {
         const rState = this.rawState() as any;
         if (rState.status === 'playing' && rState.currentBoard) {
           // Compare and update our local board
@@ -296,7 +296,7 @@ export class SudokuStore {
 
     this.audio.playSudoku('input');
 
-    if (this.currentMode() === 'pk_steal') {
+    if (this.currentMode() === 'same_pk_steal') {
       const myPlayer = this.players()[this.playerId()];
       if (myPlayer && myPlayer.freezeUntil > Date.now()) {
         this.toast.show('You are frozen!', 'error');
@@ -335,7 +335,7 @@ export class SudokuStore {
     this.checkWinCondition();
 
     // Speed mode progress tracking
-    if (this.currentMode() === 'pk_speed') {
+    if (this.currentMode() === 'same_pk_speed') {
       this.ws.send({ action: 'progress', progress: this.countFilledCells() });
     }
 
@@ -401,7 +401,7 @@ export class SudokuStore {
 
     this.audio.playSudoku('clear');
 
-    if (this.currentMode() === 'pk_steal') {
+    if (this.currentMode() === 'same_pk_steal') {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
       return;
     }
@@ -416,7 +416,7 @@ export class SudokuStore {
 
   clearBoard() {
     if (this.isFinished()) return;
-    if (this.currentMode() === 'pk_steal') return;
+    if (this.currentMode() === 'same_pk_steal') return;
 
     this.audio.playSudoku('clear');
     this.saveHistory();
@@ -437,7 +437,7 @@ export class SudokuStore {
 
   undo() {
     if (this.isFinished()) return;
-    if (this.currentMode() === 'pk_steal') return;
+    if (this.currentMode() === 'same_pk_steal') return;
     if (this.history.length === 0) return;
 
     this.audio.playSudoku('input');
@@ -549,7 +549,7 @@ export class SudokuStore {
     if (valid) {
       if (this.currentMode() === 'single') {
         this.finishPuzzle();
-      } else if (this.currentMode() === 'pk_speed') {
+      } else if (this.currentMode() === 'same_pk_speed') {
         const serialized = this.serializeBoard();
         this.ws.send({ action: 'finish', board: serialized });
       }

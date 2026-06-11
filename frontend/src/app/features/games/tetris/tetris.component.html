@@ -10,7 +10,7 @@
         <!-- Header -->
         <app-game-header
           i18n-title="@@tetris.title" title="Tetris"
-          [subtitle]="currentRoomMode() === 'pk_attack' ? i18n.t('tetris.mode.pk_attack')() : i18n.t('tetris.mode.single')()"
+          [subtitle]="currentRoomMode() === 'diff_pk_attack' ? i18n.t('tetris.mode.diff_pk_attack')() : i18n.t('tetris.mode.single')()"
           iconGradientClass="from-indigo-500 to-cyan-500"
           titleGradientClass="from-indigo-400 to-cyan-400"
           shadowClass="shadow-cyan-500/20"

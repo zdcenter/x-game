@@ -164,7 +164,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     }
     const myPlayer = this.store.players()[this.playerId];
     if (myPlayer) {
-      if (this.store.currentMode() === 'pk_steal') {
+      if (this.store.currentMode() === 'same_pk_steal') {
         return [{ label: 'Score', value: myPlayer.score || 0 }];
       } else {
         return [{ label: 'Solved', value: myPlayer.progress || 0 }];

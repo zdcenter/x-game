@@ -161,7 +161,7 @@ export class MinesweeperStore {
   });
   
   readonly speedOpponents = computed(() => {
-    if (this.currentMode() !== 'pk_speed') return [];
+    if (this.currentMode() !== 'same_pk_speed') return [];
     const s = this.rawState();
     if (!s.boards) return [];
     

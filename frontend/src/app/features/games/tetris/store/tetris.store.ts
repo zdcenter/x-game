@@ -345,7 +345,7 @@ export class TetrisStore {
     this.currentPiece.set(null);
     this.clearLines();
 
-    if (this.mode() === 'pk_attack') {
+    if (this.mode() === 'diff_pk_attack') {
       this.checkAndApplyGarbage();
     }
 
@@ -375,7 +375,7 @@ export class TetrisStore {
       this.updateDropSpeed();
       this.audio.playTetris('clear');
 
-      if (this.mode() === 'pk_attack' && linesCleared >= 2) {
+      if (this.mode() === 'diff_pk_attack' && linesCleared >= 2) {
         // Send garbage (1 line for 2 lines, 2 for 3, 4 for Tetris)
         const garbageSent = linesCleared === 4 ? 4 : linesCleared - 1;
         this.ws.send({ action: 'attack', lines: garbageSent });

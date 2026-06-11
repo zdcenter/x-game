@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	engine.Register("gomoku_pk_classic", NewClassicEngine)
+	engine.Register("gomoku_same_pk_classic", NewClassicEngine)
 }
 
 const (

@@ -9,7 +9,7 @@
   <div class="w-full shrink-0 relative z-10">
     <app-game-header
       i18n-title="@@game.gomoku" title="Gomoku"
-      [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.pk_classic')()"
+      [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.same_pk_classic')()"
       iconGradientClass="from-emerald-500 to-teal-600"
       titleGradientClass="from-emerald-400 to-teal-500"
       shadowClass="shadow-emerald-500/20"
@@ -22,7 +22,7 @@
           <ng-container header-right>
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider hidden sm:inline">
-                {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.pk_classic')() }}
+                {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.same_pk_classic')() }}
               </span>
               @if (currentRoomMode() === 'single') {
                 <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>

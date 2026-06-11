@@ -48,7 +48,7 @@
         <!-- Header -->
         <app-game-header
           [title]="t('hexa.title')() || 'Hexa Puzzle'"
-          [subtitle]="currentRoomMode() === 'pk_score' ? t('hexa.mode.pk_score')() : t('hexa.mode.single')()"
+          [subtitle]="currentRoomMode() === 'diff_pk_score' ? t('hexa.mode.diff_pk_score')() : t('hexa.mode.single')()"
           iconGradientClass="from-amber-500 to-orange-500"
           titleGradientClass="from-amber-400 to-orange-400"
           shadowClass="shadow-orange-500/20"

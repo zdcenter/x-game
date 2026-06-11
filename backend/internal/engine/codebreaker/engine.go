@@ -33,7 +33,7 @@ type CodebreakerEngine struct {
 
 func init() {
 	engine.Register("codebreaker_single", func() engine.GameEngine { return &CodebreakerEngine{} })
-	engine.Register("codebreaker_pk_speed", func() engine.GameEngine { return &CodebreakerEngine{} })
+	engine.Register("codebreaker_same_pk_speed", func() engine.GameEngine { return &CodebreakerEngine{} })
 }
 
 func (e *CodebreakerEngine) InitGame(options interface{}) error {

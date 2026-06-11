@@ -11,7 +11,7 @@
 
       <!-- Header -->
       <app-game-header i18n-title="@@app.title" title="Minesweeper"
-        [subtitle]="currentRoomMode() === 'pk_steal' ? i18n.t('game.pk_steal_label')() : (currentRoomMode() === 'pk_speed' ? i18n.t('game.pk_speed_label')() : i18n.t('game.single_label')())"
+        [subtitle]="currentRoomMode() === 'same_pk_steal' ? i18n.t('game.same_pk_steal_label')() : (currentRoomMode() === 'same_pk_speed' ? i18n.t('game.same_pk_speed_label')() : i18n.t('game.single_label')())"
         iconGradientClass="from-rose-500 to-orange-500" titleGradientClass="from-rose-400 to-orange-400"
         shadowClass="shadow-orange-500/20"
         headerBgClass="bg-gradient-to-r from-rose-900/20 to-orange-900/20 rounded-t-2xl lg:rounded-t-3xl -mt-4 lg:-mt-6 -mx-4 lg:-mx-6 px-4 lg:px-6 mb-4 lg:mb-6"
@@ -94,7 +94,7 @@
             [playerName]="playerId"
             [isHost]="playerId === store.host()"
             [isMe]="true"
-            [score]="currentRoomMode() === 'pk_steal' ? (getPlayerScores()[0]?.score || 0) : undefined"
+            [score]="currentRoomMode() === 'same_pk_steal' ? (getPlayerScores()[0]?.score || 0) : undefined"
             [stats]="[
               { icon: '⏱️', value: store.status() === 'playing' ? elapsedTime() : (store.status() === 'waiting' ? '00:00' : elapsedTime()), colorClass: store.status() === 'playing' ? 'text-pink-400' : '' },
               { icon: '💣', value: store.remainingMines() | number:'2.0' },
@@ -104,10 +104,10 @@
 
           @if (currentRoomMode() !== 'single') {
             <app-player-list-container 
-              [opponentsCount]="currentRoomMode() === 'pk_speed' ? store.speedOpponents().length : (getPlayerScores().length - 1)" 
+              [opponentsCount]="currentRoomMode() === 'same_pk_speed' ? store.speedOpponents().length : (getPlayerScores().length - 1)" 
               class="flex-1 min-w-0 flex justify-end lg:justify-start">
               <ng-template #opponentsList>
-                @if (currentRoomMode() === 'pk_speed' && store.speedOpponents().length > 0) {
+                @if (currentRoomMode() === 'same_pk_speed' && store.speedOpponents().length > 0) {
                   @for (opp of store.speedOpponents(); track opp.id) {
                     <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                       [playerName]="opp.id"
@@ -121,7 +121,7 @@
                   }
                 }
 
-                @if (currentRoomMode() === 'pk_steal') {
+                @if (currentRoomMode() === 'same_pk_steal') {
                   @for (player of getPlayerScores(); track player.id) {
                     @if (player.id !== playerId) {
                       <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"

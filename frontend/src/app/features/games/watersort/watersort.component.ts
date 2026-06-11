@@ -39,7 +39,7 @@ import { AudioService } from '../../../core/services/audio.service';
         <!-- Header -->
         <app-game-header
           [title]="i18n.t('app.title.watersort')()"
-          [subtitle]="currentRoomMode() === 'pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.mode_single_player')()"
+          [subtitle]="currentRoomMode() === 'same_pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.mode_single_player')()"
           iconGradientClass="from-blue-500 to-cyan-500"
           titleGradientClass="from-blue-400 to-cyan-400"
           shadowClass="shadow-cyan-500/20"

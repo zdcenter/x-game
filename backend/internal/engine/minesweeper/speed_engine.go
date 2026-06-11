@@ -21,7 +21,7 @@ type SpeedEngine struct {
 }
 
 func init() {
-	engine.Register("minesweeper_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
+	engine.Register("minesweeper_same_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 type PKSpeedStateResponse struct {

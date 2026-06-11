@@ -26,7 +26,7 @@ type LightsoutEngine struct {
 
 func init() {
 	engine.Register("lightsout_single", func() engine.GameEngine { return &LightsoutEngine{} })
-	engine.Register("lightsout_pk_speed", func() engine.GameEngine { return &LightsoutEngine{} })
+	engine.Register("lightsout_same_pk_speed", func() engine.GameEngine { return &LightsoutEngine{} })
 }
 
 func (e *LightsoutEngine) InitGame(options interface{}) error {

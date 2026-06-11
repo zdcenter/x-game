@@ -33,7 +33,7 @@ import { CrossGameJoinService } from './cross-game-join.service';
 export interface RoomLifecycleConfig {
   /** Unique game identifier, e.g. 'minesweeper', 'sudoku' */
   gameId: string;
-  /** Returns the current room mode ('single', 'pk_steal', 'pk_speed', etc.) */
+  /** Returns the current room mode ('single', 'same_pk_steal', 'same_pk_speed', etc.) */
   getCurrentMode: () => string;
   /** Called when the room is dismissed by the host */
   onLeaveRoom: () => void;

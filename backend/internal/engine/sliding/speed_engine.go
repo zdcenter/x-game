@@ -19,7 +19,7 @@ type SpeedEngine struct {
 }
 
 func init() {
-	engine.Register("sliding_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
+	engine.Register("sliding_same_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 type PKSpeedStateResponse struct {

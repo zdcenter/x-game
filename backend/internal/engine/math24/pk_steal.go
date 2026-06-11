@@ -16,7 +16,7 @@ type PKStealEngine struct {
 }
 
 func init() {
-	engine.Register("math24_pk_steal", func() engine.GameEngine {
+	engine.Register("math24_same_pk_steal", func() engine.GameEngine {
 		return &PKStealEngine{
 			Players: make(map[string]*Math24Player),
 			Winners: []string{},

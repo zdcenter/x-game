@@ -2,8 +2,8 @@ export const tetrisTranslations = {
   en: {
     'tetris.title': 'Tetris Battle',
     'tetris.mode.single': 'Single Player',
-    'tetris.mode.pk_attack': 'PK Attack',
-    'tetris.mode.pk_score': 'PK Score',
+    'tetris.mode.diff_pk_attack': 'PK Attack',
+    'tetris.mode.diff_pk_score': 'PK Score',
     'tetris.score': 'Score',
     'tetris.lines': 'Lines',
     'tetris.hold': 'HOLD',
@@ -16,8 +16,8 @@ export const tetrisTranslations = {
   zh: {
     'tetris.title': '俄罗斯方块',
     'tetris.mode.single': '单机闯关',
-    'tetris.mode.pk_attack': '异盘乱斗',
-    'tetris.mode.pk_score': '同盘竞技',
+    'tetris.mode.diff_pk_attack': '异盘乱斗',
+    'tetris.mode.diff_pk_score': '同盘竞技',
     'tetris.score': '分数',
     'tetris.lines': '消除行数',
     'tetris.hold': '暂存',

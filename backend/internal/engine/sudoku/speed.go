@@ -25,7 +25,7 @@ type SpeedEngine struct {
 }
 
 func init() {
-	engine.Register("sudoku_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
+	engine.Register("sudoku_same_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {

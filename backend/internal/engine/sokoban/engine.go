@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
+	"github.com/x-game/backend/pkg/db"
 )
 
 type Position struct {
@@ -30,7 +32,7 @@ type SokobanEngine struct {
 }
 
 var Levels = map[string]string{
-	"easy": `
+	"beginner": `
   ###
   #.#
   # #
@@ -40,14 +42,14 @@ var Levels = map[string]string{
   # #
   #.#
   ###`,
-	"medium": `
+	"intermediate": `
 #######
 #     #
 # .$. #
 ###$###
 # .@. #
 #######`,
-	"hard": `
+	"advanced": `
   #####
 ###   #
 #.@$  #
@@ -60,7 +62,7 @@ var Levels = map[string]string{
 }
 
 func init() {
-	engine.Register("sokoban_pk_speed", func() engine.GameEngine {
+	engine.Register("sokoban_same_pk_speed", func() engine.GameEngine {
 		return &SokobanEngine{
 			Players: make(map[string]*PlayerState),
 		}
@@ -118,12 +120,20 @@ func (e *SokobanEngine) InitGame(options interface{}) error {
 	}
 
 	if e.Difficulty == "" {
-		e.Difficulty = "easy"
+		e.Difficulty = "beginner"
 	}
 
-	levelStr, ok := Levels[e.Difficulty]
-	if !ok {
-		levelStr = Levels["easy"]
+	levelStr := ""
+
+	var puzzle domain.SokobanPuzzle
+	if err := db.DB.Where("difficulty = ?", e.Difficulty).Order("RANDOM()").First(&puzzle).Error; err == nil && puzzle.Puzzle != "" {
+		levelStr = puzzle.Puzzle
+	} else {
+		ls, ok := Levels[e.Difficulty]
+		if !ok {
+			ls = Levels["beginner"]
+		}
+		levelStr = ls
 	}
 
 	e.LevelMap = parseLevel(levelStr)
@@ -344,8 +354,8 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 
 			if finished {
 				p.Status = "finished"
-				if e.Mode == "pk_speed" {
-					// In pk_speed, first one to finish ends the game and wins
+				if e.Mode == "same_pk_speed" {
+					// In same_pk_speed, first one to finish ends the game and wins
 					e.State = engine.StateFinished
 					return true, []string{p.ID}
 				}
@@ -364,7 +374,7 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 			e.State = engine.StateFinished
 			return true, winners
 		}
-	} else if e.Mode == "pk_speed" && allFinished {
+	} else if e.Mode == "same_pk_speed" && allFinished {
 		// Just in case everyone finished somehow at same time
 		for id := range e.Players {
 			winners = append(winners, id)
