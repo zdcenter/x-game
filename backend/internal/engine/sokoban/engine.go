@@ -105,6 +105,8 @@ func (e *SokobanEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
+	e.State = engine.StateWaiting
+
 	opts, ok := options.(map[string]interface{})
 	if ok {
 		if m, ok := opts["mode"].(string); ok {

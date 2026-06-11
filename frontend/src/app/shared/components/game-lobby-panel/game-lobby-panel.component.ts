@@ -523,13 +523,29 @@ export class GameLobbyPanelComponent implements OnInit {
       return;
     }
 
+    let mode = this.newRoomMode();
+    if (!mode) {
+      const modes = this.availableModes();
+      if (modes.length > 0) {
+        mode = modes[0].id;
+      }
+    }
+
+    let diff = this.newRoomDifficulty();
+    if (!diff) {
+      const diffs = this.availableDifficulties();
+      if (diffs.length > 0) {
+        diff = diffs[0].id;
+      }
+    }
+
     const roomName = this.newRoomName().trim() || `${this.newRoomGameId()}-${Date.now()}`;
     this.wsService.setPendingAction('create');
     this.createRoom.emit({
       name: roomName,
       gameId: this.newRoomGameId(),
-      mode: this.newRoomMode(),
-      difficulty: this.newRoomDifficulty(),
+      mode: mode,
+      difficulty: diff,
       password: this.newRoomPassword()
     });
     this.isCreateModalOpen.set(false);

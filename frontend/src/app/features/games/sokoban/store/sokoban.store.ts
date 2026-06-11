@@ -67,7 +67,7 @@ export class SokobanStore {
   });
 
   readyPlayers = computed(() => {
-    return this.rawState()?.ready_players || [];
+    return (this.rawState() as any)?.readyPlayers || {};
   });
 
   currentDifficulty = computed(() => {

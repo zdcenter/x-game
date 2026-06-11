@@ -8,14 +8,17 @@ import { ShareService } from '../../../core/services/share.service';
   selector: 'app-game-waiting-room',
   standalone: true,
   imports: [CommonModule],
+  host: {
+    'class': 'flex w-full h-full min-h-0'
+  },
   template: `
-    <div class="flex-grow flex items-center justify-center p-4 sm:p-6 h-full w-full">
-      <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] p-4 sm:p-8 max-w-2xl w-full max-h-full flex flex-col text-center relative overflow-hidden">
+    <div class="flex-grow flex items-center justify-center p-4 sm:p-6 h-full w-full min-h-0">
+      <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] p-4 sm:p-8 max-w-2xl w-full max-h-full flex flex-col text-center relative overflow-hidden min-h-0">
         <!-- Decorative bg -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--color-accent-from)] opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-accent-to)] opacity-5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
         
-        <div class="relative z-10 flex flex-col h-full overflow-hidden">
+        <div class="relative z-10 flex flex-col h-full overflow-hidden min-h-0">
           <!-- Header (Title & Room Info) -->
           <div class="shrink-0">
             <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">

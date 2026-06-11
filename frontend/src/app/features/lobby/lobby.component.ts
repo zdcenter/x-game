@@ -87,13 +87,17 @@ import { ShareService } from '../../core/services/share.service';
           <!-- Dynamic Game Card -->
           <a [routerLink]="['/games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-            <!-- Card Image Gradient Banner (Padding Hack for Aspect Ratio) -->
-            <div class="w-full relative shrink-0 opacity-80 group-hover:opacity-100 transition-opacity overflow-hidden"
-                 style="padding-top: 100%; background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
+            <!-- Card Image Banner (Padding Hack for Aspect Ratio) -->
+            <div class="w-full relative shrink-0 overflow-hidden bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)]"
+                 style="padding-top: 100%;">
+              <!-- Subtle accent gradient overlay -->
+              <div class="absolute inset-0 opacity-[0.15]"
+                   style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))"></div>
+              <!-- Game SVG Icon -->
               <div class="absolute inset-0 flex items-center justify-center">
                 <img [src]="'/assets/games/icons/' + game.id + '.svg?v=3'"
                      [alt]="getGameTitle(game.id)"
-                     class="w-[70%] h-[70%] object-contain drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform duration-500"
+                     class="w-[70%] h-[70%] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-500"
                      (error)="handleIconError($event, game.id)" />
               </div>
             </div>

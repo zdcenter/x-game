@@ -29,7 +29,7 @@ export class WatersortStore {
   readonly currentRoomMode = signal<string>('single');
   readonly currentDifficulty = signal<string>('');
   readonly localDifficulty = signal<string>('easy');
-  readonly readyPlayers = computed(() => this.ws.gameState()?.ready_players || []);
+  readonly readyPlayers = computed(() => (this.ws.gameState() as any)?.readyPlayers || {});
 
   // Raw state mapped from websocket
   private readonly rawState = computed(() => {

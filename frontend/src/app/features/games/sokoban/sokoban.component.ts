@@ -329,6 +329,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       this.store.joinRoom(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
       if (pendingCross.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
+        this.showLobby.set(false);
       }
       return;
     }
@@ -339,6 +340,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       if (pending.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+        this.showLobby.set(false);
       }
     } else {
       this.store.joinRoom('', 'single', 'beginner', this.playerId);
@@ -390,6 +392,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     super.handleCreateRoom(event);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
+      this.showLobby.set(false);
     }
   }
 
@@ -397,6 +400,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     super.handleJoinRoom(params);
     if (params.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
+      this.showLobby.set(false);
     }
   }
 
