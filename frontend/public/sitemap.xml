@@ -278,4 +278,68 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/block</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/block"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/block"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/block"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/block</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/block"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/block"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/block"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/lightsout</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/lightsout"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/lightsout"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/lightsout"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/lightsout</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/lightsout"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/lightsout"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/lightsout"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/sokoban</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/sokoban"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/sokoban"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/sokoban"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/sokoban</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/sokoban"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/sokoban"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/sokoban"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/games/watersort</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/watersort"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/watersort"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/watersort"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/games/watersort</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/games/watersort"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/games/watersort"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/games/watersort"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
