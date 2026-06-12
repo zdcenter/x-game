@@ -78,6 +78,34 @@ export class SlidingStore {
     return null;
   });
 
+  readonly myProgress = computed(() => {
+    const board = this.myBoard();
+    if (!board) return 0;
+    let correct = 0;
+    const total = board.size * board.size - 1; // Not counting empty cell
+    for (let i = 0; i < total; i++) {
+      if (board.cells[i] === i + 1) correct++;
+    }
+    return (correct / total) * 100;
+  });
+
+  readonly myCorrectCount = computed(() => {
+    const board = this.myBoard();
+    if (!board) return 0;
+    let correct = 0;
+    const total = board.size * board.size - 1; // Not counting empty cell
+    for (let i = 0; i < total; i++) {
+      if (board.cells[i] === i + 1) correct++;
+    }
+    return correct;
+  });
+
+  readonly totalCells = computed(() => {
+    const board = this.myBoard();
+    if (!board) return 15;
+    return board.size * board.size - 1;
+  });
+
   readonly allBoards = computed(() => {
     if (this.currentMode() === 'single') return {};
     return this.rawState().boards || {};

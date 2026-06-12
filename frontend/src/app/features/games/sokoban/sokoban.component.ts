@@ -50,7 +50,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         iconGradientClass="from-amber-400 to-orange-500"
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-orange-500/20"
-        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
+        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-0"
         (back)="onLeaveClick()"
         (rules)="showRules.set(true)"
       >
@@ -77,6 +77,18 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
           </div>
         </ng-container>
       </app-game-header>
+
+      <!-- Progress Bar -->
+      <div class="h-1.5 bg-[var(--color-border-card)] relative group overflow-hidden border border-[var(--color-border-card)] border-t-0 shadow-md mb-2 lg:mb-3 -mt-0 -mx-3 lg:-mx-5 z-10 rounded-b-xl">
+        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
+          [style.width.%]="store.myProgress()">
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <span class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute -top-6 whitespace-nowrap shadow-md z-20">
+            {{ store.myCorrectCount() }} / {{ store.totalTargets() }}
+          </span>
+        </div>
+      </div>
 
       <div class="flex-grow flex flex-col relative min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden">
 

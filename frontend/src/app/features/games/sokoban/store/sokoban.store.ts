@@ -103,6 +103,44 @@ export class SokobanStore {
     return this.myPlayerState()?.moves || 0;
   });
 
+  myProgress = computed(() => {
+    const board = this.myBoard();
+    if (!board || board.length === 0) return 0;
+    let targets = 0;
+    let onTargets = 0;
+    for (const row of board) {
+      for (const cell of row) {
+        if (cell === '.' || cell === '+' || cell === '*') targets++;
+        if (cell === '*') onTargets++;
+      }
+    }
+    return targets > 0 ? (onTargets / targets) * 100 : 0;
+  });
+
+  myCorrectCount = computed(() => {
+    const board = this.myBoard();
+    if (!board || board.length === 0) return 0;
+    let onTargets = 0;
+    for (const row of board) {
+      for (const cell of row) {
+        if (cell === '*') onTargets++;
+      }
+    }
+    return onTargets;
+  });
+
+  totalTargets = computed(() => {
+    const board = this.myBoard();
+    if (!board || board.length === 0) return 0;
+    let targets = 0;
+    for (const row of board) {
+      for (const cell of row) {
+        if (cell === '.' || cell === '+' || cell === '*') targets++;
+      }
+    }
+    return targets;
+  });
+
   opponents = computed(() => {
     const myId = this.auth.currentUser()?.username || this.auth.guestId;
     const state = this.rawState()?.state as SokobanGameState;

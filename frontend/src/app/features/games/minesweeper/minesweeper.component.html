@@ -14,7 +14,7 @@
         [subtitle]="currentRoomMode() === 'same_pk_steal' ? i18n.t('game.same_pk_steal_label')() : (currentRoomMode() === 'same_pk_speed' ? i18n.t('game.same_pk_speed_label')() : i18n.t('game.single_label')())"
         iconGradientClass="from-rose-500 to-orange-500" titleGradientClass="from-rose-400 to-orange-400"
         shadowClass="shadow-orange-500/20"
-        headerBgClass="bg-gradient-to-r from-rose-900/20 to-orange-900/20 -mt-4 lg:-mt-6 -mx-4 lg:-mx-6 px-4 lg:px-6 mb-2 lg:mb-3"
+        headerBgClass="bg-gradient-to-r from-rose-900/20 to-orange-900/20 -mt-4 lg:-mt-6 -mx-4 lg:-mx-6 px-4 lg:px-6 mb-0"
         (back)="goBack()" (rules)="showRules.set(true)">
 
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">💣</div>
@@ -66,21 +66,20 @@
         </ng-container>
       </app-game-header>
 
-      <!-- Main Content Wrapper -->
-      <div class="relative flex-grow flex flex-col min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden mt-2">
-      <div
-        class="absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-border-card)] group cursor-help translate-y-[2px]">
+      <!-- Progress Bar -->
+      <div class="h-1.5 bg-[var(--color-border-card)] relative group overflow-hidden border border-[var(--color-border-card)] border-t-0 shadow-md mb-2 lg:mb-3 -mt-0 -mx-4 lg:-mx-6 z-10 rounded-b-xl">
         <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
           [style.width.%]="store.myProgress()">
         </div>
-        <div
-          class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span
-            class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute bottom-2 whitespace-nowrap shadow-md z-20">
+        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <span class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute -top-6 whitespace-nowrap shadow-md z-20">
             {{ store.myRevealedCnt() }} / {{ store.totalSafeCells() }}
           </span>
         </div>
       </div>
+
+      <!-- Main Content Wrapper -->
+      <div class="relative flex-grow flex flex-col min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden mt-2">
 
       <!-- Players / Opponents (Top) -->
       <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] shrink-0 w-full">
