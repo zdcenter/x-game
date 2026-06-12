@@ -20,7 +20,7 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
           
           <div class="flex items-center gap-4 sm:gap-8">
             <a routerLink="/lobby" class="flex items-center cursor-pointer group">
-              <span class="text-2xl sm:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
+              <span class="text-2xl sm:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105 whitespace-nowrap shrink-0"
                     style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 Puzzle PK
               </span>
@@ -90,8 +90,12 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
                   </a>
                 }
                 <button (click)="logout()" 
-                        class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 shrink-0">
-                  {{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}
+                        class="p-1.5 sm:px-3 sm:py-1.5 font-bold rounded-lg shadow transition-all hover:scale-105 bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 shrink-0 flex items-center justify-center gap-1"
+                        [title]="authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span class="hidden sm:inline text-xs sm:text-sm">{{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}</span>
                 </button>
               </div>
             } @else {
