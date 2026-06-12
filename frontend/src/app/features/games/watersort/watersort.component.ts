@@ -47,7 +47,7 @@ import { AudioService } from '../../../core/services/audio.service';
           (back)="goBack()"
           (rules)="showRules.set(true)">
           
-          <img game-icon src="/assets/games/icons/watersort.svg" alt="Water Sort" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
+          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🧪</div>
 
           <ng-container header-right>
             <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">

@@ -37,7 +37,7 @@
           headerBgClass="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
           (back)="view.set('lobby')"
           (rules)="showRules.set(true)">
-          <img game-icon src="/assets/games/icons/math24.svg" alt="Math24" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
+          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🃏</div>
           <div header-right class="flex items-center gap-2">
             @if (settingsService.settings().multiplayer_enabled === 'true') {
 <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
@@ -60,7 +60,7 @@
           headerBgClass="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
           (back)="returnToLobby()"
           (rules)="showRules.set(true)">
-          <img game-icon src="/assets/games/icons/math24.svg" alt="Math24" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
+          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🃏</div>
           <div header-right class="flex items-center gap-2">
             @if (settingsService.settings().multiplayer_enabled === 'true') {
 <button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-blue-400 shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">

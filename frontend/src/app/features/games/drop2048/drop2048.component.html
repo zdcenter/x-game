@@ -13,7 +13,7 @@
           i18n-title="@@lobby.drop2048" title="lobby.drop2048"
           headerBgClass="bg-[var(--color-bg-card)] lg:-mx-5 lg:-mt-5 border-b border-[var(--color-border-card)] pb-2 lg:pb-3 lg:px-5 lg:mb-4"
           [subtitle]="getModeName()">
-          <img game-icon src="/assets/games/icons/drop2048.svg" alt="Drop2048" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
+          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🟦</div>
           <ng-container header-right>
               @if (settingsService.settings().multiplayer_enabled === 'true') {
 <button (click)="isMobileSidebarOpen.set(true)" class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
