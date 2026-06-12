@@ -4,6 +4,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { marked } from 'marked';
+import { effect, SecurityContext, signal } from '@angular/core';
 
 @Component({
   selector: 'app-legal',
@@ -28,8 +31,7 @@ import { FooterComponent } from '../../shared/components/footer/footer.component
         </div>
 
         <!-- Content -->
-        <div class="px-6 py-8 sm:px-10 leading-relaxed text-sm sm:text-base opacity-90 whitespace-pre-line">
-          {{ content() }}
+        <div class="px-6 py-8 sm:px-10 leading-relaxed text-sm sm:text-base prose prose-invert max-w-none" [innerHTML]="contentHtml()">
         </div>
 
       </div>
@@ -38,11 +40,37 @@ import { FooterComponent } from '../../shared/components/footer/footer.component
         <app-footer></app-footer>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    ::ng-deep .prose-invert {
+      color: var(--color-text-secondary);
+    }
+    ::ng-deep .prose-invert h1, 
+    ::ng-deep .prose-invert h2, 
+    ::ng-deep .prose-invert h3 {
+      color: var(--color-text-main);
+      font-weight: 700;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+    ::ng-deep .prose-invert ul {
+      list-style-type: disc;
+      padding-left: 1.5em;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+    }
+    ::ng-deep .prose-invert p {
+      margin-bottom: 1em;
+    }
+    ::ng-deep .prose-invert strong {
+      color: var(--color-text-main);
+    }
+  `]
 })
 export class LegalComponent {
   private route = inject(ActivatedRoute);
   private i18n = inject(I18nService);
+  private sanitizer = inject(DomSanitizer);
 
   private paramsSig = toSignal(this.route.params);
 
@@ -55,4 +83,17 @@ export class LegalComponent {
     const type = this.paramsSig()?.['type'] || 'privacy';
     return this.i18n.t(`legal.${type}.content`)() || 'Document content not found.';
   });
+
+  contentHtml = signal<SafeHtml>('');
+
+  constructor() {
+    effect(async () => {
+      const raw = this.content();
+      if (raw) {
+         const html = await marked.parse(raw);
+         const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, html) || '';
+         this.contentHtml.set(safeHtml);
+      }
+    });
+  }
 }
