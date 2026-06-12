@@ -136,6 +136,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'admin.menu.realtime': 'Realtime Data',
     'admin.menu.announcements': 'Announcements',
     'admin.menu.settings': 'Game Settings (WIP)',
+    'admin.menu.ads': 'Ad Management',
     'admin.menu.logs': 'Server Logs (WIP)',
     
     'admin.realtime.title': 'Real-time Monitoring',
@@ -176,6 +177,25 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'admin.games.no_games': 'No games configured in the database.',
     
     // Admin Settings
+    'admin.ads.title': 'Ad Management',
+    'admin.ads.subtitle': 'Manage ad placements, daily limits, and networks priority.',
+    'admin.ads.placements': 'Ad Placements',
+    'admin.ads.enabled_label': 'Ad Enabled',
+    'admin.ads.enabled_desc': 'If off, hints will be free',
+    'admin.ads.limit_label': 'Daily Total Limit (-1 for unlimited)',
+    'admin.ads.networks_title': 'Networks (Waterfall)',
+    'admin.ads.add_network': '+ Add Network',
+    'admin.ads.no_network': 'No networks configured for this placement.',
+    'admin.ads.modal_add': 'Add Network',
+    'admin.ads.modal_edit': 'Edit Network',
+    'admin.ads.modal_provider': 'Provider',
+    'admin.ads.modal_slot': 'Slot ID',
+    'admin.ads.modal_priority': 'Priority (Lower = First)',
+    'admin.ads.modal_limit': 'Limit Per User (-1 for unlimited)',
+    'admin.ads.modal_save': 'Save',
+    'admin.ads.modal_cancel': 'Cancel',
+    'admin.ads.modal_enabled': 'Enabled',
+
     'admin.settings.title': 'System Settings',
     'admin.settings.subtitle': 'Configure global platform behavior',
     'admin.settings.save': 'Save All Settings',
@@ -546,6 +566,7 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'admin.menu.games': '游戏参数配置',
     'admin.menu.announcements': '系统公告',
     'admin.menu.settings': '系统设置 (建设中)',
+    'admin.menu.ads': '广告管理',
     'admin.menu.logs': '系统日志 (建设中)',
     
     'admin.realtime.title': '实时监控大盘',
@@ -584,6 +605,26 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'admin.games.rules.label': '规则 (Markdown)',
     'admin.games.save': '保存更改',
     'admin.games.no_games': '数据库中未配置任何游戏。',
+
+    // Admin Ads
+    'admin.ads.title': '广告管理',
+    'admin.ads.subtitle': '管理各个广告位的开启状态、限额以及优先瀑布流规则。',
+    'admin.ads.placements': '广告位',
+    'admin.ads.enabled_label': '开启广告',
+    'admin.ads.enabled_desc': '如果关闭，此广告位对应的奖励将免广告直接发放。',
+    'admin.ads.limit_label': '单日展示上限（-1为不限）',
+    'admin.ads.networks_title': '广告联盟 (瀑布流)',
+    'admin.ads.add_network': '+ 新增联盟',
+    'admin.ads.no_network': '暂未配置任何广告联盟。',
+    'admin.ads.modal_add': '新增联盟',
+    'admin.ads.modal_edit': '编辑联盟',
+    'admin.ads.modal_provider': '联盟服务商',
+    'admin.ads.modal_slot': '广告位 ID (Slot ID)',
+    'admin.ads.modal_priority': '优先级（越小越优先加载）',
+    'admin.ads.modal_limit': '每个用户展示上限（-1为不限）',
+    'admin.ads.modal_save': '保存',
+    'admin.ads.modal_cancel': '取消',
+    'admin.ads.modal_enabled': '启用该联盟',
 
     // Admin Settings
     'admin.settings.title': '系统设置',

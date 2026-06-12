@@ -65,6 +65,7 @@ func main() {
 	// Public config and active settings
 	v1.Get("/settings", rest.GetPublicSettings)
 	v1.Get("/announcements", rest.GetActiveAnnouncements)
+	v1.Get("/ads/placements", rest.GetAdPlacements)
 
 	v1.Get("/version", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{
@@ -121,6 +122,13 @@ func main() {
 	admin.Post("/announcements", rest.AdminCreateAnnouncement)
 	admin.Put("/announcements/:id", rest.AdminUpdateAnnouncement)
 	admin.Delete("/announcements/:id", rest.AdminDeleteAnnouncement)
+
+	// Ads CRUD
+	admin.Get("/ads/placements", rest.AdminGetAllAdPlacements)
+	admin.Put("/ads/placements/:id", rest.AdminUpdateAdPlacement)
+	admin.Post("/ads/networks", rest.AdminAddAdNetwork)
+	admin.Put("/ads/networks/:id", rest.AdminUpdateAdNetwork)
+	admin.Delete("/ads/networks/:id", rest.AdminDeleteAdNetwork)
 
 	// Legacy simulator endpoints (can be removed later or kept for backwards compatibility)
 	admin.Get("/simulator", rest.GetSimulatorStatus)

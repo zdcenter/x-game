@@ -49,6 +49,8 @@ func InitPostgres() {
 		&domain.Announcement{},
 		&domain.SokobanPuzzle{},
 		&domain.UserSokobanProgress{},
+		&domain.AdPlacement{},
+		&domain.AdNetwork{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -60,6 +62,7 @@ func InitPostgres() {
 	SeedMath24()
 	SeedSokoban()
 	SeedSettings()
+	SeedAds()
 
 	log.Println("Database connected and migrated successfully")
 }
@@ -216,11 +219,6 @@ func SeedSettings() {
 		{Key: "multiplayer_enabled", Value: "true"},
 		{Key: "simulator_enabled", Value: "true"},
 		{Key: "registration_enabled", Value: "true"},
-		{Key: "ad_interstitial_frequency", Value: "3"},
-		{Key: "ad_interstitial_daily_limit", Value: "3"},
-		{Key: "ad_pc_left_slot", Value: ""},
-		{Key: "ad_pc_right_slot", Value: ""},
-		{Key: "ad_mobile_lobby_slot", Value: ""},
 	}
 
 	for _, setting := range defaultSettings {

@@ -50,6 +50,10 @@
           <context context-type="linenumber">49,50</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="admin.menu.ads" datatype="html">
+        <source>admin.menu.ads</source>
+        <target>Ad Management</target>
+      </trans-unit>
       <trans-unit id="auth.logout" datatype="html">
         <source>auth.logout</source>
         <target>Logout</target>

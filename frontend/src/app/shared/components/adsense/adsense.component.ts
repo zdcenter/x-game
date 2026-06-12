@@ -9,8 +9,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
     <!-- Google AdSense -->
     <ins class="adsbygoogle"
          style="display:block"
-         [attr.data-ad-client]="adClient"
-         [attr.data-ad-slot]="adSlot"
+         [attr.data-ad-client]="parsedClient"
+         [attr.data-ad-slot]="parsedSlot"
          [attr.data-ad-format]="adFormat"
          [attr.data-full-width-responsive]="fullWidthResponsive"></ins>
   `,
@@ -29,6 +29,20 @@ export class AdsenseComponent implements AfterViewInit {
   @Input() adSlot: string = ''; 
   @Input() adFormat: string = 'auto';
   @Input() fullWidthResponsive: boolean = true;
+
+  get parsedClient(): string {
+    if (this.adSlot && this.adSlot.includes('/')) {
+      return this.adSlot.split('/')[0];
+    }
+    return this.adClient;
+  }
+
+  get parsedSlot(): string {
+    if (this.adSlot && this.adSlot.includes('/')) {
+      return this.adSlot.split('/')[1];
+    }
+    return this.adSlot;
+  }
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 

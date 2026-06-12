@@ -44,6 +44,10 @@ import { ThemeService } from '../theme/theme.service';
             <span>📢</span>
             <span><ng-container i18n="@@admin.menu.announcements">admin.menu.announcements</ng-container></span>
           </a>
+          <a routerLink="/admin/ads" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>💰</span>
+            <span><ng-container i18n="@@admin.menu.ads">admin.menu.ads</ng-container></span>
+          </a>
           <a routerLink="/admin/settings" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🛠️</span>
             <span><ng-container i18n="@@admin.menu.settings">System Settings</ng-container></span>

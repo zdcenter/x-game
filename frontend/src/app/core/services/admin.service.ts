@@ -50,6 +50,27 @@ export class AdminService {
     return this.http.put(`${this.baseUrl}/settings`, { settings });
   }
 
+  // Ad Management
+  getAdPlacements(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/ads/placements`);
+  }
+
+  updateAdPlacement(id: string, payload: { is_enabled: boolean, daily_total_limit: number }): Observable<any> {
+    return this.http.put(`${this.baseUrl}/ads/placements/${id}`, payload);
+  }
+
+  addAdNetwork(payload: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/ads/networks`, payload);
+  }
+
+  updateAdNetwork(id: number, payload: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/ads/networks/${id}`, payload);
+  }
+
+  deleteAdNetwork(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/ads/networks/${id}`);
+  }
+
   connectRealtimeWS(): Observable<any> {
     const wsUrl = environment.wsUrl || environment.apiUrl.replace('http', 'ws');
     const token = this.authStore.token();

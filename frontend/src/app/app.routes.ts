@@ -132,6 +132,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/admin-realtime.component').then(m => m.AdminRealtimeComponent)
       },
       {
+        path: 'ads',
+        loadComponent: () => import('./features/admin/admin-ads.component').then(m => m.AdminAdsComponent)
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./features/admin/admin-settings.component').then(m => m.AdminSettingsComponent)
       }

@@ -78,8 +78,16 @@ func parseMicroban() []string {
 }
 
 func SeedSokoban() {
+	var count int64
+	DB.Model(&domain.SokobanPuzzle{}).Count(&count)
+	expectedCount := int64(400)
+
+	if count == expectedCount {
+		return
+	}
+
 	DB.Where("1=1").Delete(&domain.SokobanPuzzle{})
-	log.Println("Seeding 400 Sokoban puzzles from Microban collection...")
+	log.Printf("Sokoban DB has %d puzzles, expected %d. Re-seeding...", count, expectedCount)
 
 	baseLevels := parseMicroban()
 	if len(baseLevels) < 155 {
