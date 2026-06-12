@@ -435,7 +435,40 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
 
     // Legal
     'legal.privacy.title': 'Privacy Policy',
-    'legal.privacy.content': 'We respect your privacy. This website does not collect or misuse your personal data. We only store minimal data necessary for game progression and user accounts (e.g., username, password hash). We do not sell your data to third parties. By using our service, you consent to the storage of essential game data.',
+    'legal.privacy.content': `
+# Privacy Policy
+
+**Effective Date: June 2026**
+
+Welcome to Puzzle PK. Your privacy is critically important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you use our website, games, and related services.
+
+## 1. Information We Collect
+We strive to collect only the absolute minimum amount of data required to operate the game.
+* **Account Information**: When you register, we collect a username and a securely hashed password. We do not require your real name or email address for basic gameplay.
+* **Gameplay Data**: We store your high scores, game progress, match history, and unlocked achievements.
+* **Technical Data**: We temporarily log your IP address and connection timestamps solely for the purpose of maintaining server stability, preventing DDoS attacks, and ensuring fair play during real-time multiplayer matches (PK mode).
+
+## 2. How We Use Your Information
+* To provide, maintain, and improve our gaming platform.
+* To manage your user account and authenticate your logins.
+* To display global leaderboards and matchmaking rankings.
+* To detect and prevent cheating, abuse, or other violations of our Terms of Service.
+
+## 3. Data Sharing and Disclosure
+We **do not** sell, rent, or trade your personal information to third parties. Your data is strictly used for operating Puzzle PK. We may share anonymous, aggregated gameplay statistics (e.g., "10,000 matches of Sudoku played today") publicly, but this will never contain identifiable information.
+
+## 4. Third-Party Services
+We may use third-party advertising networks (such as Google AdSense or Monetag) to help keep our games free. These providers may use cookies or similar tracking technologies to serve non-personalized or personalized ads based on your browser history. Please review their respective privacy policies for more details.
+
+## 5. Data Security
+We implement industry-standard security measures, including bcrypt password hashing and SSL/TLS encryption for all data transmitted between your browser and our servers. However, no internet transmission is 100% secure, and we cannot guarantee absolute security.
+
+## 6. Your Rights
+You have the right to request the deletion of your account and associated gameplay data at any time. To do so, please contact us or use the account deletion feature in the settings panel.
+
+## 7. Changes to this Policy
+We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Effective Date."
+    `,
     'legal.terms.title': 'Terms of Service',
     'legal.terms.content': 'By accessing this website, you agree to abide by these terms. This is a free gaming platform. Do not abuse the system, use cheats, or disrupt other players. We reserve the right to ban users who violate fair play rules. The service is provided "as is" without warranties.',
     'legal.about.title': 'About Us / Contact',
@@ -818,7 +851,40 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
 
     // Legal
     'legal.privacy.title': '隐私政策 (Privacy Policy)',
-    'legal.privacy.content': '我们非常尊重您的隐私。本网站不会滥用您的任何个人数据。我们仅存储游戏进度和用户账号所必需的最少数据（例如：用户名、密码哈希）。我们绝不会向第三方出售您的数据。使用我们的服务即表示您同意我们存储必要的游戏数据。',
+    'legal.privacy.content': `
+# 隐私政策
+
+**生效日期：2026年6月**
+
+欢迎使用 Puzzle PK（经典益智游戏对战平台）。您的隐私对我们至关重要。本隐私政策旨在向您说明，当您使用我们的网站、游戏及相关服务时，我们如何收集、使用和保护您的个人信息。
+
+## 1. 我们收集的信息
+我们秉持“最少化收集”原则，仅收集维持游戏正常运行所必需的数据。
+* **账户信息**：当您注册账号时，我们仅收集您自定义的用户名以及经过加密哈希处理的密码。我们不需要您提供真实姓名或电子邮箱。
+* **游戏数据**：我们会保存在服务器上的数据包括：您的最高分、通关进度、对战历史记录以及解锁的成就。
+* **技术数据**：为了维持服务器的稳定性、防范 DDoS 攻击以及确保实时对战（PK模式）的公平性，我们的服务器可能会短暂记录您的 IP 地址和连接时间戳。
+
+## 2. 我们如何使用您的信息
+* 用于提供、维护和改进我们的游戏平台。
+* 用于管理您的用户账户并验证您的登录状态。
+* 用于在全局排行榜和对战天梯中展示您的游戏昵称和分数。
+* 用于检测并防止作弊、恶意攻击或其他违反服务条款的行为。
+
+## 3. 数据的分享与披露
+我们**绝不会**向任何第三方出售、出租或交易您的个人数据。您的所有数据仅用于运营 Puzzle PK。我们可能会公开分享一些匿名的、汇总的游戏统计数据（例如：“今日全服共完成一万局数独”），但这些数据绝不会包含任何可识别个人身份的信息。
+
+## 4. 第三方服务与广告
+为了维持网站的免费运营，我们可能会接入第三方广告网络（如 Google AdSense 或 Monetag）。这些广告提供商可能会使用 Cookie 或类似的技术来投放非个性化或个性化的广告。您可以随时在浏览器设置中清除 Cookie。
+
+## 5. 数据安全
+我们采用行业标准的安全措施来保护您的数据，包括使用 bcrypt 对密码进行不可逆哈希加密，以及强制使用 SSL/TLS 加密所有网络传输。尽管如此，互联网环境并非绝对安全，我们无法保证数据的百分之百绝对安全。
+
+## 6. 您的权利
+您有权随时要求删除您的账户及所有关联的游戏数据。如需删除，请通过网站底部的联系方式与我们取得联系，或使用设置面板中的账号注销功能。
+
+## 7. 隐私政策的更新
+我们可能会不时更新本隐私政策。任何重大变更都将在本页面发布，并更新顶部的“生效日期”。
+    `,
     'legal.terms.title': '服务条款 (Terms of Service)',
     'legal.terms.content': '访问本网站即表示您同意遵守以下条款。这是一个免费的游戏平台。请勿滥用系统、使用作弊手段或干扰其他玩家。我们保留封禁违反公平游戏规则用户的权利。本服务按“原样”提供，不作任何保证。',
     'legal.about.title': '关于我们 / 联系方式 (About Us / Contact)',
