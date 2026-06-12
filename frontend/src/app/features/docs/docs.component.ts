@@ -181,11 +181,30 @@ export class DocsComponent {
   }
 
   getGameTitle(id: string): string {
-    return this.i18n.t(`app.title.${id}`)() || this.i18n.t(`lobby.${id}`)() || id;
+    const titleKey = `app.title.${id}`;
+    let title = this.i18n.t(titleKey)();
+    if (title === titleKey) {
+      const lobbyKey = `lobby.${id}`;
+      title = this.i18n.t(lobbyKey)();
+      if (title === lobbyKey) {
+        // Fallback to capitalizing the id if no translation exists
+        title = id.charAt(0).toUpperCase() + id.slice(1);
+      }
+    }
+    return title;
   }
 
   getGameDesc(id: string): string {
-    return this.i18n.t(`app.title.${id}.desc`)() || this.i18n.t(`lobby.${id}.desc`)() || '';
+    const descKey = `app.title.${id}.desc`;
+    let desc = this.i18n.t(descKey)();
+    if (desc === descKey) {
+      const lobbyDescKey = `lobby.${id}.desc`;
+      desc = this.i18n.t(lobbyDescKey)();
+      if (desc === lobbyDescKey) {
+        desc = '';
+      }
+    }
+    return desc;
   }
 
   private renderMarkdown(md: string) {
