@@ -152,8 +152,9 @@ import { SokobanStore } from '../../store/sokoban.store';
         
         @for (row of activeBoard(); track $index; let r = $index) {
           @for (cell of row; track $index; let c = $index) {
-            <div class="flex items-center justify-center w-full h-full relative overflow-hidden"
-                 [ngClass]="getFloorClass(r, c)">
+            <div class="flex items-center justify-center w-full h-full relative overflow-hidden cursor-pointer"
+                 [ngClass]="getFloorClass(r, c)"
+                 (click)="onCellClick(r, c)">
               
               @if (cell === '#') {
                 <!-- Grey/White Brick Wall -->
@@ -428,9 +429,18 @@ export class SokobanBoardComponent {
   playerDir = signal<'up' | 'down' | 'left' | 'right'>('down');
   playerAction = signal<'idle' | 'walk' | 'push'>('idle');
   private actionTimeout: any;
+  private pathfindingInterval: any;
 
-  triggerMove(dir: 'up' | 'down' | 'left' | 'right') {
+  clearPathfinding() {
+    if (this.pathfindingInterval) {
+      clearInterval(this.pathfindingInterval);
+      this.pathfindingInterval = null;
+    }
+  }
+
+  triggerMove(dir: 'up' | 'down' | 'left' | 'right', isAuto = false) {
     if (this.readonly) return;
+    if (!isAuto) this.clearPathfinding();
     
     // Always set direction for ALL four directions
     this.playerDir.set(dir);
@@ -608,6 +618,84 @@ export class SokobanBoardComponent {
           event.preventDefault();
         }
       }
+    }
+  }
+
+  onCellClick(targetR: number, targetC: number) {
+    if (this.readonly) return;
+    if (this.store.status() !== 'playing' || this.store.isDead()) return;
+
+    this.clearPathfinding();
+
+    const board = this.activeBoard();
+    if (targetR < 0 || targetR >= board.length || targetC < 0 || targetC >= board[targetR].length) return;
+    
+    const targetCell = board[targetR][targetC];
+    // Cannot move directly if target is wall or box
+    if (targetCell === '#' || targetCell === '$' || targetCell === '*') return;
+
+    let pr = -1, pc = -1;
+    for (let r = 0; r < board.length; r++) {
+      for (let c = 0; c < board[r].length; c++) {
+        if (board[r][c] === '@' || board[r][c] === '+') { pr = r; pc = c; break; }
+      }
+      if (pr !== -1) break;
+    }
+    if (pr === -1) return;
+    if (pr === targetR && pc === targetC) return;
+
+    // BFS
+    const queue: {r: number, c: number, path: ('up'|'down'|'left'|'right')[]}[] = [];
+    queue.push({ r: pr, c: pc, path: [] });
+    
+    const visited = new Set<string>();
+    visited.add(`${pr},${pc}`);
+    
+    let finalPath: ('up'|'down'|'left'|'right')[] | null = null;
+
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (curr.r === targetR && curr.c === targetC) {
+        finalPath = curr.path;
+        break;
+      }
+
+      const dirs: {dr: number, dc: number, dir: 'up'|'down'|'left'|'right'}[] = [
+        {dr: -1, dc: 0, dir: 'up'},
+        {dr: 1, dc: 0, dir: 'down'},
+        {dr: 0, dc: -1, dir: 'left'},
+        {dr: 0, dc: 1, dir: 'right'},
+      ];
+
+      for (const d of dirs) {
+        const nr = curr.r + d.dr;
+        const nc = curr.c + d.dc;
+        
+        if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[nr].length) {
+          const key = `${nr},${nc}`;
+          if (!visited.has(key)) {
+            const cell = board[nr][nc];
+            // Can only walk on empty floor, target orb, or starting positions. No boxes or walls.
+            if (cell === ' ' || cell === '.' || cell === '@' || cell === '+') {
+              visited.add(key);
+              queue.push({ r: nr, c: nc, path: [...curr.path, d.dir] });
+            }
+          }
+        }
+      }
+    }
+
+    if (finalPath && finalPath.length > 0) {
+      let step = 0;
+      // Start auto walking
+      this.pathfindingInterval = setInterval(() => {
+        if (step >= finalPath!.length || this.store.status() !== 'playing') {
+          this.clearPathfinding();
+          return;
+        }
+        this.triggerMove(finalPath![step], true);
+        step++;
+      }, 80); // Move every 80ms
     }
   }
 }

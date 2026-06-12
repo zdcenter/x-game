@@ -25,6 +25,7 @@
   - Modes: Single Player (首击必空), PK Speed (异盘竞速), PK Steal (同盘抢雷)
 - **Sudoku (数独)**
   - Modes: Single Player (4 difficulties: 初级/中级/高级/专业), PK Speed, PK Steal
+  - 核心功能: 毫秒级状态同步、原汁原味的历史撤销与擦除、完美的“重置回初始状态”机制，甚至自动屏蔽用过提示的固定数字。
 - **Sliding Puzzle (数字华容道)**
   - Modes: Single Player (3x3 to 6x6), PK Speed
 - **Hexa Puzzle (六边形消除)**
@@ -40,7 +41,7 @@
   - Modes: Single Player (单机模式), PK Speed (竞速对决)
 - **Sokoban (推箱子)**
   - Modes: Single Player (单机解谜), PK Speed (竞速对决)
-
+  - 核心功能: 动态响应式绝对布局、支持点击空地自动 BFS（广度优先搜索）智能寻路，以及无限次完美撤销。
 
 ## Global Features: Single Player (3/4/5 位数难度练习), PK Speed (同屏竞速破译)
 
