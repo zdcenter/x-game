@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sokoban-strategy",
+    "date": "2026-06-12",
+    "en": {
+      "title": "Sokoban: From Beginner to Master",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game",
+      "readTime": "5 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["Sokoban", "Guide", "Strategy"]
+    },
+    "zh": {
+      "title": "推箱子：从入门到精通",
+      "description": "学习推箱子游戏的核心策略与高阶技巧，教你如何避免死局，轻松破解任何关卡。",
+      "keywords": "推箱子, 益智游戏, 攻略, 技巧",
+      "readTime": "5 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["推箱子", "攻略", "技巧"]
+    }
+  },
+  {
+    "id": "sudoku-benefits",
+    "date": "2026-06-10",
+    "en": {
+      "title": "Why Playing Sudoku Every Day is Good for Your Brain",
+      "description": "Discover the scientific benefits of playing Sudoku, from improving memory and concentration to delaying cognitive decline.",
+      "keywords": "Sudoku, brain training, memory, cognitive health",
+      "readTime": "4 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["Sudoku", "Brain Health", "Education"]
+    },
+    "zh": {
+      "title": "为什么每天玩数独对大脑有益？",
+      "description": "探索玩数独的科学益处：从提升记忆力、专注力，到延缓认知能力下降。",
+      "keywords": "数独, 大脑训练, 记忆力, 认知健康",
+      "readTime": "4 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["数独", "大脑健康", "教育"]
+    }
+  },
+  {
+    "id": "minesweeper-logic",
+    "date": "2026-06-08",
+    "en": {
+      "title": "The Hidden Logic of Minesweeper",
+      "description": "Minesweeper isn't about guessing. It's a pure game of logic and probability. Here is how you can win without guessing.",
+      "keywords": "Minesweeper, logic, probability, puzzle",
+      "readTime": "6 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["Minesweeper", "Logic", "Math"]
+    },
+    "zh": {
+      "title": "扫雷背后的隐藏逻辑",
+      "description": "扫雷不是靠猜的，它是一个纯粹的逻辑与概率游戏。本文教你如何不靠猜测赢下比赛。",
+      "keywords": "扫雷, 逻辑, 概率, 益智游戏",
+      "readTime": "6 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["扫雷", "逻辑", "数学"]
+    }
+  },
+  {
+    "id": "1a2b-bulls-cows",
+    "date": "2026-06-05",
+    "en": {
+      "title": "Mastering 1A2B (Bulls and Cows)",
+      "description": "A deep dive into the algorithmic approach to solving the classic code-breaking game 1A2B efficiently.",
+      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": ["1A2B", "Algorithms", "Codebreaker"]
+    },
+    "zh": {
+      "title": "精通 1A2B（猜数字）",
+      "description": "深入解析如何用算法思维和排除法，高效破解经典密码战游戏 1A2B。",
+      "keywords": "1A2B, 猜数字, 密码战, 算法",
+      "readTime": "7 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": ["1A2B", "算法", "密码战"]
+    }
+  }
+]
