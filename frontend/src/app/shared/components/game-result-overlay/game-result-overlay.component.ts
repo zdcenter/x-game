@@ -33,9 +33,12 @@ import { AuthStore } from '../../../core/auth/auth.store';
         <!-- Stats Grid -->
         @if (stats && stats.length > 0) {
           <div class="w-full flex justify-center gap-4 mb-10 relative z-10 flex-wrap">
-            @for (stat of stats; track stat.label) {
+            @for (stat of stats; track stat.label || stat.icon) {
               <div class="bg-[var(--color-bg-card)] backdrop-blur-md px-5 py-3 rounded-2xl border border-[var(--color-border-card)] text-center flex-1 min-w-[100px] shadow-sm">
-                <div class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold mb-1">{{ stat.label }}</div>
+                <div class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold mb-1 flex justify-center gap-1">
+                  @if (stat.icon) { <span>{{ stat.icon }}</span> }
+                  @if (stat.label) { <span>{{ stat.label }}</span> }
+                </div>
                 <div class="text-2xl font-black text-[var(--color-text-main)] font-mono">{{ stat.value }}</div>
               </div>
             }
@@ -120,17 +123,15 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input({ required: true }) title!: string;
   @Input() subtitle?: string;
   @Input() promptText?: string;
-  @Input() stats?: { label: string, value: string | number }[];
+  @Input() stats?: { icon?: string, label?: string, value: string | number }[];
   @Input() showNextLevel = false;
   @Input() disableAudio: boolean = false;
   @Input() showRestart = false;
-  @Input() showCancel = false;
   @Input() showDismiss = false;
   @Input() showLeave = false;
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() restart = new EventEmitter<void>();
-  @Output() cancel = new EventEmitter<void>();
   @Output() dismiss = new EventEmitter<void>();
   @Output() leave = new EventEmitter<void>();
 

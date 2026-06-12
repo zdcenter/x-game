@@ -31,6 +31,8 @@ export class SokobanStore {
   roomId = signal('');
   currentRoomMode = signal('single');
   isDead = signal(false);
+  timeSpent = signal<number>(0);
+  private timer: any;
   
   localDifficulty = signal('beginner');
   localEngine = signal<LocalSokobanEngine | null>(null, { equal: () => false });
@@ -129,12 +131,16 @@ export class SokobanStore {
         this.localDifficulty.set(saved.difficulty);
         saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
         this.localEngine.set(saved.engine);
+        this.timeSpent.set(saved.engine.timeSpent || 0);
         this.fetchLevelsAndLoad(saved.difficulty, saved.engine.levelStr, true);
       } else {
+        this.timeSpent.set(0);
         this.fetchLevelsAndLoad(difficulty, '', false);
       }
+      this.startTimer();
     } else {
       this.ws.connect('sokoban', roomId, playerId, mode, difficulty, hostId);
+      this.startTimer();
     }
   }
 
@@ -146,11 +152,13 @@ export class SokobanStore {
     if (saved && saved.engine) {
       saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(saved.engine);
+      this.timeSpent.set(saved.engine.timeSpent || 0);
       this.fetchLevelsAndLoad(difficulty, saved.engine.levelStr, true);
     } else {
       const newEngine = new LocalSokobanEngine(levelId, difficulty, puzzle);
       newEngine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(newEngine);
+      this.timeSpent.set(0);
       newEngine.saveToStorage();
       this.fetchLevelsAndLoad(difficulty, puzzle, true);
     }
@@ -163,6 +171,7 @@ export class SokobanStore {
       this.ws.send({ type: 'leave_game' });
       this.ws.disconnect('sokoban');
     }
+    this.stopTimer();
     this.roomId.set('');
   }
 
@@ -191,7 +200,7 @@ export class SokobanStore {
     if (!eng || !this.currentLevelId()) return;
     this.http.post(`${environment.apiUrl}/sokoban/puzzle/${this.currentLevelId()}/finish`, {
       moves: eng.moves,
-      time_spent: 0,
+      time_spent: this.timeSpent(),
       stars: 3
     }).subscribe();
   }
@@ -209,8 +218,10 @@ export class SokobanStore {
     if (this.currentRoomMode() === 'single') {
       this.localEngine()?.restart();
       this.localEngine.set(this.localEngine()); // Trigger reactivity
+      this.timeSpent.set(0);
       return;
     }
+    this.timeSpent.set(0);
     this.ws.send({ action: 'restart' });
   }
 
@@ -256,6 +267,7 @@ export class SokobanStore {
       this.currentLevelId.set(id);
       saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(saved.engine);
+      this.timeSpent.set(saved.engine.timeSpent || 0);
       this.localDifficulty.set(saved.difficulty);
       return;
     }
@@ -265,6 +277,7 @@ export class SokobanStore {
       const newEngine = new LocalSokobanEngine(res.puzzle.id, this.localDifficulty(), res.puzzle.puzzle);
       newEngine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(newEngine);
+      this.timeSpent.set(0);
       newEngine.saveToStorage();
     });
   }
@@ -284,6 +297,32 @@ export class SokobanStore {
     const idx = list.findIndex(l => l.id === curr);
     if (idx > 0) {
       this.loadLevel(list[idx - 1].id);
+    }
+  }
+
+  private startTimer() {
+    this.stopTimer();
+    this.timer = setInterval(() => {
+      if (this.status() === 'playing') {
+        this.timeSpent.update(t => t + 1);
+        if (this.currentRoomMode() === 'single') {
+          const eng = this.localEngine();
+          if (eng) {
+            eng.timeSpent = this.timeSpent();
+            // Save periodically to avoid losing too much progress on abrupt close
+            if (this.timeSpent() % 5 === 0) {
+              eng.saveToStorage();
+            }
+          }
+        }
+      }
+    }, 1000);
+  }
+
+  private stopTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
     }
   }
 }

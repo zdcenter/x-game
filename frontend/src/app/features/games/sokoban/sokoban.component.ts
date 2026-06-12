@@ -58,15 +58,6 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-            @if (store.status() === 'playing' || store.status() === 'finished') {
-              <div class="flex items-center gap-1 px-2 lg:px-3 py-1 bg-black/30 rounded-lg text-amber-400 font-bold text-sm lg:text-base border border-amber-500/30 shadow-inner">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                </svg>
-                <span>{{ store.myMoves() }} <span class="hidden sm:inline">{{ i18n.t('game.moves')() }}</span></span>
-              </div>
-            }
-
             @if (store.currentRoomMode() === 'single') {
               <button (click)="showLobby.set(true)" 
                       class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
@@ -122,7 +113,8 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
               [isHost]="store.hostId() === playerId"
               [isMe]="true"
               [stats]="[
-                { label: i18n.t('game.moves')(), value: store.myMoves() }
+                { icon: '🦶', value: store.myMoves(), label: i18n.t('game.moves')() },
+                { icon: '⏱️', value: gameTimer.formatTime(store.timeSpent()), label: i18n.t('game.time')() }
               ]"
               [status]="store.myPlayerState()?.status || 'playing'"
             ></app-player-badge>
@@ -132,7 +124,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                 [playerName]="opp.id"
                 [isHost]="opp.isHost"
                 [stats]="[
-                  { label: i18n.t('game.moves')(), value: opp.moves }
+                  { icon: '🦶', value: opp.moves, label: i18n.t('game.moves')() }
                 ]"
                 [status]="opp.status"
               ></app-player-badge>
@@ -266,6 +258,10 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
             currentGameId="sokoban"
             [status]="getGameResult()"
             [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
+            [stats]="[
+              { label: i18n.t('game.moves')(), value: store.myMoves() },
+              { label: 'TIME', value: gameTimer.formatTime(store.timeSpent()) }
+            ]"
             [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === 'single'"
             [showRestart]="store.currentRoomMode() === 'single' || store.hostId() === playerId"
             [showLeave]="store.currentRoomMode() === 'single' || store.hostId() !== playerId"

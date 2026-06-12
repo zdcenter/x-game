@@ -216,7 +216,8 @@
               [showRestart]="currentRoomMode() === 'single' || (store.status() === 'finished' && store.host() === playerId)"
               [showDismiss]="currentRoomMode() !== 'single' && store.status() === 'finished' && store.host() === playerId"
               (restart)="store.playAgain()"
-              (dismiss)="dismissRoom()">
+              (dismiss)="dismissRoom()"
+              (leave)="goBack()">
             </app-game-result-overlay>
           }
         </div>

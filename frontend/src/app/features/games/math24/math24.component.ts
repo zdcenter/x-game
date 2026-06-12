@@ -154,12 +154,17 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     return isWinner ? this.i18n.t('game.win')() : this.i18n.t('game.lose')();
   }
 
-  getStats(): { label: string; value: string | number }[] {
+  getStats(): { label?: string; icon?: string; value: string | number }[] {
     if (this.store.currentMode() === 'single') {
       const time = this.store.timeSpent();
+      const formatTime = (secs: number) => {
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
       return [
         { label: this.i18n.t('game.level')(), value: this.store.localLevelIndex() + 1 },
-        { label: this.i18n.t('game.timer')(), value: `${time}s` }
+        { icon: '⏱️', value: formatTime(time) }
       ];
     }
     const myPlayer = this.store.players()[this.playerId];

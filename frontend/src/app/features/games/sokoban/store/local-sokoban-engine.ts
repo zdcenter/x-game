@@ -2,6 +2,7 @@ export class LocalSokobanEngine {
   board: string[][] = [];
   history: string[][][] = [];
   moves: number = 0;
+  timeSpent: number = 0;
   status: 'playing' | 'finished' = 'playing';
   difficulty: string;
 
@@ -21,6 +22,7 @@ export class LocalSokobanEngine {
       this.board = existingData.board;
       this.history = existingData.history || [];
       this.moves = existingData.moves || 0;
+      this.timeSpent = existingData.timeSpent || 0;
       this.status = existingData.status || 'playing';
     } else {
       this.initBoard();
@@ -57,6 +59,7 @@ export class LocalSokobanEngine {
     this.board = this.parseLevel(this.levelStr);
     this.history = [];
     this.moves = 0;
+    this.timeSpent = 0;
     this.status = 'playing';
   }
 
@@ -212,6 +215,7 @@ export class LocalSokobanEngine {
       board: this.board,
       history: this.history,
       moves: this.moves,
+      timeSpent: this.timeSpent,
       status: this.status,
       difficulty: this.difficulty,
       levelStr: this.levelStr

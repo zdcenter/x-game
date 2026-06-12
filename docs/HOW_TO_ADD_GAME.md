@@ -581,4 +581,30 @@ ngOnInit() {
   readonly readyPlayers = computed(() => (this.ws.gameState() as any)?.readyPlayers || {});
   ```
 
+### 22. 结算界面“返回大厅”按钮失效陷阱 (Result Overlay Leave Event) 🚨
+- **原理解析与隐患**：为了保证闭环体验，公共结算组件 `<app-game-result-overlay>` 内部**无条件**渲染了一个“返回大厅 (Return to Lobby)”的按钮。如果你在调用该组件时忘记绑定 `(leave)` 事件，点击该按钮将毫无反应，导致玩家（尤其是单机模式玩家）被死死卡在结算界面无法退出！
+- **标准做法**：
+  在任何使用 `<app-game-result-overlay>` 的地方，必须显式绑定 `(leave)` 事件，通常调用 `goBack()` 或 `returnToLobby()`：
+  ```html
+  <app-game-result-overlay
+    currentGameId="your_game"
+    [status]="'win'"
+    [title]="t('game.you_win')()"
+    (restart)="store.playAgain()"
+    (leave)="goBack()"> <!-- 🚨 绝对不能漏掉这一行！ -->
+  </app-game-result-overlay>
+  ```
+
+### 23. 玩家信息栏 (Player Badge) 参数标准化 (Player Stats UI)
+- **避免隐患**：为了保持全局高逼格、清爽的 UI 体验，玩家卡片中的扩展信息（如用时、步数）严禁使用冗长的文字（如 `Time: 12s`, `Moves: 5`）。
+- **标准做法**：
+  统一向 `<app-player-badge>` 的 `[stats]` 属性传入携带 `icon` 字段的配置数组，使用 Emoji 图标替代文字标签，如用 `⏱️` 表示时间，用 `🦶` 表示步数：
+  ```html
+  <!-- ❌ 错误做法：使用冗长的 label -->
+  [stats]="[{ label: 'TIME', value: '01:23' }, { label: 'MOVES', value: 45 }]"
+  
+  <!-- ✅ 正确做法：使用清爽的 Icon -->
+  [stats]="[{ icon: '⏱️', value: '01:23' }, { icon: '🦶', value: 45 }]"
+  ```
+
 遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉和流量获取上达到最顶级的体验！

@@ -7,58 +7,56 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <!-- Card Layout (used for Steal, Hexa, Sliding, Codebreaker) -->
+    <!-- Card Layout (used for Steal, Hexa, Sliding, Codebreaker, Sokoban) -->
     <ng-container *ngIf="layout === 'card'">
-      <div class="flex items-center gap-2 px-2 py-1.5 rounded-lg border transition-all duration-300 relative overflow-hidden"
+      <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl border transition-all duration-300 relative overflow-hidden shadow-sm"
            [ngClass]="{
-             'border-blue-500 bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.15)]': isMe,
-             'border-[var(--color-border-card)] bg-[var(--color-bg-card)]': !isMe,
+             'border-blue-400 bg-gradient-to-r from-blue-500/20 to-blue-600/10 shadow-[0_0_15px_rgba(59,130,246,0.3)]': isMe,
+             'border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:border-white/20': !isMe,
              'opacity-60 grayscale': status === 'frozen' || status === 'spectating',
-             'border-emerald-500 bg-emerald-500/10': status === 'finished'
+             'border-emerald-500 bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 shadow-[0_0_15px_rgba(16,185,129,0.3)]': status === 'finished'
            }">
         
         <!-- Avatar -->
-        <div class="w-8 h-8 rounded-full bg-[var(--color-bg-main)] flex items-center justify-center font-bold text-sm border border-[var(--color-border-card)] shadow-inner relative z-10 shrink-0">
-          <span *ngIf="isHost && !isSpectating()" class="absolute -top-1.5 -right-1.5 text-xs drop-shadow-md z-20">👑</span>
-          <span *ngIf="isSpectating()" class="absolute -top-1.5 -right-1.5 text-xs drop-shadow-md z-20">👁️</span>
+        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[var(--color-bg-main)] flex items-center justify-center font-black text-sm md:text-base border-2 border-[var(--color-border-card)] shadow-inner relative z-10 shrink-0 text-[var(--color-text-main)]" [class.border-blue-400]="isMe" [class.border-emerald-400]="status === 'finished'">
+          <span *ngIf="isHost && !isSpectating()" class="absolute -top-1 -right-1 text-xs drop-shadow-md z-20">👑</span>
+          <span *ngIf="isSpectating()" class="absolute -top-1 -right-1 text-xs drop-shadow-md z-20">👁️</span>
           {{ avatarChar }}
         </div>
         
-        <!-- Info Row -->
+        <!-- Info & Stats -->
         <div class="flex items-center min-w-0 z-10 flex-1 justify-between gap-1.5">
-          <div class="flex items-center gap-1 shrink w-12 md:w-auto">
-            <span class="text-xs md:text-sm font-bold truncate" 
+          <!-- Name -->
+          <div class="flex items-center gap-1 shrink w-16 md:w-auto">
+            <span class="text-sm md:text-base font-bold truncate tracking-wide" 
                   [class.text-blue-400]="isMe"
-                  [class.text-[var(--color-text-muted)]]="!isMe">
+                  [class.text-emerald-400]="!isMe && status === 'finished'"
+                  [class.text-[var(--color-text-muted)]]="!isMe && status !== 'finished'">
               {{ isMe ? (i18n.t('game.you')() || 'You') : $any(playerName) }}
             </span>
           </div>
           
-          <div class="flex items-center gap-1 shrink-0 justify-end flex-nowrap overflow-hidden">
+          <!-- Stats (Right Aligned) -->
+          <div class="flex items-center gap-1.5 shrink-0 justify-end flex-nowrap overflow-hidden">
             <ng-container *ngIf="filteredStats.length > 0">
-              <div class="flex items-center gap-1 shrink-0">
-                <div *ngFor="let stat of filteredStats" class="flex items-center gap-0.5 bg-[var(--color-bg-main)] px-1 py-0.5 rounded shadow-inner border border-[var(--color-border-card)] leading-none truncate max-w-[60px] md:max-w-none" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
-                  <span *ngIf="stat.icon" class="text-[10px] opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
-                  <span class="text-[11px] font-mono font-bold truncate">{{ stat.value }}</span>
-                  <span *ngIf="stat.label && !stat.icon" class="text-[9px] font-bold opacity-70 uppercase hidden md:inline">{{ stat.label }}</span>
+                <div *ngFor="let stat of filteredStats" class="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded shadow-inner border border-white/5 leading-none truncate" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
+                  <span *ngIf="stat.icon" class="text-xs md:text-sm opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
+                  <span class="text-sm md:text-base font-mono font-bold tracking-tight truncate" [class.text-emerald-400]="status === 'finished'">{{ stat.value }}</span>
+                  <span *ngIf="stat.label && !stat.icon" class="text-[10px] font-bold opacity-60 uppercase">{{ stat.label }}</span>
                 </div>
-              </div>
             </ng-container>
             <ng-container *ngIf="subText">
-              <span class="text-[10px] md:text-xs font-mono font-bold text-[var(--color-text-main)] truncate max-w-[50px] md:max-w-[100px]">{{ subText }}</span>
+              <span class="text-[10px] md:text-xs font-mono font-bold text-[var(--color-text-muted)] truncate max-w-[50px] md:max-w-[100px] bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{{ subText }}</span>
             </ng-container>
-            
             <ng-container *ngIf="score !== undefined">
-              <div class="flex items-baseline gap-0.5 shrink-0 ml-1">
-                <span class="text-sm md:text-base font-black leading-none text-[var(--color-text-main)] truncate max-w-[40px] md:max-w-none">{{ score }}</span>
-              </div>
+              <span class="text-sm md:text-base font-black leading-none text-amber-400 drop-shadow-md truncate max-w-[40px] md:max-w-none ml-1">{{ score }}</span>
             </ng-container>
           </div>
         </div>
 
         <!-- Finished State Overlay -->
-        <div *ngIf="status === 'finished'" class="absolute inset-0 bg-emerald-500/10 flex items-center justify-center z-0 pointer-events-none">
-          <span class="text-xl opacity-20 transform -rotate-12 whitespace-nowrap font-black">{{ $any(i18n.t('game.finished')()) || 'FINISHED' }}</span>
+        <div *ngIf="status === 'finished'" class="absolute inset-0 bg-emerald-500/10 flex flex-col items-center justify-center z-0 pointer-events-none">
+          <div class="absolute right-2 top-1/2 -translate-y-1/2 opacity-20 text-4xl">🎉</div>
         </div>
 
         <!-- Frozen Overlay -->

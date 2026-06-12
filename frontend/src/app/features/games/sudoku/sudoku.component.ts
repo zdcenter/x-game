@@ -107,8 +107,8 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
   getSinglePlayerStats() {
-    const stats = [
-      { label: 'TIME', value: this.gameTimer.formatTime(this.store.timeSpent()) }
+    const stats: any[] = [
+      { icon: '⏱️', value: this.gameTimer.formatTime(this.store.timeSpent()) }
     ];
     const best = this.store.bestTime();
     if (best > 0) {

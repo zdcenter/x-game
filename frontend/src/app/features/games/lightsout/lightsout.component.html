@@ -110,7 +110,7 @@
               [playerName]="playerId"
               [isHost]="store.hostId() === playerId"
               [isMe]="true"
-              [stats]="[{ label: i18n.t('game.moves')() || 'Moves', value: store.moves() }]"
+              [stats]="[{ icon: '🦶', value: store.moves() }]"
               [status]="store.isFinished() ? 'finished' : 'playing'"
             ></app-player-badge>
 

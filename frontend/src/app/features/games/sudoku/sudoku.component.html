@@ -117,9 +117,8 @@
                 i18n-title="@@game.win" title="game.win"
                 i18n-promptText="@@game.sudoku.next_level_prompt" promptText="Level cleared! Play next?"
                 [stats]="getSinglePlayerStats()"
-                [showCancel]="true"
                 [showNextLevel]="true"
-                (cancel)="store.view.set('lobby')"
+                (leave)="store.view.set('lobby')"
                 (nextLevel)="playNextLevel()"
                 class="absolute inset-0 z-50">
               </app-game-result-overlay>
