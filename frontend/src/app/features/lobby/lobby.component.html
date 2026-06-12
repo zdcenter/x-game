@@ -17,10 +17,6 @@
           </div>
         }
 
-        <!-- DEBUG ONLY: To remove later -->
-        <div class="text-xs text-red-500 my-2">
-          DEBUG BannerSlotId: {{ adService.getBannerSlotId('lobby_banner') | json }}
-        </div>
 
         <!-- Lobby Top Banner Ad (Visible on all devices) -->
         @if (adService.getBannerSlotId('lobby_banner')) {

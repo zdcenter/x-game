@@ -59,7 +59,7 @@ import { AdPlacement, AdNetwork } from '../../core/models/ad.model';
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" class="sr-only peer" [(ngModel)]="p.is_enabled" (ngModelChange)="savePlacement(p)">
-                      <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-accent-from)]"></div>
+                      <div class="w-11 h-6 bg-[var(--color-border-thick)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-accent-from)]"></div>
                     </label>
                   </div>
                   
@@ -91,12 +91,17 @@ import { AdPlacement, AdNetwork } from '../../core/models/ad.model';
                         </div>
                         
                         <div class="flex-grow min-w-0">
-                          <div class="flex items-center gap-2 mb-1">
+                          <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
                             <span class="font-bold text-sm uppercase tracking-wider">{{ net.provider }}</span>
+                            <!-- Quick Toggle for Network -->
+                            <label class="relative inline-flex items-center cursor-pointer ml-2" title="Toggle Network">
+                              <input type="checkbox" class="sr-only peer" [(ngModel)]="net.is_enabled" (change)="toggleNetwork(net)">
+                              <div class="w-8 h-4 bg-[var(--color-border-thick)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
                             @if(net.is_enabled) {
-                              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold uppercase">Active</span>
+                              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold uppercase ml-2">Active</span>
                             } @else {
-                              <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold uppercase">Disabled</span>
+                              <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold uppercase ml-2">Disabled</span>
                             }
                           </div>
                           <p class="text-xs font-mono opacity-60 truncate" title="{{net.slot_id}}">{{ net.slot_id }}</p>
@@ -137,21 +142,34 @@ import { AdPlacement, AdNetwork } from '../../core/models/ad.model';
                 <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.ads.modal_provider')() }}</label>
                 <select [(ngModel)]="modalForm.provider" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]">
                   <option value="google_adsense">Google AdSense / AdMob</option>
-                  <option value="adsterra_monetag">Adsterra / Monetag</option>
-                  <option value="ezoic">Ezoic</option>
-                  <option value="journey_mediavine">Journey by Mediavine</option>
-                  <option value="mediavine">Mediavine</option>
-                  <option value="raptive">Raptive</option>
-                  <option value="unity_ads">Unity Ads</option>
-                  <option value="wechat_minigame">WeChat MiniGame</option>
-                  <option value="applovin">AppLovin</option>
+                  @if (selectedPlacement()?.id !== 'lobby_banner') {
+                    <option value="adsterra_monetag">Adsterra / Monetag</option>
+                    <option value="ezoic">Ezoic</option>
+                    <option value="journey_mediavine">Journey by Mediavine</option>
+                    <option value="mediavine">Mediavine</option>
+                    <option value="raptive">Raptive</option>
+                    <option value="unity_ads">Unity Ads</option>
+                    <option value="wechat_minigame">WeChat MiniGame</option>
+                    <option value="applovin">AppLovin</option>
+                  }
                 </select>
+                @if (selectedPlacement()?.id === 'lobby_banner') {
+                  <p class="text-[10px] text-amber-400 opacity-90 mt-1 font-bold">
+                    * 安全防御：大厅横幅（内嵌式）目前仅支持渲染 Google AdSense 广告。
+                  </p>
+                }
               </div>
               <div>
                 <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.ads.modal_slot')() }}</label>
-                <input type="text" [(ngModel)]="modalForm.slot_id" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. ca-pub-xxx/7984661759">
+                <input type="text" [(ngModel)]="modalForm.slot_id" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)]" placeholder="e.g. 11136220">
                 <p class="text-[10px] text-[var(--color-accent-from)] opacity-80 mt-1">
-                  * 提示: 对于 Google AdSense，请使用 <strong>发布商ID/广告位ID</strong> 的格式 (如: ca-pub-12345/67890)。如果仅填入纯数字，则默认使用项目的全局发布商ID。
+                  @if (modalForm.provider === 'google_adsense' || modalForm.provider === 'google_admob') {
+                    * 提示: 请使用 <strong>发布商ID/广告位ID</strong> 的格式 (如: ca-pub-12345/67890)。如果仅填入纯数字，则默认使用项目的全局发布商ID。
+                  } @else if (modalForm.provider === 'adsterra_monetag') {
+                    * 提示: 请填入 Monetag/Adsterra 提供的纯数字 Zone ID (如: <strong>11136220</strong>)。
+                  } @else {
+                    * 提示: 请填入该广告联盟提供的广告位标识符 (Slot ID / Zone ID)。
+                  }
                 </p>
               </div>
               <div class="grid grid-cols-2 gap-4">
@@ -167,7 +185,7 @@ import { AdPlacement, AdNetwork } from '../../core/models/ad.model';
               <div class="flex items-center space-x-3 pt-2">
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" class="sr-only peer" [(ngModel)]="modalForm.is_enabled">
-                  <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                  <div class="w-9 h-5 bg-[var(--color-border-thick)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
                 <span class="text-sm font-bold">{{ i18n.t('admin.ads.modal_enabled')() }}</span>
               </div>
@@ -280,6 +298,26 @@ export class AdminAdsComponent implements OnInit {
         this.fetchData();
       },
       error: () => this.toast.show('Failed to save network', 'error')
+    });
+  }
+
+  toggleNetwork(net: AdNetwork) {
+    const p = this.selectedPlacement();
+    if (!p) return;
+    
+    // Quick update for toggle
+    const payload = {
+      ...net,
+      placement_id: p.id
+    };
+    
+    this.adminService.updateAdNetwork(net.id, payload).subscribe({
+      next: () => this.toast.show(`Network ${net.is_enabled ? 'enabled' : 'disabled'}`, 'success'),
+      error: () => {
+        this.toast.show('Failed to toggle network', 'error');
+        // Revert toggle visually on failure
+        net.is_enabled = !net.is_enabled;
+      }
     });
   }
 

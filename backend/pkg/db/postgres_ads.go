@@ -24,17 +24,18 @@ func SeedAds() {
 			IsEnabled:       true,
 			DailyTotalLimit: 5,
 			Networks: []domain.AdNetwork{
-				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/5224354917", Priority: 1, IsEnabled: true}, // Test rewarded ID
+				{Provider: "adsterra_monetag", SlotID: "11136220", Priority: 1, IsEnabled: true, LimitPerUser: -1},
+				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/5224354917", Priority: 1, IsEnabled: false, LimitPerUser: -1},
 			},
 		},
 		{
 			ID:              "lobby_banner",
 			Name:            "大厅顶部横幅",
 			Desc:            "游戏大厅界面顶部的横幅广告",
-			IsEnabled:       false,
+			IsEnabled:       true,
 			DailyTotalLimit: -1,
 			Networks: []domain.AdNetwork{
-				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/6300978111", Priority: 1, IsEnabled: true}, // Test banner ID
+				{Provider: "google_adsense", SlotID: "ca-pub-8428944074138941/7984661759", Priority: 1, IsEnabled: true, LimitPerUser: -1},
 			},
 		},
 		{
@@ -44,7 +45,8 @@ func SeedAds() {
 			IsEnabled:       true,
 			DailyTotalLimit: 10,
 			Networks: []domain.AdNetwork{
-				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/1033173712", Priority: 1, IsEnabled: true}, // Test interstitial ID
+				{Provider: "adsterra_monetag", SlotID: "11136220", Priority: 1, IsEnabled: true, LimitPerUser: -1},
+				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/1033173712", Priority: 1, IsEnabled: false, LimitPerUser: -1},
 			},
 		},
 	}

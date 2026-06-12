@@ -186,16 +186,13 @@ export class AdService {
     } else if (selectedNetwork.provider === 'adsterra_monetag') {
       // ----------------------------------------------------------------------
       // Monetag / Adsterra Integration Adapter (Popunder or Vignette)
-      // For Monetag, they usually provide a script to load dynamically:
-      // <script src="//site.com/xyz.js" data-cfasync="false" async></script>
       // ----------------------------------------------------------------------
-      console.log(`[Monetag Adapter] Loading Monetag script for slot: ${selectedNetwork.slot_id}`);
+      console.log(`[Monetag Adapter] Loading Monetag Vignette for zone: ${selectedNetwork.slot_id}`);
       this.toast.show('Loading Sponsor Ad...', 'info');
       
       const script = document.createElement('script');
-      script.src = `//alwingulla.com/${selectedNetwork.slot_id}/invoke.js`; // Example generic adsterra/monetag domain
-      script.async = true;
-      script.dataset['cfasync'] = 'false';
+      script.dataset['zone'] = selectedNetwork.slot_id;
+      script.src = 'https://n6wxm.com/vignette.min.js';
       
       script.onload = () => {
         console.log('[Monetag Adapter] Ad Loaded Successfully');
