@@ -60,7 +60,11 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
           </div>
           
           <!-- Footer -->
-          <div class="p-4 border-t border-[var(--color-border-card)]">
+          <div class="p-4 border-t border-[var(--color-border-card)] flex flex-col gap-3">
+            <a [href]="'/docs/' + gameId" target="_blank"
+               class="w-full py-2 text-center text-sm font-medium text-[var(--color-accent-from)] hover:text-[var(--color-accent-to)] hover:underline flex items-center justify-center gap-1">
+              {{ i18n.t('docs.read_more')() || '📖 Read full tutorial & strategies' }}
+            </a>
             <button (click)="closed.emit()"
                     class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95">
               {{ i18n.t('game.rules.got_it')() }}

@@ -428,6 +428,11 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'blog.cta_title': 'Ready to put your brain to the test?',
     'blog.cta_btn': 'Play Free Educational Games',
 
+    // Docs
+    'docs.title': 'Game Tutorials & Manuals',
+    'docs.toc': 'On this page',
+    'docs.read_more': '📖 Read full tutorial & strategies',
+
     // Legal
     'legal.privacy.title': 'Privacy Policy',
     'legal.privacy.content': 'We respect your privacy. This website does not collect or misuse your personal data. We only store minimal data necessary for game progression and user accounts (e.g., username, password hash). We do not sell your data to third parties. By using our service, you consent to the storage of essential game data.',
@@ -805,6 +810,11 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.prev_level': '上一关',
     'game.undo': '撤销',
     'game.reset': '重置',
+
+    // Docs
+    'docs.title': '经典益智游戏说明',
+    'docs.toc': '本页内容',
+    'docs.read_more': '📖 查看详细通关教程与高分技巧',
 
     // Legal
     'legal.privacy.title': '隐私政策 (Privacy Policy)',

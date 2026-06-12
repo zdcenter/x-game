@@ -35,6 +35,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent)
       },
       {
+        path: 'docs',
+        loadComponent: () => import('./features/docs/docs.component').then(m => m.DocsComponent),
+        data: { seo: { title: 'Game Tutorials & Rules - Puzzle PK', desc: 'Read detailed rules, strategies, and tutorials for all classic puzzle games on our platform.' } }
+      },
+      {
+        path: 'docs/:gameId',
+        loadComponent: () => import('./features/docs/docs.component').then(m => m.DocsComponent)
+      },
+      {
         path: 'legal/:type',
         loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
         data: { seo: { title: 'Legal & Privacy Policy', desc: 'Read our Privacy Policy, Terms of Service, and About Us information.' } }

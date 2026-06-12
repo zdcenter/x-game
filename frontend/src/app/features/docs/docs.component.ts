@@ -1,0 +1,227 @@
+import { Component, inject, signal, computed, effect, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { I18nService } from '../../core/i18n/i18n.service';
+import { GameService, GameConfig, getLocalizedField } from '../../core/services/game.service';
+import { marked } from 'marked';
+
+interface TocItem {
+  id: string;
+  text: string;
+  level: number;
+}
+
+@Component({
+  selector: 'app-docs',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
+    <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
+      
+      <!-- Mobile Sidebar Overlay -->
+      @if (isMobileMenuOpen()) {
+        <div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="isMobileMenuOpen.set(false)"></div>
+      }
+
+      <!-- Left Sidebar (Navigation) -->
+      <aside class="fixed inset-y-0 left-0 pt-16 lg:pt-0 lg:static z-50 w-64 h-full bg-[var(--color-bg-card)] border-r border-[var(--color-border-card)] transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+             [class.-translate-x-full]="!isMobileMenuOpen()"
+             [class.translate-x-0]="isMobileMenuOpen()">
+        <div class="h-full overflow-y-auto py-4 px-3 flex flex-col gap-1 custom-scrollbar">
+          <div class="px-3 pb-4 mb-2 border-b border-[var(--color-border-card)] flex items-center justify-between">
+            <h2 class="text-lg font-bold text-[var(--color-text-primary)]">
+              {{ i18n.t('docs.title')() || 'Game Tutorials' }}
+            </h2>
+            <button class="lg:hidden p-1 text-[var(--color-text-muted)]" (click)="isMobileMenuOpen.set(false)">✕</button>
+          </div>
+          
+          @for (game of games(); track game.id; let idx = $index) {
+            <a [routerLink]="['/docs', game.id]"
+               (click)="isMobileMenuOpen.set(false)"
+               class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-3"
+               [class.bg-[var(--color-bg-main)]]="currentGameId() === game.id"
+               [class.text-[var(--color-accent-from)]]="currentGameId() === game.id"
+               [class.text-[var(--color-text-secondary)]]="currentGameId() !== game.id"
+               [class.hover:bg-[var(--color-border-card)]]="currentGameId() !== game.id">
+               <span class="w-6 h-6 rounded bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-xs opacity-70">
+                 {{ idx + 1 }}
+               </span>
+               <span class="truncate">{{ getGameTitle(game.id) }}</span>
+            </a>
+          }
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 h-full overflow-y-auto custom-scrollbar relative bg-[var(--color-bg-main)] scroll-smooth" #scrollContainer>
+        <!-- Mobile Header (Hamburger) -->
+        <div class="lg:hidden sticky top-0 z-30 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] px-4 py-3 flex items-center gap-3">
+          <button (click)="isMobileMenuOpen.set(true)" class="p-1 text-[var(--color-text-primary)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span class="font-bold text-[var(--color-text-primary)] truncate">{{ currentGame() ? getGameTitle(currentGame()!.id) : 'Tutorials' }}</span>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-8 py-8 lg:py-12 flex flex-col xl:flex-row gap-12">
+          
+          <!-- Article Content -->
+          <article class="flex-1 min-w-0">
+            @if (currentGame()) {
+              <div class="mb-8 border-b border-[var(--color-border-card)] pb-6">
+                <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text mb-4"
+                    style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                  {{ getGameTitle(currentGame()!.id) }}
+                </h1>
+                <p class="text-[var(--color-text-secondary)] text-lg">
+                  {{ getGameDesc(currentGame()!.id) }}
+                </p>
+              </div>
+
+              <div class="prose prose-invert prose-lg max-w-none
+                          [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:scroll-mt-20
+                          [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:scroll-mt-20
+                          [&_p]:text-[var(--color-text-secondary)] [&_p]:mb-4 [&_p]:leading-relaxed
+                          [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-6 [&_ul]:text-[var(--color-text-secondary)] [&_li]:mb-2
+                          [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-6 [&_ol]:text-[var(--color-text-secondary)] [&_li]:mb-2
+                          [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold
+                          [&_code]:bg-[var(--color-bg-card)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:border [&_code]:border-[var(--color-border-card)]
+                          [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--color-accent-from)] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--color-text-muted)]"
+                   [innerHTML]="parsedContent()">
+              </div>
+            } @else {
+              <div class="flex items-center justify-center h-64 text-[var(--color-text-muted)]">
+                Loading documentation...
+              </div>
+            }
+          </article>
+
+          <!-- Right Sidebar (Table of Contents) -->
+          @if (toc().length > 0) {
+            <aside class="hidden xl:block w-64 shrink-0">
+              <div class="sticky top-8">
+                <h4 class="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-4">
+                  {{ i18n.t('docs.toc')() || 'On this page' }}
+                </h4>
+                <ul class="space-y-2 text-sm border-l border-[var(--color-border-card)]">
+                  @for (item of toc(); track item.id) {
+                    <li>
+                      <a [href]="'#'+item.id" 
+                         (click)="scrollToId($event, item.id)"
+                         class="block py-1 hover:text-[var(--color-accent-from)] transition-colors text-[var(--color-text-secondary)]"
+                         [ngClass]="{'pl-4': item.level === 2, 'pl-8 text-xs': item.level === 3}">
+                        {{ item.text }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </aside>
+          }
+
+        </div>
+      </main>
+
+    </div>
+  `
+})
+export class DocsComponent {
+  i18n = inject(I18nService);
+  private gameService = inject(GameService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
+
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
+  games = signal<GameConfig[]>([]);
+  currentGameId = signal<string>('');
+  isMobileMenuOpen = signal(false);
+
+  currentGame = computed(() => {
+    return this.games().find(g => g.id === this.currentGameId()) || null;
+  });
+
+  // Rendered HTML
+  parsedContent = signal<SafeHtml>('');
+  
+  // Table of Contents
+  toc = signal<TocItem[]>([]);
+
+  constructor() {
+    this.gameService.getGames().subscribe(games => {
+      // Sort games by sortOrder
+      const sorted = [...games].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      this.games.set(sorted);
+      
+      // If no gameId in route, redirect to the first game
+      if (!this.currentGameId() && sorted.length > 0) {
+        this.router.navigate(['/docs', sorted[0].id], { replaceUrl: true });
+      }
+    });
+
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('gameId');
+      if (id) {
+        this.currentGameId.set(id);
+      }
+    });
+
+    // Re-render when current game or language changes
+    effect(() => {
+      const game = this.currentGame();
+      const lang = this.i18n.currentLang();
+      if (game) {
+        const md = getLocalizedField(game.rules, lang);
+        this.renderMarkdown(md);
+      }
+    });
+  }
+
+  getGameTitle(id: string): string {
+    return this.i18n.t(`app.title.${id}`)() || this.i18n.t(`lobby.${id}`)() || id;
+  }
+
+  getGameDesc(id: string): string {
+    return this.i18n.t(`app.title.${id}.desc`)() || this.i18n.t(`lobby.${id}.desc`)() || '';
+  }
+
+  private renderMarkdown(md: string) {
+    // 1. Generate HTML using marked
+    const rawHtml = marked.parse(md, { async: false }) as string;
+    
+    // 2. Extract TOC and inject IDs into headings
+    const tocItems: TocItem[] = [];
+    let idCounter = 0;
+    
+    const htmlWithIds = rawHtml.replace(/<h([23])>(.*?)<\/h\1>/g, (match, levelStr, text) => {
+      const level = parseInt(levelStr, 10);
+      const id = `heading-${idCounter++}`;
+      // Clean up text (remove internal HTML tags if any)
+      const plainText = text.replace(/<[^>]+>/g, '').trim();
+      tocItems.push({ id, text: plainText, level });
+      return `<h${level} id="${id}">${text}</h${level}>`;
+    });
+
+    this.toc.set(tocItems);
+    this.parsedContent.set(this.sanitizer.bypassSecurityTrustHtml(htmlWithIds));
+
+    // Reset scroll
+    if (this.scrollContainer?.nativeElement) {
+      this.scrollContainer.nativeElement.scrollTop = 0;
+    }
+  }
+
+  scrollToId(event: Event, id: string) {
+    event.preventDefault();
+    const el = document.getElementById(id);
+    if (el && this.scrollContainer?.nativeElement) {
+      // Calculate position relative to container
+      const container = this.scrollContainer.nativeElement;
+      const topPos = el.offsetTop - 20; // 20px padding
+      container.scrollTo({ top: topPos, behavior: 'smooth' });
+    }
+  }
+}

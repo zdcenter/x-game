@@ -26,8 +26,11 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
               </span>
             </a>
             
+            <a routerLink="/docs" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📖 <ng-container i18n="@@docs.title">docs.title</ng-container>
+            </a>
             <a routerLink="/blog" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
-              📖 Blog
+              📝 Blog
             </a>
           </div>
 
