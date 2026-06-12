@@ -350,7 +350,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sokoban',

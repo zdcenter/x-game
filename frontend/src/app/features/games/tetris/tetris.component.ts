@@ -76,7 +76,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'tetris',

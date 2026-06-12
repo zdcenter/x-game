@@ -73,7 +73,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   override ngOnInit(): void {

@@ -341,7 +341,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   override ngOnInit() {

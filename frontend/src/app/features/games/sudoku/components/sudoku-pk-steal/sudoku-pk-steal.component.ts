@@ -76,7 +76,7 @@ export class SudokuPkStealComponent {
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     // Handle freeze countdown
     effect(() => {

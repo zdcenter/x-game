@@ -108,7 +108,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   override ngOnInit() {

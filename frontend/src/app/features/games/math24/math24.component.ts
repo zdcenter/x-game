@@ -101,7 +101,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   override ngOnInit() {

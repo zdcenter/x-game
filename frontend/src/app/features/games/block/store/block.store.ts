@@ -106,7 +106,7 @@ export class BlockStore {
           }, delay);
         }
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {

@@ -155,7 +155,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'minesweeper',

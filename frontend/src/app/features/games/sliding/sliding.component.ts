@@ -125,7 +125,7 @@ export class SlidingComponent extends BaseGameComponent {
         this.finishedAt.set(null);
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       const status = this.store.status();

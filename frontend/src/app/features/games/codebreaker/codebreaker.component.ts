@@ -105,7 +105,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       // Auto-save logic

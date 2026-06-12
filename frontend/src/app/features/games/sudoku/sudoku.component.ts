@@ -79,7 +79,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
 
     // Room lifecycle: cross-game join, reconnect, room dismissed handling
     this.roomLifecycle = setupRoomLifecycle({

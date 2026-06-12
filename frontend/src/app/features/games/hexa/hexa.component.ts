@@ -117,7 +117,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   override ngOnInit(): void {

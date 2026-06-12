@@ -71,6 +71,6 @@ export class SudokuPkSpeedComponent {
       } else {
         this.showOverlay.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 }
