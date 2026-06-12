@@ -1378,6 +1378,14 @@
         <source>admin.settings.multiplayer.desc</source>
         <target>开启或关闭全局的房间与联机系统。如果关闭，玩家只能在本地游玩纯单机模式。</target>
       </trans-unit>
+      <trans-unit id="game.diff_expert" datatype="html">
+        <source>Expert</source>
+        <target>宗师</target>
+      </trans-unit>
+      <trans-unit id="game.diff_master" datatype="html">
+        <source>Master</source>
+        <target>大师</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

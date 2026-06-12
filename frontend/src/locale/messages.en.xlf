@@ -1378,6 +1378,14 @@
         <source>admin.settings.multiplayer.desc</source>
         <target>Enable or disable the global multiplayer and room creation system. If disabled, players can only play offline single player modes.</target>
       </trans-unit>
+      <trans-unit id="game.diff_expert" datatype="html">
+        <source>Expert</source>
+        <target>Expert</target>
+      </trans-unit>
+      <trans-unit id="game.diff_master" datatype="html">
+        <source>Master</source>
+        <target>Master</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
