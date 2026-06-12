@@ -425,9 +425,14 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'blog.back_to_blog': 'Back to Blog',
     'blog.not_found_title': 'Post not found',
     'blog.not_found_desc': 'The article you are looking for does not exist or has been removed.',
-    'blog.cta_title': 'Ready to put your brain to the test?',
+    'blog.cta_title': 'Ready to Challenge Your Brain?',
     'blog.cta_btn': 'Play Free Educational Games',
 
+    // Cookie
+    'cookie.title': 'Cookie Settings',
+    'cookie.desc': 'We use cookies to enhance your gaming experience, analyze traffic, and serve personalized ads. By continuing to use our site, you consent to our use of cookies.',
+    'cookie.accept': 'Accept All',
+    
     // Docs
     'docs.title': 'Game Tutorials & Manuals',
     'docs.toc': 'On this page',
@@ -508,7 +513,7 @@ In no event shall Puzzle PK or its developers be liable for any direct, indirect
 We reserve the right to modify, suspend, or discontinue any game or feature at any time without prior notice.
     `,
     'legal.about.title': 'About Us / Contact',
-    'legal.about.content': 'Welcome to Puzzle PK! We are dedicated to providing high-quality logic and brain-training games for everyone. If you have any questions, feedback, or business inquiries, please contact us at: support@example.com.',
+    'legal.about.content': 'Welcome to Puzzle PK! We are dedicated to providing high-quality logic and brain-training games for everyone. If you have any questions, feedback, or business inquiries, please contact us at: 36663840@qq.com.',
   },
   zh: {
     // SEO
@@ -960,7 +965,7 @@ Puzzle PK 是一个免费的在线游戏平台，主要提供单机益智游戏�
 我们保留在任何时候无需事先通知的情况下，修改、暂停或永久终止任何特定游戏模式或全局服务的权利。
     `,
     'legal.about.title': '关于我们 / 联系方式 (About Us / Contact)',
-    'legal.about.content': '欢迎来到 Puzzle PK！我们致力于为大家提供高质量的逻辑推理和脑力训练小游戏。如果您有任何问题、建议或商务合作需求，请联系我们：support@example.com。',
+    'legal.about.content': '欢迎来到 Puzzle PK！我们致力于为大家提供高质量的逻辑推理和脑力训练小游戏。如果您有任何问题、建议或商务合作需求，请联系我们：36663840@qq.com。',
 
     'game.change_settings': '切换游戏',
     'game.spectating': '观战中...',
@@ -1023,5 +1028,10 @@ Puzzle PK 是一个免费的在线游戏平台，主要提供单机益智游戏�
     'blog.not_found_desc': '您要寻找的文章不存在或已被删除。',
     'blog.cta_title': '准备好挑战您的大脑了吗？',
     'blog.cta_btn': '立即试玩免费益智游戏',
+
+    // Cookie
+    'cookie.title': 'Cookie 设置',
+    'cookie.desc': '我们使用 Cookie 来提升您的游戏体验、分析网站流量并提供个性化广告。继续使用本网站即表示您同意我们使用 Cookie。',
+    'cookie.accept': '全部接受',
   },
 };

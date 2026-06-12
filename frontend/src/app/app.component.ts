@@ -5,17 +5,19 @@ import { SeoService } from './core/services/seo.service';
 import { SettingsService } from './core/services/settings.service';
 import { MaintenanceComponent } from './shared/components/maintenance/maintenance.component';
 import { AuthStore } from './core/auth/auth.store';
+import { CookieConsentComponent } from './shared/components/cookie-consent/cookie-consent.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent],
+  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent, CookieConsentComponent],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
       <app-maintenance></app-maintenance>
     } @else {
       <router-outlet></router-outlet>
       <app-ui-overlay></app-ui-overlay>
+      <app-cookie-consent></app-cookie-consent>
     }
   `
 })
