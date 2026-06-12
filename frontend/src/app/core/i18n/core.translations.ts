@@ -427,6 +427,14 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'blog.not_found_desc': 'The article you are looking for does not exist or has been removed.',
     'blog.cta_title': 'Ready to put your brain to the test?',
     'blog.cta_btn': 'Play Free Educational Games',
+
+    // Legal
+    'legal.privacy.title': 'Privacy Policy',
+    'legal.privacy.content': 'We respect your privacy. This website does not collect or misuse your personal data. We only store minimal data necessary for game progression and user accounts (e.g., username, password hash). We do not sell your data to third parties. By using our service, you consent to the storage of essential game data.',
+    'legal.terms.title': 'Terms of Service',
+    'legal.terms.content': 'By accessing this website, you agree to abide by these terms. This is a free gaming platform. Do not abuse the system, use cheats, or disrupt other players. We reserve the right to ban users who violate fair play rules. The service is provided "as is" without warranties.',
+    'legal.about.title': 'About Us / Contact',
+    'legal.about.content': 'Welcome to Puzzle PK! We are dedicated to providing high-quality logic and brain-training games for everyone. If you have any questions, feedback, or business inquiries, please contact us at: support@example.com.',
   },
   zh: {
     // SEO
@@ -797,6 +805,14 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
     'game.prev_level': '上一关',
     'game.undo': '撤销',
     'game.reset': '重置',
+
+    // Legal
+    'legal.privacy.title': '隐私政策 (Privacy Policy)',
+    'legal.privacy.content': '我们非常尊重您的隐私。本网站不会滥用您的任何个人数据。我们仅存储游戏进度和用户账号所必需的最少数据（例如：用户名、密码哈希）。我们绝不会向第三方出售您的数据。使用我们的服务即表示您同意我们存储必要的游戏数据。',
+    'legal.terms.title': '服务条款 (Terms of Service)',
+    'legal.terms.content': '访问本网站即表示您同意遵守以下条款。这是一个免费的游戏平台。请勿滥用系统、使用作弊手段或干扰其他玩家。我们保留封禁违反公平游戏规则用户的权利。本服务按“原样”提供，不作任何保证。',
+    'legal.about.title': '关于我们 / 联系方式 (About Us / Contact)',
+    'legal.about.content': '欢迎来到 Puzzle PK！我们致力于为大家提供高质量的逻辑推理和脑力训练小游戏。如果您有任何问题、建议或商务合作需求，请联系我们：support@example.com。',
 
     'game.change_settings': '切换游戏',
     'game.spectating': '观战中...',

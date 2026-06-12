@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent)
       },
       {
+        path: 'legal/:type',
+        loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
+        data: { seo: { title: 'Legal & Privacy Policy', desc: 'Read our Privacy Policy, Terms of Service, and About Us information.' } }
+      },
+      {
         path: 'games/minesweeper',
         loadComponent: () => import('./features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent),
         data: { seo: { titleKey: 'seo.minesweeper.title', descKey: 'seo.minesweeper.desc', keywordsKey: 'seo.minesweeper.keywords' } }
