@@ -470,7 +470,43 @@ You have the right to request the deletion of your account and associated gamepl
 We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Effective Date."
     `,
     'legal.terms.title': 'Terms of Service',
-    'legal.terms.content': 'By accessing this website, you agree to abide by these terms. This is a free gaming platform. Do not abuse the system, use cheats, or disrupt other players. We reserve the right to ban users who violate fair play rules. The service is provided "as is" without warranties.',
+    'legal.terms.content': `
+# Terms of Service
+
+**Effective Date: June 2026**
+
+Welcome to Puzzle PK! By accessing or using our website, games, and related services, you agree to comply with and be bound by the following Terms of Service. If you do not agree to these terms, please do not use our platform.
+
+## 1. Acceptance of Terms
+This is a free online gaming platform focusing on classic puzzle games with competitive multiplayer modes (PK mode). By registering an account or playing as a guest, you agree to these rules.
+
+## 2. User Conduct & Fair Play
+We are committed to providing a fair and enjoyable environment for all players. You agree **NOT** to:
+* Use third-party software, bots, scripts, or any form of automated tools to gain an unfair advantage (cheating) in single-player leaderboards or multiplayer matches.
+* Exploit bugs, glitches, or vulnerabilities in the game mechanics.
+* Harass, threaten, or use abusive language towards other players in game lobbies or chat.
+* Create multiple accounts to manipulate rankings or matchmaking.
+
+*Violating any of these rules may result in the immediate and permanent suspension of your account and erasure of your scores.*
+
+## 3. Account Responsibility
+You are responsible for maintaining the confidentiality of your password. Puzzle PK is not liable for any loss or damage arising from your failure to protect your account credentials.
+
+## 4. Intellectual Property
+All game designs, graphics, code, and text on this website are the intellectual property of Puzzle PK. You may not copy, distribute, or reverse-engineer our platform without explicit permission. The rules and mechanics of traditional games (like Sudoku or Minesweeper) belong to the public domain.
+
+## 5. Third-Party Advertisements
+To keep the servers running and the games free, we display advertisements provided by third-party networks. You agree that Puzzle PK is not responsible for the content, accuracy, or safety of any external websites linked through these ads.
+
+## 6. Disclaimer of Warranties
+Our services are provided strictly on an "AS IS" and "AS AVAILABLE" basis. We do not guarantee uninterrupted access, error-free gameplay, or the permanent retention of your high scores and game data.
+
+## 7. Limitation of Liability
+In no event shall Puzzle PK or its developers be liable for any direct, indirect, incidental, or consequential damages resulting from your use of the website or games.
+
+## 8. Modifications to the Service
+We reserve the right to modify, suspend, or discontinue any game or feature at any time without prior notice.
+    `,
     'legal.about.title': 'About Us / Contact',
     'legal.about.content': 'Welcome to Puzzle PK! We are dedicated to providing high-quality logic and brain-training games for everyone. If you have any questions, feedback, or business inquiries, please contact us at: support@example.com.',
   },
@@ -886,7 +922,43 @@ We may update this Privacy Policy from time to time. Any changes will be posted 
 我们可能会不时更新本隐私政策。任何重大变更都将在本页面发布，并更新顶部的“生效日期”。
     `,
     'legal.terms.title': '服务条款 (Terms of Service)',
-    'legal.terms.content': '访问本网站即表示您同意遵守以下条款。这是一个免费的游戏平台。请勿滥用系统、使用作弊手段或干扰其他玩家。我们保留封禁违反公平游戏规则用户的权利。本服务按“原样”提供，不作任何保证。',
+    'legal.terms.content': `
+# 服务条款 (Terms of Service)
+
+**生效日期：2026年6月**
+
+欢迎来到 Puzzle PK（经典益智游戏对战平台）！在您访问或使用本网站、参与游戏及使用相关服务前，请务必仔细阅读本服务条款。使用我们的服务即表示您完全同意并自愿遵守以下规定。如果您不同意本条款的任何部分，请停止使用本平台。
+
+## 1. 服务的性质
+Puzzle PK 是一个免费的在线游戏平台，主要提供单机益智游戏及实时多人在线对战（PK模式）服务。无论您是注册用户还是游客，均受本条款约束。
+
+## 2. 玩家行为规范与公平游戏
+我们致力于为所有玩家提供一个公平、友好的竞技环境。您同意**绝对不会**从事以下行为：
+* 使用任何第三方辅助软件、脚本、外挂、机器人或其他自动化工具，在单机排行榜或多人对战中获取不公平的优势（作弊）。
+* 恶意利用游戏机制中的 Bug、漏洞或系统缺陷。
+* 在游戏大厅、房间内对其他玩家进行辱骂、骚扰、威胁或发布违规言论。
+* 恶意注册大量小号以操控排行榜或干扰匹配系统。
+
+*如果系统检测或玩家举报证实您违反了上述“公平游戏”规则，我们有权立即永久封禁您的账号，并清空您的所有分数与对战记录，且不另行通知。*
+
+## 3. 账号安全责任
+您有责任妥善保管您的账号密码。对于因您个人原因导致账号被盗或分数被篡改，Puzzle PK 概不负责。
+
+## 4. 知识产权
+本网站的整体设计、UI 界面、前后端代码及相关美术资源均归 Puzzle PK 所有。未经授权，任何人不得复制、分发或逆向工程我们的平台代码。传统的益智游戏玩法（如数独、扫雷）本身的规则属于公共领域。
+
+## 5. 广告与第三方链接
+为了维持游戏服务器的免费开放，本平台会展示由第三方广告联盟（如 Google AdSense 或 Monetag）提供的广告。您理解并同意，Puzzle PK 不对这些外部广告内容的真实性、安全性以及您点击跳转后的行为承担任何责任。
+
+## 6. 免责声明
+本平台提供的所有游戏及服务均按“原样（AS IS）”和“现有（AS AVAILABLE）”基础提供。我们不保证服务绝对不会中断、不存在错误，也不保证您的游戏存档、最高分等数据会被永久且无损地保留。
+
+## 7. 责任限制
+在法律允许的最大范围内，对于因使用本平台或因平台故障、数据丢失而造成的任何直接、间接或附带损失，Puzzle PK 及其开发者不承担任何赔偿责任。
+
+## 8. 服务的变更与终止
+我们保留在任何时候无需事先通知的情况下，修改、暂停或永久终止任何特定游戏模式或全局服务的权利。
+    `,
     'legal.about.title': '关于我们 / 联系方式 (About Us / Contact)',
     'legal.about.content': '欢迎来到 Puzzle PK！我们致力于为大家提供高质量的逻辑推理和脑力训练小游戏。如果您有任何问题、建议或商务合作需求，请联系我们：support@example.com。',
 
