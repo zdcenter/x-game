@@ -1,4 +1,4 @@
-<div class="h-full w-full flex flex-col relative text-[var(--color-text-main)] overflow-hidden touch-none select-none">
+<div class="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] w-full flex-col relative text-[var(--color-text-main)] overflow-hidden touch-none select-none">
 
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="'sliding'" [isOpen]="showRules()"
@@ -138,14 +138,12 @@
           </div>
 
           <!-- The Grid Area -->
-          <div class="flex-1 flex flex-col items-center justify-start min-h-0 overflow-hidden py-2 px-2 relative w-full">
+          <div class="relative flex-grow flex items-center justify-center min-h-0 w-full shrink py-2 px-2">
 
-            <!-- Width-constrained container to fix Safari flex bug -->
-            <div class="relative w-full max-w-[min(100%,calc(100vh-320px))] lg:max-w-[min(800px,calc(100vh-320px))] mx-auto mt-2 sm:mt-4 lg:mt-8">
-              
-              <!-- Aspect Square Board -->
-              <div
-                class="w-full aspect-square relative bg-[var(--color-bg-card)] rounded-xl lg:rounded-3xl p-2 lg:p-4 shadow-2xl border border-[var(--color-border-card)] flex-shrink-0 touch-none select-none"
+            <!-- Aspect Square Board -->
+            <div
+              class="relative flex flex-col items-center justify-center w-full aspect-square mx-auto bg-[var(--color-bg-card)] rounded-xl lg:rounded-3xl p-2 lg:p-4 shadow-2xl border border-[var(--color-border-card)] flex-shrink-0 touch-none select-none"
+              [style.maxWidth]="'min(100%, 800px, calc(100dvh - 440px))'"
                 (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
 
 
@@ -170,8 +168,6 @@
                 }
               </div>
 
-            </div>
-            <!-- End Width-constrained container -->
             </div>
 
           </div>
