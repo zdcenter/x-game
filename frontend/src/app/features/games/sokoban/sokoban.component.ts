@@ -50,7 +50,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         iconGradientClass="from-amber-400 to-orange-500"
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-orange-500/20"
-        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30"
+        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
         (back)="onLeaveClick()"
         (rules)="showRules.set(true)"
       >

@@ -21,11 +21,12 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -47,12 +48,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   currentRoomMode = signal<string>('single');
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('intermediate');
-  isDifficultyModalOpen = signal(false);
-  editingDifficultyFor = signal<'single' | 'room'>('single');
-  selectedDifficulty = signal<string>('intermediate');
-  customWidth = signal(9);
-  customHeight = signal(9);
-  customMines = signal(10);
   frozenRemaining = signal(0);
   
   get predefinedDifficulties() {
@@ -247,11 +242,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   handleCellReveal(cell: any) { this.store.revealCell(cell.x, cell.y); }
   handleCellFlag(cell: any) { this.store.toggleFlag(cell.x, cell.y); }
 
-  openDifficultySettings(forMode: 'single' | 'room') {
-    this.editingDifficultyFor.set(forMode);
-    this.isDifficultyModalOpen.set(true);
-  }
-
   openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
@@ -263,18 +253,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         host: this.store.host()
       });
     }
-  }
-
-  applyDifficultySettings() {
-    let diff = this.selectedDifficulty();
-    if (diff === 'custom') diff = `custom_${this.customWidth()}_${this.customHeight()}_${this.customMines()}`;
-    if (this.editingDifficultyFor() === 'single') this.changeSingleDifficulty(diff);
-    this.isDifficultyModalOpen.set(false);
-  }
-
-  updateCustomMines() {
-    const maxMines = this.customWidth() * this.customHeight() - 1;
-    if (this.customMines() > maxMines) this.customMines.set(maxMines);
   }
 
   changeSingleDifficulty(diff: string) {

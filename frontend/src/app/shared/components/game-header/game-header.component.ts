@@ -10,7 +10,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="relative p-2 sm:p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border-b border-[var(--color-border-card)] shadow-md"
+    <div class="relative p-2 sm:p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border-b border-[var(--color-border-card)] shadow-md rounded-t-2xl lg:rounded-t-3xl"
          [ngClass]="headerBgClass">
       <div class="flex items-center justify-between w-full">
         <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">

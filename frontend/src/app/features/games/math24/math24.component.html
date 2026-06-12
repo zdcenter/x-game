@@ -1,7 +1,7 @@
 <div class="h-[calc(100vh-64px)] w-full flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative overflow-hidden">
 
   <!-- Main Game Area (Left/Top side) -->
-  <div class="flex-1 flex flex-col min-w-0 relative h-full bg-[var(--color-bg-card)] rounded-none lg:rounded-2xl lg:m-2 lg:border lg:border-[var(--color-border-card)] shadow-xl overflow-hidden overscroll-none select-none">
+  <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden overscroll-none select-none">
 
     @if (view() === 'lobby') {
       <app-math24-lobby class="flex-grow flex flex-col min-h-0"
@@ -26,15 +26,15 @@
         (cancelReady)="store.cancelReady()">
       </app-game-waiting-room>
     } @else {
-      <!-- PLAY VIEW -->
-      <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
+      <div class="flex-1 flex flex-col relative w-full h-full bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
+        <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
         <app-game-header 
           i18n-title="@@lobby.math24" title="lobby.math24"
           i18n-subtitle="@@game.single_mode" subtitle="game.single_mode"
           iconGradientClass="from-blue-500 to-indigo-600"
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
-          headerBgClass="bg-transparent"
+          headerBgClass="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
           (back)="view.set('lobby')"
           (rules)="showRules.set(true)">
           <img game-icon src="/assets/games/icons/math24.svg" alt="Math24" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
@@ -57,7 +57,7 @@
           iconGradientClass="from-blue-500 to-indigo-600"
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
-          headerBgClass="bg-transparent"
+          headerBgClass="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
           (back)="returnToLobby()"
           (rules)="showRules.set(true)">
           <img game-icon src="/assets/games/icons/math24.svg" alt="Math24" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
@@ -87,8 +87,7 @@
             [showDismiss]="store.currentMode() !== 'single' && store.host() === playerId"
             (leave)="view.set('lobby')"
             (nextLevel)="playNextLevel()"
-            (restart)="playAgain()"
-            (dismiss)="store.dismissRoom()">
+            (restart)="store.currentMode() === 'single' ? playNextLevel() : store.restartGame()">
           </app-game-result-overlay>
         }
 
@@ -124,6 +123,7 @@
         @if (store.gameStatus() === 'starting') {
           <app-game-starting-overlay [countdown]="startingCountdown()"></app-game-starting-overlay>
         }
+      </div>
       </div>
     }
   </div>

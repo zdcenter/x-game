@@ -15,6 +15,7 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 
 @Component({
   selector: 'app-lightsout',
@@ -27,7 +28,8 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     GameResultOverlayComponent,
-    GameRulesModalComponent
+    GameRulesModalComponent,
+    HintButtonComponent
   ],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html'
@@ -44,6 +46,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   showRules = signal(false);
   showOverlay = signal(false);
+  hintCell = signal<{r: number, c: number} | null>(null);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -184,5 +187,24 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     return [
       { label: 'MOVES', value: this.store.moves() }
     ];
+  }
+
+  onCellClick(r: number, c: number) {
+    this.hintCell.set(null);
+    this.store.toggle(r, c);
+  }
+
+  applyHint() {
+    if (this.store.currentRoomMode() !== 'single' || this.store.status() !== 'playing') return;
+    const sol = this.store.localSolution();
+    const size = this.store.size();
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (sol[r] && sol[r][c]) {
+          this.hintCell.set({ r, c });
+          return;
+        }
+      }
+    }
   }
 }

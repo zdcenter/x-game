@@ -18,6 +18,8 @@
     --color-overlay: rgba(0, 0, 0, 0.7);
     --color-tile-bg: #1e293b; /* slate-800 */
     --color-tile-border: #334155; /* slate-700 */
+    --color-tile-shadow: rgba(0, 0, 0, 0.6);
+    --color-tile-highlight: rgba(255, 255, 255, 0.1);
     --color-hexa-piece-light: #fbbf24; /* amber-400 */
     --color-hexa-piece-dark: #d97706; /* amber-600 */
     --color-hexa-empty: #1e293b; /* slate-800 */
@@ -38,6 +40,8 @@
     --color-overlay: rgba(0, 0, 0, 0.7);
     --color-tile-bg: #1e293b;
     --color-tile-border: #334155;
+    --color-tile-shadow: rgba(0, 0, 0, 0.6);
+    --color-tile-highlight: rgba(255, 255, 255, 0.1);
     --color-hexa-piece-light: #fbbf24; /* amber-400 */
     --color-hexa-piece-dark: #d97706; /* amber-600 */
     --color-hexa-empty: #1e293b; /* slate-800 */
@@ -58,6 +62,8 @@
     --color-overlay: rgba(255, 255, 255, 0.7);
     --color-tile-bg: #f1f5f9; /* slate-100 */
     --color-tile-border: #cbd5e1; /* slate-300 */
+    --color-tile-shadow: rgba(0, 0, 0, 0.15);
+    --color-tile-highlight: rgba(255, 255, 255, 0.6);
     --color-hexa-piece-light: #f59e0b; /* amber-500 */
     --color-hexa-piece-dark: #b45309; /* amber-700 */
     --color-hexa-empty: #e2e8f0; /* slate-200 */

@@ -43,7 +43,7 @@ import { AudioService } from '../../../core/services/audio.service';
           iconGradientClass="from-blue-500 to-cyan-500"
           titleGradientClass="from-blue-400 to-cyan-400"
           shadowClass="shadow-cyan-500/20"
-          headerBgClass="bg-gradient-to-r from-blue-900/20 to-cyan-900/20 rounded-t-2xl lg:rounded-t-3xl -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
+          headerBgClass="bg-gradient-to-r from-blue-900/20 to-cyan-900/20 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
           (back)="goBack()"
           (rules)="showRules.set(true)">
           

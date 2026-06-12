@@ -18,11 +18,13 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { SlidingTutorialComponent } from './components/sliding-tutorial/sliding-tutorial.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -40,6 +42,8 @@ export class SlidingComponent extends BaseGameComponent {
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
   showOverlay = signal<boolean>(false);
+  showTutorial = signal<boolean>(false);
+  hintTarget = signal<number | null>(null);
   Math = Math;
 
   get difficulties() {
@@ -240,6 +244,7 @@ export class SlidingComponent extends BaseGameComponent {
   onTileClick(tile: any) {
     if (this.store.status() !== GameStatus.Playing) return;
     
+    this.hintTarget.set(null);
     const board = this.store.myBoard();
     if (!board) return;
     const idx = tile.row * tile.size + tile.col;
@@ -275,6 +280,7 @@ export class SlidingComponent extends BaseGameComponent {
 
   handleSwipe(startX: number, startY: number, endX: number, endY: number) {
     if (this.store.status() !== GameStatus.Playing) return;
+    this.hintTarget.set(null);
     const board = this.store.myBoard();
     if (!board) return;
 
@@ -355,5 +361,19 @@ export class SlidingComponent extends BaseGameComponent {
       }
     }
     return stats;
+  }
+
+  applyHint() {
+    if (this.currentRoomMode() !== 'single' || this.store.status() !== GameStatus.Playing) return;
+    const board = this.store.myBoard();
+    if (!board) return;
+    const cells = board.cells;
+    const total = board.size * board.size;
+    for (let val = 1; val < total; val++) {
+      if (cells.indexOf(val) !== val - 1) {
+        this.hintTarget.set(val);
+        return;
+      }
+    }
   }
 }

@@ -45,6 +45,7 @@ export class SudokuStore {
 
   // Board state (Local)
   board = signal<SudokuCell[][]>([]);
+  originalPuzzleStr = signal<string>('');
   solution = signal<string>('');
   selectedCell = signal<{ r: number, c: number } | null>(null);
   pencilMode = signal<boolean>(false);
@@ -218,6 +219,7 @@ export class SudokuStore {
     if (savedTime) this.timeSpent.set(savedTime);
     else this.timeSpent.set(0);
 
+    this.originalPuzzleStr.set(puzzleStr);
     this.solution.set(solutionStr);
     this.isFinished.set(false);
     this.history = [];
@@ -421,16 +423,24 @@ export class SudokuStore {
     this.audio.playSudoku('clear');
     this.saveHistory();
 
+    const orig = this.originalPuzzleStr();
     const b = this.board();
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (!b[r][c].fixed) {
-          b[r][c].val = 0;
-          b[r][c].notes.clear();
-        }
+    const newBoard = b.map((row, r) => row.map((c, col) => {
+      let isOrigFixed = false;
+      if (orig && orig.length === 81) {
+        const char = orig[r * 9 + col];
+        isOrigFixed = (char !== '.' && char !== '0' && char !== '-');
+      } else {
+        isOrigFixed = c.fixed;
       }
-    }
-    this.board.set([...b]);
+      
+      if (!isOrigFixed) {
+        return { ...c, val: 0, fixed: false, notes: new Set<number>(), error: false };
+      }
+      return { ...c, error: false };
+    }));
+
+    this.board.set(newBoard);
     this.checkErrors();
     this.triggerSave();
   }

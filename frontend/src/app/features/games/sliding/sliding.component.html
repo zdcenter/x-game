@@ -4,6 +4,11 @@
   <app-game-rules-modal [gameId]="'sliding'" [isOpen]="showRules()"
     (closed)="showRules.set(false)"></app-game-rules-modal>
 
+  <!-- Tutorial Modal -->
+  @if (showTutorial()) {
+    <app-sliding-tutorial (closed)="showTutorial.set(false)"></app-sliding-tutorial>
+  }
+
   <div
     class="flex-grow w-full flex flex-col lg:flex-row h-full overflow-hidden p-2 lg:p-4 lg:px-6 gap-4 lg:gap-6 transition-colors duration-300">
     <!-- LEFT: Game Arena -->
@@ -17,7 +22,7 @@
           [subtitle]="currentRoomMode() === 'same_pk_speed' ? t('sliding.mode.same_pk_speed')() : t('sliding.mode.single')()"
           iconGradientClass="from-purple-500 to-pink-500" titleGradientClass="from-purple-400 to-pink-400"
           shadowClass="shadow-pink-500/20"
-          headerBgClass="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-t-2xl lg:rounded-t-3xl -mx-4 lg:-mx-6 -mt-4 lg:-mt-6 px-4 lg:px-6 pb-4 mb-4 lg:mb-6"
+          headerBgClass="bg-gradient-to-r from-purple-900/20 to-pink-900/20 -mx-4 lg:-mx-6 -mt-4 lg:-mt-6 px-4 lg:px-6 pb-2 mb-2 lg:mb-3"
           (back)="goBack()" (rules)="showRules.set(true)">
 
           <img game-icon src="/assets/games/icons/sliding.svg" alt="Sliding" class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 drop-shadow-md" />
@@ -85,7 +90,7 @@
           } @else {
 
           <!-- Players / Opponents (Top) -->
-          <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
+          <div class="flex-none pt-1 pb-2 mb-1 border-b border-[var(--color-border-card)] shrink-0">
             <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === 'single'">
               
               <!-- Local Player (You) -->
@@ -121,10 +126,10 @@
           </div>
 
           <!-- The Grid Area -->
-          <div class="flex-1 flex flex-col items-center justify-start min-h-0 overflow-hidden py-4 relative">
+          <div class="flex-1 flex flex-col items-center justify-start min-h-0 overflow-hidden py-2 relative">
 
             <div
-              class="my-auto relative w-full max-w-[min(96vw,calc(100vh-360px))] sm:max-w-[min(85vw,calc(100vh-360px))] lg:max-w-[min(800px,calc(100vh-400px))] mx-auto aspect-square bg-[var(--color-bg-card)] rounded-xl lg:rounded-3xl p-2 lg:p-4 shadow-2xl border border-[var(--color-border-card)] flex-shrink-0 touch-none select-none"
+              class="my-auto relative w-full max-w-[min(96vw,calc(100vh-450px))] sm:max-w-[min(85vw,calc(100vh-450px))] lg:max-w-[min(800px,calc(100vh-450px))] mx-auto aspect-square bg-[var(--color-bg-card)] rounded-xl lg:rounded-3xl p-2 lg:p-4 shadow-2xl border border-[var(--color-border-card)] flex-shrink-0 touch-none select-none"
               (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
 
 
@@ -138,7 +143,8 @@
                   <button (click)="onTileClick(tile)" [disabled]="store.status() !== 'playing'"
                     class="w-full h-full rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl md:text-4xl transition-all"
                     [ngClass]="{
-                        'bg-[var(--color-tile-bg)] border-2 border-b-[6px] border-r-[4px] border-[var(--color-tile-border)] text-[var(--color-text-main)] shadow-[0_4px_10px_var(--color-cell-shadow)] active:translate-y-1 active:translate-x-[2px] active:border-b-2 active:border-r-2': true,
+                        'bg-[var(--color-tile-bg)] border-2 border-b-[6px] border-r-[4px] border-[var(--color-tile-border)] text-[var(--color-text-main)] shadow-[0_4px_10px_var(--color-cell-shadow)] active:translate-y-1 active:translate-x-[2px] active:border-b-2 active:border-r-2': hintTarget() !== tile.val,
+                        'bg-orange-500 border-2 border-b-[6px] border-r-[4px] border-orange-700 text-white shadow-[0_4px_20px_rgba(249,115,22,0.6)] animate-pulse ring-4 ring-orange-500 active:translate-y-1 active:translate-x-[2px] active:border-b-2 active:border-r-2': hintTarget() === tile.val,
                         'hover:brightness-110 cursor-pointer': store.status() === 'playing',
                         'cursor-default opacity-90': store.status() !== 'playing'
                       }">
@@ -151,6 +157,19 @@
             </div>
 
           </div>
+          
+          <!-- Single Player Actions -->
+          @if (currentRoomMode() === 'single') {
+            <div class="flex-none flex justify-center items-center gap-4 py-2 sm:py-4 w-full relative z-10">
+              <button (click)="showTutorial.set(true)" class="flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-lg active:scale-95 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 hover:border-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+                通关教程
+              </button>
+              <app-hint-button layout="math24" (hintApplied)="applyHint()"></app-hint-button>
+            </div>
+          }
           
           @if (store.status() === 'starting') {
             <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>

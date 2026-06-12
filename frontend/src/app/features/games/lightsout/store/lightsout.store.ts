@@ -12,6 +12,7 @@ export class LightsoutStore {
   // Local State for Single Player Mode
   readonly localBoard = signal<boolean[][]>([]);
   readonly localMoves = signal<number>(0);
+  readonly localSolution = signal<boolean[][]>([]);
   readonly localDifficulty = signal<string>('medium');
   readonly currentRoomMode = signal<string>('single');
   readonly roomId = signal<string>('');
@@ -197,6 +198,14 @@ export class LightsoutStore {
     if (r < size - 1) board[r + 1][c] = !board[r + 1][c];
     if (c > 0) board[r][c - 1] = !board[r][c - 1];
     if (c < size - 1) board[r][c + 1] = !board[r][c + 1];
+
+    if (this.currentRoomMode() === 'single') {
+      const sol = this.localSolution();
+      if (sol.length === size) {
+        sol[r][c] = !sol[r][c];
+        this.localSolution.set([...sol]);
+      }
+    }
   }
 
   private checkWin(board: boolean[][]): boolean {
@@ -213,6 +222,9 @@ export class LightsoutStore {
     // Start with all lights OFF, then randomize, to ensure it's solvable to an all-OFF state
     const board: boolean[][] = Array(s).fill(null).map(() => Array(s).fill(false));
     
+    // Reset solution matrix to all false before applying toggles
+    this.localSolution.set(Array(s).fill(null).map(() => Array(s).fill(false)));
+
     // Reverse random clicks
     const clicks = s * s * 2;
     for (let i = 0; i < clicks; i++) {

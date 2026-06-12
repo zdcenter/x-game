@@ -24,8 +24,7 @@ func SeedAds() {
 			IsEnabled:       true,
 			DailyTotalLimit: 5,
 			Networks: []domain.AdNetwork{
-				{Provider: "adsterra_monetag", SlotID: "11136220", Priority: 1, IsEnabled: true, LimitPerUser: -1},
-				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/5224354917", Priority: 1, IsEnabled: false, LimitPerUser: -1},
+				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/5224354917", Priority: 1, IsEnabled: true, LimitPerUser: -1},
 			},
 		},
 		{
@@ -45,8 +44,7 @@ func SeedAds() {
 			IsEnabled:       true,
 			DailyTotalLimit: 10,
 			Networks: []domain.AdNetwork{
-				{Provider: "adsterra_monetag", SlotID: "11136220", Priority: 1, IsEnabled: true, LimitPerUser: -1},
-				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/1033173712", Priority: 1, IsEnabled: false, LimitPerUser: -1},
+				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/1033173712", Priority: 1, IsEnabled: true, LimitPerUser: -1},
 			},
 		},
 	}
