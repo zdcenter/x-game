@@ -52,7 +52,7 @@ export class LightsoutStore {
   readonly size = computed<number>(() => {
     if (this.currentRoomMode() === 'single') {
       const diff = this.localDifficulty();
-      return diff === 'easy' ? 4 : diff === 'hard' ? 6 : 5;
+      return diff === 'easy' ? 4 : diff === 'hard' ? 6 : diff === 'expert' ? 7 : diff === 'master' ? 8 : 5;
     }
     return this.rawState()?.size || 5;
   });
@@ -218,7 +218,7 @@ export class LightsoutStore {
   }
 
   private initSinglePlayerBoard(difficulty: string) {
-    const s = difficulty === 'easy' ? 4 : difficulty === 'hard' ? 6 : 5;
+    const s = difficulty === 'easy' ? 4 : difficulty === 'hard' ? 6 : difficulty === 'expert' ? 7 : difficulty === 'master' ? 8 : 5;
     // Start with all lights OFF, then randomize, to ensure it's solvable to an all-OFF state
     const board: boolean[][] = Array(s).fill(null).map(() => Array(s).fill(false));
     

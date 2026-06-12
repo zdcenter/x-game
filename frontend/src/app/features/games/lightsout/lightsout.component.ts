@@ -59,7 +59,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getDifficultyName() {
-    const diff = this.store.currentRoomMode() === 'single' ? this.store.localDifficulty() : this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : 'medium';
+    const diff = this.store.currentRoomMode() === 'single' ? this.store.localDifficulty() : this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : this.store.size() === 7 ? 'expert' : this.store.size() === 8 ? 'master' : 'medium';
     const key = this.gameRegistry.getDifficultyLabel('lightsout', diff);
     return key ? this.i18n.t(key)() : diff;
   }
@@ -135,7 +135,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         id: this.store.roomId(),
         game: 'lightsout',
         mode: this.store.currentRoomMode(),
-        difficulty: this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : 'medium',
+        difficulty: this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : this.store.size() === 7 ? 'expert' : this.store.size() === 8 ? 'master' : 'medium',
         host: this.store.hostId()
       });
     }

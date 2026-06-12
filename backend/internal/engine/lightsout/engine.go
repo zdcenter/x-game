@@ -50,6 +50,10 @@ func (e *LightsoutEngine) InitGame(options interface{}) error {
 		e.Size = 4
 	case "hard":
 		e.Size = 6
+	case "expert":
+		e.Size = 7
+	case "master":
+		e.Size = 8
 	default:
 		e.Size = 5
 	}

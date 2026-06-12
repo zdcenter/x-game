@@ -178,7 +178,9 @@ export const GAME_DEFINITIONS: GameConfig[] = [
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '4x4 Board' },
       { id: 'medium', labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '5x5 Board' },
-      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '6x6 Board' }
+      { id: 'hard', labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '6x6 Board' },
+      { id: 'expert', labelKey: 'game.diff_expert', descKey: 'game.diff_expert', desc: '7x7 Board' },
+      { id: 'master', labelKey: 'game.diff_master', descKey: 'game.diff_master', desc: '8x8 Board' }
     ],
     recommendations: ['minesweeper', 'sudoku']
   },
