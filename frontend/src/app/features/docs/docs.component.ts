@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameConfig, getLocalizedField } from '../../core/services/game.service';
 import { marked } from 'marked';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 
 interface TocItem {
   id: string;
@@ -15,7 +16,7 @@ interface TocItem {
 @Component({
   selector: 'app-docs',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FooterComponent],
   template: `
     <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
       
@@ -121,6 +122,10 @@ interface TocItem {
             </aside>
           }
 
+        </div>
+        
+        <div class="px-4 sm:px-8 max-w-4xl mx-auto">
+          <app-footer></app-footer>
         </div>
       </main>
 

@@ -16,11 +16,12 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
 import { AdsenseComponent } from '../../shared/components/adsense/adsense.component';
 import { ShareService } from '../../core/services/share.service';
 import { AdService } from '../../core/services/ad.service';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, FooterComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
@@ -41,14 +42,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
-  backendVersion = signal('loading...');
 
   ngOnInit() {
-    this.http.get<{version: string}>(`${appEnvironment.apiUrl}/version`).subscribe({
-      next: (res) => this.backendVersion.set(res.version),
-      error: () => this.backendVersion.set('unknown')
-    });
-
     // Fetch active games
     this.gameService.getGames().subscribe(games => {
       this.games.set(games);

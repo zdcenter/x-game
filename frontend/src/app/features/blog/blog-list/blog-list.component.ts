@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { BlogService, BlogPostMeta } from '../../../core/services/blog.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
 @Component({
   selector: 'app-blog-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FooterComponent],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-4xl mx-auto">
@@ -54,6 +55,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
               <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           }
+        </div>
+        
+        <div class="mt-16 w-full">
+          <app-footer></app-footer>
         </div>
       </div>
     </div>

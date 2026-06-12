@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { FooterComponent } from '../../shared/components/footer/footer.component';
 
 @Component({
   selector: 'app-legal',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FooterComponent],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xl rounded-2xl overflow-hidden">
@@ -31,6 +32,10 @@ import { I18nService } from '../../core/i18n/i18n.service';
           {{ content() }}
         </div>
 
+      </div>
+
+      <div class="px-4 sm:px-8 max-w-4xl mx-auto w-full mt-12">
+        <app-footer></app-footer>
       </div>
     </div>
   `
