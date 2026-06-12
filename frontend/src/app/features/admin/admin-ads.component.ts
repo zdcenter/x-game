@@ -23,6 +23,39 @@ import { AdPlacement, AdNetwork } from '../../core/models/ad.model';
         <div class="text-center py-12 opacity-50 animate-pulse">Loading Ad Config...</div>
       } @else {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Global Settings Card -->
+          <div class="lg:col-span-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6">
+            <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+               <div>
+                  <h3 class="text-lg font-bold text-[var(--color-accent-from)]">全局广告策略设置 (Global Strategy)</h3>
+                  <p class="text-sm opacity-70 mt-1">调控全站的广告展示频率与触发保护机制</p>
+               </div>
+               <button (click)="saveGlobalSettings()" class="px-5 py-2 bg-[var(--color-accent-from)] text-white rounded-xl font-bold hover:brightness-110 shadow-lg shrink-0">
+                 保存策略 (Save Strategy)
+               </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+               <div class="bg-[var(--color-bg-main)] p-4 rounded-xl border border-[var(--color-border-card)]">
+                  <label class="block text-sm font-bold mb-1">局间插屏频率 (次/局)</label>
+                  <p class="text-xs opacity-60 mb-3">每玩几局游戏才弹一次插屏广告</p>
+                  <input type="number" [(ngModel)]="globalSettingsForm.ad_interstitial_frequency" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[var(--color-accent-from)] text-[var(--color-text-main)] font-mono">
+               </div>
+
+               <div class="bg-[var(--color-bg-main)] p-4 rounded-xl border border-[var(--color-border-card)]">
+                  <label class="block text-sm font-bold mb-1">极速死亡免打扰 (秒)</label>
+                  <p class="text-xs opacity-60 mb-3">存活时间低于该值的对局不计入插屏触发</p>
+                  <input type="number" [(ngModel)]="globalSettingsForm.ad_min_game_seconds" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[var(--color-accent-from)] text-[var(--color-text-main)] font-mono">
+               </div>
+
+               <div class="bg-[var(--color-bg-main)] p-4 rounded-xl border border-[var(--color-border-card)]">
+                  <label class="block text-sm font-bold mb-1">新用户免广告保护期 (小时)</label>
+                  <p class="text-xs opacity-60 mb-3">新用户在规定时间内不弹插屏广告</p>
+                  <input type="number" [(ngModel)]="globalSettingsForm.ad_new_user_exemption_hours" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[var(--color-accent-from)] text-[var(--color-text-main)] font-mono">
+               </div>
+            </div>
+          </div>
           
           <!-- Placements List -->
           <div class="lg:col-span-1 space-y-4">
@@ -220,12 +253,31 @@ export class AdminAdsComponent implements OnInit {
     is_enabled: true
   };
 
+  globalSettingsForm = {
+    ad_interstitial_frequency: '3',
+    ad_min_game_seconds: '30',
+    ad_new_user_exemption_hours: '24'
+  };
+
   ngOnInit() {
     this.fetchData();
   }
 
   fetchData() {
     this.isLoading.set(true);
+    
+    // Fetch global settings
+    this.adminService.getSettings().subscribe({
+      next: (res) => {
+        if (res) {
+          this.globalSettingsForm = {
+            ...this.globalSettingsForm,
+            ...res
+          };
+        }
+      }
+    });
+
     this.adminService.getAdPlacements().subscribe({
       next: (res) => {
         this.placements.set(res);
@@ -244,6 +296,15 @@ export class AdminAdsComponent implements OnInit {
 
   selectPlacement(p: AdPlacement) {
     this.selectedPlacement.set(p);
+  }
+
+  saveGlobalSettings() {
+    this.adminService.updateSettings(this.globalSettingsForm).subscribe({
+      next: () => {
+        this.toast.show(this.i18n.t('admin.settings.saved')() || 'Global strategy saved successfully', 'success');
+      },
+      error: () => this.toast.show('Failed to save settings', 'error')
+    });
   }
 
   savePlacement(p: AdPlacement) {

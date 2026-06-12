@@ -57,10 +57,16 @@ func SeedAds() {
 		}
 	}
 
-	// Insert interstitial trigger frequency as a system setting, since it's not a daily limit
-	// but a frequency counter (e.g. every 3 games).
-	interstitialFreq := domain.SystemSetting{Key: "ad_interstitial_frequency", Value: "3"}
-	DB.Where(domain.SystemSetting{Key: interstitialFreq.Key}).FirstOrCreate(&interstitialFreq)
+	// Insert interstitial trigger frequency and other global ad strategies
+	strategies := []domain.SystemSetting{
+		{Key: "ad_interstitial_frequency", Value: "3"},
+		{Key: "ad_min_game_seconds", Value: "30"},
+		{Key: "ad_new_user_exemption_hours", Value: "24"},
+	}
 
-	log.Println("Successfully seeded default Ad Placements")
+	for _, s := range strategies {
+		DB.Where(domain.SystemSetting{Key: s.Key}).FirstOrCreate(&s)
+	}
+
+	log.Println("Successfully seeded default Ad Placements and Strategies")
 }

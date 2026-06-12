@@ -20,6 +20,8 @@ export class AdService {
   private readonly LAST_AD_DATE_KEY = 'xgame_last_ad_date';
   private readonly DAILY_AD_COUNT_PREFIX = 'xgame_daily_ad_count_';
   private readonly GAMES_SINCE_LAST_AD_KEY = 'xgame_games_since_last_ad';
+  private readonly FIRST_VISIT_TIME_KEY = 'xgame_first_visit_time';
+  private readonly LAST_INTERSTITIAL_TRY_TIME_KEY = 'xgame_last_int_try_time';
 
   public placements = signal<AdPlacement[]>([]);
 
@@ -34,6 +36,11 @@ export class AdService {
       },
       error: (err) => console.error('Failed to load ad placements', err)
     });
+    
+    // Initialize first visit time for guest exemption
+    if (!localStorage.getItem(this.FIRST_VISIT_TIME_KEY)) {
+      localStorage.setItem(this.FIRST_VISIT_TIME_KEY, Date.now().toString());
+    }
   }
 
   getPlacement(id: string): AdPlacement | undefined {
@@ -246,7 +253,36 @@ export class AdService {
       return;
     }
 
-    const frequency = parseInt(this.settingsService.settings().ad_interstitial_frequency || '3', 10);
+    const now = Date.now();
+    const settings = this.settingsService.settings();
+
+    // Strategy 1: New User Exemption
+    const exemptionHours = parseInt(settings['ad_new_user_exemption_hours'] || '24', 10);
+    if (exemptionHours > 0) {
+      const startTime = parseInt(localStorage.getItem(this.FIRST_VISIT_TIME_KEY) || now.toString(), 10);
+      const hoursSinceStart = (now - startTime) / (1000 * 60 * 60);
+      if (hoursSinceStart < exemptionHours) {
+        console.log(`[AdService] Skipping interstitial due to new user exemption (${exemptionHours}h)`);
+        onComplete();
+        return;
+      }
+    }
+
+    // Strategy 2: Min Game Seconds Protection
+    const minSeconds = parseInt(settings['ad_min_game_seconds'] || '30', 10);
+    const lastTryTime = parseInt(localStorage.getItem(this.LAST_INTERSTITIAL_TRY_TIME_KEY) || '0', 10);
+    localStorage.setItem(this.LAST_INTERSTITIAL_TRY_TIME_KEY, now.toString());
+    
+    if (lastTryTime > 0 && minSeconds > 0) {
+      const secondsSinceLastTry = (now - lastTryTime) / 1000;
+      if (secondsSinceLastTry < minSeconds) {
+        console.log(`[AdService] Skipping interstitial increment due to fast death (${secondsSinceLastTry.toFixed(1)}s < ${minSeconds}s)`);
+        onComplete();
+        return;
+      }
+    }
+
+    const frequency = parseInt(settings['ad_interstitial_frequency'] || '3', 10);
     let gamesPlayed = parseInt(localStorage.getItem(this.GAMES_SINCE_LAST_AD_KEY) || '0', 10);
     gamesPlayed++;
     localStorage.setItem(this.GAMES_SINCE_LAST_AD_KEY, gamesPlayed.toString());
