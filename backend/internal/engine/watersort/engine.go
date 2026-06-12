@@ -122,14 +122,14 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 	}
 	e.difficulty = diff
 
-	numColors := 3
+	numColors := 5
 	switch diff {
 	case "easy":
-		numColors = 3
+		numColors = 5
 	case "medium":
-		numColors = 7
+		numColors = 9
 	case "hard":
-		numColors = 12
+		numColors = 14
 	}
 
 	if numColors > len(Colors) {
