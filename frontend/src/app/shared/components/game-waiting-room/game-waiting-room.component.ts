@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { ShareService } from '../../../core/services/share.service';
+import { getHref } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-waiting-room',
@@ -170,7 +171,7 @@ export class GameWaitingRoomComponent {
   showCopiedToast = signal(false);
 
   copyInviteLink() {
-    const url = new URL(window.location.href);
+    const url = new URL(getHref());
     url.searchParams.set('joinRoom', this.roomId);
     url.searchParams.set('mode', this.mode);
     url.searchParams.set('diff', this.difficulty);

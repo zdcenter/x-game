@@ -415,18 +415,8 @@ export class GameLobbyPanelComponent implements OnInit {
   otherOnlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId()));
 
   ngOnInit() {
-    // One-time initial fetch as fallback before WS connects.
-    // After this, all room updates come via WebSocket lobby_update push.
-    this.http.get<any[]>(`${environment.apiUrl}/rooms`).subscribe({
-      next: (rooms) => {
-        if (rooms) {
-          this.wsService.activeRooms.set(rooms);
-        }
-      },
-      error: () => {
-        // Silently fail — WS is the primary source
-      }
-    });
+    // Room updates come via WebSocket lobby_update push.
+    // No need to fetch via HTTP (which can block hydration if the endpoint hangs).
   }
 
   t(key: string): string {

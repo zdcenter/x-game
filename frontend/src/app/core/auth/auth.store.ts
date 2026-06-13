@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { storageGet, storageSet, isBrowser } from '../utils/browser.util';
 
 export type UserRole = 'user' | 'admin' | 'guest';
 export type UserStatus = 'active' | 'banned';
@@ -24,20 +25,20 @@ export class AuthStore {
   readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   constructor() {
-    const savedGuestId = localStorage.getItem('x_game_guest_id');
+    const savedGuestId = storageGet('x_game_guest_id');
     if (savedGuestId) {
       this.guestId = savedGuestId;
     } else {
       this.guestId = `Guest_${Math.floor(Math.random() * 10000)}`;
-      localStorage.setItem('x_game_guest_id', this.guestId);
+      storageSet('x_game_guest_id', this.guestId);
     }
     
     this.loadFromStorage();
   }
 
   private loadFromStorage() {
-    const savedToken = localStorage.getItem('x_game_token');
-    const savedUser = localStorage.getItem('x_game_user');
+    const savedToken = storageGet('x_game_token');
+    const savedUser = storageGet('x_game_user');
     
     if (savedToken && savedUser) {
       try {
@@ -50,15 +51,17 @@ export class AuthStore {
   }
 
   setCredentials(token: string, user: User) {
-    localStorage.setItem('x_game_token', token);
-    localStorage.setItem('x_game_user', JSON.stringify(user));
+    storageSet('x_game_token', token);
+    storageSet('x_game_user', JSON.stringify(user));
     this.token.set(token);
     this.currentUser.set(user);
   }
 
   logout() {
-    localStorage.removeItem('x_game_token');
-    localStorage.removeItem('x_game_user');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('x_game_token');
+      localStorage.removeItem('x_game_user');
+    }
     this.token.set(null);
     this.currentUser.set(null);
   }

@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { isBrowser } from '../utils/browser.util';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,7 @@ export class PwaService {
 
   constructor() {
     // Only run in browser
-    if (typeof window === 'undefined') return;
+    if (!isBrowser()) return;
 
     window.addEventListener('beforeinstallprompt', (e) => {
       // Prevent the mini-infobar from appearing on mobile

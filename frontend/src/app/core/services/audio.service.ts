@@ -10,6 +10,7 @@ import { playMath24Sound } from './audio/math24.sound';
 import { playBlockSound } from './audio/block.sound';
 import { playSudokuSound } from './audio/sudoku.sound';
 import { playPuzzleSound } from './audio/puzzle.sound';
+import { storageGet, storageSet, createAudioContext } from '../utils/browser.util';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,7 @@ export class AudioService {
   private masterGain: GainNode | null = null;
 
   constructor() {
-    const saved = localStorage.getItem('xgame_muted');
+    const saved = storageGet('xgame_muted');
     if (saved === 'true') {
       this.isMuted.set(true);
       this.volume = 0;
@@ -32,7 +33,7 @@ export class AudioService {
   toggleMute() {
     const newMuted = !this.isMuted();
     this.isMuted.set(newMuted);
-    localStorage.setItem('xgame_muted', String(newMuted));
+    storageSet('xgame_muted', String(newMuted));
     
     this.volume = newMuted ? 0 : 0.6;
     if (this.masterGain) {
@@ -46,7 +47,8 @@ export class AudioService {
   
   private initWebAudio() {
     if (!this.audioCtx) {
-      this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.audioCtx = createAudioContext();
+      if (!this.audioCtx) return;
       this.masterGain = this.audioCtx.createGain();
       this.masterGain.gain.value = this.volume;
       this.masterGain.connect(this.audioCtx.destination);

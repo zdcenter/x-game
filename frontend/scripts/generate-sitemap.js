@@ -5,21 +5,20 @@ const domain = 'https://www.puzzlepk.com';
 const langs = ['en', 'zh'];
 const defaultLang = 'en';
 
+// Auto-discover games from the filesystem
+const gamesDir = path.join(__dirname, '../src/app/features/games');
+const games = fs.existsSync(gamesDir) 
+  ? fs.readdirSync(gamesDir).filter(file => fs.statSync(path.join(gamesDir, file)).isDirectory())
+  : [];
+
 const paths = [
   'lobby',
   'login',
   'register',
   'profile',
   'blog',
-  'games/minesweeper',
-  'games/sudoku',
-  'games/sliding',
-  'games/hexa',
-  'games/tetris',
-  'games/gomoku',
-  'games/codebreaker',
-  'games/math24',
-  'games/drop2048'
+  ...games.map(g => `games/${g}`),
+  ...games.map(g => `docs/${g}`)
 ];
 
 let xml = `<?xml version="1.0" encoding="UTF-8"?>

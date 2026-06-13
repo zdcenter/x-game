@@ -14,11 +14,11 @@
         "locales": {
           "en": {
             "translation": "src/locale/messages.en.xlf",
-            "baseHref": "/en/"
+            "subPath": "en"
           },
           "zh": {
             "translation": "src/locale/messages.zh.xlf",
-            "baseHref": "/zh/"
+            "subPath": "zh"
           }
         }
       },
@@ -61,18 +61,19 @@
             "serviceWorker": "ngsw-config.json",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": ["qrcode"],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ],
-            "polyfills": [
-              "@angular/localize/init"
-            ]
+            "styles": ["src/styles.css"],
+            "polyfills": ["@angular/localize/init"],
+            "server": "src/main.server.ts",
+            "prerender": {
+              "discoverRoutes": true
+            }
           },
           "configurations": {
             "production": {
@@ -85,8 +86,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",

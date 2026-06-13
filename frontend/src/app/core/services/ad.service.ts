@@ -5,6 +5,7 @@ import { I18nService } from '../i18n/i18n.service';
 import { SettingsService } from './settings.service';
 import { AdPlacement, AdNetwork } from '../models/ad.model';
 import { environment } from '../../../environments/environment';
+import { isBrowser } from '../utils/browser.util';
 
 declare var adbreak: any;
 
@@ -38,7 +39,7 @@ export class AdService {
     });
     
     // Initialize first visit time for guest exemption
-    if (!localStorage.getItem(this.FIRST_VISIT_TIME_KEY)) {
+    if (isBrowser() && !localStorage.getItem(this.FIRST_VISIT_TIME_KEY)) {
       localStorage.setItem(this.FIRST_VISIT_TIME_KEY, Date.now().toString());
     }
   }

@@ -4,11 +4,12 @@
   "scripts": {
     "ng": "ng",
     "start": "node scripts/generate-version.js && ng serve --port 4201 --host 0.0.0.0",
-    "build": "node scripts/generate-version.js && ng build && node scripts/post-build.js",
+    "build": "node scripts/generate-version.js && node scripts/generate-sitemap.js && ng build && node scripts/post-build.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "zh": "ng serve --configuration=zh --port 4201 --host 0.0.0.0",
-    "en": "ng serve --configuration=en --port 4202 --host 0.0.0.0"
+    "en": "ng serve --configuration=en --port 4202 --host 0.0.0.0",
+    "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
   },
   "private": true,
   "dependencies": {
@@ -19,8 +20,11 @@
     "@angular/forms": "^21.2.0",
     "@angular/localize": "^21.2.14",
     "@angular/platform-browser": "^21.2.0",
+    "@angular/platform-server": "^21.2.0",
     "@angular/router": "^21.2.0",
     "@angular/service-worker": "^21.2.14",
+    "@angular/ssr": "^21.2.15",
+    "express": "^5.1.0",
     "marked": "^18.0.4",
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
@@ -31,7 +35,9 @@
     "@angular/cli": "^21.2.12",
     "@angular/compiler-cli": "^21.2.0",
     "@tailwindcss/postcss": "^4.1.12",
+    "@types/express": "^5.0.1",
     "@types/marked": "^5.0.2",
+    "@types/node": "^20.17.19",
     "@types/qrcode": "^1.5.6",
     "jsdom": "^28.0.0",
     "postcss": "^8.5.3",

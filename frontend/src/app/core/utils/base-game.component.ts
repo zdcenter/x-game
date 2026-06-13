@@ -4,6 +4,7 @@ import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
 import { GameService } from '../services/game.service';
 import { SettingsService } from '../services/settings.service';
+import { isBrowser } from './browser.util';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -47,26 +48,26 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Deep link check for PK invites
-    const q = this._baseRoute.snapshot.queryParams;
-    if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== 'single') {
-      // Use setTimeout to allow subclass to finish initialization (like fetching single player records)
-      setTimeout(() => {
-        this.handleJoinRoom({
-          roomId: q['joinRoom'],
-          mode: q['mode'],
-          difficulty: q['diff'],
-          host: q['host'] || ''
-        });
-        
-        // Clean up URL
-        this._baseRouter.navigate([], {
-          relativeTo: this._baseRoute,
-          queryParams: { joinRoom: null, mode: null, diff: null, host: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true
-        });
-      }, 200);
+    // Deep link check for PK invites (browser-only: uses setTimeout + router navigate)
+    if (isBrowser()) {
+      const q = this._baseRoute.snapshot.queryParams;
+      if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== 'single') {
+        setTimeout(() => {
+          this.handleJoinRoom({
+            roomId: q['joinRoom'],
+            mode: q['mode'],
+            difficulty: q['diff'],
+            host: q['host'] || ''
+          });
+          
+          this._baseRouter.navigate([], {
+            relativeTo: this._baseRoute,
+            queryParams: { joinRoom: null, mode: null, diff: null, host: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true
+          });
+        }, 200);
+      }
     }
   }
 

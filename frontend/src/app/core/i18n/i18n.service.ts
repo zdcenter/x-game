@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, Signal, Inject, LOCALE_ID } from '@angular/core';
 import { TRANSLATIONS, Lang } from './translations';
+import { getPathname, getSearch, replaceState, storageSet } from '../utils/browser.util';
 
 @Injectable({
   providedIn: 'root'
@@ -17,16 +18,19 @@ export class I18nService {
 
   setLang(lang: Lang) {
     if (this.currentLang() !== lang) {
-      localStorage.setItem('lang_preference', lang);
+      storageSet('lang_preference', lang);
       
       // Determine if we are running in a localized build (URL contains /zh/ or /en/ right after host)
-      const pathname = window.location.pathname;
+      const pathname = getPathname();
       const isLocalizedPath = /^\/(zh|en)(\/|$)/.test(pathname);
 
       if (isLocalizedPath) {
         // Hard redirect to the localized URL prefix
         const basePath = pathname.replace(/^\/(zh|en)/, '');
-        window.location.href = `/${lang}${basePath}${window.location.search}`;
+        replaceState(`/${lang}${basePath}${getSearch()}`);
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
       } else {
         // In local development without URL localization, just update the signal and reload
         // Wait, if we reload, the constructor will read LOCALE_ID ('zh' by default in dev)

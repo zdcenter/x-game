@@ -15,8 +15,10 @@ import { SettingsService } from '../../core/services/settings.service';
 import { AnnouncementService, Announcement } from '../../core/services/announcement.service';
 import { AdsenseComponent } from '../../shared/components/adsense/adsense.component';
 import { ShareService } from '../../core/services/share.service';
+import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
+import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 
 @Component({
   selector: 'app-lobby',
@@ -129,7 +131,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   shareGame(event: Event, gameId: string) {
     event.preventDefault();
     event.stopPropagation();
-    const url = `${window.location.origin}/games/${gameId}`;
+    const url = `${getOrigin()}/games/${gameId}`;
     const title = this.getGameTitle(gameId);
     const desc = this.getGameDesc(gameId);
     
@@ -140,4 +142,3 @@ export class LobbyComponent implements OnInit, OnDestroy {
     });
   }
 }
-

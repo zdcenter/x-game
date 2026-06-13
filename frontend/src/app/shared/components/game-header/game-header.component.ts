@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AudioService } from '../../../core/services/audio.service';
 import { ShareService } from '../../../core/services/share.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { getOrigin } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-header',
@@ -94,7 +95,7 @@ export class GameHeaderComponent implements OnInit {
 
   shareGame() {
     if (!this.gameId) return;
-    const url = `${window.location.origin}/games/${this.gameId}`;
+    const url = `${getOrigin()}/games/${this.gameId}`;
     const descKey = `lobby.${this.gameId}.desc`;
     const desc = this.i18n.t(descKey)() || '';
     

@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { CrossGameJoinService } from './cross-game-join.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
+import { createWebSocket, isBrowser } from '../utils/browser.util';
 
 export interface WSMessage {
   type: string;
@@ -110,7 +111,9 @@ export class WebSocketService {
     if (password) {
       url += `&password=${encodeURIComponent(password)}`;
     }
-    this.socket = new WebSocket(url);
+    if (!isBrowser()) return;
+    this.socket = createWebSocket(url);
+    if (!this.socket) return;
     this.currentGameId = gameId;
 
     this.socket.onopen = () => {
@@ -215,8 +218,11 @@ export class WebSocketService {
     this.lobbyReconnectAttempts = 0;
     this.lobbyDisconnectIntentional = false;
 
+    if (!isBrowser()) return;
+    
     const url = `${environment.wsUrl}/ws/lobby?playerId=${playerId}&username=${encodeURIComponent(username)}`;
-    this.lobbySocket = new WebSocket(url);
+    this.lobbySocket = createWebSocket(url);
+    if (!this.lobbySocket) return;
 
     this.lobbySocket.onopen = () => {
       this.isLobbyConnected.set(true);

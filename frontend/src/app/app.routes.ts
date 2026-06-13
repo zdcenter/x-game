@@ -28,7 +28,7 @@ export const routes: Routes = [
       {
         path: 'blog',
         loadComponent: () => import('./features/blog/blog-list/blog-list.component').then(m => m.BlogListComponent),
-        data: { seo: { title: 'Puzzle PK Blog - Educational Games & Brain Training', desc: 'Read our latest articles on brain games, child development, and how to make learning fun.', keywords: 'blog, brain training, educational games, puzzle pk' } }
+        data: { seo: { titleKey: 'seo.blog.title', descKey: 'seo.blog.desc', keywordsKey: 'seo.blog.keywords' } }
       },
       {
         path: 'blog/:id',
@@ -37,7 +37,7 @@ export const routes: Routes = [
       {
         path: 'docs',
         loadComponent: () => import('./features/docs/docs.component').then(m => m.DocsComponent),
-        data: { seo: { title: 'Game Tutorials & Rules - Puzzle PK', desc: 'Read detailed rules, strategies, and tutorials for all classic puzzle games on our platform.' } }
+        data: { seo: { titleKey: 'seo.docs.title', descKey: 'seo.docs.desc', keywordsKey: 'seo.docs.keywords' } }
       },
       {
         path: 'docs/:gameId',
@@ -46,7 +46,7 @@ export const routes: Routes = [
       {
         path: 'legal/:type',
         loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
-        data: { seo: { title: 'Legal & Privacy Policy', desc: 'Read our Privacy Policy, Terms of Service, and About Us information.' } }
+        data: { seo: { titleKey: 'seo.legal.title', descKey: 'seo.legal.desc', keywordsKey: 'seo.legal.keywords' } }
       },
       {
         path: 'games/minesweeper',
@@ -101,17 +101,17 @@ export const routes: Routes = [
       {
         path: 'games/lightsout',
         loadComponent: () => import('./features/games/lightsout/lightsout.component').then(m => m.LightsoutComponent),
-        data: { seo: { titleKey: 'app.title.lightsout', descKey: 'app.title.lightsout.desc', keywordsKey: 'app.title.lightsout' } }
+        data: { seo: { titleKey: 'seo.lightsout.title', descKey: 'seo.lightsout.desc', keywordsKey: 'seo.lightsout.keywords' } }
       },
       {
         path: 'games/watersort',
         loadComponent: () => import('./features/games/watersort/watersort.component').then(m => m.WatersortComponent),
-        data: { seo: { titleKey: 'app.title.watersort', descKey: 'app.title.watersort.desc', keywordsKey: 'app.title.watersort' } }
+        data: { seo: { titleKey: 'seo.watersort.title', descKey: 'seo.watersort.desc', keywordsKey: 'seo.watersort.keywords' } }
       },
       {
         path: 'games/sokoban',
         loadComponent: () => import('./features/games/sokoban/sokoban.component').then(m => m.SokobanComponent),
-        data: { seo: { titleKey: 'app.title.sokoban', descKey: 'app.title.sokoban.desc', keywordsKey: 'seo.default.keywords' } }
+        data: { seo: { titleKey: 'seo.sokoban.title', descKey: 'seo.sokoban.desc', keywordsKey: 'seo.sokoban.keywords' } }
       },
       {
         path: 'profile',
