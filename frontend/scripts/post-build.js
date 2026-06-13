@@ -68,3 +68,36 @@ if (fs.existsSync(publicDir)) {
     console.log(`Renamed index.csr.html to index.html for ${lang}`);
   }
 });
+
+// 5. Flatten SSG directory structure to .html files for Cloudflare Pages
+// Cloudflare Pages SPA routing intercepts /zh/lobby/ and serves zh/index.html.
+// But if we provide zh/lobby.html, it serves it correctly as a static file, overriding SPA fallback.
+function flattenHtmlFiles(dir) {
+  const items = fs.readdirSync(dir);
+  for (const item of items) {
+    const fullPath = path.join(dir, item);
+    if (fs.statSync(fullPath).isDirectory()) {
+      flattenHtmlFiles(fullPath);
+      const dirContents = fs.readdirSync(fullPath);
+      if (dirContents.length === 1 && dirContents[0] === 'index.html') {
+        const indexPath = path.join(fullPath, 'index.html');
+        const newHtmlPath = fullPath + '.html';
+        fs.renameSync(indexPath, newHtmlPath);
+        fs.rmdirSync(fullPath);
+        console.log(`Flattened ${fullPath}/index.html to ${newHtmlPath}`);
+      } else if (dirContents.includes('index.html')) {
+        const indexPath = path.join(fullPath, 'index.html');
+        const newHtmlPath = fullPath + '.html';
+        fs.renameSync(indexPath, newHtmlPath);
+        console.log(`Flattened ${fullPath}/index.html to ${newHtmlPath}`);
+      }
+    }
+  }
+}
+
+['en', 'zh'].forEach(lang => {
+  const langDir = path.join(browserDir, lang);
+  if (fs.existsSync(langDir)) {
+    flattenHtmlFiles(langDir);
+  }
+});
