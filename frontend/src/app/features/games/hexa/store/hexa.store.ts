@@ -6,6 +6,7 @@ import { generatePieces } from './hexa-pieces';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export enum GameStatus {
   WAITING = 'waiting',
@@ -15,7 +16,7 @@ export enum GameStatus {
 }
 
 @Injectable()
-export class HexaStore {
+export class HexaStore implements GameStoreInterface {
   private wsService = inject(WebSocketService);
   gameState = computed(() => this.wsService.gameState());
   private authStore = inject(AuthStore);
@@ -28,10 +29,17 @@ export class HexaStore {
 
   // Derive mode from local setting or WS room
   private _localMode = signal<string>('single');
-  private _roomId = signal<string>('local');
   
   readonly currentMode = computed(() => this._localMode());
-  readonly roomId = computed(() => this._roomId());
+  readonly roomId = signal<string>('local');
+
+  // GameStoreInterface aliases
+  readonly currentRoomMode = computed(() => this.currentMode());
+  readonly hostId = computed(() => this.host());
+  readonly playersList = computed<any[]>(() => this.allPlayers());
+  readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    return (this.wsService.gameState() as any)?.readyPlayers || {};
+  });
 
   // Signals
   readonly status = computed(() => {
@@ -135,7 +143,7 @@ export class HexaStore {
   // --- BaseGameComponent required methods ---
   
   joinRoom(roomId: string, mode: string, difficulty: string, hostId: string = '') {
-    this._roomId.set(roomId);
+    this.roomId.set(roomId);
     if (mode === 'single') {
       this._localMode.set('single');
       this.startSinglePlayer();
@@ -245,6 +253,10 @@ export class HexaStore {
     } else {
       this.wsService.send({ type: 'restart_game' });
     }
+  }
+
+  restartGame() {
+    this.playAgain();
   }
 
   dismissRoom() {

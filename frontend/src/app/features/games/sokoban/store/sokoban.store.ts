@@ -5,6 +5,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { LocalSokobanEngine } from './local-sokoban-engine';
 import { environment } from '../../../../../environments/environment';
 import { AudioService } from '../../../../core/services/audio.service';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface SokobanPlayerState {
   id: string;
@@ -22,7 +23,7 @@ export interface SokobanGameState {
 @Injectable({
   providedIn: 'root'
 })
-export class SokobanStore {
+export class SokobanStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   private auth = inject(AuthStore);
   private http = inject(HttpClient);
@@ -74,7 +75,7 @@ export class SokobanStore {
 
   currentDifficulty = computed(() => {
     if (this.currentRoomMode() === 'single') return this.localDifficulty();
-    return (this.rawState()?.state as SokobanGameState)?.difficulty || 'beginner';
+    return (this.rawState() as SokobanGameState)?.difficulty || 'beginner';
   });
 
   myPlayerState = computed(() => {
@@ -90,7 +91,7 @@ export class SokobanStore {
     }
 
     const myId = this.auth.currentUser()?.username || this.auth.guestId;
-    const state = this.rawState()?.state as SokobanGameState;
+    const state = this.rawState() as SokobanGameState;
     if (!state || !state.players) return null;
     return state.players[myId];
   });
@@ -143,7 +144,7 @@ export class SokobanStore {
 
   opponents = computed(() => {
     const myId = this.auth.currentUser()?.username || this.auth.guestId;
-    const state = this.rawState()?.state as SokobanGameState;
+    const state = this.rawState() as SokobanGameState;
     if (!state || !state.players) return [];
     
     return Object.values(state.players)
@@ -202,15 +203,19 @@ export class SokobanStore {
     }
   }
 
-  leaveGame() {
-    this.roomId.set("");
-    this.currentRoomMode.set("single");
+  leaveRoom() {
     if (this.currentRoomMode() !== 'single') {
       this.ws.send({ type: 'leave_game' });
       this.ws.disconnect('sokoban');
     }
     this.stopTimer();
     this.roomId.set('');
+    this.currentRoomMode.set('single');
+  }
+
+  /** @deprecated Use leaveRoom() instead */
+  leaveGame() {
+    this.leaveRoom();
   }
 
   ready() { this.ws.send({ type: 'ready' }); }
@@ -218,6 +223,7 @@ export class SokobanStore {
   kickPlayer(playerId: string) { this.ws.send({ type: 'kick_player', target: playerId }); }
   dismissRoom() { this.ws.send({ type: 'dismiss_room' }); }
   startGame() { this.ws.send({ action: 'start' }); }
+  restartGame() { this.ws.send({ type: 'restart_game' }); }
 
   move(dir: 'up' | 'down' | 'left' | 'right') {
     if (this.currentRoomMode() === 'single') {
@@ -260,7 +266,7 @@ export class SokobanStore {
       return;
     }
     this.timeSpent.set(0);
-    this.ws.send({ action: 'restart' });
+    this.ws.send({ action: 'restart_game' });
   }
 
   applyHint(): { success: boolean; message: string } {

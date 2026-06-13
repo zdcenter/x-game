@@ -7,6 +7,7 @@ import { LocalMinesweeperEngine } from './minesweeper-engine';
 import { AdService } from '../../../../core/services/ad.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export enum CellState {
   Hidden = 0,
@@ -46,7 +47,7 @@ export enum GameStatus {
 }
 
 @Injectable()
-export class MinesweeperStore {
+export class MinesweeperStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   gameState = computed(() => this.ws.gameState());
   private audio = inject(AudioService);
@@ -65,6 +66,16 @@ export class MinesweeperStore {
   
   bestTime = signal<number>(0);
   private currentDifficulty = signal<string>('medium');
+
+  // GameStoreInterface required aliases
+  readonly currentRoomMode = computed(() => this.currentMode());
+  readonly roomId = signal<string>('');
+  readonly hostId = computed(() => this.host());
+  readonly playersList = computed<any[]>(() => {
+    if (this.currentMode() === 'single') return [];
+    return Object.keys(this.scores() || {}).map(id => ({ id }));
+  });
+  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
 
   // Derive all state from the WebSocketService's global gameState
   private rawState = computed(() => this.ws.gameState() || {
@@ -98,20 +109,23 @@ export class MinesweeperStore {
     }
     
     const s = this.rawState();
-    if (s.boards && s.boards[this.playerId()]) {
-      return s.boards[this.playerId()];
+    if (!s) {
+      return { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
+    }
+    
+    if (this.currentMode() === 'same_pk_speed') {
+      return (s.boards && s.boards[this.playerId()]) ? s.boards[this.playerId()] : null;
     }
     return s.board || { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
   });
 
-  readonly board = computed<Cell[][]>(() => this.myBoardData().cells || []);
+  readonly board = computed<Cell[][]>(() => this.myBoardData()?.cells || []);
   readonly status = computed<GameStatus>(() => {
     if (this.currentMode() === 'single') {
-      this.tick();
       return this.localEngine()?.status || GameStatus.Waiting;
     }
     const s = this.rawState() as any;
-    
+
     const mapStatus = (st: any): GameStatus => {
       if (st === 0 || st === 'waiting') return GameStatus.Waiting;
       if (st === 1 || st === 'starting') return GameStatus.Starting;
@@ -120,32 +134,36 @@ export class MinesweeperStore {
       return GameStatus.Waiting;
     };
 
-    if (s.status !== undefined) {
+    if (s && s.status !== undefined) {
       return mapStatus(s.status);
     }
     
-    return mapStatus(this.myBoardData().status);
+    return mapStatus(this.myBoardData()?.status);
   });
   
   readonly scores = computed<Record<string, number>>(() => {
     if (this.currentMode() === 'single') return { [this.playerId()]: 0 };
-    return this.rawState().scores || {};
+    const s = this.rawState();
+    return s ? (s.scores || {}) : {};
   });
   
   readonly cooldowns = computed<Record<string, number>>(() => {
     if (this.currentMode() === 'single') return {};
-    return this.rawState().cooldowns || {};
+    const s = this.rawState();
+    return s ? (s.cooldowns || {}) : {};
   });
 
   readonly myErrors = computed<number>(() => {
     if (this.currentMode() === 'single') return 0;
-    const errors = this.rawState().errors || {};
+    const s = this.rawState();
+    const errors = s ? (s.errors || {}) : {};
     return errors[this.playerId()] || 0;
   });
 
   readonly opponentErrors = computed<number>(() => {
     if (this.currentMode() === 'single') return 0;
     const s = this.rawState();
+    if (!s) return 0;
     const errors = s.errors || {};
     // For steal mode fallback, if we need it somewhere specific
     const opponentId = Object.keys(s.scores || {}).find(id => id !== this.playerId());
@@ -153,17 +171,18 @@ export class MinesweeperStore {
     return errors[opponentId] || 0;
   });
   
-  readonly startAt = computed(() => this.myBoardData().start_at || 0);
+  readonly startAt = computed(() => this.myBoardData()?.start_at || 0);
   
   readonly host = computed<string>(() => {
     if (this.currentMode() === 'single') return this.playerId();
-    return (this.rawState() as any).host || '';
+    const s = this.rawState() as any;
+    return s ? (s.host || '') : '';
   });
   
   readonly speedOpponents = computed(() => {
     if (this.currentMode() !== 'same_pk_speed') return [];
     const s = this.rawState();
-    if (!s.boards) return [];
+    if (!s || !s.boards) return [];
     
     const opponents = [];
     for (const [id, board] of Object.entries(s.boards as Record<string, any>)) {
@@ -223,16 +242,22 @@ export class MinesweeperStore {
     this.tick.set(this.tick() + 1);
   }
 
-  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
+  joinRoom(roomId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
+    this.roomId.set(roomId);
     if (mode === 'single') {
        this.currentMode.set('single');
     } else {
       this.currentMode.set(mode);
-      this.ws.connect('minesweeper', roomId, playerId, mode, difficulty, hostId);
+      this.ws.connect('minesweeper', roomId, this.playerId(), mode, difficulty, hostId);
     }
   }
 
-  leaveGame() {
+  /** @deprecated Use joinRoom() instead */
+  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
+    this.joinRoom(roomId, mode, difficulty, hostId);
+  }
+
+  leaveRoom() {
     if (this.currentMode() !== 'single') {
       this.ws.send({ type: 'leave_game' });
     }
@@ -240,6 +265,12 @@ export class MinesweeperStore {
     setTimeout(() => {
       this.ws.disconnect('minesweeper');
     }, 100);
+    this.roomId.set('');
+  }
+
+  /** @deprecated Use leaveRoom() instead */
+  leaveGame() {
+    this.leaveRoom();
   }
 
   startGame() {

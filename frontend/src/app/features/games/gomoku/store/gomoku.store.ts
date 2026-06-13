@@ -3,17 +3,20 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { GomokuAI, GomokuColor } from './gomoku-ai';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface GameStatus {
   status: 'waiting' | 'starting' | 'playing' | 'finished';
   winner?: string; // Player ID
 }
 
-export class GomokuStore {
+export class GomokuStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
+  private auth = inject(AuthStore);
 
   private emptyBoard = this.createEmptyBoard();
 
@@ -88,6 +91,19 @@ export class GomokuStore {
 
   myPlayerId = signal<string>('');
   
+  // GameStoreInterface aliases
+  readonly currentRoomMode = computed(() => this.singlePlayerMode ? 'single' : (this.rawState() as any)?.mode || 'single');
+  readonly roomId = signal<string>('');
+  readonly hostId = computed(() => {
+    if (this.singlePlayerMode) return this.myPlayerId();
+    return (this.rawState() as any)?.host || '';
+  });
+  readonly playersList = computed<any[]>(() => {
+    return this.players().map(id => ({ id }));
+  });
+  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
+  readonly status = computed<string>(() => this.gameStatus().status);
+
   // Single Player AI
   private ai: GomokuAI | null = null;
   public singlePlayerMode = false;
@@ -116,7 +132,9 @@ export class GomokuStore {
     return b;
   }
 
-  init(mode: string, difficulty: string, roomId: string, playerId: string, hostId: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
+    this.roomId.set(roomId);
+    const playerId = this.auth.currentUser()?.username || this.auth.guestId;
     this.myPlayerId.set(playerId);
     this.singlePlayerMode = mode === 'single';
     this.aiDifficulty = difficulty;
@@ -136,6 +154,11 @@ export class GomokuStore {
       const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
       this.ws.connect('gomoku', roomId, playerId, mode, difficulty, cleanHostId);
     }
+  }
+
+  /** @deprecated Use joinRoom() instead */
+  init(mode: string, difficulty: string, roomId: string, playerId: string, hostId: string) {
+    this.joinRoom(roomId, mode, difficulty, hostId);
   }
 
   destroy() {
@@ -159,6 +182,10 @@ export class GomokuStore {
     }
   }
 
+  restartGame() {
+    this.startGame();
+  }
+
   surrender() {
     if (this.singlePlayerMode) {
       this.localGameStatus.set({ status: 'finished', winner: 'AI' });
@@ -167,11 +194,17 @@ export class GomokuStore {
     }
   }
 
-  leaveGame() {
+  leaveRoom() {
     if (!this.singlePlayerMode) {
       this.ws.send({ type: 'leave_game' });
       this.ws.disconnect('gomoku');
     }
+    this.roomId.set('');
+  }
+
+  /** @deprecated Use leaveRoom() instead */
+  leaveGame() {
+    this.leaveRoom();
   }
 
   dismissRoom() {

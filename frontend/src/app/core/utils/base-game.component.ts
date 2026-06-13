@@ -5,6 +5,7 @@ import { WebSocketService } from '../services/websocket.service';
 import { GameService } from '../services/game.service';
 import { SettingsService } from '../services/settings.service';
 import { isBrowser } from './browser.util';
+import { GameStoreInterface } from '../interfaces/game-store.interface';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -29,7 +30,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   // Each subclass must implement these to hook into the base room logic
-  abstract get store(): any; 
+  abstract get store(): GameStoreInterface; 
   abstract get playerId(): string;
 
   /**

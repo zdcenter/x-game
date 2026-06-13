@@ -5,6 +5,7 @@ import { GameTimerService } from '../../../../core/services/game-timer.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface Math24Card {
   id: string;
@@ -18,7 +19,7 @@ export type Operator = '+' | '-' | '*' | '/';
 @Injectable({
   providedIn: 'root'
 })
-export class Math24Store {
+export class Math24Store implements GameStoreInterface {
   private ws = inject(WebSocketService);
   private auth = inject(AuthStore);
   private timerService = inject(GameTimerService);
@@ -41,9 +42,20 @@ export class Math24Store {
     const p = this.players() || {};
     return Object.keys(p).map(id => ({ id, ...p[id] }));
   });
-  readyPlayers = computed(() => (this.rawState() as any).readyPlayers || {});
-  winners = computed(() => this.rawState().winners || []);
-  host = computed(() => this.rawState().host || '');
+  readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
+  winners = computed(() => this.rawState()?.winners || []);
+  host = computed(() => this.rawState()?.host || '');
+
+  // GameStoreInterface required aliases
+  readonly currentRoomMode = computed(() => this.localMode() as string);
+  readonly hostId = computed(() => {
+    if (this.localMode() === 'single') return this.playerId();
+    return this.rawState()?.host || '';
+  });
+  readonly status = computed(() => {
+    if (this.localMode() === 'single') return this.localStatus() as string;
+    return (this.rawState()?.status as string) || 'waiting';
+  });
 
   playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
   
@@ -329,7 +341,7 @@ export class Math24Store {
   }
 
   startGame() {
-    this.ws.send({ type: 'action', action: 'start' });
+    this.ws.send({ action: 'start' });
   }
 
   dismissRoom() {

@@ -213,9 +213,8 @@
            'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
            'translate-x-0': isMobileSidebarOpen(),
            'translate-x-full': !isMobileSidebarOpen(),
-           'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': roomId() === '' || roomId() === 'local'
-         }">
-      <div class="flex justify-between items-center mb-4" [class.lg:hidden]="roomId() === '' || roomId() === 'local'">
+           'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
+      <div class="flex justify-between items-center mb-4 lg:hidden" >
         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || 'Room Info' }}</h3>
         <button (click)="isMobileSidebarOpen.set(false)" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] lg:hidden">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>

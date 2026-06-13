@@ -4,6 +4,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { BlockShape, getRandomShapes } from '../utils/shapes';
 import { GameTimerService } from '../../../../core/services/game-timer.service';
 import { AudioService } from '../../../../core/services/audio.service';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface BlockGameState {
   status: string;
@@ -20,7 +21,7 @@ export interface BlockGameState {
 }
 
 @Injectable({ providedIn: 'root' })
-export class BlockStore {
+export class BlockStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   private timer = inject(GameTimerService);
   private audio = inject(AudioService);
@@ -31,9 +32,9 @@ export class BlockStore {
   currentDifficulty = signal('medium');
 
   // Local State
-  private _roomId = signal<string>('local');
-  readonly roomId = computed(() => this._roomId());
+  readonly roomId = signal<string>('local');
   currentMode = signal<string>('single');
+  readonly currentRoomMode = computed(() => this.currentMode());
   localBoard = signal<number[][]>(this.createEmptyBoard(10));
   localScore = signal(0);
   localHand = signal<(BlockShape | null)[]>([null, null, null]);
@@ -59,12 +60,14 @@ export class BlockStore {
     return Object.values(state.players);
   });
 
+  readonly playersList = computed<any[]>(() => this.allPlayers());
+
   hostId = computed(() => {
     if (this.currentMode() === 'single') return this.playerId();
     return (this.rawState() as any)?.host || '';
   });
 
-  readyPlayers = computed(() => {
+  readyPlayers = computed<Record<string, boolean>>(() => {
     return (this.rawState() as any)?.readyPlayers || {};
   });
 
@@ -112,7 +115,7 @@ export class BlockStore {
   joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
     this.currentMode.set(mode);
     this.currentDifficulty.set(diff);
-    this._roomId.set(roomId);
+    this.roomId.set(roomId);
     
     // Set difficulty size
     const size = diff === 'easy' ? 8 : (diff === 'hard' ? 12 : 10);
@@ -133,7 +136,7 @@ export class BlockStore {
         this.ws.disconnect('block');
       }, 100);
     }
-    this._roomId.set('local');
+    this.roomId.set('local');
     this.currentMode.set('single');
   }
 

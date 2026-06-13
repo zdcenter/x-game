@@ -1,5 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface Tube {
   colors: string[];
@@ -21,15 +23,17 @@ export interface WatersortState {
 @Injectable({
   providedIn: 'root'
 })
-export class WatersortStore {
+export class WatersortStore implements GameStoreInterface {
   ws = inject(WebSocketService);
+  private auth = inject(AuthStore);
+  private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
   readonly roomId = signal<string>('');
   readonly hostId = computed(() => this.ws.gameState()?.host || '');
-  readonly playersList = computed(() => Object.values(this.ws.gameState()?.players || {}));
+  readonly playersList = computed<any[]>(() => Object.values(this.ws.gameState()?.players || {}));
   readonly currentRoomMode = signal<string>('single');
   readonly currentDifficulty = signal<string>('');
   readonly localDifficulty = signal<string>('easy');
-  readonly readyPlayers = computed(() => (this.ws.gameState() as any)?.readyPlayers || {});
+  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.ws.gameState() as any)?.readyPlayers || {});
 
   // Raw state mapped from websocket
   private readonly rawState = computed(() => {
@@ -46,7 +50,7 @@ export class WatersortStore {
   readonly winners = computed(() => this.rawState().winners || []);
   readonly players = computed(() => this.rawState().players || {});
 
-  joinRoom(roomId: string, mode: string, difficulty: string, host: string, playerId: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, host?: string) {
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
@@ -54,7 +58,7 @@ export class WatersortStore {
       this.localDifficulty.set(difficulty);
     }
     
-    this.ws.connect('watersort', roomId, playerId, mode, difficulty, host);
+    this.ws.connect('watersort', roomId, this.playerId(), mode, difficulty, host);
   }
 
   leaveRoom() {

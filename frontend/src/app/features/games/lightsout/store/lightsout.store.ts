@@ -2,9 +2,10 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 @Injectable()
-export class LightsoutStore {
+export class LightsoutStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   private authStore = inject(AuthStore);
   private audio = inject(AudioService);
@@ -90,8 +91,8 @@ export class LightsoutStore {
       });
   });
 
-  readonly readyPlayers = computed(() => {
-    if (this.currentRoomMode() === 'single') return [this.me()];
+  readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    if (this.currentRoomMode() === 'single') return {};
     return (this.rawState() as any)?.readyPlayers || {};
   });
 
@@ -150,7 +151,7 @@ export class LightsoutStore {
       this.initSinglePlayerBoard(this.localDifficulty());
       this.localStatus.set('playing');
     } else {
-      this.ws.send({ action: 'restart_game' });
+      this.ws.send({ type: 'restart_game' });
     }
   }
 

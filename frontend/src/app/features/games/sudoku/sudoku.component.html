@@ -143,10 +143,9 @@
              'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
              'translate-x-0': isMobileSidebarOpen(),
              'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': store.roomId() === ''
-           }">
+             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
            
-           <div class="flex justify-between items-center mb-4" [class.lg:hidden]="store.roomId() === ''">
+           <div class="flex justify-between items-center mb-4 lg:hidden" >
              <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
            </div>
         <app-game-lobby-panel

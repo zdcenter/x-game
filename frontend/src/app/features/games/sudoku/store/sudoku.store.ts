@@ -10,6 +10,7 @@ import { I18nService } from '../../../../core/i18n/i18n.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface SudokuCell {
   r: number;
@@ -25,7 +26,7 @@ export interface SudokuHistory {
 }
 
 @Injectable()
-export class SudokuStore {
+export class SudokuStore implements GameStoreInterface {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
   private auth = inject(AuthStore);
@@ -82,9 +83,27 @@ export class SudokuStore {
     winners: []
   });
 
-  gameStatus = computed(() => this.rawState().status || 'waiting');
-  players = computed(() => this.rawState().players || {});
-  host = computed(() => this.rawState().host || '');
+  gameStatus = computed(() => this.rawState()?.status || 'waiting');
+  players = computed(() => this.rawState()?.players || {});
+  host = computed(() => this.rawState()?.host || '');
+
+  // GameStoreInterface required aliases
+  readonly currentRoomMode = computed(() => this.currentMode());
+  readonly hostId = computed(() => {
+    if (this.currentMode() === 'single') return this.playerId();
+    return this.rawState()?.host || '';
+  });
+  readonly status = computed(() => {
+    if (this.currentMode() === 'single') return this.isFinished() ? 'finished' : 'playing';
+    return (this.rawState()?.status as string) || 'waiting';
+  });
+  readonly playersList = computed<any[]>(() => {
+    const p = this.players() || {};
+    return Object.keys(p).map(id => ({ id, ...p[id] }));
+  });
+  readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    return (this.rawState() as any)?.readyPlayers || {};
+  });
 
   private timer: any;
 
@@ -179,6 +198,10 @@ export class SudokuStore {
     if (this.currentMode() !== 'single') {
       this.ws.send({ type: 'restart_game' });
     }
+  }
+
+  restartGame() {
+    this.playAgain();
   }
 
   dismissRoom() {

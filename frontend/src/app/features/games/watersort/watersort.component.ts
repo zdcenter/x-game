@@ -111,7 +111,7 @@ import { AudioService } from '../../../core/services/audio.service';
               [hostId]="_store.hostId()"
               [currentUserId]="playerId"
               (leave)="returnToLobby()"
-              (start)="playAgain()"
+              (start)="_store.startGame()"
               (changeSettings)="openChangeSettings()"
               [readyPlayers]="_store.readyPlayers()"
               (kick)="_store.kickPlayer($event)"
@@ -231,10 +231,9 @@ import { AudioService } from '../../../core/services/audio.service';
              'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
              'translate-x-0': isMobileSidebarOpen(),
              'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': currentRoomId() === '' || currentRoomMode() === 'single'
-           }">
+             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
         
-        <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomMode() === 'single'">
+        <div class="flex justify-between items-center mb-4 lg:hidden" >
           <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">game.room_info</ng-container></h3>
         </div>
 
@@ -349,14 +348,14 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this._store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', this.myId);
+      this._store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       if (pending.mode !== 'single') {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
       const savedDiff = (typeof localStorage !== 'undefined' ? localStorage.getItem('watersort_single_diff') : null) || 'easy';
       const uniqueLocalRoom = 'local_' + this.myId;
-      this._store.joinRoom(uniqueLocalRoom, 'single', savedDiff, this.myId, this.myId);
+      this._store.joinRoom(uniqueLocalRoom, 'single', savedDiff, this.myId);
     }
   }
 
@@ -385,7 +384,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     setTimeout(() => {
       const uniqueLocalRoom = 'local_' + this.myId + '_' + Date.now();
       this.wsService.setPendingAction('create');
-      this._store.joinRoom(uniqueLocalRoom, 'single', diff, this.myId, this.myId);
+      this._store.joinRoom(uniqueLocalRoom, 'single', diff, this.myId);
     }, 100);
   }
 
@@ -663,7 +662,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this._store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
     const uniqueLocalRoom = 'local_' + this.myId;
-    this._store.joinRoom(uniqueLocalRoom, 'single', 'easy', this.myId, this.myId);
+    this._store.joinRoom(uniqueLocalRoom, 'single', 'easy', this.myId);
   }
 
   goBack() {
@@ -676,9 +675,9 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}): void {
     super.handleCreateRoom(config);
     if (config.password) this.wsService.setPendingPassword(config.password);
-    this._store.joinRoom(config.name, config.mode, config.difficulty, this.myId, this.myId);
+    this._store.joinRoom(config.name, config.mode, config.difficulty, this.myId);
     if (config.mode !== 'single') {
-      this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty, this.myId);
+      this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty);
     }
     this.isMobileSidebarOpen.set(false);
   }
@@ -686,7 +685,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}): void {
     super.handleJoinRoom(event);
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this._store.joinRoom(event.roomId, event.mode, event.difficulty, event.host, this.myId);
+    this._store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
     if (event.mode !== 'single') {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }

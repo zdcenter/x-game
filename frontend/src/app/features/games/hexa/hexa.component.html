@@ -235,10 +235,9 @@
              'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
              'translate-x-0': isMobileSidebarOpen(),
              'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': currentRoomId() === '' || currentRoomId() === 'local'
-           }">
+             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
       
-      <div class="flex justify-between items-center mb-4" [class.lg:hidden]="currentRoomId() === '' || currentRoomId() === 'local'">
+      <div class="flex justify-between items-center mb-4 lg:hidden" >
         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ t('game.room_info')() || 'Room Info' }}</h3>
       </div>
 

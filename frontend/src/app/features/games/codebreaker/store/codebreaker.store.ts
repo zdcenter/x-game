@@ -2,6 +2,8 @@ import { signal, computed, inject, effect } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface GuessRecord {
 	guess: string;
@@ -24,11 +26,12 @@ export interface CodebreakerState {
 	winners: string[];
 }
 
-export class CodebreakerStore {
+export class CodebreakerStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
+  private auth = inject(AuthStore);
 
   // Raw State from WebSocket
   private rawState = computed(() => this.ws.gameState() as CodebreakerState | null);
@@ -44,6 +47,13 @@ export class CodebreakerStore {
   public singlePlayerMode = false;
   myPlayerId = signal<string>('');
   difficulty = signal<string>('medium');
+
+  // GameStoreInterface aliases
+  readonly roomId = signal<string>('');
+  readonly currentRoomMode = computed(() => this.singlePlayerMode ? 'single' : (this.rawState() as any)?.mode || 'single');
+  readonly hostId = computed(() => this.host());
+  readonly playersList = computed<any[]>(() => this.players());
+  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
 
   status = computed<'waiting' | 'starting' | 'playing' | 'finished'>(() => {
     if (this.singlePlayerMode) return this.localStatus();
@@ -125,7 +135,9 @@ export class CodebreakerStore {
     });
   }
 
-  init(mode: string, difficulty: string, roomId: string, playerId: string, hostId: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
+    this.roomId.set(roomId);
+    const playerId = this.auth.currentUser()?.username || this.auth.guestId;
     this.myPlayerId.set(playerId);
     this.difficulty.set(difficulty);
     this.singlePlayerMode = mode === 'single';
@@ -147,10 +159,22 @@ export class CodebreakerStore {
     }
   }
 
-  destroy() {
+  /** @deprecated Use joinRoom() instead */
+  init(mode: string, difficulty: string, roomId: string, playerId: string, hostId: string) {
+    this.joinRoom(roomId, mode, difficulty, hostId);
+  }
+
+  leaveRoom() {
     if (!this.singlePlayerMode) {
+      this.ws.send({ type: 'leave_game' });
       this.ws.disconnect('codebreaker');
     }
+    this.roomId.set('');
+  }
+
+  /** @deprecated Use leaveRoom() instead */
+  destroy() {
+    this.leaveRoom();
   }
 
   startGame() {
@@ -164,6 +188,10 @@ export class CodebreakerStore {
     } else {
       this.ws.send({ action: 'start' });
     }
+  }
+
+  restartGame() {
+    this.startGame();
   }
 
   getSecretCode(): string {

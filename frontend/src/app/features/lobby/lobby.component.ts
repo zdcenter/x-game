@@ -64,7 +64,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.wsService.disconnectLobby();
   }
 
-  handleGlobalCreateRoom(event: {name: string, gameId: string, mode: string, difficulty: string}) {
+  handleGlobalCreateRoom(event: {name: string, gameId: string, mode: string, difficulty: string, password?: string}) {
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     this.crossGameJoin.setPendingJoin({
       game: event.gameId,
@@ -72,7 +72,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
       mode: event.mode,
       difficulty: event.difficulty,
       host: playerId,
-      action: 'create'
+      action: 'create',
+      password: event.password
     });
     this.router.navigate([`/games/${event.gameId}`]);
   }

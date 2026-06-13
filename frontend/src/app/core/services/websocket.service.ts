@@ -100,6 +100,7 @@ export class WebSocketService {
     this.roomDismissedEvent.set(0);
     this.kickedEvent.set(0);
     this.unexpectedDisconnectEvent.set(0);
+    this.connectionRejectedEvent.set(0);
     this.gameReconnectAttempts = 0;
     this.gameDisconnectIntentional = false;
 

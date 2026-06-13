@@ -115,7 +115,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
       }
 
-      @if (store.status() === 'playing' || store.status() === 'finished') {
+      @if (store.status() === 'playing' || store.status() === 'finished' || store.status() === 'starting') {
         <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full relative z-10">
           <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" 
                [class.justify-center]="store.currentRoomMode() === 'single'">
@@ -216,44 +216,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
            </div>
           </div>
 
-          <!-- Opponent Boards -->
-          @if (store.currentRoomMode() !== 'single' && store.opponents().length > 0) {
-            <div class="flex flex-row lg:flex-col items-center justify-center lg:justify-start gap-4 flex-wrap w-full lg:w-auto shrink-0 pb-10 lg:pb-0">
-              <h3 class="w-full lg:w-auto text-center font-bold text-[var(--color-text-muted)] text-sm mb-[-10px] lg:mb-0 uppercase tracking-widest bg-[var(--color-bg-card)] px-3 py-1 rounded-full border border-[var(--color-border-card)]">Opponents</h3>
-              @for (opp of store.opponents(); track opp.id) {
-                <div class="flex flex-col items-center shrink-0 bg-[var(--color-bg-card)] p-2 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.3)] border border-[var(--color-border-card)] relative overflow-hidden"
-                     [class.opacity-60]="opp.status === 'finished'">
-                  
-                  <!-- Finished Overlay -->
-                  @if (opp.status === 'finished') {
-                    <div class="absolute inset-0 bg-emerald-500/20 z-30 flex items-center justify-center backdrop-blur-[1px]">
-                      <span class="text-emerald-400 font-black text-xl transform -rotate-12 drop-shadow-md">FINISHED</span>
-                    </div>
-                  }
 
-                  <!-- Opponent Header -->
-                  <div class="w-full flex items-center justify-between px-1 mb-1 relative z-20">
-                    <div class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] flex items-center gap-1">
-                      @if (opp.isHost) { <span class="text-[10px]">👑</span> }
-                      {{ opp.id }}
-                    </div>
-                    <div class="text-[10px] text-[var(--color-text-muted)] font-mono font-bold bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded border border-[var(--color-border-card)]">
-                      🦶 {{ opp.moves }}
-                    </div>
-                  </div>
-
-                  <!-- Opponent Mini Board -->
-                  <div class="pointer-events-none opacity-90 relative z-10" style="width: min(40vw, 220px); height: min(40vw, 220px);">
-                    <app-sokoban-board 
-                      class="w-full h-full block"
-                      [boardData]="opp.board" 
-                      [readonly]="true">
-                    </app-sokoban-board>
-                  </div>
-                </div>
-              }
-            </div>
-          }
 
         </div>
 
@@ -304,10 +267,9 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
              'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
              'translate-x-0': isMobileSidebarOpen(),
              'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': !(store.status() === 'playing' && store.currentRoomMode() !== 'single')
-           }">
+             'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': true}">
         <div class="flex justify-between items-center mb-4 lg:hidden"
-             [class.lg:flex]="store.status() === 'playing' && store.currentRoomMode() !== 'single'">
+             >
           <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
           <button (click)="isMobileSidebarOpen.set(false)" class="p-2 bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -363,6 +325,15 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
         this.showOverlay.set(false);
       }
     });
+
+    effect(() => {
+      const status = this.store.status();
+      if (status === 'starting') {
+        this.gameTimer.startCountdown();
+      } else {
+        this.gameTimer.stopCountdown();
+      }
+    }, { allowSignalWrites: true });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sokoban',
@@ -474,7 +445,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     if (this.store.currentRoomMode() === 'single') {
       this.store.restart();
     } else {
-      this.wsService.send({ type: 'restart_game' });
+      this.wsService.send({ action: 'restart' });
     }
   }
 

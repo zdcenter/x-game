@@ -3,6 +3,7 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface DropBlock {
   id: string; // Unique ID for DOM tracking
@@ -28,7 +29,7 @@ export interface DropGameState {
 }
 
 @Injectable()
-export class Drop2048Store {
+export class Drop2048Store implements GameStoreInterface {
   private ws = inject(WebSocketService);
   private auth = inject(AuthStore);
   private audio = inject(AudioService);
@@ -95,7 +96,14 @@ export class Drop2048Store {
 
   host = computed(() => (this.rawState() as any)?.host || '');
   winners = computed(() => this.rawState()?.winners || []);
-  readyPlayers = computed(() => (this.rawState() as any)?.readyPlayers || {});
+  readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
+
+  // GameStoreInterface aliases
+  readonly currentRoomMode = computed(() => this.localMode());
+  readonly hostId = computed(() => {
+    if (this.localMode() === 'single') return this.playerId;
+    return (this.rawState() as any)?.host || '';
+  });
 
   get playerId(): string {
     return this.auth.currentUser()?.username || this.auth.guestId;
@@ -109,13 +117,18 @@ export class Drop2048Store {
     return this.localMode();
   }
 
-  joinGame(roomId: string, playerId: string, mode: string = 'single', diff: string = 'standard', hostId?: string) {
+  joinRoom(roomId: string, mode: string = 'single', diff: string = 'standard', hostId?: string) {
     this.roomId.set(roomId);
     this.localMode.set(mode);
     this.localDifficulty.set(diff);
     if (mode !== 'single') {
-      this.ws.connect('drop2048', roomId, playerId, mode, diff, hostId);
+      this.ws.connect('drop2048', roomId, this.playerId, mode, diff, hostId);
     }
+  }
+
+  /** @deprecated Use joinRoom() instead */
+  joinGame(roomId: string, playerId: string, mode: string = 'single', diff: string = 'standard', hostId?: string) {
+    this.joinRoom(roomId, mode, diff, hostId);
   }
 
   startGame() {
@@ -150,7 +163,11 @@ export class Drop2048Store {
     }
   }
 
-  leaveGame() {
+  restartGame() {
+    this.playAgain();
+  }
+
+  leaveRoom() {
     if (this.currentMode() !== 'single') {
       this.ws.send({ type: 'leave_game' });
     }
@@ -160,6 +177,11 @@ export class Drop2048Store {
     }, 100);
     this.localMode.set('single');
     this.localStatus.set('waiting');
+  }
+
+  /** @deprecated Use leaveRoom() instead */
+  leaveGame() {
+    this.leaveRoom();
   }
 
   dismissRoom() {

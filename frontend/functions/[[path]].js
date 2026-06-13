@@ -21,6 +21,18 @@ export async function onRequest(context) {
       return res;
     }
 
+    // Try checking if there is a directory index.html for this route (SSG output)
+    let dirIndexPath = pathname;
+    if (!dirIndexPath.endsWith('/')) {
+      dirIndexPath += '/';
+    }
+    dirIndexPath += 'index.html';
+    
+    const indexRes = await env.ASSETS.fetch(new Request(new URL(dirIndexPath, request.url)));
+    if (indexRes.status !== 404) {
+      return indexRes;
+    }
+
     // It's a route that doesn't exist statically (e.g. dynamic route).
     // Apply language-specific SPA fallback.
     if (pathname.startsWith('/zh/')) {

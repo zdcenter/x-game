@@ -65,7 +65,7 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   currentRoomMode = this.store.currentRoomMode;
-  currentRoomId = this.store.currentRoomId;
+  roomId = this.store.roomId;
 
   // For Absolute Positioning Animation
   // Returns an array of objects representing tiles 1 to size*size-1, plus 0
@@ -160,8 +160,8 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   goBack() {
-    if (this.currentRoomId()) {
-      if (this.store.host() === this.playerId) {
+    if (this.roomId()) {
+      if (this.store.hostId() === this.playerId) {
         this.dismissRoom();
       } else {
         this.store.leaveGame();
@@ -171,8 +171,8 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   returnToLobby() {
-    this.currentRoomId.set('');
-    this.store.leaveGame();
+    this.roomId.set('');
+    this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
     setTimeout(() => this.changeSingleDifficulty('medium'), 100);
   }
@@ -191,20 +191,20 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   openChangeSettings() {
-    if (this.lobbyPanel && this.currentRoomId()) {
+    if (this.lobbyPanel && this.roomId()) {
       this.isMenuOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
-        id: this.currentRoomId(),
+        id: this.roomId(),
         game: 'sliding',
         mode: this.currentRoomMode(),
         difficulty: this.store.currentDifficulty(),
-        host: this.store.host()
+        host: this.store.hostId()
       });
     }
   }
 
   changeSingleDifficulty(diff: string) {
-    if (this.currentRoomId()) return;
+    if (this.roomId()) return;
     this.store.currentDifficulty.set(diff);
     this.store.playAgain();
   }
@@ -223,7 +223,7 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
-    if (this.currentRoomId() === event.roomId) return;
+    if (this.roomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
   }

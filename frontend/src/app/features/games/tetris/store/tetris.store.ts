@@ -6,6 +6,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
 import { getEmptyGrid, Piece, rotateMatrix, Tetromino, TETROMINO_SHAPES, TETRIS_COLS, TETRIS_ROWS } from '../models/tetris.model';
 import { PRNG } from '../../../../core/utils/prng';
+import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface TetrisOpponent {
   id: string;
@@ -17,7 +18,7 @@ export interface TetrisOpponent {
 }
 
 @Injectable()
-export class TetrisStore {
+export class TetrisStore implements GameStoreInterface {
   private ws = inject(WebSocketService);
   gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
@@ -40,6 +41,19 @@ export class TetrisStore {
     return this.ws.gameState()?.host || '';
   });
   winners = computed(() => this.ws.gameState()?.winners || []);
+
+  // GameStoreInterface required members
+  readonly roomId = signal<string>('');
+  readonly currentRoomMode = computed(() => this.mode());
+  readonly hostId = computed(() => this.host());
+  readonly playersList = computed<any[]>(() => {
+    if (this.mode() === 'single') return [];
+    const st = this.ws.gameState();
+    return st?.players ? Object.values(st.players) : [];
+  });
+  readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    return (this.ws.gameState() as any)?.readyPlayers || {};
+  });
 
   // Opponents State
   opponents = computed<TetrisOpponent[]>(() => {
@@ -96,10 +110,12 @@ export class TetrisStore {
   joinRoom(roomId: string, mode: string, difficulty: string, hostId: string) {
     if (roomId === 'local') {
       this._localMode.set('single');
+      this.roomId.set('');
       this.localStatus.set('waiting');
       this.resetLocalState();
     } else {
       this._localMode.set(mode);
+      this.roomId.set(roomId);
       this.ws.connect('tetris', roomId, this.authStore.currentUser()?.username || this.authStore.guestId, mode, difficulty, hostId);
     }
   }
@@ -165,6 +181,10 @@ export class TetrisStore {
     } else {
       this.ws.send({ type: 'restart_game' });
     }
+  }
+
+  restartGame() {
+    this.playAgain();
   }
 
   dismissRoom() {
