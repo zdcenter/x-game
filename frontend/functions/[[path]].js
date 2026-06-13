@@ -14,9 +14,15 @@ export async function onRequest(context) {
   const isStaticFile = lastSegment && lastSegment.includes('.');
 
   if (!isStaticFile) {
-    // It's a route (e.g. /zh/lobby). 
-    // We MUST bypass env.ASSETS.fetch(request) here because Cloudflare's 
-    // automatic SPA routing might intercept the 404 and return the wrong index.html.
+    // Try to fetch the requested path first. Cloudflare's Clean URLs will 
+    // automatically map /zh/lobby to /zh/lobby.html if it exists.
+    const res = await env.ASSETS.fetch(request);
+    if (res.status !== 404) {
+      return res;
+    }
+
+    // It's a route that doesn't exist statically (e.g. dynamic route).
+    // Apply language-specific SPA fallback.
     if (pathname.startsWith('/zh/')) {
       return env.ASSETS.fetch(new Request(new URL('/zh/index.html', request.url)));
     }
