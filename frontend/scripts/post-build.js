@@ -58,3 +58,13 @@ if (fs.existsSync(publicDir)) {
     }
   });
 }
+
+// 4. Rename index.csr.html to index.html for SPA fallback
+['en', 'zh'].forEach(lang => {
+  const csrPath = path.join(browserDir, lang, 'index.csr.html');
+  const idxPath = path.join(browserDir, lang, 'index.html');
+  if (fs.existsSync(csrPath) && !fs.existsSync(idxPath)) {
+    fs.renameSync(csrPath, idxPath);
+    console.log(`Renamed index.csr.html to index.html for ${lang}`);
+  }
+});
