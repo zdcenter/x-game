@@ -354,7 +354,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      const savedDiff = localStorage.getItem('watersort_single_diff') || 'easy';
+      const savedDiff = (typeof localStorage !== 'undefined' ? localStorage.getItem('watersort_single_diff') : null) || 'easy';
       const uniqueLocalRoom = 'local_' + this.myId;
       this._store.joinRoom(uniqueLocalRoom, 'single', savedDiff, this.myId, this.myId);
     }
@@ -380,7 +380,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   changeSingleDifficulty(diff: string) {
-    localStorage.setItem('watersort_single_diff', diff);
+    (typeof localStorage !== 'undefined' && localStorage.setItem('watersort_single_diff', diff));
     this._store.leaveRoom();
     setTimeout(() => {
       const uniqueLocalRoom = 'local_' + this.myId + '_' + Date.now();

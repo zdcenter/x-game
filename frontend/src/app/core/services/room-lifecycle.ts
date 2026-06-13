@@ -83,10 +83,12 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
   const prefix = `${config.gameId}_reconnect`;
 
   const clearReconnectInfo = () => {
-    sessionStorage.removeItem(`${prefix}_room`);
-    sessionStorage.removeItem(`${prefix}_mode`);
-    sessionStorage.removeItem(`${prefix}_diff`);
-    sessionStorage.removeItem(`${prefix}_host`);
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(`${prefix}_room`);
+      sessionStorage.removeItem(`${prefix}_mode`);
+      sessionStorage.removeItem(`${prefix}_diff`);
+      sessionStorage.removeItem(`${prefix}_host`);
+    }
   };
 
   // Clear session storage if user navigates away via Angular SPA router
@@ -141,10 +143,16 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
       }
 
       // 2. Check for reconnect from sessionStorage (e.g. page refresh)
-      const room = sessionStorage.getItem(`${prefix}_room`);
-      const mode = sessionStorage.getItem(`${prefix}_mode`);
-      const diff = sessionStorage.getItem(`${prefix}_diff`);
-      const host = sessionStorage.getItem(`${prefix}_host`) || undefined;
+      let room = null;
+      let mode = null;
+      let diff = null;
+      let host = undefined;
+      if (typeof sessionStorage !== 'undefined') {
+        room = sessionStorage.getItem(`${prefix}_room`);
+        mode = sessionStorage.getItem(`${prefix}_mode`);
+        diff = sessionStorage.getItem(`${prefix}_diff`);
+        host = sessionStorage.getItem(`${prefix}_host`) || undefined;
+      }
 
       if (room && mode) {
         // Validate the room still exists on the server (prevents stale reconnect after backend restart)
@@ -170,11 +178,13 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
     },
 
     saveReconnectInfo(roomId: string, mode: string, difficulty: string, host?: string) {
-      sessionStorage.setItem(`${prefix}_room`, roomId);
-      sessionStorage.setItem(`${prefix}_mode`, mode);
-      sessionStorage.setItem(`${prefix}_diff`, difficulty);
-      if (host) {
-        sessionStorage.setItem(`${prefix}_host`, host);
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(`${prefix}_room`, roomId);
+        sessionStorage.setItem(`${prefix}_mode`, mode);
+        sessionStorage.setItem(`${prefix}_diff`, difficulty);
+        if (host) {
+          sessionStorage.setItem(`${prefix}_host`, host);
+        }
       }
     },
 

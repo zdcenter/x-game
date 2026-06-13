@@ -178,7 +178,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
     } else {
-      const savedDiff = localStorage.getItem('minesweeper_single_diff') || 'intermediate';
+      const savedDiff = (typeof localStorage !== 'undefined' ? localStorage.getItem('minesweeper_single_diff') : null) || 'intermediate';
       this.changeSingleDifficulty(savedDiff);
     }
   }
@@ -257,7 +257,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   changeSingleDifficulty(diff: string) {
     this.currentDifficulty.set(diff);
-    localStorage.setItem('minesweeper_single_diff', diff);
+    (typeof localStorage !== 'undefined' && localStorage.setItem('minesweeper_single_diff', diff));
     this.currentRoomMode.set('single');
     let width = 16, height = 16, mines = 40;
     if (diff.startsWith('custom_')) {

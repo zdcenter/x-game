@@ -120,9 +120,9 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
           helperMarks: this.helperMarks(),
           timestamp: Date.now()
         };
-        localStorage.setItem(`codebreaker_save_${diff}`, JSON.stringify(state));
+        (typeof localStorage !== 'undefined' && localStorage.setItem(`codebreaker_save_${diff}`, JSON.stringify(state)));
       } else if (status === 'finished') {
-        localStorage.removeItem(`codebreaker_save_${diff}`);
+        (typeof localStorage !== 'undefined' && localStorage.removeItem(`codebreaker_save_${diff}`));
       }
     });
   }
@@ -183,7 +183,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     // Try to load save if single player
     if (mode === 'single') {
       try {
-        const saved = localStorage.getItem(`codebreaker_save_${difficulty}`);
+        const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem(`codebreaker_save_${difficulty}`) : null);
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.status === 'playing' && (Date.now() - parsed.timestamp) < 24 * 60 * 60 * 1000) {

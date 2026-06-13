@@ -32,7 +32,7 @@ export class LocalSlidingEngine {
         endAt: this.endAt,
         moves: this.moves
       };
-      localStorage.setItem(LocalSlidingEngine.STORAGE_KEY, JSON.stringify(data));
+      (typeof localStorage !== 'undefined' && localStorage.setItem(LocalSlidingEngine.STORAGE_KEY, JSON.stringify(data)));
     } catch (e) {
       console.error('Failed to save sliding engine state', e);
     }
@@ -40,7 +40,7 @@ export class LocalSlidingEngine {
 
   static loadFromStorage(): { engine: LocalSlidingEngine, difficulty: string } | null {
     try {
-      const dataStr = localStorage.getItem(LocalSlidingEngine.STORAGE_KEY);
+      const dataStr = (typeof localStorage !== 'undefined' ? localStorage.getItem(LocalSlidingEngine.STORAGE_KEY) : null);
       if (dataStr) {
         const data = JSON.parse(dataStr);
         if (data && data.size && data.cells) {

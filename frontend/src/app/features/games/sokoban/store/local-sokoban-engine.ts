@@ -181,7 +181,7 @@ export class LocalSokobanEngine {
     }
     if (win) {
       this.status = 'finished';
-      localStorage.removeItem('sokoban_save');
+      (typeof localStorage !== 'undefined' && localStorage.removeItem('sokoban_save'));
     }
   }
 
@@ -207,7 +207,7 @@ export class LocalSokobanEngine {
 
   saveToStorage() {
     if (this.status === 'finished') {
-      localStorage.removeItem('sokoban_save');
+      (typeof localStorage !== 'undefined' && localStorage.removeItem('sokoban_save'));
       return;
     }
     const data = {
@@ -220,11 +220,11 @@ export class LocalSokobanEngine {
       difficulty: this.difficulty,
       levelStr: this.levelStr
     };
-    localStorage.setItem('sokoban_save', JSON.stringify(data));
+    (typeof localStorage !== 'undefined' && localStorage.setItem('sokoban_save', JSON.stringify(data)));
   }
 
   static loadFromStorage(levelId?: string): { engine: LocalSokobanEngine, difficulty: string } | null {
-    const saved = localStorage.getItem('sokoban_save');
+    const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem('sokoban_save') : null);
     if (!saved) return null;
     
     try {

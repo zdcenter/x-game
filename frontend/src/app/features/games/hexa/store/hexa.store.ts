@@ -294,7 +294,7 @@ export class HexaStore {
   }
 
   loadSinglePlayer() {
-    const saved = localStorage.getItem('hexa_single_save');
+    const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem('hexa_single_save') : null);
     if (saved) {
       try {
         const data = JSON.parse(saved);

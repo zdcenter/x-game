@@ -49,7 +49,7 @@ export class Drop2048Store {
   isDead = signal<boolean>(false);
   combos = signal<ComboText[]>([]);
   particles = signal<{ id: string, x: number, y: number, color: string }[]>([]);
-  bestScore = signal<number>(parseInt(localStorage.getItem('drop2048_best') || '0', 10));
+  bestScore = signal<number>(parseInt((typeof localStorage !== 'undefined' ? localStorage.getItem('drop2048_best') : null) || '0', 10));
   private gravityInterval: any;
 
   // Computed state
@@ -71,7 +71,7 @@ export class Drop2048Store {
           isDead: this.isDead(),
           localStatus: this.localStatus()
         };
-        localStorage.setItem('drop2048_save', JSON.stringify(state));
+        (typeof localStorage !== 'undefined' && localStorage.setItem('drop2048_save', JSON.stringify(state)));
       }
     });
   }
@@ -120,7 +120,7 @@ export class Drop2048Store {
 
   startGame() {
     if (this.currentMode() === 'single') {
-      const saved = localStorage.getItem('drop2048_save');
+      const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem('drop2048_save') : null);
       if (saved) {
         try {
           const state = JSON.parse(saved);
@@ -487,7 +487,7 @@ export class Drop2048Store {
     this.localScore.set(newScore);
     if (newScore > this.bestScore()) {
       this.bestScore.set(newScore);
-      localStorage.setItem('drop2048_best', newScore.toString());
+      (typeof localStorage !== 'undefined' && localStorage.setItem('drop2048_best', newScore.toString()));
     }
   }
 

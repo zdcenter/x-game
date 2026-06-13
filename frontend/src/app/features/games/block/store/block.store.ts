@@ -278,7 +278,7 @@ export class BlockStore {
       if (this.currentMode() !== 'single') {
         this.ws.send({ action: 'game_over', score: this.localScore(), matrix: this.localBoard() });
       } else {
-        localStorage.removeItem('block_save');
+        (typeof localStorage !== 'undefined' && localStorage.removeItem('block_save'));
       }
     }
   }
@@ -312,11 +312,11 @@ export class BlockStore {
       hand: this.localHand(),
       size: this.boardSize()
     };
-    localStorage.setItem('block_save', JSON.stringify(save));
+    (typeof localStorage !== 'undefined' && localStorage.setItem('block_save', JSON.stringify(save)));
   }
 
   private loadSinglePlayerProgress() {
-    const saveStr = localStorage.getItem('block_save');
+    const saveStr = (typeof localStorage !== 'undefined' ? localStorage.getItem('block_save') : null);
     if (saveStr) {
       try {
         const save = JSON.parse(saveStr);
