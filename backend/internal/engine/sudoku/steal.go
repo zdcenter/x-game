@@ -29,7 +29,7 @@ type StealEngine struct {
 }
 
 func init() {
-	engine.Register("sudoku_same_pk_steal", func() engine.GameEngine { return &StealEngine{} })
+	engine.Register("sudoku_steal", func() engine.GameEngine { return &StealEngine{} })
 }
 
 func (e *StealEngine) InitGame(options interface{}) error {
@@ -122,12 +122,12 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 		action = baseReq.Action
 	}
 
-	if action == "start" && e.State == engine.StateWaiting {
+	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
 		return e.State, nil
 	}
 
-	if action == "restart_game" && e.State == engine.StateFinished {
+	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		for _, p := range e.Players {
@@ -199,9 +199,9 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 			player.Score -= 1
 			player.FreezeUntil = time.Now().UnixMilli() + int64(e.PenaltySeconds*1000)
 		}
-	} else if action == "forfeit" {
+	} else if action == string(domain.ActionForfeit) {
 		player.Finished = true
-		
+
 		allFinished := true
 		for _, p := range e.Players {
 			if !p.Finished {

@@ -1,6 +1,7 @@
 package minesweeper
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -21,7 +22,7 @@ type SpeedEngine struct {
 }
 
 func init() {
-	engine.Register("minesweeper_same_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
+	engine.Register("minesweeper_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 type PKSpeedStateResponse struct {
@@ -162,12 +163,12 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		Action string `json:"action"`
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
-		if baseAction.Action == "start" && e.State == engine.StateWaiting {
+		if baseAction.Action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 			for _, b := range e.Boards {
 				b.Status = engine.StateStarting
 				b.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
 			}
-			
+
 			engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
 				now := time.Now().UnixMilli()
 				x, y := e.BaseBoard.FindSafeStartPoint()
@@ -179,8 +180,8 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			})
 			return e.State, nil
 		}
-		
-		if baseAction.Action == "forfeit" {
+
+		if baseAction.Action == string(domain.ActionForfeit) {
 			e.RemovePlayer(playerID)
 			if len(e.Boards) == 0 {
 				e.State = engine.StateFinished
@@ -189,12 +190,12 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		}
 	}
 
-	if (actionType == "restart_game" || baseAction.Action == "restart_game") && e.State == engine.StateFinished {
+	if (actionType == string(domain.ActionRestartGame) || baseAction.Action == string(domain.ActionRestartGame)) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		// We need a new base board to randomize mines
 		e.BaseBoard = NewBoard(e.BaseBoard.Width, e.BaseBoard.Height, e.BaseBoard.Mines)
 		e.BaseBoard.GenerateMines(-1, -1)
-		
+
 		for _, b := range e.Boards {
 			b.Status = engine.StateWaiting
 			// Clone new board
@@ -202,13 +203,13 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			b.Cells = newBoard.Cells
 			b.RevealedCnt = 0
 		}
-		
+
 		for playerID := range e.Scores {
 			e.Scores[playerID] = 0
 			e.Errors[playerID] = 0
 		}
 		e.Cooldowns = make(map[string]int64)
-		
+
 		e.Broadcast()
 		return e.State, nil
 	}
@@ -257,7 +258,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	case "flag":
 		if cell.IsMine {
 			cell.State = CellFlagged
-			// Fix: Do not increment RevealedCnt on flag, otherwise players win early 
+			// Fix: Do not increment RevealedCnt on flag, otherwise players win early
 			// because RevealedCnt reaches totalSafeCells before the board is clear.
 		} else {
 			e.Errors[playerID]++
@@ -327,7 +328,7 @@ func (e *SpeedEngine) checkWinCondition(playerID string) {
 func (e *SpeedEngine) CheckGameOver() (bool, []string) {
 	e.Mu.RLock()
 	defer e.Mu.RUnlock()
-	
+
 	if e.State == engine.StateFinished {
 		var winners []string
 		for p, s := range e.Scores {

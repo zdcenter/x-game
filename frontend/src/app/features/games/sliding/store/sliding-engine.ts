@@ -1,17 +1,27 @@
-import { GameStatus } from './sliding.store';
+import { GameStatus, GameStatusType, GameDifficulty } from '../../../../core/models/game.model';
+import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
 
-export class LocalSlidingEngine {
+export enum SlidingActionType {
+  Move = 'move'
+}
+
+export type SlidingAction = {
+  type: SlidingActionType.Move;
+  index: number;
+};
+
+export class LocalSlidingEngine implements ILocalEngine<any, SlidingAction> {
   size: number;
   cells: number[];
   emptyIdx: number;
-  status: GameStatus = GameStatus.Playing;
+  status: GameStatusType = GameStatus.Playing;
   startAt: number = 0;
   endAt: number = 0;
   moves: number = 0;
 
   static readonly STORAGE_KEY = 'x_game_sliding_single_state';
 
-  constructor(difficulty: string = 'medium') {
+  constructor(difficulty: string = GameDifficulty.Medium) {
     this.size = this.parseDifficulty(difficulty);
     this.cells = Array.from({ length: this.size * this.size }, (_, i) => i + 1);
     this.cells[this.size * this.size - 1] = 0;
@@ -44,7 +54,7 @@ export class LocalSlidingEngine {
       if (dataStr) {
         const data = JSON.parse(dataStr);
         if (data && data.size && data.cells) {
-          const engine = new LocalSlidingEngine(data.difficulty || 'medium');
+          const engine = new LocalSlidingEngine(data.difficulty || GameDifficulty.Medium);
           engine.size = data.size;
           engine.cells = data.cells;
           engine.emptyIdx = data.emptyIdx;
@@ -52,7 +62,7 @@ export class LocalSlidingEngine {
           engine.startAt = data.startAt;
           engine.endAt = data.endAt || 0;
           engine.moves = data.moves || 0;
-          return { engine, difficulty: data.difficulty || 'medium' };
+          return { engine, difficulty: data.difficulty || GameDifficulty.Medium };
         }
       }
     } catch (e) {
@@ -73,11 +83,11 @@ export class LocalSlidingEngine {
       }
     }
     switch (difficulty) {
-      case 'easy':
+      case GameDifficulty.Easy:
       case 'beginner': return 4;
-      case 'hard':
+      case GameDifficulty.Hard:
       case 'advanced': return 6;
-      case 'medium':
+      case GameDifficulty.Medium:
       case 'intermediate':
       default: return 5;
     }
@@ -108,7 +118,31 @@ export class LocalSlidingEngine {
     }
   }
 
-  move(idx: number): boolean {
+  initGame(config: any): void {
+    // Already initialized in constructor, or apply config if needed
+    if (config?.difficulty) {
+      this.size = this.parseDifficulty(config.difficulty);
+      this.cells = Array.from({ length: this.size * this.size }, (_, i) => i + 1);
+      this.cells[this.size * this.size - 1] = 0;
+      this.emptyIdx = this.size * this.size - 1;
+      this.shuffle(this.size * this.size * 100);
+      this.startAt = Date.now();
+      this.moves = 0;
+      this.status = GameStatus.Playing;
+    }
+  }
+
+  getState(): any {
+    return this;
+  }
+
+  handleAction(action: SlidingAction): void {
+    if (action.type === SlidingActionType.Move) {
+      this.move(action.index);
+    }
+  }
+
+  private move(idx: number): boolean {
     if (this.status !== GameStatus.Playing) return false;
     
     if (idx < 0 || idx >= this.size * this.size) return false;

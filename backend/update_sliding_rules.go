@@ -126,13 +126,13 @@ Battle online against other players!
 - **完全公平**: 所有人开局拿到的是**完全相同**的打乱棋盘！
 - **胜负判定**: 没有任何运气成分，纯粹比拼规划路线的脑力和点击的极限手速，**最先复原拼图的玩家直接获得胜利！**`
 
-    jsonStr := fmt.Sprintf(`{"en": %#v, "zh": %#v}`, enRules, zhRules)
+	jsonStr := fmt.Sprintf(`{"en": %#v, "zh": %#v}`, enRules, zhRules)
 
 	var game domain.GameConfig
 	if err := database.Where("id = ?", "sliding").First(&game).Error; err != nil {
 		log.Fatal("Game not found", err)
 	}
-	
+
 	game.Rules = jsonStr
 	if err := database.Save(&game).Error; err != nil {
 		log.Fatal("Failed to save rules", err)

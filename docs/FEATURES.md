@@ -145,7 +145,7 @@
   - `GameEngine` 实现了高度插件化。核心 WebSocket 大厅不再关心具体游玩的是扫雷、数独还是未来的俄罗斯方块。
   - 新增游戏只需要通过 `engine.Register()` 向框架注册并实现统一的生命周期与广播接口 (`SetBroadcaster`)，即可开箱即用地继承所有的房间、对战和重连机制。
 - **全端参数与标识符标准化 (Unified Identifiers)**：
-  - 前端路由与组件中，对战模式统一抽象为泛用的 `pk_steal` 与 `pk_speed`。
+  - 前端路由与组件中，对战模式统一抽象为泛用的 `steal`, `speed`, `score`, `battle`。
   - 后端 Engine Factory 自动通过统一 `gameId` 和 `mode` 反射生成游戏实例。
 - **全端响应式界面与大厅交互 (Responsive Drawer Panel)**：
   - 各类游戏全面适配桌面与移动端 UI 体验。移动端大厅抽屉（Drawer）不会由于 CSS 冲突自动常驻遮挡游戏区域；关闭逻辑保证精准恢复游戏棋盘视觉，`flex` 布局受抽屉状态（`isMobileSidebarOpen`）严格控制，彻底告别移动端样式穿透带来的操作障碍。
@@ -206,7 +206,7 @@
 - **前端组件强制继承 (Component Extension)**：
   - 所有的对战级别主游戏组件必须 `extends BaseGameComponent`。基类不仅完美处理了房间加入、创建、解散等通用逻辑，还会在 `ngOnInit` 阶段自动连接竞技大厅的 WebSocket (`connectLobby()`)，确保右侧面板始终能收到实时的房间与玩家数据更新。子类如果覆盖生命周期函数必须调用 `super.ngOnInit()`。
 - **统一模式命名字典 (Mode Naming Convention)**：
-  - 各个游戏的模式命名强制使用公共常量规范：同盘抢分模式统一后缀为 `_pk_steal`，异盘竞速模式统一后缀为 `_pk_speed`。前端使用通用的 `GameLobbyPanelComponent` 组件即可零代码获得大厅列表、建房弹窗和模式匹配的支持。
+  - 各个游戏的模式命名强制使用公共常量规范：同盘抢分/抢雷模式统一后缀为 `steal`，异盘竞速模式统一后缀为 `speed`，分数生存模式统一为 `score`，对战互相攻击模式为 `battle`。前端使用通用的 `GameLobbyPanelComponent` 组件即可零代码获得大厅列表、建房弹窗和模式匹配的支持。
 
 ### 7. 24点游戏 (Math 24)
 - **支持模式**：单机模式、同盘抢分模式 (Steal)、竞速冲刺模式 (Speed)

@@ -1,6 +1,7 @@
 package drop2048
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"time"
 
@@ -65,9 +66,9 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 	}
 
 	// Handle Start
-	if actionType == "start" && e.State == engine.StateWaiting {
+	if actionType == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		e.state.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
-		
+
 		// Reset all players for the new round
 		for _, p := range e.state.Players {
 			p.Score = 0
@@ -78,11 +79,11 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
 			e.state.GlobalStartAt = time.Now().UnixMilli()
 		})
-		
+
 		return e.State, nil
 	}
 
-	if actionType == "restart_game" && e.State == engine.StateFinished {
+	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.state.Winners = []string{}
 		for _, p := range e.state.Players {
@@ -104,7 +105,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 			p.Score = act.Score
 			e.Broadcast()
 
-		case "game_over", "forfeit":
+		case "game_over", string(domain.ActionForfeit):
 			p.Finished = true
 			e.checkGameEnd()
 			e.Broadcast()
@@ -133,7 +134,7 @@ func (e *PKScoreEngine) checkGameEnd() {
 
 	if allFinished {
 		e.State = engine.StateFinished
-		
+
 		// Find max score
 		maxScore := -1
 		for _, p := range e.state.Players {

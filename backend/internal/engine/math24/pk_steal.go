@@ -16,7 +16,7 @@ type PKStealEngine struct {
 }
 
 func init() {
-	engine.Register("math24_same_pk_steal", func() engine.GameEngine {
+	engine.Register("math24_steal", func() engine.GameEngine {
 		return &PKStealEngine{
 			Players: make(map[string]*Math24Player),
 			Winners: []string{},
@@ -77,12 +77,12 @@ func (e *PKStealEngine) HandleAction(playerID string, actionType string, payload
 		return e.State, nil
 	}
 
-	if e.State == engine.StateWaiting && actionType == "start" {
+	if e.State == engine.StateWaiting && actionType == string(domain.ActionStartGame) {
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
 		return e.State, nil
 	}
 
-	if actionType == "restart_game" && e.State == engine.StateFinished {
+	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		puzzles := getRandomPuzzles(e.Difficulty, 1)
@@ -118,7 +118,7 @@ func (e *PKStealEngine) HandleAction(playerID string, actionType string, payload
 			if len(puzzles) > 0 {
 				e.CurrentPuzzle = &puzzles[0]
 			}
-			
+
 			if p.Score >= 5 {
 				e.State = engine.StateFinished
 				e.Winners = append(e.Winners, playerID)

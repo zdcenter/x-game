@@ -27,7 +27,7 @@ export class SudokuPkSpeedComponent {
   showOverlay = signal(false);
 
   getModeName() {
-    const mode = this.store.currentMode();
+    const mode = this.store.currentRoomMode();
     const key = this.gameRegistry.getModeLabel('sudoku', mode);
     return key ? this.i18n.t(key)() : mode;
   }

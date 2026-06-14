@@ -34,7 +34,7 @@ func GetAdminGames(c fiber.Ctx) error {
 func UpdateGame(c fiber.Ctx) error {
 	id := c.Params("id")
 	var game domain.GameConfig
-	
+
 	if err := db.DB.First(&game, "id = ?", id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Game not found"})
 	}

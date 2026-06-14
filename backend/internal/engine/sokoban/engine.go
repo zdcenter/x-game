@@ -19,8 +19,8 @@ type PlayerState struct {
 	ID      string     `json:"id"`
 	Board   [][]string `json:"board"`
 	History [][][]string
-	Moves   int        `json:"moves"`
-	Status  string     `json:"status"` // "playing", "finished"
+	Moves   int    `json:"moves"`
+	Status  string `json:"status"` // "playing", "finished"
 }
 
 type SokobanEngine struct {
@@ -62,7 +62,7 @@ var Levels = map[string]string{
 }
 
 func init() {
-	engine.Register("sokoban_same_pk_speed", func() engine.GameEngine {
+	engine.Register("sokoban_speed", func() engine.GameEngine {
 		return &SokobanEngine{
 			Players: make(map[string]*PlayerState),
 		}
@@ -184,7 +184,7 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 		return e.State, fmt.Errorf("player not found")
 	}
 
-	if actionType == "restart_game" && e.State == engine.StateFinished {
+	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StatePlaying
 		for _, player := range e.Players {
 			player.Board = copyBoard(e.LevelMap)
@@ -215,7 +215,7 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 	}
 
 	switch actionType {
-	case "move":
+	case string(domain.ActionMove):
 		var moveReq struct {
 			Dir string `json:"dir"` // up, down, left, right
 		}
@@ -354,8 +354,8 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 
 			if finished {
 				p.Status = "finished"
-				if e.Mode == "same_pk_speed" {
-					// In same_pk_speed, first one to finish ends the game and wins
+				if e.Mode == "speed" {
+					// In speed, first one to finish ends the game and wins
 					e.State = engine.StateFinished
 					return true, []string{p.ID}
 				}
@@ -374,7 +374,7 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 			e.State = engine.StateFinished
 			return true, winners
 		}
-	} else if e.Mode == "same_pk_speed" && allFinished {
+	} else if e.Mode == "speed" && allFinished {
 		// Just in case everyone finished somehow at same time
 		for id := range e.Players {
 			winners = append(winners, id)

@@ -1,6 +1,7 @@
 package sliding
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -19,7 +20,7 @@ type SpeedEngine struct {
 }
 
 func init() {
-	engine.Register("sliding_same_pk_speed", func() engine.GameEngine { return &SpeedEngine{} })
+	engine.Register("sliding_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
 type PKSpeedStateResponse struct {
@@ -110,14 +111,14 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		return e.State, err
 	}
 
-	if baseAction.Action == "start" && e.State == engine.StateWaiting {
+	if baseAction.Action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		startAt := time.Now().Add(3 * time.Second).UnixMilli()
 		e.GlobalStartAt = startAt
 		for _, b := range e.Boards {
 			b.Status = engine.StateStarting
 			b.StartAt = startAt
 		}
-		
+
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
 			now := time.Now().UnixMilli()
 			e.GlobalStartAt = now
@@ -129,7 +130,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		return e.State, nil
 	}
 
-	if (actionType == "restart_game" || baseAction.Action == "restart_game") && e.State == engine.StateFinished {
+	if (actionType == string(domain.ActionRestartGame) || baseAction.Action == string(domain.ActionRestartGame)) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		for _, b := range e.Boards {
@@ -143,8 +144,8 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		}
 		return e.State, nil
 	}
-	
-	if baseAction.Action == "forfeit" {
+
+	if baseAction.Action == string(domain.ActionForfeit) {
 		e.RemovePlayer(playerID)
 		if len(e.Boards) == 0 {
 			e.State = engine.StateFinished
@@ -165,12 +166,12 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		return e.State, errors.New("player board not playing")
 	}
 
-	if baseAction.Action == "move" {
+	if baseAction.Action == string(domain.ActionMove) {
 		if b.Move(baseAction.Idx) {
 			if b.CheckWin() {
 				b.Status = engine.StateFinished
 				e.Winners = append(e.Winners, playerID)
-				
+
 				// End game for everyone
 				e.State = engine.StateFinished
 				for _, otherBoard := range e.Boards {

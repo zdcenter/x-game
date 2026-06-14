@@ -1,32 +1,59 @@
-import { Cell, CellState, GameStatus } from './minesweeper.store';
+import { Cell, CellState } from './minesweeper.store';
+import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
+import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
-export class LocalMinesweeperEngine {
-  width: number;
-  height: number;
-  mines: number;
-  cells: Cell[][];
-  status: GameStatus;
-  revealedCnt: number;
-  startAt: number;
-  isMinesPlaced: boolean;
+export enum MinesweeperActionType {
+  Reveal = 'reveal',
+  Flag = 'flag',
+  Hint = 'hint'
+}
 
-  constructor(width: number, height: number, mines: number) {
-    this.width = width;
-    this.height = height;
-    this.mines = mines;
+export type MinesweeperAction = 
+  | { type: MinesweeperActionType.Reveal, x: number, y: number }
+  | { type: MinesweeperActionType.Flag, x: number, y: number }
+  | { type: MinesweeperActionType.Hint };
+
+export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperAction> {
+  width: number = 0;
+  height: number = 0;
+  mines: number = 0;
+  cells: Cell[][] = [];
+  status: GameStatusType = GameStatus.Waiting;
+  revealedCnt: number = 0;
+  startAt: number = 0;
+  isMinesPlaced: boolean = false;
+
+  initGame(config: { width: number, height: number, mines: number }) {
+    this.width = config.width;
+    this.height = config.height;
+    this.mines = config.mines;
     this.status = GameStatus.Playing;
     this.revealedCnt = 0;
     this.startAt = Date.now();
     this.isMinesPlaced = false;
-    this.cells = Array.from({ length: height }, (_, y) =>
-      Array.from({ length: width }, (_, x) => ({
+    this.cells = Array.from({ length: this.height }, (_, y) =>
+      Array.from({ length: this.width }, (_, x) => ({
         x,
         y,
         state: CellState.Hidden,
         neighbors: 0,
-        isMine: false // Private tracking for local engine
+        isMine: false
       }))
     );
+  }
+
+  getState() {
+    return this;
+  }
+
+  handleAction(action: MinesweeperAction) {
+    if (action.type === MinesweeperActionType.Reveal) {
+      this.revealCell(action.x, action.y);
+    } else if (action.type === MinesweeperActionType.Flag) {
+      this.toggleFlag(action.x, action.y);
+    } else if (action.type === MinesweeperActionType.Hint) {
+      this.applyHint();
+    }
   }
 
   revealCell(x: number, y: number) {

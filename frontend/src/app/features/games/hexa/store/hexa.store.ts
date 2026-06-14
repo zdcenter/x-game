@@ -8,12 +8,7 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
-export enum GameStatus {
-  WAITING = 'waiting',
-  STARTING = 'starting',
-  PLAYING = 'playing',
-  FINISHED = 'finished'
-}
+import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 @Injectable()
 export class HexaStore implements GameStoreInterface {
@@ -44,10 +39,10 @@ export class HexaStore implements GameStoreInterface {
   // Signals
   readonly status = computed(() => {
     if (this.currentMode() === 'single') {
-      return this.gameOver() ? GameStatus.FINISHED : GameStatus.PLAYING;
+      return this.gameOver() ? GameStatus.Finished : GameStatus.Playing;
     }
     const s = this.wsService.gameState()?.status;
-    return s ? (s as GameStatus) : GameStatus.WAITING;
+    return s ? (s as GameStatusType) : GameStatus.Waiting;
   });
 
   // Host info
@@ -175,7 +170,7 @@ export class HexaStore implements GameStoreInterface {
   }
 
   placePiece(piece: HexPiece, origin: { q: number, r: number, s: number }, pieceIndex: number) {
-    if (this.gameOver() || this.status() !== GameStatus.PLAYING) return;
+    if (this.gameOver() || this.status() !== GameStatus.Playing) return;
     if (!this.engine.canPlacePiece(piece, origin)) return;
 
     const result = this.engine.placePiece(piece, origin);

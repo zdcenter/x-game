@@ -5,7 +5,9 @@ import { Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
-import { MinesweeperStore, GameStatus } from './store/minesweeper.store';
+import { MinesweeperStore, CellState } from './store/minesweeper.store';
+import { GameStatus, GameMode, GameId, GameResult, GameResultType } from '../../../core/models/game.model';
+import { C2SAction } from '../../../core/models/websocket.model';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -45,7 +47,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   showRules = signal(false);
   get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
-  currentRoomMode = signal<string>('single');
+  currentRoomMode = signal<string>(GameMode.Single);
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('intermediate');
   frozenRemaining = signal(0);
@@ -54,12 +56,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     return this.gameRegistry.getConfig('minesweeper')?.difficulties || [];
   }
 
-  hasLostSingleMode = computed(() => this.currentRoomMode() === 'single' && this.store.board().some(row => row.some(c => c.state === 3)));
+  hasLostSingleMode = computed(() => this.currentRoomMode() === GameMode.Single && this.store.board().some(row => row.some(c => c.state === 3)));
 
   isDefeat = computed(() => {
-    if (this.currentRoomMode() === 'single') return this.hasLostSingleMode();
-    if (this.currentRoomMode() === 'same_pk_speed') return !this.hasWonSpeedMode();
-    if (this.currentRoomMode() === 'same_pk_steal') {
+    if (this.currentRoomMode() === GameMode.Single) return this.hasLostSingleMode();
+    if (this.currentRoomMode() === GameMode.Speed) return !this.hasWonSpeedMode();
+    if (this.currentRoomMode() === GameMode.Steal) {
       const rawScores = this.store.scores();
       const myScore = rawScores[this.playerId] || 0;
       const otherScores = Object.keys(rawScores).filter(id => id !== this.playerId).map(id => rawScores[id]);
@@ -90,7 +92,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       const mode = this.currentRoomMode();
 
       // Elapsed timer logic
-      if (status === GameStatus.Playing && mode !== 'single') {
+      if (status === GameStatus.Playing && mode !== GameMode.Single) {
         if (!this.elapsedInterval) {
           this.elapsedInterval = setInterval(() => {
             const startAt = this.store.startAt();
@@ -158,7 +160,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     });
 
     this.roomLifecycle = setupRoomLifecycle({
-      gameId: 'minesweeper',
+      gameId: GameId.Minesweeper,
       getCurrentMode: () => this.currentRoomMode(),
       onLeaveRoom: () => this.returnToLobby(),
     });
@@ -184,7 +186,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   override ngOnDestroy() {
-    this.wsService.disconnect('minesweeper');
+    this.wsService.disconnect(GameId.Minesweeper);
     this.gameTimer.stopCountdown();
     if (this.elapsedInterval) {
       clearInterval(this.elapsedInterval);
@@ -209,12 +211,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentRoomId.set(roomId);
     this.isMobileSidebarOpen.set(false);
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId);
   }
 
   returnToLobby() {
     this.currentRoomId.set('');
-    this.store.leaveGame();
+    this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
     setTimeout(() => this.changeSingleDifficulty('intermediate'), 100);
   }
@@ -234,7 +236,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   goBack() {
     if (this.currentRoomId()) {
-      this.wsService.send({ type: this.store.host() === this.playerId ? 'dismiss_room' : 'leave_room' });
+      this.wsService.send({ type: this.store.hostId() === this.playerId ? C2SAction.DismissRoom : C2SAction.LeaveRoom });
     }
     this.router.navigate(['/lobby']);
   }
@@ -250,7 +252,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         game: 'minesweeper',
         mode: this.currentRoomMode(),
         difficulty: this.currentDifficulty(),
-        host: this.store.host()
+        host: this.store.hostId()
       });
     }
   }
@@ -299,38 +301,38 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     return scores[this.playerId] > 0;
   }
 
-  getOverlayStatus(): 'win' | 'lose' {
-    if (this.currentRoomMode() === 'same_pk_speed') {
-      return this.hasWonSpeedMode() ? 'win' : 'lose';
+  getOverlayStatus(): GameResultType {
+    if (this.currentRoomMode() === GameMode.Speed) {
+      return this.hasWonSpeedMode() ? GameResult.Win : GameResult.Lose;
     }
-    return this.isDefeat() ? 'lose' : 'win';
+    return this.isDefeat() ? GameResult.Lose : GameResult.Win;
   }
 
   getOverlayTitle(): string {
     const status = this.getOverlayStatus();
-    if (status === 'win') {
-      return this.currentRoomMode() === 'same_pk_speed' ? this.i18n.t('game.you_win')() : this.i18n.t('minesweeper.victory')();
+    if (status === GameResult.Win) {
+      return this.currentRoomMode() === GameMode.Speed ? this.i18n.t('game.you_win')() : this.i18n.t('minesweeper.victory')();
     }
     return this.i18n.t('game.defeat')();
   }
 
   getOverlaySubtitle(): string {
-    if (this.currentRoomMode() === 'same_pk_speed') {
+    if (this.currentRoomMode() === GameMode.Speed) {
       return this.hasWonSpeedMode() ? this.i18n.t('game.cleared_first')() : this.i18n.t('game.opponent_finished')();
     }
     if (this.isDefeat()) {
-      return this.currentRoomMode() === 'single' ? this.i18n.t('game.stepped_mine')() : this.i18n.t('game.steal_defeat')();
+      return this.currentRoomMode() === GameMode.Single ? this.i18n.t('game.stepped_mine')() : this.i18n.t('game.steal_defeat')();
     }
-    return this.currentRoomMode() === 'single' ? this.i18n.t('minesweeper.cleared')() : this.i18n.t('game.steal_victory')();
+    return this.currentRoomMode() === GameMode.Single ? this.i18n.t('minesweeper.cleared')() : this.i18n.t('game.steal_victory')();
   }
 
   getOverlayStats() {
     const stats: { label: string, value: string | number }[] = [];
 
     // Time spent is relevant for single and speed mode
-    if (this.currentRoomMode() !== 'same_pk_steal') {
+    if (this.currentRoomMode() !== GameMode.Steal) {
       let timeStr = this.elapsedTime();
-      if (this.currentRoomMode() === 'single') {
+      if (this.currentRoomMode() === GameMode.Single) {
         const start = this.store.startAt();
         if (start > 0) {
           const diffMs = Date.now() - start;
@@ -344,7 +346,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         stats.push({ label: 'TIME', value: timeStr });
       }
 
-      if (this.currentRoomMode() === 'single') {
+      if (this.currentRoomMode() === GameMode.Single) {
         const best = this.store.bestTime();
         if (best > 0) {
           const m = Math.floor(best / 60).toString().padStart(2, '0');
@@ -355,7 +357,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
 
     // Score (flags) is relevant for steal mode
-    if (this.currentRoomMode() === 'same_pk_steal') {
+    if (this.currentRoomMode() === GameMode.Steal) {
       const scores = this.store.scores();
       const myScore = scores[this.playerId] || 0;
       stats.push({ label: 'SCORE', value: myScore });

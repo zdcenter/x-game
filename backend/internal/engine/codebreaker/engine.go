@@ -1,6 +1,7 @@
 package codebreaker
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"math/rand"
 	"strings"
@@ -24,16 +25,16 @@ type PlayerState struct {
 
 type CodebreakerEngine struct {
 	engine.BaseEngine
-	Players      map[string]*PlayerState `json:"players"`
-	Difficulty   string                  `json:"difficulty"`
-	SecretCode   string                  `json:"secretCode"`
-	DigitLength  int                     `json:"digitLength"`
-	Winners      []string                `json:"winners"`
+	Players     map[string]*PlayerState `json:"players"`
+	Difficulty  string                  `json:"difficulty"`
+	SecretCode  string                  `json:"secretCode"`
+	DigitLength int                     `json:"digitLength"`
+	Winners     []string                `json:"winners"`
 }
 
 func init() {
 	engine.Register("codebreaker_single", func() engine.GameEngine { return &CodebreakerEngine{} })
-	engine.Register("codebreaker_same_pk_speed", func() engine.GameEngine { return &CodebreakerEngine{} })
+	engine.Register("codebreaker_speed", func() engine.GameEngine { return &CodebreakerEngine{} })
 }
 
 func (e *CodebreakerEngine) InitGame(options interface{}) error {
@@ -118,12 +119,12 @@ func (e *CodebreakerEngine) HandleAction(playerID string, action string, payload
 		action = baseReq.Action
 	}
 
-	if action == "start" && e.State == engine.StateWaiting {
+	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
 		return e.State, nil
 	}
 
-	if action == "restart_game" && e.State == engine.StateFinished {
+	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		for _, p := range e.Players {
@@ -167,7 +168,7 @@ func (e *CodebreakerEngine) HandleAction(playerID string, action string, payload
 				}
 			}
 		}
-	} else if action == "forfeit" {
+	} else if action == string(domain.ActionForfeit) {
 		player.Finished = true
 		e.checkGameEnd()
 	}

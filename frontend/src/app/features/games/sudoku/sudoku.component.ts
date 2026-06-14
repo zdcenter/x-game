@@ -84,7 +84,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     // Room lifecycle: cross-game join, reconnect, room dismissed handling
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sudoku',
-      getCurrentMode: () => this.store.currentMode(),
+      getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => {
         this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
@@ -159,9 +159,9 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       this.lobbyPanel.openUpdateRoomModal({
         id: this.store.roomId(),
         game: 'sudoku',
-        mode: this.store.currentMode(),
+        mode: this.store.currentRoomMode(),
         difficulty: '',
-        host: this.store.host()
+        host: this.store.hostId()
       });
     }
   }

@@ -10,7 +10,7 @@ import { I18nService } from '../../../../core/i18n/i18n.service';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
 
 export interface SudokuCell {
   r: number;
@@ -26,23 +26,17 @@ export interface SudokuHistory {
 }
 
 @Injectable()
-export class SudokuStore implements GameStoreInterface {
+export class SudokuStore extends BaseGameStore {
+  readonly gameId = 'sudoku';
+
   private http = inject(HttpClient);
   private toast = inject(ToastService);
-  private auth = inject(AuthStore);
   private audio = inject(AudioService);
   private i18n = inject(I18nService);
   private adService = inject(AdService);
-  ws = inject(WebSocketService);
   private statsService = inject(GameStatsService);
 
   private saveSubject = new Subject<void>();
-
-  playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
-
-  // Modes: 'single', 'same_pk_steal', 'same_pk_speed'
-  currentMode = signal<string>('single');
-  roomId = signal<string>('');
 
   // Board state (Local)
   board = signal<SudokuCell[][]>([]);
@@ -74,7 +68,7 @@ export class SudokuStore implements GameStoreInterface {
   });
 
   // WS State derived
-  rawState = computed(() => this.ws.gameState() || {
+  override rawState = computed(() => this.ws.gameState() || {
     status: 'waiting',
     difficulty: '',
     players: {},
@@ -85,29 +79,21 @@ export class SudokuStore implements GameStoreInterface {
 
   gameStatus = computed(() => this.rawState()?.status || 'waiting');
   players = computed(() => this.rawState()?.players || {});
-  host = computed(() => this.rawState()?.host || '');
+  override readonly hostId = computed(() => this.rawState()?.host || '');
 
-  // GameStoreInterface required aliases
-  readonly currentRoomMode = computed(() => this.currentMode());
-  readonly hostId = computed(() => {
-    if (this.currentMode() === 'single') return this.playerId();
-    return this.rawState()?.host || '';
-  });
-  readonly status = computed(() => {
-    if (this.currentMode() === 'single') return this.isFinished() ? 'finished' : 'playing';
+  override readonly status = computed(() => {
+    if (this.currentRoomMode() === 'single') return this.isFinished() ? 'finished' : 'playing';
     return (this.rawState()?.status as string) || 'waiting';
   });
-  readonly playersList = computed<any[]>(() => {
+  override readonly playersList = computed<any[]>(() => {
     const p = this.players() || {};
     return Object.keys(p).map(id => ({ id, ...p[id] }));
-  });
-  readonly readyPlayers = computed<Record<string, boolean>>(() => {
-    return (this.rawState() as any)?.readyPlayers || {};
   });
 
   private timer: any;
 
   constructor() {
+    super();
     this.saveSubject.pipe(debounceTime(1000)).subscribe(() => {
       this.saveStateToBackend();
     });
@@ -142,7 +128,7 @@ export class SudokuStore implements GameStoreInterface {
 
     // Effect to auto-sync Steal mode board
     effect(() => {
-      if (this.currentMode() === 'same_pk_steal') {
+      if (this.currentRoomMode() === 'steal') {
         const rState = this.rawState() as any;
         if (rState.status === 'playing' && rState.currentBoard) {
           // Compare and update our local board
@@ -174,66 +160,20 @@ export class SudokuStore implements GameStoreInterface {
   }
 
   // --- ROOM MANAGEMENT ---
-  async joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
-    this.currentMode.set(mode);
-    this.roomId.set(roomId);
+  // override joinRoom if we want to set 'view' or we can just rely on effect
+  override joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
     this.view.set('room');
-    await this.ws.connect('sudoku', roomId, this.playerId(), mode, diff, hostId);
+    super.joinRoom(roomId, mode, diff, hostId);
   }
 
-  leaveRoom() {
-    this.ws.disconnect('sudoku');
-    this.roomId.set('');
-    this.currentMode.set('single');
+  override leaveRoom() {
+    super.leaveRoom();
     this.view.set('lobby');
   }
 
-  startGame() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ action: 'start' });
-    }
-  }
-
   playAgain() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'restart_game' });
-    }
-  }
-
-  restartGame() {
-    this.playAgain();
-  }
-
-  dismissRoom() {
-    if (this.currentMode() !== 'single') {
-      this.toast.confirm({
-        title: 'Dismiss Room',
-        message: 'Are you sure you want to dismiss this room? All players will be kicked out.',
-        confirmText: 'Dismiss',
-        cancelText: 'Cancel',
-        onConfirm: () => {
-          this.ws.send({ type: 'dismiss_room' });
-          this.toast.show('Room dismissed successfully', 'success');
-        }
-      });
-    }
-  }
-
-  kickPlayer(playerId: string) {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'kick_player', target: playerId });
-    }
-  }
-
-  ready() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'ready' });
-    }
-  }
-
-  cancelReady() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'cancel_ready' });
+    if (this.currentRoomMode() !== 'single') {
+      super.restartGame();
     }
   }
 
@@ -321,7 +261,7 @@ export class SudokuStore implements GameStoreInterface {
 
     this.audio.playSudoku('input');
 
-    if (this.currentMode() === 'same_pk_steal') {
+    if (this.currentRoomMode() === 'steal') {
       const myPlayer = this.players()[this.playerId()];
       if (myPlayer && myPlayer.freezeUntil > Date.now()) {
         this.toast.show('You are frozen!', 'error');
@@ -360,7 +300,7 @@ export class SudokuStore implements GameStoreInterface {
     this.checkWinCondition();
 
     // Speed mode progress tracking
-    if (this.currentMode() === 'same_pk_speed') {
+    if (this.currentRoomMode() === 'speed') {
       this.ws.send({ action: 'progress', progress: this.countFilledCells() });
     }
 
@@ -368,7 +308,7 @@ export class SudokuStore implements GameStoreInterface {
   }
 
   applyHint() {
-    if (this.currentMode() !== 'single' || this.isFinished()) return;
+    if (this.currentRoomMode() !== 'single' || this.isFinished()) return;
     const sel = this.selectedCell();
     if (!sel) {
       this.toast.show(this.i18n.t('game.select_cell_first')() || 'Please select an empty cell first', 'info');
@@ -426,7 +366,7 @@ export class SudokuStore implements GameStoreInterface {
 
     this.audio.playSudoku('clear');
 
-    if (this.currentMode() === 'same_pk_steal') {
+    if (this.currentRoomMode() === 'steal') {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
       return;
     }
@@ -441,7 +381,7 @@ export class SudokuStore implements GameStoreInterface {
 
   clearBoard() {
     if (this.isFinished()) return;
-    if (this.currentMode() === 'same_pk_steal') return;
+    if (this.currentRoomMode() === 'steal') return;
 
     this.audio.playSudoku('clear');
     this.saveHistory();
@@ -470,7 +410,7 @@ export class SudokuStore implements GameStoreInterface {
 
   undo() {
     if (this.isFinished()) return;
-    if (this.currentMode() === 'same_pk_steal') return;
+    if (this.currentRoomMode() === 'steal') return;
     if (this.history.length === 0) return;
 
     this.audio.playSudoku('input');
@@ -553,7 +493,7 @@ export class SudokuStore implements GameStoreInterface {
 
     const valid = complete && !hasError;
 
-    if (valid && this.currentMode() === 'single') {
+    if (valid && this.currentRoomMode() === 'single') {
       this.isFinished.set(true);
       this.stopTimer();
 
@@ -580,9 +520,9 @@ export class SudokuStore implements GameStoreInterface {
     }
 
     if (valid) {
-      if (this.currentMode() === 'single') {
+      if (this.currentRoomMode() === 'single') {
         this.finishPuzzle();
-      } else if (this.currentMode() === 'same_pk_speed') {
+      } else if (this.currentRoomMode() === 'speed') {
         const serialized = this.serializeBoard();
         this.ws.send({ action: 'finish', board: serialized });
       }
@@ -616,7 +556,7 @@ export class SudokuStore implements GameStoreInterface {
   }
 
   private triggerSave() {
-    if (this.currentMode() === 'single') {
+    if (this.currentRoomMode() === 'single') {
       this.saveSubject.next();
     }
   }
@@ -653,7 +593,7 @@ export class SudokuStore implements GameStoreInterface {
   }
 
   pauseAndSave() {
-    if (this.currentMode() === 'single') {
+    if (this.currentRoomMode() === 'single') {
       this.stopTimer();
       this.saveStateToBackend();
     }

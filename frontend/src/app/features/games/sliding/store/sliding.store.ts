@@ -1,61 +1,29 @@
 import { Injectable, computed, inject, effect, signal } from '@angular/core';
-import { WebSocketService } from '../../../../core/services/websocket.service';
-import { AudioService } from '../../../../core/services/audio.service';
-import { AuthStore } from '../../../../core/auth/auth.store';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
-import { LocalSlidingEngine } from './sliding-engine';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
-
-export enum GameStatus {
-  Waiting = 'waiting',
-  Starting = 'starting',
-  Playing = 'playing',
-  Finished = 'finished',
-}
+import { AudioService } from '../../../../core/services/audio.service';
+import { LocalSlidingEngine, SlidingAction, SlidingActionType } from './sliding-engine';
+import { GameStatusType, GameStatus, GameMode, GameId, GameDifficulty } from '../../../../core/models/game.model';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { C2SAction } from '../../../../core/models/websocket.model';
 
 @Injectable()
-export class SlidingStore implements GameStoreInterface {
-  private ws = inject(WebSocketService);
-  gameState = computed(() => this.ws.gameState());
+export class SlidingStore extends BaseGameStore {
+  readonly gameId = GameId.Sliding;
   private audio = inject(AudioService);
-  private auth = inject(AuthStore);
   private statsService = inject(GameStatsService);
-  
-  private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
-  private currentMode = signal<string>('single');
   private localEngine = signal<LocalSlidingEngine | null>(null);
   readonly bestTime = signal<number>(0);
 
-  private rawState = computed(() => this.ws.gameState() || {
-    boards: {},
-    winners: [],
-    host: '',
-    status: GameStatus.Waiting
-  });
-
-  readonly currentRoomMode = computed(() => this.currentMode());
-  readonly roomId = signal<string>('');
-  readonly currentDifficulty = signal<string>('medium');
-
-  readonly host = computed<string>(() => {
-    if (this.currentMode() === 'single') return this.playerId();
-    return (this.rawState() as any)?.host || '';
-  });
-
-  // GameStoreInterface aliases
-  readonly hostId = computed(() => this.host());
+  // playersList & status are required by BaseGameStore
   readonly playersList = computed<any[]>(() => {
-    if (this.currentMode() === 'single') return [];
-    const boards = this.rawState()?.boards || {};
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const boards = (this.rawState() as any)?.boards || {};
     return Object.keys(boards).map(id => ({ id }));
   });
-  readonly readyPlayers = computed<Record<string, boolean>>(() => {
-    return (this.rawState() as any)?.readyPlayers || {};
-  });
 
-  private mapStatus(backendStatus: number | string | undefined): GameStatus {
-    if (typeof backendStatus === 'string') return backendStatus as GameStatus;
+  private mapStatus(backendStatus: number | string | undefined): GameStatusType {
+    if (typeof backendStatus === 'string') return backendStatus as GameStatusType;
     switch (backendStatus) {
       case 1: return GameStatus.Starting;
       case 2: return GameStatus.Playing;
@@ -66,24 +34,24 @@ export class SlidingStore implements GameStoreInterface {
     }
   }
 
-  readonly status = computed<GameStatus>(() => {
-    if (this.currentMode() === 'single') {
+  readonly status = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
       return this.localEngine()?.status || GameStatus.Waiting;
     }
-    return this.mapStatus(this.rawState().status);
+    return this.mapStatus((this.rawState() as any)?.status);
   });
 
   readonly globalStartAt = computed(() => {
-    return (this.rawState() as any).globalStartAt || 0;
+    return (this.rawState() as any)?.globalStartAt || 0;
   });
 
   readonly myBoard = computed(() => {
-    if (this.currentMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const le = this.localEngine();
       if (!le) return null;
       return { size: le.size, cells: le.cells, emptyIdx: le.emptyIdx, status: le.status, startAt: le.startAt, moves: le.moves };
     }
-    const boards = this.rawState().boards;
+    const boards = (this.rawState() as any)?.boards;
     if (boards && boards[this.playerId()]) {
       return boards[this.playerId()];
     }
@@ -119,13 +87,13 @@ export class SlidingStore implements GameStoreInterface {
   });
 
   readonly allBoards = computed(() => {
-    if (this.currentMode() === 'single') return {};
-    return this.rawState().boards || {};
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    return (this.rawState() as any)?.boards || {};
   });
 
   readonly otherPlayers = computed(() => {
-    if (this.currentMode() === 'single') return [];
-    const boards = this.rawState().boards || {};
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const boards = (this.rawState() as any)?.boards || {};
     const others = [];
     for (const [id, board] of Object.entries(boards)) {
       if (id !== this.playerId()) {
@@ -136,13 +104,16 @@ export class SlidingStore implements GameStoreInterface {
   });
 
   readonly winners = computed(() => {
-    if (this.currentMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       return this.localEngine()?.status === GameStatus.Finished ? [this.playerId()] : [];
     }
-    return this.rawState().winners || [];
+    return (this.rawState() as any)?.winners || [];
   });
 
+  private tick = signal(0);
+
   constructor() {
+    super();
     effect(() => {
       const s = this.status();
       if (s === GameStatus.Finished) {
@@ -153,17 +124,15 @@ export class SlidingStore implements GameStoreInterface {
     });
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string = 'medium', hostId?: string) {
-    this.currentMode.set(mode);
-    this.roomId.set(roomId);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string) {
+    super.joinRoom(roomId, mode, difficulty, hostId);
 
-    if (mode === 'single') {
+    if (mode === GameMode.Single) {
       const saved = LocalSlidingEngine.loadFromStorage();
       if (saved) {
         this.currentDifficulty.set(saved.difficulty);
         this.localEngine.set(saved.engine);
       } else {
-        this.currentDifficulty.set(difficulty);
         const engine = new LocalSlidingEngine(difficulty);
         this.localEngine.set(engine);
         engine.saveToStorage(difficulty);
@@ -171,67 +140,45 @@ export class SlidingStore implements GameStoreInterface {
       
       // Load best time
       if (this.auth.isAuthenticated()) {
-        this.statsService.getStats('sliding').subscribe(stats => {
-          const stat = stats.find(s => s.Mode === 'single' && s.Difficulty === difficulty);
+        this.statsService.getStats(GameId.Sliding).subscribe(stats => {
+          const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === difficulty);
           if (stat) this.bestTime.set(stat.BestTime);
         });
       }
-    } else {
-      this.currentDifficulty.set(difficulty);
-      const playerId = this.playerId();
-      const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
-      this.ws.connect('sliding', roomId, playerId, mode, difficulty, cleanHostId);
     }
   }
 
-  /** @deprecated Use joinRoom() instead */
-  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
-    this.joinRoom(roomId, mode, difficulty, hostId);
-  }
-
-  leaveRoom() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'leave_game' });
-      this.ws.disconnect('sliding');
-    }
-    this.roomId.set('');
-    this.currentMode.set('single');
-  }
-
-  /** @deprecated Use leaveRoom() instead */
-  leaveGame() {
-    this.leaveRoom();
-  }
-
-  startGame() {
-    if (this.currentMode() === 'single') {
+  override startGame() {
+    if (this.currentRoomMode() === GameMode.Single) {
       const le = this.localEngine();
       if (le) {
         le.status = GameStatus.Playing;
         le.startAt = Date.now();
-        le.saveToStorage(this.currentDifficulty());
-        this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty()), le));
+        le.saveToStorage(this.currentDifficulty() as string);
+        this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty() as string), le));
       }
     } else {
-      this.ws.send({ type: 'game_action', action: 'start' });
+      super.startGame();
     }
   }
 
-  move(idx: number) {
+  dispatch(action: SlidingAction) {
     if (this.status() !== GameStatus.Playing) return;
-    
-    if (this.currentMode() === 'single') {
+
+    if (this.currentRoomMode() === GameMode.Single) {
       const le = this.localEngine();
-      if (le && le.move(idx)) {
-        this.audio.playPuzzle('move'); // optional, but good for feedback
-        le.saveToStorage(this.currentDifficulty());
+      if (le) {
+        le.handleAction(action);
+        this.tick.set(this.tick() + 1);
+        this.audio.playPuzzle('move');
+        le.saveToStorage(this.currentDifficulty() as string);
         
         // Submit stat if finished
         if (le.status === GameStatus.Finished && this.auth.isAuthenticated()) {
           const timeSecs = Math.floor((le.endAt! - le.startAt!) / 1000);
-          this.statsService.submitStat('sliding', {
-            mode: 'single',
-            difficulty: this.currentDifficulty(),
+          this.statsService.submitStat(GameId.Sliding, {
+            mode: GameMode.Single,
+            difficulty: this.currentDifficulty() as string,
             score: 0,
             time: timeSecs,
             won: true
@@ -243,50 +190,24 @@ export class SlidingStore implements GameStoreInterface {
         }
         
         // Force reactivity
-        this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty()), le));
+        this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty() as string), le));
       }
     } else {
-      this.ws.send({ type: 'game_action', action: 'move', idx });
-      this.audio.playPuzzle('move'); // Optimistic audio
+      if (action.type === SlidingActionType.Move) {
+        this.ws.send({ action: C2SAction.Move, idx: action.index });
+        this.audio.playPuzzle('move'); // Optimistic audio
+      }
     }
   }
 
   playAgain() {
-    if (this.currentMode() === 'single') {
-      const engine = new LocalSlidingEngine(this.currentDifficulty());
+    if (this.currentRoomMode() === GameMode.Single) {
+      const engine = new LocalSlidingEngine(this.currentDifficulty() as string);
       this.localEngine.set(engine);
-      engine.saveToStorage(this.currentDifficulty());
+      engine.saveToStorage(this.currentDifficulty() as string);
       this.startGame();
     } else {
-      this.ws.send({ type: 'restart_game' });
-    }
-  }
-
-  restartGame() {
-    this.playAgain();
-  }
-
-  dismissRoom() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'dismiss_room' });
-    }
-  }
-
-  kickPlayer(playerId: string) {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'kick_player', target: playerId });
-    }
-  }
-
-  ready() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'ready' });
-    }
-  }
-
-  cancelReady() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'cancel_ready' });
+      super.restartGame();
     }
   }
 }

@@ -21,19 +21,19 @@ type Cell struct {
 	Y         int       `json:"y"`
 	IsMine    bool      `json:"-"` // Don't expose mines to clients!
 	State     CellState `json:"state"`
-	Neighbors int       `json:"neighbors"` // Number of adjacent mines
+	Neighbors int       `json:"neighbors"`       // Number of adjacent mines
 	Owner     string    `json:"owner,omitempty"` // ID of the player who claimed it
 }
 
 type Board struct {
-	Width       int       `json:"width"`
-	Height      int       `json:"height"`
-	Mines       int       `json:"mines"`
-	Cells       [][]*Cell `json:"cells"`
+	Width         int              `json:"width"`
+	Height        int              `json:"height"`
+	Mines         int              `json:"mines"`
+	Cells         [][]*Cell        `json:"cells"`
 	Status        engine.GameState `json:"status"`
-	RevealedCnt   int       `json:"revealed_cnt"`
-	StartAt       int64     `json:"start_at,omitempty"`
-	IsMinesPlaced bool      `json:"is_mines_placed"`
+	RevealedCnt   int              `json:"revealed_cnt"`
+	StartAt       int64            `json:"start_at,omitempty"`
+	IsMinesPlaced bool             `json:"is_mines_placed"`
 }
 
 func NewBoard(width, height, mines int) *Board {
@@ -69,20 +69,20 @@ func (b *Board) GenerateMines(excludeX, excludeY int) {
 
 func (b *Board) placeMines(excludeX, excludeY int) {
 	rand.Seed(time.Now().UnixNano())
-	
+
 	// Create a safe zone around the excluded coordinate
-	safeZone := make(map[struct{x, y int}]bool)
+	safeZone := make(map[struct{ x, y int }]bool)
 	if excludeX != -1 && excludeY != -1 {
 		for dy := -1; dy <= 1; dy++ {
 			for dx := -1; dx <= 1; dx++ {
 				nx, ny := excludeX+dx, excludeY+dy
 				if b.isValid(nx, ny) {
-					safeZone[struct{x, y int}{nx, ny}] = true
+					safeZone[struct{ x, y int }{nx, ny}] = true
 				}
 			}
 		}
 	}
-	
+
 	placed := 0
 	attempts := 0
 	maxAttempts := b.Width * b.Height * 10
@@ -91,12 +91,12 @@ func (b *Board) placeMines(excludeX, excludeY int) {
 		attempts++
 		x := rand.Intn(b.Width)
 		y := rand.Intn(b.Height)
-		
+
 		// If we are struggling to place mines, drop the safe zone requirement
-		if safeZone[struct{x, y int}{x, y}] && attempts < maxAttempts/2 {
+		if safeZone[struct{ x, y int }{x, y}] && attempts < maxAttempts/2 {
 			continue
 		}
-		
+
 		if !b.Cells[y][x].IsMine {
 			b.Cells[y][x].IsMine = true
 			placed++
@@ -135,11 +135,11 @@ func (b *Board) isValid(x, y int) bool {
 
 func (b *Board) FindSafeStartPoint() (int, int) {
 	// 1. Try to find a 0
-	var zeroes []struct{x, y int}
+	var zeroes []struct{ x, y int }
 	for y := 0; y < b.Height; y++ {
 		for x := 0; x < b.Width; x++ {
 			if !b.Cells[y][x].IsMine && b.Cells[y][x].Neighbors == 0 {
-				zeroes = append(zeroes, struct{x, y int}{x, y})
+				zeroes = append(zeroes, struct{ x, y int }{x, y})
 			}
 		}
 	}
@@ -150,11 +150,11 @@ func (b *Board) FindSafeStartPoint() (int, int) {
 
 	// 2. Try to find lowest number
 	for target := 1; target <= 8; target++ {
-		var candidates []struct{x, y int}
+		var candidates []struct{ x, y int }
 		for y := 0; y < b.Height; y++ {
 			for x := 0; x < b.Width; x++ {
 				if !b.Cells[y][x].IsMine && b.Cells[y][x].Neighbors == target {
-					candidates = append(candidates, struct{x, y int}{x, y})
+					candidates = append(candidates, struct{ x, y int }{x, y})
 				}
 			}
 		}

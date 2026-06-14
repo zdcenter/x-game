@@ -3,11 +3,12 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
-import { LocalMinesweeperEngine } from './minesweeper-engine';
+import { LocalMinesweeperEngine, MinesweeperActionType } from './minesweeper-engine';
 import { AdService } from '../../../../core/services/ad.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { GameId, GameMode, GameDifficulty, GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export enum CellState {
   Hidden = 0,
@@ -30,7 +31,7 @@ export interface GameState {
     height: number;
     mines: number;
     cells: Cell[][];
-    status: GameStatus;
+    status: GameStatusType;
     revealed_cnt: number;
     start_at?: number;
   };
@@ -39,59 +40,33 @@ export interface GameState {
   errors: { [playerId: string]: number };
 }
 
-export enum GameStatus {
-  Waiting = 'waiting',
-  Starting = 'starting',
-  Playing = 'playing',
-  Finished = 'finished',
-}
 
 @Injectable()
-export class MinesweeperStore implements GameStoreInterface {
-  private ws = inject(WebSocketService);
-  gameState = computed(() => this.ws.gameState());
+export class MinesweeperStore extends BaseGameStore {
+  readonly gameId = GameId.Minesweeper;
+
   private audio = inject(AudioService);
-  private auth = inject(AuthStore);
   private statsService = inject(GameStatsService);
   private adService = inject(AdService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
   
-  private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
-
   // Local state for single player mode
-  private currentMode = signal<string>('single');
   private localEngine = signal<LocalMinesweeperEngine | null>(null);
   private tick = signal(0);
   
   bestTime = signal<number>(0);
-  private currentDifficulty = signal<string>('medium');
 
-  // GameStoreInterface required aliases
-  readonly currentRoomMode = computed(() => this.currentMode());
-  readonly roomId = signal<string>('');
-  readonly hostId = computed(() => this.host());
-  readonly playersList = computed<any[]>(() => {
-    if (this.currentMode() === 'single') return [];
+  // Override derived state
+  override readonly playersList = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [];
     return Object.keys(this.scores() || {}).map(id => ({ id }));
-  });
-  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
-
-  // Derive all state from the WebSocketService's global gameState
-  private rawState = computed(() => this.ws.gameState() || {
-    board: { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 },
-    boards: {},
-    scores: {},
-    cooldowns: {},
-    errors: {},
-    host: '',
-    status: GameStatus.Waiting
   });
 
   // For Steal mode it's just rawState().board. For Speed mode it's rawState().boards[playerId]
   private myBoardData = computed(() => {
     this.tick(); // register dependency to force updates for local mutations
-    if (this.currentMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
       if (engine) {
         return {
@@ -108,29 +83,29 @@ export class MinesweeperStore implements GameStoreInterface {
       }
     }
     
-    const s = this.rawState();
+    const s = this.rawState() as any;
     if (!s) {
       return { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
     }
     
-    if (this.currentMode() === 'same_pk_speed') {
+    if (this.currentRoomMode() === GameMode.Speed) {
       return (s.boards && s.boards[this.playerId()]) ? s.boards[this.playerId()] : null;
     }
     return s.board || { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
   });
 
   readonly board = computed<Cell[][]>(() => this.myBoardData()?.cells || []);
-  readonly status = computed<GameStatus>(() => {
-    if (this.currentMode() === 'single') {
+  override readonly status = computed<GameStatusType>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
       return this.localEngine()?.status || GameStatus.Waiting;
     }
     const s = this.rawState() as any;
 
-    const mapStatus = (st: any): GameStatus => {
-      if (st === 0 || st === 'waiting') return GameStatus.Waiting;
-      if (st === 1 || st === 'starting') return GameStatus.Starting;
-      if (st === 2 || st === 'playing') return GameStatus.Playing;
-      if (st === 3 || st === 'finished') return GameStatus.Finished;
+    const mapStatus = (st: any): GameStatusType => {
+      if (st === 0 || st === GameStatus.Waiting) return GameStatus.Waiting;
+      if (st === 1 || st === GameStatus.Starting) return GameStatus.Starting;
+      if (st === 2 || st === GameStatus.Playing) return GameStatus.Playing;
+      if (st === 3 || st === GameStatus.Finished) return GameStatus.Finished;
       return GameStatus.Waiting;
     };
 
@@ -142,27 +117,27 @@ export class MinesweeperStore implements GameStoreInterface {
   });
   
   readonly scores = computed<Record<string, number>>(() => {
-    if (this.currentMode() === 'single') return { [this.playerId()]: 0 };
-    const s = this.rawState();
+    if (this.currentRoomMode() === GameMode.Single) return { [this.playerId()]: 0 };
+    const s = this.rawState() as any;
     return s ? (s.scores || {}) : {};
   });
   
   readonly cooldowns = computed<Record<string, number>>(() => {
-    if (this.currentMode() === 'single') return {};
-    const s = this.rawState();
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    const s = this.rawState() as any;
     return s ? (s.cooldowns || {}) : {};
   });
 
   readonly myErrors = computed<number>(() => {
-    if (this.currentMode() === 'single') return 0;
-    const s = this.rawState();
+    if (this.currentRoomMode() === GameMode.Single) return 0;
+    const s = this.rawState() as any;
     const errors = s ? (s.errors || {}) : {};
     return errors[this.playerId()] || 0;
   });
 
   readonly opponentErrors = computed<number>(() => {
-    if (this.currentMode() === 'single') return 0;
-    const s = this.rawState();
+    if (this.currentRoomMode() === GameMode.Single) return 0;
+    const s = this.rawState() as any;
     if (!s) return 0;
     const errors = s.errors || {};
     // For steal mode fallback, if we need it somewhere specific
@@ -174,14 +149,14 @@ export class MinesweeperStore implements GameStoreInterface {
   readonly startAt = computed(() => this.myBoardData()?.start_at || 0);
   
   readonly host = computed<string>(() => {
-    if (this.currentMode() === 'single') return this.playerId();
+    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
     const s = this.rawState() as any;
     return s ? (s.host || '') : '';
   });
   
   readonly speedOpponents = computed(() => {
-    if (this.currentMode() !== 'same_pk_speed') return [];
-    const s = this.rawState();
+    if (this.currentRoomMode() !== GameMode.Speed) return [];
+    const s = this.rawState() as any;
     if (!s || !s.boards) return [];
     
     const opponents = [];
@@ -223,18 +198,23 @@ export class MinesweeperStore implements GameStoreInterface {
     return this.totalMines() - flagged;
   });
 
-  constructor() {}
+  constructor() {
+    super();
+  }
 
-  startLocalGame(width: number, height: number, mines: number, difficulty: string = 'medium') {
-    this.currentMode.set('single');
+  startLocalGame(width: number, height: number, mines: number, difficulty: string = GameDifficulty.Medium) {
+    this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(difficulty);
-    this.ws.disconnect('minesweeper'); // Ensure we don't hold a WebSocket for single player
-    this.localEngine.set(new LocalMinesweeperEngine(width, height, mines));
+    this.ws.disconnect(GameId.Minesweeper); // Ensure we don't hold a WebSocket for single player
+    
+    const engine = new LocalMinesweeperEngine();
+    engine.initGame({ width, height, mines });
+    this.localEngine.set(engine);
     
     // Load best time
     if (this.auth.currentUser()) {
         this.statsService.getStats('minesweeper').subscribe(stats => {
-          const stat = stats.find(s => s.Mode === 'single' && s.Difficulty === difficulty);
+          const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === difficulty);
           if (stat) this.bestTime.set(stat.BestTime);
         });
     }
@@ -242,39 +222,13 @@ export class MinesweeperStore implements GameStoreInterface {
     this.tick.set(this.tick() + 1);
   }
 
-  joinRoom(roomId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
-    this.roomId.set(roomId);
-    if (mode === 'single') {
-       this.currentMode.set('single');
-    } else {
-      this.currentMode.set(mode);
-      this.ws.connect('minesweeper', roomId, this.playerId(), mode, difficulty, hostId);
-    }
-  }
-
-  /** @deprecated Use joinRoom() instead */
-  joinGame(roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId?: string) {
-    this.joinRoom(roomId, mode, difficulty, hostId);
-  }
-
-  leaveRoom() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'leave_game' });
-    }
-    // Give it a tiny delay to ensure the message is sent before the connection closes
-    setTimeout(() => {
-      this.ws.disconnect('minesweeper');
-    }, 100);
-    this.roomId.set('');
-  }
-
   /** @deprecated Use leaveRoom() instead */
   leaveGame() {
     this.leaveRoom();
   }
 
-  startGame() {
-    if (this.currentMode() === 'single') {
+  override startGame() {
+    if (this.currentRoomMode() === GameMode.Single) {
        const engine = this.localEngine();
        if (engine) {
           engine.status = GameStatus.Playing;
@@ -282,93 +236,44 @@ export class MinesweeperStore implements GameStoreInterface {
           this.tick.set(this.tick() + 1);
        }
     } else {
-      this.ws.send({ action: 'start' });
+      super.startGame();
     }
   }
 
-  restartGame() {
-    if (this.currentMode() === 'single') {
-       const engine = this.localEngine();
-       if (engine) {
-          this.startLocalGame(engine.width, engine.height, engine.mines);
-       }
+
+
+  dispatch(action: any) {
+    if (this.currentRoomMode() === GameMode.Single) {
+      const engine = this.localEngine();
+      if (engine) {
+        engine.handleAction(action);
+        if (action.type === MinesweeperActionType.Hint) {
+           // Provide feedback logic here if necessary or in component
+        }
+        this.tick.set(this.tick() + 1);
+      }
     } else {
-      this.ws.send({ type: 'restart_game' });
-    }
-  }
-
-  dismissRoom() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'dismiss_room' });
-    }
-  }
-
-  kickPlayer(playerId: string) {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'kick_player', target: playerId });
-    }
-  }
-
-  ready() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'ready' });
-    }
-  }
-
-  cancelReady() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'cancel_ready' });
+      this.ws.send(action);
     }
   }
 
   revealCell(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playClick();
-    
-    if (this.currentMode() === 'single') {
-      const engine = this.localEngine();
-      if (engine) {
-        engine.revealCell(x, y);
-        this.tick.set(this.tick() + 1);
-      }
-    } else {
-      this.ws.send({ type: 'reveal', x, y });
-    }
+    this.dispatch({ type: MinesweeperActionType.Reveal, x, y });
   }
 
   toggleFlag(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playFlag();
-    
-    if (this.currentMode() === 'single') {
-      const engine = this.localEngine();
-      if (engine) {
-        engine.toggleFlag(x, y);
-        this.tick.set(this.tick() + 1);
-      }
-    } else {
-      this.ws.send({ type: 'flag', x, y });
-    }
+    this.dispatch({ type: MinesweeperActionType.Flag, x, y });
   }
 
   applyHint() {
-    if (this.currentMode() !== 'single' || this.status() !== GameStatus.Playing) {
+    if (this.currentRoomMode() !== GameMode.Single || this.status() !== GameStatus.Playing) {
       return;
     }
-
-    const engine = this.localEngine();
-    if (engine) {
-      const result = engine.applyHint();
-      if (result.success) {
-        this.audio.playClick();
-        this.tick.set(this.tick() + 1);
-        const msg = this.i18n.t(result.message)() || 'Hint applied';
-        this.toast.show(msg, 'success');
-      } else {
-        const msg = this.i18n.t(result.message)() || 'No hint available';
-        this.toast.show(msg, 'info');
-      }
-    }
+    this.dispatch({ type: MinesweeperActionType.Hint });
   }
 }
 

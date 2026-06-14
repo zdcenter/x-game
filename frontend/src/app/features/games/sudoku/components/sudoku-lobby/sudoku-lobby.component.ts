@@ -43,8 +43,8 @@ export class SudokuLobbyComponent implements OnInit {
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}>();
 
   sudokuModes = [
-    { id: 'same_pk_steal', labelKey: 'game.sudoku_same_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_same_pk_steal_desc' },
-    { id: 'same_pk_speed', labelKey: 'game.sudoku_same_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_same_pk_speed_desc' }
+    { id: 'steal', labelKey: 'game.sudoku_same_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_same_pk_steal_desc' },
+    { id: 'speed', labelKey: 'game.sudoku_same_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_same_pk_speed_desc' }
   ];
 
   difficulties = [

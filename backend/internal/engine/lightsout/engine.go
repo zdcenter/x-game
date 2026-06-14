@@ -1,6 +1,7 @@
 package lightsout
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"math/rand"
 	"time"
@@ -26,7 +27,7 @@ type LightsoutEngine struct {
 
 func init() {
 	engine.Register("lightsout_single", func() engine.GameEngine { return &LightsoutEngine{} })
-	engine.Register("lightsout_same_pk_speed", func() engine.GameEngine { return &LightsoutEngine{} })
+	engine.Register("lightsout_speed", func() engine.GameEngine { return &LightsoutEngine{} })
 }
 
 func (e *LightsoutEngine) InitGame(options interface{}) error {
@@ -145,12 +146,12 @@ func (e *LightsoutEngine) HandleAction(playerID string, action string, payload [
 		action = baseReq.Action
 	}
 
-	if action == "start" && e.State == engine.StateWaiting {
+	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
 		return e.State, nil
 	}
 
-	if action == "restart_game" && e.State == engine.StateFinished {
+	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		e.generateInitialBoard()
@@ -192,7 +193,7 @@ func (e *LightsoutEngine) HandleAction(playerID string, action string, payload [
 				}
 			}
 		}
-	} else if action == "forfeit" {
+	} else if action == string(domain.ActionForfeit) {
 		player.Finished = true
 		e.checkGameEnd()
 	}

@@ -1,6 +1,7 @@
 package minesweeper
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"errors"
 	"log"
@@ -23,7 +24,7 @@ type MinesweeperEngine struct {
 
 func init() {
 	engine.Register("minesweeper_single", func() engine.GameEngine { return &MinesweeperEngine{} })
-	engine.Register("minesweeper_same_pk_steal", func() engine.GameEngine { return &MinesweeperEngine{} })
+	engine.Register("minesweeper_steal", func() engine.GameEngine { return &MinesweeperEngine{} })
 }
 
 // Action structure for incoming payloads
@@ -108,15 +109,15 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
-	
+
 	log.Printf("[DEBUG] HandleAction called by player=%s, payload=%s", playerID, string(payload))
-	
+
 	// Parse generic action from payload
 	var baseAction struct {
 		Action string `json:"action"`
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
-		if baseAction.Action == "start" && e.State == engine.StateWaiting {
+		if baseAction.Action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 			engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
 				e.Board.Status = engine.StatePlaying
 				e.Board.StartAt = time.Now().UnixMilli()
@@ -125,8 +126,8 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 			})
 			return e.State, nil
 		}
-		
-		if baseAction.Action == "forfeit" {
+
+		if baseAction.Action == string(domain.ActionForfeit) {
 			e.RemovePlayer(playerID)
 			if len(e.Scores) == 0 {
 				e.Board.Status = engine.StateFinished
@@ -136,7 +137,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 		}
 	}
 
-	if actionType == "restart_game" && e.State == engine.StateFinished {
+	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Board = NewBoard(e.Board.Width, e.Board.Height, e.Board.Mines)
 		if e.Mode != "single" {
@@ -258,10 +259,10 @@ func (e *MinesweeperEngine) checkWinCondition() {
 	if e.Board.Status == engine.StateFinished {
 		return
 	}
-	
+
 	// Game ends when all safe cells are revealed, OR all mines are processed (flagged/exploded)
 	totalSafeCells := (e.Board.Width * e.Board.Height) - e.Board.Mines
-	
+
 	processedMines := 0
 	for y := 0; y < e.Board.Height; y++ {
 		for x := 0; x < e.Board.Width; x++ {

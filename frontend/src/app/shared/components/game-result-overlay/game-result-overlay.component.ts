@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { GameRegistryService, GameConfig } from '../../../core/services/game-registry.service';
 import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { GameResult, GameResultType } from '../../../core/models/game.model';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -20,8 +21,8 @@ import { AuthStore } from '../../../core/auth/auth.store';
         <!-- Title -->
         <h2 class="text-5xl md:text-6xl font-black mb-2 relative z-10 text-center"
             [ngClass]="{
-              'text-amber-500 drop-shadow-md': status === 'win',
-              'text-red-500 drop-shadow-md': status === 'lose'
+              'text-amber-500 drop-shadow-md': status === GameResult.Win,
+              'text-red-500 drop-shadow-md': status === GameResult.Lose
             }">
           {{ title }}
         </h2>
@@ -117,9 +118,11 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private adService = inject(AdService);
   authStore = inject(AuthStore);
 
+  GameResult = GameResult;
+
   @Input() currentGameId?: string;
 
-  @Input({ required: true }) status!: 'win' | 'lose';
+  @Input({ required: true }) status!: GameResultType;
   @Input({ required: true }) title!: string;
   @Input() subtitle?: string;
   @Input() promptText?: string;
@@ -200,13 +203,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   // Play effect only once per component lifecycle to avoid double-playing
   private playEffect() {
     if (this.audioPlayed || this.disableAudio) return;
-    this.audioPlayed = true;
-
-    if (this.status === 'win') {
+    if (this.status === GameResult.Win) {
       this.audio.playWin();
-    } else {
+    } else if (this.status === GameResult.Lose) {
       this.audio.playLose();
     }
+    this.audioPlayed = true;
   }
 
   ngOnDestroy() {

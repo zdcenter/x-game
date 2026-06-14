@@ -1,6 +1,7 @@
 package watersort
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"math/rand"
 	"sync"
@@ -47,7 +48,7 @@ type WatersortEngine struct {
 
 func init() {
 	engine.Register("watersort_single", func() engine.GameEngine { return NewEngine("single") })
-	engine.Register("watersort_same_pk_speed", func() engine.GameEngine { return NewEngine("same_pk_speed") })
+	engine.Register("watersort_speed", func() engine.GameEngine { return NewEngine("speed") })
 }
 
 func NewEngine(mode string) *WatersortEngine {
@@ -175,7 +176,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	if action == "start" && e.status == engine.StateWaiting {
+	if action == string(domain.ActionStartGame) && e.status == engine.StateWaiting {
 		engine.StartWithCountdown(&e.mu, &e.status, e.broadcastFn, func() {
 			e.state.Status = "playing"
 			e.state.Winners = []string{}
@@ -184,9 +185,9 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		return e.status, nil
 	}
 
-	if action == "restart_game" && e.status == engine.StateFinished {
+	if action == string(domain.ActionRestartGame) && e.status == engine.StateFinished {
 		e.state.Winners = []string{}
-		
+
 		// Generate new puzzle
 		numColors := 3
 		switch e.difficulty {
@@ -222,7 +223,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 			e.status = engine.StateWaiting
 			e.state.Status = "waiting"
 		}
-		
+
 		if e.broadcastFn != nil {
 			e.broadcastFn()
 		}
@@ -243,7 +244,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		}
 	} else if action == "restart" {
 		e.handleRestart(playerID)
-	} else if action == "forfeit" {
+	} else if action == string(domain.ActionForfeit) {
 		e.state.Status = "finished"
 		e.status = engine.StateFinished
 		for id := range e.state.Players {

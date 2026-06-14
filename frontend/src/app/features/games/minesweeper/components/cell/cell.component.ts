@@ -22,7 +22,7 @@ export class CellComponent {
       return 'bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner scale-95';
     }
     if (this.cell.state === CellState.Exploded) {
-      return 'bg-red-500/20 border border-red-500/50 scale-95';
+      return 'bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] scale-95';
     }
     return 'bg-[var(--color-border-card)] border-[1.5px] border-t-[var(--color-cell-highlight)] border-l-[var(--color-cell-highlight)] border-b-[var(--color-cell-shadow)] border-r-[var(--color-cell-shadow)] shadow-md hover:brightness-110 active:scale-95 cursor-pointer';
   }
@@ -30,16 +30,16 @@ export class CellComponent {
   get neighborColor(): string {
     const colors = [
       '', // 0
-      '#60a5fa', // 1: blue-400
-      '#34d399', // 2: emerald-400
-      '#f87171', // 3: red-400
-      '#818cf8', // 4: indigo-400
-      '#fb923c', // 5: orange-400
-      '#2dd4bf', // 6: teal-400
-      '#c084fc', // 7: purple-400
-      '#a1a1aa'  // 8: zinc-400
+      'var(--color-ms-1)',
+      'var(--color-ms-2)',
+      'var(--color-ms-3)',
+      'var(--color-ms-4)',
+      'var(--color-ms-5)',
+      'var(--color-ms-6)',
+      'var(--color-ms-7)',
+      'var(--color-ms-8)'
     ];
-    return colors[this.cell.neighbors] || '#fff';
+    return colors[this.cell.neighbors] || 'var(--color-text-main)';
   }
 
   onLeftClick(event: MouseEvent) {

@@ -1,4 +1,5 @@
 import { Signal } from '@angular/core';
+import { GameModeType, GameDifficultyType, GameStatusType } from '../models/game.model';
 
 /**
  * 统一的游戏 Store 接口。
@@ -14,14 +15,14 @@ export interface GameStoreInterface {
   /** 当前房间 ID（空字符串表示未加入房间） */
   readonly roomId: Signal<string>;
 
-  /** 当前房间模式 ('single' | 'same_pk_steal' | 'same_pk_speed' | 'diff_pk_score' | ...) */
-  readonly currentRoomMode: Signal<string>;
+  /** 当前房间模式 */
+  readonly currentRoomMode: Signal<GameModeType | string>;
 
   /** 当前房主 ID（单机模式下返回当前玩家 ID） */
   readonly hostId: Signal<string>;
 
-  /** 游戏状态 ('waiting' | 'starting' | 'playing' | 'finished') */
-  readonly status: Signal<string>;
+  /** 游戏状态 */
+  readonly status: Signal<GameStatusType | string>;
 
   // ===== 大厅/等待房间需要的数据 =====
 
@@ -49,11 +50,11 @@ export interface GameStoreInterface {
    * 不要传 playerId！Store 内部自己从 AuthStore 获取。
    *
    * @param roomId 房间 ID
-   * @param mode 模式 ('single', 'same_pk_steal', ...)
-   * @param difficulty 难度 ('easy', 'medium', ...)
+   * @param mode 模式
+   * @param difficulty 难度
    * @param hostId 房主 ID（可选，创建房间时传当前玩家 ID）
    */
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string): void;
+  joinRoom(roomId: string, mode: GameModeType | string, difficulty: GameDifficultyType | string, hostId?: string): void;
 
   /**
    * 离开房间。

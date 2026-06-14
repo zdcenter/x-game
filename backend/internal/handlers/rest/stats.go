@@ -27,13 +27,13 @@ func GetStats(c fiber.Ctx) error {
 
 	var stats []domain.UserGameStat
 	var result *gorm.DB
-	
+
 	if gameID == "all" {
 		result = db.DB.Where("user_id = ?", userID).Find(&stats)
 	} else {
 		result = db.DB.Where("user_id = ? AND game_id = ?", userID, gameID).Find(&stats)
 	}
-	
+
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch stats"})
 	}
@@ -74,13 +74,13 @@ func SubmitStat(c fiber.Ctx) error {
 		if req.Won {
 			stat.WinCount = 1
 		}
-		
+
 		// If it's a score based game
 		if req.Score > 0 {
 			stat.BestScore = req.Score
 			isNewRecord = true
 		}
-		
+
 		// If it's a time based game
 		if req.Time > 0 && req.Won {
 			stat.BestTime = req.Time

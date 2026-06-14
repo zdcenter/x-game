@@ -18,7 +18,7 @@ func GetSudokuLevels(c fiber.Ctx) error {
 	}
 
 	progressMap := make(map[string]domain.UserSudokuProgress)
-	
+
 	if userIDStr := c.Locals("user_id"); userIDStr != nil {
 		userID := uint(userIDStr.(float64))
 		var progresses []domain.UserSudokuProgress

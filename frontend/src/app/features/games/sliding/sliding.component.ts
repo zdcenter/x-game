@@ -4,12 +4,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
-import { SlidingStore, GameStatus } from './store/sliding.store';
+import { SlidingStore } from './store/sliding.store';
+import { SlidingActionType } from './store/sliding-engine';
+import { GameStatus, GameMode, GameResult, GameResultType, GameId } from '../../../core/models/game.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameLobbyPanelComponent, GameMode, GameDifficulty } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameLobbyPanelComponent, GameDifficulty } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -99,7 +101,7 @@ export class SlidingComponent extends BaseGameComponent {
     super();
 
     this.roomLifecycle = setupRoomLifecycle({
-      gameId: 'sliding',
+      gameId: GameId.Sliding,
       getCurrentMode: () => this.currentRoomMode(),
       onLeaveRoom: () => this.returnToLobby(),
     });
@@ -145,7 +147,7 @@ export class SlidingComponent extends BaseGameComponent {
       this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       return;
     } else {
-      this.store.joinGame('', this.playerId, 'single');
+      this.store.joinRoom('', GameMode.Single);
     }
 
 
@@ -155,7 +157,7 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   override ngOnDestroy() {
-    this.store.leaveGame();
+    this.store.leaveRoom();
     if (this.timerInterval) clearInterval(this.timerInterval);
   }
 
@@ -164,7 +166,7 @@ export class SlidingComponent extends BaseGameComponent {
       if (this.store.hostId() === this.playerId) {
         this.dismissRoom();
       } else {
-        this.store.leaveGame();
+        this.store.leaveRoom();
       }
     }
     this.router.navigate(['/lobby']);
@@ -218,7 +220,7 @@ export class SlidingComponent extends BaseGameComponent {
 
   joinRoom(roomId: string, mode: string, difficulty: string, hostId: string) {
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId);
     this.isMenuOpen.set(false);
   }
 
@@ -234,7 +236,7 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   getPlayerScores() {
-    if (this.currentRoomMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       return [{ id: this.playerId, score: 0 }];
     }
     const boards = this.store.allBoards();
@@ -248,7 +250,7 @@ export class SlidingComponent extends BaseGameComponent {
     const board = this.store.myBoard();
     if (!board) return;
     const idx = tile.row * tile.size + tile.col;
-    this.store.move(idx);
+    this.store.dispatch({ type: SlidingActionType.Move, index: idx });
   }
 
   private touchStartX = 0;
@@ -306,7 +308,7 @@ export class SlidingComponent extends BaseGameComponent {
 
     if (targetRow >= 0 && targetRow < size && targetCol >= 0 && targetCol < size) {
       const idx = targetRow * size + targetCol;
-      this.store.move(idx);
+      this.store.dispatch({ type: SlidingActionType.Move, index: idx });
     }
   }
 
@@ -334,27 +336,27 @@ export class SlidingComponent extends BaseGameComponent {
     return `${m}:${s}`;
   }
 
-  getOverlayStatus(): 'win' | 'lose' {
-    if (this.currentRoomMode() === 'single') return 'win';
-    if (this.store.winners().includes(this.playerId)) return 'win';
-    return 'lose';
+  getOverlayStatus(): GameResultType {
+    if (this.currentRoomMode() === GameMode.Single) return GameResult.Win;
+    if (this.store.winners().includes(this.playerId)) return GameResult.Win;
+    return GameResult.Lose;
   }
 
   getOverlayTitle(): string {
-    if (this.currentRoomMode() === 'single') return this.t('game.you_win')();
+    if (this.currentRoomMode() === GameMode.Single) return this.t('game.you_win')();
     if (this.store.winners().includes(this.playerId)) return this.t('game.you_win')();
     return this.t('game.you_lose')();
   }
 
   getOverlaySubtitle(): string {
-    return `${this.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(this.currentRoomMode() === 'single' ? (this.store.myBoard()?.startAt || 0) : this.store.globalStartAt()))}`;
+    return `${this.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(this.currentRoomMode() === GameMode.Single ? (this.store.myBoard()?.startAt || 0) : this.store.globalStartAt()))}`;
   }
 
   getOverlayStats(): { label: string; value: string | number }[] {
     const stats = [
       { label: this.t('game.moves')() || 'Moves', value: this.store.myBoard()?.moves || 0 }
     ];
-    if (this.currentRoomMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const best = this.store.bestTime();
       if (best > 0) {
         stats.push({ label: 'BEST', value: this.formatTime(best * 1000) });
@@ -364,7 +366,7 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   applyHint() {
-    if (this.currentRoomMode() !== 'single' || this.store.status() !== GameStatus.Playing) return;
+    if (this.currentRoomMode() !== GameMode.Single || this.store.status() !== GameStatus.Playing) return;
     const board = this.store.myBoard();
     if (!board) return;
     const cells = board.cells;

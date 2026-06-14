@@ -56,6 +56,8 @@ func InitPostgres() {
 		log.Fatalf("Failed to auto migrate: %v", err)
 	}
 
+	MigrateModesAndDifficulties(DB)
+
 	// Seed default data
 	Seed()
 	SeedSudoku()
@@ -65,6 +67,29 @@ func InitPostgres() {
 	SeedAds()
 
 	log.Println("Database connected and migrated successfully")
+}
+
+func MigrateModesAndDifficulties(db *gorm.DB) {
+	// Migrate Modes
+	db.Exec("UPDATE gm_user_game_stats SET mode = 'speed' WHERE mode = 'same_pk_speed'")
+	db.Exec("UPDATE gm_user_game_stats SET mode = 'steal' WHERE mode = 'same_pk_steal'")
+	db.Exec("UPDATE gm_user_game_stats SET mode = 'score' WHERE mode IN ('same_pk_score', 'diff_pk_score')")
+	db.Exec("UPDATE gm_user_game_stats SET mode = 'battle' WHERE mode IN ('diff_pk_attack', 'same_pk_classic')")
+
+	// Migrate Difficulties
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'easy' WHERE difficulty = 'beginner'")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'medium' WHERE difficulty IN ('intermediate', 'standard')")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'hard' WHERE difficulty = 'advanced'")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'hard_1' WHERE difficulty = 'hard_mode'")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'hard_2' WHERE difficulty = 'professional'")
+	// Expert and Master usually map to Expert/Master, but in some games they map directly
+	// e.g., in minesweeper: Expert maps to Master, but we had Master->Expert previously? Wait,
+	// In the old code: Master was 30x22 (now Expert), Expert was 30x24 (now Master).
+	// Let's swap them. To avoid collision, rename to temp first.
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'temp_expert' WHERE difficulty = 'expert'")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'temp_master' WHERE difficulty = 'master'")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'master' WHERE difficulty = 'temp_expert'")
+	db.Exec("UPDATE gm_user_game_stats SET difficulty = 'expert' WHERE difficulty = 'temp_master'")
 }
 
 func Seed() {
@@ -232,5 +257,3 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
-
-

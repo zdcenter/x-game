@@ -1,6 +1,7 @@
 package gomoku
 
 import (
+	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"fmt"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func init() {
-	engine.Register("gomoku_same_pk_classic", NewClassicEngine)
+	engine.Register("gomoku_battle", NewClassicEngine)
 }
 
 const (
@@ -103,7 +104,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		action = act.Action
 	}
 
-	if action == "start" {
+	if action == string(domain.ActionStartGame) {
 		if len(e.Players) != 2 {
 			return e.State, fmt.Errorf("gomoku requires exactly 2 players")
 		}
@@ -127,7 +128,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		return e.State, nil
 	}
 
-	if action == "restart_game" && e.State == engine.StateFinished {
+	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winner = ""
 		e.LastMove = nil
@@ -144,7 +145,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		return e.State, fmt.Errorf("game is not playing")
 	}
 
-	if action == "move" {
+	if action == string(domain.ActionMove) {
 		if e.CurrentTurn != playerID {
 			return e.State, fmt.Errorf("not your turn")
 		}
@@ -185,7 +186,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		return e.State, nil
 	}
 
-	if action == "forfeit" {
+	if action == string(domain.ActionForfeit) {
 		e.State = engine.StateFinished
 		for _, p := range e.Players {
 			if p != playerID {

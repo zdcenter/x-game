@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { CrossGameJoinService } from './cross-game-join.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
+import { S2CEvent, WSErrorCode } from '../models/websocket.model';
 import { createWebSocket, isBrowser } from '../utils/browser.util';
 
 export interface WSMessage {
@@ -126,23 +127,23 @@ export class WebSocketService {
 
     this.socket.onmessage = (event) => {
       const msg: any = JSON.parse(event.data);
-      if (msg.type === 'pong') {
+      if (msg.type === S2CEvent.Pong) {
         // Heartbeat response, connection is alive
         return;
       }
-      if (msg.type === 'gameState' && msg.state) {
+      if (msg.type === S2CEvent.RoomStateUpdate && msg.state) {
         msg.state.host = msg.host;
         msg.state.readyPlayers = msg.readyPlayers || {};
         this.gameState.set(msg.state);
-      } else if (msg.type === 'room_dismissed' || (msg.type === 'error' && (msg.message === 'room has been dismissed' || (msg.error && msg.error.includes('room has been dismissed'))))) {
+      } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {
         this.gameDisconnectIntentional = true;
         this.roomDismissedEvent.update(v => v + 1);
         this.disconnect(gameId);
-      } else if (msg.type === 'kicked') {
+      } else if (msg.type === S2CEvent.PlayerKicked) {
         this.gameDisconnectIntentional = true;
         this.kickedEvent.update(v => v + 1);
         this.disconnect(gameId);
-      } else if (msg.type === 'error') {
+      } else if (msg.type === S2CEvent.Error) {
         // Server rejected us (e.g. room not found, kicked cooldown)
         const errorMsg = msg.message || msg.error || 'Connection rejected';
         console.warn('Game WS error:', errorMsg);
@@ -150,9 +151,9 @@ export class WebSocketService {
         this.gameDisconnectIntentional = true;
         this.connectionRejectedEvent.update(v => v + 1);
         this.disconnect(gameId);
-      } else if (msg.type === 'host_changed') {
+      } else if (msg.type === S2CEvent.HostChanged) {
         this.hostChangedEvent.set({ newHost: msg.newHost, oldHost: msg.oldHost });
-      } else if (msg.type === 'room_game_changed') {
+      } else if (msg.type === S2CEvent.GameChanged) {
         this.crossGameJoin.setPendingJoin({
           game: msg.game,
           roomId: msg.roomId,
@@ -234,7 +235,7 @@ export class WebSocketService {
 
     this.lobbySocket.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type === 'pong') {
+      if (msg.type === S2CEvent.Pong) {
         return;
       }
       if (msg.type === 'lobby_update') {
@@ -248,7 +249,7 @@ export class WebSocketService {
         setTimeout(() => {
           this.broadcastMessages.update(msgs => msgs.filter(m => m !== msg));
         }, 15000);
-      } else if (msg.type === 'error') {
+      } else if (msg.type === S2CEvent.Error) {
         console.warn('Lobby WS error:', msg.message);
         this.lobbyDisconnectIntentional = true;
         if (this.lobbySocket) {
@@ -383,31 +384,28 @@ export class WebSocketService {
    * Backend sends codes like "kick_cooldown:25", "room not found", "game already started"
    */
   private parseServerError(errorMsg: string): string {
-    // kick_cooldown:25 → "你已被踢出，请等待 25 秒后再加入"
-    if (errorMsg.startsWith('kick_cooldown:')) {
+    // err_kick_cooldown:25 → "你已被踢出，请等待 25 秒后再加入"
+    if (errorMsg.startsWith(`${WSErrorCode.KickCooldown}:`)) {
       const seconds = errorMsg.split(':')[1];
       const template = this.i18n.t('game.kick_cooldown_msg')();
       return template ? template.replace('{seconds}', seconds) : `Kicked. Please wait ${seconds}s before rejoining.`;
     }
-    if (errorMsg === 'room not found') {
-      return this.i18n.t('game.room_not_found_msg')() || 'Room not found.';
+    switch (errorMsg) {
+      case WSErrorCode.RoomNotFound:
+        return this.i18n.t('game.room_not_found_msg')() || 'Room not found.';
+      case WSErrorCode.GameAlreadyStarted:
+        return this.i18n.t('game.game_already_started_msg')() || 'Game already started.';
+      case WSErrorCode.RoomDismissed:
+        return this.i18n.t('game.room_dismissed_msg')() || 'Room has been dismissed.';
+      case WSErrorCode.RoomAlreadyExists:
+        return this.i18n.t('game.room_already_exists_msg')() || 'Room already exists.';
+      case WSErrorCode.WrongPassword:
+        return this.i18n.t('game.wrong_password_msg')() || 'Wrong password, please try again.';
+      case WSErrorCode.MultiplayerDisabled:
+        return this.i18n.t('game.multiplayer_disabled_msg')() || 'Multiplayer features are currently disabled for maintenance.';
+      default:
+        return errorMsg;
     }
-    if (errorMsg === 'game already started') {
-      return this.i18n.t('game.game_already_started_msg')() || 'Game already started.';
-    }
-    if (errorMsg === 'room has been dismissed') {
-      return this.i18n.t('game.room_dismissed_msg')() || 'Room has been dismissed.';
-    }
-    if (errorMsg === 'room already exists') {
-      return this.i18n.t('game.room_already_exists_msg')() || 'Room already exists.';
-    }
-    if (errorMsg === 'wrong_password') {
-      return this.i18n.t('game.wrong_password_msg')() || 'Wrong password, please try again.';
-    }
-    if (errorMsg === 'multiplayer_disabled') {
-      return this.i18n.t('game.multiplayer_disabled_msg')() || 'Multiplayer features are currently disabled for maintenance.';
-    }
-    return errorMsg;
   }
 
   /**

@@ -28,7 +28,7 @@ func Register(router fiber.Router) {
 	adminGroup := router.Group("/admin")
 	adminGroup.Use(middleware.Protected())
 	adminGroup.Use(middleware.AdminProtected())
-	
+
 	adminGroup.Get("/", websocket.New(func(c *websocket.Conn) {
 		client := &wsManager.AdminClient{
 			ID:   fmt.Sprintf("admin-%d", time.Now().UnixNano()),
@@ -71,11 +71,11 @@ func Register(router fiber.Router) {
 		if err != nil {
 			roomID = rawRoomID
 		}
-		gameId := c.Query("game", "")              // "minesweeper", "sudoku", etc.
-		mode := c.Query("mode", "single")           // "single", "same_pk_steal", "same_pk_speed"
+		gameId := c.Query("game", "")                 // "minesweeper", "sudoku", etc.
+		mode := c.Query("mode", "single")             // "single", "steal", "speed"
 		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"
-		hostId := c.Query("hostId", "")             // Used to preserve host on reconnect
-		action := c.Query("action", "")             // "create" or "join"
+		hostId := c.Query("hostId", "")               // Used to preserve host on reconnect
+		action := c.Query("action", "")               // "create" or "join"
 		password := c.Query("password", "")           // Optional 4-digit room password
 		playerID := c.Query("playerId", "anonymous")
 		var room *wsManager.Room

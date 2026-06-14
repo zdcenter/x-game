@@ -3,7 +3,8 @@ import { Component, computed, effect, HostListener, inject, ViewChild, ElementRe
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
-import { HexaStore, GameStatus } from './store/hexa.store';
+import { HexaStore } from './store/hexa.store';
+import { GameStatus } from '../../../core/models/game.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
@@ -105,13 +106,13 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     // Handle PK Start countdown
     effect((onCleanup) => {
       const status = this.store.status();
-      if (status === GameStatus.STARTING) {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
       
-      if (status === GameStatus.FINISHED || this.store.gameOver()) {
+      if (status === GameStatus.Finished || this.store.gameOver()) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -163,7 +164,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     // 触发并恢复音频上下文，因为这是用户的明确交互
     this.audioService.initAudio();
 
-    if (this.store.gameOver() || (this.currentRoomMode() !== 'single' && this.store.status() !== GameStatus.PLAYING)) return;
+    if (this.store.gameOver() || (this.currentRoomMode() !== 'single' && this.store.status() !== GameStatus.Playing)) return;
     
     event.preventDefault();
     this.isDragging = true;

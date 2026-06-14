@@ -94,9 +94,9 @@
 
           @if (store.status() === 'waiting' && currentRoomMode() !== 'single') {
           <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
-            [roomId]="roomId()" [difficulty]="'medium'" [players]="getPlayerScores()" [hostId]="store.host()"
+            [roomId]="roomId()" [difficulty]="'medium'" [players]="getPlayerScores()" [hostId]="store.hostId()"
             [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
-            (changeSettings)="openChangeSettings()" [readyPlayers]="store.gameState()?.readyPlayers || {}"
+            (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
             (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()">
           </app-game-waiting-room>
           } @else {
@@ -108,7 +108,7 @@
               <!-- Local Player (You) -->
               <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                 [playerName]="playerId"
-                [isHost]="playerId === store.host()"
+                [isHost]="playerId === store.hostId()"
                 [isMe]="true"
                 [stats]="[
                   { icon: '⏱️', value: formatTime(getElapsedMs(currentRoomMode() === 'single' ? (store.myBoard()?.startAt || 0) : store.globalStartAt())), colorClass: store.status() === 'playing' ? 'text-pink-400' : '' },
@@ -123,7 +123,7 @@
                     @for (opp of store.otherPlayers(); track opp.id) {
                       <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" 
                         [playerName]="opp.id"
-                        [isHost]="opp.id === store.host()" 
+                        [isHost]="opp.id === store.hostId()" 
                         [isMe]="false"
                         [stats]="[
                           { icon: '🔄', value: opp.board?.moves || 0 }
@@ -205,9 +205,9 @@
           @if (store.status() === 'finished' && showOverlay()) {
             <app-game-result-overlay currentGameId="sliding" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
               [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()"
-              [showRestart]="currentRoomMode() === 'single' || store.host() === playerId"
-              [showDismiss]="currentRoomMode() !== 'single' && store.host() === playerId"
-              [showLeave]="currentRoomMode() === 'single' || store.host() !== playerId" (leave)="goBack()"
+              [showRestart]="currentRoomMode() === 'single' || store.hostId() === playerId"
+              [showDismiss]="currentRoomMode() !== 'single' && store.hostId() === playerId"
+              [showLeave]="currentRoomMode() === 'single' || store.hostId() !== playerId" (leave)="goBack()"
               (restart)="store.playAgain()" (dismiss)="dismissRoom()">
             </app-game-result-overlay>
           }

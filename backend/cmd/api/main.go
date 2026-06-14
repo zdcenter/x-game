@@ -13,6 +13,7 @@ import (
 	"github.com/x-game/backend/pkg/simulator"
 
 	// Register engines
+	_ "github.com/x-game/backend/internal/engine/block"
 	_ "github.com/x-game/backend/internal/engine/codebreaker"
 	_ "github.com/x-game/backend/internal/engine/drop2048"
 	_ "github.com/x-game/backend/internal/engine/gomoku"
@@ -21,11 +22,10 @@ import (
 	_ "github.com/x-game/backend/internal/engine/math24"
 	_ "github.com/x-game/backend/internal/engine/minesweeper"
 	_ "github.com/x-game/backend/internal/engine/sliding"
+	_ "github.com/x-game/backend/internal/engine/sokoban"
 	_ "github.com/x-game/backend/internal/engine/sudoku"
 	_ "github.com/x-game/backend/internal/engine/tetris"
 	_ "github.com/x-game/backend/internal/engine/watersort"
-	_ "github.com/x-game/backend/internal/engine/block"
-	_ "github.com/x-game/backend/internal/engine/sokoban"
 )
 
 // Version is injected during build

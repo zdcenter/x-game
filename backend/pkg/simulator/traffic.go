@@ -12,7 +12,7 @@ import (
 
 var (
 	Enabled bool = true
-	
+
 	mu          sync.RWMutex
 	fakePlayers []map[string]interface{}
 	fakeRooms   []map[string]interface{}
@@ -25,7 +25,7 @@ var (
 func init() {
 	// Initialize random seed
 	rand.Seed(time.Now().UnixNano())
-	
+
 	// Pre-generate initial fake data
 	refreshFakeData()
 }
@@ -54,7 +54,7 @@ func Start() {
 		for {
 			sleepTime := time.Duration(rand.Intn(120)+60) * time.Second
 			time.Sleep(sleepTime)
-			
+
 			if Enabled {
 				gameID := games[rand.Intn(len(games))]
 				// Best effort update
@@ -112,25 +112,25 @@ func refreshFakeData() {
 	// 2. Generate fake active rooms (between 8 and 20)
 	numRooms := rand.Intn(12) + 8
 	newRooms := make([]map[string]interface{}, 0, numRooms)
-	
+
 	for i := 0; i < numRooms; i++ {
 		hostID := fmt.Sprintf("Guest_%04x", rand.Intn(0xFFFF))
 		game := games[rand.Intn(len(games))]
 		mode := modes[rand.Intn(len(modes))]
 		diff := diffs[rand.Intn(len(diffs))]
-		
+
 		roomID := fmt.Sprintf("room-%08x", rand.Intn(0xFFFFFFFF))
-		
+
 		hasPassword := rand.Intn(100) < 20
-		
+
 		// Randomize players (1 or 2)
 		playersCount := rand.Intn(2) + 1
-		
+
 		// Randomize creation time (between 1 minute and 60 minutes ago)
 		// to make the list look naturally formed over time.
 		pastSeconds := rand.Intn(3600) + 60
 		createdAt := time.Now().Unix() - int64(pastSeconds)
-		
+
 		newRooms = append(newRooms, map[string]interface{}{
 			"id":          roomID,
 			"game":        game,
@@ -138,7 +138,7 @@ func refreshFakeData() {
 			"players":     playersCount,
 			"mode":        mode,
 			"difficulty":  diff,
-			"status":      "playing",  // Prevent real players from joining
+			"status":      "playing", // Prevent real players from joining
 			"hasPassword": hasPassword,
 			"createdAt":   createdAt,
 		})

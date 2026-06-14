@@ -47,7 +47,7 @@ func getRandomPuzzles(difficulty string, n int) []domain.Math24Puzzle {
 // Wait, actually, the frontend will just send `action: "solve", payload: { "expression": "...", "isCorrect": true }`
 // To be safe and simple, since it's a game, we can just let the frontend evaluate and send the boolean,
 // OR we can implement a proper evaluator. For PK, server validation is better.
-// We can use a simple JS interpreter or custom parser. 
+// We can use a simple JS interpreter or custom parser.
 // Given the scope, let's trust the client for `isCorrect` for now, or just verify if the expression equals 24.
 // Let's create a placeholder that accepts the client's judgement but checks against the DB solutions if possible.
 

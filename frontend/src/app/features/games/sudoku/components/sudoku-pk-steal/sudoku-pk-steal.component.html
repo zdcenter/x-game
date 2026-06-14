@@ -7,9 +7,9 @@
           [status]="isWinner() ? 'win' : 'lose'"
           [title]="isWinner() ? i18n.t('game.win')() : i18n.t('game.lose')()"
           [stats]="getStats()"
-          [showLeave]="store.host() !== store.playerId()"
-          [showRestart]="store.host() === store.playerId()"
-          [showDismiss]="store.host() === store.playerId()"
+          [showLeave]="store.hostId() !== store.playerId()"
+          [showRestart]="store.hostId() === store.playerId()"
+          [showDismiss]="store.hostId() === store.playerId()"
           (restart)="store.playAgain()"
           (dismiss)="store.dismissRoom()"
           (leave)="store.view.set('lobby')">
@@ -65,7 +65,7 @@
         <!-- Local Player -->
         <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
           [playerName]="store.playerId()"
-          [isHost]="store.playerId() === store.host()"
+          [isHost]="store.playerId() === store.hostId()"
           [isMe]="true"
           [score]="store.players()[store.playerId()]?.score || 0"
           [status]="'playing'">
@@ -78,7 +78,7 @@
               @if (player.id !== store.playerId()) {
                 <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                   [playerName]="player.id"
-                  [isHost]="player.id === store.host()"
+                  [isHost]="player.id === store.hostId()"
                   [isMe]="false"
                   [score]="player.score"
                   [status]="'playing'">

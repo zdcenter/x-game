@@ -23,7 +23,7 @@ func GetUsers(c fiber.Ctx) error {
 
 func ToggleUserStatus(c fiber.Ctx) error {
 	id := c.Params("id")
-	
+
 	var req ToggleStatusRequest
 	if err := c.Bind().Body(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})

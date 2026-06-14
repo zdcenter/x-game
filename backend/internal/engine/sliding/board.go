@@ -84,7 +84,7 @@ func (b *Board) Move(idx int) bool {
 	if idx < 0 || idx >= b.Size*b.Size {
 		return false
 	}
-	
+
 	size := b.Size
 	emptyRow, emptyCol := b.EmptyIdx/size, b.EmptyIdx%size
 	targetRow, targetCol := idx/size, idx%size

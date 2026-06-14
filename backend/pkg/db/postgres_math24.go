@@ -11,9 +11,9 @@ func SeedMath24() {
 	DB.Model(&domain.Math24Puzzle{}).Count(&count)
 	// Force re-seed: if count != 1362, we will delete and re-insert
 	if count != 1362 {
-        log.Println("Re-seeding Math24 puzzles...")
-        DB.Exec("DELETE FROM math24_puzzles")
-        
+		log.Println("Re-seeding Math24 puzzles...")
+		DB.Exec("DELETE FROM math24_puzzles")
+
 		puzzles := []domain.Math24Puzzle{
 			{ID: "m24-easy-1", Difficulty: "easy", Cards: "2,2,10,10"},
 			{ID: "m24-easy-2", Difficulty: "easy", Cards: "1,5,9,11"},
@@ -1378,7 +1378,7 @@ func SeedMath24() {
 			{ID: "m24-expert-135", Difficulty: "expert", Cards: "6,12,13,13"},
 			{ID: "m24-expert-136", Difficulty: "expert", Cards: "5,5,9,11"},
 		}
-		
+
 		DB.CreateInBatches(puzzles, 100)
 		log.Println("Seeded 1362 Math24 puzzles")
 	}

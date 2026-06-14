@@ -24,6 +24,16 @@
     --color-hexa-piece-dark: #d97706; /* amber-600 */
     --color-hexa-empty: #1e293b; /* slate-800 */
     --color-hexa-empty-stroke: rgba(100, 116, 139, 0.5); /* slate-500/50 */
+    --color-ms-1: #60a5fa;
+    --color-ms-2: #34d399;
+    --color-ms-3: #f87171;
+    --color-ms-4: #818cf8;
+    --color-ms-5: #fb923c;
+    --color-ms-6: #2dd4bf;
+    --color-ms-7: #c084fc;
+    --color-ms-8: #a1a1aa;
+    --color-danger-bg: rgba(239, 68, 68, 0.2);
+    --color-danger-border: rgba(239, 68, 68, 0.5);
   }
 
   .theme-dark {
@@ -46,6 +56,16 @@
     --color-hexa-piece-dark: #d97706; /* amber-600 */
     --color-hexa-empty: #1e293b; /* slate-800 */
     --color-hexa-empty-stroke: rgba(100, 116, 139, 0.5); /* slate-500/50 */
+    --color-ms-1: #60a5fa;
+    --color-ms-2: #34d399;
+    --color-ms-3: #f87171;
+    --color-ms-4: #818cf8;
+    --color-ms-5: #fb923c;
+    --color-ms-6: #2dd4bf;
+    --color-ms-7: #c084fc;
+    --color-ms-8: #a1a1aa;
+    --color-danger-bg: rgba(239, 68, 68, 0.2);
+    --color-danger-border: rgba(239, 68, 68, 0.5);
   }
 
   .theme-light {
@@ -69,6 +89,16 @@
     --color-hexa-empty: #e2e8f0; /* slate-200 */
     --color-hexa-empty-stroke: #cbd5e1; /* slate-300 */
     --color-block-board: #e2e8f0; /* slate-200 */
+    --color-ms-1: #3b82f6; /* blue-500 */
+    --color-ms-2: #10b981; /* emerald-500 */
+    --color-ms-3: #ef4444; /* red-500 */
+    --color-ms-4: #6366f1; /* indigo-500 */
+    --color-ms-5: #f97316; /* orange-500 */
+    --color-ms-6: #14b8a6; /* teal-500 */
+    --color-ms-7: #a855f7; /* purple-500 */
+    --color-ms-8: #71717a; /* zinc-500 */
+    --color-danger-bg: rgba(239, 68, 68, 0.3);
+    --color-danger-border: rgba(239, 68, 68, 0.6);
   }
 
   .block-piece {

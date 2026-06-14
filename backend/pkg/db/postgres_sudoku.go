@@ -9,17 +9,17 @@ import (
 func SeedSudoku() {
 	var count int64
 	DB.Model(&domain.SudokuPuzzle{}).Count(&count)
-	
+
 	// If the count is exactly what we expect, don't re-seed
 	// Otherwise, clear and re-seed
 	expectedCount := int64(2000)
-	
+
 	if count != expectedCount {
 		log.Printf("Sudoku DB has %d puzzles, expected %d. Re-seeding...", count, expectedCount)
-		
+
 		// Delete existing
 		DB.Exec("DELETE FROM sudoku_puzzles")
-		
+
 		puzzles := []domain.SudokuPuzzle{
 			{ID: "sudoku-easy-1", Difficulty: domain.SudokuDifficultyEasy, Puzzle: "--9-163-7---2-----2-6--3-4972-391-5---5-27-31----48---1----2-64963-74-1-4-2--5-93", Solution: "589416327347259186216783549724391658895627431631548972158932764963874215472165893"},
 			{ID: "sudoku-easy-2", Difficulty: domain.SudokuDifficultyEasy, Puzzle: "-58973--136---4--97-96-2-388-3---4--5--39--6-9-65--17-1---6538-------2--6--237---", Solution: "258973641361854729749612538813726495574391862926548173192465387437189256685237914"},
@@ -2022,7 +2022,7 @@ func SeedSudoku() {
 			{ID: "sudoku-expert-499", Difficulty: domain.SudokuDifficultyExpert, Puzzle: "-------37-8--3-9---92-4--5---6---7--4----9--8----7----52-1------3-6-8-4---9------", Solution: "145982637687531924392746851256814793473269518918375462524197386731658249869423175"},
 			{ID: "sudoku-expert-500", Difficulty: domain.SudokuDifficultyExpert, Puzzle: "---3---9-3------4--8-29-6---9---------87-4---2-----58----53-2-------87-6--6------", Solution: "762341895359687142184295673495812367638754921271963584847536219913428756526179438"},
 		}
-		
+
 		// Insert in batches of 100 for performance
 		result := DB.CreateInBatches(puzzles, 100)
 		if result.Error != nil {
