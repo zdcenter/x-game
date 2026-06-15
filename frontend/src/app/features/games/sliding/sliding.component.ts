@@ -1,3 +1,4 @@
+import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -6,7 +7,6 @@ import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { SlidingStore } from './store/sliding.store';
 import { SlidingActionType } from './store/sliding-engine';
-import { GameMode, GameStatus, GameDifficulty, GameId, GameResult, GameResultType } from '../../../core/models/game.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -179,7 +179,7 @@ export class SlidingComponent extends BaseGameComponent {
     this.roomId.set('');
     this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
-    setTimeout(() => this.changeSingleDifficulty('medium'), 100);
+    setTimeout(() => this.changeSingleDifficulty(GameDifficulty.Medium), 100);
   }
 
   dismissRoom() {

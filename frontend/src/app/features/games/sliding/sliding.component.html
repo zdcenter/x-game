@@ -94,7 +94,7 @@
 
           @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
           <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
-            [roomId]="roomId()" [difficulty]="'medium'" [players]="getPlayerScores()" [hostId]="store.hostId()"
+            [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
             [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
             (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
             (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()">
@@ -208,7 +208,9 @@
               [showRestart]="currentRoomMode() === GameMode.Single || store.hostId() === playerId"
               [showDismiss]="currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
               [showLeave]="currentRoomMode() === GameMode.Single || store.hostId() !== playerId" (leave)="goBack()"
-              (restart)="store.playAgain()" (dismiss)="dismissRoom()">
+              (restart)="store.playAgain()" (dismiss)="dismissRoom()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)">
             </app-game-result-overlay>
           }
 

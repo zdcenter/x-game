@@ -1,5 +1,5 @@
+import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 import { Tube } from './watersort.store';
 
 export enum WatersortActionType {
@@ -17,7 +17,7 @@ export class LocalWatersortEngine implements ILocalEngine<any, WatersortAction> 
   moves: number = 0;
   finished: boolean = false;
   playerId: string = '';
-  difficulty: string = 'easy';
+  difficulty: string = GameDifficulty.Easy;
 
   private initialTubes: Tube[] = [];
   private onWin?: () => void;
@@ -117,8 +117,8 @@ export class LocalWatersortEngine implements ILocalEngine<any, WatersortAction> 
   private generateBoard() {
     let numTubes = 7;
     let numColors = 5;
-    if (this.difficulty === 'medium') { numTubes = 11; numColors = 9; }
-    else if (this.difficulty === 'hard') { numTubes = 16; numColors = 14; }
+    if (this.difficulty === GameDifficulty.Medium) { numTubes = 11; numColors = 9; }
+    else if (this.difficulty === GameDifficulty.Hard) { numTubes = 16; numColors = 14; }
 
     const colors = [
       'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan', 'pink',

@@ -2,7 +2,7 @@ package drop2048
 
 type PlayerInfo struct {
 	ID       string `json:"id"`
-	Score    int    `json:"score"`
+	Score    int    `json:string(domain.ModeScore)`
 	Finished bool   `json:"finished"`
 }
 

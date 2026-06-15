@@ -52,13 +52,13 @@
             (click)="playLevel(level, (currentPage() - 1) * pageSize + i)"
             class="aspect-square flex items-center justify-center rounded-xl text-lg sm:text-xl font-bold transition-all duration-300 relative group overflow-hidden shadow-lg border"
             [ngClass]="{
-              'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30': level.progress?.status === 'finished',
-              'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:text-white': level.progress?.status !== 'finished'
+              'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30': level.progress?.status === GameStatus.Finished,
+              'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:text-white': level.progress?.status !== GameStatus.Finished
             }">
             
             <span class="z-10 relative text-sm sm:text-base whitespace-nowrap">关卡 {{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
             
-            @if (level.progress?.status === 'finished') {
+            @if (level.progress?.status === GameStatus.Finished) {
               <div class="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
                 <span class="text-4xl">⭐</span>
               </div>

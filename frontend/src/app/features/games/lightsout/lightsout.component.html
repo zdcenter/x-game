@@ -83,7 +83,7 @@
         gameId="lightsout"
         [mode]="store.currentRoomMode()"
         [roomId]="store.roomId()"
-        [difficulty]="store.size() === 4 ? 'easy' : store.size() === 6 ? 'hard' : 'medium'"
+        [difficulty]="store.size() === 4 ? GameDifficulty.Easy : store.size() === 6 ? GameDifficulty.Hard : GameDifficulty.Medium"
         [players]="store.playersList()"
         [hostId]="store.hostId()"
         [currentUserId]="playerId"
@@ -265,6 +265,8 @@
         [showLeave]="store.currentRoomMode() !== GameMode.Single"
         (restart)="store.restartGame()"
         (leave)="onLeaveClick()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)"
       ></app-game-result-overlay>
     }
 

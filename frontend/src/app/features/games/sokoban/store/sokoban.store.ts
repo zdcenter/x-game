@@ -1,3 +1,4 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthStore } from '../../../../core/auth/auth.store';
@@ -5,7 +6,6 @@ import { LocalSokobanEngine, SokobanActionType } from './local-sokoban-engine';
 import { environment } from '../../../../../environments/environment';
 import { AudioService } from '../../../../core/services/audio.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameMode, GameStatus, GameStatusType, GameDifficulty, GameId } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 export interface SokobanPlayerState {
@@ -25,6 +25,8 @@ export interface SokobanGameState {
   providedIn: 'root'
 })
 export class SokobanStore extends BaseGameStore {
+  override readonly singlePlayerWinners = computed<string[]>(() => []);
+
   readonly gameId = GameId.Sokoban;
 
   private http = inject(HttpClient);
@@ -51,23 +53,19 @@ export class SokobanStore extends BaseGameStore {
     return level ? level.level_num : 1;
   });
 
-  override readonly status = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localEngine()?.status || GameStatus.Playing;
+  override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.localEngine()?.status || 'playing';
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
     let status = st.status;
     if (typeof status === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || GameStatus.Waiting;
+      status = statusMap[status] || 'waiting';
     }
-    return status || GameStatus.Waiting;
+    return status || 'waiting';
   });
 
-  override readonly playersList = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [{id: this.playerId()}];
-    const players = (this.rawState() as any)?.players;
-    return Object.values(players || {}) as any[];
-  });
+  override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
   override readonly readyPlayers = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return {};
@@ -279,7 +277,7 @@ export class SokobanStore extends BaseGameStore {
         return;
       }
 
-      let targetLevel = levels.find(l => !l.progress || l.progress.status !== 'finished');
+      let targetLevel = levels.find(l => !l.progress || l.progress.status !== GameStatus.Finished);
       if (!targetLevel) targetLevel = levels[levels.length - 1];
 
       if (targetLevel) {

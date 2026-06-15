@@ -1,5 +1,5 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -53,14 +53,14 @@ export class GomokuComponent implements OnInit, OnDestroy {
 
     effect(() => {
       const status = this.gameStatus();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
       
       // Delay result overlay so players can see the winning line
-      if (status === 'finished') {
+      if (status === GameStatus.Finished) {
         if (this.store.winner() && this.store.winner() !== 'tie') {
           this.audio.playGomoku('stoneWin');
         } else if (this.store.winner() === 'tie') {
@@ -88,7 +88,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
   
   // Room state
   currentRoomMode = signal<string>(GameMode.Single);
-  currentDifficulty = signal<string>('medium');
+  currentDifficulty = signal<string>(GameDifficulty.Medium);
   roomId = signal<string>('');
   hostId = signal<string>('');
 

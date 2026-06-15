@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../core/models/game.model';
 export type GomokuColor = 0 | 1 | 2; // 0=Empty, 1=Black, 2=White
 
 export class GomokuAI {
@@ -5,11 +6,11 @@ export class GomokuAI {
   private maxDepth = 2; // Default for Medium. Easy=1, Hard=4
 
   constructor(private myColor: GomokuColor, difficulty: string) {
-    if (difficulty === 'easy') {
+    if (difficulty === GameDifficulty.Easy) {
       this.maxDepth = 1;
-    } else if (difficulty === 'medium') {
+    } else if (difficulty === GameDifficulty.Medium) {
       this.maxDepth = 2;
-    } else if (difficulty === 'hard') {
+    } else if (difficulty === GameDifficulty.Hard) {
       this.maxDepth = 4;
     }
   }

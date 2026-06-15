@@ -1,5 +1,5 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -80,7 +80,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   // Room state
   currentRoomMode = signal<string>(GameMode.Single);
-  currentDifficulty = signal<string>('medium');
+  currentDifficulty = signal<string>(GameDifficulty.Medium);
   roomId = signal<string>('');
   hostId = signal<string>('');
 
@@ -97,13 +97,13 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
     effect((onCleanup) => {
       const status = this.status();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
 
-      if (status === 'finished') {
+      if (status === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -116,7 +116,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
       if (this.currentRoomMode() !== GameMode.Single) return;
       const status = this.status();
       const diff = this.currentDifficulty();
-      if (status === 'playing') {
+      if (status === GameStatus.Playing) {
         const state = {
           status,
           secretCode: this.store.getSecretCode(),
@@ -125,7 +125,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
           timestamp: Date.now()
         };
         (typeof localStorage !== 'undefined' && localStorage.setItem(`codebreaker_save_${diff}`, JSON.stringify(state)));
-      } else if (status === 'finished') {
+      } else if (status === GameStatus.Finished) {
         (typeof localStorage !== 'undefined' && localStorage.removeItem(`codebreaker_save_${diff}`));
       }
     });
@@ -184,7 +184,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
         const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem(`codebreaker_save_${difficulty}`) : null);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.status === 'playing' && (Date.now() - parsed.timestamp) < 24 * 60 * 60 * 1000) {
+          if (parsed.status === GameStatus.Playing && (Date.now() - parsed.timestamp) < 24 * 60 * 60 * 1000) {
             this.store.restoreSave(parsed.secretCode, parsed.guesses);
             this.helperMarks.set(parsed.helperMarks || {});
           }
@@ -252,7 +252,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   // Keyboard actions
   pressKey(num: string) {
-    if (this.status() !== 'playing') return;
+    if (this.status() !== GameStatus.Playing) return;
     
     const input = this.currentInput();
     

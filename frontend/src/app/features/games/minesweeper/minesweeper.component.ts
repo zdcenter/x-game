@@ -1,3 +1,4 @@
+import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -6,7 +7,6 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { MinesweeperStore, CellState } from './store/minesweeper.store';
-import { GameStatus, GameMode, GameId, GameResult, GameResultType, GameDifficulty } from '../../../core/models/game.model';
 import { C2SAction } from '../../../core/models/websocket.model';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';

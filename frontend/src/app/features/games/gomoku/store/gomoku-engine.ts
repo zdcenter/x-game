@@ -1,5 +1,5 @@
+import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 import { GomokuAI, GomokuColor } from './gomoku-ai';
 
 export enum GomokuActionType {
@@ -22,7 +22,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
   playerColors: Record<string, GomokuColor> = {};
 
   private ai: GomokuAI | null = null;
-  private aiDifficulty: string = 'medium';
+  private aiDifficulty: string = GameDifficulty.Medium;
   private playerId: string = '';
   private onAiMove?: () => void;
   private onGameOver?: (win: boolean) => void;

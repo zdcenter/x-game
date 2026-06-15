@@ -72,8 +72,8 @@ func Register(router fiber.Router) {
 			roomID = rawRoomID
 		}
 		gameId := c.Query("game", "")                 // "minesweeper", "sudoku", etc.
-		mode := c.Query("mode", "single")             // "single", "steal", "speed"
-		difficulty := c.Query("difficulty", "medium") // "easy", "medium", "hard"
+		mode := c.Query("mode", string(domain.ModeSingle))             // string(domain.ModeSingle), string(domain.ModeSteal), string(domain.ModeSpeed)
+		difficulty := c.Query("difficulty", string(domain.DiffMedium)) // string(domain.DiffEasy), string(domain.DiffMedium), string(domain.DiffHard)
 		hostId := c.Query("hostId", "")               // Used to preserve host on reconnect
 		action := c.Query("action", "")               // "create" or "join"
 		password := c.Query("password", "")           // Optional 4-digit room password

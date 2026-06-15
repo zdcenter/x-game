@@ -1,9 +1,9 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { AudioService } from '../../../../core/services/audio.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalMath24Engine, Math24ActionType } from './math24-engine';
 import { environment } from '../../../../../environments/environment';
@@ -33,40 +33,33 @@ export class Math24Store extends BaseGameStore {
   completedLevels = signal<Record<string, number[]>>({});
   currentPuzzleId = signal<string>('');
   
-  override readonly status = computed<GameStatusType | string>(() => {
+  override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
-      return this.localEngine()?.status || GameStatus.Waiting;
+      return this.localEngine()?.status || 'waiting';
     }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
     let status = st.status;
     if (typeof status === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || GameStatus.Waiting;
+      status = statusMap[status] || 'waiting';
     }
-    return status || GameStatus.Waiting;
+    return status || 'waiting';
   });
 
   players = computed(() => (this.rawState() as any)?.players || {});
 
-  override readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [{id: this.playerId()}];
-    const p = this.players();
-    return Object.keys(p).map(id => ({ id, ...p[id] }));
-  });
+  override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
   override readonly readyPlayers = computed<Record<string, boolean>>(() => {
     if (this.currentRoomMode() === GameMode.Single) return {};
     return (this.rawState() as any)?.readyPlayers || {};
   });
 
-  winners = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.finished ? [this.playerId()] : [];
-    }
-    return (this.rawState() as any)?.winners || [];
+  override readonly singlePlayerWinners = computed(() => {
+    this.tick();
+    return this.localEngine()?.finished ? [this.playerId()] : [];
   });
 
   override readonly hostId = computed(() => {
@@ -80,7 +73,7 @@ export class Math24Store extends BaseGameStore {
     return p?.freezeUntil || 0;
   });
 
-  isFinished = computed(() => {
+  override isFinished = computed(() => {
     return this.status() === GameStatus.Finished;
   });
 

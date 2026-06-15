@@ -44,7 +44,7 @@ func (e *CodebreakerEngine) InitGame(options interface{}) error {
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*PlayerState)
 	e.Winners = make([]string, 0)
-	e.Difficulty = "medium"
+	e.Difficulty = string(domain.DiffMedium)
 	e.DigitLength = 4
 
 	if opts, ok := options.(map[string]interface{}); ok {
@@ -55,9 +55,9 @@ func (e *CodebreakerEngine) InitGame(options interface{}) error {
 
 	// Calculate digit length based on difficulty
 	switch e.Difficulty {
-	case "easy":
+	case string(domain.DiffEasy):
 		e.DigitLength = 3
-	case "hard":
+	case string(domain.DiffHard):
 		e.DigitLength = 5
 	default:
 		e.DigitLength = 4

@@ -1,3 +1,4 @@
+import { GameResult, GameResultType } from '../../../core/models/game.model';
 import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -6,7 +7,6 @@ import { Router } from '@angular/router';
 import { GameRegistryService, GameConfig } from '../../../core/services/game-registry.service';
 import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { GameResult, GameResultType } from '../../../core/models/game.model';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -132,11 +132,13 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() showRestart = false;
   @Input() showDismiss = false;
   @Input() showLeave = false;
+  @Input() enableChangeRoomGame = false;
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() restart = new EventEmitter<void>();
   @Output() dismiss = new EventEmitter<void>();
   @Output() leave = new EventEmitter<void>();
+  @Output() changeRoomGame = new EventEmitter<string>();
 
   private audioPlayed = false;
   recommendedGames: GameConfig[] = [];
@@ -196,7 +198,11 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   handleGoToGame(gameId: string) {
     this.adService.tryShowInterstitial(() => {
-      this.router.navigate(['/games', gameId]);
+      if (this.enableChangeRoomGame) {
+        this.changeRoomGame.emit(gameId);
+      } else {
+        this.router.navigate(['/games', gameId]);
+      }
     });
   }
 

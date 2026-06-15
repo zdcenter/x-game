@@ -44,11 +44,11 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 				}
 			} else {
 				switch diff {
-				case "easy", "beginner":
+				case string(domain.DiffEasy), "beginner":
 					size = 4
-				case "medium", "intermediate":
+				case string(domain.DiffMedium), "intermediate":
 					size = 5
-				case "hard", "advanced":
+				case string(domain.DiffHard), "advanced":
 					size = 6
 				}
 			}

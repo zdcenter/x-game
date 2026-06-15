@@ -1,8 +1,8 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalWatersortEngine, WatersortActionType } from './watersort-engine';
 
@@ -35,27 +35,24 @@ export class WatersortStore extends BaseGameStore {
   private localEngine = signal<LocalWatersortEngine | null>(null);
   private tick = signal(0);
 
-  override readonly status = computed<GameStatusType | string>(() => {
+  override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
-      return this.localEngine()?.status || GameStatus.Waiting;
+      return this.localEngine()?.status || 'waiting';
     }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
     let status = st.status;
     if (typeof status === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || GameStatus.Waiting;
+      status = statusMap[status] || 'waiting';
     }
-    return status || GameStatus.Waiting;
+    return status || 'waiting';
   });
 
-  readonly winners = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.finished ? [this.playerId()] : [];
-    }
-    return (this.rawState() as any)?.winners || [];
+  override readonly singlePlayerWinners = computed(() => {
+    this.tick();
+    return this.localEngine()?.finished ? [this.playerId()] : [];
   });
 
   readonly players = computed(() => {
@@ -74,10 +71,7 @@ export class WatersortStore extends BaseGameStore {
     return (this.rawState() as any)?.players || {};
   });
 
-  override readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [{id: this.playerId()}];
-    return Object.values((this.rawState() as any)?.players || {});
-  });
+  override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
   override readonly hostId = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.playerId();

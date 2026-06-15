@@ -47,8 +47,8 @@ type WatersortEngine struct {
 }
 
 func init() {
-	engine.Register("watersort_single", func() engine.GameEngine { return NewEngine("single") })
-	engine.Register("watersort_speed", func() engine.GameEngine { return NewEngine("speed") })
+	engine.Register("watersort_single", func() engine.GameEngine { return NewEngine(string(domain.ModeSingle)) })
+	engine.Register("watersort_speed", func() engine.GameEngine { return NewEngine(string(domain.ModeSpeed)) })
 }
 
 func NewEngine(mode string) *WatersortEngine {
@@ -115,7 +115,7 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	diff := "easy"
+	diff := string(domain.DiffEasy)
 	if opts, ok := options.(map[string]interface{}); ok {
 		if d, ok := opts["difficulty"].(string); ok {
 			diff = d
@@ -125,11 +125,11 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 
 	numColors := 5
 	switch diff {
-	case "easy":
+	case string(domain.DiffEasy):
 		numColors = 5
-	case "medium":
+	case string(domain.DiffMedium):
 		numColors = 9
-	case "hard":
+	case string(domain.DiffHard):
 		numColors = 14
 	}
 
@@ -150,7 +150,7 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 		p.Finished = false
 	}
 
-	if e.mode == "single" {
+	if e.mode == string(domain.ModeSingle) {
 		e.state.Status = "playing"
 		e.status = engine.StatePlaying
 		e.state.Winners = []string{}
@@ -176,26 +176,22 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	if action == string(domain.ActionStartGame) && e.status == engine.StateWaiting {
+		if engine.HandleLifecycle(&e.status, action, func() {
 		engine.StartWithCountdown(&e.mu, &e.status, e.broadcastFn, func() {
 			e.state.Status = "playing"
 			e.state.Winners = []string{}
 			e.startTime = time.Now()
 		})
-		return e.status, nil
-	}
-
-	if action == string(domain.ActionRestartGame) && e.status == engine.StateFinished {
+	}, func() {
 		e.state.Winners = []string{}
 
-		// Generate new puzzle
 		numColors := 3
 		switch e.difficulty {
-		case "easy":
+		case string(domain.DiffEasy):
 			numColors = 5
-		case "medium":
+		case string(domain.DiffMedium):
 			numColors = 9
-		case "hard":
+		case string(domain.DiffHard):
 			numColors = 14
 		}
 		if numColors > len(Colors) {
@@ -215,7 +211,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 			p.Finished = false
 		}
 
-		if e.mode == "single" {
+		if e.mode == string(domain.ModeSingle) {
 			e.status = engine.StatePlaying
 			e.state.Status = "playing"
 			e.startTime = time.Now()
@@ -227,6 +223,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		if e.broadcastFn != nil {
 			e.broadcastFn()
 		}
+	}) {
 		return e.status, nil
 	}
 
@@ -297,7 +294,7 @@ func (e *WatersortEngine) handlePour(clientID string, from, to int) {
 		player.Moves++
 		if e.checkWin(player.Tubes) {
 			player.Finished = true
-			if e.mode == "single" {
+			if e.mode == string(domain.ModeSingle) {
 				e.state.Status = "finished"
 				e.status = engine.StateFinished
 				e.state.Winners = append(e.state.Winners, clientID)

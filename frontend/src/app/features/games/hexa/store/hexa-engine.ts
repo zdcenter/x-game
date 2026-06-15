@@ -1,5 +1,5 @@
+import { GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 import { generatePieces } from './hexa-pieces';
 import { PRNG } from '../../../../core/utils/prng';
 
@@ -122,7 +122,7 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
       this.availablePieces = action.pieces;
       this.piecesPlaced = action.piecesPlaced;
       this.gameOver = action.gameOver;
-      this.status = action.gameOver ? GameStatus.Finished : GameStatus.Playing;
+      this.status = action.gameOver ? GameStatus.Finished : 'playing';
     }
   }
 

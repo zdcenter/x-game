@@ -37,7 +37,7 @@ func (e *LightsoutEngine) InitGame(options interface{}) error {
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*PlayerState)
 	e.Winners = make([]string, 0)
-	e.Difficulty = "medium"
+	e.Difficulty = string(domain.DiffMedium)
 	e.Size = 5
 
 	if opts, ok := options.(map[string]interface{}); ok {
@@ -47,13 +47,13 @@ func (e *LightsoutEngine) InitGame(options interface{}) error {
 	}
 
 	switch e.Difficulty {
-	case "easy":
+	case string(domain.DiffEasy):
 		e.Size = 4
-	case "hard":
+	case string(domain.DiffHard):
 		e.Size = 6
-	case "expert":
+	case string(domain.DiffExpert):
 		e.Size = 7
-	case "master":
+	case string(domain.DiffMaster):
 		e.Size = 8
 	default:
 		e.Size = 5

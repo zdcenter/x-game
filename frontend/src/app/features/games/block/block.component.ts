@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect, untracked } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -15,7 +16,6 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 
 @Component({
   selector: 'app-block',
@@ -33,6 +33,9 @@ import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.
   templateUrl: './block.component.html',
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameDifficulty = GameDifficulty;
+  GameStatus = GameStatus;
+  GameMode = GameMode;
   override store = inject(BlockStore);
   private authStore = inject(AuthStore);
   private crossGameJoin = inject(CrossGameJoinService);
@@ -187,7 +190,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   getOpponentStatus(oppId: string): 'playing' | 'finished' {
-    return (this.store as any).rawState()?.players[oppId]?.finished ? 'finished' : 'playing';
+    return (this.store as any).rawState()?.players[oppId]?.finished ? GameStatus.Finished : 'playing';
   }
 
   // --- Drag and Drop Logic ---

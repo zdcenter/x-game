@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
 import { Component, OnInit, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AdminService } from '../../core/services/admin.service';
@@ -81,7 +82,7 @@ interface ActiveRoom {
                     <td class="px-6 py-4 font-mono text-sm opacity-80">{{ p.ip }}</td>
                     <td class="px-6 py-4">
                       <span class="px-2 py-1 rounded text-xs font-bold uppercase"
-                            [ngClass]="{'bg-blue-500/20 text-blue-400 border border-blue-500/30': p.status === 'playing', 'bg-[var(--color-bg-card)] opacity-70': p.status !== 'playing'}">
+                            [ngClass]="{'bg-blue-500/20 text-blue-400 border border-blue-500/30': p.status === GameStatus.Playing, 'bg-[var(--color-bg-card)] opacity-70': p.status !== GameStatus.Playing}">
                         {{ p.status }}
                       </span>
                     </td>
@@ -108,7 +109,7 @@ interface ActiveRoom {
                 <div class="flex justify-between items-start mb-3">
                   <div class="font-bold text-lg capitalize text-[var(--color-accent-from)]">{{ r.game }}</div>
                   <span class="px-2 py-1 text-xs font-bold rounded-full border"
-                        [ngClass]="{'bg-emerald-500/10 text-emerald-500 border-emerald-500/30': r.status === 'playing', 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30': r.status === 'waiting'}">
+                        [ngClass]="{'bg-emerald-500/10 text-emerald-500 border-emerald-500/30': r.status === GameStatus.Playing, 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30': r.status === GameStatus.Waiting}">
                     {{ r.status }}
                   </span>
                 </div>
@@ -147,6 +148,7 @@ interface ActiveRoom {
   `
 })
 export class AdminRealtimeComponent implements OnInit, OnDestroy {
+  GameStatus = GameStatus;
   adminService = inject(AdminService);
   i18n = inject(I18nService);
   

@@ -28,3 +28,29 @@ func (b *BaseEngine) Broadcast() {
 		b.broadcast()
 	}
 }
+
+// HandleLifecycle processes standard start and restart actions.
+// It returns true if the action was handled (so the caller can return early).
+func HandleLifecycle(state *GameState, action string, onStart func(), onRestart func()) bool {
+	if action == "start" && *state == StateWaiting {
+		if onStart != nil {
+			onStart()
+		} else {
+			*state = StatePlaying
+		}
+		return true
+	}
+	if action == "restart_game" && *state == StateFinished {
+		*state = StateWaiting
+		if onRestart != nil {
+			onRestart()
+		}
+		return true
+	}
+	return false
+}
+
+// HandleLifecycle (method) is kept for backwards compatibility with BaseEngine.
+func (b *BaseEngine) HandleLifecycle(action string, onStart func(), onRestart func()) bool {
+	return HandleLifecycle(&b.State, action, onStart, onRestart)
+}

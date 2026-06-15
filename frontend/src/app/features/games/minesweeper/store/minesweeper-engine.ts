@@ -1,6 +1,6 @@
+import { GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Cell, CellState } from './minesweeper.store';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export enum MinesweeperActionType {
   Reveal = 'reveal',

@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
@@ -63,7 +63,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getDifficultyName() {
-    const diff = this.store.currentRoomMode() === GameMode.Single ? this.store.currentDifficulty() : this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : this.store.size() === 7 ? 'expert' : this.store.size() === 8 ? 'master' : 'medium';
+    const diff = this.store.currentRoomMode() === GameMode.Single ? this.store.currentDifficulty() : this.store.size() === 4 ? GameDifficulty.Easy : this.store.size() === 6 ? GameDifficulty.Hard : this.store.size() === 7 ? GameDifficulty.Expert : this.store.size() === 8 ? GameDifficulty.Master : GameDifficulty.Medium;
     const key = this.gameRegistry.getDifficultyLabel('lightsout', diff);
     return key ? this.i18n.t(key)() : diff;
   }
@@ -82,7 +82,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     });
 
     effect((onCleanup) => {
-      const isFin = this.store.status() === 'finished';
+      const isFin = this.store.status() === GameStatus.Finished;
       if (isFin) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
@@ -103,7 +103,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinRoom('single_room', GameMode.Single, 'medium');
+      this.store.joinRoom('single_room', GameMode.Single, GameDifficulty.Medium);
     }
   }
 
@@ -139,7 +139,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         id: this.store.roomId(),
         game: 'lightsout',
         mode: this.store.currentRoomMode(),
-        difficulty: this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : this.store.size() === 7 ? 'expert' : this.store.size() === 8 ? 'master' : 'medium',
+        difficulty: this.store.size() === 4 ? GameDifficulty.Easy : this.store.size() === 6 ? GameDifficulty.Hard : this.store.size() === 7 ? GameDifficulty.Expert : this.store.size() === 8 ? GameDifficulty.Master : GameDifficulty.Medium,
         host: this.store.hostId()
       });
     }
@@ -199,7 +199,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   applyHint() {
-    if (this.store.currentRoomMode() !== GameMode.Single || this.store.status() !== 'playing') return;
+    if (this.store.currentRoomMode() !== GameMode.Single || this.store.status() !== GameStatus.Playing) return;
     const sol = this.store.currentSolution();
     const size = this.store.size();
     for (let r = 0; r < size; r++) {

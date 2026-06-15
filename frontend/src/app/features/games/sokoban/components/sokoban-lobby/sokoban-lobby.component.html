@@ -61,12 +61,12 @@
             class="flex flex-col items-center p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-orange-400 hover:shadow-[0_0_15px_rgba(251,146,60,0.3)] transition-all group relative overflow-hidden"
           >
             <!-- Status indicator -->
-            @if (level.progress && level.progress.status === 'finished') {
+            @if (level.progress && level.progress.status === GameStatus.Finished) {
               <div class="absolute top-0 right-0 w-8 h-8 bg-green-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
               <div class="absolute top-1 right-1 flex items-center justify-center">
                 <span class="text-green-500 text-lg leading-none">⭐</span>
               </div>
-            } @else if (level.progress && level.progress.status === 'playing') {
+            } @else if (level.progress && level.progress.status === GameStatus.Playing) {
               <div class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
               <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
             }
@@ -75,9 +75,9 @@
               {{ i18n.t('game.level')() }} {{ level.level_num | number:'1.0-0' }}
             </span>
             
-            @if (level.progress && level.progress.status === 'playing') {
+            @if (level.progress && level.progress.status === GameStatus.Playing) {
               <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.in_progress')() }}</span>
-            } @else if (level.progress && level.progress.status === 'finished') {
+            } @else if (level.progress && level.progress.status === GameStatus.Finished) {
               <span class="text-[10px] text-green-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.finished')() }}</span>
             } @else {
               <span class="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.unplayed')() }}</span>

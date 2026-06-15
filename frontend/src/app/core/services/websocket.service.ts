@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
 import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -69,7 +70,7 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  connect(gameId: string, roomId: string, playerId: string, mode: string = 'single', difficulty: string = 'medium', hostId: string = '', action: string = '', password: string = '') {
+  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '') {
     // Auto-consume pendingPassword if no explicit password provided
     if (!password && this._pendingPassword) {
       password = this._pendingPassword;

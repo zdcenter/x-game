@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -17,7 +18,6 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
-import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
 
 @Component({
   selector: 'app-drop2048',
@@ -38,6 +38,8 @@ import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.
   templateUrl: './drop2048.component.html'
 })
 export class Drop2048Component extends BaseGameComponent implements OnInit, OnDestroy {
+  GameStatus = GameStatus;
+  GameMode = GameMode;
   override store = inject(Drop2048Store);
   roomLifecycle!: RoomLifecycleHandle;
   private router = inject(Router);

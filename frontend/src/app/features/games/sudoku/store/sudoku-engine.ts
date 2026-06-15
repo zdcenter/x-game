@@ -1,5 +1,5 @@
+import { GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export interface SudokuCell {
   r: number;

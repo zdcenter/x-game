@@ -1,10 +1,10 @@
+import { GameDifficulty, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameTimerService } from '../../../../core/services/game-timer.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { BlockEngine, BlockActionType, BlockGameState } from './block-engine';
 import { BlockShape } from '../utils/shapes';
-import { GameMode, GameStatus, GameStatusType, GameDifficulty } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 export interface BlockOpponent {
@@ -36,20 +36,16 @@ export class BlockStore extends BaseGameStore {
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
-  readonly status = computed(() => {
+  readonly singlePlayerStatus = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localStatus();
     const st = this.rawState();
     if (!st) return 'disconnected';
-    return st.status || GameStatus.Waiting;
+    return st.status || 'waiting';
   });
 
-  readonly winners = computed(() => this.rawState()?.winners || []);
+  override readonly singlePlayerWinners = computed(() => []);
 
-  readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [{ id: this.playerId() }];
-    const st = this.rawState() as any;
-    return st?.players ? Object.values(st.players) : [];
-  });
+  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
   opponents = computed<BlockOpponent[]>(() => {
     const st = this.rawState() as any;

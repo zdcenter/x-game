@@ -1,5 +1,5 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
-import { GameMode, GameStatus, GameDifficulty } from '../../../../../core/models/game.model';
 import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -47,23 +47,23 @@ export class SudokuLobbyComponent implements OnInit {
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}>();
 
   sudokuModes = [
-    { id: 'steal', labelKey: 'game.sudoku_same_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_same_pk_steal_desc' },
-    { id: 'speed', labelKey: 'game.sudoku_same_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_same_pk_speed_desc' }
+    { id: GameMode.Steal, labelKey: 'game.sudoku_same_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_same_pk_steal_desc' },
+    { id: GameMode.Speed, labelKey: 'game.sudoku_same_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_same_pk_speed_desc' }
   ];
 
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_sudoku_easy', desc: 'A gentle start' },
-    { id: 'medium', labelKey: 'game.diff_sudoku_medium', desc: 'A fair challenge' },
-    { id: 'hard', labelKey: 'game.diff_sudoku_hard', desc: 'For experienced players' },
-    { id: 'expert', labelKey: 'game.diff_sudoku_expert', desc: 'True test of skill' }
+    { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', desc: 'A fair challenge' },
+    { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', desc: 'For experienced players' },
+    { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', desc: 'True test of skill' }
   ];
 
-  activeTab = signal<string>('easy');
+  activeTab = signal<string>(GameDifficulty.Easy);
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels('easy');
+    this.loadLevels(GameDifficulty.Easy);
   }
 
   selectDifficulty(diff: string) {

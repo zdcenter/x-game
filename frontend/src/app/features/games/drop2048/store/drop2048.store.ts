@@ -1,10 +1,10 @@
+import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { Drop2048Engine, Drop2048ActionType, DropBlock, ComboText, DROP2048_ROWS, DROP2048_COLS } from './drop2048-engine';
 export type { DropBlock, ComboText };
-import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 export interface Drop2048Opponent {
@@ -47,20 +47,16 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
 
   level = computed(() => Math.floor(this.score() / 500) + 1);
 
-  readonly status = computed(() => {
+  readonly singlePlayerStatus = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localStatus();
     const st = this.rawState();
     if (!st) return 'disconnected';
-    return st.status || GameStatus.Waiting;
+    return st.status || 'waiting';
   });
 
-  readonly winners = computed(() => this.rawState()?.winners || []);
+  override readonly singlePlayerWinners = computed(() => []);
 
-  readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [];
-    const st = this.rawState() as any;
-    return st?.players ? Object.values(st.players) : [];
-  });
+  override readonly singlePlayerList = computed(() => []);
 
   opponents = computed<Drop2048Opponent[]>(() => {
     const st = this.rawState() as any;
@@ -154,7 +150,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
       
       if (this.auth.isAuthenticated()) {
         this.statsService.getStats('drop2048').subscribe(stats => {
-          const stat = stats.find(s => s.Mode === 'single');
+          const stat = stats.find(s => s.Mode === GameMode.Single);
           if (stat) this.bestScore.set(stat.BestScore);
         });
       }
@@ -188,7 +184,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     if (this.currentRoomMode() === GameMode.Single) {
       if (this.auth.isAuthenticated()) {
         this.statsService.submitStat('drop2048', {
-          mode: 'single',
+          mode: GameMode.Single,
           difficulty: '',
           score: this.localScore(),
           time: 0,

@@ -10,7 +10,7 @@ import (
 type SubmitStatRequest struct {
 	Mode       string `json:"mode"`
 	Difficulty string `json:"difficulty"`
-	Score      int    `json:"score"`
+	Score      int    `json:string(domain.ModeScore)`
 	Time       int    `json:"time"`
 	Won        bool   `json:"won"`
 }

@@ -215,9 +215,16 @@ func init() {
 	})
 
 	// 同盘积分模式：使用全局统一的 Seed，前端基于此 Seed 生成完全一致的碎片序列
-	engine.Register("hexa_score", func() engine.GameEngine {
+	engine.Register("hexa_same_score", func() engine.GameEngine {
 		e := &PKScoreEngine{}
 		e.useSeed = true
+		return e
+	})
+
+	// 单机模式：虽然主要逻辑在前端本地运行，但后端需要一个虚拟引擎以防崩溃
+	engine.Register("hexa_single", func() engine.GameEngine {
+		e := &PKScoreEngine{}
+		e.useSeed = false
 		return e
 	})
 }

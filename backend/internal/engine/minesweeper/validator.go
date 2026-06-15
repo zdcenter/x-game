@@ -42,7 +42,7 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 		if modeOpt, ok := opts["mode"].(string); ok {
 			e.Mode = modeOpt
 		} else {
-			e.Mode = "single"
+			e.Mode = string(domain.ModeSingle)
 		}
 		if penalty, ok := opts["penaltySeconds"].(float64); ok {
 			e.PenaltyMs = int64(penalty * 1000)
@@ -68,19 +68,15 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 				}
 			} else {
 				switch diff {
-				case "easy", "beginner":
+				case string(domain.DiffEasy), "beginner":
 					width, height, mines = 9, 9, 10
-				case "medium", "intermediate":
+				case string(domain.DiffMedium), "intermediate":
 					width, height, mines = 16, 16, 40
-				case "hard", "advanced":
+				case string(domain.DiffHard), "advanced":
 					width, height, mines = 30, 16, 99
-				case "hard_mode": // mapping iOS '困难'
-					width, height, mines = 30, 18, 130
-				case "professional":
+				case string(domain.DiffExpert):
 					width, height, mines = 30, 20, 160
-				case "master":
-					width, height, mines = 30, 22, 190
-				case "expert":
+				case string(domain.DiffMaster):
 					width, height, mines = 30, 24, 230
 				default:
 					width, height, mines = 16, 16, 40
@@ -96,7 +92,7 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 
 	// Determine if we should start in waiting mode
 	if opts, ok := options.(map[string]interface{}); ok {
-		if mode, ok := opts["mode"].(string); ok && mode != "single" {
+		if mode, ok := opts["mode"].(string); ok && mode != string(domain.ModeSingle) {
 			e.State = engine.StateWaiting
 			e.Board.Status = engine.StateWaiting // Keep Board status sync
 			e.Board.GenerateMines(-1, -1)
@@ -140,7 +136,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Board = NewBoard(e.Board.Width, e.Board.Height, e.Board.Mines)
-		if e.Mode != "single" {
+		if e.Mode != string(domain.ModeSingle) {
 			e.Board.Status = engine.StateWaiting
 			e.Board.GenerateMines(-1, -1)
 		}
@@ -182,12 +178,12 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 
 	switch action.Type {
 	case "reveal":
-		if !e.Board.IsMinesPlaced && e.Mode == "single" {
+		if !e.Board.IsMinesPlaced && e.Mode == string(domain.ModeSingle) {
 			e.Board.GenerateMines(action.X, action.Y)
 		}
 
 		if cell.IsMine {
-			if e.Mode == "single" {
+			if e.Mode == string(domain.ModeSingle) {
 				// Single mode: game over immediately
 				cell.State = CellExploded
 				e.Board.Status = engine.StateFinished
@@ -210,7 +206,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 			cell.Owner = playerID
 			e.Scores[playerID]++
 		} else {
-			if e.Mode == "single" {
+			if e.Mode == string(domain.ModeSingle) {
 				// In standard minesweeper, bad flag usually doesn't do anything or just marks it wrong at the end
 				// But let's apply the penalty if they want, or maybe no penalty in single player?
 				// Let's just ignore incorrect flag in single player (can't flag empty)
@@ -274,7 +270,7 @@ func (e *MinesweeperEngine) checkWinCondition() {
 	}
 
 	isFinished := false
-	if e.Mode == "single" {
+	if e.Mode == string(domain.ModeSingle) {
 		// Single player wins if all safe cells are revealed, or all mines are flagged
 		if e.Board.RevealedCnt == totalSafeCells || processedMines == e.Board.Mines {
 			isFinished = true

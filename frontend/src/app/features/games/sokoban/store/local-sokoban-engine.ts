@@ -1,5 +1,5 @@
+import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export enum SokobanActionType {
   Move = 'move',
@@ -18,7 +18,7 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
   moves: number = 0;
   timeSpent: number = 0;
   status: GameStatusType = GameStatus.Playing;
-  difficulty: string = 'beginner';
+  difficulty: string = GameDifficulty.Easy;
   levelStr: string = '';
   levelId: string = '';
   onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void;
@@ -34,7 +34,7 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
       this.history = existingData.history || [];
       this.moves = existingData.moves || 0;
       this.timeSpent = existingData.timeSpent || 0;
-      this.status = existingData.status || GameStatus.Playing;
+      this.status = existingData.status || 'playing';
     } else if (this.levelStr) {
       this.initBoard();
     }
@@ -265,9 +265,6 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
       
       const targetLevelId = levelId || data.levelId;
 
-      if (data.difficulty === 'easy') data.difficulty = 'beginner';
-      if (data.difficulty === 'medium') data.difficulty = 'intermediate';
-      if (data.difficulty === 'hard') data.difficulty = 'advanced';
 
       const engine = new LocalSokobanEngine(targetLevelId, data.difficulty, data.levelStr, data);
       return { engine, difficulty: data.difficulty };

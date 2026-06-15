@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -102,7 +102,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
         <!-- Board Area -->
         <div class="flex-1 flex flex-col relative min-h-0 overflow-hidden mt-2 w-full">
-          @if (status === 'waiting' && currentRoomMode() !== GameMode.Single) {
+          @if (status === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
             <app-game-waiting-room
               [gameId]="'watersort'"
               [mode]="currentRoomMode()"
@@ -134,7 +134,7 @@ import { AudioService } from '../../../core/services/audio.service';
                   [stats]="[
                     { icon: '🔄', value: myMoves(), label: i18n.t('game.moves')() }
                   ]"
-                  [status]="status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
+                  [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
 
                 @if (currentRoomMode() !== GameMode.Single && opponentId()) {
                   <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
@@ -145,7 +145,7 @@ import { AudioService } from '../../../core/services/audio.service';
                     [stats]="[
                       { icon: '🔄', value: opponentMoves(), label: i18n.t('game.moves')() }
                     ]"
-                    [status]="status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
+                    [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
                 }
               </div>
             </div>
@@ -183,7 +183,7 @@ import { AudioService } from '../../../core/services/audio.service';
               </div>
 
               <!-- Starting Countdown Overlay -->
-              @if (status === 'starting') {
+              @if (status === GameStatus.Starting) {
                 <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
               }
 
@@ -192,7 +192,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
 
               <!-- Hint Floating Button -->
-              @if (status === 'playing' && currentRoomMode() === GameMode.Single) {
+              @if (status === GameStatus.Playing && currentRoomMode() === GameMode.Single) {
                 <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-3 items-end">
                   <app-hint-button layout="compact" class="block shadow-lg hover:scale-105 active:scale-95 transition-all bg-[var(--color-bg-main)] rounded-lg" (hintApplied)="applyHint()"></app-hint-button>
                 </div>
@@ -202,7 +202,7 @@ import { AudioService } from '../../../core/services/audio.service';
           }
           
           <!-- Game Over Overlay -->
-          @if (status === 'finished' && showOverlay()) {
+          @if (status === GameStatus.Finished && showOverlay()) {
             <app-game-result-overlay
               currentGameId="watersort"
               [status]="didIWin() ? 'win' : 'lose'"
@@ -213,7 +213,9 @@ import { AudioService } from '../../../core/services/audio.service';
               [showDismiss]="currentRoomMode() !== GameMode.Single && isHost()"
               (leave)="returnToLobby()"
               (restart)="playAgain()"
-              (dismiss)="dismissRoom()">
+              (dismiss)="dismissRoom()"
+          [enableChangeRoomGame]="_store.currentRoomMode() !== GameMode.Single && _store.hostId() === _store.playerId()"
+          (changeRoomGame)="_store.changeRoomGame($event)">
             </app-game-result-overlay>
           }
         </div>
@@ -332,13 +334,13 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     super();
     effect((onCleanup) => {
       const status = this._store.status();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
 
-      if (status === 'finished') {
+      if (status === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -369,12 +371,12 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   isDifficultyModalOpen = signal(false);
-  selectedDifficulty = signal('easy');
+  selectedDifficulty = signal<string>(GameDifficulty.Easy);
   isBlindMode = signal(false);
   predefinedDifficulties = [
     { id: 'easy', labelKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
-    { id: 'medium', labelKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
-    { id: 'hard', labelKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
+    { id: GameDifficulty.Medium, labelKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
+    { id: GameDifficulty.Hard, labelKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
   ];
 
   openDifficultySettings() {
@@ -576,7 +578,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   onTubeClick(index: number) {
-    if (this.status !== 'playing') return;
+    if (this.status !== GameStatus.Playing) return;
     if (this.pouringState) return; // Prevent clicking while animating
     
     if (this.selectedTubeIndex === null) {
@@ -600,7 +602,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   applyHint() {
-    if (this.status !== 'playing') return;
+    if (this.status !== GameStatus.Playing) return;
     const myTubes = this.myTubes();
     let bestMove: { from: number, to: number } | null = null;
     let fallbackMove: { from: number, to: number } | null = null;
@@ -666,7 +668,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this._store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
     const uniqueLocalRoom = 'local_' + this.myId;
-    this._store.joinRoom(uniqueLocalRoom, GameMode.Single, 'easy', this.myId);
+    this._store.joinRoom(uniqueLocalRoom, GameMode.Single, GameDifficulty.Easy, this.myId);
   }
 
   goBack() {

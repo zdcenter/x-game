@@ -11,7 +11,7 @@
 
       <!-- Header -->
       <app-game-header i18n-title="@@app.title" title="Minesweeper"
-        [subtitle]="currentRoomMode() === 'steal' ? i18n.t('game.same_pk_steal_label')() : (currentRoomMode() === 'speed' ? i18n.t('game.same_pk_speed_label')() : i18n.t('game.single_label')())"
+        [subtitle]="currentRoomMode() === GameMode.Steal ? i18n.t('game.same_pk_steal_label')() : (currentRoomMode() === GameMode.Speed ? i18n.t('game.same_pk_speed_label')() : i18n.t('game.single_label')())"
         iconGradientClass="from-rose-500 to-orange-500" titleGradientClass="from-rose-400 to-orange-400"
         shadowClass="shadow-orange-500/20"
         headerBgClass="bg-gradient-to-r from-rose-900/20 to-orange-900/20 -mt-4 lg:-mt-6 -mx-4 lg:-mx-6 px-4 lg:px-6 mb-0"
@@ -90,7 +90,7 @@
             [playerName]="playerId"
             [isHost]="playerId === store.hostId()"
             [isMe]="true"
-            [score]="currentRoomMode() === 'steal' ? (getPlayerScores()[0]?.score || 0) : undefined"
+            [score]="currentRoomMode() === GameMode.Steal ? (getPlayerScores()[0]?.score || 0) : undefined"
             [stats]="[
               { icon: '⏱️', value: store.status() === GameStatus.Playing ? elapsedTime() : (store.status() === GameStatus.Waiting ? '00:00' : elapsedTime()), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
               { icon: '💣', value: store.remainingMines() | number:'2.0' },
@@ -100,10 +100,10 @@
 
           @if (currentRoomMode() !== GameMode.Single) {
             <app-player-list-container 
-              [opponentsCount]="currentRoomMode() === 'speed' ? store.speedOpponents().length : (getPlayerScores().length - 1)" 
+              [opponentsCount]="currentRoomMode() === GameMode.Speed ? store.speedOpponents().length : (getPlayerScores().length - 1)" 
               class="flex-1 min-w-0 flex justify-end lg:justify-start">
               <ng-template #opponentsList>
-                @if (currentRoomMode() === 'speed' && store.speedOpponents().length > 0) {
+                @if (currentRoomMode() === GameMode.Speed && store.speedOpponents().length > 0) {
                   @for (opp of store.speedOpponents(); track opp.id) {
                     <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                       [playerName]="opp.id"
@@ -117,7 +117,7 @@
                   }
                 }
 
-                @if (currentRoomMode() === 'steal') {
+                @if (currentRoomMode() === GameMode.Steal) {
                   @for (player of getPlayerScores(); track player.id) {
                     @if (player.id !== playerId) {
                       <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
@@ -148,7 +148,7 @@
         @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
         <div class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[var(--color-bg-main)]">
           <app-game-waiting-room [gameId]="'minesweeper'" [mode]="currentRoomMode()" [roomId]="currentRoomId()"
-            [difficulty]="'medium'" [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
+            [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
             [readyPlayers]="store.readyPlayers() || {}" (leave)="returnToLobby()" (start)="store.startGame()"
             (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)" (ready)="store.ready()"
             (cancelReady)="store.cancelReady()"></app-game-waiting-room>
@@ -229,7 +229,9 @@
           [showRestart]="currentRoomMode() === GameMode.Single || store.host() === playerId"
           [showDismiss]="currentRoomMode() !== GameMode.Single && store.host() === playerId"
           [showLeave]="currentRoomMode() === GameMode.Single || store.host() !== playerId" (leave)="goBack()"
-          (restart)="store.restartGame()" (dismiss)="dismissRoom()">
+          (restart)="store.restartGame()" (dismiss)="dismissRoom()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)">
         </app-game-result-overlay>
         }
         

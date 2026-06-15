@@ -1,3 +1,4 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
@@ -8,7 +9,6 @@ import { AdService } from '../../../../core/services/ad.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameId, GameMode, GameDifficulty, GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export enum CellState {
   Hidden = 0,
@@ -43,6 +43,8 @@ export interface GameState {
 
 @Injectable()
 export class MinesweeperStore extends BaseGameStore {
+  override readonly singlePlayerWinners = computed<string[]>(() => []);
+
   readonly gameId = GameId.Minesweeper;
 
   private audio = inject(AudioService);
@@ -58,10 +60,7 @@ export class MinesweeperStore extends BaseGameStore {
   bestTime = signal<number>(0);
 
   // Override derived state
-  override readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [];
-    return Object.keys(this.scores() || {}).map(id => ({ id }));
-  });
+  override readonly singlePlayerList = computed(() => []);
 
   // For Steal mode it's just rawState().board. For Speed mode it's rawState().boards[playerId]
   private myBoardData = computed(() => {
@@ -85,19 +84,19 @@ export class MinesweeperStore extends BaseGameStore {
     
     const s = this.rawState() as any;
     if (!s) {
-      return { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
+      return { cells: [], status: 'waiting', width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
     }
     
     if (this.currentRoomMode() === GameMode.Speed) {
       return (s.boards && s.boards[this.playerId()]) ? s.boards[this.playerId()] : null;
     }
-    return s.board || { cells: [], status: GameStatus.Waiting, width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
+    return s.board || { cells: [], status: 'waiting', width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
   });
 
   readonly board = computed<Cell[][]>(() => this.myBoardData()?.cells || []);
-  override readonly status = computed<GameStatusType>(() => {
+  override readonly singlePlayerStatus = computed<GameStatusType>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
-      return this.localEngine()?.status || GameStatus.Waiting;
+      return this.localEngine()?.status || 'waiting';
     }
     const s = this.rawState() as any;
 

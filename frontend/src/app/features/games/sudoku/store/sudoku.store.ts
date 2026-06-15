@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -12,7 +13,6 @@ import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { SudokuEngine, SudokuCell, SudokuActionType } from './sudoku-engine';
-import { GameMode, GameStatus, GameDifficulty } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 export type { SudokuCell };
 
@@ -20,6 +20,8 @@ export type { SudokuCell };
 
 @Injectable()
 export class SudokuStore extends BaseGameStore {
+  override readonly singlePlayerWinners = computed<string[]>(() => []);
+
   readonly gameId = 'sudoku';
 
   private http = inject(HttpClient);
@@ -46,7 +48,7 @@ export class SudokuStore extends BaseGameStore {
   view = signal<'lobby' | 'room' | 'countdown' | 'play'>('lobby');
   currentPuzzleId = signal<string>('');
   timeSpent = signal<number>(0);
-  isFinished = signal<boolean>(false);
+  override isFinished = signal<boolean>(false);
   bestTime = signal<number>(0);
 
   filledCells = computed(() => {
@@ -63,7 +65,7 @@ export class SudokuStore extends BaseGameStore {
 
   // WS State derived
   override rawState = computed(() => this.ws.gameState() || {
-    status: GameStatus.Waiting,
+    status: 'waiting',
     difficulty: '',
     players: {},
     puzzle: '',
@@ -71,18 +73,15 @@ export class SudokuStore extends BaseGameStore {
     winners: []
   });
 
-  gameStatus = computed(() => this.rawState()?.status || GameStatus.Waiting);
+  gameStatus = computed(() => this.rawState()?.status || 'waiting');
   players = computed(() => this.rawState()?.players || {});
   override readonly hostId = computed(() => this.rawState()?.host || '');
 
-  override readonly status = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.isFinished() ? GameStatus.Finished : GameStatus.Playing;
-    return (this.rawState()?.status as string) || GameStatus.Waiting;
+  override readonly singlePlayerStatus = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.isFinished() ? GameStatus.Finished : 'playing';
+    return (this.rawState()?.status as string) || 'waiting';
   });
-  override readonly playersList = computed<any[]>(() => {
-    const p = this.players() || {};
-    return Object.keys(p).map(id => ({ id, ...p[id] }));
-  });
+  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
   private timer: any;
 
@@ -201,10 +200,10 @@ export class SudokuStore extends BaseGameStore {
     // Load best time
     if (this.auth.isAuthenticated()) {
       const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
-      let diff = 'easy';
+      let diff: string = GameDifficulty.Easy;
       if (match) {
-        if (match[1].includes('medium')) diff = 'medium';
-        else if (match[1].includes('hard')) diff = 'hard';
+        if (match[1].includes(GameDifficulty.Medium)) diff = GameDifficulty.Medium;
+        else if (match[1].includes(GameDifficulty.Hard)) diff = GameDifficulty.Hard;
       }
       this.statsService.getStats('sudoku').subscribe(stats => {
         const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === diff);
@@ -476,10 +475,10 @@ export class SudokuStore extends BaseGameStore {
       // Submit stat
       if (this.auth.isAuthenticated()) {
         const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
-        let diff = 'easy';
+        let diff: string = GameDifficulty.Easy;
         if (match) {
-          if (match[1].includes('medium')) diff = 'medium';
-          else if (match[1].includes('hard')) diff = 'hard';
+          if (match[1].includes(GameDifficulty.Medium)) diff = GameDifficulty.Medium;
+          else if (match[1].includes(GameDifficulty.Hard)) diff = GameDifficulty.Hard;
         }
         this.statsService.submitStat('sudoku', {
           mode: GameMode.Single,

@@ -12,7 +12,7 @@ import (
 
 type StealPlayer struct {
 	ID          string `json:"id"`
-	Score       int    `json:"score"`
+	Score       int    `json:string(domain.ModeScore)`
 	FreezeUntil int64  `json:"freezeUntil"` // Unix milliseconds
 	Finished    bool   `json:"finished"`
 }
@@ -40,7 +40,7 @@ func (e *StealEngine) InitGame(options interface{}) error {
 	e.Players = make(map[string]*StealPlayer)
 	e.Winners = make([]string, 0)
 
-	e.Difficulty = "medium"
+	e.Difficulty = string(domain.DiffMedium)
 	e.PenaltySeconds = 3
 
 	if opts, ok := options.(map[string]interface{}); ok {

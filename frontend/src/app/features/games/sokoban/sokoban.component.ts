@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -93,7 +93,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 
       <div class="flex-grow flex flex-col relative min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden">
 
-      @if (store.status() === 'waiting') {
+      @if (store.status() === GameStatus.Waiting) {
         <app-game-waiting-room
           [gameId]="'sokoban'"
           [mode]="store.currentRoomMode()"
@@ -112,11 +112,11 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
         ></app-game-waiting-room>
       }
 
-      @if (store.status() === 'starting') {
+      @if (store.status() === GameStatus.Starting) {
         <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
       }
 
-      @if (store.status() === 'playing' || store.status() === 'finished' || store.status() === 'starting') {
+      @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
         <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full relative z-10">
           <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" 
                [class.justify-center]="store.currentRoomMode() === GameMode.Single">
@@ -221,7 +221,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 
         </div>
 
-        @if (store.status() === 'playing' && store.isDead()) {
+        @if (store.status() === GameStatus.Playing && store.isDead()) {
           <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <h2 class="text-4xl md:text-6xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
               {{ i18n.t('game.spectating')() }}
@@ -229,14 +229,14 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
           </div>
         }
       }
-        @if (store.status() === 'finished' && showOverlay()) {
+        @if (store.status() === GameStatus.Finished && showOverlay()) {
           <app-game-result-overlay
             currentGameId="sokoban"
             [status]="getGameResult()"
             [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
             [stats]="[
               { label: i18n.t('game.moves')(), value: store.myMoves() },
-              { label: 'TIME', value: gameTimer.formatTime(store.timeSpent()) }
+              { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
             ]"
             [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
             [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
@@ -245,7 +245,9 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
             (nextLevel)="handleNextLevel()"
             (restart)="handleRestart()"
             (leave)="onLeaveClick()"
-            (dismiss)="handleDismissRoom()">
+            (dismiss)="handleDismissRoom()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)">
           </app-game-result-overlay>
         }
 
@@ -257,7 +259,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
     <!-- Mobile Sidebar Overlay Backdrop -->
     @if (isMobileSidebarOpen()) {
       <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40" 
-           [class.lg:hidden]="!(store.status() === 'playing' && store.currentRoomMode() !== GameMode.Single)"
+           [class.lg:hidden]="!(store.status() === GameStatus.Playing && store.currentRoomMode() !== GameMode.Single)"
            (click)="isMobileSidebarOpen.set(false)"></div>
     }
 
@@ -322,7 +324,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   constructor() {
     super();
     effect((onCleanup) => {
-      if (this.store.status() === 'finished') {
+      if (this.store.status() === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -332,7 +334,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
     effect(() => {
       const status = this.store.status();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
@@ -372,7 +374,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
         this.showLobby.set(false);
       }
     } else {
-      this.store.joinRoom('', GameMode.Single, 'beginner', this.playerId);
+      this.store.joinRoom('', GameMode.Single, GameDifficulty.Easy, this.playerId);
     }
   }
 

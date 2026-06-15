@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -76,7 +76,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     effect((onCleanup) => {
       const status = this.store.status();
       if (this.store.currentRoomMode() !== GameMode.Single) {
-        if (status === 'starting') {
+        if (status === GameStatus.Starting) {
           untracked(() => {
             this.view.set('play');
             this.startingCountdown.set(3);
@@ -85,12 +85,12 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
               this.startingCountdown.update(v => Math.max(1, v - 1));
             }, 1000);
           });
-        } else if (status === 'playing') {
+        } else if (status === GameStatus.Playing) {
           untracked(() => {
             this.view.set('play');
             if (this.countdownInterval) clearInterval(this.countdownInterval);
           });
-        } else if (status === 'waiting') {
+        } else if (status === GameStatus.Waiting) {
           untracked(() => {
             this.view.set('room');
             if (this.countdownInterval) clearInterval(this.countdownInterval);
@@ -98,7 +98,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
         }
       }
       
-      const isFin = this.store.isFinished() || this.store.status() === 'finished';
+      const isFin = this.store.isFinished() || this.store.status() === GameStatus.Finished;
       if (isFin) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));

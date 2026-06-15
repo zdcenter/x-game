@@ -1,9 +1,9 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalLightsoutEngine, LightsoutActionType } from './lightsout-engine';
 
@@ -49,22 +49,22 @@ export class LightsoutStore extends BaseGameStore {
     return (this.rawState() as any)?.size || 5;
   });
 
-  override readonly status = computed<GameStatusType | string>(() => {
+  override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
-      return this.localEngine()?.status || GameStatus.Waiting;
+      return this.localEngine()?.status || 'waiting';
     }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
     let status = st.status;
     if (typeof status === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || GameStatus.Waiting;
+      status = statusMap[status] || 'waiting';
     }
-    return status || GameStatus.Waiting;
+    return status || 'waiting';
   });
 
-  readonly isFinished = computed<boolean>(() => {
+  override readonly isFinished = computed<boolean>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
       return this.localEngine()?.finished || false;
@@ -76,19 +76,12 @@ export class LightsoutStore extends BaseGameStore {
     return false;
   });
 
-  readonly winners = computed<string[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.finished ? [this.playerId()] : [];
-    }
-    return (this.rawState() as any)?.winners || [];
+  override readonly singlePlayerWinners = computed(() => {
+    this.tick();
+    return this.localEngine()?.finished ? [this.playerId()] : [];
   });
 
-  override readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [{ id: this.playerId() }];
-    const st = this.rawState() as any;
-    return st?.players ? Object.keys(st.players).map(id => ({ id })) : [];
-  });
+  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
   readonly opponents = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];

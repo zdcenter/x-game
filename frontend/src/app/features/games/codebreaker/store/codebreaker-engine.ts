@@ -1,5 +1,5 @@
+import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 import { GuessRecord } from './codebreaker.store';
 
 export enum CodebreakerActionType {
@@ -18,7 +18,7 @@ export class LocalCodebreakerEngine implements ILocalEngine<any, CodebreakerActi
   secretCode: string = '';
   finished: boolean = false;
   playerId: string = '';
-  difficulty: string = 'medium';
+  difficulty: string = GameDifficulty.Medium;
 
   private onWin?: () => void;
   private onWrong?: () => void;

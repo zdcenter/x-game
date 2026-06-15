@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -29,7 +30,7 @@ import { getHref } from '../../../core/utils/browser.util';
               <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
               <div class="flex items-center gap-2">
                 <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
-                @if (mode !== 'single') {
+                @if (mode !== GameMode.Single) {
                   <button (click)="copyInviteLink()" class="relative group p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/50 transition-all active:scale-95 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)]" [title]="i18n.t('game.copy_invite_link')() || 'Copy Invite Link'">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -109,6 +110,7 @@ import { getHref } from '../../../core/utils/browser.util';
   `
 })
 export class GameWaitingRoomComponent {
+  GameMode = GameMode;
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
 
@@ -146,7 +148,7 @@ export class GameWaitingRoomComponent {
   get allGuestsReady(): boolean {
     if (!this.players) return false;
     const guests = this.players.filter(p => p.id !== this.hostId);
-    if (guests.length === 0 && this.mode !== 'single') return false; // Must have at least 1 guest in PK
+    if (guests.length === 0 && this.mode !== GameMode.Single) return false; // Must have at least 1 guest in PK
     return guests.every(g => this.readyPlayers[g.id]);
   }
 
@@ -162,8 +164,8 @@ export class GameWaitingRoomComponent {
       console.error('Error getting mode label:', e);
     }
     if (typeof modeId === 'string') {
-      if (modeId.includes('steal')) return this.i18n.t('game.steal_mode')() || 'PK Steal';
-      if (modeId.includes('speed')) return this.i18n.t('game.speed_mode')() || 'PK Speed';
+      if (modeId.includes(GameMode.Steal)) return this.i18n.t('game.steal_mode')() || 'PK Steal';
+      if (modeId.includes(GameMode.Speed)) return this.i18n.t('game.speed_mode')() || 'PK Speed';
     }
     return modeId || '';
   }

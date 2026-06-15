@@ -21,22 +21,23 @@ const (
 type GameMode string
 
 const (
-	ModeSingle  GameMode = "single"
-	ModePkSteal GameMode = "pk_steal"
-	ModePkSpeed GameMode = "pk_speed"
-	ModePkLocal GameMode = "pk_local"
+	ModeSingle    GameMode = "single"
+	ModeSpeed     GameMode = "speed"
+	ModeSteal     GameMode = "steal"
+	ModeScore     GameMode = "score"
+	ModeSameScore GameMode = "same_score"
+	ModeBattle    GameMode = "battle"
 )
 
 type GameDifficulty string
 
 const (
-	DiffBeginner     GameDifficulty = "beginner"
-	DiffIntermediate GameDifficulty = "intermediate"
-	DiffExpert       GameDifficulty = "expert"
-	DiffEasy         GameDifficulty = "easy"
-	DiffMedium       GameDifficulty = "medium"
-	DiffHard         GameDifficulty = "hard"
-	DiffNone         GameDifficulty = "none"
+	DiffEasy   GameDifficulty = "easy"
+	DiffMedium GameDifficulty = "medium"
+	DiffHard   GameDifficulty = "hard"
+	DiffExpert GameDifficulty = "expert"
+	DiffMaster GameDifficulty = "master"
+	DiffNone   GameDifficulty = "none"
 )
 
 type GameStatus string

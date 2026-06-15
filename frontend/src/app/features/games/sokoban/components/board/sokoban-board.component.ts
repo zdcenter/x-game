@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { Component, HostListener, computed, inject, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SokobanStore } from '../../store/sokoban.store';
@@ -420,6 +421,7 @@ import { SokobanStore } from '../../store/sokoban.store';
   `
 })
 export class SokobanBoardComponent {
+  GameStatus = GameStatus;
   @Input() boardData: string[][] | undefined;
   @Input() readonly: boolean = false;
 
@@ -555,7 +557,7 @@ export class SokobanBoardComponent {
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
     if (this.readonly) return;
-    if (this.store.status() !== 'playing' || this.store.isDead()) return;
+    if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
 
     switch (event.key) {
       case 'ArrowUp':
@@ -625,7 +627,7 @@ export class SokobanBoardComponent {
 
   onCellClick(targetR: number, targetC: number) {
     if (this.readonly) return;
-    if (this.store.status() !== 'playing' || this.store.isDead()) return;
+    if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
 
     this.clearPathfinding();
 
@@ -691,7 +693,7 @@ export class SokobanBoardComponent {
       let step = 0;
       // Start auto walking
       this.pathfindingInterval = setInterval(() => {
-        if (step >= finalPath!.length || this.store.status() !== 'playing') {
+        if (step >= finalPath!.length || this.store.status() !== GameStatus.Playing) {
           this.clearPathfinding();
           return;
         }

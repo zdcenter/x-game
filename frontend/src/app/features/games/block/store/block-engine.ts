@@ -1,4 +1,4 @@
-import { GameModeType, GameStatus, GameStatusType, GameDifficulty } from '../../../../core/models/game.model';
+import { GameDifficulty, GameModeType, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
 import { BlockShape, getRandomShapes } from '../utils/shapes';
 

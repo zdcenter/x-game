@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -31,6 +32,8 @@ interface LevelResponse {
   styleUrl: './sokoban-lobby.component.css'
 })
 export class SokobanLobbyComponent implements OnInit {
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   private http = inject(HttpClient);
   private router = inject(Router);
@@ -45,18 +48,18 @@ export class SokobanLobbyComponent implements OnInit {
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, difficulty: string, levelNum: number}>();
 
   difficulties = [
-    { id: 'beginner', labelKey: 'game.diff_sokoban_beginner', desc: 'A gentle start' },
-    { id: 'intermediate', labelKey: 'game.diff_sokoban_intermediate', desc: 'A fair challenge' },
-    { id: 'advanced', labelKey: 'game.diff_sokoban_advanced', desc: 'For experienced players' },
-    { id: 'professional', labelKey: 'game.diff_sokoban_professional', desc: 'True test of skill' }
+    { id: 'easy', labelKey: 'game.diff_sokoban_beginner', desc: 'A gentle start' },
+    { id: GameDifficulty.Medium, labelKey: 'game.diff_sokoban_intermediate', desc: 'A fair challenge' },
+    { id: GameDifficulty.Hard, labelKey: 'game.diff_sokoban_advanced', desc: 'For experienced players' },
+    { id: GameDifficulty.Expert, labelKey: 'game.diff_sokoban_professional', desc: 'True test of skill' }
   ];
 
-  activeTab = signal<string>('beginner');
+  activeTab = signal<string>(GameDifficulty.Easy);
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels('beginner');
+    this.loadLevels(GameDifficulty.Easy);
   }
 
   selectDifficulty(diff: string) {

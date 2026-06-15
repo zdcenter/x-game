@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -72,11 +72,11 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     // Watch for countdown trigger
     effect((onCleanup) => {
       const status = this.store.gameStatus();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         untracked(() => this.gameTimer.startCountdown());
       }
       
-      const isFin = this.store.isFinished() || status === 'finished';
+      const isFin = this.store.isFinished() || status === GameStatus.Finished;
       if (isFin) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));

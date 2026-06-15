@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
 import { Directive, inject, signal, OnInit, OnDestroy, HostBinding } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
@@ -52,7 +53,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     // Deep link check for PK invites (browser-only: uses setTimeout + router navigate)
     if (isBrowser()) {
       const q = this._baseRoute.snapshot.queryParams;
-      if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== 'single') {
+      if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== GameMode.Single) {
         setTimeout(() => {
           this.handleJoinRoom({
             roomId: q['joinRoom'],

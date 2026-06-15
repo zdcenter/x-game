@@ -2,7 +2,7 @@ package tetris
 
 type PlayerInfo struct {
 	ID              string  `json:"id"`
-	Score           int     `json:"score"`
+	Score           int     `json:string(domain.ModeScore)`
 	Lines           int     `json:"lines"`
 	GarbageReceived int     `json:"garbageReceived"`
 	Matrix          [][]int `json:"matrix"`

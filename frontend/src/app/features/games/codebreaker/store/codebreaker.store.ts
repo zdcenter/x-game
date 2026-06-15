@@ -1,9 +1,9 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalCodebreakerEngine, CodebreakerActionType } from './codebreaker-engine';
 
@@ -46,27 +46,24 @@ export class CodebreakerStore extends BaseGameStore {
     return (this.rawState() as CodebreakerState)?.digitLength || 4;
   });
 
-  winners = computed<string[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.finished ? [this.playerId()] : [];
-    }
-    return (this.rawState() as CodebreakerState)?.winners || [];
+  override readonly singlePlayerWinners = computed(() => {
+    this.tick();
+    return this.localEngine()?.finished ? [this.playerId()] : [];
   });
 
-  override readonly status = computed<string>(() => {
+  override readonly singlePlayerStatus = computed<string>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
-      return String(this.localEngine()?.status || GameStatus.Waiting);
+      return String(this.localEngine()?.status || 'waiting');
     }
     const st = this.rawState() as CodebreakerState;
     if (!st) return GameStatus.Waiting;
     let status = st.status;
     if (typeof status === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || GameStatus.Waiting;
+      status = statusMap[status] || 'waiting';
     }
-    return String(status || GameStatus.Waiting);
+    return String(status || 'waiting');
   });
 
   players = computed<PlayerState[]>(() => {
@@ -90,7 +87,7 @@ export class CodebreakerStore extends BaseGameStore {
     }
   });
 
-  override readonly playersList = computed<any[]>(() => this.players());
+  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
   myState = computed<PlayerState | null>(() => {
     return this.players().find(p => p.id === this.playerId()) || null;

@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { Component, effect, inject, Input, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';
@@ -22,7 +23,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
             [isHost]="playerId === hostId"
             [isMe]="true"
             [score]="store.players()[playerId]?.score || 0"
-            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === 'finished' ? 'finished' : 'playing')"
+            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === GameStatus.Finished ? GameStatus.Finished : 'playing')"
             [freezeCountdown]="isFrozen(store.players()[playerId]) ? getFrozenRemaining(store.players()[playerId]) : undefined"
           ></app-player-badge>
 
@@ -35,7 +36,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
                   [isHost]="kv.key === hostId"
                   [isMe]="false"
                   [score]="kv.value.score"
-                  [status]="isFrozen(kv.value) ? 'frozen' : (store.status() === 'finished' ? 'finished' : 'playing')"
+                  [status]="isFrozen(kv.value) ? 'frozen' : (store.status() === GameStatus.Finished ? GameStatus.Finished : 'playing')"
                   [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
                 ></app-player-badge>
               </ng-container>
@@ -75,6 +76,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
   `
 })
 export class Math24PkStealComponent {
+  GameStatus = GameStatus;
   @Input({ required: true }) playerId!: string;
   @Input({ required: true }) hostId!: string;
 

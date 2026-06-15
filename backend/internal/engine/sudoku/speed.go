@@ -36,7 +36,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Players = make(map[string]*SpeedPlayer)
 	e.Winners = make([]string, 0)
 
-	e.Difficulty = "medium"
+	e.Difficulty = string(domain.DiffMedium)
 
 	if opts, ok := options.(map[string]interface{}); ok {
 		if diff, ok := opts["difficulty"].(string); ok {

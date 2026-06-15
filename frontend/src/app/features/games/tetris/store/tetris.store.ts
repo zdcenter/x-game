@@ -1,10 +1,10 @@
+import { GameMode, GameModeType, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { getEmptyGrid, Piece, Tetromino } from '../models/tetris.model';
 import { TetrisEngine, TetrisActionType, TetrisState } from './tetris-engine';
-import { GameMode, GameStatusType, GameStatus, GameModeType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 export interface TetrisOpponent {
@@ -39,20 +39,16 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   isDead = signal<boolean>(false);
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
-  readonly status = computed(() => {
+  readonly singlePlayerStatus = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localStatus();
     const st = this.rawState();
     if (!st) return 'disconnected';
-    return st.status || GameStatus.Waiting;
+    return st.status || 'waiting';
   });
 
-  readonly winners = computed(() => this.rawState()?.winners || []);
+  override readonly singlePlayerWinners = computed(() => []);
 
-  readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [];
-    const st = this.rawState() as any;
-    return st?.players ? Object.values(st.players) : [];
-  });
+  override readonly singlePlayerList = computed(() => []);
 
   // Opponents State
   opponents = computed<TetrisOpponent[]>(() => {
@@ -138,7 +134,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       // Load best score
       if (this.auth.isAuthenticated()) {
         this.statsService.getStats('tetris').subscribe(stats => {
-          const stat = stats.find(s => s.Mode === 'single');
+          const stat = stats.find(s => s.Mode === GameMode.Single);
           if (stat) this.bestScore.set(stat.BestScore);
         });
       }
@@ -168,7 +164,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       // Submit stat
       if (this.auth.isAuthenticated()) {
         this.statsService.submitStat('tetris', {
-          mode: 'single',
+          mode: GameMode.Single,
           difficulty: '',
           score: this.score(),
           time: 0,

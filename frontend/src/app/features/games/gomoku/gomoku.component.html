@@ -9,7 +9,7 @@
   <div class="w-full shrink-0 relative z-10">
     <app-game-header
       i18n-title="@@game.gomoku" title="Gomoku"
-      [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.same_pk_classic')()"
+      [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === GameDifficulty.Easy ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === GameDifficulty.Hard ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.same_pk_classic')()"
       iconGradientClass="from-emerald-500 to-teal-600"
       titleGradientClass="from-emerald-400 to-teal-500"
       shadowClass="shadow-emerald-500/20"
@@ -135,7 +135,7 @@
         class="w-full h-full flex"
         [gameId]="'gomoku'"
         [mode]="currentRoomMode()"
-        [roomId]="roomId()" [difficulty]="'medium'"
+        [roomId]="roomId()" [difficulty]="GameDifficulty.Medium"
         [players]="mappedPlayers"
         [hostId]="hostId()"
         [currentUserId]="myPlayerId()"
@@ -167,7 +167,9 @@
       [showLeave]="currentRoomMode() !== GameMode.Single"
       [stats]="[]"
       (restart)="onRestart()"
-      (leave)="returnToLobby()">
+      (leave)="returnToLobby()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)">
     </app-game-result-overlay>
   }
     </div> <!-- End of content wrapper -->

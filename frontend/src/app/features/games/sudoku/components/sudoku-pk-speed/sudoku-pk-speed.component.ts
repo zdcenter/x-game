@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { Component, inject, effect, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
@@ -64,12 +64,12 @@ export class SudokuPkSpeedComponent {
   }
 
   isLoser(): boolean {
-    return (this.store.isFinished() || this.store.gameStatus() === 'finished') && !this.isWinner();
+    return (this.store.isFinished() || this.store.gameStatus() === GameStatus.Finished) && !this.isWinner();
   }
 
   constructor() {
     effect((onCleanup) => {
-      if (this.store.isFinished() || this.store.gameStatus() === 'finished') {
+      if (this.store.isFinished() || this.store.gameStatus() === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {

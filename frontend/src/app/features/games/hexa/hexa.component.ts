@@ -1,10 +1,10 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { HexaStore } from './store/hexa.store';
-import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
@@ -42,6 +42,9 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
   templateUrl: './hexa.component.html'
 })
 export class HexaComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameDifficulty = GameDifficulty;
+  GameStatus = GameStatus;
+  GameMode = GameMode;
   override store = inject(HexaStore);
   private authStore = inject(AuthStore);
   private toastService = inject(ToastService);
@@ -96,7 +99,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
     // Start single player by default if we land directly on page
     effect(() => {
-      if (this.currentRoomMode() === 'single') {
+      if (this.currentRoomMode() === GameMode.Single) {
         if (!this.store.loadSinglePlayer()) {
           this.store.startGame();
         }
@@ -106,13 +109,13 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     // Handle PK Start countdown
     effect((onCleanup) => {
       const status = this.store.status();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
       
-      if (status === 'finished' || this.store.gameOver()) {
+      if (status === GameStatus.Finished || this.store.gameOver()) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -128,7 +131,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-      if (pending.mode !== 'single') {
+      if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     }
@@ -138,7 +141,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
@@ -147,7 +150,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
@@ -164,7 +167,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     // 触发并恢复音频上下文，因为这是用户的明确交互
     this.audioService.initAudio();
 
-    if (this.store.gameOver() || (this.currentRoomMode() !== 'single' && this.store.status() !== 'playing')) return;
+    if (this.store.gameOver() || (this.currentRoomMode() !== GameMode.Single && this.store.status() !== GameStatus.Playing)) return;
     
     event.preventDefault();
     this.isDragging = true;
@@ -259,7 +262,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   // Helpers
   getElapsedMs(): number {
-    const startAt = this.currentRoomMode() === 'single' ? 0 : this.store.globalStartAt();
+    const startAt = this.currentRoomMode() === GameMode.Single ? 0 : this.store.globalStartAt();
     if (!startAt) return 0;
     return Math.max(0, Date.now() - startAt);
   }

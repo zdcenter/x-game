@@ -1,4 +1,4 @@
-import { GameMode, GameStatus, GameDifficulty } from '../../../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';

@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -99,8 +100,8 @@ export interface GameDifficulty {
                             <span class="font-mono text-sm font-bold text-inherit truncate max-w-[100px] sm:max-w-[150px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }} ({{ t('game.host') }})</span>
                           </div>
                           <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
-                                [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
-                                [class.bg-[var(--color-accent-to)]]="room.status === 'waiting'" [class.text-[var(--color-bg-main)]]="room.status === 'waiting'">
+                                [class.bg-yellow-500]="room.status === GameStatus.Playing" [class.text-black]="room.status === GameStatus.Playing"
+                                [class.bg-[var(--color-accent-to)]]="room.status === GameStatus.Waiting" [class.text-[var(--color-bg-main)]]="room.status === GameStatus.Waiting">
                             {{ room.status }}
                           </span>
                         </div>
@@ -163,8 +164,8 @@ export interface GameDifficulty {
                           <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate max-w-[120px] sm:max-w-[180px]" [title]="decodeName(room.id, 100)">{{ decodeName(room.id) }}</span>
                         </div>
                         <span class="text-xs font-bold uppercase px-2 py-0.5 rounded"
-                              [class.bg-yellow-500]="room.status === 'playing'" [class.text-black]="room.status === 'playing'"
-                              [class.bg-[var(--color-accent-to)]]="room.status === 'waiting'" [class.text-[var(--color-bg-main)]]="room.status === 'waiting'">
+                              [class.bg-yellow-500]="room.status === GameStatus.Playing" [class.text-black]="room.status === GameStatus.Playing"
+                              [class.bg-[var(--color-accent-to)]]="room.status === GameStatus.Waiting" [class.text-[var(--color-bg-main)]]="room.status === GameStatus.Waiting">
                           {{ room.status }}
                         </span>
                       </div>
@@ -186,9 +187,9 @@ export interface GameDifficulty {
                             <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">
                               {{ t('game.rejoin') || 'Rejoin' }}
                             </button>
-                          } @else if (room.status === 'waiting' || room.status === 'playing') {
+                          } @else if (room.status === GameStatus.Waiting || room.status === GameStatus.Playing) {
                             <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">
-                              {{ room.status === 'playing' ? (t('game.rejoin') || 'Rejoin') : (room.hasPassword ? '🔒 ' + t('game.join') : t('game.join')) }}
+                              {{ room.status === GameStatus.Playing ? (t('game.rejoin') || 'Rejoin') : (room.hasPassword ? '🔒 ' + t('game.join') : t('game.join')) }}
                             </button>
                           } @else {
                             <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.finished') || 'Finished' }}</button>
@@ -219,7 +220,7 @@ export interface GameDifficulty {
                     </div>
                     <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-800"
                          [class.bg-[var(--color-accent-to)]]="player.status === 'idle'"
-                         [class.bg-yellow-400]="player.status === 'playing'"></div>
+                         [class.bg-yellow-400]="player.status === GameStatus.Playing"></div>
                   </div>
                   <div>
                     <div class="text-sm font-bold text-inherit leading-none truncate max-w-[120px]" [title]="player.username">{{ formatHost(player.username, 15) }}</div>
@@ -368,6 +369,9 @@ export interface GameDifficulty {
   `
 })
 export class GameLobbyPanelComponent implements OnInit {
+  GameDifficulty = GameDifficulty;
+  GameStatus = GameStatus;
+  GameMode = GameMode;
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
@@ -409,12 +413,12 @@ export class GameLobbyPanelComponent implements OnInit {
   allGames = computed(() => this.gameRegistry.getAllConfigs());
   availableModes = computed(() => {
     const modes = this.gameRegistry.getConfig(this.newRoomGameId())?.modes || [];
-    return modes.filter(m => m.id !== 'single');
+    return modes.filter(m => m.id !== GameMode.Single);
   });
   availableDifficulties = computed(() => this.gameRegistry.getConfig(this.newRoomGameId())?.difficulties || []);
   
   // Show all active rooms across all games (exclude single-player)
-  gameRooms = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== 'single'));
+  gameRooms = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single));
   
   myRooms = computed(() => this.gameRooms().filter((r: any) => r.host === this.playerId()));
   otherRooms = computed(() => this.gameRooms().filter((r: any) => r.host !== this.playerId()));
@@ -618,8 +622,8 @@ export class GameLobbyPanelComponent implements OnInit {
       if (labelKey) return this.t(labelKey);
     }
     // Global fallback
-    if (modeId.includes('steal')) return this.t('game.steal_mode');
-    if (modeId.includes('speed')) return this.t('game.speed_mode');
+    if (modeId.includes(GameMode.Steal)) return this.t('game.steal_mode');
+    if (modeId.includes(GameMode.Speed)) return this.t('game.speed_mode');
     return modeId;
   }
 
@@ -636,9 +640,9 @@ export class GameLobbyPanelComponent implements OnInit {
       if (labelKey) return this.t(labelKey);
     }
     // Global fallback
-    if (diffId === 'easy') return this.t('game.diff_easy');
-    if (diffId === 'medium') return this.t('game.diff_medium');
-    if (diffId === 'hard') return this.t('game.diff_hard');
+    if (diffId === GameDifficulty.Easy) return this.t('game.diff_easy');
+    if (diffId === GameDifficulty.Medium) return this.t('game.diff_medium');
+    if (diffId === GameDifficulty.Hard) return this.t('game.diff_hard');
     return diffId;
   }
 

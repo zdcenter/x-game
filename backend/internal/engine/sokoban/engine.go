@@ -3,11 +3,13 @@ package sokoban
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+	"math/rand"
 	"strings"
 
+        "github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
-	"github.com/x-game/backend/pkg/db"
 )
 
 type Position struct {
@@ -25,41 +27,14 @@ type PlayerState struct {
 
 type SokobanEngine struct {
 	engine.BaseEngine
-	Mode       string                  `json:"mode"`
-	Difficulty string                  `json:"difficulty"`
-	Players    map[string]*PlayerState `json:"players"`
-	LevelMap   [][]string              `json:"-"`
+	Mode          string                  `json:"mode"`
+	Difficulty    string                  `json:"difficulty"`
+	GlobalStartAt int64                   `json:"globalStartAt"`
+	Players       map[string]*PlayerState `json:"players"`
+	LevelMap      [][]string              `json:"-"`
 }
 
-var Levels = map[string]string{
-	"beginner": `
-  ###
-  #.#
-  # #
-###$###
-#.@.$.#
-###$###
-  # #
-  #.#
-  ###`,
-	"intermediate": `
-#######
-#     #
-# .$. #
-###$###
-# .@. #
-#######`,
-	"advanced": `
-  #####
-###   #
-#.@$  #
-### $.#
-#.##$ #
-# # . ##
-#$ *$$.#
-#   .  #
-########`,
-}
+
 
 func init() {
 	engine.Register("sokoban_speed", func() engine.GameEngine {
@@ -120,26 +95,33 @@ func (e *SokobanEngine) InitGame(options interface{}) error {
 	}
 
 	if e.Difficulty == "" {
-		e.Difficulty = "beginner"
+		e.Difficulty = string(domain.DiffEasy)
 	}
 
 	levelStr := ""
 
-	var puzzle domain.SokobanPuzzle
-	if err := db.DB.Where("difficulty = ?", e.Difficulty).Order("RANDOM()").First(&puzzle).Error; err == nil && puzzle.Puzzle != "" {
-		levelStr = puzzle.Puzzle
-	} else {
-		ls, ok := Levels[e.Difficulty]
-		if !ok {
-			ls = Levels["beginner"]
+	// 只从数据库获取题库
+	var dbPuzzles []domain.SokobanPuzzle
+	if db.DB != nil {
+		db.DB.Where("difficulty = ?", e.Difficulty).Find(&dbPuzzles)
+	}
+
+	var validPuzzles []string
+	for _, p := range dbPuzzles {
+		if p.Puzzle != "" {
+			validPuzzles = append(validPuzzles, p.Puzzle)
 		}
-		levelStr = ls
+	}
+
+	if len(validPuzzles) > 0 {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		levelStr = validPuzzles[r.Intn(len(validPuzzles))]
 	}
 
 	e.LevelMap = parseLevel(levelStr)
 
 	// Single player jumps straight to playing
-	if e.Mode == "single" {
+	if e.Mode == string(domain.ModeSingle) {
 		e.State = engine.StatePlaying
 	}
 
@@ -184,14 +166,23 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 		return e.State, fmt.Errorf("player not found")
 	}
 
-	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
-		e.State = engine.StatePlaying
-		for _, player := range e.Players {
-			player.Board = copyBoard(e.LevelMap)
-			player.History = make([][][]string, 0)
-			player.Moves = 0
-			player.Status = "playing"
-		}
+	if actionType == "start" && e.State == engine.StateWaiting {
+		e.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
+		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+			e.GlobalStartAt = time.Now().UnixMilli()
+			for _, player := range e.Players {
+				player.Board = copyBoard(e.LevelMap)
+				player.History = make([][][]string, 0)
+				player.Moves = 0
+				player.Status = "playing"
+			}
+		})
+		return e.State, nil
+	}
+
+	if actionType == "restart_game" && e.State == engine.StateFinished {
+		e.State = engine.StateWaiting
+		e.GlobalStartAt = 0
 		return e.State, nil
 	}
 
@@ -200,7 +191,7 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 		p.History = make([][][]string, 0)
 		p.Moves = 0
 		p.Status = "playing"
-		if e.Mode == "single" && e.State == engine.StateFinished {
+		if e.Mode == string(domain.ModeSingle) && e.State == engine.StateFinished {
 			e.State = engine.StatePlaying
 		}
 		return e.State, nil
@@ -231,6 +222,8 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 			p.Moves--
 		}
 	}
+
+	e.checkGameOverLocked()
 
 	return e.State, nil
 }
@@ -329,10 +322,7 @@ func pushBox(to string) string {
 	return "$"
 }
 
-func (e *SokobanEngine) CheckGameOver() (bool, []string) {
-	e.Mu.Lock()
-	defer e.Mu.Unlock()
-
+func (e *SokobanEngine) checkGameOverLocked() (bool, []string) {
 	allFinished := true
 	winners := []string{}
 
@@ -354,7 +344,7 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 
 			if finished {
 				p.Status = "finished"
-				if e.Mode == "speed" {
+				if e.Mode == string(domain.ModeSpeed) {
 					// In speed, first one to finish ends the game and wins
 					e.State = engine.StateFinished
 					return true, []string{p.ID}
@@ -365,7 +355,7 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 		}
 	}
 
-	if e.Mode == "single" {
+	if e.Mode == string(domain.ModeSingle) {
 		if allFinished {
 			// Find player
 			for id := range e.Players {
@@ -374,7 +364,7 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 			e.State = engine.StateFinished
 			return true, winners
 		}
-	} else if e.Mode == "speed" && allFinished {
+	} else if e.Mode == string(domain.ModeSpeed) && allFinished {
 		// Just in case everyone finished somehow at same time
 		for id := range e.Players {
 			winners = append(winners, id)
@@ -384,6 +374,12 @@ func (e *SokobanEngine) CheckGameOver() (bool, []string) {
 	}
 
 	return false, nil
+}
+
+func (e *SokobanEngine) CheckGameOver() (bool, []string) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	return e.checkGameOverLocked()
 }
 
 func (e *SokobanEngine) GetState() interface{} {
@@ -402,12 +398,16 @@ func (e *SokobanEngine) GetState() interface{} {
 	}
 
 	return struct {
-		Mode       string                  `json:"mode"`
-		Difficulty string                  `json:"difficulty"`
-		Players    map[string]*PlayerState `json:"players"`
+		Mode          string                  `json:"mode"`
+		Difficulty    string                  `json:"difficulty"`
+		Status        string                  `json:"status"`
+		GlobalStartAt int64                   `json:"globalStartAt"`
+		Players       map[string]*PlayerState `json:"players"`
 	}{
-		Mode:       e.Mode,
-		Difficulty: e.Difficulty,
-		Players:    sanitizedPlayers,
+		Mode:          e.Mode,
+		Difficulty:    e.Difficulty,
+		Status:        string(e.State),
+		GlobalStartAt: e.GlobalStartAt,
+		Players:       sanitizedPlayers,
 	}
 }

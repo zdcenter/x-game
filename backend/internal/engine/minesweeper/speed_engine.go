@@ -61,19 +61,15 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 				}
 			} else {
 				switch diff {
-				case "easy", "beginner":
+				case string(domain.DiffEasy), "beginner":
 					width, height, mines = 9, 9, 10
-				case "medium", "intermediate":
+				case string(domain.DiffMedium), "intermediate":
 					width, height, mines = 16, 16, 40
-				case "hard", "advanced":
+				case string(domain.DiffHard), "advanced":
 					width, height, mines = 30, 16, 99
-				case "hard_mode":
-					width, height, mines = 30, 18, 130
-				case "professional":
+				case string(domain.DiffExpert):
 					width, height, mines = 30, 20, 160
-				case "master":
-					width, height, mines = 30, 22, 190
-				case "expert":
+				case string(domain.DiffMaster):
 					width, height, mines = 30, 24, 230
 				default:
 					width, height, mines = 16, 16, 40

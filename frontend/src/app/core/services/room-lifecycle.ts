@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
 import { Signal, WritableSignal, effect, inject, untracked, DestroyRef } from '@angular/core';
 import { Router, NavigationStart } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -33,7 +34,7 @@ import { CrossGameJoinService } from './cross-game-join.service';
 export interface RoomLifecycleConfig {
   /** Unique game identifier, e.g. 'minesweeper', 'sudoku' */
   gameId: string;
-  /** Returns the current room mode ('single', 'same_pk_steal', 'same_pk_speed', etc.) */
+  /** Returns the current room mode (GameMode.Single, 'same_pk_steal', 'same_pk_speed', etc.) */
   getCurrentMode: () => string;
   /** Called when the room is dismissed by the host */
   onLeaveRoom: () => void;
@@ -105,7 +106,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
   // Auto-register room dismissed handler via Angular effect()
   effect(() => {
     const dismissed = wsService.roomDismissedEvent();
-    if (dismissed > 0 && untracked(() => config.getCurrentMode()) !== 'single') {
+    if (dismissed > 0 && untracked(() => config.getCurrentMode()) !== GameMode.Single) {
       toastService.show(i18n.t('game.room_dismissed_msg')() || 'The host has dismissed the room.', 'info');
       clearReconnectInfo();
       config.onLeaveRoom();
@@ -123,7 +124,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
 
   effect(() => {
     const rejected = wsService.connectionRejectedEvent();
-    if (rejected > 0 && untracked(() => config.getCurrentMode()) !== 'single') {
+    if (rejected > 0 && untracked(() => config.getCurrentMode()) !== GameMode.Single) {
       clearReconnectInfo();
       config.onLeaveRoom();
     }
@@ -163,7 +164,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
           return null;
         }
 
-        if (mode !== 'single') {
+        if (mode !== GameMode.Single) {
           wsService.setPendingAction('join');
         }
         return {

@@ -1,8 +1,8 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { LocalSlidingEngine, SlidingAction, SlidingActionType } from './sliding-engine';
-import { GameStatusType, GameStatus, GameMode, GameId, GameDifficulty } from '../../../../core/models/game.model';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
@@ -16,11 +16,7 @@ export class SlidingStore extends BaseGameStore {
   readonly bestTime = signal<number>(0);
 
   // playersList & status are required by BaseGameStore
-  readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return [];
-    const boards = (this.rawState() as any)?.boards || {};
-    return Object.keys(boards).map(id => ({ id }));
-  });
+  override readonly singlePlayerList = computed(() => []);
 
   private mapStatus(backendStatus: number | string | undefined): GameStatusType {
     if (typeof backendStatus === 'string') return backendStatus as GameStatusType;
@@ -34,9 +30,9 @@ export class SlidingStore extends BaseGameStore {
     }
   }
 
-  readonly status = computed<GameStatusType | string>(() => {
+  readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
-      return this.localEngine()?.status || GameStatus.Waiting;
+      return this.localEngine()?.status || 'waiting';
     }
     return this.mapStatus((this.rawState() as any)?.status);
   });
@@ -103,11 +99,9 @@ export class SlidingStore extends BaseGameStore {
     return others;
   });
 
-  readonly winners = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      return this.localEngine()?.status === GameStatus.Finished ? [this.playerId()] : [];
-    }
-    return (this.rawState() as any)?.winners || [];
+  override readonly singlePlayerWinners = computed(() => {
+    
+    return this.localEngine()?.status === GameStatus.Finished ? [this.playerId()] : [];
   });
 
   private tick = signal(0);

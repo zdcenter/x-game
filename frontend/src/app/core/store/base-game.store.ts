@@ -3,12 +3,14 @@ import { WebSocketService } from '../services/websocket.service';
 import { AuthStore } from '../auth/auth.store';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
 import { GameMode, GameModeType, GameDifficulty, GameDifficultyType, GameStatusType, GameStatus } from '../models/game.model';
-import { C2SAction } from '../models/websocket.model';
+import { C2SAction, MessageType } from '../models/websocket.model';
+import { GameRegistryService } from '../services/game-registry.service';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
   readonly ws = inject(WebSocketService);
   readonly auth = inject(AuthStore);
+  readonly gameRegistry = inject(GameRegistryService);
 
   readonly roomId = signal<string>('');
   readonly currentRoomMode = signal<GameModeType | string>(GameMode.Single);
@@ -31,9 +33,46 @@ export abstract class BaseGameStore implements GameStoreInterface {
   // 子类必须提供游戏ID用于 websocket 路由
   abstract readonly gameId: string;
 
-  // 子类必须实现，因为不同游戏计算玩家列表和游戏状态的方式（尤其在竞速和抢分模式下）有所不同
-  abstract readonly playersList: import('@angular/core').Signal<any[]>;
-  abstract readonly status: import('@angular/core').Signal<GameStatusType | string>;
+  // 子类实现单机状态、单机玩家列表、单机获胜者列表
+  abstract readonly singlePlayerStatus: import('@angular/core').Signal<GameStatusType | string>;
+  abstract readonly singlePlayerList: import('@angular/core').Signal<any[]>;
+  abstract readonly singlePlayerWinners: import('@angular/core').Signal<string[]>;
+
+  readonly playersList = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      return this.singlePlayerList();
+    }
+    const players = (this.rawState() as any)?.players;
+    if (!players) return [];
+    // Ensure id is present in the object
+    return Object.keys(players).map(k => ({ id: k, ...players[k] }));
+  });
+
+  readonly winners = computed<string[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      return this.singlePlayerWinners();
+    }
+    return (this.rawState() as any)?.winners || [];
+  });
+
+  readonly status = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      return this.singlePlayerStatus();
+    }
+    const st = this.rawState() as any;
+    if (!st) return GameStatus.Waiting;
+    let s = st.status;
+    if (typeof s === 'number') {
+      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
+      return statusMap[s] || 'waiting';
+    }
+    return s || 'waiting';
+  });
+
+  readonly isWaiting = computed(() => this.status() === GameStatus.Waiting);
+  readonly isStarting = computed(() => this.status() === GameStatus.Starting);
+  readonly isPlaying = computed(() => this.status() === GameStatus.Playing);
+  readonly isFinished = computed(() => this.status() === GameStatus.Finished);
 
   joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string) {
     this.roomId.set(roomId);
@@ -57,12 +96,51 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   startGame() {
-    this.ws.send({ action: C2SAction.StartGame });
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.onSinglePlayerStart();
+    } else {
+      this.ws.send({ action: C2SAction.StartGame });
+    }
   }
 
   restartGame() {
-    this.ws.send({ type: C2SAction.RestartGame });
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.onSinglePlayerRestart();
+      return;
+    }
+    this.ws.send({
+      type: MessageType.Room,
+      action: C2SAction.RestartGame
+    });
   }
+
+  changeRoomGame(targetGameId: string) {
+    if (this.currentRoomMode() === GameMode.Single) return;
+    
+    const targetConfig = this.gameRegistry.getConfig(targetGameId);
+    let targetMode = this.currentRoomMode() as string;
+    let targetDiff = this.currentDifficulty() as string;
+    
+    if (targetConfig) {
+       if (!targetConfig.modes.some(m => m.id === targetMode)) {
+         const mpMode = targetConfig.modes.find(m => m.id !== GameMode.Single);
+         targetMode = mpMode ? mpMode.id : targetConfig.modes[0].id;
+       }
+       if (!targetConfig.difficulties.some(d => d.id === targetDiff)) {
+         targetDiff = targetConfig.difficulties[0].id;
+       }
+    }
+
+    this.ws.send({
+      type: MessageType.Room,
+      action: C2SAction.ChangeGame,
+      payload: { game: targetGameId, mode: targetMode, difficulty: targetDiff }
+    });
+  }
+
+  // 子类实现单机游戏的开始和重置逻辑
+  protected onSinglePlayerStart() {}
+  protected onSinglePlayerRestart() {}
 
   dismissRoom() {
     this.ws.send({ type: C2SAction.DismissRoom });

@@ -13,13 +13,11 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_beginner', descKey: 'game.diff_mine_9x9', desc: '9x9 (10)' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_intermediate', descKey: 'game.diff_mine_16x16', desc: '16x16 (40)' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_advanced', descKey: 'game.diff_mine_30x16', desc: '30x16 (99)' },
-      { id: GameDifficulty.Hard1, labelKey: 'game.diff_hard_mode', descKey: 'game.diff_mine_30x18', desc: '30x18 (130)' },
-      { id: GameDifficulty.Hard2, labelKey: 'game.diff_professional', descKey: 'game.diff_mine_30x20', desc: '30x20 (160)' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_master', descKey: 'game.diff_mine_30x22', desc: '30x22 (190)' },
-      { id: GameDifficulty.Master, labelKey: 'game.diff_expert', descKey: 'game.diff_mine_30x24', desc: '30x24 (230)' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_mine_9x9', desc: '9x9 (10)' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_mine_16x16', desc: '16x16 (40)' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_mine_30x16', desc: '30x16 (99)' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_mine_30x20', desc: '30x20 (160)' },
+      { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_mine_30x24', desc: '30x24 (230)' }
     ],
     recommendations: ['sudoku', 'sliding']
   },
@@ -34,10 +32,10 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Steal, labelKey: 'game.same_pk_steal_number', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium', desc: 'Intermediate' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard', desc: 'Advanced' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert', desc: 'Professional' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_sudoku_medium', desc: 'Intermediate' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_sudoku_hard', desc: 'Advanced' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_sudoku_expert', desc: 'Professional' }
     ],
     recommendations: ['minesweeper', 'math24']
   },
@@ -51,7 +49,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_easy', descKey: 'game.diff_slide_4x4', desc: '4x4 Grid' },
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_slide_4x4', desc: '4x4 Grid' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_slide_5x5', desc: '5x5 Grid' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_slide_6x6', desc: '6x6 Grid' }
     ],
@@ -68,7 +66,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '⚡', desc: 'Shared board. Highest score wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Medium, labelKey: 'game.standard', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
     ],
     recommendations: ['tetris', 'drop2048']
   },
@@ -83,7 +81,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Medium, labelKey: 'game.standard', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
     ],
     recommendations: ['drop2048', 'hexa']
   },
@@ -97,7 +95,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Battle, labelKey: 'game.same_pk_classic', descKey: 'game.same_pk_classic_desc', icon: '⚔️', desc: 'Classic 1v1 PvP' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_easy', descKey: 'game.diff_gomoku_easy', desc: 'Easy AI (15x15)' },
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_gomoku_easy', desc: 'Easy AI (15x15)' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_gomoku_medium', desc: 'Medium AI (15x15)' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
     ],
@@ -113,7 +111,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_easy', descKey: 'game.diff_codebreaker_easy', desc: '3-digit code' },
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_codebreaker_easy', desc: '3-digit code' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_codebreaker_medium', desc: '4-digit code' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_codebreaker_hard', desc: '5-digit code' }
     ],
@@ -130,10 +128,10 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Steal, labelKey: 'game.same_pk_steal_score', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'First to solve gets the point!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_math24_easy', descKey: 'game.diff_math24_easy', desc: 'Beginner' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_math24_medium', descKey: 'game.diff_math24_medium', desc: 'Intermediate' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_math24_hard', descKey: 'game.diff_math24_hard', desc: 'Advanced' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_math24_expert', descKey: 'game.diff_math24_expert', desc: 'Professional' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_math24_easy', desc: 'Beginner' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_math24_medium', desc: 'Intermediate' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_math24_hard', desc: 'Advanced' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_math24_expert', desc: 'Professional' }
     ],
     recommendations: ['sudoku', 'codebreaker']
   },
@@ -147,7 +145,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Medium, labelKey: 'game.standard', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
     ],
     recommendations: ['tetris', 'hexa']
   },
@@ -161,7 +159,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '8x8 Board' },
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '8x8 Board' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '10x10 Board' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '12x12 Board' }
     ],
@@ -177,7 +175,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '4x4 Board' },
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '4x4 Board' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '5x5 Board' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '6x6 Board' },
       { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_expert', desc: '7x7 Board' },
@@ -195,7 +193,7 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_easy', descKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
     ],
@@ -210,10 +208,10 @@ export const GAME_DEFINITIONS: GameConfig[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
-      { id: GameDifficulty.Easy, labelKey: 'game.diff_beginner', descKey: 'game.diff_sokoban_beginner', desc: 'Beginner' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_intermediate', descKey: 'game.diff_sokoban_intermediate', desc: 'Intermediate' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_advanced', descKey: 'game.diff_sokoban_advanced', desc: 'Advanced' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_professional', descKey: 'game.diff_sokoban_professional', desc: 'Professional' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sokoban_beginner', desc: 'Beginner' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_sokoban_intermediate', desc: 'Intermediate' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_sokoban_advanced', desc: 'Advanced' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_sokoban_professional', desc: 'Professional' }
     ],
     recommendations: ['sliding', 'lightsout']
   }

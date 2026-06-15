@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { Component, EventEmitter, Output, inject, signal, OnInit, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -24,6 +25,8 @@ interface LevelResponse {
   templateUrl: './math24-lobby.component.html'
 })
 export class Math24LobbyComponent implements OnInit {
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   private http = inject(HttpClient);
   store = inject(Math24Store);
@@ -34,12 +37,12 @@ export class Math24LobbyComponent implements OnInit {
 
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_math24_easy' },
-    { id: 'medium', labelKey: 'game.diff_math24_medium' },
-    { id: 'hard', labelKey: 'game.diff_math24_hard' },
-    { id: 'expert', labelKey: 'game.diff_math24_expert' }
+    { id: GameDifficulty.Medium, labelKey: 'game.diff_math24_medium' },
+    { id: GameDifficulty.Hard, labelKey: 'game.diff_math24_hard' },
+    { id: GameDifficulty.Expert, labelKey: 'game.diff_math24_expert' }
   ];
 
-  activeTab = signal<string>('easy');
+  activeTab = signal<string>(GameDifficulty.Easy);
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
@@ -57,7 +60,7 @@ export class Math24LobbyComponent implements OnInit {
   totalPages = computed(() => Math.ceil(this.levels().length / this.pageSize));
 
   ngOnInit() {
-    this.loadLevels('easy');
+    this.loadLevels(GameDifficulty.Easy);
   }
 
   selectDifficulty(diff: string) {

@@ -1,14 +1,16 @@
+import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { LocalGomokuEngine, GomokuActionType } from './gomoku-engine';
 import { GomokuColor } from './gomoku-ai';
-import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 @Injectable()
 export class GomokuStore extends BaseGameStore {
+  override readonly singlePlayerWinners = computed<string[]>(() => []);
+
   readonly gameId = GameId.Gomoku;
 
   private statsService = inject(GameStatsService);
@@ -62,10 +64,10 @@ export class GomokuStore extends BaseGameStore {
     return (this.rawState() as any)?.playerColors || {};
   });
 
-  override readonly status = computed<GameStatusType | string>(() => {
+  override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
-      return this.localEngine()?.status || GameStatus.Waiting;
+      return this.localEngine()?.status || 'waiting';
     }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
@@ -73,9 +75,9 @@ export class GomokuStore extends BaseGameStore {
     let status = st.status;
     if (typeof status === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || GameStatus.Waiting;
+      status = statusMap[status] || 'waiting';
     }
-    return status || GameStatus.Waiting;
+    return status || 'waiting';
   });
 
   readonly winner = computed<string | undefined>(() => {
@@ -91,18 +93,9 @@ export class GomokuStore extends BaseGameStore {
     return (this.rawState() as any)?.host || '';
   });
 
-  override readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return (this.localEngine()?.players || []).map(id => ({ id }));
-    }
-    const st = this.rawState() as any;
-    if (!st || !st.players) return [];
-    if (Array.isArray(st.players)) {
-      return st.players.map((id: string) => ({ id }));
-    } else {
-      return Object.keys(st.players).map(id => ({ id }));
-    }
+  override readonly singlePlayerList = computed(() => {
+    this.tick();
+    return (this.localEngine()?.players || []).map(id => ({ id }));
   });
 
   isSpectator = computed<boolean>(() => {

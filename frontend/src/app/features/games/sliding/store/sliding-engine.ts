@@ -1,4 +1,4 @@
-import { GameStatus, GameStatusType, GameDifficulty } from '../../../../core/models/game.model';
+import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
 
 export enum SlidingActionType {

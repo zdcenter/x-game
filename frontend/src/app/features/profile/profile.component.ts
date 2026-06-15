@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -120,6 +121,7 @@ import { AuthStore } from '../../core/auth/auth.store';
   `
 })
 export class ProfileComponent implements OnInit {
+  GameMode = GameMode;
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
   private statsService = inject(GameStatsService);
@@ -188,7 +190,7 @@ export class ProfileComponent implements OnInit {
   }
 
   formatModeAndDiff(stat: UserGameStat): string {
-    let modeStr = stat.Mode === 'single' ? (this.i18n.t('game.single_mode')() || 'Single') : stat.Mode;
+    let modeStr = stat.Mode === GameMode.Single ? (this.i18n.t('game.single_mode')() || 'Single') : stat.Mode;
     let diffStr = stat.Difficulty;
     if (!diffStr) return modeStr;
 

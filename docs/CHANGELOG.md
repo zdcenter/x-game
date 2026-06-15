@@ -1,7 +1,14 @@
 # Changelog
 
+## [2026-06-15] - ⚙️ 核心架构深化：前端状态机大一统与多人联机逻辑解耦
+### 🌟 架构重构 (Architecture & Refactoring)
+- **房间内无缝切游 (Switch Room Game)**：在多人对战房间结算页面，房主现在可以直接一键切换至其他游戏（通过 `ActionChangeGame` C2S 指令），所有房间内的玩家都会跟随房主自动跳转至新游戏，无需解散房间或退回大厅。所有 13 款游戏均已接入新的 `<app-game-result-overlay>` 机制并支持此功能！
+- **前端核心 Store (BaseGameStore) 状态机重构**：将所有 13 款子游戏前端 Store 中散落各处的、硬编码的游戏状态更新逻辑（如 `this.status.set(GameStatus.Playing)`）彻底清理。现在前端状态机的运转完全下沉至 `BaseGameStore`，通过自动解析 WebSocket 房间全局 Payload 来推导当前状态，彻底断绝了前端因单机/联机状态混淆导致的幽灵 BUG。
+- **派生状态标准化**：为 `BaseGameStore` 添加了一系列健壮的计算属性（`isWaiting`, `isStarting`, `isPlaying`, `isFinished`，以及 `playersList` 和 `winners`），完全接管了原来各子游戏中冗余、重复的状态判断代码。各子游戏仅需负责提供自身的单机数据实现（如 `singlePlayerStatus`, `singlePlayerList`），基类会自动完成模式判别。
+- **后端 Lifecycle 生命周期托管**：在后端的 `BaseEngine` 引擎层提供 `HandleLifecycle`，并为子游戏暴露统一的钩子 `OnGameStart` 和 `OnGameRestart`，清除了冗长的 action 分发样板代码，使所有游戏的启停状态变更与房间通信逻辑保持绝对一致。
 ## [2026-06-14] - 🔧 全栈统一：游戏模式与难度枚举标准化重构
 ### 🌟 架构重构 (Architecture & Refactoring)
+- **房间内无缝切游 (Switch Room Game)**：在多人对战房间结算页面，房主现在可以直接一键切换至其他游戏（通过 `ActionChangeGame` C2S 指令），所有房间内的玩家都会跟随房主自动跳转至新游戏，无需解散房间或退回大厅。所有 13 款游戏均已接入新的 `<app-game-result-overlay>` 机制并支持此功能！
 - **多游戏骨架重构 (Hexa, Tetris, Drop2048, Block)**：对《六边形消除》、《俄罗斯方块》、《下落 2048》和《1010! 方块》进行了深度的 `ILocalEngine` 与 `BaseGameStore` 核心架构改造。彻底分离了游戏特有的重力/掉落/消除逻辑引擎与前端 UI 组件，让组件全面降维为“只渲染状态”的傻瓜视图层。
 - **华容道 (Sliding Puzzle) 引擎彻底标准化重构**：将老旧的底层存储状态和组件逻辑推翻重写，完全接入全新的 `ILocalEngine` 协议；用 `BaseGameStore` 替换了原有的冗余继承链；将组件内所有零散的方法调用升级为标准化的 `store.dispatch(action)` 单向数据流模式；并彻底清扫了 `'single'`, `'win'`, `'lose'` 等魔法字符串，完美并入 `GameResult` 全局强类型枚举控制。
 - **游戏常量大一统 (激进派重构)**：彻底推翻了前端和后端各游戏中碎片化、硬编码的魔法字符串（如 `local`, `same_pk_speed`, `diff_pk_score`, `beginner` 等），建立了全栈统一的 `GameMode` (`single`, `speed`, `steal`, `score`, `battle`) 和 `GameDifficulty` (`easy`, `medium`, `hard`, `expert`, `master` 等) 绝对标准体系。
@@ -48,6 +55,7 @@
 ## [2026-06-07] - 🚀 重大重构：Cloudflare 边缘路由优化与全站 Angular 编译级多语言
 
 ### 🌟 架构重构 (Architecture & Refactoring)
+- **房间内无缝切游 (Switch Room Game)**：在多人对战房间结算页面，房主现在可以直接一键切换至其他游戏（通过 `ActionChangeGame` C2S 指令），所有房间内的玩家都会跟随房主自动跳转至新游戏，无需解散房间或退回大厅。所有 13 款游戏均已接入新的 `<app-game-result-overlay>` 机制并支持此功能！
 - **全面迁移至 Angular 原生多语言架构 (`@angular/localize`)**：废弃了原有的动态加载 JSON 字典方案，改用编译时 AOT 方案。大大提升了首屏加载速度，并实现了纯正的 SEO 支持。
 - **自研 XLF 提取引擎**：开发了轻量级的 `generate-xlf.js` 脚本，可一键扫描前端 `core.translations.ts` 并自动生成/更新供 Angular 编译器使用的 `.xlf` 物理字典包。
 - **边缘网络重写 (Cloudflare Functions)**：新增了 `functions/[[path]].js` 中间件，拦截并智能分发 `/zh/` 和 `/en/` 流量。彻底解决了 Cloudflare Pages SPA Auto-Routing 机制导致的多语言子路径 404 及无限重定向死循环问题。

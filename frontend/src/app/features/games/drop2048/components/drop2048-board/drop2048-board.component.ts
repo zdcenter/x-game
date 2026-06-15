@@ -1,3 +1,4 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { Component, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store';
@@ -39,7 +40,7 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
         </div>
 
         <!-- BEST Score -->
-        <div *ngIf="store.currentRoomMode() === 'single'" class="flex flex-col items-end text-white/20 mt-2">
+        <div *ngIf="store.currentRoomMode() === GameMode.Single" class="flex flex-col items-end text-white/20 mt-2">
           <span class="text-[10px] tracking-widest uppercase">BEST</span>
           <span class="text-2xl">{{ store.bestScore() }}</span>
         </div>
@@ -127,6 +128,7 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
   `]
 })
 export class Drop2048BoardComponent {
+  GameMode = GameMode;
   @Input() board: DropBlock[] = [];
   @Input() activeBlock: { id: string, val: number, c: number, r: number } | null = null;
   @Input() combos: ComboText[] = [];

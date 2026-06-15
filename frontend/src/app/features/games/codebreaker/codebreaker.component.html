@@ -10,7 +10,7 @@
     <div class="w-full">
       <app-game-header
         i18n-title="@@lobby.codebreaker" title="Codebreaker"
-        [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
+        [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === GameDifficulty.Easy ? i18n.t('game.diff_easy')() : (currentDifficulty() === GameDifficulty.Hard ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
         iconGradientClass="from-teal-500 to-emerald-500"
         titleGradientClass="from-teal-400 to-emerald-400"
         shadowClass="shadow-emerald-500/20"
@@ -312,7 +312,9 @@
       [showRestart]="true"
       [showLeave]="true"
       (restart)="onRestart()"
-      (leave)="returnToLobby()">
+      (leave)="returnToLobby()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)">
     </app-game-result-overlay>
   }
 

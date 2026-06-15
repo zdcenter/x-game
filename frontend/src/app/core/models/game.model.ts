@@ -33,6 +33,8 @@ export const GameMode = {
   Steal: 'steal',
   /** 分数生存模式：比拼最终得分 (替代旧版的 same_pk_score / diff_pk_score) */
   Score: 'score',
+  /** 同盘分数生存模式：使用相同的随机种子 (用于六边形消除等) */
+  SameScore: 'same_score',
   /** 互相攻击模式：大乱斗或经典对战机制 (替代旧版的 diff_pk_attack / same_pk_classic) */
   Battle: 'battle'
 } as const;
@@ -50,10 +52,6 @@ export const GameDifficulty = {
   Medium: 'medium',   
   /** 困难/高级 */
   Hard: 'hard',       
-  /** 极难 1 阶 (替代 hard_mode) */
-  Hard1: 'hard_1',    
-  /** 极难 2 阶 (替代 professional) */
-  Hard2: 'hard_2',    
   /** 专家级 */
   Expert: 'expert',   
   /** 大师级 */

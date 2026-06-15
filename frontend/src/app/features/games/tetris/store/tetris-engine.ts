@@ -1,7 +1,7 @@
+import { GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { getEmptyGrid, Piece, rotateMatrix, Tetromino, TETROMINO_SHAPES, TETRIS_COLS, TETRIS_ROWS } from '../models/tetris.model';
 import { PRNG } from '../../../../core/utils/prng';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export enum TetrisActionType {
   MoveLeft = 'moveLeft',

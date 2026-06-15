@@ -142,7 +142,10 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Roo
 	eng, err := engine.CreateEngine(engineKey)
 	if err != nil {
 		log.Printf("Failed to create engine for %s: %v", engineKey, err)
-		eng, _ = engine.CreateEngine(gameId + "_single")
+		eng, err = engine.CreateEngine(gameId + "_single")
+		if err != nil || eng == nil {
+			return nil, fmt.Errorf("failed to create engine: %v", err)
+		}
 	}
 
 	r := &Room{
@@ -432,7 +435,11 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 						eng, err := engine.CreateEngine(engineKey)
 						if err != nil {
 							log.Printf("Failed to create engine %s: %v", engineKey, err)
-							return
+							eng, err = engine.CreateEngine(gameId + "_single")
+							if err != nil || eng == nil {
+								log.Printf("Fallback to single engine failed: %v", err)
+								return
+							}
 						}
 
 						r.Game = domain.GameId(gameId)

@@ -1,5 +1,5 @@
+import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
 
 export enum LightsoutActionType {
   Toggle = 'toggle',
@@ -16,7 +16,7 @@ export class LocalLightsoutEngine implements ILocalEngine<any, LightsoutAction> 
   solution: boolean[][] = [];
   moves: number = 0;
   size: number = 5;
-  difficulty: string = 'medium';
+  difficulty: string = GameDifficulty.Medium;
   finished: boolean = false;
   playerId: string = '';
 

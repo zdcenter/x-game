@@ -1,10 +1,10 @@
+import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
@@ -29,6 +29,9 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
   providers: [TetrisStore]
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameDifficulty = GameDifficulty;
+  GameStatus = GameStatus;
+  GameMode = GameMode;
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLDivElement>;
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(TetrisStore);
@@ -64,13 +67,13 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     super();
     effect((onCleanup) => {
       const status = this.store.status();
-      if (status === 'starting') {
+      if (status === GameStatus.Starting) {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
 
-      if (status === 'finished') {
+      if (status === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -95,11 +98,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-      if (pending.mode !== 'single') {
+      if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinRoom('local', 'single', 'normal', '');
+      this.store.joinRoom('local', GameMode.Single, 'normal', '');
     }
   }
 
@@ -112,7 +115,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
@@ -121,7 +124,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}) {
     if (config.password) this.wsService.setPendingPassword(config.password);
     this.store.joinRoom(config.name, config.mode, config.difficulty, this.playerId);
-    if (config.mode !== 'single') {
+    if (config.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
@@ -130,12 +133,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   returnToLobby() {
     this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
-    this.store.joinRoom('local', 'single', 'normal', '');
+    this.store.joinRoom('local', GameMode.Single, 'normal', '');
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (this.store.status() !== 'playing') return;
+    if (this.store.status() !== GameStatus.Playing) return;
     
     switch (event.code) {
       case 'ArrowLeft':
@@ -162,7 +165,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onTouchStart(e: TouchEvent) {
-    if (this.store.status() !== 'playing') return;
+    if (this.store.status() !== GameStatus.Playing) return;
     this.touchStartX = e.touches[0].clientX;
     this.touchStartY = e.touches[0].clientY;
     this.lastProcessedX = this.touchStartX;
@@ -172,7 +175,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onTouchMove(e: TouchEvent) {
-    if (this.store.status() !== 'playing') return;
+    if (this.store.status() !== GameStatus.Playing) return;
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
 
@@ -199,7 +202,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onTouchEnd(e: TouchEvent) {
-    if (this.store.status() !== 'playing') return;
+    if (this.store.status() !== GameStatus.Playing) return;
     const currentX = e.changedTouches[0].clientX;
     const currentY = e.changedTouches[0].clientY;
     const totalDx = currentX - this.touchStartX;
@@ -295,7 +298,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     const stats: { label: string, value: string | number }[] = [
       { label: this.i18n.t('tetris.score')() || 'SCORE', value: this.store.score() }
     ];
-    if (this.currentRoomMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const best = this.store.bestScore();
       if (best > 0) {
         stats.push({ label: 'BEST', value: best });
