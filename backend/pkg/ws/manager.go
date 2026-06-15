@@ -36,6 +36,7 @@ type Room struct {
 	Difficulty    domain.GameDifficulty // "easy", "medium", "hard"
 	Password      string                // Optional 4-digit password (empty = public room)
 	CreatedAt     int64                 // Unix timestamp of creation
+	LastActivity  int64                 // Unix timestamp of last client action or join
 	GameChangedAt int64                 // Unix timestamp of last game change to prevent disconnect races
 	Clients       map[string]*Client
 	Engine        engine.GameEngine
@@ -148,6 +149,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Roo
 		}
 	}
 
+	now := time.Now().Unix()
 	r := &Room{
 		ID:            roomID,
 		Game:          domain.GameId(gameId),
@@ -155,7 +157,8 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Roo
 		Mode:          domain.GameMode(mode),
 		Difficulty:    domain.GameDifficulty(difficulty),
 		Password:      password,
-		CreatedAt:     time.Now().Unix(),
+		CreatedAt:     now,
+		LastActivity:  now,
 		Clients:       make(map[string]*Client),
 		Engine:        eng,
 		KickedPlayers: make(map[string]time.Time),
@@ -215,6 +218,95 @@ func cleanDismissedRooms() {
 	}
 }
 
+func init() {
+	go janitor()
+}
+
+// janitor runs every 5 minutes to evict rooms that slipped through normal cleanup
+// (e.g. all connections dropped simultaneously, engine goroutines outlived clients).
+// Cleanup thresholds (measured from LastActivity):
+//   - empty room (0 clients)  → 10 minutes
+//   - finished game           → 30 minutes
+//   - any other state         → 2 hours (safety net for frozen rooms)
+func janitor() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		cleanupStaleRooms()
+	}
+}
+
+func cleanupStaleRooms() {
+	const (
+		emptyTTL    = int64(10 * 60)      // 10 min
+		finishedTTL = int64(30 * 60)      // 30 min
+		staleTTL    = int64(2 * 60 * 60)  // 2 h
+	)
+	now := time.Now().Unix()
+
+	// Step 1: snapshot room pointers without holding mu (same pattern as GetActiveRooms)
+	mu.Lock()
+	snapshot := make([]*Room, 0, len(Rooms))
+	for _, r := range Rooms {
+		snapshot = append(snapshot, r)
+	}
+	mu.Unlock()
+
+	type staleRoom struct {
+		room    *Room
+		clients []*Client
+	}
+	var candidates []staleRoom
+
+	// Step 2: inspect each room under its own lock (no global lock held)
+	for _, r := range snapshot {
+		r.mu.Lock()
+		idle := now - r.LastActivity
+		clientCount := len(r.Clients)
+		status := r.Engine.GetStatus()
+
+		stale := (clientCount == 0 && idle > emptyTTL) ||
+			(status == engine.StateFinished && idle > finishedTTL) ||
+			idle > staleTTL
+
+		var clients []*Client
+		if stale {
+			for _, c := range r.Clients {
+				clients = append(clients, c)
+			}
+		}
+		r.mu.Unlock()
+
+		if stale {
+			candidates = append(candidates, staleRoom{r, clients})
+		}
+	}
+
+	if len(candidates) == 0 {
+		return
+	}
+
+	// Step 3: remove from global map (re-check existence to avoid double-delete)
+	mu.Lock()
+	for _, s := range candidates {
+		if _, exists := Rooms[s.room.ID]; exists {
+			delete(Rooms, s.room.ID)
+			log.Printf("Janitor: evicted stale room %s (game=%s, clients=%d)", s.room.ID, s.room.Game, len(s.clients))
+		}
+	}
+	mu.Unlock()
+
+	// Step 4: notify any lingering clients outside all locks
+	dismissed := []byte(`{"type":"` + string(domain.EventRoomDismissed) + `"}`)
+	for _, s := range candidates {
+		for _, c := range s.clients {
+			c.WriteMessage(websocket.TextMessage, dismissed)
+		}
+	}
+
+	go Lobby.BroadcastLobbyUpdate()
+}
+
 // getGameOptions fetches the database config and merges it with standard options
 func getGameOptions(gameId, mode, difficulty string) map[string]interface{} {
 	options := map[string]interface{}{
@@ -238,6 +330,8 @@ func getGameOptions(gameId, mode, difficulty string) map[string]interface{} {
 func (r *Room) AddClient(client *Client, password string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	r.LastActivity = time.Now().Unix()
 
 	// Check password (host always skips password check)
 	if r.Password != "" && client.ID != r.Host && password != r.Password {
@@ -375,6 +469,8 @@ func (r *Room) transferHost(oldHostID string) {
 func (r *Room) HandleMessage(clientID string, payload []byte) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	r.LastActivity = time.Now().Unix()
 
 	oldStatus := r.Engine.GetStatus()
 	defer func() {
