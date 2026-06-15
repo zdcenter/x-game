@@ -11,12 +11,19 @@ import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { SudokuEngine, SudokuCell, SudokuActionType } from './sudoku-engine';
-import { GameMode, GameStatus, GameDifficulty } from '../../../../core/models/game.model';
-import { C2SAction } from '../../../../core/models/websocket.model';
-export type { SudokuCell };
 
+export interface SudokuCell {
+  r: number;
+  c: number;
+  val: number; // 0 means empty
+  fixed: boolean;
+  notes: Set<number>;
+  error: boolean;
+}
 
+export interface SudokuHistory {
+  board: SudokuCell[][];
+}
 
 @Injectable()
 export class SudokuStore extends BaseGameStore {
@@ -30,7 +37,6 @@ export class SudokuStore extends BaseGameStore {
   private statsService = inject(GameStatsService);
 
   private saveSubject = new Subject<void>();
-  private engine = new SudokuEngine();
 
   // Board state (Local)
   board = signal<SudokuCell[][]>([]);
@@ -40,7 +46,7 @@ export class SudokuStore extends BaseGameStore {
   pencilMode = signal<boolean>(false);
 
   // History for Undo
-  
+  private history: SudokuHistory[] = [];
 
   // Metadata
   view = signal<'lobby' | 'room' | 'countdown' | 'play'>('lobby');
@@ -63,7 +69,7 @@ export class SudokuStore extends BaseGameStore {
 
   // WS State derived
   override rawState = computed(() => this.ws.gameState() || {
-    status: GameStatus.Waiting,
+    status: 'waiting',
     difficulty: '',
     players: {},
     puzzle: '',
@@ -71,13 +77,13 @@ export class SudokuStore extends BaseGameStore {
     winners: []
   });
 
-  gameStatus = computed(() => this.rawState()?.status || GameStatus.Waiting);
+  gameStatus = computed(() => this.rawState()?.status || 'waiting');
   players = computed(() => this.rawState()?.players || {});
   override readonly hostId = computed(() => this.rawState()?.host || '');
 
   override readonly status = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.isFinished() ? GameStatus.Finished : GameStatus.Playing;
-    return (this.rawState()?.status as string) || GameStatus.Waiting;
+    if (this.currentRoomMode() === 'single') return this.isFinished() ? 'finished' : 'playing';
+    return (this.rawState()?.status as string) || 'waiting';
   });
   override readonly playersList = computed<any[]>(() => {
     const p = this.players() || {};
@@ -97,8 +103,8 @@ export class SudokuStore extends BaseGameStore {
       const status = this.gameStatus();
       const currentView = this.view();
 
-      // When server sends GameStatus.Starting, show countdown overlay
-      if (status === GameStatus.Starting && (currentView === 'room' || currentView === 'lobby')) {
+      // When server sends 'starting', show countdown overlay
+      if (status === 'starting' && (currentView === 'room' || currentView === 'lobby')) {
         this.view.set('countdown');
         // Pre-init the board so it's ready when countdown ends
         const puzzle = this.rawState().puzzle;
@@ -107,15 +113,14 @@ export class SudokuStore extends BaseGameStore {
         }
       }
 
-      // When server sends GameStatus.Playing, transition to play view
-      if (status === GameStatus.Playing && (currentView === 'countdown' || currentView === 'room' || currentView === 'lobby')) {
+      // When server sends 'playing', transition to play view
+      if (status === 'playing' && (currentView === 'countdown' || currentView === 'room')) {
         this.view.set('play');
         // Init board if not already done during countdown
-        if (this.board().length === 0 || currentView === 'lobby') {
+        if (this.board().length === 0) {
           const puzzle = this.rawState().puzzle;
           if (puzzle) {
-            const savedState = localStorage.getItem(`sudoku_pk_${this.roomId()}`);
-            this.initBoard(puzzle, '', savedState || undefined);
+            this.initBoard(puzzle);
           }
         }
       }
@@ -123,9 +128,9 @@ export class SudokuStore extends BaseGameStore {
 
     // Effect to auto-sync Steal mode board
     effect(() => {
-      if (this.currentRoomMode() === GameMode.Steal) {
+      if (this.currentRoomMode() === 'steal') {
         const rState = this.rawState() as any;
-        if (rState.status === GameStatus.Playing && rState.currentBoard) {
+        if (rState.status === 'playing' && rState.currentBoard) {
           // Compare and update our local board
           if (this.board().length > 0) {
             const currentStr = rState.currentBoard;
@@ -167,7 +172,7 @@ export class SudokuStore extends BaseGameStore {
   }
 
   playAgain() {
-    if (this.currentRoomMode() !== GameMode.Single) {
+    if (this.currentRoomMode() !== 'single') {
       super.restartGame();
     }
   }
@@ -180,6 +185,7 @@ export class SudokuStore extends BaseGameStore {
     this.originalPuzzleStr.set(puzzleStr);
     this.solution.set(solutionStr);
     this.isFinished.set(false);
+    this.history = [];
 
     if (savedState) {
       try {
@@ -207,7 +213,7 @@ export class SudokuStore extends BaseGameStore {
         else if (match[1].includes('hard')) diff = 'hard';
       }
       this.statsService.getStats('sudoku').subscribe(stats => {
-        const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === diff);
+        const stat = stats.find(s => s.Mode === 'single' && s.Difficulty === diff);
         if (stat) this.bestTime.set(stat.BestTime);
       });
     }
@@ -255,16 +261,18 @@ export class SudokuStore extends BaseGameStore {
 
     this.audio.playSudoku('input');
 
-    if (this.currentRoomMode() === GameMode.Steal) {
+    if (this.currentRoomMode() === 'steal') {
       const myPlayer = this.players()[this.playerId()];
       if (myPlayer && myPlayer.freezeUntil > Date.now()) {
         this.toast.show('You are frozen!', 'error');
         return;
       }
       // In steal mode, we send directly to WS and wait for update
-      this.ws.send({ action: C2SAction.Input, r: sel.r, c: sel.c, val: num });
+      this.ws.send({ action: 'input', r: sel.r, c: sel.c, val: num });
       return;
     }
+
+    this.saveHistory();
 
     if (this.pencilMode()) {
       if (cell.val !== 0) {
@@ -292,15 +300,15 @@ export class SudokuStore extends BaseGameStore {
     this.checkWinCondition();
 
     // Speed mode progress tracking
-    if (this.currentRoomMode() === GameMode.Speed) {
-      this.ws.send({ action: C2SAction.Progress, progress: this.countFilledCells() });
+    if (this.currentRoomMode() === 'speed') {
+      this.ws.send({ action: 'progress', progress: this.countFilledCells() });
     }
 
     this.triggerSave();
   }
 
   applyHint() {
-    if (this.currentRoomMode() !== GameMode.Single || this.isFinished()) return;
+    if (this.currentRoomMode() !== 'single' || this.isFinished()) return;
     const sel = this.selectedCell();
     if (!sel) {
       this.toast.show(this.i18n.t('game.select_cell_first')() || 'Please select an empty cell first', 'info');
@@ -319,6 +327,7 @@ export class SudokuStore extends BaseGameStore {
     const targetVal = parseInt(solution[sel.r * 9 + sel.c], 10);
     
     this.audio.playSudoku('success');
+    this.saveHistory();
     
     const newB = this.board();
     const cell = newB[sel.r][sel.c];
@@ -357,10 +366,12 @@ export class SudokuStore extends BaseGameStore {
 
     this.audio.playSudoku('clear');
 
-    if (this.currentRoomMode() === GameMode.Steal) {
+    if (this.currentRoomMode() === 'steal') {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
       return;
     }
+
+    this.saveHistory();
     cell.val = 0;
     cell.notes.clear();
     this.board.set([...b]);
@@ -370,9 +381,10 @@ export class SudokuStore extends BaseGameStore {
 
   clearBoard() {
     if (this.isFinished()) return;
-    if (this.currentRoomMode() === GameMode.Steal) return;
+    if (this.currentRoomMode() === 'steal') return;
 
     this.audio.playSudoku('clear');
+    this.saveHistory();
 
     const orig = this.originalPuzzleStr();
     const b = this.board();
@@ -397,14 +409,26 @@ export class SudokuStore extends BaseGameStore {
   }
 
   undo() {
-    if (this.currentRoomMode() !== GameMode.Single || this.isFinished()) return;
+    if (this.isFinished()) return;
+    if (this.currentRoomMode() === 'steal') return;
+    if (this.history.length === 0) return;
+
     this.audio.playSudoku('input');
-    this.engine.handleAction({ type: SudokuActionType.Undo });
-    this.board.set([...this.engine.board]);
-    this.saveSubject.next();
+
+    const prevState = this.history.pop()!;
+    this.board.set(prevState.board);
+    this.checkErrors();
+    this.triggerSave();
   }
 
-  
+  private saveHistory() {
+    const currentBoard = this.board().map(row =>
+      row.map(c => ({ ...c, notes: new Set(c.notes) }))
+    );
+    this.history.push({ board: currentBoard });
+    if (this.history.length > 50) this.history.shift();
+  }
+
   private autoEraseNotes(r: number, c: number, num: number) {
     const b = this.board();
     // Clear in row
@@ -469,7 +493,7 @@ export class SudokuStore extends BaseGameStore {
 
     const valid = complete && !hasError;
 
-    if (valid && this.currentRoomMode() === GameMode.Single) {
+    if (valid && this.currentRoomMode() === 'single') {
       this.isFinished.set(true);
       this.stopTimer();
 
@@ -482,7 +506,7 @@ export class SudokuStore extends BaseGameStore {
           else if (match[1].includes('hard')) diff = 'hard';
         }
         this.statsService.submitStat('sudoku', {
-          mode: GameMode.Single,
+          mode: 'single',
           difficulty: diff,
           score: 0,
           time: this.timeSpent(),
@@ -496,11 +520,11 @@ export class SudokuStore extends BaseGameStore {
     }
 
     if (valid) {
-      if (this.currentRoomMode() === GameMode.Single) {
+      if (this.currentRoomMode() === 'single') {
         this.finishPuzzle();
-      } else if (this.currentRoomMode() === GameMode.Speed) {
+      } else if (this.currentRoomMode() === 'speed') {
         const serialized = this.serializeBoard();
-        this.ws.send({ action: C2SAction.Finish, board: serialized });
+        this.ws.send({ action: 'finish', board: serialized });
       }
     }
   }
@@ -532,14 +556,8 @@ export class SudokuStore extends BaseGameStore {
   }
 
   private triggerSave() {
-    if (this.currentRoomMode() === GameMode.Single) {
+    if (this.currentRoomMode() === 'single') {
       this.saveSubject.next();
-    } else if (this.roomId()) {
-      // Multiplayer: save locally to localStorage so it can be restored on reconnect
-      const serialized = JSON.stringify(this.board().map(row =>
-        row.map(c => ({ ...c, notes: Array.from(c.notes) }))
-      ));
-      localStorage.setItem(`sudoku_pk_${this.roomId()}`, serialized);
     }
   }
 
@@ -575,7 +593,7 @@ export class SudokuStore extends BaseGameStore {
   }
 
   pauseAndSave() {
-    if (this.currentRoomMode() === GameMode.Single) {
+    if (this.currentRoomMode() === 'single') {
       this.stopTimer();
       this.saveStateToBackend();
     }

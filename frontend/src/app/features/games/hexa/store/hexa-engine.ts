@@ -1,3 +1,8 @@
+import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
+import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
+import { generatePieces } from './hexa-pieces';
+import { PRNG } from '../../../../core/utils/prng';
+
 export interface HexCoord {
   q: number;
   r: number;
@@ -6,7 +11,7 @@ export interface HexCoord {
 
 export interface HexCell extends HexCoord {
   filled: boolean;
-  color?: string; // used for rendering the blocks
+  color?: string;
 }
 
 export interface HexPiece {
@@ -15,11 +20,38 @@ export interface HexPiece {
   color: string;
 }
 
-export class HexaEngine {
+export enum HexaActionType {
+  PlacePiece = 'place_piece',
+  Reset = 'reset',
+  LoadState = 'load_state'
+}
+
+export type HexaAction = 
+  | { type: HexaActionType.PlacePiece; piece: HexPiece; origin: HexCoord; pieceIndex: number }
+  | { type: HexaActionType.Reset; seed?: number }
+  | { type: HexaActionType.LoadState; cells: any; score: number; combo: number; pieces: HexPiece[]; piecesPlaced: number; gameOver: boolean };
+
+export interface HexaState {
+  cells: HexCell[];
+  score: number;
+  combo: number;
+  availablePieces: HexPiece[];
+  piecesPlaced: number;
+  gameOver: boolean;
+  status: GameStatusType;
+}
+
+export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
   private readonly radius = 4;
   cells: Map<string, HexCell> = new Map();
   score = 0;
   combo = 0;
+  availablePieces: HexPiece[] = [];
+  piecesPlaced = 0;
+  gameOver = false;
+  status: GameStatusType = GameStatus.Waiting;
+  
+  private prng: PRNG | undefined;
 
   constructor() {
     this.initBoard();
@@ -42,6 +74,58 @@ export class HexaEngine {
     }
   }
 
+  initGame(config: { seed?: number } = {}): void {
+    if (config.seed) {
+      this.prng = new PRNG(config.seed);
+    } else {
+      this.prng = undefined;
+    }
+    this.resetGame();
+  }
+
+  private resetGame() {
+    this.initBoard();
+    this.score = 0;
+    this.combo = 0;
+    this.piecesPlaced = 0;
+    this.gameOver = false;
+    this.status = GameStatus.Playing;
+    this.availablePieces = generatePieces(3, this.prng);
+  }
+
+  getState(): HexaState {
+    return {
+      cells: Array.from(this.cells.values()),
+      score: this.score,
+      combo: this.combo,
+      availablePieces: this.availablePieces,
+      piecesPlaced: this.piecesPlaced,
+      gameOver: this.gameOver,
+      status: this.status
+    };
+  }
+
+  handleAction(action: HexaAction): void {
+    if (action.type === HexaActionType.PlacePiece) {
+      this.executePlacePiece(action.piece, action.origin, action.pieceIndex);
+    } else if (action.type === HexaActionType.Reset) {
+      this.initGame({ seed: action.seed });
+    } else if (action.type === HexaActionType.LoadState) {
+      this.score = action.score;
+      this.combo = action.combo;
+      if (action.cells && Array.isArray(action.cells)) {
+        this.cells.clear();
+        for (const cell of action.cells) {
+          this.cells.set(HexaEngine.coordToString({ q: cell.q, r: cell.r, s: cell.s }), cell);
+        }
+      }
+      this.availablePieces = action.pieces;
+      this.piecesPlaced = action.piecesPlaced;
+      this.gameOver = action.gameOver;
+      this.status = action.gameOver ? GameStatus.Finished : GameStatus.Playing;
+    }
+  }
+
   canPlacePiece(piece: HexPiece, origin: HexCoord): boolean {
     for (const offset of piece.shape) {
       const targetQ = origin.q + offset.q;
@@ -58,10 +142,9 @@ export class HexaEngine {
     return true;
   }
 
-  placePiece(piece: HexPiece, origin: HexCoord): { linesCleared: number, cellsCleared: HexCoord[], gameOver: boolean } {
-    if (!this.canPlacePiece(piece, origin)) {
-      return { linesCleared: 0, cellsCleared: [], gameOver: false };
-    }
+  private executePlacePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number): { linesCleared: number } | null {
+    if (this.gameOver || this.status !== GameStatus.Playing) return null;
+    if (!this.canPlacePiece(piece, origin)) return null;
 
     // Place the piece
     for (const offset of piece.shape) {
@@ -78,18 +161,27 @@ export class HexaEngine {
     }
 
     this.score += piece.shape.length; // points for placing
+    this.piecesPlaced++;
 
     // Check for cleared lines
     const cleared = this.checkAndClearLines();
-    
-    return {
-      linesCleared: cleared.lines,
-      cellsCleared: cleared.clearedCells,
-      gameOver: false // Will be checked externally against available pieces
-    };
+
+    // Replace the used piece with a new one
+    const newPieces = [...this.availablePieces];
+    newPieces[pieceIndex] = generatePieces(1, this.prng)[0];
+    this.availablePieces = newPieces;
+
+    // Check Game Over
+    const currentPieces = this.availablePieces.filter(p => p !== null && p !== undefined);
+    if (this.checkGameOver(currentPieces)) {
+      this.gameOver = true;
+      this.status = GameStatus.Finished;
+    }
+
+    return { linesCleared: cleared.lines };
   }
 
-  private checkAndClearLines(): { lines: number, clearedCells: HexCoord[] } {
+  private checkAndClearLines(): { lines: number } {
     const toClear = new Set<string>();
     let lines = 0;
 
@@ -104,13 +196,11 @@ export class HexaEngine {
       }
     }
 
-    const clearedCells: HexCoord[] = [];
     toClear.forEach(key => {
       const cell = this.cells.get(key);
       if (cell) {
         cell.filled = false;
         delete cell.color;
-        clearedCells.push({ q: cell.q, r: cell.r, s: cell.s });
       }
     });
 
@@ -122,7 +212,7 @@ export class HexaEngine {
       this.combo = 0;
     }
 
-    return { lines, clearedCells };
+    return { lines };
   }
 
   private getLineCells(axis: 'q' | 'r' | 's', value: number): HexCell[] {
@@ -135,10 +225,9 @@ export class HexaEngine {
     return res;
   }
 
-  checkGameOver(availablePieces: HexPiece[]): boolean {
+  private checkGameOver(availablePieces: HexPiece[]): boolean {
     if (availablePieces.length === 0) return false;
 
-    // If ANY of the available pieces can be placed ANYWHERE, game is not over.
     for (const piece of availablePieces) {
       for (const cell of this.cells.values()) {
         if (this.canPlacePiece(piece, { q: cell.q, r: cell.r, s: cell.s })) {
@@ -147,21 +236,5 @@ export class HexaEngine {
       }
     }
     return true;
-  }
-
-  loadState(cells: any, score: number, combo: number) {
-    this.score = score;
-    this.combo = combo;
-    if (cells) {
-      this.cells = new Map(cells);
-    }
-  }
-
-  getState() {
-    return {
-      cells: Array.from(this.cells.entries()),
-      score: this.score,
-      combo: this.combo
-    };
   }
 }

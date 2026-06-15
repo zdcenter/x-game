@@ -22,7 +22,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
             [isHost]="playerId === hostId"
             [isMe]="true"
             [score]="store.players()[playerId]?.score || 0"
-            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === 'finished' ? 'finished' : 'playing')"
             [freezeCountdown]="isFrozen(store.players()[playerId]) ? getFrozenRemaining(store.players()[playerId]) : undefined"
           ></app-player-badge>
 
@@ -35,7 +35,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
                   [isHost]="kv.key === hostId"
                   [isMe]="false"
                   [score]="kv.value.score"
-                  [status]="isFrozen(kv.value) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+                  [status]="isFrozen(kv.value) ? 'frozen' : (store.status() === 'finished' ? 'finished' : 'playing')"
                   [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
                 ></app-player-badge>
               </ng-container>
@@ -88,7 +88,7 @@ export class Math24PkStealComponent {
     let lastScores: Record<string, any> = {};
 
     effect(() => {
-      const state = this.store.rawState() as any;
+      const state = this.store.ws.gameState() as any;
       const currentRound = state.round || 0;
       const currentScores = state.players || {};
       const puzzle = state.puzzle;
@@ -107,14 +107,14 @@ export class Math24PkStealComponent {
            setTimeout(() => {
               this.roundWinner.set(null);
               if (puzzle && puzzle.cards) {
-                 this.store.loadPuzzle(puzzle.cards);
+                 this.store.loadMultiplayerPuzzle(puzzle.cards);
               }
            }, 2000);
         });
       } else {
         // Initial load or normal update
         if (puzzle && puzzle.cards && !this.roundWinner()) {
-           untracked(() => this.store.loadPuzzle(puzzle.cards));
+           untracked(() => this.store.loadMultiplayerPuzzle(puzzle.cards));
         }
       }
 

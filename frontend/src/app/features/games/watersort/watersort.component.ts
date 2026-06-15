@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -51,13 +52,13 @@ import { AudioService } from '../../../core/services/audio.service';
 
           <ng-container header-right>
             <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-              @if (currentRoomMode() === 'single') {
+              @if (currentRoomMode() === GameMode.Single) {
                 <!-- Difficulty Button -->
                 <div class="flex flex-col items-center relative">
                   <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest">{{ i18n.t('game.difficulty')() }}</span>
                   <button (click)="isDifficultyModalOpen.set(!isDifficultyModalOpen())"
                     class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
-                    <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentRoomMode() === 'single' ? _store.localDifficulty() : currentDifficulty()) }}</span>
+                    <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentRoomMode() === GameMode.Single ? _store.currentDifficulty() : currentDifficulty()) }}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4 shrink-0 transition-transform" [class.rotate-180]="isDifficultyModalOpen()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -69,10 +70,10 @@ import { AudioService } from '../../../core/services/audio.service';
                       @for (diff of predefinedDifficulties; track diff.id) {
                         <button (click)="changeSingleDifficulty(diff.id); isDifficultyModalOpen.set(false)"
                           class="w-full text-left px-4 py-3 hover:bg-[var(--color-bg-card)] transition-colors border-b border-[var(--color-border-card)] last:border-0 flex flex-col"
-                          [class.text-[var(--color-accent-to)]]="_store.localDifficulty() === diff.id"
-                          [class.font-bold]="_store.localDifficulty() === diff.id">
+                          [class.text-[var(--color-accent-to)]]="_store.currentDifficulty() === diff.id"
+                          [class.font-bold]="_store.currentDifficulty() === diff.id">
                           <span class="text-sm">{{ i18n.t($any(diff.labelKey))() }}</span>
-                          <span class="text-[10px] opacity-60 font-mono mt-0.5" [class.text-[var(--color-text-main)]]="_store.localDifficulty() !== diff.id">{{ diff.desc }}</span>
+                          <span class="text-[10px] opacity-60 font-mono mt-0.5" [class.text-[var(--color-text-main)]]="_store.currentDifficulty() !== diff.id">{{ diff.desc }}</span>
                         </button>
                       }
                       
@@ -101,7 +102,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
         <!-- Board Area -->
         <div class="flex-1 flex flex-col relative min-h-0 overflow-hidden mt-2 w-full">
-          @if (status === 'waiting' && currentRoomMode() !== 'single') {
+          @if (status === 'waiting' && currentRoomMode() !== GameMode.Single) {
             <app-game-waiting-room
               [gameId]="'watersort'"
               [mode]="currentRoomMode()"
@@ -122,7 +123,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
             <!-- Players / Opponents (Top) -->
             <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === 'single'">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
                 
                 <!-- Local Player (You) -->
                 <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
@@ -135,7 +136,7 @@ import { AudioService } from '../../../core/services/audio.service';
                   ]"
                   [status]="status === 'finished' ? 'finished' : 'playing'"></app-player-badge>
 
-                @if (currentRoomMode() !== 'single' && opponentId()) {
+                @if (currentRoomMode() !== GameMode.Single && opponentId()) {
                   <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                     [playerName]="opponentId()!"
                     [isHost]="opponentId() === _store.hostId()"
@@ -153,7 +154,7 @@ import { AudioService } from '../../../core/services/audio.service';
             <div class="flex-grow flex-1 relative w-full min-h-0 flex items-center justify-center p-2 lg:p-4">
               
               <!-- Opponent Tubes (Mini) -->
-              @if (currentRoomMode() !== 'single' && opponentId()) {
+              @if (currentRoomMode() !== GameMode.Single && opponentId()) {
                 <div class="absolute top-2 left-1/2 -translate-x-1/2 scale-[0.35] sm:scale-50 opacity-60 pointer-events-none origin-top transition-all">
                   <div class="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-lg">
                      @for (tube of opponentTubes(); track $index) {
@@ -164,7 +165,7 @@ import { AudioService } from '../../../core/services/audio.service';
               }
 
               <!-- My Board -->
-              <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto relative" [class.mt-32]="currentRoomMode() !== 'single'">
+              <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto relative" [class.mt-32]="currentRoomMode() !== GameMode.Single">
                 @for (tube of myTubes(); track $index) {
                   <app-tube #tubeElements
                     class="transform z-10 transition-all duration-300 ease-in-out"
@@ -191,7 +192,7 @@ import { AudioService } from '../../../core/services/audio.service';
 
 
               <!-- Hint Floating Button -->
-              @if (status === 'playing' && currentRoomMode() === 'single') {
+              @if (status === 'playing' && currentRoomMode() === GameMode.Single) {
                 <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-3 items-end">
                   <app-hint-button layout="compact" class="block shadow-lg hover:scale-105 active:scale-95 transition-all bg-[var(--color-bg-main)] rounded-lg" (hintApplied)="applyHint()"></app-hint-button>
                 </div>
@@ -205,11 +206,11 @@ import { AudioService } from '../../../core/services/audio.service';
             <app-game-result-overlay
               currentGameId="watersort"
               [status]="didIWin() ? 'win' : 'lose'"
-              [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
+              [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
               [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
-              [showLeave]="currentRoomMode() === 'single' || !isHost()"
-              [showRestart]="currentRoomMode() === 'single' || isHost()"
-              [showDismiss]="currentRoomMode() !== 'single' && isHost()"
+              [showLeave]="currentRoomMode() === GameMode.Single || !isHost()"
+              [showRestart]="currentRoomMode() === GameMode.Single || isHost()"
+              [showDismiss]="currentRoomMode() !== GameMode.Single && isHost()"
               (leave)="returnToLobby()"
               (restart)="playAgain()"
               (dismiss)="dismissRoom()">
@@ -275,6 +276,9 @@ import { AudioService } from '../../../core/services/audio.service';
   `]
 })
 export class WatersortComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
 @ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
   @ViewChildren('tubeElements', { read: ElementRef }) tubeElements!: QueryList<ElementRef>;
   public i18n = inject(I18nService);
@@ -349,13 +353,13 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
       this._store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-      if (pending.mode !== 'single') {
+      if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
       const savedDiff = (typeof localStorage !== 'undefined' ? localStorage.getItem('watersort_single_diff') : null) || 'easy';
       const uniqueLocalRoom = 'local_' + this.myId;
-      this._store.joinRoom(uniqueLocalRoom, 'single', savedDiff, this.myId);
+      this._store.joinRoom(uniqueLocalRoom, GameMode.Single, savedDiff, this.myId);
     }
   }
 
@@ -384,7 +388,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     setTimeout(() => {
       const uniqueLocalRoom = 'local_' + this.myId + '_' + Date.now();
       this.wsService.setPendingAction('create');
-      this._store.joinRoom(uniqueLocalRoom, 'single', diff, this.myId);
+      this._store.joinRoom(uniqueLocalRoom, GameMode.Single, diff, this.myId);
     }, 100);
   }
 
@@ -605,7 +609,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       const source = myTubes[i];
       if (source.colors.length === 0) continue;
       
-      const isSolid = source.colors.every(c => c === source.colors[0]);
+      const isSolid = source.colors.every((c: string) => c === source.colors[0]);
       if (isSolid && source.colors.length === 4) continue;
 
       const topColor = source.colors[source.colors.length - 1];
@@ -662,11 +666,11 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this._store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
     const uniqueLocalRoom = 'local_' + this.myId;
-    this._store.joinRoom(uniqueLocalRoom, 'single', 'easy', this.myId);
+    this._store.joinRoom(uniqueLocalRoom, GameMode.Single, 'easy', this.myId);
   }
 
   goBack() {
-    if (this.currentRoomMode() !== 'single') {
+    if (this.currentRoomMode() !== GameMode.Single) {
       this._store.leaveRoom();
     }
     this.router.navigate(['/lobby']);
@@ -676,7 +680,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     super.handleCreateRoom(config);
     if (config.password) this.wsService.setPendingPassword(config.password);
     this._store.joinRoom(config.name, config.mode, config.difficulty, this.myId);
-    if (config.mode !== 'single') {
+    if (config.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty);
     }
     this.isMobileSidebarOpen.set(false);
@@ -686,7 +690,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     super.handleJoinRoom(event);
     if (event.password) this.wsService.setPendingPassword(event.password);
     this._store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);

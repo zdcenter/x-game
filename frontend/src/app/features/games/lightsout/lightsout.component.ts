@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
@@ -35,6 +36,9 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
   templateUrl: './lightsout.component.html'
 })
 export class LightsoutComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   override store = inject(LightsoutStore);
   private gameRegistry = inject(GameRegistryService);
   private authStore = inject(AuthStore);
@@ -59,7 +63,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getDifficultyName() {
-    const diff = this.store.currentRoomMode() === 'single' ? this.store.localDifficulty() : this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : this.store.size() === 7 ? 'expert' : this.store.size() === 8 ? 'master' : 'medium';
+    const diff = this.store.currentRoomMode() === GameMode.Single ? this.store.currentDifficulty() : this.store.size() === 4 ? 'easy' : this.store.size() === 6 ? 'hard' : this.store.size() === 7 ? 'expert' : this.store.size() === 8 ? 'master' : 'medium';
     const key = this.gameRegistry.getDifficultyLabel('lightsout', diff);
     return key ? this.i18n.t(key)() : diff;
   }
@@ -95,24 +99,24 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-      if (pending.mode !== 'single') {
+      if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinRoom('single_room', 'single', 'medium');
+      this.store.joinRoom('single_room', GameMode.Single, 'medium');
     }
   }
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
     }
   }
 
   override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
     super.handleJoinRoom(params);
-    if (params.mode !== 'single') {
+    if (params.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
   }
@@ -149,7 +153,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   onLeaveClick() {
     this.gameTimer.stopCountdown();
-    if (this.store.currentRoomMode() !== 'single') {
+    if (this.store.currentRoomMode() !== GameMode.Single) {
       this.store.leaveRoom();
     }
     this.router.navigate(['/lobby']);
@@ -195,8 +199,8 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   applyHint() {
-    if (this.store.currentRoomMode() !== 'single' || this.store.status() !== 'playing') return;
-    const sol = this.store.localSolution();
+    if (this.store.currentRoomMode() !== GameMode.Single || this.store.status() !== 'playing') return;
+    const sol = this.store.currentSolution();
     const size = this.store.size();
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {

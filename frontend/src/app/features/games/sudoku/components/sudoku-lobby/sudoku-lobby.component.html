@@ -60,7 +60,7 @@
                 class="flex flex-col items-center p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-from)] hover:shadow-[0_0_15px_rgba(var(--color-accent-from-rgb),0.3)] transition-all group relative overflow-hidden"
               >
                 <!-- Status indicator -->
-                @if (level.progress.status === 'playing') {
+                @if (level.progress.status === GameStatus.Playing) {
                   <div class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
                   <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
                 }
@@ -71,7 +71,7 @@
                 
                 <!-- Stars -->
                 <div class="flex gap-1 h-4">
-                  @if (level.progress.status === 'finished') {
+                  @if (level.progress.status === GameStatus.Finished) {
                     @for (star of [1,2,3]; track star) {
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" 
                            [class.text-yellow-400]="level.progress.stars >= star"
@@ -83,7 +83,7 @@
                   }
                 </div>
                 
-                @if (level.progress.status === 'playing') {
+                @if (level.progress.status === GameStatus.Playing) {
                   <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider">In Progress</span>
                 }
               </button>

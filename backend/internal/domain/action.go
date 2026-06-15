@@ -27,8 +27,20 @@ const (
 	ActionStartGame C2SAction = "start"
 	// 玩家在游戏中执行操作 (例如落子、移动)
 	ActionMove      C2SAction = "move"
-	// 玩家主动认输
 	ActionForfeit   C2SAction = "forfeit"
+	// 游戏自然结束 (死亡/过关)
+	ActionGameOver  C2SAction = "game_over"
+	// 对战中释放干扰/攻击
+	ActionAttack    C2SAction = "attack"
+	ActionUpdate    C2SAction = "update"
+	ActionUndo      C2SAction = "undo"
+	ActionGuess     C2SAction = "guess"
+	ActionInput     C2SAction = "input"
+	ActionProgress  C2SAction = "progress"
+	ActionFinish    C2SAction = "finish"
+	ActionToggle    C2SAction = "toggle"
+	ActionPour      C2SAction = "pour"
+	ActionSolve     C2SAction = "solve"
 
 	// ===== 系统级操作 =====
 	// 客户端应用层心跳保活包

@@ -1,6 +1,9 @@
 import { Lang } from './translations';
 export const coreTranslations: Record<Lang, Record<string, string>> = {
   en: {
+    "update.title": "Update Available",
+    "update.message": "A new version of the app is available. Please reload to update.",
+    "update.reload": "Reload",
     // SEO
     'seo.default.title': 'Puzzle PK Platform - Multiplayer Web Games',
     'seo.default.desc': 'A modern web gaming platform for multiplayer games including Minesweeper and Sudoku.',
@@ -531,6 +534,9 @@ We reserve the right to modify, suspend, or discontinue any game or feature at a
     'legal.about.content': 'Welcome to Puzzle PK! We are dedicated to providing high-quality logic and brain-training games for everyone. If you have any questions, feedback, or business inquiries, please contact us at: 36663840@qq.com.',
   },
   zh: {
+    "update.title": "系统更新",
+    "update.message": "发现新版本的应用程序，请刷新以更新至最新版。",
+    "update.reload": "立即刷新",
     // SEO
     'seo.default.title': 'Puzzle PK 平台 - 在线多人对战小游戏',
     'seo.default.desc': '一个现代化的网页游戏平台，提供扫雷、数独等在线多人对战游戏。',

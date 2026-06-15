@@ -69,13 +69,13 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
 
         <!-- Row 0 -->
         <div class="w-full h-full">
-          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.boardCards()[0] }"></ng-container>
+          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.currentBoardCards()[0] }"></ng-container>
         </div>
         <div class="w-full h-full">
           <ng-container *ngTemplateOutlet="opTpl; context: { op: '+' }"></ng-container>
         </div>
         <div class="w-full h-full">
-          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.boardCards()[1] }"></ng-container>
+          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.currentBoardCards()[1] }"></ng-container>
         </div>
 
         <!-- Row 1 -->
@@ -93,13 +93,13 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
 
         <!-- Row 2 -->
         <div class="w-full h-full">
-          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.boardCards()[2] }"></ng-container>
+          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.currentBoardCards()[2] }"></ng-container>
         </div>
         <div class="w-full h-full">
           <ng-container *ngTemplateOutlet="opTpl; context: { op: '-' }"></ng-container>
         </div>
         <div class="w-full h-full">
-          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.boardCards()[3] }"></ng-container>
+          <ng-container *ngTemplateOutlet="cardTpl; context: { card: store.currentBoardCards()[3] }"></ng-container>
         </div>
 
       </div>
@@ -117,8 +117,8 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
         <div class="flex gap-2 sm:gap-4">
           <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
                   (click)="undo()"
-                  [disabled]="store.boardHistory().length <= 1"
-                  [ngClass]="{'opacity-50 cursor-not-allowed': store.boardHistory().length <= 1}">
+                  [disabled]="store.currentBoardHistory().length <= 1"
+                  [ngClass]="{'opacity-50 cursor-not-allowed': store.currentBoardHistory().length <= 1}">
             <span>↩️</span> <ng-container i18n="@@game.undo">game.undo</ng-container>
           </button>
           <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
@@ -202,11 +202,9 @@ export class Math24BoardComponent {
       this.selectedCard = null; // deselect
     } else if (this.selectedOp) {
       // Combine
-      const newCard = this.store.combineCards(this.selectedCard, card, this.selectedOp);
-      if (newCard) {
-        this.selectedCard = newCard;
-        this.selectedOp = null;
-      }
+      this.store.combineCards(this.selectedCard, card, this.selectedOp);
+      this.selectedCard = null;
+      this.selectedOp = null;
     } else {
       // change selection
       this.selectedCard = card;
@@ -227,19 +225,13 @@ export class Math24BoardComponent {
   }
 
   reset() {
-    // Reset to start of history
-    const history = this.store.boardHistory();
-    if (history.length > 0) {
-      const initial = history[0];
-      this.store.boardHistory.set([initial]);
-      this.store.boardCards.set(initial);
-      this.selectedCard = null;
-      this.selectedOp = null;
-    }
+    this.store.reset();
+    this.selectedCard = null;
+    this.selectedOp = null;
   }
 
   applyHint() {
-    const cards = this.store.boardCards();
+    const cards = this.store.currentBoardCards();
     const solution = Math24Solver.solve(cards);
     if (solution) {
       this.hintSolution.set(solution);

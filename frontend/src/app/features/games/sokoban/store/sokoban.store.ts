@@ -1,11 +1,12 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
-import { LocalSokobanEngine } from './local-sokoban-engine';
+import { LocalSokobanEngine, SokobanActionType } from './local-sokoban-engine';
 import { environment } from '../../../../../environments/environment';
 import { AudioService } from '../../../../core/services/audio.service';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { GameMode, GameStatus, GameStatusType, GameDifficulty, GameId } from '../../../../core/models/game.model';
+import { C2SAction } from '../../../../core/models/websocket.model';
 
 export interface SokobanPlayerState {
   id: string;
@@ -23,19 +24,16 @@ export interface SokobanGameState {
 @Injectable({
   providedIn: 'root'
 })
-export class SokobanStore implements GameStoreInterface {
-  private ws = inject(WebSocketService);
-  private auth = inject(AuthStore);
+export class SokobanStore extends BaseGameStore {
+  readonly gameId = GameId.Sokoban;
+
   private http = inject(HttpClient);
   private audio = inject(AudioService);
 
-  roomId = signal('');
-  currentRoomMode = signal('single');
   isDead = signal(false);
   timeSpent = signal<number>(0);
   private timer: any;
   
-  localDifficulty = signal('beginner');
   localEngine = signal<LocalSokobanEngine | null>(null, { equal: () => false });
   currentLevelId = signal<string>('');
   levelsList = signal<any[]>([]);
@@ -53,47 +51,44 @@ export class SokobanStore implements GameStoreInterface {
     return level ? level.level_num : 1;
   });
 
-  private rawState = computed(() => this.ws.gameState() as any);
-
-  hostId = computed(() => {
-    return this.rawState()?.host || '';
+  override readonly status = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.localEngine()?.status || GameStatus.Playing;
+    const st = this.rawState() as any;
+    if (!st) return GameStatus.Waiting;
+    let status = st.status;
+    if (typeof status === 'number') {
+      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
+      status = statusMap[status] || GameStatus.Waiting;
+    }
+    return status || GameStatus.Waiting;
   });
 
-  status = computed(() => {
-    if (this.currentRoomMode() === 'single') return this.localEngine()?.status || 'playing';
-    return this.rawState()?.status || 'waiting';
-  });
-
-  playersList = computed(() => {
-    const players = this.rawState()?.players;
+  override readonly playersList = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [{id: this.playerId()}];
+    const players = (this.rawState() as any)?.players;
     return Object.values(players || {}) as any[];
   });
 
-  readyPlayers = computed(() => {
+  override readonly readyPlayers = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) return {};
     return (this.rawState() as any)?.readyPlayers || {};
   });
 
-  currentDifficulty = computed(() => {
-    if (this.currentRoomMode() === 'single') return this.localDifficulty();
-    return (this.rawState() as SokobanGameState)?.difficulty || 'beginner';
-  });
-
   myPlayerState = computed(() => {
-    if (this.currentRoomMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
       if (!engine) return null;
       return { 
-        id: this.auth.currentUser()?.username || this.auth.guestId, 
+        id: this.playerId(), 
         board: engine.board, 
         moves: engine.moves, 
         status: engine.status 
       } as SokobanPlayerState;
     }
 
-    const myId = this.auth.currentUser()?.username || this.auth.guestId;
     const state = this.rawState() as SokobanGameState;
     if (!state || !state.players) return null;
-    return state.players[myId];
+    return state.players[this.playerId()];
   });
 
   myBoard = computed(() => {
@@ -143,12 +138,12 @@ export class SokobanStore implements GameStoreInterface {
   });
 
   opponents = computed(() => {
-    const myId = this.auth.currentUser()?.username || this.auth.guestId;
+    if (this.currentRoomMode() === GameMode.Single) return [];
     const state = this.rawState() as SokobanGameState;
     if (!state || !state.players) return [];
     
     return Object.values(state.players)
-      .filter(p => p.id !== myId)
+      .filter(p => p.id !== this.playerId())
       .map(p => ({
         id: p.id,
         board: p.board,
@@ -158,16 +153,14 @@ export class SokobanStore implements GameStoreInterface {
       }));
   });
 
-  joinRoom(roomId: string, mode: string = 'single', difficulty: string = 'beginner', hostId?: string) {
-    const playerId = this.auth.currentUser()?.username || this.auth.guestId;
-    this.roomId.set(roomId);
-    this.currentRoomMode.set(mode);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string) {
+    super.joinRoom(roomId, mode, difficulty, hostId);
     this.isDead.set(false);
     
-    if (mode === 'single') {
+    if (mode === GameMode.Single) {
       const saved = LocalSokobanEngine.loadFromStorage();
       if (saved) {
-        this.localDifficulty.set(saved.difficulty);
+        this.currentDifficulty.set(saved.difficulty);
         saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
         this.localEngine.set(saved.engine);
         this.timeSpent.set(saved.engine.timeSpent || 0);
@@ -178,13 +171,12 @@ export class SokobanStore implements GameStoreInterface {
       }
       this.startTimer();
     } else {
-      this.ws.connect('sokoban', roomId, playerId, mode, difficulty, hostId);
       this.startTimer();
     }
   }
 
   loadLevelFromLobby(difficulty: string, puzzle: string, levelId: string) {
-    this.localDifficulty.set(difficulty);
+    this.currentDifficulty.set(difficulty);
     this.currentLevelId.set(levelId);
     
     const saved = LocalSokobanEngine.loadFromStorage(levelId);
@@ -194,8 +186,11 @@ export class SokobanStore implements GameStoreInterface {
       this.timeSpent.set(saved.engine.timeSpent || 0);
       this.fetchLevelsAndLoad(difficulty, saved.engine.levelStr, true);
     } else {
-      const newEngine = new LocalSokobanEngine(levelId, difficulty, puzzle);
-      newEngine.onSound = (sound) => this.audio.playSokoban(sound);
+      const newEngine = new LocalSokobanEngine();
+      newEngine.initGame({
+        levelId, difficulty, levelStr: puzzle,
+        onSound: (sound) => this.audio.playSokoban(sound)
+      });
       this.localEngine.set(newEngine);
       this.timeSpent.set(0);
       newEngine.saveToStorage();
@@ -203,40 +198,23 @@ export class SokobanStore implements GameStoreInterface {
     }
   }
 
-  leaveRoom() {
-    if (this.currentRoomMode() !== 'single') {
-      this.ws.send({ type: 'leave_game' });
-      this.ws.disconnect('sokoban');
-    }
+  override leaveRoom() {
+    super.leaveRoom();
     this.stopTimer();
-    this.roomId.set('');
-    this.currentRoomMode.set('single');
   }
-
-  /** @deprecated Use leaveRoom() instead */
-  leaveGame() {
-    this.leaveRoom();
-  }
-
-  ready() { this.ws.send({ type: 'ready' }); }
-  cancelReady() { this.ws.send({ type: 'cancel_ready' }); }
-  kickPlayer(playerId: string) { this.ws.send({ type: 'kick_player', target: playerId }); }
-  dismissRoom() { this.ws.send({ type: 'dismiss_room' }); }
-  startGame() { this.ws.send({ action: 'start' }); }
-  restartGame() { this.ws.send({ type: 'restart_game' }); }
 
   move(dir: 'up' | 'down' | 'left' | 'right') {
-    if (this.currentRoomMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const eng = this.localEngine();
       if (!eng) return;
-      eng.move(dir);
-      this.localEngine.set(eng); // Trigger reactivity
-      if (eng.status === 'finished') {
+      eng.handleAction({ type: SokobanActionType.Move, dir });
+      this.localEngine.set(eng);
+      if (eng.status === GameStatus.Finished) {
         this.submitFinish();
       }
       return;
     }
-    this.ws.send({ action: 'move', dir });
+    this.ws.send({ action: C2SAction.Move, dir });
   }
 
   private submitFinish() {
@@ -250,27 +228,33 @@ export class SokobanStore implements GameStoreInterface {
   }
 
   undo() {
-    if (this.currentRoomMode() === 'single') {
-      this.localEngine()?.undo();
-      this.localEngine.set(this.localEngine()); // Trigger reactivity
+    if (this.currentRoomMode() === GameMode.Single) {
+      const eng = this.localEngine();
+      if (eng) {
+        eng.handleAction({ type: SokobanActionType.Undo });
+        this.localEngine.set(eng);
+      }
       return;
     }
-    this.ws.send({ action: 'undo' });
+    this.ws.send({ action: C2SAction.Undo });
   }
 
   restart() {
-    if (this.currentRoomMode() === 'single') {
-      this.localEngine()?.restart();
-      this.localEngine.set(this.localEngine()); // Trigger reactivity
+    if (this.currentRoomMode() === GameMode.Single) {
+      const eng = this.localEngine();
+      if (eng) {
+        eng.handleAction({ type: SokobanActionType.Restart });
+        this.localEngine.set(eng);
+      }
       this.timeSpent.set(0);
       return;
     }
     this.timeSpent.set(0);
-    this.ws.send({ action: 'restart_game' });
+    this.ws.send({ action: C2SAction.RestartGame });
   }
 
   applyHint(): { success: boolean; message: string } {
-    if (this.currentRoomMode() === 'single') {
+    if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
       if (engine) return engine.applyHint();
     }
@@ -278,7 +262,7 @@ export class SokobanStore implements GameStoreInterface {
   }
 
   changeSingleDifficulty(diff: string) {
-    this.localDifficulty.set(diff);
+    this.currentDifficulty.set(diff);
     this.fetchLevelsAndLoad(diff);
   }
 
@@ -295,9 +279,8 @@ export class SokobanStore implements GameStoreInterface {
         return;
       }
 
-      // Find first unfinished level
       let targetLevel = levels.find(l => !l.progress || l.progress.status !== 'finished');
-      if (!targetLevel) targetLevel = levels[levels.length - 1]; // All finished, pick last
+      if (!targetLevel) targetLevel = levels[levels.length - 1];
 
       if (targetLevel) {
         this.loadLevel(targetLevel.id);
@@ -312,14 +295,19 @@ export class SokobanStore implements GameStoreInterface {
       saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
       this.localEngine.set(saved.engine);
       this.timeSpent.set(saved.engine.timeSpent || 0);
-      this.localDifficulty.set(saved.difficulty);
+      this.currentDifficulty.set(saved.difficulty);
       return;
     }
 
     this.http.get<any>(`${environment.apiUrl}/sokoban/puzzle/${id}`).subscribe(res => {
       this.currentLevelId.set(res.puzzle.id);
-      const newEngine = new LocalSokobanEngine(res.puzzle.id, this.localDifficulty(), res.puzzle.puzzle);
-      newEngine.onSound = (sound) => this.audio.playSokoban(sound);
+      const newEngine = new LocalSokobanEngine();
+      newEngine.initGame({
+        levelId: res.puzzle.id,
+        difficulty: this.currentDifficulty() as string,
+        levelStr: res.puzzle.puzzle,
+        onSound: (sound) => this.audio.playSokoban(sound)
+      });
       this.localEngine.set(newEngine);
       this.timeSpent.set(0);
       newEngine.saveToStorage();
@@ -347,13 +335,12 @@ export class SokobanStore implements GameStoreInterface {
   private startTimer() {
     this.stopTimer();
     this.timer = setInterval(() => {
-      if (this.status() === 'playing') {
+      if (this.status() === GameStatus.Playing) {
         this.timeSpent.update(t => t + 1);
-        if (this.currentRoomMode() === 'single') {
+        if (this.currentRoomMode() === GameMode.Single) {
           const eng = this.localEngine();
           if (eng) {
             eng.timeSpent = this.timeSpent();
-            // Save periodically to avoid losing too much progress on abrupt close
             if (this.timeSpent() % 5 === 0) {
               eng.saveToStorage();
             }

@@ -2,6 +2,7 @@
 
 ## [2026-06-14] - 🔧 全栈统一：游戏模式与难度枚举标准化重构
 ### 🌟 架构重构 (Architecture & Refactoring)
+- **多游戏骨架重构 (Hexa, Tetris, Drop2048, Block)**：对《六边形消除》、《俄罗斯方块》、《下落 2048》和《1010! 方块》进行了深度的 `ILocalEngine` 与 `BaseGameStore` 核心架构改造。彻底分离了游戏特有的重力/掉落/消除逻辑引擎与前端 UI 组件，让组件全面降维为“只渲染状态”的傻瓜视图层。
 - **华容道 (Sliding Puzzle) 引擎彻底标准化重构**：将老旧的底层存储状态和组件逻辑推翻重写，完全接入全新的 `ILocalEngine` 协议；用 `BaseGameStore` 替换了原有的冗余继承链；将组件内所有零散的方法调用升级为标准化的 `store.dispatch(action)` 单向数据流模式；并彻底清扫了 `'single'`, `'win'`, `'lose'` 等魔法字符串，完美并入 `GameResult` 全局强类型枚举控制。
 - **游戏常量大一统 (激进派重构)**：彻底推翻了前端和后端各游戏中碎片化、硬编码的魔法字符串（如 `local`, `same_pk_speed`, `diff_pk_score`, `beginner` 等），建立了全栈统一的 `GameMode` (`single`, `speed`, `steal`, `score`, `battle`) 和 `GameDifficulty` (`easy`, `medium`, `hard`, `expert`, `master` 等) 绝对标准体系。
 - **Go 后端引擎无缝迁移**：批量替换了后端引擎工厂注册名，统一去除了冗长的 `same_pk_` 前缀，并自动映射到简化的新枚举值。

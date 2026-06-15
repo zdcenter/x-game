@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../../../core/models/game.model';
 import { Component, inject, effect, signal, untracked, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
@@ -19,6 +20,9 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
   templateUrl: './sudoku-pk-steal.component.html',
   styleUrl: './sudoku-pk-steal.component.css'})
 export class SudokuPkStealComponent {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   store = inject(SudokuStore);
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);

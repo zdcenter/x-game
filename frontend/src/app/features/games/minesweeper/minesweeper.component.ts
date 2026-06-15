@@ -6,7 +6,7 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { MinesweeperStore, CellState } from './store/minesweeper.store';
-import { GameStatus, GameMode, GameId, GameResult, GameResultType } from '../../../core/models/game.model';
+import { GameStatus, GameMode, GameId, GameResult, GameResultType, GameDifficulty } from '../../../core/models/game.model';
 import { C2SAction } from '../../../core/models/websocket.model';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -35,12 +35,14 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './minesweeper.component.css'
 })
 export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   store = inject(MinesweeperStore);
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
   audioService = inject(AudioService);
   toastService = inject(ToastService);
-  GameStatus = GameStatus;
   router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
   private roomLifecycle!: RoomLifecycleHandle;
@@ -260,7 +262,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   changeSingleDifficulty(diff: string) {
     this.currentDifficulty.set(diff);
     (typeof localStorage !== 'undefined' && localStorage.setItem('minesweeper_single_diff', diff));
-    this.currentRoomMode.set('single');
+    this.currentRoomMode.set(GameMode.Single);
     let width = 16, height = 16, mines = 40;
     if (diff.startsWith('custom_')) {
       const parts = diff.split('_');

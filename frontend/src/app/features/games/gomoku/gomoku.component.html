@@ -9,7 +9,7 @@
   <div class="w-full shrink-0 relative z-10">
     <app-game-header
       i18n-title="@@game.gomoku" title="Gomoku"
-      [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.same_pk_classic')()"
+      [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('gomoku.diff.easy')() : (currentDifficulty() === 'hard' ? i18n.t('gomoku.diff.hard')() : i18n.t('gomoku.diff.medium')())) : '') : i18n.t('gomoku.mode.same_pk_classic')()"
       iconGradientClass="from-emerald-500 to-teal-600"
       titleGradientClass="from-emerald-400 to-teal-500"
       shadowClass="shadow-emerald-500/20"
@@ -21,9 +21,9 @@
           <ng-container header-right>
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider hidden sm:inline">
-                {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.same_pk_classic')() }}
+                {{ currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() : i18n.t('gomoku.mode.same_pk_classic')() }}
               </span>
-              @if (currentRoomMode() === 'single') {
+              @if (currentRoomMode() === GameMode.Single) {
                 <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
                 <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
                         class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
@@ -68,7 +68,7 @@
       </div>
 
       <!-- Turn Indicator -->
-      @if (gameStatus().status === 'playing') {
+      @if (gameStatus() === GameStatus.Playing) {
         <div class="absolute bottom-2 right-2 flex items-center gap-2 z-20 pointer-events-none drop-shadow-md bg-white/40 backdrop-blur-sm border border-black/10 px-3 py-1.5 rounded-md transition-all duration-300">
           <div class="w-3.5 h-3.5 rounded-full shadow-[1px_1px_2px_rgba(0,0,0,0.4)]"
                [ngClass]="currentTurnColor === 1 ? 'bg-gradient-to-b from-gray-700 to-black' : 'bg-gradient-to-b from-white to-gray-200'"></div>
@@ -113,7 +113,7 @@
                 </div>
               } @else {
                 <!-- Hover Preview -->
-                @if (isMyTurn && gameStatus().status === 'playing') {
+                @if (isMyTurn && gameStatus() === GameStatus.Playing) {
                   <div class="w-[85%] h-[85%] rounded-full relative z-10 opacity-0 group-hover:opacity-50 transition-opacity duration-150"
                        [ngClass]="myColor === 1 ? 'bg-black' : 'bg-white'">
                   </div>
@@ -129,7 +129,7 @@
   <!-- Modals & Overlays -->
   <app-game-rules-modal [gameId]="'gomoku'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
-  @if (currentRoomMode() !== 'single' && gameStatus().status === 'waiting') {
+  @if (currentRoomMode() !== GameMode.Single && gameStatus() === GameStatus.Waiting) {
     <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
       <app-game-waiting-room
         class="w-full h-full flex"
@@ -142,7 +142,7 @@
         (start)="store.startGame()"
         (leave)="returnToLobby()"
         (changeSettings)="openChangeSettings()"
-        [readyPlayers]="store.gameState()?.readyPlayers || {}"
+        [readyPlayers]="store.readyPlayers()"
         (kick)="store.kickPlayer($event)"
         (ready)="store.ready()"
         (cancelReady)="store.cancelReady()"
@@ -152,7 +152,7 @@
   }
 
   <!-- Starting Overlay -->
-  @if (gameStatus().status === 'starting') {
+  @if (gameStatus() === GameStatus.Starting) {
     <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
   }
 
@@ -161,10 +161,10 @@
     <app-game-result-overlay
       class="absolute inset-0 z-50 flex items-center justify-center"
       currentGameId="gomoku"
-      [status]="gameStatus().winner === myPlayerId() ? 'win' : 'lose'"
+      [status]="store.winner() === myPlayerId() ? 'win' : 'lose'"
       [title]="winnerText"
       [showRestart]="true"
-      [showLeave]="currentRoomMode() !== 'single'"
+      [showLeave]="currentRoomMode() !== GameMode.Single"
       [stats]="[]"
       (restart)="onRestart()"
       (leave)="returnToLobby()">

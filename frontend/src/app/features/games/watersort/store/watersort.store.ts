@@ -1,7 +1,10 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { WebSocketService } from '../../../../core/services/websocket.service';
+import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
+import { C2SAction } from '../../../../core/models/websocket.model';
+import { LocalWatersortEngine, WatersortActionType } from './watersort-engine';
 
 export interface Tube {
   colors: string[];
@@ -23,85 +26,132 @@ export interface WatersortState {
 @Injectable({
   providedIn: 'root'
 })
-export class WatersortStore implements GameStoreInterface {
-  ws = inject(WebSocketService);
-  private auth = inject(AuthStore);
-  private playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
-  readonly roomId = signal<string>('');
-  readonly hostId = computed(() => this.ws.gameState()?.host || '');
-  readonly playersList = computed<any[]>(() => Object.values(this.ws.gameState()?.players || {}));
-  readonly currentRoomMode = signal<string>('single');
-  readonly currentDifficulty = signal<string>('');
-  readonly localDifficulty = signal<string>('easy');
-  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.ws.gameState() as any)?.readyPlayers || {});
+export class WatersortStore extends BaseGameStore {
+  readonly gameId = GameId.WaterSort;
 
-  // Raw state mapped from websocket
-  private readonly rawState = computed(() => {
-    const raw = this.ws.gameState() as WatersortState | undefined;
-    if (raw) return raw;
-    return {
-      players: {},
-      status: 'waiting',
-      winners: []
-    } as WatersortState;
+  private statsService = inject(GameStatsService);
+
+
+  private localEngine = signal<LocalWatersortEngine | null>(null);
+  private tick = signal(0);
+
+  override readonly status = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.status || GameStatus.Waiting;
+    }
+    const st = this.rawState() as any;
+    if (!st) return GameStatus.Waiting;
+    let status = st.status;
+    if (typeof status === 'number') {
+      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
+      status = statusMap[status] || GameStatus.Waiting;
+    }
+    return status || GameStatus.Waiting;
   });
 
-  readonly status = computed(() => this.rawState().status);
-  readonly winners = computed(() => this.rawState().winners || []);
-  readonly players = computed(() => this.rawState().players || {});
-
-  joinRoom(roomId: string, mode: string, difficulty: string, host?: string) {
-    this.roomId.set(roomId);
-    this.currentRoomMode.set(mode);
-    this.currentDifficulty.set(difficulty);
-    if (mode === 'single') {
-      this.localDifficulty.set(difficulty);
+  readonly winners = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.finished ? [this.playerId()] : [];
     }
-    
-    this.ws.connect('watersort', roomId, this.playerId(), mode, difficulty, host);
+    return (this.rawState() as any)?.winners || [];
+  });
+
+  readonly players = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      const eng = this.localEngine();
+      return {
+        [this.playerId()]: {
+          id: this.playerId(),
+          tubes: eng?.tubes || [],
+          moves: eng?.moves || 0,
+          finished: eng?.finished || false
+        }
+      };
+    }
+    return (this.rawState() as any)?.players || {};
+  });
+
+  override readonly playersList = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [{id: this.playerId()}];
+    return Object.values((this.rawState() as any)?.players || {});
+  });
+
+  override readonly hostId = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
+    return (this.rawState() as any)?.host || '';
+  });
+
+  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    return (this.rawState() as any)?.readyPlayers || {};
+  });
+
+  override startGame() {
+    if (this.currentRoomMode() === GameMode.Single) {
+      const engine = new LocalWatersortEngine();
+      engine.initGame({
+        playerId: this.playerId(),
+        difficulty: this.currentDifficulty() as string,
+        onWin: () => {
+          this.submitSinglePlayerStats();
+          this.tick.set(this.tick() + 1);
+        },
+        onPour: () => {
+          this.tick.set(this.tick() + 1);
+        },
+        onInvalid: () => {
+          // Play clink sound in component instead of passing audio here to avoid circular dep
+          this.tick.set(this.tick() + 1);
+        }
+      });
+      this.localEngine.set(engine);
+      this.tick.set(this.tick() + 1);
+    } else {
+      super.startGame();
+    }
   }
 
-  leaveRoom() {
-    this.ws.send({ type: 'leave_game' });
-    this.ws.disconnect('watersort');
-    this.roomId.set('');
-  }
-
-  ready() {
-    this.ws.send({ type: 'ready' });
-  }
-
-  cancelReady() {
-    this.ws.send({ type: 'cancel_ready' });
-  }
-
-  startGame() {
-    this.ws.send({ action: 'start' });
-  }
-
-  restartGame() {
-    this.ws.send({ type: 'restart_game' });
-  }
-
-  kickPlayer(playerId: string) {
-    this.ws.send({ type: 'kick_player', target: playerId });
-  }
-
-  dismissRoom() {
-    this.ws.send({ type: 'dismiss_room' });
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string) {
+    super.joinRoom(roomId, mode, difficulty, hostId);
+    if (mode === GameMode.Single) {
+      this.startGame();
+    }
   }
 
   pour(fromIndex: number, toIndex: number) {
-    this.ws.send({
-      action: 'pour',
-      from: fromIndex,
-      to: toIndex
-    });
+    if (this.status() !== GameStatus.Playing) return;
+
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.localEngine()?.handleAction({ type: WatersortActionType.Pour, from: fromIndex, to: toIndex });
+      this.tick.set(this.tick() + 1);
+    } else {
+      this.ws.send({
+        action: C2SAction.Pour,
+        from: fromIndex,
+        to: toIndex
+      });
+    }
   }
 
   restart() {
-    this.ws.send({
-      action: 'restart'
-    });
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.localEngine()?.handleAction({ type: WatersortActionType.Restart });
+      this.tick.set(this.tick() + 1);
+    } else {
+      this.ws.send({ action: C2SAction.RestartGame });
+    }
+  }
+
+  private submitSinglePlayerStats() {
+    this.statsService.submitStat(GameId.WaterSort, {
+      mode: GameMode.Single,
+      difficulty: this.currentDifficulty() as string,
+      score: this.localEngine()?.moves || 0,
+      time: 0,
+      won: true
+    }).subscribe();
   }
 }

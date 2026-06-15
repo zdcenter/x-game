@@ -17,6 +17,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
 
 @Component({
   selector: 'app-drop2048',
@@ -37,7 +38,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
   templateUrl: './drop2048.component.html'
 })
 export class Drop2048Component extends BaseGameComponent implements OnInit, OnDestroy {
-  store = inject(Drop2048Store);
+  override store = inject(Drop2048Store);
   roomLifecycle!: RoomLifecycleHandle;
   private router = inject(Router);
   i18n = inject(I18nService);
@@ -47,28 +48,28 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
   getModeName(): string {
-    const mode = this.store.currentMode();
-    if (mode === 'single') return this.i18n.t('game.single_mode')();
+    const mode = this.store.currentRoomMode();
+    if (mode === GameMode.Single) return this.i18n.t('game.single_mode')();
     const key = this.gameRegistry.getModeLabel('drop2048', mode);
     return key ? this.i18n.t(key)() : mode;
   }
 
-  get playerId(): string {
-    return this.store.playerId;
+  override get playerId(): string {
+    return this.store.playerId();
   }
 
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   showRules = signal(false);
   showOverlay = signal(false);
-  currentRoomId = computed(() => this.store.roomId());
+  currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
 
   constructor() {
     super();
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'drop2048',
-      getCurrentMode: () => this.store.currentMode(),
+      getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => {
-        this.store.leaveGame();
+        this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
       },
     });
@@ -78,23 +79,19 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       const rawState = (this.store as any).rawState();
       
       untracked(() => {
-        if (this.store.currentMode() !== 'single') {
-          if (status === 'starting' && rawState?.globalStartAt) {
+        if (this.store.currentRoomMode() !== GameMode.Single) {
+          if (status === GameStatus.Starting && rawState?.globalStartAt) {
             this.view.set('play');
             this.gameTimer.startCountdown();
-            this.store.resetForPK();
-          } else if (status === 'playing') {
+          } else if (status === GameStatus.Playing) {
             this.view.set('play');
-            if (this.store.board().length === 0) {
-                this.store.spawnBlock();
-            }
-          } else if (status === 'waiting') {
+          } else if (status === GameStatus.Waiting) {
             this.view.set('room');
-          } else if (status === 'finished') {
+          } else if (status === GameStatus.Finished) {
             this.view.set('play');
           }
         } else {
-          if (status === 'playing' || status === 'finished') {
+          if (status === GameStatus.Playing || status === GameStatus.Finished) {
             this.view.set('play');
           }
         }
@@ -102,7 +99,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     });
 
     effect((onCleanup) => {
-      if (this.store.status() === 'finished') {
+      if (this.store.status() === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -121,37 +118,38 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       if (pendingCrossJoin.password) this.wsService.setPendingPassword(pendingCrossJoin.password);
       this.joinRoom(pendingCrossJoin.roomId, pendingCrossJoin.mode, pendingCrossJoin.difficulty, pendingCrossJoin.host);
     } else if (joinInfo) {
-      if (joinInfo.mode !== 'single') {
+      if (joinInfo.mode !== GameMode.Single) {
         if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
         this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
       } else {
         this.view.set('play');
+        this.store.joinRoom('single_room', GameMode.Single, GameDifficulty.Medium);
       }
     } else {
       // Create a single-player room without auto-starting
-      this.onJoinSinglePlayer('standard');
+      this.onJoinSinglePlayer(GameDifficulty.Medium);
     }
   }
 
   override ngOnDestroy() {
     super.ngOnDestroy();
-    this.store.leaveGame();
+    this.store.leaveRoom();
   }
 
   onJoinSinglePlayer(diff: any) {
     this.view.set('play');
-    this.store.joinGame('single_room', this.playerId, 'single', diff);
+    this.store.joinRoom('single_room', GameMode.Single, diff);
   }
 
   joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
     this.isMobileSidebarOpen.set(false);
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinGame(roomId, this.playerId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId);
     this.view.set('room');
   }
 
   override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
-    if (this.store.roomId() === event.roomId) return;
+    if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
   }
@@ -166,13 +164,14 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   }
 
   onLeaveClick() {
-    if (this.store.currentMode() === 'single') {
+    if (this.store.currentRoomMode() === GameMode.Single) {
+      this.store.leaveRoom();
       this.router.navigate(['/lobby']);
     } else {
-      if (this.store.host() === this.playerId) {
+      if (this.store.hostId() === this.playerId) {
         this.store.dismissRoom();
       } else {
-        this.store.leaveGame();
+        this.store.leaveRoom();
       }
       this.roomLifecycle.clearReconnectInfo();
       this.router.navigate(['/lobby']);
@@ -180,24 +179,24 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   }
 
   openChangeSettings() {
-    if (this.lobbyPanel && this.store.roomId()) {
+    if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
-        id: this.store.roomId(),
+        id: this.currentRoomId(),
         game: 'drop2048',
-        mode: this.store.currentMode(),
-        difficulty: this.store.localDifficulty(),
-        host: this.store.host()
+        mode: this.store.currentRoomMode(),
+        difficulty: '',
+        host: this.store.hostId()
       });
     }
   }
 
   getResultTitle(): string {
-    if (this.store.currentMode() === 'single') {
+    if (this.store.currentRoomMode() === GameMode.Single) {
       return 'game.game_over';
     }
     const winners = this.store.winners();
-    if (winners.includes(this.store.playerId)) return 'game.you_win';
+    if (winners.includes(this.playerId)) return 'game.you_win';
     return 'game.you_lose';
   }
 }

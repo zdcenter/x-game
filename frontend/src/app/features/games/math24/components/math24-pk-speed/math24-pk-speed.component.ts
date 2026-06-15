@@ -22,7 +22,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
             [isHost]="playerId === hostId"
             [isMe]="true"
             [stats]="[{ label: 'PROG', value: (store.players()[playerId]?.progress || 0) + '/' + totalPuzzles }]"
-            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === 'finished' ? 'finished' : 'playing')"
             [freezeCountdown]="isFrozen(store.players()[playerId]) ? getFrozenRemaining(store.players()[playerId]) : undefined"
           ></app-player-badge>
 
@@ -35,7 +35,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
                   [isHost]="kv.key === hostId"
                   [isMe]="false"
                   [stats]="[{ label: 'PROG', value: (kv.value.progress || 0) + '/' + totalPuzzles }]"
-                  [status]="isFrozen(kv.value) ? 'frozen' : (store.gameStatus() === 'finished' ? 'finished' : 'playing')"
+                  [status]="isFrozen(kv.value) ? 'frozen' : (store.status() === 'finished' ? 'finished' : 'playing')"
                   [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
                 ></app-player-badge>
               </ng-container>
@@ -79,7 +79,7 @@ export class Math24PkSpeedComponent {
   frozenRemaining = signal(0);
 
   get totalPuzzles(): number {
-    return this.store.rawState().puzzles?.length || 5;
+    return (this.store.ws.gameState() as any).puzzles?.length || 5;
   }
 
   get myProgress(): number {
@@ -91,7 +91,7 @@ export class Math24PkSpeedComponent {
       // Whenever progress changes, load the new puzzle
       const puzzle = this.store.currentPuzzle();
       if (puzzle && puzzle.cards) {
-        this.store.loadPuzzle(puzzle.cards);
+        this.store.loadMultiplayerPuzzle(puzzle.cards);
       }
     });
 

@@ -56,7 +56,7 @@
           [isHost]="store.playerId() === store.hostId()"
           [isMe]="true"
           [stats]="[{ label: 'PROG', value: (store.players()[store.playerId()]?.progress || 0) + '/81' }]"
-          [status]="store.players()[store.playerId()]?.finished ? 'finished' : 'playing'">
+          [status]="store.players()[store.playerId()]?.finished ? GameStatus.Finished : GameStatus.Playing">
         </app-player-badge>
 
         <!-- Opponents -->
@@ -69,7 +69,7 @@
                   [isHost]="player.id === store.hostId()"
                   [isMe]="false"
                   [stats]="[{ label: 'PROG', value: player.progress + '/81' }]"
-                  [status]="player.finished ? 'finished' : 'playing'">
+                  [status]="player.finished ? GameStatus.Finished : GameStatus.Playing">
                 </app-player-badge>
               }
             }

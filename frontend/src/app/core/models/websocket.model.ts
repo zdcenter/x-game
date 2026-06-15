@@ -39,8 +39,30 @@ export enum C2SAction {
   StartGame = 'start',
   /** 玩家在游戏中执行操作 (例如落子、移动) */
   Move = 'move',
-  /** 玩家主动认输 */
   Forfeit = 'forfeit',
+  /** 游戏自然结束 (死亡/过关) */
+  GameOver = 'game_over',
+  /** 对战中释放干扰/攻击 */
+  Attack = 'attack',
+  /** 游戏状态更新 (例如进度、分数等，特定游戏需要) */
+  Update = 'update',
+  /** 特定游戏：撤销 */
+  Undo = 'undo',
+  /** 特定游戏：猜数字/密码 */
+  Guess = 'guess',
+  /** 特定游戏：输入/填入 */
+  Input = 'input',
+  /** 特定游戏：进度同步 */
+  Progress = 'progress',
+  /** 特定游戏：完成/交卷 */
+  Finish = 'finish',
+  /** 特定游戏：切换/点击 */
+  Toggle = 'toggle',
+
+  /** 特定游戏：倒水 */
+  Pour = 'pour',
+  /** 特定游戏：解答 */
+  Solve = 'solve',
 
   // ===== 系统级操作 =====
   /** 客户端应用层心跳保活包 */

@@ -47,10 +47,25 @@ for (const p of paths) {
 
 xml += `</urlset>`;
 
-const outDir = path.join(__dirname, 'public');
+const outDir = path.join(__dirname, '../public');
 if (!fs.existsSync(outDir)) {
   fs.mkdirSync(outDir, { recursive: true });
 }
 
+// Write sitemap.xml
 fs.writeFileSync(path.join(outDir, 'sitemap.xml'), xml, 'utf-8');
 console.log('sitemap.xml generated successfully in public/');
+
+// Write _redirects for Cloudflare Pages SPA fallback per locale
+const redirects = `
+/en/* /en/index.html 200
+/zh/* /zh/index.html 200
+/* /index.html 200
+`.trim() + '\n';
+fs.writeFileSync(path.join(outDir, '_redirects'), redirects, 'utf-8');
+console.log('_redirects generated successfully in public/');
+
+// Write routes.txt for Angular SSG
+const routesContent = paths.map(p => `/${p}`).join('\n') + '\n';
+fs.writeFileSync(path.join(__dirname, '../routes.txt'), routesContent, 'utf-8');
+console.log('routes.txt generated successfully in root/');

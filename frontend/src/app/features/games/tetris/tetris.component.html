@@ -59,12 +59,12 @@
               [roomId]="currentRoomId()"
               [difficulty]="'medium'"
               [players]="getPlayerScores()"
-              [hostId]="store.host()"
+              [hostId]="store.hostId()"
               [currentUserId]="playerId"
               (leave)="returnToLobby()"
               (start)="store.startGame()"
               (changeSettings)="openChangeSettings()"
-        [readyPlayers]="store.gameState()?.readyPlayers || {}"
+        [readyPlayers]="store.readyPlayers() || {}"
         (kick)="store.kickPlayer($event)"
         (ready)="store.ready()"
         (cancelReady)="store.cancelReady()"
@@ -79,7 +79,7 @@
                 <!-- Local Player (You) -->
                 <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                   [playerName]="playerId"
-                  [isHost]="playerId === store.host()"
+                  [isHost]="playerId === store.hostId()"
                   [isMe]="true"
                   [score]="store.score()"
                   [stats]="[
@@ -92,7 +92,7 @@
                     <ng-template #opponentsList>
                       @for (opp of store.opponents(); track opp.id) {
                         <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" [playerName]="opp.id"
-                          [isHost]="opp.id === store.host()" [isMe]="false"
+                          [isHost]="opp.id === store.hostId()" [isMe]="false"
                           [score]="opp.score"
                           [status]="opp.finished ? 'finished' : 'playing'"></app-player-badge>
                       }
@@ -160,7 +160,7 @@
                       <div class="bg-[var(--color-bg-card)] backdrop-blur-sm rounded-xl p-2 lg:p-3 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full">
                         <div class="flex flex-col w-full text-center mb-1">
                           <div class="text-[9px] lg:text-xs font-bold text-[var(--color-text-main)] truncate w-full" [title]="opp.id">
-                            {{ opp.id === store.host() ? '👑 ' : '' }}{{ opp.id }}
+                            {{ opp.id === store.hostId() ? '👑 ' : '' }}{{ opp.id }}
                             @if (opp.finished) { <span class="text-red-500">💀</span> }
                           </div>
                         </div>
@@ -189,7 +189,7 @@
             <app-game-starting-overlay [countdown]="timerService.countdownDisplay()"></app-game-starting-overlay>
           }
 
-          @if (store.mode() === 'single' && store.status() === 'waiting') {
+          @if (store.currentRoomMode() === 'single' && store.status() === 'waiting') {
             <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl lg:rounded-2xl">
               <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,13 +213,13 @@
             <app-game-result-overlay
               currentGameId="tetris"
               [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
-              [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.mode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
+              [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.currentRoomMode() === 'single' ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
               [stats]="getOverlayStats()"
-              [showLeave]="store.mode() === 'single' || store.host() !== playerId"
-              [showRestart]="store.mode() === 'single' || store.host() === playerId"
-              [showDismiss]="store.mode() !== 'single' && store.host() === playerId"
+              [showLeave]="store.currentRoomMode() === 'single' || store.hostId() !== playerId"
+              [showRestart]="store.currentRoomMode() === 'single' || store.hostId() === playerId"
+              [showDismiss]="store.currentRoomMode() !== 'single' && store.hostId() === playerId"
               (leave)="goBack()"
-              (restart)="store.playAgain()"
+              (restart)="store.restartGame()"
               (dismiss)="dismissRoom()">
             </app-game-result-overlay>
           }

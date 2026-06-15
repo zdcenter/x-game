@@ -72,7 +72,8 @@
             "polyfills": ["@angular/localize/init"],
             "server": "src/main.server.ts",
             "prerender": {
-              "discoverRoutes": true
+              "discoverRoutes": true,
+              "routesFile": "routes.txt"
             }
           },
           "configurations": {

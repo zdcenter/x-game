@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -47,6 +48,9 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
   templateUrl: './sudoku.component.html',
   styleUrl: './sudoku.component.css'})
 export class SudokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   store = inject(SudokuStore);
   router = inject(Router);
   http = inject(HttpClient);
@@ -101,7 +105,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
-      if (joinInfo.mode !== 'single') {
+      if (joinInfo.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
       }
     }
@@ -122,7 +126,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     if (this.store.roomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
@@ -131,7 +135,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);

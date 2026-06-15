@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -46,19 +47,19 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <app-game-header
         [title]="i18n.t('lobby.sokoban')()"
-        [subtitle]="getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === 'single' ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : '')"
+        [subtitle]="getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === GameMode.Single ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : '')"
         iconGradientClass="from-amber-400 to-orange-500"
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-orange-500/20"
         headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-0"
-        (back)="onLeaveClick()"
+        (back)="showLobby.set(true)"
         (rules)="showRules.set(true)"
       >
         <div game-icon>📦</div>
 
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-            @if (store.currentRoomMode() === 'single') {
+            @if (store.currentRoomMode() === GameMode.Single) {
               <button (click)="showLobby.set(true)" 
                       class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
                 <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,7 +119,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
       @if (store.status() === 'playing' || store.status() === 'finished' || store.status() === 'starting') {
         <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full relative z-10">
           <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" 
-               [class.justify-center]="store.currentRoomMode() === 'single'">
+               [class.justify-center]="store.currentRoomMode() === GameMode.Single">
             
             <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
               [playerName]="playerId"
@@ -165,7 +166,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
              </button>
 
-             @if (store.currentRoomMode() === 'single') {
+             @if (store.currentRoomMode() === GameMode.Single) {
                <!-- Prev Level -->
                <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
                        (click)="store.prevLevel()"
@@ -196,7 +197,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
                <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
              </button>
 
-             @if (store.currentRoomMode() === 'single') {
+             @if (store.currentRoomMode() === GameMode.Single) {
                <!-- Hint -->
                <div class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center">
                  <app-hint-button layout="sokoban" (hintApplied)="applyHint()" class="w-full h-full"></app-hint-button>
@@ -237,10 +238,10 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
               { label: i18n.t('game.moves')(), value: store.myMoves() },
               { label: 'TIME', value: gameTimer.formatTime(store.timeSpent()) }
             ]"
-            [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === 'single'"
-            [showRestart]="store.currentRoomMode() === 'single' || store.hostId() === playerId"
-            [showLeave]="store.currentRoomMode() === 'single' || store.hostId() !== playerId"
-            [showDismiss]="store.currentRoomMode() !== 'single' && store.hostId() === playerId"
+            [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
+            [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
+            [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
+            [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
             (nextLevel)="handleNextLevel()"
             (restart)="handleRestart()"
             (leave)="onLeaveClick()"
@@ -256,7 +257,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
     <!-- Mobile Sidebar Overlay Backdrop -->
     @if (isMobileSidebarOpen()) {
       <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40" 
-           [class.lg:hidden]="!(store.status() === 'playing' && store.currentRoomMode() !== 'single')"
+           [class.lg:hidden]="!(store.status() === 'playing' && store.currentRoomMode() !== GameMode.Single)"
            (click)="isMobileSidebarOpen.set(false)"></div>
     }
 
@@ -293,6 +294,9 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
   `
 })
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   override store = inject(SokobanStore);
   private authStore = inject(AuthStore);
   private crossGameJoin = inject(CrossGameJoinService);
@@ -339,7 +343,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       gameId: 'sokoban',
       getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => {
-        this.store.leaveGame();
+        this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
       },
     });
@@ -352,7 +356,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     if (pendingCross) {
       if (pendingCross.password) this.wsService.setPendingPassword(pendingCross.password);
       this.store.joinRoom(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
-      if (pendingCross.mode !== 'single') {
+      if (pendingCross.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
         this.showLobby.set(false);
       }
@@ -363,12 +367,12 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-      if (pending.mode !== 'single') {
+      if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
         this.showLobby.set(false);
       }
     } else {
-      this.store.joinRoom('', 'single', 'beginner', this.playerId);
+      this.store.joinRoom('', GameMode.Single, 'beginner', this.playerId);
     }
   }
 
@@ -415,7 +419,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
       this.showLobby.set(false);
     }
@@ -423,7 +427,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
     super.handleJoinRoom(params);
-    if (params.mode !== 'single') {
+    if (params.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
       this.showLobby.set(false);
     }
@@ -435,17 +439,17 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   }
 
   getGameResult(): 'win' | 'lose' {
-    if (this.store.currentRoomMode() === 'single') return 'win';
+    if (this.store.currentRoomMode() === GameMode.Single) return 'win';
     const raw = this.wsService.gameState();
     if (!raw || !raw.winners) return 'lose';
     return raw.winners.includes(this.playerId) ? 'win' : 'lose';
   }
 
   handleRestart() {
-    if (this.store.currentRoomMode() === 'single') {
+    if (this.store.currentRoomMode() === GameMode.Single) {
       this.store.restart();
     } else {
-      this.wsService.send({ action: 'restart' });
+      this.store.restart();
     }
   }
 
@@ -460,12 +464,12 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   }
 
   onLeaveClick() {
-    this.store.leaveGame();
+    this.store.leaveRoom();
     this.router.navigate(['/lobby']);
   }
 
   override ngOnDestroy() {
     super.ngOnDestroy();
-    this.store.leaveGame();
+    this.store.leaveRoom();
   }
 }

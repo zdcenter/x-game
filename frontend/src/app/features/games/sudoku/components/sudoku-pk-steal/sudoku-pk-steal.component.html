@@ -68,7 +68,7 @@
           [isHost]="store.playerId() === store.hostId()"
           [isMe]="true"
           [score]="store.players()[store.playerId()]?.score || 0"
-          [status]="'playing'">
+          [status]="GameStatus.Playing">
         </app-player-badge>
 
         <!-- Opponents -->
@@ -81,7 +81,7 @@
                   [isHost]="player.id === store.hostId()"
                   [isMe]="false"
                   [score]="player.score"
-                  [status]="'playing'">
+                  [status]="GameStatus.Playing">
                 </app-player-badge>
               }
             }

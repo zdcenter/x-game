@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect, untracked } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { BlockStore } from './store/block.store';
@@ -15,6 +15,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 
 @Component({
   selector: 'app-block',
@@ -55,19 +56,21 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   private roomLifecycle!: RoomLifecycleHandle;
 
+  currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
+
   constructor() {
     super();
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'block',
-      getCurrentMode: () => this.store.currentMode(),
+      getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => {
-        this.store.leaveGame();
+        this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
       },
     });
 
     effect((onCleanup) => {
-      if (this.store.status() === 'finished') {
+      if (this.store.status() === GameStatus.Finished) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -83,26 +86,26 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-      if (pending.mode !== 'single') {
+      if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      if (!this.roomId() || this.roomId() === 'local') {
-        this.store.joinRoom('local', 'single', 'medium', this.playerId);
+      if (!this.currentRoomId() || this.currentRoomId() === 'local') {
+        this.store.joinRoom('local', GameMode.Single, GameDifficulty.Medium, this.playerId);
       }
     }
   }
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);
-    if (event.mode !== 'single') {
-      this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
+    if (event.mode !== GameMode.Single) {
+      this.roomLifecycle.saveReconnectInfo(this.currentRoomId() || event.name, event.mode, event.difficulty, this.playerId);
     }
   }
 
   override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
     super.handleJoinRoom(params);
-    if (params.mode !== 'single') {
+    if (params.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
   }
@@ -114,72 +117,62 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this.store.leaveGame();
+    this.store.leaveRoom();
   }
 
   getModeName() {
-    const mode = this.store.currentMode();
+    const mode = this.store.currentRoomMode();
     const key = this.gameRegistry.getModeLabel('block', mode);
     return key ? this.i18n.t(key as string)() : mode;
   }
 
   returnToLobby(): void {
-    this.store.leaveGame();
+    this.store.leaveRoom();
   }
 
   goBack(): void {
-    if (this.roomId() && this.roomId() !== 'local') {
-      this.store.leaveGame();
+    if (this.currentRoomId() && this.currentRoomId() !== 'local') {
+      this.store.leaveRoom();
     }
     history.back();
   }
 
   getDifficultyName() {
-    const diff = this.currentDifficulty();
+    const diff = this.store.currentDifficulty();
     const key = this.gameRegistry.getDifficultyLabel('block', diff);
     return key ? this.i18n.t(key as string)() : diff;
   }
 
   openChangeSettings() {
-    if (this.lobbyPanel && this.roomId()) {
+    if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
-        id: this.roomId(),
+        id: this.currentRoomId(),
         game: 'block',
-        mode: this.currentRoomMode(),
-        difficulty: this.currentDifficulty(),
-        host: this.hostId()
+        mode: this.store.currentRoomMode(),
+        difficulty: this.store.currentDifficulty(),
+        host: this.store.hostId()
       });
     }
   }
 
   changeSingleDifficulty(event: Event) {
     const select = event.target as HTMLSelectElement;
-    this.handleJoinRoom({
-      roomId: 'local', 
-      mode: 'single', 
-      difficulty: select.value, 
-      host: this.playerId
-    });
+    this.store.joinRoom('local', GameMode.Single, select.value, this.playerId);
   }
 
-  roomId() { return this.store.roomId(); }
-  currentRoomMode() { return this.store.currentMode(); }
-  currentDifficulty() { return this.store.currentDifficulty(); }
-  hostId() { return this.store.hostId(); }
-
   get isWin(): boolean {
-    if (this.store.currentMode() === 'single') return false;
-    return this.store.rawState()?.winners?.includes(this.playerId) || false;
+    if (this.store.currentRoomMode() === GameMode.Single) return false;
+    return this.store.winners().includes(this.playerId) || false;
   }
 
   get resultStatus(): 'win' | 'lose' {
-    if (this.store.currentMode() === 'single') return 'lose'; // Survival always ends in loss
+    if (this.store.currentRoomMode() === GameMode.Single) return 'lose';
     return this.isWin ? 'win' : 'lose';
   }
 
   get resultTitle(): string {
-    if (this.store.currentMode() === 'single') return this.i18n.t('game.game_over')();
+    if (this.store.currentRoomMode() === GameMode.Single) return this.i18n.t('game.game_over')();
     return this.isWin ? this.i18n.t('game.you_win')() : this.i18n.t('game.you_lose')();
   }
 
@@ -190,11 +183,11 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   getOpponentScore(oppId: string): number {
-    return this.store.rawState()?.players[oppId]?.score || 0;
+    return (this.store as any).rawState()?.players[oppId]?.score || 0;
   }
 
   getOpponentStatus(oppId: string): 'playing' | 'finished' {
-    return this.store.rawState()?.players[oppId]?.finished ? 'finished' : 'playing';
+    return (this.store as any).rawState()?.players[oppId]?.finished ? 'finished' : 'playing';
   }
 
   // --- Drag and Drop Logic ---
@@ -208,7 +201,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   dragCellGap = 4;
 
   onDragStart(event: MouseEvent | TouchEvent, shape: BlockShape, index: number) {
-    if (this.store.status() !== 'playing' || this.store.isDead()) return;
+    if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
     
     // Prevent default to avoid scrolling on touch devices
     if (event.cancelable) {

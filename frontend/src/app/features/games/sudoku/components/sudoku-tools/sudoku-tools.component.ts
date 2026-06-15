@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../../../core/models/game.model';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
@@ -11,6 +12,9 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
   templateUrl: './sudoku-tools.component.html',
   styleUrl: './sudoku-tools.component.css'})
 export class SudokuToolsComponent {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   store = inject(SudokuStore);
   i18n = inject(I18nService);
 }

@@ -1,16 +1,17 @@
 import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
-import { WebSocketService } from '../../../../core/services/websocket.service';
-import { AuthStore } from '../../../../core/auth/auth.store';
-import { GameTimerService } from '../../../../core/services/game-timer.service';
-import { AudioService } from '../../../../core/services/audio.service';
 import { HttpClient } from '@angular/common/http';
+import { AuthStore } from '../../../../core/auth/auth.store';
+import { AudioService } from '../../../../core/services/audio.service';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
+import { C2SAction } from '../../../../core/models/websocket.model';
+import { LocalMath24Engine, Math24ActionType } from './math24-engine';
 import { environment } from '../../../../../environments/environment';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
 
 export interface Math24Card {
   id: string;
   value: number;
-  expression: string; // E.g., "4", "(4+6)", etc.
+  expression: string;
   used: boolean;
 }
 
@@ -19,108 +20,91 @@ export type Operator = '+' | '-' | '*' | '/';
 @Injectable({
   providedIn: 'root'
 })
-export class Math24Store implements GameStoreInterface {
-  private ws = inject(WebSocketService);
-  private auth = inject(AuthStore);
-  private timerService = inject(GameTimerService);
+export class Math24Store extends BaseGameStore {
+  readonly gameId = GameId.Math24;
   private audio = inject(AudioService);
   private http = inject(HttpClient);
 
-  // Raw state from WebSocket
-  rawState = computed(() => this.ws.gameState() || {
-    status: 'waiting',
-    difficulty: '',
-    players: {},
-    puzzles: [],
-    puzzle: null,
-    winners: []
-  });
-
-  gameStatus = computed(() => this.rawState().status);
-  players = computed(() => this.rawState().players);
-  playersList = computed(() => {
-    const p = this.players() || {};
-    return Object.keys(p).map(id => ({ id, ...p[id] }));
-  });
-  readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
-  winners = computed(() => this.rawState()?.winners || []);
-  host = computed(() => this.rawState()?.host || '');
-
-  // GameStoreInterface required aliases
-  readonly currentRoomMode = computed(() => this.localMode() as string);
-  readonly hostId = computed(() => {
-    if (this.localMode() === 'single') return this.playerId();
-    return this.rawState()?.host || '';
-  });
-  readonly status = computed(() => {
-    if (this.localMode() === 'single') return this.localStatus() as string;
-    return (this.rawState()?.status as string) || 'waiting';
-  });
-
-  playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
+  private localEngine = signal<LocalMath24Engine | null>(null);
+  private tick = signal(0);
+  private timerInterval: any;
   
-  // Single Player Local State
-  roomId = signal<string>('');
-  private localMode = signal<'single' | 'same_pk_speed' | 'same_pk_steal'>('single');
-  private localDifficulty = signal<string>('easy');
-  private localCards = signal<Math24Card[]>([]);
-  private localHistory = signal<Math24Card[][]>([]);
-  private localTime = signal<number>(0);
-  private localStatus = signal<'waiting' | 'playing' | 'finished'>('waiting');
   localLevelIndex = signal<number>(0);
   completedLevels = signal<Record<string, number[]>>({});
-  private timerInterval: any;
+  currentPuzzleId = signal<string>('');
+  
+  override readonly status = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.status || GameStatus.Waiting;
+    }
+    const st = this.rawState() as any;
+    if (!st) return GameStatus.Waiting;
+    let status = st.status;
+    if (typeof status === 'number') {
+      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
+      status = statusMap[status] || GameStatus.Waiting;
+    }
+    return status || GameStatus.Waiting;
+  });
+
+  players = computed(() => (this.rawState() as any)?.players || {});
+
+  override readonly playersList = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [{id: this.playerId()}];
+    const p = this.players();
+    return Object.keys(p).map(id => ({ id, ...p[id] }));
+  });
+
+  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    return (this.rawState() as any)?.readyPlayers || {};
+  });
+
+  winners = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.finished ? [this.playerId()] : [];
+    }
+    return (this.rawState() as any)?.winners || [];
+  });
+
+  override readonly hostId = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
+    return (this.rawState() as any)?.host || '';
+  });
 
   freezeUntil = computed(() => {
-    if (this.currentMode() === 'single') return 0;
-    const p = this.players()?.[this.playerId()];
+    if (this.currentRoomMode() === GameMode.Single) return 0;
+    const p = this.players()[this.playerId()];
     return p?.freezeUntil || 0;
   });
 
-  constructor() {
-    effect(() => {
-      const puzzle = this.currentPuzzle();
-      const mode = this.currentMode();
-      
-      if (mode !== 'single' && puzzle && puzzle.cards) {
-        untracked(() => {
-          const id = puzzle.id || puzzle.cards;
-          if (this.currentPuzzleId() !== id) {
-            this.currentPuzzleId.set(id);
-            this.loadPuzzle(puzzle.cards);
-          }
-        });
-      }
-    });
-  }
-
-  currentMode = computed(() => {
-    return this.localMode();
-  });
-
-  currentDifficulty = computed(() => {
-    return this.localDifficulty();
-  });
-
   isFinished = computed(() => {
-    if (this.currentMode() === 'single') return this.localStatus() === 'finished';
-    return this.gameStatus() === 'finished';
+    return this.status() === GameStatus.Finished;
   });
 
   timeSpent = computed(() => {
-    if (this.currentMode() === 'single') return this.localTime();
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.timeSpent || 0;
+    }
     return 0; // Handled by PK timer usually
   });
 
-  // Current Puzzle logic
   currentPuzzle = computed(() => {
-    if (this.currentMode() === 'single') {
-      return { cards: this.localCards().map(c => c.value).join(',') };
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      const eng = this.localEngine();
+      if (!eng || eng.boardHistory.length === 0) return null;
+      return { cards: eng.boardHistory[0].map(c => c.value).join(',') };
     }
-    const state = this.rawState();
-    if (this.currentMode() === 'same_pk_steal') {
+    const state = this.rawState() as any;
+    if (!state) return null;
+    
+    if (this.currentRoomMode() === GameMode.Steal) {
       return state.puzzle;
-    } else if (this.currentMode() === 'same_pk_speed') {
+    } else if (this.currentRoomMode() === GameMode.Speed) {
       const p = state.players[this.playerId()];
       if (p && state.puzzles && p.progress < state.puzzles.length) {
         return state.puzzles[p.progress];
@@ -130,13 +114,45 @@ export class Math24Store implements GameStoreInterface {
     return null;
   });
 
-  // Gameplay Board State
+  // Multiplayer Board State (LocalEngine handles single player)
   boardCards = signal<Math24Card[]>([]);
   boardHistory = signal<Math24Card[][]>([]);
 
-  // When a new puzzle arrives, we must reset the board.
-  // In a real app we might use an effect, but we can also do it via an explicit method.
-  loadPuzzle(cardsStr: string) {
+  readonly currentBoardCards = computed<Math24Card[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.boardCards || [];
+    }
+    return this.boardCards();
+  });
+
+  readonly currentBoardHistory = computed<Math24Card[][]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.boardHistory || [];
+    }
+    return this.boardHistory();
+  });
+
+  constructor() {
+    super();
+    effect(() => {
+      const puzzle = this.currentPuzzle();
+      const mode = this.currentRoomMode();
+      
+      if (mode !== GameMode.Single && puzzle && puzzle.cards) {
+        untracked(() => {
+          const id = puzzle.id || puzzle.cards;
+          if (this.currentPuzzleId() !== id) {
+            this.currentPuzzleId.set(id);
+            this.loadMultiplayerPuzzle(puzzle.cards);
+          }
+        });
+      }
+    });
+  }
+
+  loadMultiplayerPuzzle(cardsStr: string) {
     if (!cardsStr) return;
     const vals = cardsStr.split(',').map(Number);
     const initial = vals.map((v, i) => ({
@@ -149,12 +165,16 @@ export class Math24Store implements GameStoreInterface {
     this.boardHistory.set([initial]);
   }
 
-  combineCards(c1: Math24Card, c2: Math24Card, op: Operator): Math24Card | null {
+  combineCards(c1: Math24Card, c2: Math24Card, op: Operator) {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.localEngine()?.handleAction({ type: Math24ActionType.Combine, c1, c2, op });
+      this.tick.set(this.tick() + 1);
+      return;
+    }
+
     let result = 0;
     let exp = '';
     
-    // Auto-order for subtraction/division to avoid negatives/fractions if possible, 
-    // BUT the user selected c1 then c2, so order matters.
     if (op === '+') {
       result = c1.value + c2.value;
       exp = `(${c1.expression}+${c2.expression})`;
@@ -165,7 +185,7 @@ export class Math24Store implements GameStoreInterface {
       result = c1.value * c2.value;
       exp = `(${c1.expression}*${c2.expression})`;
     } else if (op === '/') {
-      if (c2.value === 0) return null; // invalid
+      if (c2.value === 0) return;
       result = c1.value / c2.value;
       exp = `(${c1.expression}/${c2.expression})`;
     }
@@ -187,12 +207,16 @@ export class Math24Store implements GameStoreInterface {
     this.audio.playMath24('flip');
 
     if (next.length === 1) {
-      this.checkWin(next[0]);
+      this.checkMultiplayerWin(next[0]);
     }
-    return newCard;
   }
 
   undo() {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.localEngine()?.handleAction({ type: Math24ActionType.Undo });
+      this.tick.set(this.tick() + 1);
+      return;
+    }
     const history = this.boardHistory();
     if (history.length > 1) {
       history.pop();
@@ -202,47 +226,39 @@ export class Math24Store implements GameStoreInterface {
     }
   }
 
-  currentPuzzleId = signal<string>('');
+  reset() {
+    if (this.currentRoomMode() === GameMode.Single) {
+      const puzzleStr = this.currentPuzzle()?.cards;
+      if (puzzleStr) {
+        this.localEngine()?.handleAction({ type: Math24ActionType.Load, puzzle: puzzleStr });
+        this.tick.set(this.tick() + 1);
+      }
+      return;
+    }
+    const history = this.boardHistory();
+    if (history.length > 0) {
+      const initial = history[0];
+      this.boardHistory.set([initial]);
+      this.boardCards.set(initial);
+      this.audio.playMath24('flip');
+    }
+  }
 
-  checkWin(finalCard: Math24Card) {
-    // For 24 Game, we usually want exactly 24.
-    // Floating point precision issue workaround:
+  private checkMultiplayerWin(finalCard: Math24Card) {
     if (Math.abs(finalCard.value - 24) < 0.0001) {
       this.audio.playMath24('correct');
-      if (this.currentMode() === 'single') {
-        this.stopTimer();
-        this.localStatus.set('finished');
-        
-        let stars = 3;
-        if (this.localTime() > 30) stars = 2;
-        if (this.localTime() > 60) stars = 1;
-
-        if (this.auth.isAuthenticated() && this.currentPuzzleId()) {
-          this.http.post(`${environment.apiUrl}/math24/puzzle/${this.currentPuzzleId()}/finish`, {
-            time_spent: this.localTime(),
-            stars: stars
-          }).subscribe();
-        }
-      } else {
-        // Send solve to server
-        this.ws.send({
-          type: 'action',
-          action: 'solve',
-          payload: { expression: finalCard.expression, isCorrect: true }
-        });
-      }
+      this.ws.send({
+        type: 'action',
+        action: C2SAction.Solve,
+        payload: { expression: finalCard.expression, isCorrect: true }
+      });
     } else {
-      this.audio.playMath24('error'); // Error sound
-      if (this.currentMode() !== 'single') {
-        this.ws.send({
-          type: 'action',
-          action: 'solve',
-          payload: { expression: finalCard.expression, isCorrect: false }
-        });
-        // Server will freeze us
-      }
-      
-      // Auto-reset board on fail
+      this.audio.playMath24('error');
+      this.ws.send({
+        type: 'action',
+        action: C2SAction.Solve,
+        payload: { expression: finalCard.expression, isCorrect: false }
+      });
       setTimeout(() => {
         const history = this.boardHistory();
         if (history.length > 0) {
@@ -254,21 +270,41 @@ export class Math24Store implements GameStoreInterface {
     }
   }
 
-  // --- Single Player Logic ---
-  startSinglePlayer(id: string, puzzle: string, difficulty: string = 'easy', levelIndex: number = 0) {
-    this.localMode.set('single');
-    this.localDifficulty.set(difficulty);
-    this.localStatus.set('playing');
+  startSinglePlayer(id: string, puzzle: string, difficulty: string = GameDifficulty.Easy, levelIndex: number = 0) {
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(difficulty);
     this.localLevelIndex.set(levelIndex);
     this.currentPuzzleId.set(id);
-    
-    this.loadPuzzle(puzzle);
+    this.ws.disconnect(GameId.Math24);
+
+    const engine = new LocalMath24Engine();
+    engine.initGame({
+      playerId: this.playerId(),
+      puzzleId: id,
+      puzzle: puzzle,
+      onWin: () => {
+        this.audio.playMath24('correct');
+        this.stopTimer();
+        this.submitSinglePlayerStats();
+        this.tick.set(this.tick() + 1);
+      },
+      onWrong: () => {
+        this.audio.playMath24('error');
+        this.tick.set(this.tick() + 1);
+      },
+      onFlip: () => {
+        this.audio.playMath24('flip');
+        this.tick.set(this.tick() + 1);
+      }
+    });
+    this.localEngine.set(engine);
     this.startTimer();
+    this.tick.set(this.tick() + 1);
   }
 
   loadNextLevel() {
-    if (this.currentMode() !== 'single') return;
-    const diff = this.localDifficulty();
+    if (this.currentRoomMode() !== GameMode.Single) return;
+    const diff = this.currentDifficulty() as string;
     const nextIndex = this.localLevelIndex() + 1;
     this.http.get<any>(`${environment.apiUrl}/math24/levels/${diff}`).subscribe(levels => {
       if (levels && levels.length > nextIndex) {
@@ -279,8 +315,8 @@ export class Math24Store implements GameStoreInterface {
   }
 
   loadPrevLevel() {
-    if (this.currentMode() !== 'single') return;
-    const diff = this.localDifficulty();
+    if (this.currentRoomMode() !== GameMode.Single) return;
+    const diff = this.currentDifficulty() as string;
     const prevIndex = this.localLevelIndex() - 1;
     if (prevIndex < 0) return;
     this.http.get<any>(`${environment.apiUrl}/math24/levels/${diff}`).subscribe(levels => {
@@ -291,64 +327,39 @@ export class Math24Store implements GameStoreInterface {
     });
   }
 
-  startTimer() {
+  private startTimer() {
     this.stopTimer();
-    this.localTime.set(0);
     this.timerInterval = setInterval(() => {
-      this.localTime.update(t => t + 1);
+      const eng = this.localEngine();
+      if (eng && eng.status === GameStatus.Playing) {
+        eng.timeSpent++;
+        this.tick.set(this.tick() + 1);
+      }
     }, 1000);
   }
 
-  stopTimer() {
+  private stopTimer() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
   }
 
-  // --- Multi Player Logic ---
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
-    this.roomId.set(roomId);
-    this.localMode.set(mode as any);
-    this.ws.connect('math24', roomId, this.playerId(), mode, difficulty, hostId);
-  }
+  private submitSinglePlayerStats() {
+    let stars = 3;
+    const time = this.localEngine()?.timeSpent || 0;
+    if (time > 30) stars = 2;
+    if (time > 60) stars = 1;
 
-  leaveRoom() {
-    this.ws.send({ type: 'leave_game' });
-    this.roomId.set('');
-    this.localMode.set('single');
-  }
-
-  disconnectWS() {
-    this.ws.disconnect('math24');
-  }
-
-  kickPlayer(playerId: string) {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'kick_player', target: playerId });
+    if (this.auth.isAuthenticated() && this.currentPuzzleId()) {
+      this.http.post(`${environment.apiUrl}/math24/puzzle/${this.currentPuzzleId()}/finish`, {
+        time_spent: time,
+        stars: stars
+      }).subscribe();
     }
   }
 
-  ready() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'ready' });
-    }
-  }
-
-  cancelReady() {
-    if (this.currentMode() !== 'single') {
-      this.ws.send({ type: 'cancel_ready' });
-    }
-  }
-
-  startGame() {
-    this.ws.send({ action: 'start' });
-  }
-
-  dismissRoom() {
-    this.ws.send({ type: 'dismiss_room' });
-  }
-
-  restartGame() {
-    this.ws.send({ type: 'restart_game' });
+  override leaveRoom() {
+    super.leaveRoom();
+    this.stopTimer();
   }
 }

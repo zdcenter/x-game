@@ -8,7 +8,7 @@
         <!-- Header -->
         <app-game-header
           [title]="i18n.t('app.title.block')() || 'Block Puzzle'"
-          [subtitle]="store.currentMode() === 'single' ? getDifficultyName() : (getModeName() + ' / ' + getDifficultyName())"
+          [subtitle]="store.currentRoomMode() === 'single' ? getDifficultyName() : (getModeName() + ' / ' + getDifficultyName())"
           iconGradientClass="from-blue-500 to-indigo-500"
           titleGradientClass="from-blue-400 to-indigo-400"
           shadowClass="shadow-blue-500/20"
@@ -19,9 +19,9 @@
           <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🟩</div>
 
           <ng-container header-center>
-            @if (store.currentMode() === 'single') {
+            @if (store.currentRoomMode() === 'single') {
               <select class="ml-2 bg-transparent text-[var(--color-text-main)] text-sm font-bold focus:outline-none cursor-pointer hover:text-blue-400 transition-colors hidden sm:block"
-                      [value]="currentDifficulty()"
+                      [value]="store.currentDifficulty()"
                       (change)="changeSingleDifficulty($event)">
                 <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
                 <option value="medium" selected>{{ i18n.t('game.diff_medium')() }}</option>
@@ -32,7 +32,7 @@
           
           <ng-container header-right>
             <div class="flex items-center gap-1 sm:gap-2">
-              @if (store.currentMode() !== 'single') {
+              @if (store.currentRoomMode() !== 'single') {
                 <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -55,19 +55,19 @@
         <div class="flex-grow flex flex-col relative min-h-0 overflow-hidden bg-[var(--color-bg-base)] rounded-b-2xl lg:rounded-b-3xl">
 
           <!-- PK Waiting Room -->
-          @if (store.currentMode() !== 'single' && store.status() === 'waiting') {
+          @if (store.currentRoomMode() !== 'single' && store.status() === 'waiting') {
             <div class="flex-grow flex items-center justify-center p-4 min-h-0 overflow-y-auto">
               <app-game-waiting-room
                 [gameId]="'block'"
-                [mode]="currentRoomMode()"
-                [roomId]="roomId()"
-                [difficulty]="currentDifficulty()"
-                [players]="store.allPlayers()"
-                [hostId]="hostId()"
+                [mode]="store.currentRoomMode()"
+                [roomId]="currentRoomId()"
+                [difficulty]="store.currentDifficulty()"
+                [players]="store.playersList()"
+                [hostId]="store.hostId()"
                 [currentUserId]="playerId"
                 [readyPlayers]="store.readyPlayers()"
                 (start)="store.startGame()"
-                (leave)="store.leaveGame()"
+                (leave)="store.leaveRoom()"
                 (changeSettings)="openChangeSettings()"
                 (ready)="store.ready()"
                 (cancelReady)="store.cancelReady()"
@@ -77,11 +77,11 @@
           }
 
           <!-- Main Game Area -->
-          @if (store.currentMode() === 'single' || store.status() !== 'waiting') {
+          @if (store.currentRoomMode() === 'single' || store.status() !== 'waiting') {
             <!-- Players Status Bar (Moved outside game area to match Hexa) -->
             <div class="flex-none py-2 border-b border-[var(--color-border-card)] shrink-0 w-full">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentMode() === 'single'">
-                  @if (store.currentMode() === 'single') {
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === 'single'">
+                  @if (store.currentRoomMode() === 'single') {
                     <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                       [playerName]="playerId"
                       [isHost]="true"
@@ -90,13 +90,13 @@
                       [status]="store.status() === 'finished' ? 'finished' : 'playing'"
                     ></app-player-badge>
                   } @else {
-                    @for (oppId of store.players(); track oppId) {
+                    @for (opp of store.playersList(); track opp.id) {
                       <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                        [playerName]="oppId"
-                        [isHost]="oppId === hostId()"
-                        [isMe]="oppId === playerId"
-                        [score]="getOpponentScore(oppId)"
-                        [status]="getOpponentStatus(oppId)"
+                        [playerName]="opp.id"
+                        [isHost]="opp.id === store.hostId()"
+                        [isMe]="opp.id === playerId"
+                        [score]="getOpponentScore(opp.id)"
+                        [status]="getOpponentStatus(opp.id)"
                       ></app-player-badge>
                     }
                   }
@@ -140,7 +140,7 @@
                 </div>
                 
                 <!-- Spectating Overlay -->
-                @if (store.currentMode() !== 'single' && store.status() === 'playing' && store.isDead()) {
+                @if (store.currentRoomMode() !== 'single' && store.status() === 'playing' && store.isDead()) {
                   <div class="absolute inset-0 z-20 backdrop-blur-md bg-black/40 rounded-xl flex items-center justify-center">
                      <div class="text-white text-xl font-bold animate-pulse">{{ i18n.t('game.spectating')() }}</div>
                   </div>
@@ -188,12 +188,12 @@
               [status]="resultStatus"
               [title]="resultTitle"
               [stats]="resultStats"
-              [showRestart]="store.currentMode() === 'single' || (store.status() === 'finished' && hostId() === playerId)"
-              [showDismiss]="store.currentMode() !== 'single' && store.status() === 'finished' && hostId() === playerId"
-              [showLeave]="store.currentMode() !== 'single'"
-              (restart)="store.currentMode() === 'single' ? store.startLocalGame() : store.restartGame()"
+              [showRestart]="store.currentRoomMode() === 'single' || (store.status() === 'finished' && store.hostId() === playerId)"
+              [showDismiss]="store.currentRoomMode() !== 'single' && store.status() === 'finished' && store.hostId() === playerId"
+              [showLeave]="store.currentRoomMode() !== 'single'"
+              (restart)="store.currentRoomMode() === 'single' ? store.startGame() : store.restartGame()"
               (dismiss)="store.dismissRoom()"
-              (leave)="store.leaveGame()">
+              (leave)="store.leaveRoom()">
             </app-game-result-overlay>
           }
 
@@ -225,7 +225,7 @@
         #lobbyPanel
         class="flex-grow flex"
         [currentGameId]="'block'"
-        [currentRoomId]="roomId()"
+        [currentRoomId]="currentRoomId()"
         (joinRoom)="handleJoinRoom($event)"
         (createRoom)="handleCreateRoom($event)">
       </app-game-lobby-panel>

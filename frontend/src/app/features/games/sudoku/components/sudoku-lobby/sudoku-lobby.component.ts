@@ -1,4 +1,5 @@
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
+import { GameMode, GameStatus, GameDifficulty } from '../../../../../core/models/game.model';
 import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -29,6 +30,9 @@ interface LevelResponse {
   templateUrl: './sudoku-lobby.component.html',
   styleUrl: './sudoku-lobby.component.css'})
 export class SudokuLobbyComponent implements OnInit {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   private http = inject(HttpClient);
   private router = inject(Router);

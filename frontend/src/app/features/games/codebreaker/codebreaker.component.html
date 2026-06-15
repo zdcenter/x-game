@@ -10,7 +10,7 @@
     <div class="w-full">
       <app-game-header
         i18n-title="@@lobby.codebreaker" title="Codebreaker"
-        [subtitle]="currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
+        [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === 'easy' ? i18n.t('game.diff_easy')() : (currentDifficulty() === 'hard' ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
         iconGradientClass="from-teal-500 to-emerald-500"
         titleGradientClass="from-teal-400 to-emerald-400"
         shadowClass="shadow-emerald-500/20"
@@ -22,9 +22,9 @@
         <ng-container header-right>
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider hidden sm:inline">
-                {{ currentRoomMode() === 'single' ? i18n.t('gomoku.mode.single')() : i18n.t('codebreaker.game_mode_pk')() }}
+                {{ currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() : i18n.t('codebreaker.game_mode_pk')() }}
               </span>
-              @if (currentRoomMode() === 'single') {
+              @if (currentRoomMode() === GameMode.Single) {
                 <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
                 <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
                         class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
@@ -120,7 +120,7 @@
                   [ngClass]="myState()?.guesses?.length === 0 && currentInput().length === 0 ? 'text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]' : 'text-[var(--color-text-muted)]'">
               <ng-container i18n="@@codebreaker.input_hint_pre">codebreaker.input_hint_pre</ng-container><strong class="text-[var(--color-text-main)] text-sm mx-1">{{ digitLength() }}</strong><ng-container i18n="@@codebreaker.input_hint_post">codebreaker.input_hint_post</ng-container>
             </span>
-            @if (currentRoomMode() === 'single') {
+            @if (currentRoomMode() === GameMode.Single) {
               <app-hint-button layout="compact" (hintApplied)="applyHint()"></app-hint-button>
             }
           </div>
@@ -200,7 +200,7 @@
       </div>
 
       <!-- Right Panel: Opponent Progress (PK mode only) -->
-      @if (currentRoomMode() !== 'single') {
+      @if (currentRoomMode() !== GameMode.Single) {
         <div class="flex-grow lg:flex-1 min-h-[200px] lg:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
           <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
             <span class="flex items-center gap-1.5">
@@ -275,7 +275,7 @@
   <!-- Modals & Overlays -->
   <app-game-rules-modal [gameId]="'codebreaker'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
-  @if (currentRoomMode() !== 'single' && status() === 'waiting') {
+  @if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
     <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
       <app-game-waiting-room
         [gameId]="'codebreaker'"
@@ -288,7 +288,7 @@
         (start)="store.startGame()"
         (leave)="returnToLobby()"
         (changeSettings)="openChangeSettings()"
-        [readyPlayers]="store.gameState()?.readyPlayers || {}"
+        [readyPlayers]="store.readyPlayers()"
         (kick)="store.kickPlayer($event)"
         (ready)="store.ready()"
         (cancelReady)="store.cancelReady()"
@@ -298,12 +298,12 @@
   }
 
   <!-- Starting Overlay -->
-  @if (status() === 'starting') {
+  @if (status() === GameStatus.Starting) {
     <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
   }
 
   <!-- Results Overlay -->
-  @if (status() === 'finished' && showOverlay()) {
+  @if (status() === GameStatus.Finished && showOverlay()) {
     <app-game-result-overlay
       currentGameId="codebreaker"
       [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"

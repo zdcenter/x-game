@@ -39,7 +39,7 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
         </div>
 
         <!-- BEST Score -->
-        <div *ngIf="store.currentMode() === 'single'" class="flex flex-col items-end text-white/20 mt-2">
+        <div *ngIf="store.currentRoomMode() === 'single'" class="flex flex-col items-end text-white/20 mt-2">
           <span class="text-[10px] tracking-widest uppercase">BEST</span>
           <span class="text-2xl">{{ store.bestScore() }}</span>
         </div>

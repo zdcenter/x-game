@@ -1,4 +1,5 @@
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -37,6 +38,9 @@ import { SettingsService } from '../../../core/services/settings.service';
   styleUrls: ['./codebreaker.component.css']
 })
 export class CodebreakerComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -72,10 +76,10 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   myState = this.store.myState;
   opponentState = this.store.opponentState;
   winners = this.store.winners;
-  myPlayerId = this.store.myPlayerId;
+  myPlayerId = this.store.playerId;
 
   // Room state
-  currentRoomMode = signal<string>('single');
+  currentRoomMode = signal<string>(GameMode.Single);
   currentDifficulty = signal<string>('medium');
   roomId = signal<string>('');
   hostId = signal<string>('');
@@ -109,7 +113,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
     effect(() => {
       // Auto-save logic
-      if (this.currentRoomMode() !== 'single') return;
+      if (this.currentRoomMode() !== GameMode.Single) return;
       const status = this.status();
       const diff = this.currentDifficulty();
       if (status === 'playing') {
@@ -145,7 +149,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
         if (this.roomId()) {
           return;
         }
-        const mode = params['mode'] || 'single';
+        const mode = params['mode'] || GameMode.Single;
         const diff = params['difficulty'] || 'medium';
         const roomId = params['room'] || `codebreaker-${Date.now()}`;
         const host = params['host'] || roomId;
@@ -168,20 +172,14 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     
-    this.store.init(
-      mode,
-      difficulty,
-      roomId,
-      playerId,
-      host
-    );
+    this.store.joinRoom(roomId, mode, difficulty, host);
 
     // Reset local helpers on join
     this.currentInput.set('');
     this.helperMarks.set({});
     
     // Try to load save if single player
-    if (mode === 'single') {
+    if (mode === GameMode.Single) {
       try {
         const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem(`codebreaker_save_${difficulty}`) : null);
         if (saved) {
@@ -196,13 +194,13 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
       }
     }
     
-    if (mode !== 'single') {
+    if (mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
     }
   }
 
   ngOnDestroy() {
-    this.store.destroy();
+    this.store.leaveRoom();
   }
 
   returnToLobby() {
@@ -243,13 +241,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     const diff = (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
     this.currentDifficulty.set(diff);
-    this.store.init(
-      this.currentRoomMode(),
-      diff,
-      this.roomId(),
-      this.myPlayerId(),
-      this.hostId()
-    );
+    this.store.joinRoom(this.roomId(), this.currentRoomMode(), diff, this.hostId());
     this.currentInput.set('');
   }
 

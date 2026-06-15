@@ -1,4 +1,5 @@
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -26,6 +27,9 @@ import { AudioService } from '../../../core/services/audio.service';
   styleUrls: ['./gomoku.component.css']
 })
 export class GomokuComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   route = inject(ActivatedRoute);
   router = inject(Router);
@@ -48,7 +52,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
     });
 
     effect(() => {
-      const status = this.gameStatus().status;
+      const status = this.gameStatus();
       if (status === 'starting') {
         this.gameTimer.startCountdown();
       } else {
@@ -57,9 +61,9 @@ export class GomokuComponent implements OnInit, OnDestroy {
       
       // Delay result overlay so players can see the winning line
       if (status === 'finished') {
-        if (this.gameStatus().winner && this.gameStatus().winner !== 'tie') {
+        if (this.store.winner() && this.store.winner() !== 'tie') {
           this.audio.playGomoku('stoneWin');
-        } else if (this.gameStatus().winner === 'tie') {
+        } else if (this.store.winner() === 'tie') {
           this.audio.playLose(); // fallback for tie or surrender
         }
         setTimeout(() => this.showResultOverlay.set(true), 2000);
@@ -75,21 +79,21 @@ export class GomokuComponent implements OnInit, OnDestroy {
 
   // Computed state
   board = this.store.board;
-  gameStatus = this.store.gameStatus;
+  gameStatus = this.store.status;
   currentTurn = this.store.currentTurn;
   playerColors = this.store.playerColors;
-  myPlayerId = this.store.myPlayerId;
+  myPlayerId = this.store.playerId;
   lastMove = computed(() => this.store.lastMove());
   isSpectator = this.store.isSpectator;
   
   // Room state
-  currentRoomMode = signal<string>('single');
+  currentRoomMode = signal<string>(GameMode.Single);
   currentDifficulty = signal<string>('medium');
   roomId = signal<string>('');
   hostId = signal<string>('');
 
   get mappedPlayers() {
-    return this.store.players().map(p => ({ id: p }));
+    return this.store.playersList();
   }
 
   ngOnInit() {
@@ -109,7 +113,7 @@ export class GomokuComponent implements OnInit, OnDestroy {
         if (this.roomId()) {
           return;
         }
-        const mode = params['mode'] || 'single';
+        const mode = params['mode'] || GameMode.Single;
         const diff = params['difficulty'] || 'medium';
         const roomId = params['room'] || `gomoku-${Date.now()}`;
         const host = params['host'] || roomId;
@@ -133,21 +137,15 @@ export class GomokuComponent implements OnInit, OnDestroy {
 
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     
-    this.store.init(
-      mode,
-      difficulty,
-      roomId,
-      playerId,
-      host
-    );
+    this.store.joinRoom(roomId, mode, difficulty, host);
     
-    if (mode !== 'single') {
+    if (mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
     }
   }
 
   ngOnDestroy() {
-    this.store.destroy();
+    this.store.leaveRoom();
   }
 
   get isMyTurn(): boolean {
@@ -195,18 +193,17 @@ export class GomokuComponent implements OnInit, OnDestroy {
     if (diff === this.currentDifficulty()) return;
     this.currentDifficulty.set(diff);
     // Re-init the store to apply new difficulty
-    this.store.init(
+    this.store.joinRoom(
+      this.roomId(),
       this.currentRoomMode(),
       this.currentDifficulty(),
-      this.roomId(),
-      this.myPlayerId(),
       this.hostId()
     );
   }
 
   returnToLobby() {
     this.roomId.set('');
-    this.store.leaveGame();
+    this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
     this.router.navigate(['/lobby']);
   }
@@ -245,10 +242,10 @@ export class GomokuComponent implements OnInit, OnDestroy {
   }
 
   get winnerText(): string {
-    const winnerId = this.gameStatus().winner;
+    const winnerId = this.store.winner();
     if (winnerId === 'tie') return this.i18n.t('gomoku.winner.tie')();
     if (winnerId === this.myPlayerId()) return this.i18n.t('game.you_win')();
-    if (this.currentRoomMode() === 'single' && winnerId === 'AI') return this.i18n.t('game.game_over')();
+    if (this.currentRoomMode() === GameMode.Single && winnerId === 'AI') return this.i18n.t('game.game_over')();
     
     // PvP opponent wins
     const color = this.playerColors()[winnerId!] === 1 ? 'gomoku.winner.black' : 'gomoku.winner.white';

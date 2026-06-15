@@ -4,7 +4,7 @@
   <div class="flex-grow flex flex-col relative min-w-0 bg-[var(--color-bg-main)] transition-colors duration-300 overflow-y-auto overflow-x-hidden custom-scrollbar">
     
     <!-- Lobby Toggle Button (Mobile) -->
-    @if (store.currentRoomMode() !== 'single') {
+    @if (store.currentRoomMode() !== GameMode.Single) {
       <button 
         class="lg:hidden fixed bottom-6 right-6 z-50 p-4 bg-primary text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
         (click)="isMobileSidebarOpen.set(!isMobileSidebarOpen())"
@@ -51,12 +51,12 @@
         </svg>
       </div>
       <div header-center class="flex items-center gap-2">
-        @if (!isConnected() && store.currentRoomMode() !== 'single') {
+        @if (!isConnected() && store.currentRoomMode() !== GameMode.Single) {
           <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg animate-pulse border border-red-500/30 font-bold whitespace-nowrap hidden sm:inline-block">Offline</span>
         }
-        @if (store.currentRoomMode() === 'single') {
+        @if (store.currentRoomMode() === GameMode.Single) {
           <select 
-            [value]="store.localDifficulty()"
+            [value]="store.currentDifficulty()"
             (change)="changeDifficulty($event)"
             class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-md px-3 py-1 text-sm font-medium text-[var(--color-text-main)] hover:border-orange-500/50 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer appearance-none shadow-sm"
           >
@@ -78,7 +78,7 @@
       </div>
     </app-game-header>
 
-    @if (store.status() === 'waiting' && store.currentRoomMode() !== 'single') {
+    @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
       <app-game-waiting-room
         gameId="lightsout"
         [mode]="store.currentRoomMode()"
@@ -98,7 +98,7 @@
     } @else {
       
       <!-- Starting Overlay -->
-      @if (store.status() === 'starting') {
+      @if (store.status() === GameStatus.Starting) {
         <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
       }
 
@@ -106,14 +106,14 @@
         
         <!-- Players Info Row -->
         <div class="flex-none py-2 mb-2 w-full max-w-[800px] border-b border-[var(--color-border-card)]">
-          <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === 'single'">
+          <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
             <!-- Local Player -->
             <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
               [playerName]="playerId"
               [isHost]="store.hostId() === playerId"
               [isMe]="true"
               [stats]="[{ icon: '🦶', value: store.moves() }]"
-              [status]="store.isFinished() ? 'finished' : 'playing'"
+              [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"
             ></app-player-badge>
 
             <!-- Opponents -->
@@ -122,7 +122,7 @@
                 [playerName]="opp.id"
                 [isHost]="store.hostId() === opp.id"
                 [stats]="[{ icon: '💡', value: opp.remainingLights }]"
-                [status]="opp.finished ? 'finished' : 'playing'"
+                [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
               ></app-player-badge>
             }
           </div>
@@ -147,7 +147,7 @@
                     [class.ring-orange-500]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
                     [class.animate-pulse]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
                     (click)="onCellClick(rIndex, cIndex)"
-                    [disabled]="store.status() !== 'playing' || store.isFinished()"
+                    [disabled]="store.status() !== GameStatus.Playing || store.isFinished()"
                   >
                     <!-- ON State Background Layer (Animated Opacity) -->
                     <div class="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-400/30 shadow-[inset_0_0_15px_rgba(245,158,11,0.2),0_0_15px_rgba(245,158,11,0.15)] transition-opacity duration-500 ease-in-out pointer-events-none"
@@ -244,7 +244,7 @@
         </div>
 
         <!-- Single Player Actions -->
-        @if (store.currentRoomMode() === 'single') {
+        @if (store.currentRoomMode() === GameMode.Single) {
           <div class="flex-none flex justify-center items-center py-2 sm:py-4 w-full">
             <app-hint-button layout="math24" (hintApplied)="applyHint()"></app-hint-button>
           </div>
@@ -254,7 +254,7 @@
     }
 
     <!-- Game Over Overlay -->
-    @if (store.status() === 'finished' && showOverlay()) {
+    @if (store.status() === GameStatus.Finished && showOverlay()) {
       <app-game-result-overlay
         currentGameId="lightsout"
         [status]="getOverlayStatus()"
@@ -262,7 +262,7 @@
         [subtitle]="getOverlaySubtitle()"
         [stats]="getOverlayStats()"
         [showRestart]="true"
-        [showLeave]="store.currentRoomMode() !== 'single'"
+        [showLeave]="store.currentRoomMode() !== GameMode.Single"
         (restart)="store.restartGame()"
         (leave)="onLeaveClick()"
       ></app-game-result-overlay>
@@ -282,7 +282,7 @@
 <div class="w-80 border-l border-[var(--color-border-card)] bg-[var(--color-bg-card)] flex-shrink-0 transition-transform duration-300 fixed lg:static right-0 top-0 h-full z-40"
        [class.translate-x-full]="!isMobileSidebarOpen()"
        [class.lg:translate-x-0]="true"
-       [class.!hidden]="store.currentRoomMode() !== 'single' && store.status() !== 'waiting' && !isMobileSidebarOpen()">
+       [class.!hidden]="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Waiting && !isMobileSidebarOpen()">
     <app-game-lobby-panel
       #lobbyPanel
       currentGameId="lightsout"

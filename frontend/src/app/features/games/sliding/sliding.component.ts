@@ -6,12 +6,12 @@ import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { SlidingStore } from './store/sliding.store';
 import { SlidingActionType } from './store/sliding-engine';
-import { GameStatus, GameMode, GameResult, GameResultType, GameId } from '../../../core/models/game.model';
+import { GameMode, GameStatus, GameDifficulty, GameId, GameResult, GameResultType } from '../../../core/models/game.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameLobbyPanelComponent, GameDifficulty } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -32,6 +32,9 @@ import { SlidingTutorialComponent } from './components/sliding-tutorial/sliding-
   styleUrls: ['./sliding.component.scss']
 })
 export class SlidingComponent extends BaseGameComponent {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(SlidingStore);
   private authStore = inject(AuthStore);

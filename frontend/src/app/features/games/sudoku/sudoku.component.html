@@ -90,7 +90,7 @@
                       { icon: '⏱️', value: store.isFinished() ? gameTimer.formatTime(store.timeSpent()) : gameTimer.formatTime(store.timeSpent()), colorClass: !store.isFinished() ? 'text-pink-400' : '' },
                       (store.bestTime() > 0 ? { icon: '👑', value: gameTimer.formatTime(store.bestTime()), label: 'BEST' } : $any(null))
                     ]"
-                    [status]="store.isFinished() ? 'finished' : 'playing'"></app-player-badge>
+                    [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
                 </div>
               </div>
             </div>
@@ -98,7 +98,7 @@
             <div class="flex-grow flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-start md:justify-center md:content-start items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto">
 
 
-              <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-280px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === 'single'">
+              <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-280px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === GameMode.Single">
                 <app-sudoku-board class="w-full"></app-sudoku-board>
               </div>
 
@@ -112,7 +112,7 @@
             </div>
 
             <!-- Victory Overlay -->
-            @if (store.isFinished() && store.currentRoomMode() === 'single' && showOverlay()) {
+            @if (store.isFinished() && store.currentRoomMode() === GameMode.Single && showOverlay()) {
               <app-game-result-overlay
                 currentGameId="sudoku"
                 [status]="'win'"

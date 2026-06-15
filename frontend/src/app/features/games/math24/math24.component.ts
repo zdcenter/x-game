@@ -1,3 +1,4 @@
+import { GameMode, GameStatus, GameDifficulty } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -40,6 +41,9 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
   templateUrl: './math24.component.html'
 })
 export class Math24Component extends BaseGameComponent implements OnInit, OnDestroy {
+  GameMode = GameMode;
+  GameStatus = GameStatus;
+  GameDifficulty = GameDifficulty;
   store = inject(Math24Store);
   private authStore = inject(AuthStore);
   private roomLifecycle!: RoomLifecycleHandle;
@@ -62,7 +66,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     super();
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'math24',
-      getCurrentMode: () => this.store.currentMode(),
+      getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => {
         this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
@@ -70,8 +74,8 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     });
     
     effect((onCleanup) => {
-      const status = this.store.gameStatus();
-      if (this.store.currentMode() !== 'single') {
+      const status = this.store.status();
+      if (this.store.currentRoomMode() !== GameMode.Single) {
         if (status === 'starting') {
           untracked(() => {
             this.view.set('play');
@@ -94,7 +98,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
         }
       }
       
-      const isFin = this.store.isFinished() || this.store.gameStatus() === 'finished';
+      const isFin = this.store.isFinished() || this.store.status() === 'finished';
       if (isFin) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
@@ -111,7 +115,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
-      if (joinInfo.mode !== 'single') {
+      if (joinInfo.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
       }
       this.view.set('room');
@@ -121,7 +125,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   override ngOnDestroy() {
     super.ngOnDestroy();
     if (this.countdownInterval) clearInterval(this.countdownInterval);
-    this.store.disconnectWS();
+    this.store.leaveRoom();
   }
 
   returnToLobby() {
@@ -135,27 +139,27 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       this.lobbyPanel.openUpdateRoomModal({
         id: this.store.roomId(),
         game: 'math24',
-        mode: this.store.currentMode(),
+        mode: this.store.currentRoomMode(),
         difficulty: this.store.currentDifficulty(),
-        host: this.store.host()
+        host: this.store.hostId()
       });
     }
   }
 
   getGameResultStatus(): 'win' | 'lose' {
-    if (this.store.currentMode() === 'single') return 'win';
+    if (this.store.currentRoomMode() === GameMode.Single) return 'win';
     const isWinner = this.store.winners().includes(this.playerId);
     return isWinner ? 'win' : 'lose';
   }
 
   getGameResultTitle(): string {
-    if (this.store.currentMode() === 'single') return this.i18n.t('game.win')();
+    if (this.store.currentRoomMode() === GameMode.Single) return this.i18n.t('game.win')();
     const isWinner = this.store.winners().includes(this.playerId);
     return isWinner ? this.i18n.t('game.win')() : this.i18n.t('game.lose')();
   }
 
   getStats(): { label?: string; icon?: string; value: string | number }[] {
-    if (this.store.currentMode() === 'single') {
+    if (this.store.currentRoomMode() === GameMode.Single) {
       const time = this.store.timeSpent();
       const formatTime = (secs: number) => {
         const m = Math.floor(secs / 60);
@@ -169,7 +173,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     }
     const myPlayer = this.store.players()[this.playerId];
     if (myPlayer) {
-      if (this.store.currentMode() === 'same_pk_steal') {
+      if (this.store.currentRoomMode() === 'same_pk_steal') {
         return [{ label: 'Score', value: myPlayer.score || 0 }];
       } else {
         return [{ label: 'Solved', value: myPlayer.progress || 0 }];
@@ -183,7 +187,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   }
 
   playAgain() {
-    if (this.store.currentMode() === 'single') {
+    if (this.store.currentRoomMode() === GameMode.Single) {
       this.playNextLevel();
     } else {
       this.store.restartGame();
@@ -197,7 +201,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);
-    if (event.mode !== 'single') {
+    if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
     }
     this.view.set("room");
@@ -205,7 +209,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
     super.handleJoinRoom(params);
-    if (params.mode !== 'single') {
+    if (params.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
     this.view.set('room');

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
@@ -40,8 +41,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   readonly COLS = TETRIS_COLS;
   readonly ROWS = TETRIS_ROWS;
   readonly COLORS = TETROMINO_COLORS;
-
-  currentRoomMode = this.store.mode;
+  currentRoomMode = this.store.currentRoomMode;
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
   showRules = signal(false);
   showOverlay = signal(false);
@@ -243,7 +243,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   goBack(): void {
     if (this.currentRoomId()) {
-      if (this.store.host() === this.playerId) {
+      if (this.store.hostId() === this.playerId) {
         this.dismissRoom();
       } else {
         this.store.leaveRoom();
@@ -277,7 +277,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         game: 'tetris',
         mode: this.currentRoomMode(),
         difficulty: '',
-        host: this.store.host()
+        host: this.store.hostId()
       });
     }
   }

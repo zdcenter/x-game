@@ -115,7 +115,9 @@ export interface GameDifficulty {
                           <div class="flex items-center gap-2">
                             <span class="text-xs text-slate-400">{{ room.players }} {{ t('game.players_count') }}</span>
                             @if (currentRoomId === room.id) {
-                              <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed ml-2">{{ t('game.joined') }}</button>
+                              <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">
+                                {{ t('game.rejoin') || 'Rejoin' }}
+                              </button>
                             } @else {
                               <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity ml-2">{{ t('game.join') }}</button>
                             }
@@ -181,11 +183,15 @@ export interface GameDifficulty {
                         <div class="flex items-center gap-2">
                           <span class="text-xs text-slate-400">{{ room.players }} {{ t('game.players_count') }}</span>
                           @if (currentRoomId === room.id) {
-                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.joined') }}</button>
-                          } @else if (room.status === 'waiting') {
-                            <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">{{ room.hasPassword ? '🔒 ' + t('game.join') : t('game.join') }}</button>
+                            <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">
+                              {{ t('game.rejoin') || 'Rejoin' }}
+                            </button>
+                          } @else if (room.status === 'waiting' || room.status === 'playing') {
+                            <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)" class="px-3 py-1 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded shadow hover:opacity-80 transition-opacity">
+                              {{ room.status === 'playing' ? (t('game.rejoin') || 'Rejoin') : (room.hasPassword ? '🔒 ' + t('game.join') : t('game.join')) }}
+                            </button>
                           } @else {
-                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.started') }}</button>
+                            <button disabled class="px-3 py-1 bg-[var(--color-bg-card)] opacity-50 text-inherit text-xs font-bold rounded shadow cursor-not-allowed">{{ t('game.finished') || 'Finished' }}</button>
                           }
                         </div>
                       </div>

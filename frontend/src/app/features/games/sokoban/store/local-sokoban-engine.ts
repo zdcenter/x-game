@@ -1,39 +1,72 @@
-export class LocalSokobanEngine {
+import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
+import { GameStatusType, GameStatus } from '../../../../core/models/game.model';
+
+export enum SokobanActionType {
+  Move = 'move',
+  Undo = 'undo',
+  Restart = 'restart_game'
+}
+
+export type SokobanAction = 
+  | { type: SokobanActionType.Move, dir: 'up' | 'down' | 'left' | 'right' }
+  | { type: SokobanActionType.Undo }
+  | { type: SokobanActionType.Restart };
+
+export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
   board: string[][] = [];
   history: string[][][] = [];
   moves: number = 0;
   timeSpent: number = 0;
-  status: 'playing' | 'finished' = 'playing';
-  difficulty: string;
-
-  levelStr: string;
-
-  levelId: string;
+  status: GameStatusType = GameStatus.Playing;
+  difficulty: string = 'beginner';
+  levelStr: string = '';
+  levelId: string = '';
   onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void;
 
-  constructor(levelId: string, difficulty: string, levelStr: string, existingData?: any, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void) {
-    this.levelId = levelId;
-    this.difficulty = difficulty;
-    this.levelStr = levelStr;
-    this.onSound = onSound;
-    this.levelStr = levelStr;
+  constructor(levelId?: string, difficulty?: string, levelStr?: string, existingData?: any, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void) {
+    if (levelId) this.levelId = levelId;
+    if (difficulty) this.difficulty = difficulty;
+    if (levelStr) this.levelStr = levelStr;
+    if (onSound) this.onSound = onSound;
     
-    if (existingData && existingData.levelStr === levelStr) {
+    if (existingData && existingData.levelStr === this.levelStr) {
       this.board = existingData.board;
       this.history = existingData.history || [];
       this.moves = existingData.moves || 0;
       this.timeSpent = existingData.timeSpent || 0;
-      this.status = existingData.status || 'playing';
-    } else {
+      this.status = existingData.status || GameStatus.Playing;
+    } else if (this.levelStr) {
       this.initBoard();
+    }
+  }
+
+  initGame(config: { levelId: string, difficulty: string, levelStr: string, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void }) {
+    this.levelId = config.levelId;
+    this.difficulty = config.difficulty;
+    this.levelStr = config.levelStr;
+    this.onSound = config.onSound;
+    this.initBoard();
+  }
+
+  getState() {
+    return this;
+  }
+
+  handleAction(action: SokobanAction) {
+    if (action.type === SokobanActionType.Restart) {
+      this.restart();
+    } else if (action.type === SokobanActionType.Undo) {
+      this.undo();
+    } else if (action.type === SokobanActionType.Move) {
+      this.move(action.dir);
     }
   }
 
   private parseLevel(levelStr: string): string[][] {
     levelStr = levelStr.replace(/\r/g, '');
     const lines = levelStr.split('\n');
-    if (lines[0] === '') lines.shift(); // Remove first empty line if exists
-    if (lines[lines.length - 1] === '') lines.pop(); // Remove last empty line if exists
+    if (lines[0] === '') lines.shift(); 
+    if (lines[lines.length - 1] === '') lines.pop();
 
     let maxLen = 0;
     for (const line of lines) {
@@ -43,9 +76,7 @@ export class LocalSokobanEngine {
     const board: string[][] = [];
     for (const line of lines) {
       let padded = line;
-      while (padded.length < maxLen) {
-        padded += ' ';
-      }
+      while (padded.length < maxLen) padded += ' ';
       board.push(padded.split(''));
     }
     return board;
@@ -60,7 +91,7 @@ export class LocalSokobanEngine {
     this.history = [];
     this.moves = 0;
     this.timeSpent = 0;
-    this.status = 'playing';
+    this.status = GameStatus.Playing;
   }
 
   restart() {
@@ -69,7 +100,7 @@ export class LocalSokobanEngine {
   }
 
   undo() {
-    if (this.status === 'finished') return;
+    if (this.status === GameStatus.Finished) return;
     if (this.history.length > 0) {
       const lastBoard = this.history.pop();
       if (lastBoard) {
@@ -81,7 +112,7 @@ export class LocalSokobanEngine {
   }
 
   move(dir: 'up' | 'down' | 'left' | 'right') {
-    if (this.status === 'finished') return;
+    if (this.status === GameStatus.Finished) return;
 
     let pr = -1, pc = -1;
     for (let r = 0; r < this.board.length; r++) {
@@ -180,13 +211,13 @@ export class LocalSokobanEngine {
       if (!win) break;
     }
     if (win) {
-      this.status = 'finished';
+      this.status = GameStatus.Finished;
       (typeof localStorage !== 'undefined' && localStorage.removeItem('sokoban_save'));
     }
   }
 
   applyHint(): { success: boolean; message: string } {
-    if (this.status === 'finished') return { success: false, message: 'game.no_hint_available' };
+    if (this.status === GameStatus.Finished) return { success: false, message: 'game.no_hint_available' };
 
     for (let r = 1; r < this.board.length - 1; r++) {
       for (let c = 1; c < this.board[r].length - 1; c++) {
@@ -206,7 +237,7 @@ export class LocalSokobanEngine {
   }
 
   saveToStorage() {
-    if (this.status === 'finished') {
+    if (this.status === GameStatus.Finished) {
       (typeof localStorage !== 'undefined' && localStorage.removeItem('sokoban_save'));
       return;
     }
@@ -230,16 +261,10 @@ export class LocalSokobanEngine {
     try {
       const data = JSON.parse(saved);
       if (!data.levelStr) return null;
+      if (levelId && data.levelId && data.levelId !== levelId) return null;
       
-      // If a specific levelId was requested, and it doesn't match the saved one, return null
-      if (levelId && data.levelId && data.levelId !== levelId) {
-        return null;
-      }
-      
-      // If no levelId was requested, use the saved one
       const targetLevelId = levelId || data.levelId;
 
-      // Migrate legacy difficulties
       if (data.difficulty === 'easy') data.difficulty = 'beginner';
       if (data.difficulty === 'medium') data.difficulty = 'intermediate';
       if (data.difficulty === 'hard') data.difficulty = 'advanced';

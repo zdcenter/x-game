@@ -12,11 +12,11 @@
     } @else if (view() === 'room') {
       <app-game-waiting-room 
         [gameId]="'math24'"
-        [mode]="store.currentMode()"
+        [mode]="store.currentRoomMode()"
         [roomId]="store.roomId()" [difficulty]="'medium'"
         [players]="store.playersList()"
         [currentUserId]="playerId"
-        [hostId]="store.host()"
+        [hostId]="store.hostId()"
         [readyPlayers]="store.readyPlayers()"
         (start)="store.startGame()"
         (leave)="returnToLobby()"
@@ -27,7 +27,7 @@
       </app-game-waiting-room>
     } @else {
       <div class="flex-1 flex flex-col relative w-full h-full bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
-        <ng-container *ngIf="store.currentMode() === 'single'; else pkHeader">
+        <ng-container *ngIf="store.currentRoomMode() === GameMode.Single; else pkHeader">
         <app-game-header 
           i18n-title="@@lobby.math24" title="lobby.math24"
           i18n-subtitle="@@game.single_mode" subtitle="game.single_mode"
@@ -53,12 +53,12 @@
       <ng-template #pkHeader>
         <app-game-header 
           i18n-title="@@lobby.math24" title="lobby.math24"
-          [subtitle]="store.currentMode() === 'same_pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
+          [subtitle]="store.currentRoomMode() === 'same_pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
           iconGradientClass="from-blue-500 to-indigo-600"
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
           headerBgClass="bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
-          (back)="returnToLobby()"
+          (back)="view.set('lobby')"
           (rules)="showRules.set(true)">
           <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🃏</div>
           <div header-right class="flex items-center gap-2">
@@ -81,28 +81,28 @@
             [status]="getGameResultStatus()"
             [title]="getGameResultTitle()"
             [stats]="getStats()"
-            [showLeave]="store.currentMode() === 'single' || store.host() !== playerId"
-            [showNextLevel]="store.currentMode() === 'single'"
-            [showRestart]="store.currentMode() === 'single' || store.host() === playerId"
-            [showDismiss]="store.currentMode() !== 'single' && store.host() === playerId"
+            [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
+            [showNextLevel]="store.currentRoomMode() === GameMode.Single"
+            [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
+            [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
             (leave)="view.set('lobby')"
             (nextLevel)="playNextLevel()"
-            (restart)="store.currentMode() === 'single' ? playNextLevel() : store.restartGame()">
+            (restart)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()">
           </app-game-result-overlay>
         }
 
         <!-- PK Steal Mode -->
-        <ng-container *ngIf="store.currentMode() === 'same_pk_steal' && store.gameStatus() !== 'waiting'">
-          <app-math24-pk-steal [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-steal>
+        <ng-container *ngIf="store.currentRoomMode() === 'same_pk_steal' && store.status() !== GameStatus.Waiting">
+          <app-math24-pk-steal [playerId]="playerId" [hostId]="store.hostId()"></app-math24-pk-steal>
         </ng-container>
 
         <!-- PK Speed Mode -->
-        <ng-container *ngIf="store.currentMode() === 'same_pk_speed' && store.gameStatus() !== 'waiting'">
-          <app-math24-pk-speed [playerId]="playerId" [hostId]="store.host()"></app-math24-pk-speed>
+        <ng-container *ngIf="store.currentRoomMode() === 'same_pk_speed' && store.status() !== GameStatus.Waiting">
+          <app-math24-pk-speed [playerId]="playerId" [hostId]="store.hostId()"></app-math24-pk-speed>
         </ng-container>
 
         <!-- Single Player Mode -->
-        <ng-container *ngIf="store.currentMode() === 'single'">
+        <ng-container *ngIf="store.currentRoomMode() === GameMode.Single">
           <!-- Local Player (You) -->
           <div class="flex-none py-2 border-b border-[var(--color-border-card)] shrink-0 w-full mb-4 mt-[-8px]">
             <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 justify-center">
@@ -113,14 +113,14 @@
                 [stats]="[
                   { icon: '⏱️', value: store.timeSpent() + 's', colorClass: store.isFinished() ? '' : 'text-pink-400' }
                 ]"
-                [status]="store.isFinished() ? 'finished' : 'playing'"></app-player-badge>
+                [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
             </div>
           </div>
           <app-math24-board></app-math24-board>
         </ng-container>
 
         <!-- Starting Overlay -->
-        @if (store.gameStatus() === 'starting') {
+        @if (store.status() === GameStatus.Starting) {
           <app-game-starting-overlay [countdown]="startingCountdown()"></app-game-starting-overlay>
         }
       </div>

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { HexaStore } from './store/hexa.store';
-import { GameStatus } from '../../../core/models/game.model';
+import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
@@ -98,7 +98,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     effect(() => {
       if (this.currentRoomMode() === 'single') {
         if (!this.store.loadSinglePlayer()) {
-          this.store.startSinglePlayer();
+          this.store.startGame();
         }
       }
     });
@@ -106,13 +106,13 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     // Handle PK Start countdown
     effect((onCleanup) => {
       const status = this.store.status();
-      if (status === GameStatus.Starting) {
+      if (status === 'starting') {
         this.gameTimer.startCountdown();
       } else {
         this.gameTimer.stopCountdown();
       }
       
-      if (status === GameStatus.Finished || this.store.gameOver()) {
+      if (status === 'finished' || this.store.gameOver()) {
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -164,7 +164,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     // 触发并恢复音频上下文，因为这是用户的明确交互
     this.audioService.initAudio();
 
-    if (this.store.gameOver() || (this.currentRoomMode() !== 'single' && this.store.status() !== GameStatus.Playing)) return;
+    if (this.store.gameOver() || (this.currentRoomMode() !== 'single' && this.store.status() !== 'playing')) return;
     
     event.preventDefault();
     this.isDragging = true;
@@ -269,7 +269,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   }
 
   currentRoomMode(): string {
-    return this.store.currentMode();
+    return this.store.currentRoomMode();
   }
 
   currentRoomId(): string {
@@ -297,7 +297,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
         game: 'hexa',
         mode: this.currentRoomMode(),
         difficulty: '',
-        host: this.store.host()
+        host: this.store.hostId()
       });
     }
   }

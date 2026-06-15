@@ -1,120 +1,130 @@
-import { signal, computed, inject, effect } from '@angular/core';
-import { WebSocketService } from '../../../../core/services/websocket.service';
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
-import { GomokuAI, GomokuColor } from './gomoku-ai';
-import { AuthStore } from '../../../../core/auth/auth.store';
-import { GameStoreInterface } from '../../../../core/interfaces/game-store.interface';
+import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { LocalGomokuEngine, GomokuActionType } from './gomoku-engine';
+import { GomokuColor } from './gomoku-ai';
+import { GameMode, GameStatus, GameDifficulty, GameId, GameStatusType } from '../../../../core/models/game.model';
+import { C2SAction } from '../../../../core/models/websocket.model';
 
-export interface GameStatus {
-  status: 'waiting' | 'starting' | 'playing' | 'finished';
-  winner?: string; // Player ID
-}
+@Injectable()
+export class GomokuStore extends BaseGameStore {
+  readonly gameId = GameId.Gomoku;
 
-export class GomokuStore implements GameStoreInterface {
-  private ws = inject(WebSocketService);
-  gameState = computed(() => this.ws.gameState());
   private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
-  private auth = inject(AuthStore);
 
   private emptyBoard = this.createEmptyBoard();
 
-  // Raw State from WebSocket
-  private rawState = computed(() => this.ws.gameState());
-
-  // Single Player Mode local signals
-  private localBoard = signal<GomokuColor[][]>(this.createEmptyBoard());
-  private localCurrentTurn = signal<string>('');
-  private localPlayerColors = signal<Record<string, GomokuColor>>({});
-  private localGameStatus = signal<GameStatus>({ status: 'waiting' });
-  private localPlayers = signal<string[]>([]);
-  private localLastMove = signal<number[] | null>(null);
-  private localWinningLine = signal<number[][] | null>(null);
+  // Local state for single player mode
+  private localEngine = signal<LocalGomokuEngine | null>(null);
+  private tick = signal(0); // Trigger reactivity for engine mutations
 
   // Public computed states (reactive derivation from ws state or local state)
   board = computed<GomokuColor[][]>(() => {
-    if (this.singlePlayerMode) return this.localBoard();
-    return this.rawState()?.board || this.emptyBoard;
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      const eng = this.localEngine();
+      return eng ? eng.board : this.emptyBoard;
+    }
+    return (this.rawState() as any)?.board || this.emptyBoard;
   });
 
   currentTurn = computed<string>(() => {
-    if (this.singlePlayerMode) return this.localCurrentTurn();
-    return this.rawState()?.currentTurn || '';
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.currentTurn || '';
+    }
+    return (this.rawState() as any)?.currentTurn || '';
   });
 
   lastMove = computed<number[] | null>(() => {
-    if (this.singlePlayerMode) return this.localLastMove();
-    return this.rawState()?.lastMove || null;
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.lastMove || null;
+    }
+    return (this.rawState() as any)?.lastMove || null;
   });
 
   winningLine = computed<number[][] | null>(() => {
-    if (this.singlePlayerMode) return this.localWinningLine();
-    return this.rawState()?.winningLine || null;
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.winningLine || null;
+    }
+    return (this.rawState() as any)?.winningLine || null;
   });
 
   playerColors = computed<Record<string, GomokuColor>>(() => {
-    if (this.singlePlayerMode) return this.localPlayerColors();
-    return this.rawState()?.playerColors || {};
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.playerColors || {};
+    }
+    return (this.rawState() as any)?.playerColors || {};
   });
 
-  gameStatus = computed<GameStatus>(() => {
-    if (this.singlePlayerMode) return this.localGameStatus();
-    const st = this.rawState();
-    if (!st) return { status: 'waiting' };
+  override readonly status = computed<GameStatusType | string>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.status || GameStatus.Waiting;
+    }
+    const st = this.rawState() as any;
+    if (!st) return GameStatus.Waiting;
     
     let status = st.status;
     if (typeof status === 'number') {
-      const statusMap: any[] = ['waiting', 'starting', 'playing', 'finished'];
-      status = statusMap[status] || 'waiting';
+      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
+      status = statusMap[status] || GameStatus.Waiting;
     }
-    return { status: status || 'waiting', winner: st.winner };
+    return status || GameStatus.Waiting;
   });
 
-  players = computed<string[]>(() => {
-    if (this.singlePlayerMode) return this.localPlayers();
-    const st = this.rawState();
+  readonly winner = computed<string | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.winner;
+    }
+    return (this.rawState() as any)?.winner;
+  });
+
+  override readonly hostId = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
+    return (this.rawState() as any)?.host || '';
+  });
+
+  override readonly playersList = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return (this.localEngine()?.players || []).map(id => ({ id }));
+    }
+    const st = this.rawState() as any;
     if (!st || !st.players) return [];
     if (Array.isArray(st.players)) {
-      return st.players;
+      return st.players.map((id: string) => ({ id }));
     } else {
-      return Object.keys(st.players);
+      return Object.keys(st.players).map(id => ({ id }));
     }
   });
 
   isSpectator = computed<boolean>(() => {
-    const p = this.players();
-    const myId = this.myPlayerId();
+    if (this.currentRoomMode() === GameMode.Single) return false;
+    const p = this.playersList().map(pl => pl.id);
+    const myId = this.playerId();
     if (!myId || p.length === 0) return false;
     return !p.includes(myId);
   });
 
-  myPlayerId = signal<string>('');
-  
-  // GameStoreInterface aliases
-  readonly currentRoomMode = computed(() => this.singlePlayerMode ? 'single' : (this.rawState() as any)?.mode || 'single');
-  readonly roomId = signal<string>('');
-  readonly hostId = computed(() => {
-    if (this.singlePlayerMode) return this.myPlayerId();
-    return (this.rawState() as any)?.host || '';
+  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    return (this.rawState() as any)?.readyPlayers || {};
   });
-  readonly playersList = computed<any[]>(() => {
-    return this.players().map(id => ({ id }));
-  });
-  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
-  readonly status = computed<string>(() => this.gameStatus().status);
-
-  // Single Player AI
-  private ai: GomokuAI | null = null;
-  public singlePlayerMode = false;
-  private aiDifficulty = 'medium';
 
   constructor() {
+    super();
     // Play drop sound on moves in multiplayer mode
     let lastTurn = '';
     effect(() => {
-      const state = this.rawState();
-      if (state && state.board && this.gameStatus().status === 'playing') {
+      const state = this.rawState() as any;
+      if (this.currentRoomMode() !== GameMode.Single && state && state.board && this.status() === GameStatus.Playing) {
         const turn = state.currentTurn || '';
         if (lastTurn && turn && turn !== lastTurn) {
           this.audio.playGomoku('stoneDrop');
@@ -132,210 +142,69 @@ export class GomokuStore implements GameStoreInterface {
     return b;
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
-    this.roomId.set(roomId);
-    const playerId = this.auth.currentUser()?.username || this.auth.guestId;
-    this.myPlayerId.set(playerId);
-    this.singlePlayerMode = mode === 'single';
-    this.aiDifficulty = difficulty;
-    
-    if (this.singlePlayerMode) {
-      this.localBoard.set(this.createEmptyBoard());
-      this.localGameStatus.set({ status: 'playing' });
-      this.localPlayers.set([playerId, 'AI']);
-      // In single player, player is always Black (1), AI is White (2)
-      this.localPlayerColors.set({
-        [playerId]: 1,
-        'AI': 2
-      });
-      this.localCurrentTurn.set(playerId); // Black always goes first
-      this.ai = new GomokuAI(2, this.aiDifficulty);
-    } else {
-      const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
-      this.ws.connect('gomoku', roomId, playerId, mode, difficulty, cleanHostId);
-    }
-  }
+  startLocalGame(difficulty: string = GameDifficulty.Medium) {
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(difficulty);
+    this.ws.disconnect(GameId.Gomoku);
 
-  /** @deprecated Use joinRoom() instead */
-  init(mode: string, difficulty: string, roomId: string, playerId: string, hostId: string) {
-    this.joinRoom(roomId, mode, difficulty, hostId);
-  }
-
-  destroy() {
-    if (!this.singlePlayerMode) {
-      this.ws.disconnect('gomoku');
-    }
-  }
-
-  startGame() {
-    if (this.singlePlayerMode) {
-      this.localBoard.set(this.createEmptyBoard());
-      this.localGameStatus.set({ status: 'playing', winner: undefined });
-      this.localCurrentTurn.set(this.myPlayerId());
-      this.localLastMove.set(null);
-      this.localWinningLine.set(null);
-      if (this.ai) {
-        this.ai = new GomokuAI(2, this.aiDifficulty);
+    const engine = new LocalGomokuEngine();
+    engine.initGame({
+      playerId: this.playerId(),
+      difficulty: difficulty,
+      onAiMove: () => {
+        this.audio.playGomoku('stoneDrop');
+        this.tick.set(this.tick() + 1);
+      },
+      onGameOver: (win: boolean) => {
+        this.submitSinglePlayerStats(win);
+        this.tick.set(this.tick() + 1);
       }
-    } else {
-      this.ws.send({ action: 'start' });
-    }
+    });
+    this.localEngine.set(engine);
+    this.tick.set(this.tick() + 1);
   }
 
-  restartGame() {
-    this.startGame();
+  override startGame() {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.startLocalGame(this.currentDifficulty() as string);
+    } else {
+      super.startGame();
+    }
   }
 
   surrender() {
-    if (this.singlePlayerMode) {
-      this.localGameStatus.set({ status: 'finished', winner: 'AI' });
+    if (this.currentRoomMode() === GameMode.Single) {
+      const engine = this.localEngine();
+      if (engine) {
+        engine.handleAction({ type: GomokuActionType.Surrender });
+        this.tick.set(this.tick() + 1);
+      }
     } else {
-      this.ws.send({ action: 'forfeit' });
-    }
-  }
-
-  leaveRoom() {
-    if (!this.singlePlayerMode) {
-      this.ws.send({ type: 'leave_game' });
-      this.ws.disconnect('gomoku');
-    }
-    this.roomId.set('');
-  }
-
-  /** @deprecated Use leaveRoom() instead */
-  leaveGame() {
-    this.leaveRoom();
-  }
-
-  dismissRoom() {
-    if (!this.singlePlayerMode) {
-      this.ws.send({ type: 'dismiss_room' });
-    }
-  }
-
-  kickPlayer(playerId: string) {
-    if (!this.singlePlayerMode) {
-      this.ws.send({ type: 'kick_player', target: playerId });
-    }
-  }
-
-  ready() {
-    if (!this.singlePlayerMode) {
-      this.ws.send({ type: 'ready' });
-    }
-  }
-
-  cancelReady() {
-    if (!this.singlePlayerMode) {
-      this.ws.send({ type: 'cancel_ready' });
+      this.ws.send({ action: C2SAction.Forfeit });
     }
   }
 
   makeMove(y: number, x: number) {
-    if (this.gameStatus().status !== 'playing') return;
-    if (this.currentTurn() !== this.myPlayerId()) return; // Not my turn
+    if (this.status() !== GameStatus.Playing) return;
     
-    const b = this.board();
-    if (b[y][x] !== 0) return; // Cell occupied
-
-    if (this.singlePlayerMode) {
-      // Apply player move
-      const currentB = this.localBoard();
-      currentB[y][x] = this.playerColors()[this.myPlayerId()];
-      this.localBoard.set([...currentB]);
-      this.localLastMove.set([y, x]);
-      this.audio.playGomoku('stoneDrop');
-      
-      if (this.checkWin(y, x, currentB[y][x])) {
-        this.localWinningLine.set(this.checkWin(y, x, currentB[y][x]));
-        this.localGameStatus.set({ status: 'finished', winner: this.myPlayerId() });
-        this.submitSinglePlayerStats(true);
-        return;
+    if (this.currentRoomMode() === GameMode.Single) {
+      const engine = this.localEngine();
+      if (engine && engine.currentTurn === this.playerId()) {
+        engine.handleAction({ type: GomokuActionType.Move, y, x });
+        this.audio.playGomoku('stoneDrop');
+        this.tick.set(this.tick() + 1);
       }
-      
-      if (this.checkDraw(currentB)) {
-        this.localGameStatus.set({ status: 'finished', winner: 'tie' });
-        this.submitSinglePlayerStats(false);
-        return;
-      }
-
-      // AI turn
-      this.localCurrentTurn.set('AI');
-      
-      // Use setTimeout so UI can render the player's move first
-      setTimeout(() => {
-        if (this.ai && this.gameStatus().status === 'playing') {
-          const [aiY, aiX] = this.ai.getBestMove(this.localBoard());
-            if (aiY !== -1) {
-            const aiB = this.localBoard();
-            aiB[aiY][aiX] = this.playerColors()['AI'];
-            this.localBoard.set([...aiB]);
-            this.localLastMove.set([aiY, aiX]);
-            this.audio.playGomoku('stoneDrop');
-            
-            if (this.checkWin(aiY, aiX, aiB[aiY][aiX])) {
-              this.localWinningLine.set(this.checkWin(aiY, aiX, aiB[aiY][aiX]));
-              this.localGameStatus.set({ status: 'finished', winner: 'AI' });
-              this.submitSinglePlayerStats(false);
-              return;
-            }
-
-            if (this.checkDraw(aiB)) {
-              this.localGameStatus.set({ status: 'finished', winner: 'tie' });
-              this.submitSinglePlayerStats(false);
-              return;
-            }
-          }
-          this.localCurrentTurn.set(this.myPlayerId());
-        }
-      }, 100);
-
     } else {
-      this.ws.send({ action: 'move', y, x });
+      if (this.currentTurn() !== this.playerId()) return;
+      this.ws.send({ action: C2SAction.Move, y, x });
     }
-  }
-
-  private checkWin(y: number, x: number, color: GomokuColor): number[][] | null {
-    const b = this.board();
-    const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
-    
-    for (const [dy, dx] of dirs) {
-      let count = 1;
-      const line = [[y, x]];
-      for (let i = 1; i < 5; i++) {
-        const ny = y + dy * i;
-        const nx = x + dx * i;
-        if (ny >= 0 && ny < 15 && nx >= 0 && nx < 15 && b[ny][nx] === color) {
-          count++;
-          line.push([ny, nx]);
-        } else break;
-      }
-      for (let i = 1; i < 5; i++) {
-        const ny = y - dy * i;
-        const nx = x - dx * i;
-        if (ny >= 0 && ny < 15 && nx >= 0 && nx < 15 && b[ny][nx] === color) {
-          count++;
-          line.push([ny, nx]);
-        } else break;
-      }
-      if (count >= 5) return line;
-    }
-    return null;
-  }
-
-  private checkDraw(b: GomokuColor[][]): boolean {
-    for (let y = 0; y < 15; y++) {
-      for (let x = 0; x < 15; x++) {
-        if (b[y][x] === 0) return false;
-      }
-    }
-    return true;
   }
 
   private submitSinglePlayerStats(win: boolean) {
-    this.statsService.submitStat('gomoku', {
-      mode: 'single',
-      difficulty: this.aiDifficulty,
+    if (!this.auth.currentUser()) return;
+    this.statsService.submitStat(GameId.Gomoku, {
+      mode: GameMode.Single,
+      difficulty: this.currentDifficulty() as string,
       score: win ? 1 : 0,
       time: 0,
       won: win
