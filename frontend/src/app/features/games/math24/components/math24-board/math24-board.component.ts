@@ -201,10 +201,18 @@ export class Math24BoardComponent {
     } else if (this.selectedCard.id === card.id) {
       this.selectedCard = null; // deselect
     } else if (this.selectedOp) {
-      // Combine
+      // Record existing IDs before combine to identify the result card
+      const prevIds = new Set(this.store.currentBoardCards().map(c => c.id));
       this.store.combineCards(this.selectedCard, card, this.selectedOp);
-      this.selectedCard = null;
       this.selectedOp = null;
+
+      // Auto-select the result card so the next operation can start immediately
+      const newCards = this.store.currentBoardCards();
+      if (newCards.length > 1) {
+        this.selectedCard = newCards.find(c => !prevIds.has(c.id)) ?? null;
+      } else {
+        this.selectedCard = null; // final card — win or reset
+      }
     } else {
       // change selection
       this.selectedCard = card;
