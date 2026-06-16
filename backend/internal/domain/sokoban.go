@@ -7,10 +7,10 @@ import (
 type SokobanDifficulty string
 
 const (
-	SokobanDifficultyBeginner     SokobanDifficulty = "beginner"
-	SokobanDifficultyIntermediate SokobanDifficulty = "intermediate"
-	SokobanDifficultyAdvanced     SokobanDifficulty = "advanced"
-	SokobanDifficultyProfessional SokobanDifficulty = "professional"
+	SokobanDifficultyBeginner     SokobanDifficulty = "easy"
+	SokobanDifficultyIntermediate SokobanDifficulty = "medium"
+	SokobanDifficultyAdvanced     SokobanDifficulty = "hard"
+	SokobanDifficultyProfessional SokobanDifficulty = "expert"
 )
 
 // SokobanPuzzle represents a predefined Sokoban puzzle

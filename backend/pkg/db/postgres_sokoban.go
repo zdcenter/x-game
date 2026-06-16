@@ -96,40 +96,40 @@ func SeedSokoban() {
 
 	var puzzles []domain.SokobanPuzzle
 
-	// 1. Beginner (Levels 1-100) -> Base 1-100
+	// 1. Easy (Levels 1-100) -> Base 1-100
 	for i := 0; i < 100 && i < len(baseLevels); i++ {
 		puzzles = append(puzzles, domain.SokobanPuzzle{
-			ID:         fmt.Sprintf("SOKO-BEG-%03d", i+1),
+			ID:         fmt.Sprintf("SOKO-EAS-%03d", i+1),
 			Difficulty: domain.SokobanDifficultyBeginner,
 			LevelNum:   i + 1,
 			Puzzle:     baseLevels[i],
 		})
 	}
 
-	// 2. Intermediate (Levels 1-100) -> Base 56-155 (100 levels)
+	// 2. Medium (Levels 1-100) -> Base 56-155 (100 levels)
 	for i := 0; i < 100 && (55+i) < len(baseLevels); i++ {
 		puzzles = append(puzzles, domain.SokobanPuzzle{
-			ID:         fmt.Sprintf("SOKO-INT-%03d", i+1),
+			ID:         fmt.Sprintf("SOKO-MED-%03d", i+1),
 			Difficulty: domain.SokobanDifficultyIntermediate,
 			LevelNum:   i + 1,
 			Puzzle:     baseLevels[55+i],
 		})
 	}
 
-	// 3. Advanced (Levels 1-100) -> Base 1-100 (Vertical Mirror)
+	// 3. Hard (Levels 1-100) -> Base 1-100 (Vertical Mirror)
 	for i := 0; i < 100 && i < len(baseLevels); i++ {
 		puzzles = append(puzzles, domain.SokobanPuzzle{
-			ID:         fmt.Sprintf("SOKO-ADV-%03d", i+1),
+			ID:         fmt.Sprintf("SOKO-HAR-%03d", i+1),
 			Difficulty: domain.SokobanDifficultyAdvanced,
 			LevelNum:   i + 1,
 			Puzzle:     mirrorVertical(baseLevels[i]),
 		})
 	}
 
-	// 4. Professional (Levels 1-100) -> Base 56-155 (Horizontal + Vertical Mirror)
+	// 4. Expert (Levels 1-100) -> Base 56-155 (Horizontal + Vertical Mirror)
 	for i := 0; i < 100 && (55+i) < len(baseLevels); i++ {
 		puzzles = append(puzzles, domain.SokobanPuzzle{
-			ID:         fmt.Sprintf("SOKO-PRO-%03d", i+1),
+			ID:         fmt.Sprintf("SOKO-EXP-%03d", i+1),
 			Difficulty: domain.SokobanDifficultyProfessional,
 			LevelNum:   i + 1,
 			Puzzle:     mirrorHorizontal(mirrorVertical(baseLevels[55+i])),

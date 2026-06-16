@@ -11,7 +11,7 @@ import { I18nService } from '../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { SudokuEngine, SudokuCell, SudokuActionType } from './sudoku-engine';
+import { SudokuCell } from './sudoku-engine';
 import { C2SAction } from '../../../../core/models/websocket.model';
 export type { SudokuCell };
 
@@ -28,7 +28,7 @@ export class SudokuStore extends BaseGameStore {
   private adService = inject(AdService);
 
   private saveSubject = new Subject<void>();
-  private engine = new SudokuEngine();
+  private history: SudokuCell[][][] = [];
 
   // Board state (Local)
   board = signal<SudokuCell[][]>([]);
@@ -167,6 +167,7 @@ export class SudokuStore extends BaseGameStore {
 
   // --- SINGLE PLAYER INIT ---
   initBoard(puzzleStr: string, solutionStr: string = '', savedState?: string, savedTime?: number) {
+    this.history = [];
     if (savedTime) this.timeSpent.set(savedTime);
     else this.timeSpent.set(0);
 
@@ -258,6 +259,8 @@ export class SudokuStore extends BaseGameStore {
       this.ws.send({ action: C2SAction.Input, r: sel.r, c: sel.c, val: num });
       return;
     }
+
+    this.saveHistory();
 
     if (this.pencilMode()) {
       if (cell.val !== 0) {
@@ -354,6 +357,7 @@ export class SudokuStore extends BaseGameStore {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
       return;
     }
+    this.saveHistory();
     cell.val = 0;
     cell.notes.clear();
     this.board.set([...b]);
@@ -366,6 +370,7 @@ export class SudokuStore extends BaseGameStore {
     if (this.currentRoomMode() === GameMode.Steal) return;
 
     this.audio.playSudoku('clear');
+    this.saveHistory();
 
     const orig = this.originalPuzzleStr();
     const b = this.board();
@@ -389,12 +394,22 @@ export class SudokuStore extends BaseGameStore {
     this.triggerSave();
   }
 
+  canUndo = () => this.history.length > 0;
+
   undo() {
     if (this.currentRoomMode() !== GameMode.Single || this.isFinished()) return;
+    if (this.history.length === 0) return;
     this.audio.playSudoku('input');
-    this.engine.handleAction({ type: SudokuActionType.Undo });
-    this.board.set([...this.engine.board]);
+    const last = this.history.pop()!;
+    this.board.set(last.map(row => row.map(c => ({ ...c, notes: new Set(c.notes) }))));
+    this.checkErrors();
     this.saveSubject.next();
+  }
+
+  private saveHistory() {
+    const clone = this.board().map(row => row.map(c => ({ ...c, notes: new Set(c.notes) })));
+    this.history.push(clone);
+    if (this.history.length > 20) this.history.shift();
   }
 
   
