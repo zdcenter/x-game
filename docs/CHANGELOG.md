@@ -1,5 +1,62 @@
 # Changelog
 
+## [2026-06-16] - 🔄 用户留存系统深化：新手引导扩展 + PK 对战历史自动提交
+
+### ✨ 新功能 & Bug 修复
+
+**每日挑战横幅**
+- 修复每日挑战横幅游戏名称显示：改用 `I18nService.t(def.titleKey)()` 渲染翻译后的游戏名，而非原始 ID 字符串
+- 横幅 CTA 链接追加 `puzzleId` query param，游戏组件无需二次请求即可直接加载目标关卡
+
+**连续登录 Streak**
+- 修复登录 API (`auth.go`) 未触发 `CheckLoginStreak()`：现在每次成功登录后服务端自动检测并发放登录 XP，并在响应中返回 `login_streak` 与 `bonus_xp` 字段
+
+**每日挑战自动联通**
+- 数独（Sudoku）：支持 `?dailyChallengeId=&puzzleId=` 参数直接跳转加载指定关卡，完成后自动调用 `DailyChallengeService.finish()` 标记完成
+- Math24：同上，完成后自动标记每日挑战完成
+- 推箱子（Sokoban）：新增 `joinRoomWithLevel(levelId, difficulty)` 绕过 `fetchLevelsAndLoad()` 竞争条件，支持每日挑战精准跳题
+
+**新手引导扩展**
+- Codebreaker（1A2B）：首次单机游戏加载 600ms 后自动弹出 4 步教学引导；`TutorialService.hasSeen/markSeen` 控制只触发一次
+- WaterSort（水管分色）：同上，4 步引导介绍目标、操作、规则和提示用法
+- Sokoban（推箱子）：同上，4 步引导介绍目标、控制、规则和撤销功能
+- `game-definitions.ts` 补充三款游戏的 `tutorial` 步骤配置（标题/描述均接入 i18n）
+- `retention.translations.ts` 新增 3 × 8 = 24 组（zh+en 各 12 组）教程翻译键
+
+**PK 对战历史自动提交（BaseGameStore）**
+- `BaseGameStore` 新增构造函数 `effect()`：自动检测 PK 模式下 Playing→Finished 状态迁移
+- 认证用户结束 PK 对战时，自动调用 `_submitPKStat()` → `POST /api/v1/stats/:gameId`，记入对战历史、发放 XP、触发成就检测
+- 新增 `extractPKStatPayload()` 虚方法供子类 override，默认从 `rawState.players[playerId]` 提取 `score/time`
+- 使用普通属性（`_pkPrevStatus`, `_pkStatSubmitted`）而非 Signal 跟踪状态，避免 `allowSignalWrites` 复杂度
+- `joinRoom()` 调用时重置 PK 追踪 flag，防止跨房间误触发
+
+**XLF 构建警告修复**
+- `messages.zh.xlf` 和 `messages.en.xlf` 补充 4 个缺失的 Admin 菜单翻译单元：`admin.menu.achievements`, `admin.menu.daily_challenges`, `admin.menu.leaderboard`, `admin.menu.xp_config`，消除 Angular i18n 编译警告
+
+---
+
+## [2026-06-16] - 🏆 用户留存系统：XP/等级/成就/排行榜/每日挑战/对战历史全面上线
+### 🌟 新功能 (New Features)
+
+**后端新增**
+- **XP/等级系统**：`service/xp.go` — `CalcLevel(xp)=floor(sqrt(xp/100))+1`，原子更新 User.XP/Level，每次 SubmitStat 和 PuzzleFinish 自动派发 XP（单机完成+2/胜利+5，PK参与+5/胜利+15，每日挑战+30）
+- **连续登录奖励**：`CheckLoginStreak()` 每天首次调用发放 3-50 XP 登录奖励，连续天数越多奖励越高
+- **成就系统**：35个成就（starter/playtime/streak/daily/allround/mastery类别），稀有度 common/rare/epic/legendary，条件由 `service/achievement.go` switch 评估，解锁时自动追加 XP 并返回至前端
+- **全球排行榜**：直查 `gm_user_game_stats JOIN gm_users`，支持 all-time/weekly 周期、time/score 类型，自动附带当前用户排名；过滤 guest 用户
+- **每日挑战**：Admin 可预排期任意日期任何游戏（含批量创建），用户每天只可完成一次（防重复提交），完成奖励 +30XP 并检测成就
+- **对战历史**：所有 SubmitStat 和 PuzzleFinish 自动写 `gm_match_history`，支持按游戏/模式过滤
+- **Admin REST 扩展**：成就 CRUD、每日挑战 CRUD+批量创建、排行榜查看+删除条目
+
+**前端新增**
+- **XP 浮字动画**：`XpGainBadgeComponent` 全局挂载，游戏结束后右下角弹出 `+N XP` 向上飘出动画
+- **成就解锁弹窗**：`AchievementUnlockOverlayComponent` 底部 Toast，稀有度主题光晕，队列式展示
+- **排行榜页面** (`/leaderboard`)：按游戏/模式/难度/时段筛选，金银铜牌徽章，高亮当前用户排名
+- **每日挑战页面** (`/daily`)：今日挑战卡片+倒计时，30天日历格完成状态，历史列表
+- **Profile 重构**：4-tab 布局（总览/成就/排名/历史），XP 进度条，等级徽章，成就格子按类别分组
+- **每日挑战横幅**：`DailyChallengeBannerComponent` 嵌入 Lobby 首页顶部，CTA 直跳游戏
+- **Admin 扩展**：4个新后台页面（成就管理/每日挑战日历/排行榜管理/XP配置），Admin 导航栏 Retention 分区
+- **导航栏**：顶部追加排行榜和每日挑战链接
+
 ## [2026-06-15] - ⚙️ 核心架构深化：前端状态机大一统与多人联机逻辑解耦
 ### 🌟 架构重构 (Architecture & Refactoring)
 - **房间内无缝切游 (Switch Room Game)**：在多人对战房间结算页面，房主现在可以直接一键切换至其他游戏（通过 `ActionChangeGame` C2S 指令），所有房间内的玩家都会跟随房主自动跳转至新游戏，无需解散房间或退回大厅。所有 13 款游戏均已接入新的 `<app-game-result-overlay>` 机制并支持此功能！

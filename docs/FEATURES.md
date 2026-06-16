@@ -221,6 +221,60 @@
 - **操作逻辑**：点击卡片选择数字和操作符进行运算，支持撤销和重置功能。
 - **机制同步**：完全接入大厅与通用对战引擎，共享基础房间和状态广播机制。
 
+---
+
+## 9. 用户留存系统 (User Retention System)
+
+### 9.1 XP / 等级系统
+- **公式**：`level = floor(sqrt(xp / 100)) + 1`，XP 随对局、胜利、每日挑战自动累积。
+- **奖励机制**：单机对局 +2 XP，单机胜利 +5 XP，PK 对局 +5 XP，PK 胜利 +15 XP，每日挑战 +30 XP；后台可通过 `system_settings` 动态调整。
+- **连续登录奖励**：每日首次触发 `CheckLoginStreak()`，连续登录奖励叠加 XP（可在后台配置）。
+- **前端可视化**：全局 `XpGainBadgeComponent` 在每次获得 XP 时显示向上飘出动画（`+N XP`）；个人资料页展示 XP 进度条与等级徽章。
+- **Admin 管理**：`/admin/xp-config` 页面通过 `PUT /admin/settings/bulk` 批量读写 10 个 XP 奖励参数。
+
+### 9.2 成就系统
+- **35 个内置成就**：分 6 大类别（starter / mastery / streak / playtime / daily / allround），4 个稀有度（common / rare / epic / legendary）。
+- **条件驱动评测**：每次 `SubmitStat` / `puzzle/finish` 触发后端 `CheckAchievements()`，支持 9 种条件类型（首次登录、首胜、连胜、总局数、全游戏挑战等）。
+- **解锁 XP 奖励**：每个成就解锁后自动累加 `xp_reward` 到用户账户。
+- **前端弹窗**：`AchievementUnlockOverlayComponent` 全局队列式展示成就解锁弹窗（稀有度光晕动效）。
+- **Admin 管理**：`/admin/achievements` 支持成就 CRUD、稀有度徽章、一键启用/停用，以及用户成就查看。
+
+### 9.3 全球排行榜
+- **多维过滤**：按游戏 / 模式 / 难度 / 时间段（全榜 / 本周）筛选；时间型游戏显示最佳用时，得分型游戏显示最高分。
+- **我的排名**：登录后实时展示当前用户在所选榜单的名次（金/银/铜 Medal 展示）。
+- **隐私保护**：guest 用户不参与排行，`role='guest'` 自动过滤。
+- **Admin 管理**：`/admin/leaderboard` 支持管理员查看与删除疑似作弊条目。
+
+### 9.4 每日挑战
+- **每日一题**：管理员提前在 `/admin/daily-challenges` 月历视图中排期；支持单条创建或批量生成（按月份+游戏）。
+- **完成追踪**：玩家完成后后端防重复保护，奖励固定 30 XP，触发成就检测。
+- **倒计时横幅**：大厅页顶部 `DailyChallengeBannerComponent` 实时展示今日挑战与剩余时间，已完成显示绿色勾。
+- **历史日历**：`/daily` 页面展示 30 天完成日历与历史记录。
+
+### 9.5 对战历史记录
+- **全局记录**：每次 `SubmitStat` / `puzzle/finish` 写入 `gm_match_history`，记录游戏、模式、难度、结果、用时、XP 获得。
+- **时间线展示**：个人资料页「历史」标签展示最近 20 场，含游戏图标、结果徽章（胜/负/完成）、XP 收益。
+- **API**：`GET /api/v1/history?limit=20&gameId=&mode=` 支持按游戏和模式过滤。
+- **PK 对战自动提交**：`BaseGameStore` 构造函数 `effect()` 检测 PK 模式 Playing→Finished 状态迁移，自动调用 `_submitPKStat()` 提交对战统计；子类可 override `extractPKStatPayload()` 提供游戏特定的 score/time 提取逻辑。
+
+### 9.6 新手引导
+- **游戏内嵌步骤引导**：`TutorialOverlayComponent` 分步展示引导卡片（图标 + 标题 + 描述）。
+- **一次性触发**：`TutorialService` 通过 localStorage 记录 `seen_tutorial_[gameId]`，每个用户每款游戏只展示一次。
+- **集成游戏**：扫雷（5步）、数独（4步）、Math 24（4步）、Codebreaker（4步）、WaterSort（4步）、Sokoban（4步）；步骤内容在 `game-definitions.ts` 中集中管理，支持 i18n。
+
+### 9.7 游戏结果增强
+- **破纪录标识**：游戏结算界面展示「New Record」标识（金色横幅），对比历史最佳。
+- **XP 增益展示**：结算界面内联展示本局 XP 收益及升级提示。
+- **`lastStatResult` Signal**：`BaseGameStore` 保存最后一次提交结果，供各游戏结算页读取。
+
+### 9.8 Admin 留存管理后台
+- **成就管理** (`/admin/achievements`)：CRUD、稀有度徽章、启用/停用开关、解锁次数统计。
+- **每日挑战排期** (`/admin/daily-challenges`)：7 列月历 CSS Grid 视图 + 单条/批量创建弹窗。
+- **排行榜管理** (`/admin/leaderboard`)：多维过滤 + 条目删除（防作弊）。
+- **XP 配置** (`/admin/xp-config`)：滑动条调整 10 个 XP 参数，实时同步至 `system_settings`。
+
+---
+
 ### 8. 水管分色 (Water Sort Puzzle)
 - **支持模式**：单机模式、竞速对决 (Speed)
 - **后端生成算法**：采用完全动态的**逆向洗牌算法**，实时在内存中由解开的胜利状态向后推演数千次产生死局，100%保证每一次生成的关卡都有解，彻底消灭了静态题库维护成本。

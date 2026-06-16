@@ -54,6 +54,22 @@
         <source>admin.menu.ads</source>
         <target>Ad Management</target>
       </trans-unit>
+      <trans-unit id="admin.menu.achievements" datatype="html">
+        <source>Achievements</source>
+        <target>Achievements</target>
+      </trans-unit>
+      <trans-unit id="admin.menu.daily_challenges" datatype="html">
+        <source>Daily Challenges</source>
+        <target>Daily Challenges</target>
+      </trans-unit>
+      <trans-unit id="admin.menu.leaderboard" datatype="html">
+        <source>Leaderboard</source>
+        <target>Leaderboard</target>
+      </trans-unit>
+      <trans-unit id="admin.menu.xp_config" datatype="html">
+        <source>XP Config</source>
+        <target>XP Config</target>
+      </trans-unit>
       <trans-unit id="auth.logout" datatype="html">
         <source>auth.logout</source>
         <target>Logout</target>

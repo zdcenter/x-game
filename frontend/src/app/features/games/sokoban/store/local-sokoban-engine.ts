@@ -1,5 +1,6 @@
 import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
+import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
 
 export enum SokobanActionType {
   Move = 'move',
@@ -212,7 +213,7 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
     }
     if (win) {
       this.status = GameStatus.Finished;
-      (typeof localStorage !== 'undefined' && localStorage.removeItem('sokoban_save'));
+      storageRemove('sokoban_save');
     }
   }
 
@@ -238,7 +239,7 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
 
   saveToStorage() {
     if (this.status === GameStatus.Finished) {
-      (typeof localStorage !== 'undefined' && localStorage.removeItem('sokoban_save'));
+      storageRemove('sokoban_save');
       return;
     }
     const data = {
@@ -251,11 +252,11 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
       difficulty: this.difficulty,
       levelStr: this.levelStr
     };
-    (typeof localStorage !== 'undefined' && localStorage.setItem('sokoban_save', JSON.stringify(data)));
+    storageSet('sokoban_save', JSON.stringify(data));
   }
 
   static loadFromStorage(levelId?: string): { engine: LocalSokobanEngine, difficulty: string } | null {
-    const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem('sokoban_save') : null);
+    const saved = storageGet('sokoban_save');
     if (!saved) return null;
     
     try {

@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
@@ -11,7 +10,6 @@ import { LocalLightsoutEngine, LightsoutActionType } from './lightsout-engine';
 export class LightsoutStore extends BaseGameStore {
   readonly gameId = GameId.LightsOut;
 
-  private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
 
   private localEngine = signal<LocalLightsoutEngine | null>(null);
@@ -50,18 +48,8 @@ export class LightsoutStore extends BaseGameStore {
   });
 
   override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.status || 'waiting';
-    }
-    const st = this.rawState() as any;
-    if (!st) return GameStatus.Waiting;
-    let status = st.status;
-    if (typeof status === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || 'waiting';
-    }
-    return status || 'waiting';
+    this.tick();
+    return this.localEngine()?.status || 'waiting';
   });
 
   override readonly isFinished = computed<boolean>(() => {
@@ -81,7 +69,7 @@ export class LightsoutStore extends BaseGameStore {
     return this.localEngine()?.finished ? [this.playerId()] : [];
   });
 
-  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
+
 
   readonly opponents = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];
@@ -109,17 +97,6 @@ export class LightsoutStore extends BaseGameStore {
       });
   });
 
-  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return {};
-    return (this.rawState() as any)?.readyPlayers || {};
-  });
-
-  override readonly hostId = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
-    return (this.rawState() as any)?.host || '';
-  });
-
-  
   readonly currentSolution = computed(() => this.currentRoomMode() === GameMode.Single ? (this.localEngine()?.solution || []) : (this.rawState() as any)?.solution || []);
 
   constructor() {
@@ -194,12 +171,6 @@ export class LightsoutStore extends BaseGameStore {
   }
 
   private submitSinglePlayerStats() {
-    this.statsService.submitStat(GameId.LightsOut, {
-      mode: GameMode.Single,
-      difficulty: this.currentDifficulty() as string,
-      score: this.localEngine()?.moves || 0,
-      time: 0,
-      won: true
-    }).subscribe();
+    this.submitSingleStat({ score: this.localEngine()?.moves || 0 }).subscribe();
   }
 }

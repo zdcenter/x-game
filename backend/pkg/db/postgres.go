@@ -51,6 +51,12 @@ func InitPostgres() {
 		&domain.UserSokobanProgress{},
 		&domain.AdPlacement{},
 		&domain.AdNetwork{},
+		// Retention features
+		&domain.Achievement{},
+		&domain.UserAchievement{},
+		&domain.DailyChallenge{},
+		&domain.UserDailyChallenge{},
+		&domain.MatchHistory{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -65,6 +71,7 @@ func InitPostgres() {
 	SeedSokoban()
 	SeedSettings()
 	SeedAds()
+	SeedAchievements()
 
 	log.Println("Database connected and migrated successfully")
 }

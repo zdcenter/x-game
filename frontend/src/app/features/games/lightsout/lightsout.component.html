@@ -261,6 +261,8 @@
         [title]="getOverlayTitle()"
         [subtitle]="getOverlaySubtitle()"
         [stats]="getOverlayStats()"
+        [xpResult]="store.lastStatResult()?.xp_result"
+        [isNewRecord]="store.lastStatResult()?.isNewRecord"
         [showRestart]="true"
         [showLeave]="store.currentRoomMode() !== GameMode.Single"
         (restart)="store.restartGame()"

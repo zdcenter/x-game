@@ -8,7 +8,6 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AdService } from '../../../../core/services/ad.service';
 import { environment } from '../../../../../environments/environment';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
@@ -20,8 +19,6 @@ export type { SudokuCell };
 
 @Injectable()
 export class SudokuStore extends BaseGameStore {
-  override readonly singlePlayerWinners = computed<string[]>(() => []);
-
   readonly gameId = 'sudoku';
 
   private http = inject(HttpClient);
@@ -29,7 +26,6 @@ export class SudokuStore extends BaseGameStore {
   private audio = inject(AudioService);
   private i18n = inject(I18nService);
   private adService = inject(AdService);
-  private statsService = inject(GameStatsService);
 
   private saveSubject = new Subject<void>();
   private engine = new SudokuEngine();
@@ -81,8 +77,6 @@ export class SudokuStore extends BaseGameStore {
     if (this.currentRoomMode() === GameMode.Single) return this.isFinished() ? GameStatus.Finished : 'playing';
     return (this.rawState()?.status as string) || 'waiting';
   });
-  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
-
   private timer: any;
 
   constructor() {
@@ -205,7 +199,7 @@ export class SudokuStore extends BaseGameStore {
         if (match[1].includes(GameDifficulty.Medium)) diff = GameDifficulty.Medium;
         else if (match[1].includes(GameDifficulty.Hard)) diff = GameDifficulty.Hard;
       }
-      this.statsService.getStats('sudoku').subscribe(stats => {
+      this.getStats().subscribe(stats => {
         const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === diff);
         if (stat) this.bestTime.set(stat.BestTime);
       });
@@ -471,33 +465,11 @@ export class SudokuStore extends BaseGameStore {
     if (valid && this.currentRoomMode() === GameMode.Single) {
       this.isFinished.set(true);
       this.stopTimer();
-
-      // Submit stat
-      if (this.auth.isAuthenticated()) {
-        const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
-        let diff: string = GameDifficulty.Easy;
-        if (match) {
-          if (match[1].includes(GameDifficulty.Medium)) diff = GameDifficulty.Medium;
-          else if (match[1].includes(GameDifficulty.Hard)) diff = GameDifficulty.Hard;
-        }
-        this.statsService.submitStat('sudoku', {
-          mode: GameMode.Single,
-          difficulty: diff,
-          score: 0,
-          time: this.timeSpent(),
-          won: true
-        }).subscribe(res => {
-          if (res.isNewRecord) {
-            this.bestTime.set(this.timeSpent());
-          }
-        });
-      }
+      this.finishPuzzle();
     }
 
     if (valid) {
-      if (this.currentRoomMode() === GameMode.Single) {
-        this.finishPuzzle();
-      } else if (this.currentRoomMode() === GameMode.Speed) {
+      if (this.currentRoomMode() === GameMode.Speed) {
         const serialized = this.serializeBoard();
         this.ws.send({ action: C2SAction.Finish, board: serialized });
       }
@@ -560,17 +532,30 @@ export class SudokuStore extends BaseGameStore {
   private finishPuzzle() {
     if (!this.currentPuzzleId()) return;
 
-    // Save the final board state immediately
     this.saveStateToBackend();
 
     let stars = 3;
-    if (this.timeSpent() > 300) stars = 2; // > 5 mins
-    if (this.timeSpent() > 600) stars = 1; // > 10 mins
+    if (this.timeSpent() > 300) stars = 2;
+    if (this.timeSpent() > 600) stars = 1;
 
-    this.http.post(`${environment.apiUrl}/sudoku/puzzle/${this.currentPuzzleId()}/finish`, {
+    const match = this.currentPuzzleId().match(/^(.*)-(\d+)$/);
+    let diff: string = GameDifficulty.Easy;
+    if (match) {
+      if (match[1].includes(GameDifficulty.Medium)) diff = GameDifficulty.Medium;
+      else if (match[1].includes(GameDifficulty.Hard)) diff = GameDifficulty.Hard;
+    }
+
+    this.http.post<any>(`${environment.apiUrl}/sudoku/puzzle/${this.currentPuzzleId()}/finish`, {
       time_spent: this.timeSpent(),
-      stars: stars
-    }).subscribe();
+      stars,
+      mode: GameMode.Single,
+      difficulty: diff
+    }).subscribe(res => {
+      if (res?.isNewRecord) this.bestTime.set(this.timeSpent());
+      this.lastStatResult.set(res);
+      if (res?.xp_result?.xp_earned) this.xpService.showXpGain(res.xp_result.xp_earned);
+      if (res?.new_achievements?.length) this.achievementService.handleNewAchievements(res.new_achievements);
+    });
   }
 
   pauseAndSave() {

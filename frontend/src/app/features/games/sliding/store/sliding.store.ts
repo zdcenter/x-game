@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, effect, signal } from '@angular/core';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { LocalSlidingEngine, SlidingAction, SlidingActionType } from './sliding-engine';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
@@ -10,7 +9,6 @@ import { C2SAction } from '../../../../core/models/websocket.model';
 export class SlidingStore extends BaseGameStore {
   readonly gameId = GameId.Sliding;
   private audio = inject(AudioService);
-  private statsService = inject(GameStatsService);
 
   private localEngine = signal<LocalSlidingEngine | null>(null);
   readonly bestTime = signal<number>(0);
@@ -18,24 +16,9 @@ export class SlidingStore extends BaseGameStore {
   // playersList & status are required by BaseGameStore
   override readonly singlePlayerList = computed(() => []);
 
-  private mapStatus(backendStatus: number | string | undefined): GameStatusType {
-    if (typeof backendStatus === 'string') return backendStatus as GameStatusType;
-    switch (backendStatus) {
-      case 1: return GameStatus.Starting;
-      case 2: return GameStatus.Playing;
-      case 3: return GameStatus.Finished;
-      case 0:
-      default:
-        return GameStatus.Waiting;
-    }
-  }
-
-  readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      return this.localEngine()?.status || 'waiting';
-    }
-    return this.mapStatus((this.rawState() as any)?.status);
-  });
+  readonly singlePlayerStatus = computed<GameStatusType | string>(() =>
+    this.localEngine()?.status || 'waiting'
+  );
 
   readonly globalStartAt = computed(() => {
     return (this.rawState() as any)?.globalStartAt || 0;
@@ -134,7 +117,7 @@ export class SlidingStore extends BaseGameStore {
       
       // Load best time
       if (this.auth.isAuthenticated()) {
-        this.statsService.getStats(GameId.Sliding).subscribe(stats => {
+        this.getStats().subscribe(stats => {
           const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === difficulty);
           if (stat) this.bestTime.set(stat.BestTime);
         });
@@ -170,13 +153,7 @@ export class SlidingStore extends BaseGameStore {
         // Submit stat if finished
         if (le.status === GameStatus.Finished && this.auth.isAuthenticated()) {
           const timeSecs = Math.floor((le.endAt! - le.startAt!) / 1000);
-          this.statsService.submitStat(GameId.Sliding, {
-            mode: GameMode.Single,
-            difficulty: this.currentDifficulty() as string,
-            score: 0,
-            time: timeSecs,
-            won: true
-          }).subscribe(res => {
+          this.submitSingleStat({ time: timeSecs }).subscribe(res => {
             if (res.isNewRecord) {
               this.bestTime.set(timeSecs);
             }

@@ -81,6 +81,8 @@
             [status]="getGameResultStatus()"
             [title]="getGameResultTitle()"
             [stats]="getStats()"
+            [xpResult]="store.lastStatResult()?.xp_result"
+            [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
             [showNextLevel]="store.currentRoomMode() === GameMode.Single"
             [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
@@ -162,4 +164,10 @@
   
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="'math24'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  <app-tutorial-overlay
+    [steps]="tutorialSteps"
+    [visible]="showTutorial()"
+    (done)="onTutorialDone()">
+  </app-tutorial-overlay>
 </div>

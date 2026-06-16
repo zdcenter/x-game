@@ -134,6 +134,8 @@
             [status]="getResultTitle() === 'game.you_lose' ? 'lose' : 'win'"
             [title]="i18n.t(getResultTitle())()"
             [stats]="[{label: 'SCORE', value: store.score()}]"
+            [xpResult]="store.lastStatResult()?.xp_result"
+            [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
             (restart)="store.restartGame()"
             (leave)="onLeaveClick()"

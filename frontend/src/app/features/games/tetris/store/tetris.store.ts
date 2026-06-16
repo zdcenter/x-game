@@ -1,7 +1,6 @@
 import { GameMode, GameModeType, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { getEmptyGrid, Piece, Tetromino } from '../models/tetris.model';
 import { TetrisEngine, TetrisActionType, TetrisState } from './tetris-engine';
@@ -20,7 +19,6 @@ export interface TetrisOpponent {
 export class TetrisStore extends BaseGameStore implements OnDestroy {
   readonly gameId = 'tetris';
 
-  private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
 
   // Engine
@@ -39,14 +37,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   isDead = signal<boolean>(false);
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
-  readonly singlePlayerStatus = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localStatus();
-    const st = this.rawState();
-    if (!st) return 'disconnected';
-    return st.status || 'waiting';
-  });
-
-  override readonly singlePlayerWinners = computed(() => []);
+  readonly singlePlayerStatus = computed(() => this.localStatus());
 
   override readonly singlePlayerList = computed(() => []);
 
@@ -133,7 +124,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       
       // Load best score
       if (this.auth.isAuthenticated()) {
-        this.statsService.getStats('tetris').subscribe(stats => {
+        this.getStats().subscribe(stats => {
           const stat = stats.find(s => s.Mode === GameMode.Single);
           if (stat) this.bestScore.set(stat.BestScore);
         });
@@ -163,13 +154,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     if (this.currentRoomMode() === GameMode.Single) {
       // Submit stat
       if (this.auth.isAuthenticated()) {
-        this.statsService.submitStat('tetris', {
-          mode: GameMode.Single,
-          difficulty: '',
-          score: this.score(),
-          time: 0,
-          won: true
-        }).subscribe(res => {
+        this.submitSingleStat({ score: this.score() }).subscribe(res => {
           if (res.isNewRecord) {
             this.bestScore.set(this.score());
           }

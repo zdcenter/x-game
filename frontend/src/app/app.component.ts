@@ -10,11 +10,13 @@ import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
 import { ToastService } from './core/services/toast.service';
 import { I18nService } from './core/i18n/i18n.service';
+import { XpGainBadgeComponent } from './shared/components/xp-gain-badge/xp-gain-badge.component';
+import { AchievementUnlockOverlayComponent } from './shared/components/achievement-unlock-overlay/achievement-unlock-overlay.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent, CookieConsentComponent],
+  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent, CookieConsentComponent, XpGainBadgeComponent, AchievementUnlockOverlayComponent],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
       <app-maintenance></app-maintenance>
@@ -22,6 +24,8 @@ import { I18nService } from './core/i18n/i18n.service';
       <router-outlet></router-outlet>
       <app-ui-overlay></app-ui-overlay>
       <app-cookie-consent></app-cookie-consent>
+      <app-xp-gain-badge />
+      <app-achievement-unlock-overlay />
     }
   `
 })
@@ -37,6 +41,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.settingsService.loadSettings().subscribe();
     this.checkForUpdates();
+    this.authStore.refreshProfile();
   }
 
   private checkForUpdates() {

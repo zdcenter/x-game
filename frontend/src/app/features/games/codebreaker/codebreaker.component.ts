@@ -1,4 +1,5 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
+import { storageGet, storageSet, storageRemove } from '../../../core/utils/browser.util';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -19,6 +20,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { SettingsService } from '../../../core/services/settings.service';
+import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { TutorialService } from '../../../core/services/tutorial.service';
 
 @Component({
   selector: 'app-codebreaker',
@@ -31,7 +34,8 @@ import { SettingsService } from '../../../core/services/settings.service';
     GameLobbyPanelComponent,
     GameStartingOverlayComponent,
     GameHeaderComponent,
-    HintButtonComponent
+    HintButtonComponent,
+    TutorialOverlayComponent
   ],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
@@ -56,9 +60,12 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
 
+  private tutorialService = inject(TutorialService);
   showRules = signal(false);
   isMobileSidebarOpen = signal(false);
   showOverlay = signal(false);
+  showTutorial = signal(false);
+  tutorialSteps = this.tutorialService.getStepsForGame(GameId.Codebreaker);
 
   // User input signals
   currentInput = signal<string>('');
@@ -124,9 +131,9 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
           helperMarks: this.helperMarks(),
           timestamp: Date.now()
         };
-        (typeof localStorage !== 'undefined' && localStorage.setItem(`codebreaker_save_${diff}`, JSON.stringify(state)));
+        storageSet(`codebreaker_save_${diff}`, JSON.stringify(state));
       } else if (status === GameStatus.Finished) {
-        (typeof localStorage !== 'undefined' && localStorage.removeItem(`codebreaker_save_${diff}`));
+        storageRemove(`codebreaker_save_${diff}`);
       }
     });
   }
@@ -181,7 +188,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     // Try to load save if single player
     if (mode === GameMode.Single) {
       try {
-        const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem(`codebreaker_save_${difficulty}`) : null);
+        const saved = storageGet(`codebreaker_save_${difficulty}`);
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.status === GameStatus.Playing && (Date.now() - parsed.timestamp) < 24 * 60 * 60 * 1000) {
@@ -196,7 +203,14 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     
     if (mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
+    } else if (!this.tutorialService.hasSeen(GameId.Codebreaker) && this.tutorialSteps.length) {
+      setTimeout(() => this.showTutorial.set(true), 600);
     }
+  }
+
+  onTutorialDone(): void {
+    this.tutorialService.markSeen(GameId.Codebreaker);
+    this.showTutorial.set(false);
   }
 
   ngOnDestroy() {

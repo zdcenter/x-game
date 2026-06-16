@@ -1,16 +1,56 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 import { WebSocketService } from '../services/websocket.service';
 import { AuthStore } from '../auth/auth.store';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
 import { GameMode, GameModeType, GameDifficulty, GameDifficultyType, GameStatusType, GameStatus } from '../models/game.model';
 import { C2SAction, MessageType } from '../models/websocket.model';
 import { GameRegistryService } from '../services/game-registry.service';
+import { GameStatsService, SubmitStatResponse, XPResult } from '../services/game-stats.service';
+import { XpService } from '../services/xp.service';
+import { AchievementService } from '../services/achievement.service';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
   readonly ws = inject(WebSocketService);
   readonly auth = inject(AuthStore);
   readonly gameRegistry = inject(GameRegistryService);
+  protected readonly stats = inject(GameStatsService);
+  protected readonly xpService = inject(XpService);
+  protected readonly achievementService = inject(AchievementService);
+
+  // Last stat submission result — cleared on new game start
+  readonly lastStatResult = signal<SubmitStatResponse | null>(null);
+
+  // PK stat auto-submit tracking (plain properties, not signals)
+  private _pkPrevStatus = '';
+  private _pkStatSubmitted = false;
+
+  constructor() {
+    // Auto-submit PK match result when game transitions Playing → Finished.
+    // Runs once per room (guarded by _pkStatSubmitted flag).
+    effect(() => {
+      const mode = this.currentRoomMode();
+      const cur = this.status();
+
+      if (mode === GameMode.Single) {
+        this._pkPrevStatus = '';
+        this._pkStatSubmitted = false;
+        return;
+      }
+
+      if (
+        cur === GameStatus.Finished &&
+        this._pkPrevStatus === GameStatus.Playing &&
+        !this._pkStatSubmitted &&
+        this.auth.isAuthenticated()
+      ) {
+        this._pkStatSubmitted = true;
+        untracked(() => this._submitPKStat());
+      }
+      this._pkPrevStatus = cur as string;
+    }, { allowSignalWrites: false });
+  }
 
   readonly roomId = signal<string>('');
   readonly currentRoomMode = signal<GameModeType | string>(GameMode.Single);
@@ -28,15 +68,22 @@ export abstract class BaseGameStore implements GameStoreInterface {
     return s ? (s.host || '') : '';
   });
 
-  readonly readyPlayers = computed<Record<string, boolean>>(() => (this.rawState() as any)?.readyPlayers || {});
+  readonly readyPlayers = computed<Record<string, boolean>>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    return (this.rawState() as any)?.readyPlayers || {};
+  });
 
   // 子类必须提供游戏ID用于 websocket 路由
   abstract readonly gameId: string;
 
-  // 子类实现单机状态、单机玩家列表、单机获胜者列表
+  // 子类必须实现单机状态
   abstract readonly singlePlayerStatus: import('@angular/core').Signal<GameStatusType | string>;
-  abstract readonly singlePlayerList: import('@angular/core').Signal<any[]>;
-  abstract readonly singlePlayerWinners: import('@angular/core').Signal<string[]>;
+
+  // 默认实现：单个玩家自己；需要特殊列表的游戏（如五子棋双方）可 override
+  readonly singlePlayerList = computed<any[]>(() => [{ id: this.playerId() }]);
+
+  // 默认实现：无明确胜者（得分类游戏）；需要显示胜者的游戏可 override
+  readonly singlePlayerWinners = computed<string[]>(() => []);
 
   readonly playersList = computed<any[]>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
@@ -78,6 +125,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
+    this._pkPrevStatus = '';
+    this._pkStatSubmitted = false;
+    this.lastStatResult.set(null);
     if (mode !== GameMode.Single) {
       this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId);
     }
@@ -156,5 +206,73 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
   kickPlayer(playerId: string) {
     this.ws.send({ type: C2SAction.KickPlayer, target: playerId });
+  }
+
+  // ── 统计辅助方法 ──────────────────────────────────────────────────────────
+
+  /** 获取本游戏的个人最佳统计（使用子类 gameId）。 */
+  protected getStats() {
+    return this.stats.getStats(this.gameId);
+  }
+
+  /**
+   * 提交单机模式统计，自动填入 gameId / mode / difficulty。
+   * 子类只需传入游戏特有的 score / time / won。
+   */
+  protected submitSingleStat(payload: { score?: number; time?: number; won?: boolean } = {}): Observable<SubmitStatResponse> {
+    this.lastStatResult.set(null);
+    return this.stats.submitStat(this.gameId, {
+      mode: GameMode.Single,
+      difficulty: this.currentDifficulty() as string,
+      score: payload.score ?? 0,
+      time:  payload.time  ?? 0,
+      won:   payload.won   ?? true,
+    }).pipe(
+      tap(res => {
+        this.lastStatResult.set(res);
+        if (res.xp_result?.xp_earned) {
+          this.xpService.showXpGain(res.xp_result.xp_earned);
+        }
+        if (res.new_achievements?.length) {
+          this.achievementService.handleNewAchievements(res.new_achievements);
+        }
+      })
+    );
+  }
+
+  /**
+   * 子类可 override 此方法，返回本游戏 PK 模式下的 score / time。
+   * 默认从 rawState.players[playerId] 提取 score 字段。
+   */
+  protected extractPKStatPayload(): { score: number; time: number } {
+    const playerState = (this.rawState() as any)?.players?.[this.playerId()];
+    return {
+      score: playerState?.score ?? 0,
+      time:  playerState?.time  ?? playerState?.time_taken ?? 0,
+    };
+  }
+
+  /** PK 对战结束时由 effect 自动调用，外部不应直接调用。 */
+  private _submitPKStat(): void {
+    const won = this.winners().includes(this.playerId());
+    const { score, time } = this.extractPKStatPayload();
+    this.stats.submitStat(this.gameId, {
+      mode:       this.currentRoomMode() as string,
+      difficulty: this.currentDifficulty() as string,
+      score,
+      time,
+      won,
+    }).subscribe({
+      next: res => {
+        this.lastStatResult.set(res);
+        if (res.xp_result?.xp_earned) {
+          this.xpService.showXpGain(res.xp_result.xp_earned);
+        }
+        if (res.new_achievements?.length) {
+          this.achievementService.handleNewAchievements(res.new_achievements);
+        }
+      },
+      error: () => {}
+    });
   }
 }

@@ -53,24 +53,11 @@ export class SokobanStore extends BaseGameStore {
     return level ? level.level_num : 1;
   });
 
-  override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localEngine()?.status || 'playing';
-    const st = this.rawState() as any;
-    if (!st) return GameStatus.Waiting;
-    let status = st.status;
-    if (typeof status === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || 'waiting';
-    }
-    return status || 'waiting';
-  });
+  override readonly singlePlayerStatus = computed<GameStatusType | string>(() =>
+    this.localEngine()?.status || 'playing'
+  );
 
   override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
-
-  override readonly readyPlayers = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return {};
-    return (this.rawState() as any)?.readyPlayers || {};
-  });
 
   myPlayerState = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) {
@@ -151,6 +138,18 @@ export class SokobanStore extends BaseGameStore {
       }));
   });
 
+  joinRoomWithLevel(levelId: string, difficulty: string) {
+    super.joinRoom('', GameMode.Single, difficulty);
+    this.isDead.set(false);
+    this.timeSpent.set(0);
+    this.currentDifficulty.set(difficulty);
+    this.http.get<any[]>(`${environment.apiUrl}/sokoban/levels/${difficulty}`).subscribe(res => {
+      this.levelsList.set(res || []);
+    });
+    this.loadLevel(levelId);
+    this.startTimer();
+  }
+
   override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string) {
     super.joinRoom(roomId, mode, difficulty, hostId);
     this.isDead.set(false);
@@ -218,11 +217,17 @@ export class SokobanStore extends BaseGameStore {
   private submitFinish() {
     const eng = this.localEngine();
     if (!eng || !this.currentLevelId()) return;
-    this.http.post(`${environment.apiUrl}/sokoban/puzzle/${this.currentLevelId()}/finish`, {
+    this.http.post<any>(`${environment.apiUrl}/sokoban/puzzle/${this.currentLevelId()}/finish`, {
       moves: eng.moves,
       time_spent: this.timeSpent(),
-      stars: 3
-    }).subscribe();
+      stars: 3,
+      mode: GameMode.Single,
+      difficulty: this.currentDifficulty()
+    }).subscribe(res => {
+      this.lastStatResult.set(res);
+      if (res?.xp_result?.xp_earned) this.xpService.showXpGain(res.xp_result.xp_earned);
+      if (res?.new_achievements?.length) this.achievementService.handleNewAchievements(res.new_achievements);
+    });
   }
 
   undo() {

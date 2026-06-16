@@ -1,7 +1,7 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -23,6 +23,9 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { TutorialService } from '../../../core/services/tutorial.service';
+import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 
@@ -41,7 +44,8 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameResultOverlayComponent,
     GameLobbyPanelComponent,
     GameHeaderComponent,
-    PlayerBadgeComponent
+    PlayerBadgeComponent,
+    TutorialOverlayComponent
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,10 +62,16 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   authStore = inject(AuthStore);
   private roomLifecycle!: RoomLifecycleHandle;
   private gameRegistry = inject(GameRegistryService);
+  private tutorialService = inject(TutorialService);
+  private dailyService = inject(DailyChallengeService);
+  private route = inject(ActivatedRoute);
+  private pendingDailyChallengeId = signal<string | null>(null);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
-  
+
   view = this.store.view;
   showOverlay = signal(false);
+  showTutorial = signal(false);
+  tutorialSteps = this.tutorialService.getStepsForGame('sudoku');
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
@@ -85,6 +95,17 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       }
     });
 
+    effect(() => {
+      const result = this.store.lastStatResult();
+      const challengeId = this.pendingDailyChallengeId();
+      if (result && challengeId) {
+        untracked(() => {
+          this.dailyService.finish(0, this.store.timeSpent()).subscribe();
+          this.pendingDailyChallengeId.set(null);
+        });
+      }
+    });
+
     // Room lifecycle: cross-game join, reconnect, room dismissed handling
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sudoku',
@@ -99,6 +120,25 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   override ngOnInit() {
     super.ngOnInit(); // connects lobby WS
     this.view.set('lobby');
+
+    const qp = this.route.snapshot.queryParamMap;
+    const dailyChallengeId = qp.get('dailyChallengeId');
+    const puzzleId = qp.get('puzzleId');
+    if (dailyChallengeId && puzzleId) {
+      this.pendingDailyChallengeId.set(dailyChallengeId);
+      this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${puzzleId}`).subscribe(res => {
+        if (res?.puzzle) {
+          this.startLevel({
+            id: res.puzzle.id,
+            puzzle: res.puzzle.puzzle,
+            solution: res.puzzle.solution,
+            savedState: res.progress?.current_state,
+            timeSpent: res.progress?.time_spent || 0
+          });
+        }
+      });
+      return;
+    }
 
     // Check for cross-game join or reconnect
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
@@ -174,6 +214,14 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.view.set('play');
     this.store.currentPuzzleId.set(level.id);
     this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);
+    if (!this.tutorialService.hasSeen('sudoku') && this.tutorialSteps.length) {
+      setTimeout(() => this.showTutorial.set(true), 500);
+    }
+  }
+
+  onTutorialDone(): void {
+    this.tutorialService.markSeen('sudoku');
+    this.showTutorial.set(false);
   }
 
   playNextLevel() {

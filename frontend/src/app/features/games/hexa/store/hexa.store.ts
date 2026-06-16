@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { HexaEngine, HexPiece, HexCell, HexCoord, HexaActionType, HexaState } from './hexa-engine';
 import { AudioService } from '../../../../core/services/audio.service';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
+import { storageGet, storageSet } from '../../../../core/utils/browser.util';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 @Injectable()
@@ -11,7 +11,6 @@ export class HexaStore extends BaseGameStore {
   readonly gameId = 'hexa';
   
   private audio = inject(AudioService);
-  private statsService = inject(GameStatsService);
 
   // Local Engine
   engine = new HexaEngine();
@@ -33,7 +32,7 @@ export class HexaStore extends BaseGameStore {
     return Object.values(state.players);
   });
 
-  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
+
 
   readonly pkOpponents = computed(() => {
     const state = this.rawState() as any;
@@ -62,7 +61,7 @@ export class HexaStore extends BaseGameStore {
     return state.players[this.playerId()];
   });
 
-  override readonly singlePlayerWinners = computed(() => []);
+
 
   readonly singlePlayerStatus = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) {
@@ -113,7 +112,7 @@ export class HexaStore extends BaseGameStore {
     if (mode === GameMode.Single) {
       this.startSinglePlayer();
       if (this.auth.isAuthenticated()) {
-        this.statsService.getStats('hexa').subscribe(stats => {
+        this.getStats().subscribe(stats => {
           const stat = stats.find(s => s.Mode === GameMode.Single);
           if (stat) this.bestScore.set(stat.BestScore);
         });
@@ -150,13 +149,7 @@ export class HexaStore extends BaseGameStore {
         this.ws.send({ action: C2SAction.GameOver });
       } else {
         if (this.auth.isAuthenticated()) {
-          this.statsService.submitStat('hexa', {
-            mode: GameMode.Single,
-            difficulty: '',
-            score: this.score(),
-            time: 0,
-            won: false
-          }).subscribe();
+          this.submitSingleStat({ score: this.score(), won: false }).subscribe();
         }
       }
     }
@@ -199,11 +192,11 @@ export class HexaStore extends BaseGameStore {
   }
 
   private saveSinglePlayer() {
-    localStorage.setItem('hexa_single_save', JSON.stringify(this.engine.getState()));
+    storageSet('hexa_single_save', JSON.stringify(this.engine.getState()));
   }
 
   loadSinglePlayer() {
-    const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem('hexa_single_save') : null);
+    const saved = storageGet('hexa_single_save');
     if (saved) {
       try {
         const data = JSON.parse(saved) as HexaState;

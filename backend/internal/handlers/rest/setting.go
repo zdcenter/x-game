@@ -26,25 +26,37 @@ func GetPublicSettings(c fiber.Ctx) error {
 	return c.JSON(result)
 }
 
-// GetAdminSettings returns all system settings
+// GetAdminSettings returns all system settings as {settings: [{key,value}]}
 func GetAdminSettings(c fiber.Ctx) error {
 	var settings []domain.SystemSetting
 	if err := db.DB.Find(&settings).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch settings"})
 	}
 
-	result := make(map[string]string)
-	for _, s := range settings {
-		result[s.Key] = s.Value
+	type kvPair struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
 	}
-	return c.JSON(result)
+	pairs := make([]kvPair, 0, len(settings))
+	for _, s := range settings {
+		pairs = append(pairs, kvPair{Key: s.Key, Value: s.Value})
+	}
+	return c.JSON(fiber.Map{"settings": pairs})
 }
 
 type UpdateSettingsRequest struct {
 	Settings map[string]string `json:"settings"`
 }
 
-// UpdateSettings updates multiple system settings at once
+// BulkUpdateSettingsRequest accepts an array of {key, value} pairs
+type BulkUpdateSettingsRequest struct {
+	Settings []struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	} `json:"settings"`
+}
+
+// UpdateSettings updates multiple system settings at once (map format)
 func UpdateSettings(c fiber.Ctx) error {
 	var req UpdateSettingsRequest
 	if err := c.Bind().Body(&req); err != nil {
@@ -52,21 +64,34 @@ func UpdateSettings(c fiber.Ctx) error {
 	}
 
 	for key, val := range req.Settings {
-		setting := domain.SystemSetting{Key: key, Value: val}
-		// Save to DB
-		if err := db.DB.Save(&setting).Error; err != nil {
+		if err := upsertSetting(key, val); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update setting: " + key})
 		}
+	}
+	return c.JSON(fiber.Map{"message": "Settings updated successfully"})
+}
 
-		// Handle specific side effects
-		if key == "simulator_enabled" {
-			if val == "true" {
-				simulator.Enabled = true
-			} else {
-				simulator.Enabled = false
-			}
+// BulkUpdateSettings updates settings from an array of {key,value} pairs
+func BulkUpdateSettings(c fiber.Ctx) error {
+	var req BulkUpdateSettingsRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+	for _, kv := range req.Settings {
+		if err := upsertSetting(kv.Key, kv.Value); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update setting: " + kv.Key})
 		}
 	}
-
 	return c.JSON(fiber.Map{"message": "Settings updated successfully"})
+}
+
+func upsertSetting(key, val string) error {
+	setting := domain.SystemSetting{Key: key, Value: val}
+	if err := db.DB.Save(&setting).Error; err != nil {
+		return err
+	}
+	if key == "simulator_enabled" {
+		simulator.Enabled = val == "true"
+	}
+	return nil
 }

@@ -18,12 +18,13 @@ import { ShareService } from '../../core/services/share.service';
 import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
+import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, FooterComponent],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, FooterComponent, DailyChallengeBannerComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })

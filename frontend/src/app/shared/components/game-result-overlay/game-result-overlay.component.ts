@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { GameRegistryService, GameConfig } from '../../../core/services/game-registry.service';
 import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { XPResult } from '../../../core/services/game-stats.service';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -30,6 +31,35 @@ import { AuthStore } from '../../../core/auth/auth.store';
         <p class="text-[var(--color-text-muted)] text-sm md:text-base mb-8 relative z-10 font-medium">
           {{ subtitle }}
         </p>
+
+        <!-- New Record Banner -->
+        @if (isNewRecord) {
+          <div class="w-full mb-4 relative z-10">
+            <div class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-amber-400/20 border border-amber-400/40 text-amber-300 font-black text-sm animate-pulse">
+              🏆 {{ i18n.t('result.new_record')() }}
+            </div>
+          </div>
+        }
+
+        <!-- XP Gain display -->
+        @if (xpResult && xpResult.xp_earned > 0) {
+          <div class="w-full mb-6 relative z-10">
+            <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+              <div class="flex items-center gap-2">
+                @if (xpResult.leveled_up) {
+                  <span class="text-xl">⬆️</span>
+                  <span class="text-sm font-black text-[var(--color-accent-from)]">{{ i18n.t('result.level_up')() }} Lv.{{ xpResult.level }}</span>
+                } @else {
+                  <span class="text-xl">✨</span>
+                  <span class="text-sm font-bold text-[var(--color-text-muted)]">{{ i18n.t('xp.current_xp')() }}</span>
+                }
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-black text-[var(--color-accent-to)]">+{{ xpResult.xp_earned }} XP</span>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Stats Grid -->
         @if (stats && stats.length > 0) {
@@ -133,6 +163,10 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() showDismiss = false;
   @Input() showLeave = false;
   @Input() enableChangeRoomGame = false;
+
+  /** Optional: pass result from submitSingleStat() response to show XP & new-record badge */
+  @Input() xpResult?: XPResult | null;
+  @Input() isNewRecord?: boolean;
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() restart = new EventEmitter<void>();

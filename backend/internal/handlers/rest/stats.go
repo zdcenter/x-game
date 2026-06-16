@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/internal/service"
 	"github.com/x-game/backend/pkg/db"
 	"gorm.io/gorm"
 )
@@ -112,9 +113,24 @@ func SubmitStat(c fiber.Ctx) error {
 		db.DB.Save(&stat)
 	}
 
+	// Award XP
+	isPK := service.IsPKMode(req.Mode)
+	xpAmount := service.CalcEventXP(isPK, req.Won)
+	xpResult := service.AddXP(userID, xpAmount)
+
+	// Record match history
+	service.RecordMatch(userID, gameID, req.Mode, req.Difficulty, req.Won, req.Score, req.Time, xpAmount)
+
+	// Check achievements
+	newAchievements := service.CheckAchievements(service.AchievementContext{
+		UserID: userID, GameID: gameID, Mode: req.Mode, Won: req.Won,
+	})
+
 	return c.JSON(fiber.Map{
-		"message":     "Stat submitted successfully",
-		"stat":        stat,
-		"isNewRecord": isNewRecord,
+		"message":          "Stat submitted successfully",
+		"stat":             stat,
+		"isNewRecord":      isNewRecord,
+		"xp_result":        xpResult,
+		"new_achievements": newAchievements,
 	})
 }

@@ -119,6 +119,8 @@
                 i18n-title="@@game.win" title="game.win"
                 i18n-promptText="@@game.sudoku.next_level_prompt" promptText="Level cleared! Play next?"
                 [stats]="getSinglePlayerStats()"
+                [xpResult]="store.lastStatResult()?.xp_result"
+                [isNewRecord]="store.lastStatResult()?.isNewRecord"
                 [showNextLevel]="true"
                 (leave)="store.view.set('lobby')"
                 (nextLevel)="playNextLevel()"
@@ -161,5 +163,10 @@
       </div>
 }
 
+    <app-tutorial-overlay
+      [steps]="tutorialSteps"
+      [visible]="showTutorial()"
+      (done)="onTutorialDone()">
+    </app-tutorial-overlay>
     </div>
   

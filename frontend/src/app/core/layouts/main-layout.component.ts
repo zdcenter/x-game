@@ -26,11 +26,11 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
               </span>
             </a>
             
-            <a routerLink="/docs" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
-              📖 {{ i18n.t('docs.title')() }}
+            <a routerLink="/leaderboard" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              🏆 {{ i18n.t('leaderboard.title')() }}
             </a>
-            <a routerLink="/blog" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
-              📝 Blog
+            <a routerLink="/daily" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📅 {{ i18n.t('daily.title')() }}
             </a>
           </div>
 

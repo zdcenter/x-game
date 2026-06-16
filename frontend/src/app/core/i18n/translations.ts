@@ -1,4 +1,5 @@
 import { coreTranslations } from './core.translations';
+import { retentionTranslations } from './retention.translations';
 import { minesweeperTranslations } from '../../features/games/minesweeper/i18n/minesweeper.translations';
 import { sudokuTranslations } from '../../features/games/sudoku/i18n/sudoku.translations';
 import { slidingTranslations } from '../../features/games/sliding/i18n/sliding.translations';
@@ -24,8 +25,8 @@ const gameTranslations: Record<Lang, Record<string, string>>[] = [
   watersortTranslations,
 ];
 
-// Auto-merge core + all game translations
+// Auto-merge core + retention + all game translations
 export const TRANSLATIONS: Record<Lang, Record<string, string>> = {
-  en: Object.assign({}, coreTranslations['en'], ...gameTranslations.map(t => t['en'])),
-  zh: Object.assign({}, coreTranslations['zh'], ...gameTranslations.map(t => t['zh'])),
+  en: Object.assign({}, coreTranslations['en'], retentionTranslations['en'], ...gameTranslations.map(t => t['en'])),
+  zh: Object.assign({}, coreTranslations['zh'], retentionTranslations['zh'], ...gameTranslations.map(t => t['zh'])),
 };

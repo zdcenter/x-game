@@ -163,6 +163,8 @@
       currentGameId="gomoku"
       [status]="store.winner() === myPlayerId() ? 'win' : 'lose'"
       [title]="winnerText"
+      [xpResult]="store.lastStatResult()?.xp_result"
+      [isNewRecord]="store.lastStatResult()?.isNewRecord"
       [showRestart]="true"
       [showLeave]="currentRoomMode() !== GameMode.Single"
       [stats]="[]"

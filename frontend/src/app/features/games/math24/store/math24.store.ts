@@ -34,37 +34,17 @@ export class Math24Store extends BaseGameStore {
   currentPuzzleId = signal<string>('');
   
   override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.status || 'waiting';
-    }
-    const st = this.rawState() as any;
-    if (!st) return GameStatus.Waiting;
-    let status = st.status;
-    if (typeof status === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || 'waiting';
-    }
-    return status || 'waiting';
+    this.tick();
+    return this.localEngine()?.status || 'waiting';
   });
 
   players = computed(() => (this.rawState() as any)?.players || {});
 
   override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
-  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return {};
-    return (this.rawState() as any)?.readyPlayers || {};
-  });
-
   override readonly singlePlayerWinners = computed(() => {
     this.tick();
     return this.localEngine()?.finished ? [this.playerId()] : [];
-  });
-
-  override readonly hostId = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
-    return (this.rawState() as any)?.host || '';
   });
 
   freezeUntil = computed(() => {
@@ -344,10 +324,16 @@ export class Math24Store extends BaseGameStore {
     if (time > 60) stars = 1;
 
     if (this.auth.isAuthenticated() && this.currentPuzzleId()) {
-      this.http.post(`${environment.apiUrl}/math24/puzzle/${this.currentPuzzleId()}/finish`, {
+      this.http.post<any>(`${environment.apiUrl}/math24/puzzle/${this.currentPuzzleId()}/finish`, {
         time_spent: time,
-        stars: stars
-      }).subscribe();
+        stars,
+        mode: GameMode.Single,
+        difficulty: this.currentDifficulty()
+      }).subscribe(res => {
+        this.lastStatResult.set(res);
+        if (res?.xp_result?.xp_earned) this.xpService.showXpGain(res.xp_result.xp_earned);
+        if (res?.new_achievements?.length) this.achievementService.handleNewAchievements(res.new_achievements);
+      });
     }
   }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/internal/service"
 	"github.com/x-game/backend/pkg/db"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -87,7 +88,10 @@ func Login(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
 	}
 
-	return c.JSON(fiber.Map{"token": t, "user": user})
+	bonusXP, streak := service.CheckLoginStreak(user.ID)
+	db.DB.First(&user, user.ID)
+
+	return c.JSON(fiber.Map{"token": t, "user": user, "login_streak": streak, "bonus_xp": bonusXP})
 }
 
 func GuestLogin(c fiber.Ctx) error {

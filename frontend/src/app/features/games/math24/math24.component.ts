@@ -1,6 +1,7 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Math24Store } from './store/math24.store';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -14,10 +15,14 @@ import { Math24BoardComponent } from './components/math24-board/math24-board.com
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { Math24LobbyComponent } from './components/math24-lobby/math24-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { environment } from '../../../../environments/environment';
+import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { TutorialService } from '../../../core/services/tutorial.service';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 
@@ -36,7 +41,8 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     Math24LobbyComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
-    GameRulesModalComponent
+    GameRulesModalComponent,
+    TutorialOverlayComponent
   ],
   templateUrl: './math24.component.html'
 })
@@ -52,10 +58,17 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
+  private tutorialService = inject(TutorialService);
+  private dailyService = inject(DailyChallengeService);
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  private pendingDailyChallengeId = signal<string | null>(null);
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   startingCountdown = signal(3);
   showRules = signal(false);
   showOverlay = signal(false);
+  showTutorial = signal(false);
+  tutorialSteps = this.tutorialService.getStepsForGame('math24');
   private countdownInterval: any;
 
   get playerId(): string {
@@ -73,6 +86,17 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       },
     });
     
+    effect(() => {
+      const result = this.store.lastStatResult();
+      const challengeId = this.pendingDailyChallengeId();
+      if (result && challengeId) {
+        untracked(() => {
+          this.dailyService.finish(0, this.store.timeSpent()).subscribe();
+          this.pendingDailyChallengeId.set(null);
+        });
+      }
+    });
+
     effect((onCleanup) => {
       const status = this.store.status();
       if (this.store.currentRoomMode() !== GameMode.Single) {
@@ -110,7 +134,25 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   override ngOnInit() {
     super.ngOnInit();
-    
+
+    const qp = this.route.snapshot.queryParamMap;
+    const dailyChallengeId = qp.get('dailyChallengeId');
+    const puzzleId = qp.get('puzzleId');
+    if (dailyChallengeId && puzzleId) {
+      this.pendingDailyChallengeId.set(dailyChallengeId);
+      this.http.get<any>(`${environment.apiUrl}/math24/puzzle/${puzzleId}`).subscribe(res => {
+        if (res?.puzzle) {
+          this.startLevel({
+            id: res.puzzle.id,
+            puzzle: res.puzzle.cards,
+            difficulty: res.puzzle.difficulty ?? GameDifficulty.Easy,
+            levelIndex: 0
+          });
+        }
+      });
+      return;
+    }
+
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
@@ -197,6 +239,14 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {
     this.view.set('play');
     this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);
+    if (!this.tutorialService.hasSeen('math24') && this.tutorialSteps.length) {
+      setTimeout(() => this.showTutorial.set(true), 500);
+    }
+  }
+
+  onTutorialDone(): void {
+    this.tutorialService.markSeen('math24');
+    this.showTutorial.set(false);
   }
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {

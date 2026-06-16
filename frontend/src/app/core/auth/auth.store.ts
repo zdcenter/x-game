@@ -1,5 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { storageGet, storageSet, isBrowser } from '../utils/browser.util';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { storageGet, storageSet, storageRemove } from '../utils/browser.util';
+import { environment } from '../../../environments/environment';
 
 export type UserRole = 'user' | 'admin' | 'guest';
 export type UserStatus = 'active' | 'banned';
@@ -9,12 +11,17 @@ export interface User {
   username: string;
   role: UserRole;
   status: UserStatus;
+  xp: number;
+  level: number;
+  login_streak: number;
+  last_login_date: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthStore {
+  private http = inject(HttpClient);
   readonly currentUser = signal<User | null>(null);
   readonly token = signal<string | null>(null);
   
@@ -58,11 +65,20 @@ export class AuthStore {
   }
 
   logout() {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('x_game_token');
-      localStorage.removeItem('x_game_user');
-    }
+    storageRemove('x_game_token');
+    storageRemove('x_game_user');
     this.token.set(null);
     this.currentUser.set(null);
+  }
+
+  refreshProfile(): void {
+    if (!this.token()) return;
+    this.http.get<User>(`${environment.apiUrl}/profile/me`).subscribe({
+      next: user => {
+        storageSet('x_game_user', JSON.stringify(user));
+        this.currentUser.set(user);
+      },
+      error: () => {}
+    });
   }
 }

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { GAME_DEFINITIONS } from './core/config/game-definitions';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'lobby', pathMatch: 'full' },
@@ -48,75 +48,31 @@ export const routes: Routes = [
         loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
         data: { seo: { titleKey: 'seo.legal.title', descKey: 'seo.legal.desc', keywordsKey: 'seo.legal.keywords' } }
       },
-      {
-        path: 'games/minesweeper',
-        loadComponent: () => import('./features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent),
-        data: { seo: { titleKey: 'seo.minesweeper.title', descKey: 'seo.minesweeper.desc', keywordsKey: 'seo.minesweeper.keywords' } }
-      },
-      {
-        path: 'games/sudoku',
-        loadComponent: () => import('./features/games/sudoku/sudoku.component').then(m => m.SudokuComponent),
-        data: { seo: { titleKey: 'seo.sudoku.title', descKey: 'seo.sudoku.desc', keywordsKey: 'seo.sudoku.keywords' } }
-      },
-      {
-        path: 'games/sliding',
-        loadComponent: () => import('./features/games/sliding/sliding.component').then(m => m.SlidingComponent),
-        data: { seo: { titleKey: 'seo.sliding.title', descKey: 'seo.sliding.desc', keywordsKey: 'seo.sliding.keywords' } }
-      },
-      {
-        path: 'games/hexa',
-        loadComponent: () => import('./features/games/hexa/hexa.component').then(m => m.HexaComponent),
-        data: { seo: { titleKey: 'seo.hexa.title', descKey: 'seo.hexa.desc', keywordsKey: 'seo.hexa.keywords' } }
-      },
-      {
-        path: 'games/tetris',
-        loadComponent: () => import('./features/games/tetris/tetris.component').then(m => m.TetrisComponent),
-        data: { seo: { titleKey: 'seo.tetris.title', descKey: 'seo.tetris.desc', keywordsKey: 'seo.tetris.keywords' } }
-      },
-      {
-        path: 'games/block',
-        loadComponent: () => import('./features/games/block/block.component').then(m => m.BlockComponent),
-        data: { seo: { titleKey: 'seo.block.title', descKey: 'seo.block.desc', keywordsKey: 'seo.block.keywords' } }
-      },
-      {
-        path: 'games/gomoku',
-        loadComponent: () => import('./features/games/gomoku/gomoku.component').then(m => m.GomokuComponent),
-        data: { seo: { titleKey: 'seo.gomoku.title', descKey: 'seo.gomoku.desc', keywordsKey: 'seo.gomoku.keywords' } }
-      },
-      {
-        path: 'games/codebreaker',
-        loadComponent: () => import('./features/games/codebreaker/codebreaker.component').then(m => m.CodebreakerComponent),
-        data: { seo: { titleKey: 'seo.codebreaker.title', descKey: 'seo.codebreaker.desc', keywordsKey: 'seo.codebreaker.keywords' } }
-      },
-      {
-        path: 'games/math24',
-        loadComponent: () => import('./features/games/math24/math24.component').then(m => m.Math24Component),
-        data: { seo: { titleKey: 'seo.math24.title', descKey: 'seo.math24.desc', keywordsKey: 'seo.math24.keywords' } }
-      },
-      {
-        path: 'games/drop2048',
-        loadComponent: () => import('./features/games/drop2048/drop2048.component').then(m => m.Drop2048Component),
-        data: { seo: { titleKey: 'seo.drop2048.title', descKey: 'seo.drop2048.desc', keywordsKey: 'seo.drop2048.keywords' } }
-      },
-      {
-        path: 'games/lightsout',
-        loadComponent: () => import('./features/games/lightsout/lightsout.component').then(m => m.LightsoutComponent),
-        data: { seo: { titleKey: 'seo.lightsout.title', descKey: 'seo.lightsout.desc', keywordsKey: 'seo.lightsout.keywords' } }
-      },
-      {
-        path: 'games/watersort',
-        loadComponent: () => import('./features/games/watersort/watersort.component').then(m => m.WatersortComponent),
-        data: { seo: { titleKey: 'seo.watersort.title', descKey: 'seo.watersort.desc', keywordsKey: 'seo.watersort.keywords' } }
-      },
-      {
-        path: 'games/sokoban',
-        loadComponent: () => import('./features/games/sokoban/sokoban.component').then(m => m.SokobanComponent),
-        data: { seo: { titleKey: 'seo.sokoban.title', descKey: 'seo.sokoban.desc', keywordsKey: 'seo.sokoban.keywords' } }
-      },
+      // Game routes — auto-generated from GAME_DEFINITIONS. To add a new game,
+      // add its entry to core/config/game-definitions.ts only.
+      ...GAME_DEFINITIONS.map(def => ({
+        path: def.route.slice(1), // '/games/foo' -> 'games/foo'
+        loadComponent: def.loadComponent,
+        data: { seo: {
+          titleKey:    `seo.${def.id}.title`,
+          descKey:     `seo.${def.id}.desc`,
+          keywordsKey: `seo.${def.id}.keywords`
+        }}
+      })),
       {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
         data: { seo: { titleKey: 'seo.profile.title', descKey: 'seo.profile.desc', keywordsKey: 'seo.profile.keywords' } }
+      },
+      {
+        path: 'leaderboard',
+        loadComponent: () => import('./features/leaderboard/leaderboard.component').then(m => m.LeaderboardComponent),
+        data: { seo: { titleKey: 'seo.leaderboard.title', descKey: 'seo.leaderboard.desc', keywordsKey: 'seo.leaderboard.keywords' } }
+      },
+      {
+        path: 'daily',
+        loadComponent: () => import('./features/daily/daily.component').then(m => m.DailyComponent),
+        data: { seo: { titleKey: 'seo.daily.title', descKey: 'seo.daily.desc', keywordsKey: 'seo.daily.keywords' } }
       }
     ]
   },
@@ -152,6 +108,22 @@ export const routes: Routes = [
       {
         path: 'settings',
         loadComponent: () => import('./features/admin/admin-settings.component').then(m => m.AdminSettingsComponent)
+      },
+      {
+        path: 'achievements',
+        loadComponent: () => import('./features/admin/admin-achievements.component').then(m => m.AdminAchievementsComponent)
+      },
+      {
+        path: 'daily-challenges',
+        loadComponent: () => import('./features/admin/admin-daily-challenges.component').then(m => m.AdminDailyChallengesComponent)
+      },
+      {
+        path: 'leaderboard',
+        loadComponent: () => import('./features/admin/admin-leaderboard.component').then(m => m.AdminLeaderboardComponent)
+      },
+      {
+        path: 'xp-config',
+        loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent)
       }
     ]
   },

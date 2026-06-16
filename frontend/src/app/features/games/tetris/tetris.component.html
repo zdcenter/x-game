@@ -215,6 +215,8 @@
               [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
               [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
               [stats]="getOverlayStats()"
+              [xpResult]="store.lastStatResult()?.xp_result"
+              [isNewRecord]="store.lastStatResult()?.isNewRecord"
               [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
               [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
               [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"

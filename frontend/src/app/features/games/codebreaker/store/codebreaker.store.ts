@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
@@ -32,7 +31,6 @@ export interface CodebreakerState {
 export class CodebreakerStore extends BaseGameStore {
   readonly gameId = GameId.Codebreaker;
 
-  private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
 
   private localEngine = signal<LocalCodebreakerEngine | null>(null);
@@ -52,18 +50,8 @@ export class CodebreakerStore extends BaseGameStore {
   });
 
   override readonly singlePlayerStatus = computed<string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return String(this.localEngine()?.status || 'waiting');
-    }
-    const st = this.rawState() as CodebreakerState;
-    if (!st) return GameStatus.Waiting;
-    let status = st.status;
-    if (typeof status === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || 'waiting';
-    }
-    return String(status || 'waiting');
+    this.tick();
+    return String(this.localEngine()?.status || 'waiting');
   });
 
   players = computed<PlayerState[]>(() => {
@@ -87,8 +75,6 @@ export class CodebreakerStore extends BaseGameStore {
     }
   });
 
-  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
-
   myState = computed<PlayerState | null>(() => {
     return this.players().find(p => p.id === this.playerId()) || null;
   });
@@ -98,15 +84,6 @@ export class CodebreakerStore extends BaseGameStore {
     return this.players().find(p => p.id !== this.playerId()) || null;
   });
 
-  override readonly hostId = computed<string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
-    return (this.rawState() as any)?.host || '';
-  });
-
-  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return {};
-    return (this.rawState() as any)?.readyPlayers || {};
-  });
 
   constructor() {
     super();
@@ -195,12 +172,6 @@ export class CodebreakerStore extends BaseGameStore {
   }
 
   private submitSinglePlayerStats() {
-    this.statsService.submitStat(GameId.Codebreaker, {
-      mode: GameMode.Single,
-      difficulty: this.currentDifficulty() as string,
-      score: this.localEngine()?.guesses.length || 0,
-      time: 0,
-      won: true
-    }).subscribe();
+    this.submitSingleStat({ score: this.localEngine()?.guesses.length || 0 }).subscribe();
   }
 }

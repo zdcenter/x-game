@@ -1,8 +1,8 @@
 import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
+import { storageGet, storageSet } from '../../../../core/utils/browser.util';
 import { Drop2048Engine, Drop2048ActionType, DropBlock, ComboText, DROP2048_ROWS, DROP2048_COLS } from './drop2048-engine';
 export type { DropBlock, ComboText };
 import { C2SAction } from '../../../../core/models/websocket.model';
@@ -17,7 +17,6 @@ export interface Drop2048Opponent {
 export class Drop2048Store extends BaseGameStore implements OnDestroy {
   readonly gameId = 'drop2048';
 
-  private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
 
   // Engine
@@ -34,7 +33,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   isDead = signal<boolean>(false);
   combos = signal<ComboText[]>([]);
   particles = signal<{ id: string, x: number, y: number, color: string }[]>([]);
-  bestScore = signal<number>(parseInt((typeof localStorage !== 'undefined' ? localStorage.getItem('drop2048_best') : null) || '0', 10));
+  bestScore = signal<number>(parseInt(storageGet('drop2048_best') || '0', 10));
   
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
@@ -47,14 +46,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
 
   level = computed(() => Math.floor(this.score() / 500) + 1);
 
-  readonly singlePlayerStatus = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localStatus();
-    const st = this.rawState();
-    if (!st) return 'disconnected';
-    return st.status || 'waiting';
-  });
-
-  override readonly singlePlayerWinners = computed(() => []);
+  readonly singlePlayerStatus = computed(() => this.localStatus());
 
   override readonly singlePlayerList = computed(() => []);
 
@@ -84,7 +76,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
           isDead: this.isDead(),
           localStatus: this.localStatus()
         };
-        (typeof localStorage !== 'undefined' && localStorage.setItem('drop2048_save', JSON.stringify(state)));
+        storageSet('drop2048_save', JSON.stringify(state));
       }
     });
 
@@ -132,7 +124,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
 
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
-      const saved = (typeof localStorage !== 'undefined' ? localStorage.getItem('drop2048_save') : null);
+      const saved = storageGet('drop2048_save');
       if (saved) {
         try {
           const state = JSON.parse(saved);
@@ -149,7 +141,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
       this.resetLocalState();
       
       if (this.auth.isAuthenticated()) {
-        this.statsService.getStats('drop2048').subscribe(stats => {
+        this.getStats().subscribe(stats => {
           const stat = stats.find(s => s.Mode === GameMode.Single);
           if (stat) this.bestScore.set(stat.BestScore);
         });
@@ -183,16 +175,10 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.isDead.set(true);
     if (this.currentRoomMode() === GameMode.Single) {
       if (this.auth.isAuthenticated()) {
-        this.statsService.submitStat('drop2048', {
-          mode: GameMode.Single,
-          difficulty: '',
-          score: this.localScore(),
-          time: 0,
-          won: true
-        }).subscribe(res => {
+        this.submitSingleStat({ score: this.localScore() }).subscribe(res => {
           if (res.isNewRecord) {
             this.bestScore.set(this.localScore());
-            (typeof localStorage !== 'undefined' && localStorage.setItem('drop2048_best', this.localScore().toString()));
+            storageSet('drop2048_best', this.localScore().toString());
           }
         });
       }
@@ -242,7 +228,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     
     if (state.score > this.bestScore()) {
       this.bestScore.set(state.score);
-      (typeof localStorage !== 'undefined' && localStorage.setItem('drop2048_best', state.score.toString()));
+      storageSet('drop2048_best', state.score.toString());
     }
     
     this.localScore.set(state.score);

@@ -6,6 +6,7 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { BlockEngine, BlockActionType, BlockGameState } from './block-engine';
 import { BlockShape } from '../utils/shapes';
 import { C2SAction } from '../../../../core/models/websocket.model';
+import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
 
 export interface BlockOpponent {
   id: string;
@@ -36,16 +37,8 @@ export class BlockStore extends BaseGameStore {
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
-  readonly singlePlayerStatus = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localStatus();
-    const st = this.rawState();
-    if (!st) return 'disconnected';
-    return st.status || 'waiting';
-  });
+  readonly singlePlayerStatus = computed(() => this.localStatus());
 
-  override readonly singlePlayerWinners = computed(() => []);
-
-  override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
   opponents = computed<BlockOpponent[]>(() => {
     const st = this.rawState() as any;
@@ -114,7 +107,7 @@ export class BlockStore extends BaseGameStore {
           hand: this.localHand(),
           size: this.boardSize()
         };
-        (typeof localStorage !== 'undefined' && localStorage.setItem('block_save', JSON.stringify(save)));
+        storageSet('block_save', JSON.stringify(save));
       }
     });
   }
@@ -220,13 +213,14 @@ export class BlockStore extends BaseGameStore {
   private onGameOver() {
     this.localStatus.set(GameStatus.Finished);
     if (this.currentRoomMode() !== GameMode.Single) {
-      this.ws.send({ 
-        action: C2SAction.GameOver, 
-        score: this.localScore(), 
-        matrix: this.localBoard() 
+      this.ws.send({
+        action: C2SAction.GameOver,
+        score: this.localScore(),
+        matrix: this.localBoard()
       });
     } else {
-      (typeof localStorage !== 'undefined' && localStorage.removeItem('block_save'));
+      storageRemove('block_save');
+      this.submitSingleStat({ score: this.localScore(), won: false }).subscribe();
     }
   }
 
@@ -249,11 +243,11 @@ export class BlockStore extends BaseGameStore {
       hand: this.localHand(),
       size: this.boardSize()
     };
-    (typeof localStorage !== 'undefined' && localStorage.setItem('block_save', JSON.stringify(save)));
+    storageSet('block_save', JSON.stringify(save));
   }
 
   private loadSinglePlayerProgress() {
-    const saveStr = (typeof localStorage !== 'undefined' ? localStorage.getItem('block_save') : null);
+    const saveStr = storageGet('block_save');
     if (saveStr) {
       try {
         const save = JSON.parse(saveStr);

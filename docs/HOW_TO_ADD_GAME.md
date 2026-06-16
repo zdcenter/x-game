@@ -1,224 +1,534 @@
-# 新增游戏开发标准指南 (How to Add a New Game)
+# 新增游戏开发指南
 
-本指南旨在规范 X-Game 项目中新增游戏的开发流程。基于现有的高可扩展架构（前端 `BaseGameStore` + `BaseGameComponent` 以及后端 `BaseEngine`），开发者只需关注游戏本身的核心逻辑，即可零成本获得房间大厅、WebSocket 通信、断线重连、跨游戏跳转等一系列基础设施的支持。
+本项目支持两类游戏，开发流程略有不同，请先判断你的游戏属于哪一类：
+
+| 类型 | 说明 | 现有示例 |
+|---|---|---|
+| **对战游戏** | 实时 WebSocket 多人对战，后端有 GameEngine | 扫雷、俄罗斯方块、五子棋、数独(多人)… |
+| **解谜游戏** | 关卡制单机闯关，有题库数据库，用 REST API | 数独(单人)、数学24、推箱子 |
+
+> 数独同时支持两类，单机走 PuzzleRepo，多人走 GameEngine。大多数新游戏只需实现其中一种。
 
 ---
 
-## 一、 后端开发规范 (Backend)
+## 一、后端
 
-### 0. 绝对红线：严禁触碰底层房间生命周期管理 🚨
-目前的房间生命周期管理、WebSocket 连接机制、用户加入与离开的逻辑（特别是后端的 `pkg/ws/manager.go` 和 `pkg/ws/lobby.go`）已经过深度打磨，达到了最稳定和最高效的状态（包含断线重连、幽灵房间清理、防抖状态流转等）。
-在以后添加任何新游戏、新玩法或新功能时：**绝对禁止再去触碰或修改底层的加入/离开逻辑、以及房间的解散与重连机制！**
-你只需要专注于继承 `BaseEngine` 并实现你的游戏专属逻辑，底层的基础设施会自动为你提供所有支持。
+### 🚨 绝对红线
 
-### 1. 创建游戏引擎包与自动注册
-在 `backend/internal/engine/` 目录下新建你的游戏目录（例如 `backend/internal/engine/tetris/`）。
-你的对战类游戏引擎必须 **强制嵌入（embed）** `engine.BaseEngine`。这会自动继承并发锁 `Mu`、生命周期状态 `State` 和广播通道。
+**不要修改 `pkg/ws/manager.go` 和 `pkg/ws/lobby.go`。** 房间生命周期（加入/离开/断线重连/幽灵房间清理）已完全封装，新游戏只需实现引擎逻辑，底层自动运转。
 
-并在 `init()` 函数中向全局工厂注册，命名规范遵循：`游戏名_模式名`：
+---
+
+### A. 对战游戏 — 实现 GameEngine
+
+#### 1. 创建引擎包
+
+在 `backend/internal/engine/<你的游戏>/` 下创建 Go 包，每种对战模式建一个 struct：
+
 ```go
-package tetris
+// backend/internal/engine/mygame/engine.go
+package mygame
 
-import "github.com/x-game/backend/internal/engine"
+import (
+    "encoding/json"
+    "github.com/x-game/backend/internal/engine"
+)
 
-type PKStealEngine struct {
-	engine.BaseEngine // 必须嵌入！免费获得 Mu, State, Broadcast
-	// 定义你的游戏特有状态
-	Players map[string]*PlayerState
+type ClassicEngine struct {
+    engine.BaseEngine            // 必须嵌入！获得 Mu、State、Broadcast
+    Players map[string]*Player
 }
 
+type Player struct {
+    ID    string `json:"id"`
+    Score int    `json:"score"`
+}
+
+// 在 init() 中注册，命名规则：<gameId>_<mode>
 func init() {
-	engine.Register("tetris_pk_steal", func() engine.GameEngine { return &PKStealEngine{} })
+    engine.Register("mygame_classic", func() engine.GameEngine {
+        return &ClassicEngine{Players: make(map[string]*Player)}
+    })
 }
 ```
-然后在 `backend/cmd/api/main.go` 中空白导入该包（`_ "github.com/x-game/backend/internal/engine/tetris"`），使注册逻辑在程序启动时自动执行。这彻底避免了侵入和修改 `pkg/ws/manager.go`。
 
-### 2. 实现 `GameEngine` interface
-你需要实现以下核心方法（如果嵌入了 `BaseEngine` 则自动获得了状态和广播等基础方法）：
-- `InitGame(options interface{}) error`：初始化游戏参数与棋盘配置。记得如果是单机模式，直接 `e.State = engine.StatePlaying`。若是联机，必须首先置为 `e.State = engine.StateWaiting`。
-- `AddPlayer(playerID string)`：玩家加入房间时触发。
-- `RemovePlayer(playerID string)`：玩家彻底离开房间时触发。
-- `HasPlayer(playerID string) bool`：判断玩家是否存在。
-- `HandleAction(playerID string, actionType string, payload []byte) (engine.GameState, error)`：处理玩家具体操作。**🚨 此处拦截的操作名必须对应于全局枚举 `C2SAction`。**
-- `CheckGameOver() (bool, []string)`：检查游戏是否结束，返回是否结束以及胜利者的 playerID 数组。
-- `GetState() interface{}`：返回要广播给客户端的当前游戏状态结构体。
+#### 2. 实现 GameEngine 接口
+
+以下方法均需实现（已嵌入 `BaseEngine` 的方法不用重复写）：
+
+```go
+func (e *ClassicEngine) InitGame(options interface{}) error {
+    e.Mu.Lock()
+    defer e.Mu.Unlock()
+    // 联机游戏必须从 Waiting 开始
+    e.State = engine.StateWaiting
+    e.Players = make(map[string]*Player)
+    return nil
+}
+
+func (e *ClassicEngine) AddPlayer(playerID string) {
+    e.Mu.Lock()
+    defer e.Mu.Unlock()
+    e.Players[playerID] = &Player{ID: playerID}
+}
+
+func (e *ClassicEngine) RemovePlayer(playerID string) {
+    e.Mu.Lock()
+    defer e.Mu.Unlock()
+    delete(e.Players, playerID)
+}
+
+func (e *ClassicEngine) HasPlayer(playerID string) bool {
+    e.Mu.RLock()
+    defer e.Mu.RUnlock()
+    _, ok := e.Players[playerID]
+    return ok
+}
+
+func (e *ClassicEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
+    e.Mu.Lock()
+    defer e.Mu.Unlock()
+
+    // 用 HandleLifecycle 处理通用的 start / restart_game 动作
+    if engine.HandleLifecycle(&e.State, action, func() {
+        engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+    }, func() {
+        e.Players = make(map[string]*Player)
+    }) {
+        return e.State, nil
+    }
+
+    // 处理游戏专属动作（必须使用 C2SAction 中定义的字符串值）
+    switch action {
+    case "move":
+        var req struct{ Dir string }
+        json.Unmarshal(payload, &req)
+        // ... 业务逻辑
+    }
+    return e.State, nil
+}
+
+func (e *ClassicEngine) CheckGameOver() (bool, []string) {
+    e.Mu.RLock()
+    defer e.Mu.RUnlock()
+    // 返回 (是否结束, 胜者ID列表)
+    return false, nil
+}
+
+func (e *ClassicEngine) GetState() interface{} {
+    e.Mu.RLock()
+    defer e.Mu.RUnlock()
+    return map[string]interface{}{
+        "status":  e.State,
+        "players": e.Players,
+    }
+}
+```
+
+**`action` 字符串必须与前端 `C2SAction` 枚举的值对应**（`core/models/websocket.model.ts`），两端共用同一套字符串，不能自造。
+
+#### 3. 注册 blank import（自动化）
+
+**无需手动编辑 `main.go`。** 只需在引擎包的 `init()` 注册后，运行：
+
+```bash
+cd backend && go generate ./cmd/api/...
+```
+
+脚本 `cmd/api/gen_engines.go` 会自动扫描 `internal/engine/` 所有子目录，重写 `cmd/api/engines_gen.go`。提交 `engines_gen.go` 即可。
 
 ---
 
-## 二、 前端开发规范 (Frontend) 🚨 (核心重构篇)
+### B. 解谜游戏 — 实现 PuzzleRepo
 
-经历了架构演进后，前端的 Store 和组件开发已经进入了高度标准化的时代。
+解谜游戏有题库数据库，走统一的 REST 层（`internal/handlers/rest/puzzle.go`），无需 WebSocket 引擎。
 
-### 1. 强制继承 `BaseGameStore`
-在 `frontend/src/app/features/games/你的游戏/store/你的游戏.store.ts` 中：
-必须继承 `BaseGameStore`！这会免费送你如下能力：
-- 自动帮你管理 `roomId`, `currentRoomMode`, `status`
-- 自动封装好了 `joinRoom`, `leaveRoom`, `startGame`, `ready`, `cancelReady`, `restartGame`，**严禁再次手写这些方法**。
-- 自动帮你监听全局 WS 状态同步（通过 `this.rawState()` 提供）。
+#### 1. 建 domain 模型和数据库表
+
+在 `internal/domain/` 下新建模型文件：
+
+```go
+// internal/domain/mypuzzle.go
+package domain
+
+type MyPuzzle struct {
+    ID         string `gorm:"primarykey"`
+    Difficulty string `gorm:"index"`
+    Content    string // 题目数据
+}
+
+type UserMyPuzzleProgress struct {
+    UserID    uint   `gorm:"index;not null"`
+    PuzzleID  string `gorm:"index;not null"`
+    Status    string // "playing" | "finished"
+    TimeSpent int
+    Stars     int
+}
+```
+
+然后在 `pkg/db/postgres.go` 的 `AutoMigrate` 调用中加入这两个模型（其他模型已有示例，照着加一行）。
+
+#### 2. 实现 PuzzleRepo 接口
+
+在 `internal/handlers/rest/` 新建 `mypuzzle.go`：
+
+```go
+// internal/handlers/rest/mypuzzle.go
+package rest
+
+import (
+    "github.com/x-game/backend/internal/domain"
+    "github.com/x-game/backend/pkg/db"
+)
+
+type MyPuzzleRepo struct{}
+
+func NewMyPuzzleRepo() PuzzleRepo { return &MyPuzzleRepo{} }
+
+// HasSave — 是否需要中途保存进度接口（/puzzle/:id/save）
+func (r *MyPuzzleRepo) HasSave() bool { return false }
+
+// GetLevels — 返回某难度下的关卡列表（含用户进度）
+func (r *MyPuzzleRepo) GetLevels(difficulty string, userID *uint) (any, error) {
+    var puzzles []domain.MyPuzzle
+    if err := db.DB.Where("difficulty = ?", difficulty).Find(&puzzles).Error; err != nil {
+        return nil, err
+    }
+    // 可选：合并 userID 对应的进度数据后返回
+    return puzzles, nil
+}
+
+// GetPuzzle — 返回单道题 + 用户进度（未有记录则自动创建）
+func (r *MyPuzzleRepo) GetPuzzle(puzzleID string, userID *uint) (any, any, error) {
+    var puzzle domain.MyPuzzle
+    if err := db.DB.First(&puzzle, "id = ?", puzzleID).Error; err != nil {
+        return nil, nil, err
+    }
+    var progress domain.UserMyPuzzleProgress
+    if userID != nil {
+        if err := db.DB.Where("user_id = ? AND puzzle_id = ?", *userID, puzzleID).First(&progress).Error; err != nil {
+            progress = domain.UserMyPuzzleProgress{UserID: *userID, PuzzleID: puzzleID, Status: "playing"}
+            db.DB.Create(&progress)
+        }
+    }
+    return puzzle, progress, nil
+}
+
+// SaveProgress — 可选，HasSave()=true 时才会被调用
+func (r *MyPuzzleRepo) SaveProgress(puzzleID string, userID uint, req SavePayload) error {
+    var p domain.UserMyPuzzleProgress
+    return db.DB.Where(domain.UserMyPuzzleProgress{UserID: userID, PuzzleID: puzzleID}).
+        Assign(domain.UserMyPuzzleProgress{TimeSpent: req.TimeSpent}).
+        FirstOrCreate(&p).Error
+}
+
+// Finish — 标记完成，框架层会自动 upsert UserGameStat，此处只更新业务进度表
+func (r *MyPuzzleRepo) Finish(puzzleID string, userID uint, req FinishPayload) error {
+    var p domain.UserMyPuzzleProgress
+    return db.DB.Where(domain.UserMyPuzzleProgress{UserID: userID, PuzzleID: puzzleID}).
+        Assign(domain.UserMyPuzzleProgress{Status: "finished", TimeSpent: req.TimeSpent, Stars: req.Stars}).
+        FirstOrCreate(&p).Error
+}
+```
+
+> `Finish()` 只负责更新业务进度表。`UserGameStat`（个人最佳记录）由 `makeFinishHandler` 在调用 `Finish()` 后**自动 upsert**，无需在此手写。
+
+#### 3. 在 main.go 注册路由
+
+```go
+// backend/cmd/api/main.go
+mypuzzle := v1.Group("/mypuzzle")
+mypuzzle.Use(middleware.OptionalProtected())
+rest.RegisterPuzzleRoutes(mypuzzle, "mygame", rest.NewMyPuzzleRepo())
+```
+
+这一行会自动注册以下端点：
+- `GET  /api/v1/mypuzzle/levels/:difficulty`
+- `GET  /api/v1/mypuzzle/puzzle/:id`
+- `POST /api/v1/mypuzzle/puzzle/:id/save`（仅 `HasSave()=true` 时）
+- `POST /api/v1/mypuzzle/puzzle/:id/finish` → 返回 `{ status, isNewRecord }`
+
+---
+
+## 二、前端
+
+### A. Store（对战游戏 & 解谜游戏通用）
+
+在 `frontend/src/app/features/games/<你的游戏>/store/` 下新建 `<游戏>.store.ts`，**必须继承 `BaseGameStore`**：
 
 ```typescript
+import { Injectable, computed, signal, effect } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 
 @Injectable()
-export class TetrisStore extends BaseGameStore {
-  // 定义游戏特定的本地信号
-  board = signal<number[][]>([]);
+export class MyGameStore extends BaseGameStore {
+  readonly gameId = 'mygame';
 
-  // 如果需要额外拦截或监听 rawState，可以通过 effect() 进行，但绝不要试图手动覆盖基类的生命周期状态
+  // ── 本地状态信号（游戏特有） ──
+  board = signal<number[][]>([]);
+  localScore = signal(0);
+  localStatus = signal<GameStatusType>(GameStatus.Waiting);
+
+  // ── 必须实现：单机模式下的状态来源 ──
+  readonly singlePlayerStatus = computed(() => this.localStatus());
+
+  // ── 可选：覆盖单机胜者/玩家列表 ──
+  override readonly singlePlayerWinners = computed(() => []);
+  override readonly singlePlayerList    = computed(() => [{ id: this.playerId() }]);
+
   constructor() {
     super();
+
+    // 监听多人 WS 状态变化（Single 模式不会走这里）
     effect(() => {
-      const state = this.rawState();
-      // 根据 rawState 派生更新你自己的棋盘
+      const st = this.rawState() as any;
+      if (this.currentRoomMode() === GameMode.Single || !st) return;
+      // 根据 st.status / st.board 等字段更新本地信号
     });
   }
 }
 ```
 
-### 2. 彻底禁用魔法字符串：必须使用 `C2SAction` 🚨
-前端与后端之间的通信指令，**绝对禁止**使用硬编码的字符串，如 `this.ws.send({ action: 'put_block' })`。
-所有的动作标识符必须统一集中在 `C2SAction` (位于 `frontend/src/app/core/models/websocket.model.ts`)，前后端共用一份标准：
+**基类已经提供的，不要重写：**
+- `roomId`, `currentRoomMode`, `rawState`, `status`, `readyPlayers`, `hostId`
+- `joinRoom()`, `leaveRoom()`, `startGame()`, `ready()`, `cancelReady()`, `restartGame()`
+
+**`status` 计算规则：**
+- `GameMode.Single` → 自动取 `singlePlayerStatus()`
+- 其他模式 → 自动取 `rawState().status`
+
+所以 `singlePlayerStatus` 里只写单机相关逻辑，多人状态完全不需要处理。
+
+#### 单机引擎（可选但推荐）
+
+如果有复杂的本地逻辑（棋盘计算、Undo 等），把它抽到独立的 `<游戏>-engine.ts` 文件：
+
 ```typescript
-import { C2SAction } from '../../../../core/models/websocket.model';
-
-// ❌ 错误做法：
-this.ws.send({ action: 'rotate' });
-
-// ✅ 正确规范：
-this.ws.send({ action: C2SAction.Rotate });
-```
-
-### 3. 前端单机逻辑的 `ILocalEngine` 标准
-如果你的游戏支持单机模式或纯前端计算逻辑，必须将其从 Store 里剥离，抽取到独立的 `你的游戏-engine.ts` 中，并实现 `ILocalEngine<State, Action>` 接口。
-- **优点**：彻底隔绝 UI 响应式依赖，方便写单元测试，天然支持 Undo/Redo/Hint 的状态快照。
-```typescript
-import { ILocalEngine } from '../../../../core/models/engine.model';
-
-export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
-  // 核心状态
+// my-game-engine.ts
+export class MyGameEngine {
   board: number[][] = [];
-  status: string = 'waiting';
+  status = GameStatus.Waiting;
 
-  initBoard(options: any): void { /* ... */ }
-  
-  handleAction(action: TetrisAction): void {
-    // 纯纯的 JS 业务逻辑计算
-  }
-  
-  undo(): void { /* ... */ }
+  initGame(options: any) { /* 初始化 */ }
+  handleAction(action: MyAction) { /* 纯业务逻辑，无 Angular 依赖 */ }
+  undo() { /* 可选 */ }
 }
 ```
-然后在 Store 中调用：
-```typescript
-  private engine = new TetrisEngine();
 
-  rotateBlock() {
-    if (this.currentRoomMode() === GameMode.Single) {
-       this.engine.handleAction({ type: 'ROTATE' });
-       this.board.set([...this.engine.board]); // 同步给前端 UI
-    } else {
-       this.ws.send({ action: C2SAction.Rotate }); // 联机则推给后端
-    }
+Store 中持有引擎实例，每次动作后把结果同步到 Signal：
+
+```typescript
+private engine = new MyGameEngine();
+
+makeMove(dir: string) {
+  if (this.currentRoomMode() === GameMode.Single) {
+    this.engine.handleAction({ type: 'move', dir });
+    this.board.set([...this.engine.board]);  // 同步到 Angular 信号
+  } else {
+    this.ws.send({ action: C2SAction.Move, dir });  // 发给后端
   }
+}
 ```
 
-### 4. 编写主组件 (强制继承 `BaseGameComponent` 与使用 Standalone 组件)
-主组件必须继承 `BaseGameComponent`，它为你提供 `wsService`、`gameTimer` 等，并自动调用 `connectLobby()` 连接大厅。
+---
+
+### B. 主组件
+
+在 `features/games/<你的游戏>/` 下新建 `<游戏>.component.ts`，**必须继承 `BaseGameComponent`**：
 
 ```typescript
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { BaseGameComponent } from '../../../../core/utils/base-game.component';
-import { TetrisStore } from './store/tetris.store';
+import { MyGameStore } from './store/mygame.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../../core/services/room-lifecycle';
+import { GameMode } from '../../../../core/models/game.model';
 
 @Component({
-  selector: 'app-tetris',
+  selector: 'app-mygame',
   standalone: true,
-  templateUrl: './tetris.component.html'
+  templateUrl: './mygame.component.html',
+  providers: [MyGameStore]
 })
-export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  override store = inject(TetrisStore);
-  private roomLifecycle!: RoomLifecycleHandle;
+export class MyGameComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  override store = inject(MyGameStore);
+  private lifecycle!: RoomLifecycleHandle;
 
   constructor() {
     super();
-    this.roomLifecycle = setupRoomLifecycle({
-      gameId: 'tetris',
+    this.lifecycle = setupRoomLifecycle({
+      gameId: 'mygame',
       getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => {
         this.store.leaveRoom();
-        this.roomLifecycle.clearReconnectInfo();
+        this.lifecycle.clearReconnectInfo();
       },
     });
   }
 
   override ngOnInit() {
-    super.ngOnInit(); // ← 必须！自动连接竞技大厅 WebSocket
-    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    super.ngOnInit();  // 必须！自动连接大厅 WS
+    const pending = this.lifecycle.consumePendingOrReconnect();
     if (pending) {
-       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host ?? '');
     }
   }
 
   override ngOnDestroy() {
-    super.ngOnDestroy(); // ← 必须！
+    super.ngOnDestroy();  // 必须！
     this.store.leaveRoom();
   }
-  
-  // 对于创建、加入和解散房间的统一事件处理器，调用 super 后，务必要加上 roomLifecycle 保存
-  override handleJoinRoom(...) {
-     super.handleJoinRoom(params);
-     if (params.mode !== GameMode.Single) this.roomLifecycle.saveReconnectInfo(...);
+
+  override handleJoinRoom(params: any) {
+    super.handleJoinRoom(params);
+    if (params.mode !== GameMode.Single) {
+      this.lifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
+    }
   }
 }
 ```
 
-### 5. 统一的游戏开局倒计时遮罩 (Game Starting Overlay)
-在 HTML 模板中，只需直接引入并渲染即可：
+**模板中的通用 overlay（直接复制）：**
+
 ```html
+<!-- 倒计时开局遮罩 -->
 @if (store.status() === GameStatus.Starting) {
-  <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+  <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"/>
+}
+
+<!-- 结果面板 -->
+@if (store.status() === GameStatus.Finished) {
+  <app-game-result-overlay [winners]="store.singlePlayerWinners()" .../>
 }
 ```
-
-### 6. 更新多语言配置 (i18n) 🚨 全新原生编译架构
-本项目已全量重构为基于 **Angular 原生 `@angular/localize`** 的编译时多语言架构。
-1. **HTML 模板中的静态文本：**
-   必须使用 `i18n` 属性，并指定带有 `@@` 前缀的唯一 ID。
-2. **TypeScript / Signal 逻辑中的动态文本：**
-   使用注入的 `I18nService` 配合 `t()` 方法：`this.i18n.t('game.defeat')()`
-3. **一键生成 XLF 物理文件：**
-   将中英文内容统一录入到 `frontend/src/app/core/i18n/core.translations.ts` 中。
-   进入 `frontend` 目录执行 `node generate-xlf.js`，让 Angular 底层把文本物理刻录进 HTML 里！
 
 ---
 
-## 三、 常见踩坑与开发规范准则 (Best Practices & Standards)
+### C. 注册路由（唯一入口）
 
-### 1. 全局枚举使用
-**必须严格使用 `GameDifficulty`, `GameMode`, `GameStatus` 全局常量枚举来代替所有的硬编码字符串。** 
-不论是在 `Store` 初始化还是在模板比较中。
+打开 `frontend/src/app/core/config/game-definitions.ts`，在 `GAME_DEFINITIONS` 数组末尾添加一条记录：
 
-### 2. 玩家信息栏 (Player Badge) 参数标准化 (Player Stats UI)
-为了保持全局高逼格、清爽的 UI 体验，玩家卡片中的扩展信息严禁使用冗长的文字。
-统一向 `<app-player-badge>` 的 `[stats]` 属性传入携带 `icon` 字段的配置数组，使用 Emoji 图标替代文字标签，如用 `⏱️` 表示时间，用 `🦶` 表示步数：
-```html
-<!-- ✅ 正确做法：使用清爽的 Icon -->
-[stats]="[{ icon: '⏱️', value: '01:23' }, { icon: '🦶', value: 45 }]"
+```typescript
+{
+  id: GameId.MyGame,          // 先在 game.model.ts 的 GameId 枚举里加这个值
+  route: '/games/mygame',
+  titleKey: 'lobby.mygame',
+  iconEmoji: '🎮',
+  loadComponent: () => import('../../features/games/mygame/mygame.component')
+                         .then(m => m.MyGameComponent),
+  modes: [
+    { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+    // 如果有多人模式，继续添加…
+  ],
+  difficulties: [
+    { id: GameDifficulty.Easy,   labelKey: 'game.diff_easy',   descKey: '...', desc: 'Easy' },
+    { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: '...', desc: 'Medium' },
+  ],
+  recommendations: ['sudoku', 'minesweeper']
+}
 ```
 
-### 3. 主题适配 (Dark/Light Theme)
-**绝不允许使用硬编码的 Tailwind 颜色**（如 `bg-slate-900`, `text-white`，或带有透明度的 `bg-white/10`）作为主背景和主文本色。
-必须严格使用在 `index.css` 中定义好的 CSS 全局变量（如 `var(--color-bg-main)`, `var(--color-bg-card)`, `var(--color-text-main)`）。
+**`app.routes.ts` 不需要改动。** 路由由 `GAME_DEFINITIONS` 自动生成。
 
-### 4. 游戏排版与 CSS 布局规范 (🚨 极其重要！防跳动与 Safari 兼容)
-在编写游戏的棋盘布局时，**绝对禁止**使用 `flex-1`、`flex-grow` 配合 `h-full` 来自动推算棋盘的高度。
-必须利用 `vmin` 结合物理像素强行限制棋盘的最大尺寸，使浏览器失去重新计算的余地。例如：
+---
+
+### D. 多语言（i18n）
+
+#### 静态模板文本
+
+HTML 里的固定文字使用 `i18n` 属性：
+
 ```html
-<div class="relative flex items-center justify-center shrink-0"
-     style="width: min(85vmin, 600px); height: min(85vmin, 600px);">
-  <app-your-game-board class="w-full h-full"></app-your-game-board>
-</div>
+<h1 i18n="@@mygame.title">我的游戏</h1>
 ```
 
-遵循以上规范，我们可以最大程度保证下一个游戏在接入时不仅稳定可靠，而且在多端视觉和代码可维护性上达到最顶级的体验！
+#### TypeScript 动态文本
+
+```typescript
+private i18n = inject(I18nService);
+label = this.i18n.t('mygame.win_message');  // 返回 Signal<string>
+```
+
+#### 添加翻译词条
+
+在 `frontend/src/app/core/i18n/core.translations.ts` 中添加中英文：
+
+```typescript
+'mygame.title':       { zh: '我的游戏', en: 'My Game' },
+'mygame.win_message': { zh: '你赢了！', en: 'You Win!' },
+```
+
+然后运行：
+
+```bash
+cd frontend && node generate-xlf.js
+```
+
+---
+
+### E. 个人最佳统计
+
+**对战游戏**：游戏结束后前端调用：
+
+```typescript
+private statsService = inject(GameStatsService);
+
+onGameOver() {
+  this.statsService.submitStat('mygame', {
+    mode: this.currentRoomMode(),
+    difficulty: this.currentDifficulty(),
+    score: this.localScore(),
+    time: this.timeSpent(),
+    won: true
+  }).subscribe(res => {
+    if (res.isNewRecord) { /* 显示破纪录提示 */ }
+  });
+}
+```
+
+**解谜游戏**：调用 `/puzzle/:id/finish` 端点时传入 `mode` 和 `difficulty`，后端自动 upsert 统计，响应中包含 `isNewRecord`。**不需要**另外调用 `submitStat`。
+
+```typescript
+this.http.post<{ isNewRecord: boolean }>(`${env.apiUrl}/mypuzzle/puzzle/${id}/finish`, {
+  time_spent: this.timeSpent(),
+  stars: 3,
+  mode: GameMode.Single,
+  difficulty: this.currentDifficulty()
+}).subscribe(res => {
+  if (res.isNewRecord) { /* 破纪录 */ }
+});
+```
+
+---
+
+## 三、最后几步
+
+1. **更新文档**：编辑 `docs/FEATURES.md` 添加新游戏描述，`docs/CHANGELOG.md` 添加变更记录。
+
+2. **SEO 文案**（如果需要）：在 i18n 文件中添加 `seo.<gameId>.title`、`seo.<gameId>.desc`、`seo.<gameId>.keywords` 词条，路由会自动读取。
+
+3. **数据库种子**（解谜游戏）：准备题目数据，添加到种子脚本或通过管理后台导入。
+
+4. **编译验证**：
+   ```bash
+   # 后端
+   cd backend && go build ./cmd/api/...
+   
+   # 前端类型检查
+   cd frontend && npx tsc --noEmit
+   ```
+
+---
+
+## 四、规范速查
+
+| 场景 | 正确做法 |
+|---|---|
+| WS 动作字符串 | 用 `C2SAction.Move` 枚举，禁止 `'move'` 字面量 |
+| 颜色样式 | 用 `var(--color-bg-card)` CSS 变量，禁止 `bg-slate-900` |
+| UI 文本 | 走 i18n，禁止硬编码中英文字符串 |
+| 棋盘尺寸 | `style="width: min(85vmin, 600px)"` vmin 约束，禁止 `flex-1 h-full` |
+| 玩家信息卡 | `[stats]="[{ icon: '⏱️', value: '01:23' }]"` emoji 图标形式 |
+| 多人 status | 不在 `singlePlayerStatus` 里写多人逻辑，基类已处理 |
+| 解谜统计 | 只调 `/finish`，不额外调 `submitStat` |
+| engine imports | 跑 `go generate ./cmd/api/...`，不手动改 `engines_gen.go` |

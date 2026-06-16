@@ -1,3 +1,5 @@
+//go:generate go run gen_engines.go
+
 package main
 
 import (
@@ -11,21 +13,6 @@ import (
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/middleware"
 	"github.com/x-game/backend/pkg/simulator"
-
-	// Register engines
-	_ "github.com/x-game/backend/internal/engine/block"
-	_ "github.com/x-game/backend/internal/engine/codebreaker"
-	_ "github.com/x-game/backend/internal/engine/drop2048"
-	_ "github.com/x-game/backend/internal/engine/gomoku"
-	_ "github.com/x-game/backend/internal/engine/hexa"
-	_ "github.com/x-game/backend/internal/engine/lightsout"
-	_ "github.com/x-game/backend/internal/engine/math24"
-	_ "github.com/x-game/backend/internal/engine/minesweeper"
-	_ "github.com/x-game/backend/internal/engine/sliding"
-	_ "github.com/x-game/backend/internal/engine/sokoban"
-	_ "github.com/x-game/backend/internal/engine/sudoku"
-	_ "github.com/x-game/backend/internal/engine/tetris"
-	_ "github.com/x-game/backend/internal/engine/watersort"
 )
 
 // Version is injected during build
@@ -77,34 +64,49 @@ func main() {
 	v1.Post("/games/:id/visit", rest.VisitGame)
 	v1.Get("/rooms", rest.GetRooms) // HTTP polling fallback for room list
 
+	// Profile (Protected)
+	v1.Get("/profile/me", middleware.Protected(), rest.GetProfileMe)
+
+	// Match history (Protected)
+	v1.Get("/history", middleware.Protected(), rest.GetMatchHistory)
+
+	// Achievements (optional auth for public list, protected for personal)
+	achievements := v1.Group("/achievements")
+	achievements.Use(middleware.OptionalProtected())
+	achievements.Get("/", rest.GetAchievements)
+	achievements.Get("/my", middleware.Protected(), rest.GetMyAchievements)
+
+	// Leaderboard (optional auth to show my_rank)
+	leaderboard := v1.Group("/leaderboard")
+	leaderboard.Use(middleware.OptionalProtected())
+	leaderboard.Get("/my-ranks", middleware.Protected(), rest.GetMyRanks)
+	leaderboard.Get("/:gameId", rest.GetLeaderboard)
+
+	// Daily challenge (optional auth)
+	daily := v1.Group("/daily-challenge")
+	daily.Use(middleware.OptionalProtected())
+	daily.Get("/", rest.GetTodayChallenge)
+	daily.Post("/finish", middleware.Protected(), rest.FinishDailyChallenge)
+	daily.Get("/history", middleware.Protected(), rest.GetDailyChallengeHistory)
+
 	// Stats routes (Protected)
 	stats := v1.Group("/stats")
 	stats.Use(middleware.Protected())
 	stats.Get("/:game_id", rest.GetStats)
 	stats.Post("/:game_id", rest.SubmitStat)
 
-	// Sudoku routes (Optional auth for guests)
+	// Puzzle game routes (Optional auth for guests)
 	sudoku := v1.Group("/sudoku")
 	sudoku.Use(middleware.OptionalProtected())
-	sudoku.Get("/levels/:difficulty", rest.GetSudokuLevels)
-	sudoku.Get("/puzzle/:id", rest.GetSudokuPuzzle)
-	sudoku.Post("/puzzle/:id/save", rest.SaveSudokuProgress)
-	sudoku.Post("/puzzle/:id/finish", rest.FinishSudoku)
+	rest.RegisterPuzzleRoutes(sudoku, "sudoku", rest.NewSudokuRepo())
 
-	// Math24 routes (Optional auth for guests)
 	math24 := v1.Group("/math24")
 	math24.Use(middleware.OptionalProtected())
-	math24.Get("/levels/:difficulty", rest.GetMath24Levels)
-	math24.Get("/puzzle/:id", rest.GetMath24Puzzle)
-	math24.Post("/puzzle/:id/finish", rest.FinishMath24)
+	rest.RegisterPuzzleRoutes(math24, "math24", rest.NewMath24Repo())
 
-	// Sokoban routes (Optional auth for guests)
 	sokoban := v1.Group("/sokoban")
 	sokoban.Use(middleware.OptionalProtected())
-	sokoban.Get("/levels/:difficulty", rest.GetSokobanLevels)
-	sokoban.Get("/puzzle/:id", rest.GetSokobanPuzzle)
-	sokoban.Post("/puzzle/:id/save", rest.SaveSokobanProgress)
-	sokoban.Post("/puzzle/:id/finish", rest.FinishSokoban)
+	rest.RegisterPuzzleRoutes(sokoban, "sokoban", rest.NewSokobanRepo())
 
 	// Admin routes
 	admin := v1.Group("/admin")
@@ -116,6 +118,7 @@ func main() {
 	admin.Put("/games/:id", rest.UpdateGame)
 	admin.Get("/settings", rest.GetAdminSettings)
 	admin.Put("/settings", rest.UpdateSettings)
+	admin.Put("/settings/bulk", rest.BulkUpdateSettings)
 
 	// Announcements CRUD
 	admin.Get("/announcements", rest.AdminGetAllAnnouncements)
@@ -129,6 +132,24 @@ func main() {
 	admin.Post("/ads/networks", rest.AdminAddAdNetwork)
 	admin.Put("/ads/networks/:id", rest.AdminUpdateAdNetwork)
 	admin.Delete("/ads/networks/:id", rest.AdminDeleteAdNetwork)
+
+	// Achievements management
+	admin.Get("/achievements", rest.AdminListAchievements)
+	admin.Post("/achievements", rest.AdminCreateAchievement)
+	admin.Put("/achievements/:id", rest.AdminUpdateAchievement)
+	admin.Delete("/achievements/:id", rest.AdminDeleteAchievement)
+	admin.Get("/users/:id/achievements", rest.AdminGetUserAchievements)
+
+	// Daily challenge management
+	admin.Get("/daily-challenges", rest.AdminListDailyChallenges)
+	admin.Post("/daily-challenges", rest.AdminCreateDailyChallenge)
+	admin.Post("/daily-challenges/bulk", rest.AdminBulkCreateDailyChallenges)
+	admin.Put("/daily-challenges/:id", rest.AdminUpdateDailyChallenge)
+	admin.Delete("/daily-challenges/:id", rest.AdminDeleteDailyChallenge)
+
+	// Leaderboard management
+	admin.Get("/leaderboard", rest.AdminGetLeaderboard)
+	admin.Delete("/leaderboard/stat/:statId", rest.AdminDeleteLeaderboardEntry)
 
 	// Legacy simulator endpoints (can be removed later or kept for backwards compatibility)
 	admin.Get("/simulator", rest.GetSimulatorStatus)

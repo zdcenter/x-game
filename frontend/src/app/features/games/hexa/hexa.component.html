@@ -213,6 +213,8 @@
               [status]="store.status() === GameStatus.Finished ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"
               [title]="currentRoomMode() === GameMode.Single ? t('game.you_lose')() : (store.status() === GameStatus.Finished ? (store.winners().includes(playerId) ? t('game.you_win')() : t('game.you_lose')()) : t('game.waiting_for_others')())"
               [stats]="currentRoomMode() === GameMode.Single ? [{label: t('hexa.score')() || 'SCORE', value: store.score()}, {label: t('hexa.best')() || 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: t('hexa.score')() || 'SCORE', value: store.score()}]"
+              [xpResult]="store.lastStatResult()?.xp_result"
+              [isNewRecord]="store.lastStatResult()?.isNewRecord"
               [showRestart]="currentRoomMode() === GameMode.Single || (store.status() === GameStatus.Finished && store.hostId() === playerId)"
               [showDismiss]="currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Finished && store.hostId() === playerId"
               (restart)="store.restartGame()"

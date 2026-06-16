@@ -122,35 +122,7 @@ func Register(router fiber.Router) {
 			c.Close()
 		}()
 
-		// Configure Ping/Pong heartbeat for Game WS
-		c.SetPingHandler(func(appData string) error {
-			return c.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(5*time.Second))
-		})
-
-		// Start server-side ping ticker
-		pingTicker := time.NewTicker(30 * time.Second)
-		pingDone := make(chan struct{})
-		go func() {
-			defer pingTicker.Stop()
-			for {
-				select {
-				case <-pingTicker.C:
-					if err := c.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(5*time.Second)); err != nil {
-						log.Printf("Game WS ping failed for %s: %v", playerID, err)
-						return
-					}
-				case <-pingDone:
-					return
-				}
-			}
-		}()
-
-		// Set read deadline — if no message (including pong) received in 90s, close
-		c.SetReadDeadline(time.Now().Add(90 * time.Second))
-		c.SetPongHandler(func(appData string) error {
-			c.SetReadDeadline(time.Now().Add(90 * time.Second))
-			return nil
-		})
+		pingDone := startHeartbeat(c, "Game WS "+playerID)
 
 		for {
 			mt, msg, err := c.ReadMessage()
@@ -205,35 +177,7 @@ func Register(router fiber.Router) {
 			c.Close()
 		}()
 
-		// Configure Ping/Pong heartbeat for Lobby WS
-		c.SetPingHandler(func(appData string) error {
-			return c.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(5*time.Second))
-		})
-
-		// Start server-side ping ticker
-		pingTicker := time.NewTicker(30 * time.Second)
-		pingDone := make(chan struct{})
-		go func() {
-			defer pingTicker.Stop()
-			for {
-				select {
-				case <-pingTicker.C:
-					if err := c.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(5*time.Second)); err != nil {
-						log.Printf("Lobby WS ping failed for %s: %v", playerID, err)
-						return
-					}
-				case <-pingDone:
-					return
-				}
-			}
-		}()
-
-		// Set read deadline — if no message (including pong) received in 90s, close
-		c.SetReadDeadline(time.Now().Add(90 * time.Second))
-		c.SetPongHandler(func(appData string) error {
-			c.SetReadDeadline(time.Now().Add(90 * time.Second))
-			return nil
-		})
+		pingDone := startHeartbeat(c, "Lobby WS "+playerID)
 
 		for {
 			mt, msg, err := c.ReadMessage()

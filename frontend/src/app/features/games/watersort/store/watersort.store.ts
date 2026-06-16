@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
@@ -29,25 +28,14 @@ export interface WatersortState {
 export class WatersortStore extends BaseGameStore {
   readonly gameId = GameId.WaterSort;
 
-  private statsService = inject(GameStatsService);
 
 
   private localEngine = signal<LocalWatersortEngine | null>(null);
   private tick = signal(0);
 
   override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.status || 'waiting';
-    }
-    const st = this.rawState() as any;
-    if (!st) return GameStatus.Waiting;
-    let status = st.status;
-    if (typeof status === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || 'waiting';
-    }
-    return status || 'waiting';
+    this.tick();
+    return this.localEngine()?.status || 'waiting';
   });
 
   override readonly singlePlayerWinners = computed(() => {
@@ -71,17 +59,8 @@ export class WatersortStore extends BaseGameStore {
     return (this.rawState() as any)?.players || {};
   });
 
-  override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
-  override readonly hostId = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
-    return (this.rawState() as any)?.host || '';
-  });
 
-  override readonly readyPlayers = computed<Record<string, boolean>>(() => {
-    if (this.currentRoomMode() === GameMode.Single) return {};
-    return (this.rawState() as any)?.readyPlayers || {};
-  });
 
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
@@ -140,12 +119,6 @@ export class WatersortStore extends BaseGameStore {
   }
 
   private submitSinglePlayerStats() {
-    this.statsService.submitStat(GameId.WaterSort, {
-      mode: GameMode.Single,
-      difficulty: this.currentDifficulty() as string,
-      score: this.localEngine()?.moves || 0,
-      time: 0,
-      won: true
-    }).subscribe();
+    this.submitSingleStat({ score: this.localEngine()?.moves || 0 }).subscribe();
   }
 }

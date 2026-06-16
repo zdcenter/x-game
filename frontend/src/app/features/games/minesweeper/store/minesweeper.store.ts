@@ -3,7 +3,6 @@ import { Injectable, computed, inject, effect, signal } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { LocalMinesweeperEngine, MinesweeperActionType } from './minesweeper-engine';
 import { AdService } from '../../../../core/services/ad.service';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -43,12 +42,9 @@ export interface GameState {
 
 @Injectable()
 export class MinesweeperStore extends BaseGameStore {
-  override readonly singlePlayerWinners = computed<string[]>(() => []);
-
   readonly gameId = GameId.Minesweeper;
 
   private audio = inject(AudioService);
-  private statsService = inject(GameStatsService);
   private adService = inject(AdService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
@@ -94,26 +90,9 @@ export class MinesweeperStore extends BaseGameStore {
   });
 
   readonly board = computed<Cell[][]>(() => this.myBoardData()?.cells || []);
-  override readonly singlePlayerStatus = computed<GameStatusType>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      return this.localEngine()?.status || 'waiting';
-    }
-    const s = this.rawState() as any;
-
-    const mapStatus = (st: any): GameStatusType => {
-      if (st === 0 || st === GameStatus.Waiting) return GameStatus.Waiting;
-      if (st === 1 || st === GameStatus.Starting) return GameStatus.Starting;
-      if (st === 2 || st === GameStatus.Playing) return GameStatus.Playing;
-      if (st === 3 || st === GameStatus.Finished) return GameStatus.Finished;
-      return GameStatus.Waiting;
-    };
-
-    if (s && s.status !== undefined) {
-      return mapStatus(s.status);
-    }
-    
-    return mapStatus(this.myBoardData()?.status);
-  });
+  override readonly singlePlayerStatus = computed<GameStatusType>(() =>
+    this.localEngine()?.status || 'waiting'
+  );
   
   readonly scores = computed<Record<string, number>>(() => {
     if (this.currentRoomMode() === GameMode.Single) return { [this.playerId()]: 0 };
@@ -212,7 +191,7 @@ export class MinesweeperStore extends BaseGameStore {
     
     // Load best time
     if (this.auth.currentUser()) {
-        this.statsService.getStats('minesweeper').subscribe(stats => {
+        this.getStats().subscribe(stats => {
           const stat = stats.find(s => s.Mode === GameMode.Single && s.Difficulty === difficulty);
           if (stat) this.bestTime.set(stat.BestTime);
         });
@@ -245,11 +224,17 @@ export class MinesweeperStore extends BaseGameStore {
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
       if (engine) {
+        const prevStatus = engine.status;
         engine.handleAction(action);
-        if (action.type === MinesweeperActionType.Hint) {
-           // Provide feedback logic here if necessary or in component
-        }
         this.tick.set(this.tick() + 1);
+
+        if (prevStatus !== GameStatus.Finished && engine.status === GameStatus.Finished) {
+          const isWin = !engine.cells.some(row => row.some(c => c.state === CellState.Exploded));
+          if (isWin) {
+            const timeSec = engine.startAt > 0 ? Math.round((Date.now() - engine.startAt) / 1000) : 0;
+            this.submitSingleStat({ time: timeSec, won: true }).subscribe();
+          }
+        }
       }
     } else {
       this.ws.send(action);

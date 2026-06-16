@@ -226,6 +226,8 @@
         @if (store.status() === GameStatus.Finished && showOverlay()) {
         <app-game-result-overlay currentGameId="minesweeper" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
           [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()" [disableAudio]="true"
+          [xpResult]="store.lastStatResult()?.xp_result"
+          [isNewRecord]="store.lastStatResult()?.isNewRecord"
           [showRestart]="currentRoomMode() === GameMode.Single || store.host() === playerId"
           [showDismiss]="currentRoomMode() !== GameMode.Single && store.host() === playerId"
           [showLeave]="currentRoomMode() === GameMode.Single || store.host() !== playerId" (leave)="goBack()"
@@ -234,6 +236,9 @@
           (changeRoomGame)="store.changeRoomGame($event)">
         </app-game-result-overlay>
         }
+
+        <!-- Tutorial Overlay -->
+        <app-tutorial-overlay [visible]="showTutorial()" [steps]="tutorialSteps" (done)="onTutorialDone()" />
         
       </div>
     </div>

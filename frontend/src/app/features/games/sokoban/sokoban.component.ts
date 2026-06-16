@@ -1,6 +1,6 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { SokobanStore } from './store/sokoban.store';
@@ -20,6 +20,9 @@ import { SokobanLobbyComponent } from './components/sokoban-lobby/sokoban-lobby.
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
+import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { TutorialService } from '../../../core/services/tutorial.service';
 
 @Component({
   selector: 'app-sokoban',
@@ -35,7 +38,8 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
     GameLobbyPanelComponent,
     SokobanBoardComponent,
     SokobanLobbyComponent,
-    GameRulesModalComponent
+    GameRulesModalComponent,
+    TutorialOverlayComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
@@ -238,6 +242,8 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
               { label: i18n.t('game.moves')(), value: store.myMoves() },
               { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
             ]"
+            [xpResult]="store.lastStatResult()?.xp_result"
+            [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
             [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
             [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
@@ -293,6 +299,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
   </div>
 
   <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+  <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
   `
 })
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
@@ -304,9 +311,15 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private dailyService = inject(DailyChallengeService);
   i18n = inject(I18nService);
   toastService = inject(ToastService);
-  
+  private pendingDailyChallengeId = signal<string | null>(null);
+  private tutorialService = inject(TutorialService);
+  showTutorial = signal(false);
+  tutorialSteps = this.tutorialService.getStepsForGame(GameId.Sokoban);
+
   private roomLifecycle!: RoomLifecycleHandle;
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
@@ -341,6 +354,16 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       }
     }, { allowSignalWrites: true });
 
+    effect(() => {
+      const result = this.store.lastStatResult();
+      const challengeId = this.pendingDailyChallengeId();
+      if (result && challengeId) {
+        const t = this.store.timeSpent();
+        this.dailyService.finish(0, t).subscribe();
+        this.pendingDailyChallengeId.set(null);
+      }
+    }, { allowSignalWrites: true });
+
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sokoban',
       getCurrentMode: () => this.store.currentRoomMode(),
@@ -353,7 +376,21 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   override ngOnInit() {
     super.ngOnInit();
-    
+
+    const qp = this.route.snapshot.queryParamMap;
+    const dailyChallengeId = qp.get('dailyChallengeId');
+    const puzzleId = qp.get('puzzleId');
+    const difficulty = qp.get('difficulty') ?? GameDifficulty.Easy;
+    if (dailyChallengeId && puzzleId) {
+      this.pendingDailyChallengeId.set(dailyChallengeId);
+      this.store.joinRoomWithLevel(puzzleId, difficulty);
+      this.showLobby.set(false);
+      if (!this.tutorialService.hasSeen(GameId.Sokoban) && this.tutorialSteps.length) {
+        setTimeout(() => this.showTutorial.set(true), 800);
+      }
+      return;
+    }
+
     const pendingCross = this.crossGameJoin.consumePendingJoin('sokoban');
     if (pendingCross) {
       if (pendingCross.password) this.wsService.setPendingPassword(pendingCross.password);
@@ -397,6 +434,14 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   onLevelSelect(level: {id: string, puzzle: string, difficulty: string, levelNum: number}) {
     this.store.loadLevelFromLobby(level.difficulty, level.puzzle, level.id);
     this.showLobby.set(false);
+    if (!this.tutorialService.hasSeen(GameId.Sokoban) && this.tutorialSteps.length) {
+      setTimeout(() => this.showTutorial.set(true), 800);
+    }
+  }
+
+  onTutorialDone(): void {
+    this.tutorialService.markSeen(GameId.Sokoban);
+    this.showTutorial.set(false);
   }
 
   changeDifficulty(event: Event) {

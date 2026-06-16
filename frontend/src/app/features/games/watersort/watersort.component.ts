@@ -1,4 +1,5 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
+import { storageGet, storageSet } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -19,6 +20,8 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
+import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { TutorialService } from '../../../core/services/tutorial.service';
 
 @Component({
   selector: 'app-watersort',
@@ -27,7 +30,7 @@ import { AudioService } from '../../../core/services/audio.service';
     CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
     GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
-    HintButtonComponent
+    HintButtonComponent, TutorialOverlayComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
@@ -208,6 +211,8 @@ import { AudioService } from '../../../core/services/audio.service';
               [status]="didIWin() ? 'win' : 'lose'"
               [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
               [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
+              [xpResult]="_store.lastStatResult()?.xp_result"
+              [isNewRecord]="_store.lastStatResult()?.isNewRecord"
               [showLeave]="currentRoomMode() === GameMode.Single || !isHost()"
               [showRestart]="currentRoomMode() === GameMode.Single || isHost()"
               [showDismiss]="currentRoomMode() !== GameMode.Single && isHost()"
@@ -255,6 +260,7 @@ import { AudioService } from '../../../core/services/audio.service';
   </div>
   
   <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+  <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
   `,
   styles: [`
     .is-receiving {
@@ -290,9 +296,12 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   private router = inject(Router);
   private toastService = inject(ToastService);
   private audioService = inject(AudioService);
-  
+  private tutorialService = inject(TutorialService);
+
   showRules = signal(false);
   showOverlay = signal(false);
+  showTutorial = signal(false);
+  tutorialSteps = this.tutorialService.getStepsForGame(GameId.WaterSort);
 
   get store() { return this._store; }
   override get playerId() { return this.authStore.currentUser()?.username || this.authStore.guestId; }
@@ -359,10 +368,18 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      const savedDiff = (typeof localStorage !== 'undefined' ? localStorage.getItem('watersort_single_diff') : null) || 'easy';
+      const savedDiff = storageGet('watersort_single_diff') || 'easy';
       const uniqueLocalRoom = 'local_' + this.myId;
       this._store.joinRoom(uniqueLocalRoom, GameMode.Single, savedDiff, this.myId);
+      if (!this.tutorialService.hasSeen(GameId.WaterSort) && this.tutorialSteps.length) {
+        setTimeout(() => this.showTutorial.set(true), 600);
+      }
     }
+  }
+
+  onTutorialDone(): void {
+    this.tutorialService.markSeen(GameId.WaterSort);
+    this.showTutorial.set(false);
   }
 
   override ngOnDestroy() {
@@ -385,7 +402,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   changeSingleDifficulty(diff: string) {
-    (typeof localStorage !== 'undefined' && localStorage.setItem('watersort_single_diff', diff));
+    storageSet('watersort_single_diff', diff);
     this._store.leaveRoom();
     setTimeout(() => {
       const uniqueLocalRoom = 'local_' + this.myId + '_' + Date.now();

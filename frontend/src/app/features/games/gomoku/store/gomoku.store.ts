@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
-import { GameStatsService } from '../../../../core/services/game-stats.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { LocalGomokuEngine, GomokuActionType } from './gomoku-engine';
@@ -9,11 +8,10 @@ import { C2SAction } from '../../../../core/models/websocket.model';
 
 @Injectable()
 export class GomokuStore extends BaseGameStore {
-  override readonly singlePlayerWinners = computed<string[]>(() => []);
+
 
   readonly gameId = GameId.Gomoku;
 
-  private statsService = inject(GameStatsService);
   private audio = inject(AudioService);
 
   private emptyBoard = this.createEmptyBoard();
@@ -65,19 +63,8 @@ export class GomokuStore extends BaseGameStore {
   });
 
   override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.status || 'waiting';
-    }
-    const st = this.rawState() as any;
-    if (!st) return GameStatus.Waiting;
-    
-    let status = st.status;
-    if (typeof status === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      status = statusMap[status] || 'waiting';
-    }
-    return status || 'waiting';
+    this.tick();
+    return this.localEngine()?.status || 'waiting';
   });
 
   readonly winner = computed<string | undefined>(() => {
@@ -88,10 +75,6 @@ export class GomokuStore extends BaseGameStore {
     return (this.rawState() as any)?.winner;
   });
 
-  override readonly hostId = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.playerId();
-    return (this.rawState() as any)?.host || '';
-  });
 
   override readonly singlePlayerList = computed(() => {
     this.tick();
@@ -195,12 +178,6 @@ export class GomokuStore extends BaseGameStore {
 
   private submitSinglePlayerStats(win: boolean) {
     if (!this.auth.currentUser()) return;
-    this.statsService.submitStat(GameId.Gomoku, {
-      mode: GameMode.Single,
-      difficulty: this.currentDifficulty() as string,
-      score: win ? 1 : 0,
-      time: 0,
-      won: win
-    }).subscribe();
+    this.submitSingleStat({ score: win ? 1 : 0, won: win }).subscribe();
   }
 }

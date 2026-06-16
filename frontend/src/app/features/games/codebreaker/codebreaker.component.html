@@ -309,6 +309,8 @@
       [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"
       [title]="winnerText"
       [subtitle]="winDescription"
+      [xpResult]="store.lastStatResult()?.xp_result"
+      [isNewRecord]="store.lastStatResult()?.isNewRecord"
       [showRestart]="true"
       [showLeave]="true"
       (restart)="onRestart()"
@@ -346,5 +348,9 @@
   </div>
     }
 
-
+  <app-tutorial-overlay
+    [steps]="tutorialSteps"
+    [visible]="showTutorial()"
+    (done)="onTutorialDone()">
+  </app-tutorial-overlay>
 </div>

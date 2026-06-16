@@ -48,6 +48,10 @@ export const storageSet = (key: string, value: string): void => {
   if (isBrowser()) localStorage.setItem(key, value);
 };
 
+export const storageRemove = (key: string): void => {
+  if (isBrowser()) localStorage.removeItem(key);
+};
+
 export const getNavigatorLanguage = (): string | null =>
   isBrowser() ? navigator.language : null;
 

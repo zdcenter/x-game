@@ -52,6 +52,27 @@ import { ThemeService } from '../theme/theme.service';
             <span>🛠️</span>
             <span><ng-container i18n="@@admin.menu.settings">System Settings</ng-container></span>
           </a>
+
+          <!-- Divider -->
+          <div class="border-t border-[var(--color-border-card)] my-2 opacity-40"></div>
+          <p class="px-4 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] opacity-50 mb-1">Retention</p>
+
+          <a routerLink="/admin/achievements" routerLinkActive="bg-yellow-500/20 text-yellow-400 border-yellow-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>🏅</span>
+            <span><ng-container i18n="@@admin.menu.achievements">Achievements</ng-container></span>
+          </a>
+          <a routerLink="/admin/daily-challenges" routerLinkActive="bg-orange-500/20 text-orange-400 border-orange-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>📅</span>
+            <span><ng-container i18n="@@admin.menu.daily_challenges">Daily Challenges</ng-container></span>
+          </a>
+          <a routerLink="/admin/leaderboard" routerLinkActive="bg-blue-500/20 text-blue-400 border-blue-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>🏆</span>
+            <span><ng-container i18n="@@admin.menu.leaderboard">Leaderboard</ng-container></span>
+          </a>
+          <a routerLink="/admin/xp-config" routerLinkActive="bg-green-500/20 text-green-400 border-green-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>✨</span>
+            <span><ng-container i18n="@@admin.menu.xp_config">XP Config</ng-container></span>
+          </a>
         </nav>
 
         <!-- Current User Info -->

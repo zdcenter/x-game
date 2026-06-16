@@ -205,6 +205,8 @@
           @if (store.status() === GameStatus.Finished && showOverlay()) {
             <app-game-result-overlay currentGameId="sliding" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
               [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()"
+              [xpResult]="store.lastStatResult()?.xp_result"
+              [isNewRecord]="store.lastStatResult()?.isNewRecord"
               [showRestart]="currentRoomMode() === GameMode.Single || store.hostId() === playerId"
               [showDismiss]="currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
               [showLeave]="currentRoomMode() === GameMode.Single || store.hostId() !== playerId" (leave)="goBack()"

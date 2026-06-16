@@ -1,5 +1,6 @@
 import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
+import { storageGet, storageSet } from '../../../../core/utils/browser.util';
 
 export enum SlidingActionType {
   Move = 'move'
@@ -42,7 +43,7 @@ export class LocalSlidingEngine implements ILocalEngine<any, SlidingAction> {
         endAt: this.endAt,
         moves: this.moves
       };
-      (typeof localStorage !== 'undefined' && localStorage.setItem(LocalSlidingEngine.STORAGE_KEY, JSON.stringify(data)));
+      storageSet(LocalSlidingEngine.STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
       console.error('Failed to save sliding engine state', e);
     }
@@ -50,7 +51,7 @@ export class LocalSlidingEngine implements ILocalEngine<any, SlidingAction> {
 
   static loadFromStorage(): { engine: LocalSlidingEngine, difficulty: string } | null {
     try {
-      const dataStr = (typeof localStorage !== 'undefined' ? localStorage.getItem(LocalSlidingEngine.STORAGE_KEY) : null);
+      const dataStr = storageGet(LocalSlidingEngine.STORAGE_KEY);
       if (dataStr) {
         const data = JSON.parse(dataStr);
         if (data && data.size && data.cells) {

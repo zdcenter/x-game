@@ -54,6 +54,22 @@
         <source>admin.menu.ads</source>
         <target>广告管理</target>
       </trans-unit>
+      <trans-unit id="admin.menu.achievements" datatype="html">
+        <source>Achievements</source>
+        <target>成就管理</target>
+      </trans-unit>
+      <trans-unit id="admin.menu.daily_challenges" datatype="html">
+        <source>Daily Challenges</source>
+        <target>每日挑战管理</target>
+      </trans-unit>
+      <trans-unit id="admin.menu.leaderboard" datatype="html">
+        <source>Leaderboard</source>
+        <target>排行榜管理</target>
+      </trans-unit>
+      <trans-unit id="admin.menu.xp_config" datatype="html">
+        <source>XP Config</source>
+        <target>XP配置</target>
+      </trans-unit>
       <trans-unit id="auth.logout" datatype="html">
         <source>auth.logout</source>
         <target>退出登录</target>

@@ -188,6 +188,8 @@
               [status]="resultStatus"
               [title]="resultTitle"
               [stats]="resultStats"
+              [xpResult]="store.lastStatResult()?.xp_result"
+              [isNewRecord]="store.lastStatResult()?.isNewRecord"
               [showRestart]="store.currentRoomMode() === GameMode.Single || (store.status() === GameStatus.Finished && store.hostId() === playerId)"
               [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Finished && store.hostId() === playerId"
               [showLeave]="store.currentRoomMode() !== GameMode.Single"
