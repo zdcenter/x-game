@@ -2,7 +2,7 @@
   <div class="flex-1 flex flex-col lg:flex-row overflow-hidden p-1 lg:p-4 gap-2 lg:gap-6">
 
     <!-- LEFT: Main Game Area -->
-    <div class="flex-1 relative min-w-0 min-h-[600px] lg:min-h-0 flex flex-col">
+    <div class="flex-1 relative min-w-0 flex flex-col">
       <div class="flex-1 flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         
@@ -49,7 +49,7 @@
 
           @if (view() === 'play') {
             <div class="flex-1 flex flex-col relative w-full min-h-0">
-              <div class="flex-1 overflow-y-auto flex flex-col relative bg-[var(--color-bg-base)] p-4">
+              <div class="flex-1 overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-4">
           
           <!-- Top Opponents Panel in PK Mode / Local Player Panel in Single -->
           <div class="flex-none pt-1 pb-2 mb-1 border-b border-[var(--color-border-card)]">
@@ -86,7 +86,7 @@
           </div>
 
           <!-- Main Game Board with Top Stats -->
-          <div class="flex-1 relative flex flex-col items-center justify-start min-h-[450px] pt-4 md:pt-8">
+          <div class="flex-1 relative flex flex-col items-center justify-start pt-4 md:pt-8">
             
 
 

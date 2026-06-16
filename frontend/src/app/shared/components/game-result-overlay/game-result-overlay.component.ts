@@ -8,6 +8,8 @@ import { GameRegistryService, GameConfig } from '../../../core/services/game-reg
 import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { XPResult } from '../../../core/services/game-stats.service';
+import { ShareService } from '../../../core/services/share.service';
+import { getOrigin } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -94,7 +96,7 @@ import { XPResult } from '../../../core/services/game-stats.service';
             {{ t('game.return_lobby') || 'Return to Lobby' }}
           </button>
           @if (showRestart) {
-            <button (click)="handleRestart()" 
+            <button (click)="handleRestart()"
               [ngClass]="{
                 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-lg hover:shadow-xl': !showNextLevel,
                 'bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)]': showNextLevel
@@ -110,13 +112,23 @@ import { XPResult } from '../../../core/services/game-stats.service';
             </button>
           }
         </div>
-        
+
+        <!-- Share + Dismiss row -->
         <div class="w-full flex gap-3 mt-3 relative z-10">
-            @if (showDismiss) {
-              <button (click)="handleDismiss()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 transition-colors">
-                <ng-container i18n="@@game.dismiss_room">Dismiss Room</ng-container>
-              </button>
-            }
+          @if (currentGameId) {
+            <button (click)="shareResult()"
+              class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white border border-blue-500/20 active:scale-95 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              {{ t('share.share_score') || 'Share Result' }}
+            </button>
+          }
+          @if (showDismiss) {
+            <button (click)="handleDismiss()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 transition-colors">
+              <ng-container i18n="@@game.dismiss_room">Dismiss Room</ng-container>
+            </button>
+          }
         </div>
       </div>
 
@@ -146,6 +158,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
   private adService = inject(AdService);
+  private shareService = inject(ShareService);
   authStore = inject(AuthStore);
 
   GameResult = GameResult;
@@ -228,6 +241,31 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   handleDismiss() {
     this.adService.tryShowInterstitial(() => this.dismiss.emit());
+  }
+
+  shareResult() {
+    if (!this.currentGameId) return;
+    const config = this.gameRegistry.getConfig(this.currentGameId);
+    const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
+    const url = `${getOrigin()}/games/${this.currentGameId}`;
+
+    const statsStr = (this.stats || [])
+      .map(s => `${s.icon || ''}${s.value}`)
+      .join('  ');
+
+    const textKey = this.status === GameResult.Win ? 'share.result_win' : 'share.result_lose';
+    let text = this.i18n.t(textKey)().replace('[game]', gameName);
+    if (statsStr) text += `\n${statsStr}`;
+
+    this.shareService.share({
+      title: `Puzzle PK - ${gameName}`,
+      text,
+      url,
+      gameName,
+      gameEmoji: config?.iconEmoji,
+      isWin: this.status === GameResult.Win,
+      stats: this.stats,
+    });
   }
 
   handleGoToGame(gameId: string) {

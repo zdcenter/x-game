@@ -33,10 +33,10 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     HintButtonComponent, TutorialOverlayComponent
   ],
   template: `
-<div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
+<div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-hidden select-none overscroll-none">
     
     <!-- LEFT: Main Game Area -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
+    <div class="flex-grow flex flex-col items-center relative min-w-0">
       <div class="w-full h-full flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-3 lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         

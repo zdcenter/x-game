@@ -1,7 +1,7 @@
 <div class="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)]">
   
   <!-- Main Game Area -->
-  <div class="flex-grow flex flex-col relative min-w-0 bg-[var(--color-bg-main)] transition-colors duration-300 overflow-y-auto overflow-x-hidden custom-scrollbar">
+  <div class="flex-grow flex flex-col relative min-w-0 bg-[var(--color-bg-main)] transition-colors duration-300 overflow-hidden">
     
     <!-- Lobby Toggle Button (Mobile) -->
     @if (store.currentRoomMode() !== GameMode.Single) {
@@ -129,11 +129,11 @@
         </div>
 
         <!-- Board Area (Strict Aspect Square) -->
-        <div class="relative flex-grow flex items-center justify-center min-h-0 w-full shrink py-2">
-          
+        <div class="relative flex-grow flex items-center justify-center min-h-0 w-full py-2">
+
           <!-- Board -->
-          <div class="relative flex flex-col items-center justify-center w-full aspect-square bg-gradient-to-br from-amber-900/20 to-orange-900/20 rounded-xl border border-orange-500/20 shadow-[0_0_40px_rgba(245,158,11,0.1)] p-2 sm:p-4 backdrop-blur-sm"
-               [style.maxWidth]="'min(100%, 600px, calc(100dvh - 300px))'">
+          <div class="relative flex flex-col items-center justify-center bg-gradient-to-br from-amber-900/20 to-orange-900/20 rounded-xl border border-orange-500/20 shadow-[0_0_40px_rgba(245,158,11,0.1)] p-2 sm:p-4 backdrop-blur-sm"
+               [style.width]="boardSizePx()" [style.height]="boardSizePx()">
             
             <div class="w-full h-full grid gap-1.5 sm:gap-2 lg:gap-3"
                  [style.gridTemplateColumns]="'repeat(' + store.size() + ', minmax(0, 1fr))'"

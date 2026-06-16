@@ -6,6 +6,11 @@ export interface ShareData {
   title: string;
   text: string;
   url: string;
+  // Optional extras for rich share card
+  gameName?: string;
+  gameEmoji?: string;
+  isWin?: boolean;
+  stats?: { icon?: string; label?: string; value: string | number }[];
 }
 
 @Injectable({
@@ -27,12 +32,11 @@ export class ShareService {
   async share(data: ShareData) {
     if (navigator.share) {
       try {
-        await navigator.share(data);
-        return; // Success
+        // Only pass the standard Web Share API fields — extra props cause TypeError on iOS Safari
+        await navigator.share({ title: data.title, text: data.text, url: data.url });
+        return;
       } catch (err: any) {
-        // If the user cancelled, it throws an AbortError. We shouldn't show a fallback for user cancellation.
         if (err.name !== 'AbortError') {
-          console.error('Web Share failed', err);
           this.openFallbackModal(data);
         }
       }
@@ -51,28 +55,35 @@ export class ShareService {
     setTimeout(() => this.currentShareData.set(null), 300); // Clear after animation
   }
 
+  copyFull(text: string, url: string) {
+    const full = `${text}\n👉 ${url}`;
+    this.copyText(full);
+  }
+
   copyUrl(url: string) {
+    this.copyText(url);
+  }
+
+  private copyText(str: string) {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
+      navigator.clipboard.writeText(str).then(() => {
         this.toastService.show(this.i18n.t('share.copied')() || 'Link copied to clipboard!', 'success');
-      }).catch(err => {
-        console.error('Failed to copy', err);
+      }).catch(() => {
         this.toastService.show('Failed to copy', 'error');
       });
     } else {
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea");
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
+      const ta = document.createElement('textarea');
+      ta.value = str;
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
       try {
         document.execCommand('copy');
         this.toastService.show(this.i18n.t('share.copied')() || 'Link copied to clipboard!', 'success');
-      } catch (err) {
+      } catch {
         this.toastService.show('Failed to copy', 'error');
       }
-      document.body.removeChild(textArea);
+      document.body.removeChild(ta);
     }
   }
 }

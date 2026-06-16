@@ -121,10 +121,10 @@ import { TutorialService } from '../../../core/services/tutorial.service';
       }
 
       @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
-        <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full relative z-10">
-          <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" 
+        <div class="flex-none py-2 border-b border-[var(--color-border-card)] w-full relative z-10">
+          <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar"
                [class.justify-center]="store.currentRoomMode() === GameMode.Single">
-            
+
             <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
               [playerName]="playerId"
               [isHost]="store.hostId() === playerId"
@@ -149,89 +149,84 @@ import { TutorialService } from '../../../core/services/tutorial.service';
           </div>
         </div>
 
-        <!-- Main Game Area Container -->
-        <div class="relative flex-grow flex flex-col lg:flex-row items-center lg:items-start justify-center min-h-0 w-full shrink py-2 px-2 z-10 overflow-y-auto custom-scrollbar gap-8">
-          
-          <!-- Local Player Board & Controls -->
-          <div class="flex flex-col items-center justify-start shrink-0">
-            <div class="relative flex items-center justify-center shrink-0 w-full"
-               style="width: min(95vw, calc(100vh - 350px), 600px); height: min(95vw, calc(100vh - 350px), 600px);">
-            <app-sokoban-board class="w-full h-full"></app-sokoban-board>
+        <!-- Board Area: flex-grow + overflow-hidden，不产生滚动条 -->
+        <div class="relative flex-grow flex flex-col lg:flex-row items-center justify-center min-h-0 overflow-hidden w-full py-2 px-2 z-10 gap-8">
+          <div class="flex flex-col items-center justify-center shrink-0">
+            <div class="relative flex items-center justify-center shrink-0"
+               style="width: min(85vw, calc(100vh - 390px), 520px); height: min(85vw, calc(100vh - 390px), 520px);">
+              <app-sokoban-board class="w-full h-full"></app-sokoban-board>
+            </div>
           </div>
 
-          <!-- Action Buttons Bar underneath the board -->
-          <div class="flex flex-row items-center justify-center w-full max-w-[600px] gap-2 mt-4 z-20 px-2 pb-6 shrink-0">
-             <!-- Back to Lobby -->
-             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                     (click)="onLeaveClick()">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-               </svg>
-               <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
-             </button>
-
-             @if (store.currentRoomMode() === GameMode.Single) {
-               <!-- Prev Level -->
-               <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                       (click)="store.prevLevel()"
-                       [disabled]="store.currentLevelNum() <= 1"
-                       [class.opacity-50]="store.currentLevelNum() <= 1">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                 </svg>
-                 <span class="truncate w-full text-center">{{ i18n.t('game.prev_level')() }}</span>
-               </button>
-             }
-
-             <!-- Undo -->
-             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-sky-600/80 hover:bg-sky-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-sky-500/50"
-                     (click)="store.undo()">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-               </svg>
-               <span class="truncate w-full text-center">{{ i18n.t('game.undo')() }}</span>
-             </button>
-             
-             <!-- Restart (Retry) -->
-             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-red-500/50"
-                     (click)="handleRestart()">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-               </svg>
-               <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
-             </button>
-
-             @if (store.currentRoomMode() === GameMode.Single) {
-               <!-- Hint -->
-               <div class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center">
-                 <app-hint-button layout="sokoban" (hintApplied)="applyHint()" class="w-full h-full"></app-hint-button>
-               </div>
-
-               <!-- Next Level -->
-               <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                       (click)="store.nextLevel()"
-                       [disabled]="!store.hasNextLevel()"
-                       [class.opacity-50]="!store.hasNextLevel()">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                 </svg>
-                 <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
-               </button>
-             }
-           </div>
-          </div>
-
-
-
+          @if (store.status() === GameStatus.Playing && store.isDead()) {
+            <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <h2 class="text-4xl md:text-6xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                {{ i18n.t('game.spectating')() }}
+              </h2>
+            </div>
+          }
         </div>
 
-        @if (store.status() === GameStatus.Playing && store.isDead()) {
-          <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <h2 class="text-4xl md:text-6xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-              {{ i18n.t('game.spectating')() }}
-            </h2>
-          </div>
-        }
+        <!-- Action Buttons Bar: flex-none，固定在卡片底部，始终可见 -->
+        <div class="flex-none flex flex-row items-center justify-center w-full gap-2 py-2 px-2 z-20">
+           <!-- Back to Lobby -->
+           <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+                   (click)="onLeaveClick()">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+             </svg>
+             <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
+           </button>
+
+           @if (store.currentRoomMode() === GameMode.Single) {
+             <!-- Prev Level -->
+             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+                     (click)="store.prevLevel()"
+                     [disabled]="store.currentLevelNum() <= 1"
+                     [class.opacity-50]="store.currentLevelNum() <= 1">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+               </svg>
+               <span class="truncate w-full text-center">{{ i18n.t('game.prev_level')() }}</span>
+             </button>
+           }
+
+           <!-- Undo -->
+           <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-sky-600/80 hover:bg-sky-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-sky-500/50"
+                   (click)="store.undo()">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+             </svg>
+             <span class="truncate w-full text-center">{{ i18n.t('game.undo')() }}</span>
+           </button>
+
+           <!-- Restart (Retry) -->
+           <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-red-500/50"
+                   (click)="handleRestart()">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+             </svg>
+             <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
+           </button>
+
+           @if (store.currentRoomMode() === GameMode.Single) {
+             <!-- Hint -->
+             <div class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center">
+               <app-hint-button layout="sokoban" (hintApplied)="applyHint()" class="w-full h-full"></app-hint-button>
+             </div>
+
+             <!-- Next Level -->
+             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+                     (click)="store.nextLevel()"
+                     [disabled]="!store.hasNextLevel()"
+                     [class.opacity-50]="!store.hasNextLevel()">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+               </svg>
+               <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
+             </button>
+           }
+        </div>
       }
         @if (store.status() === GameStatus.Finished && showOverlay()) {
           <app-game-result-overlay

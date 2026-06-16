@@ -4,6 +4,8 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { WindowSizeService } from '../../../core/services/window-size.service';
+import { boardSizePx } from '../../../core/utils/board-size.util';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -51,6 +53,9 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   showRules = signal(false);
   showOverlay = signal(false);
   hintCell = signal<{r: number, c: number} | null>(null);
+
+  // chrome = nav + outer-padding + card-padding + header + player-badges + board-py
+  boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 260, tablet: 300, pc: 340 }, 600);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;

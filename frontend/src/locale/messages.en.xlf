@@ -52,23 +52,7 @@
       </trans-unit>
       <trans-unit id="admin.menu.ads" datatype="html">
         <source>admin.menu.ads</source>
-        <target>Ad Management</target>
-      </trans-unit>
-      <trans-unit id="admin.menu.achievements" datatype="html">
-        <source>Achievements</source>
-        <target>Achievements</target>
-      </trans-unit>
-      <trans-unit id="admin.menu.daily_challenges" datatype="html">
-        <source>Daily Challenges</source>
-        <target>Daily Challenges</target>
-      </trans-unit>
-      <trans-unit id="admin.menu.leaderboard" datatype="html">
-        <source>Leaderboard</source>
-        <target>Leaderboard</target>
-      </trans-unit>
-      <trans-unit id="admin.menu.xp_config" datatype="html">
-        <source>XP Config</source>
-        <target>XP Config</target>
+        <target>admin.menu.ads</target>
       </trans-unit>
       <trans-unit id="auth.logout" datatype="html">
         <source>auth.logout</source>
@@ -1385,22 +1369,6 @@
           <context context-type="sourcefile">src/app/shared/components/share-modal/share-modal.component.ts</context>
           <context context-type="linenumber">62,63</context>
         </context-group>
-      </trans-unit>
-      <trans-unit id="admin.settings.multiplayer.title" datatype="html">
-        <source>admin.settings.multiplayer.title</source>
-        <target>Multiplayer System</target>
-      </trans-unit>
-      <trans-unit id="admin.settings.multiplayer.desc" datatype="html">
-        <source>admin.settings.multiplayer.desc</source>
-        <target>Enable or disable the global multiplayer and room creation system. If disabled, players can only play offline single player modes.</target>
-      </trans-unit>
-      <trans-unit id="game.diff_expert" datatype="html">
-        <source>Expert</source>
-        <target>Expert</target>
-      </trans-unit>
-      <trans-unit id="game.diff_master" datatype="html">
-        <source>Master</source>
-        <target>Master</target>
       </trans-unit>
     </body>
   </file>

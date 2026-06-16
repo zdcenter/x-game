@@ -8,6 +8,8 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { SlidingStore } from './store/sliding.store';
 import { SlidingActionType } from './store/sliding-engine';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { WindowSizeService } from '../../../core/services/window-size.service';
+import { boardSizePx } from '../../../core/utils/board-size.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
@@ -50,6 +52,9 @@ export class SlidingComponent extends BaseGameComponent {
   showTutorial = signal<boolean>(false);
   hintTarget = signal<number | null>(null);
   Math = Math;
+
+  // chrome = nav + root-padding + card-padding + header + progress + badges + board-py + actions
+  boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 302, tablet: 350, pc: 390 });
 
   get difficulties() {
     return this.gameRegistry.getConfig('sliding')?.difficulties || [];

@@ -520,14 +520,150 @@ this.http.post<{ isNewRecord: boolean }>(`${env.apiUrl}/mypuzzle/puzzle/${id}/fi
 
 ---
 
-## 四、规范速查
+## 四、响应式布局规范
+
+游戏页面必须在 PC、iPad、手机三端都不出现滚动条和橡皮筋效果，同时最大化棋盘区域。以下是本项目经过多次修复总结出的硬性规范。
+
+### 🚨 Overflow 红线
+
+**任何游戏内容区容器，一律用 `overflow-hidden`，禁止 `overflow-y-auto`。**
+
+```html
+<!-- ❌ 错误 — 会在内容稍高时弹出垂直滚动条 -->
+<div class="flex-1 overflow-y-auto flex flex-col ...">
+
+<!-- ✅ 正确 — 内容撑不开父容器，超出则裁剪 -->
+<div class="flex-1 overflow-hidden flex flex-col ...">
+```
+
+`overscroll-behavior: none` 已在全局 `html`/`body` 上设置，无需在游戏组件重复添加。
+
+### 🚨 最小高度红线
+
+**禁止在游戏布局容器上使用 `min-h-[600px]`、`min-h-[450px]` 等固定最小高度。**
+
+这类约束会强制容器超出视口，导致父容器出现滚动条：
+
+```html
+<!-- ❌ 错误 — 强制至少 600px，小屏必溢出 -->
+<div class="flex-1 relative min-w-0 min-h-[600px] lg:min-h-0 flex flex-col">
+
+<!-- ✅ 正确 — flex-1 自动填满可用空间，不强制最小高度 -->
+<div class="flex-1 relative min-w-0 flex flex-col">
+```
+
+### 棋盘尺寸：使用 TS Signal，不用 CSS 公式
+
+CSS 的 `min()` 公式（如 `min(85vmin, 600px)`）无法区分不同断点的 Chrome 高度，导致移动端棋盘过小或 PC 端出现滚动条。**使用 `boardSizePx()` 信号。**
+
+#### 方形棋盘（宽 = 高）
+
+```typescript
+// 在组件 class 中
+import { WindowSizeService } from '../../../core/services/window-size.service';
+import { boardSizePx } from '../../../core/utils/board-size.util';
+
+// chrome = 导航栏 + 外层padding + 卡片padding + 游戏header + 进度条 + 玩家badge + 棋盘上下py + 操作按钮
+// 按移动端/平板/PC 三档分别测量（单位 px）
+boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 302, tablet: 350, pc: 390 });
+```
+
+```html
+<!-- 棋盘 div 直接绑定信号，不要用 w-full / aspect-square / maxWidth -->
+<div [style.width]="boardSizePx()" [style.height]="boardSizePx()">
+  <!-- 棋盘内容 -->
+</div>
+```
+
+#### 非方形棋盘（高 > 宽，如竖版游戏）
+
+```typescript
+import { boardSizePx, boardHeightPx } from '../../../core/utils/board-size.util';
+
+// ratio = 高/宽，例如 7行5列的棋盘 444/320 ≈ 1.3875
+boardWidthPx  = boardSizePx(inject(WindowSizeService), { mobile: 240, tablet: 260, pc: 300 }, 400, 200, undefined, 1.3875);
+boardHeightPx = boardHeightPx(this.boardWidthPx, 1.3875);
+```
+
+```html
+<div [style.width]="boardWidthPx()" [style.height]="boardHeightPx()">
+  <!-- 棋盘内容 -->
+</div>
+```
+
+#### Chrome 高度如何估算
+
+Chrome = 所有垂直方向占用的非棋盘像素之和：
+
+| 元素 | 移动端 | PC |
+|---|---|---|
+| 导航栏 | 64px | 64px |
+| 根容器 padding（p-1/p-4） | 8px | 32px |
+| 卡片 padding（p-3/p-5） | 24px | 40px |
+| 游戏 Header | ~60px | ~80px |
+| 进度条（如有） | 24px | 24px |
+| 玩家 Badge | ~50px | ~60px |
+| 棋盘区 padding（py-2/py-4） | 8px | 16px |
+| 操作按钮栏（如有） | ~64px | ~64px |
+
+把本游戏用到的元素加总，分别填入 `mobile`/`tablet`/`pc`。
+
+#### 内部固定尺寸的棋盘组件
+
+如果棋盘子组件内部使用硬编码像素尺寸（如 `readonly cellSize = 60`），**不要用 `boardSizePx`**，只需：
+
+1. 移除外层容器的 `min-h-[...]` 约束
+2. 把游戏内容区的 `overflow-y-auto` 改为 `overflow-hidden`
+
+棋盘在可用空间内居中显示，超出则裁剪，不会产生滚动条。
+
+### 标准布局骨架
+
+```html
+<!-- 根容器：撑满父级，overflow-hidden -->
+<div class="flex-1 flex flex-col overflow-hidden">
+
+  <!-- 卡片层 -->
+  <div class="flex-1 flex flex-col overflow-hidden rounded-2xl ...">
+
+    <!-- Header（flex-none，不参与伸缩） -->
+    <app-game-header class="flex-none" .../>
+
+    <!-- 玩家 Badge（flex-none） -->
+    <div class="flex-none py-2 border-b ...">
+      <app-player-badge .../>
+    </div>
+
+    <!-- 棋盘区（flex-grow，填满剩余空间） -->
+    <div class="flex-grow flex items-center justify-center overflow-hidden min-h-0">
+      <div [style.width]="boardSizePx()" [style.height]="boardSizePx()">
+        <!-- 棋盘内容 -->
+      </div>
+    </div>
+
+    <!-- 操作按钮（flex-none，始终可见） -->
+    <div class="flex-none py-2 flex justify-center gap-4">
+      <button>重开</button>
+    </div>
+
+  </div>
+</div>
+```
+
+`flex-none` 保证 Header 和操作按钮不被压缩，`flex-grow` 把剩余空间全给棋盘，`overflow-hidden` 防止内容溢出。
+
+---
+
+## 五、规范速查
 
 | 场景 | 正确做法 |
 |---|---|
 | WS 动作字符串 | 用 `C2SAction.Move` 枚举，禁止 `'move'` 字面量 |
 | 颜色样式 | 用 `var(--color-bg-card)` CSS 变量，禁止 `bg-slate-900` |
 | UI 文本 | 走 i18n，禁止硬编码中英文字符串 |
-| 棋盘尺寸 | `style="width: min(85vmin, 600px)"` vmin 约束，禁止 `flex-1 h-full` |
+| 棋盘尺寸 | 用 `boardSizePx()` TS 信号；禁止 `min(85vmin, ...)` CSS 公式、`flex-1 h-full` |
+| 游戏区 overflow | 一律 `overflow-hidden`，禁止 `overflow-y-auto` |
+| 布局最小高度 | 禁止 `min-h-[600px]` 等固定值，用 `flex-1 min-h-0` 代替 |
 | 玩家信息卡 | `[stats]="[{ icon: '⏱️', value: '01:23' }]"` emoji 图标形式 |
 | 多人 status | 不在 `singlePlayerStatus` 里写多人逻辑，基类已处理 |
 | 解谜统计 | 只调 `/finish`，不额外调 `submitStat` |
