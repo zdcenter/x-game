@@ -1,8 +1,11 @@
 /lobby
+/leaderboard
+/daily
+/blog
+/docs
 /login
 /register
 /profile
-/blog
 /games/block
 /games/codebreaker
 /games/drop2048
@@ -29,3 +32,7 @@
 /docs/sudoku
 /docs/tetris
 /docs/watersort
+/blog/sokoban-strategy
+/blog/sudoku-benefits
+/blog/minesweeper-logic
+/blog/1a2b-bulls-cows

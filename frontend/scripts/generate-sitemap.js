@@ -4,68 +4,91 @@ const path = require('path');
 const domain = 'https://www.puzzlepk.com';
 const langs = ['en', 'zh'];
 const defaultLang = 'en';
+const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-// Auto-discover games from the filesystem
+// Auto-discover games
 const gamesDir = path.join(__dirname, '../src/app/features/games');
-const games = fs.existsSync(gamesDir) 
-  ? fs.readdirSync(gamesDir).filter(file => fs.statSync(path.join(gamesDir, file)).isDirectory())
+const games = fs.existsSync(gamesDir)
+  ? fs.readdirSync(gamesDir).filter(f => fs.statSync(path.join(gamesDir, f)).isDirectory())
   : [];
 
-const paths = [
-  'lobby',
-  'login',
-  'register',
-  'profile',
-  'blog',
-  ...games.map(g => `games/${g}`),
-  ...games.map(g => `docs/${g}`)
+// Auto-discover blog posts — prefer public/ folder which is the canonical source
+const blogIndexPath = path.join(__dirname, '../public/assets/blog/index.json');
+const blogIndexPathFallback = path.join(__dirname, '../src/assets/blog/index.json');
+const blogPosts = fs.existsSync(blogIndexPath)
+  ? JSON.parse(fs.readFileSync(blogIndexPath, 'utf-8'))
+  : fs.existsSync(blogIndexPathFallback)
+    ? JSON.parse(fs.readFileSync(blogIndexPathFallback, 'utf-8'))
+    : [];
+
+// Route config: [path, changefreq, priority, lastmod]
+const staticPaths = [
+  ['lobby',        'daily',  '1.0', today],
+  ['leaderboard',  'hourly', '0.9', today],
+  ['daily',        'daily',  '0.9', today],
+  ['blog',         'weekly', '0.8', today],
+  ['docs',         'monthly','0.7', today],
+  ['login',        'monthly','0.5', today],
+  ['register',     'monthly','0.5', today],
+  ['profile',      'monthly','0.5', today],
+  ...games.map(g => [`games/${g}`, 'weekly', '0.9', today]),
+  ...games.map(g => [`docs/${g}`,  'monthly','0.7', today]),
 ];
+
+// Blog post entries with their own publish date
+const blogPostPaths = blogPosts.map(post => [
+  `blog/${post.id}`,
+  'monthly',
+  '0.8',
+  post.date || today
+]);
+
+const allPaths = [...staticPaths, ...blogPostPaths];
+
+// Routes that Angular SSG should prerender at build time.
+// Blog routes are RenderMode.Server (DB-backed) — exclude them so Angular
+// doesn't try to call the API during the build when no server is running.
+const prerenderPaths = staticPaths.filter(([p]) => p !== 'blog');
+
+function urlEntry(p, changefreq, priority, lastmod, lang) {
+  let xml = `  <url>\n`;
+  xml += `    <loc>${domain}/${lang}/${p}</loc>\n`;
+  xml += `    <lastmod>${lastmod}</lastmod>\n`;
+  for (const altLang of langs) {
+    xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${domain}/${altLang}/${p}"/>\n`;
+  }
+  xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domain}/${defaultLang}/${p}"/>\n`;
+  xml += `    <changefreq>${changefreq}</changefreq>\n`;
+  xml += `    <priority>${priority}</priority>\n`;
+  xml += `  </url>\n`;
+  return xml;
+}
 
 let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
 `;
 
-for (const p of paths) {
+for (const [p, changefreq, priority, lastmod] of allPaths) {
   for (const lang of langs) {
-    xml += `  <url>\n`;
-    xml += `    <loc>${domain}/${lang}/${p}</loc>\n`;
-    
-    // Add alternate links for all languages (including itself)
-    for (const altLang of langs) {
-      xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${domain}/${altLang}/${p}"/>\n`;
-    }
-    
-    // x-default is recommended by Google to point to the default language or language selector
-    xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domain}/${defaultLang}/${p}"/>\n`;
-    
-    xml += `    <changefreq>weekly</changefreq>\n`;
-    xml += `    <priority>${p === 'lobby' ? '1.0' : '0.8'}</priority>\n`;
-    xml += `  </url>\n`;
+    xml += urlEntry(p, changefreq, priority, lastmod, lang);
   }
 }
 
 xml += `</urlset>`;
 
 const outDir = path.join(__dirname, '../public');
-if (!fs.existsSync(outDir)) {
-  fs.mkdirSync(outDir, { recursive: true });
-}
+if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
-// Write sitemap.xml
 fs.writeFileSync(path.join(outDir, 'sitemap.xml'), xml, 'utf-8');
-console.log('sitemap.xml generated successfully in public/');
+console.log(`sitemap.xml generated — ${allPaths.length * langs.length} URLs`);
 
-// Write _redirects for Cloudflare Pages SPA fallback per locale
-const redirects = `
-/en/* /en/index.html 200
-/zh/* /zh/index.html 200
-/* /index.html 200
-`.trim() + '\n';
+// Cloudflare Pages SPA fallback redirects
+const redirects = `/en/* /en/index.html 200\n/zh/* /zh/index.html 200\n/* /index.html 200\n`;
 fs.writeFileSync(path.join(outDir, '_redirects'), redirects, 'utf-8');
-console.log('_redirects generated successfully in public/');
+console.log('_redirects generated');
 
-// Write routes.txt for Angular SSG
-const routesContent = paths.map(p => `/${p}`).join('\n') + '\n';
+// Routes for Angular SSG prerender — blog routes excluded (RenderMode.Server)
+const routesContent = prerenderPaths.map(([p]) => `/${p}`).join('\n') + '\n';
 fs.writeFileSync(path.join(__dirname, '../routes.txt'), routesContent, 'utf-8');
-console.log('routes.txt generated successfully in root/');
+console.log(`routes.txt generated — ${prerenderPaths.length} prerender routes (blog excluded)`);

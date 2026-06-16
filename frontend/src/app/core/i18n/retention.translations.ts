@@ -104,6 +104,7 @@ export const retentionTranslations: Record<Lang, Record<string, string>> = {
 
     // ─── Daily Challenge ──────────────────────────────────────────────
     'daily.title': "Today's Challenge",
+    'daily.today': "Today",
     'daily.subtitle': 'A new puzzle every day',
     'daily.complete': 'Challenge Complete!',
     'daily.already_done': 'Completed Today',
@@ -336,6 +337,7 @@ export const retentionTranslations: Record<Lang, Record<string, string>> = {
 
     // ─── Daily Challenge ──────────────────────────────────────────────
     'daily.title': '今日挑战',
+    'daily.today': '今天',
     'daily.subtitle': '每天一道新谜题',
     'daily.complete': '挑战完成！',
     'daily.already_done': '今日已完成',

@@ -70,6 +70,11 @@ func main() {
 	// Match history (Protected)
 	v1.Get("/history", middleware.Protected(), rest.GetMatchHistory)
 
+	// Blog (public read)
+	blog := v1.Group("/blog")
+	blog.Get("/posts", rest.ListBlogPosts)
+	blog.Get("/posts/:slug", rest.GetBlogPost)
+
 	// Achievements (optional auth for public list, protected for personal)
 	achievements := v1.Group("/achievements")
 	achievements.Use(middleware.OptionalProtected())
@@ -152,6 +157,14 @@ func main() {
 	admin.Delete("/leaderboard/stat/:statId", rest.AdminDeleteLeaderboardEntry)
 
 	// Legacy simulator endpoints (can be removed later or kept for backwards compatibility)
+	// Blog admin CRUD
+	admin.Get("/blog/posts", rest.AdminListBlogPosts)
+	admin.Get("/blog/posts/:id", rest.AdminGetBlogPost)
+	admin.Post("/blog/posts", rest.AdminCreateBlogPost)
+	admin.Put("/blog/posts/:id", rest.AdminUpdateBlogPost)
+	admin.Delete("/blog/posts/:id", rest.AdminDeleteBlogPost)
+	admin.Patch("/blog/posts/:id/toggle", rest.AdminToggleBlogPost)
+
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)
 

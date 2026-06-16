@@ -32,11 +32,13 @@
     {
       "name": "api-cache",
       "urls": [
-        "/api/**"
+        "/api/v1/stats/**",
+        "/api/v1/leaderboard/**",
+        "/api/v1/game-configs/**"
       ],
       "cacheConfig": {
         "maxSize": 100,
-        "maxAge": "1d",
+        "maxAge": "1h",
         "timeout": "5s",
         "strategy": "freshness"
       }

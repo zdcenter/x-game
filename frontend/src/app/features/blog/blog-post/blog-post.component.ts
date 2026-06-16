@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, SecurityContext, computed, effect, untracked } from '@angular/core';
+import { Component, inject, OnInit, signal, SecurityContext, computed, effect, untracked, DOCUMENT } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
@@ -6,6 +6,8 @@ import { BlogService, BlogPostMeta } from '../../../core/services/blog.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { marked } from 'marked';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
+
+const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
 @Component({
   selector: 'app-blog-post',
@@ -141,6 +143,7 @@ export class BlogPostComponent implements OnInit {
   private titleService = inject(Title);
   private metaService = inject(Meta);
   private sanitizer = inject(DomSanitizer);
+  private doc = inject(DOCUMENT);
   i18n = inject(I18nService);
 
   rawMeta = signal<BlogPostMeta | null>(null);
@@ -156,68 +159,87 @@ export class BlogPostComponent implements OnInit {
   currentId = signal<string | null>(null);
 
   constructor() {
+    // Re-render content + SEO when language or loaded post changes
     effect(() => {
       const lang = this.i18n.currentLang();
       const meta = this.displayMeta();
-      const id = this.currentId();
+      const raw = this.rawMeta();
 
-      if (id && meta) {
-        // Update SEO when language changes
-        untracked(() => {
-          this.titleService.setTitle(`${meta.title} - Puzzle PK Blog`);
-          this.metaService.updateTag({ name: 'description', content: meta.description });
-          this.metaService.updateTag({ name: 'keywords', content: meta.keywords });
+      if (!meta || !raw) return;
 
-          // Fetch the markdown for the new language
-          this.loading.set(true);
-          this.blogService.getPostContent(id, lang).subscribe({
-            next: async (markdownStr) => {
-              const rawHtml = await marked.parse(markdownStr);
-              const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, rawHtml) || '';
-              this.contentHtml.set(safeHtml);
-              this.loading.set(false);
-            },
-            error: (err) => {
-              console.error('Failed to load markdown', err);
-              this.error.set(true);
-              this.loading.set(false);
-            }
-          });
+      untracked(async () => {
+        // SEO tags
+        this.titleService.setTitle(`${meta.title} - Puzzle PK Blog`);
+        this.metaService.updateTag({ name: 'description', content: meta.description });
+        this.metaService.updateTag({ name: 'keywords', content: meta.keywords });
+        this.metaService.updateTag({ property: 'og:title', content: `${meta.title} - Puzzle PK Blog` });
+        this.metaService.updateTag({ property: 'og:description', content: meta.description });
+
+        // BlogPosting JSON-LD
+        const origin = (typeof window !== 'undefined' && window.location?.origin) || PROD_ORIGIN;
+        this.setJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: meta.title,
+          description: meta.description,
+          author: { '@type': 'Organization', name: meta.author || 'Puzzle PK Team' },
+          publisher: { '@type': 'Organization', name: 'Puzzle PK', logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` } },
+          datePublished: raw.date,
+          dateModified: raw.date,
+          url: `${origin}/${lang}/blog/${raw.id}`,
+          mainEntityOfPage: { '@type': 'WebPage', '@id': `${origin}/${lang}/blog/${raw.id}` },
+          keywords: meta.keywords,
+          image: `${origin}/og-cover.png`,
+          inLanguage: lang === 'zh' ? 'zh-CN' : 'en-US',
         });
-      }
+
+        // Render markdown (content already available in meta.content from API)
+        const markdownStr = meta.content ?? '';
+        const rawHtml = await marked.parse(markdownStr);
+        const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, rawHtml) || '';
+        this.contentHtml.set(safeHtml);
+        this.loading.set(false);
+      });
     });
   }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.currentId.set(id);
-        this.loadPostMeta(id);
+      const slug = params.get('id');
+      if (slug) {
+        this.currentId.set(slug);
+        this.loadPost(slug);
       }
     });
   }
 
-  private loadPostMeta(id: string) {
+  private setJsonLd(data: Record<string, unknown>): void {
+    const head = this.doc.head;
+    if (!head) return;
+    const elemId = 'blog-post-jsonld';
+    let script = head.querySelector(`#${elemId}`) as HTMLScriptElement | null;
+    if (!script) {
+      script = this.doc.createElement('script');
+      script.id = elemId;
+      script.type = 'application/ld+json';
+      head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
+  }
+
+  private loadPost(slug: string) {
     this.loading.set(true);
     this.error.set(false);
 
-    // Fetch metadata. The effect will handle fetching the markdown based on language.
-    this.blogService.getBlogPosts().subscribe({
-      next: (posts) => {
-        const postMeta = posts.find(p => p.id === id);
-        if (postMeta) {
-          this.rawMeta.set(postMeta);
-        } else {
-          this.error.set(true);
-          this.loading.set(false);
-        }
+    this.blogService.getBlogPost(slug).subscribe({
+      next: (post) => {
+        this.rawMeta.set(post);
+        // loading.set(false) is handled in the effect after content renders
       },
-      error: (err) => {
-        console.error('Failed to load index', err);
+      error: () => {
         this.error.set(true);
         this.loading.set(false);
-      }
+      },
     });
   }
 }

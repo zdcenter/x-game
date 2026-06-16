@@ -63,7 +63,7 @@ export class SeoService {
       const defaultUrl = `${origin}/en${routePath}`;
 
       // --- og:image: always use PNG (social platforms don't support SVG) ---
-      const fullImageUrl = `${origin}/assets/icons/icon-512x512.png`;
+      const fullImageUrl = `${origin}/og-cover.png`;
 
       // ===== Apply meta tags =====
       this.title.setTitle(pageTitle);

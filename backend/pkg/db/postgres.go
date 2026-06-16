@@ -57,6 +57,7 @@ func InitPostgres() {
 		&domain.DailyChallenge{},
 		&domain.UserDailyChallenge{},
 		&domain.MatchHistory{},
+		&domain.BlogPost{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -72,6 +73,7 @@ func InitPostgres() {
 	SeedSettings()
 	SeedAds()
 	SeedAchievements()
+	SeedBlog()
 
 	log.Println("Database connected and migrated successfully")
 }

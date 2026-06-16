@@ -467,31 +467,73 @@ export const coreTranslations: Record<Lang, Record<string, string>> = {
 Welcome to Puzzle PK. Your privacy is critically important to us. This Privacy Policy explains how we collect, use, and protect your personal information when you use our website, games, and related services.
 
 ## 1. Information We Collect
-We strive to collect only the absolute minimum amount of data required to operate the game.
+
+We strive to collect only the absolute minimum amount of data required to operate the platform.
+
 * **Account Information**: When you register, we collect a username and a securely hashed password. We do not require your real name or email address for basic gameplay.
-* **Gameplay Data**: We store your high scores, game progress, match history, and unlocked achievements.
+* **Gameplay Data**: We store your high scores, game progress, match history, and unlocked achievements so you can track improvement over time.
 * **Technical Data**: We temporarily log your IP address and connection timestamps solely for the purpose of maintaining server stability, preventing DDoS attacks, and ensuring fair play during real-time multiplayer matches (PK mode).
 
 ## 2. How We Use Your Information
+
 * To provide, maintain, and improve our gaming platform.
-* To manage your user account and authenticate your logins.
+* To manage your user account and authenticate your logins securely.
 * To display global leaderboards and matchmaking rankings.
 * To detect and prevent cheating, abuse, or other violations of our Terms of Service.
+* To send you important service-related notifications (we do not send marketing emails).
 
 ## 3. Data Sharing and Disclosure
+
 We **do not** sell, rent, or trade your personal information to third parties. Your data is strictly used for operating Puzzle PK. We may share anonymous, aggregated gameplay statistics (e.g., "10,000 matches of Sudoku played today") publicly, but this will never contain identifiable information.
 
-## 4. Third-Party Services
-We may use third-party advertising networks (such as Google AdSense or Monetag) to help keep our games free. These providers may use cookies or similar tracking technologies to serve non-personalized or personalized ads based on your browser history. Please review their respective privacy policies for more details.
+## 4. Advertising & Google AdSense Cookies
 
-## 5. Data Security
+To keep our games **100% free**, Puzzle PK displays advertisements provided by **Google AdSense** and other third-party advertising networks.
+
+**How it works:**
+* Google AdSense uses cookies and similar tracking technologies to collect information about your visits to this and other websites in order to show you relevant advertisements.
+* The **DoubleClick cookie** and other advertising cookies may be set by Google on your device when you visit our site. These cookies track which ads you have seen and allow Google to serve ads tailored to your interests.
+* We do **not** have direct access to the data collected by these advertising cookies.
+
+**Your choices:**
+* You can **opt out of personalised advertising** by visiting [Google's Ads Settings](https://adssettings.google.com/).
+* You can also opt out via the [Network Advertising Initiative opt-out page](http://optout.networkadvertising.org/) or manage cookies directly in your browser settings.
+* Opting out does not remove ads entirely — it means ads will no longer be tailored to your interests.
+
+For more information on how Google uses data when you use our site, please visit: [How Google uses information from sites or apps that use our services](https://policies.google.com/technologies/partner-sites).
+
+## 5. Cookies
+
+We use the following types of cookies:
+
+| Type | Purpose | Duration |
+|------|---------|----------|
+| Session Cookie | Keep you logged in | Browser session |
+| Preference Cookie | Remember your theme/language | 1 year |
+| Analytics Cookie (Google) | Understand traffic patterns | 2 years |
+| Advertising Cookie (Google AdSense) | Serve relevant ads | Up to 2 years |
+
+You can disable cookies in your browser settings at any time. Please note that disabling cookies may affect the functionality of our website and game features.
+
+## 6. Data Security
+
 We implement industry-standard security measures, including bcrypt password hashing and SSL/TLS encryption for all data transmitted between your browser and our servers. However, no internet transmission is 100% secure, and we cannot guarantee absolute security.
 
-## 6. Your Rights
-You have the right to request the deletion of your account and associated gameplay data at any time. To do so, please contact us or use the account deletion feature in the settings panel.
+## 7. Children's Privacy
 
-## 7. Changes to this Policy
-We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Effective Date."
+Our games are designed to be enjoyed by users of all ages, including children. We do not knowingly collect personal information from children under 13 without parental consent. If you believe your child has provided personal information on our site, please contact us at **contact@puzzlepk.com** so we can promptly delete it.
+
+## 8. Your Rights
+
+You have the right to request the deletion of your account and associated gameplay data at any time. To do so, please contact us at **contact@puzzlepk.com** or use the account deletion feature in the settings panel.
+
+## 9. Changes to this Policy
+
+We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Effective Date." We encourage you to review this page periodically.
+
+## 10. Contact Us
+
+If you have any questions about this Privacy Policy or our data practices, please contact us at: **contact@puzzlepk.com**
     `,
     'legal.terms.title': 'Terms of Service',
     'legal.terms.content': `
@@ -532,7 +574,42 @@ In no event shall Puzzle PK or its developers be liable for any direct, indirect
 We reserve the right to modify, suspend, or discontinue any game or feature at any time without prior notice.
     `,
     'legal.about.title': 'About Us / Contact',
-    'legal.about.content': 'Welcome to Puzzle PK! We are dedicated to providing high-quality logic and brain-training games for everyone. If you have any questions, feedback, or business inquiries, please contact us at: 36663840@qq.com.',
+    'legal.about.content': `
+# About Puzzle PK
+
+## Our Mission
+
+Puzzle PK is a free online gaming platform dedicated to bringing the joy of classic brain-training games to everyone — from young students looking to sharpen their math skills, to adults who love a good daily puzzle challenge.
+
+We believe that great puzzle games don't need flashy graphics or expensive subscriptions. Just open your browser, pick a game, and play.
+
+## What We Offer
+
+We currently host **13 free puzzle and brain games**, including:
+
+* **Sudoku** — The classic number-placement puzzle, from beginner to expert difficulty.
+* **Minesweeper** — The timeless logic game, playable solo or in real-time PK (player vs player) mode.
+* **Math 24** — Use four numbers and basic arithmetic to make 24. A favourite for sharpening mental arithmetic.
+* **Sokoban** — Push boxes to their targets in this classic warehouse puzzle game.
+* **Water Sort Puzzle** — Sort coloured liquids into matching tubes.
+* **Codebreaker (1A2B)** — Crack the secret code using deductive logic.
+* **Tetris Battle, Gomoku, Hexa Puzzle, Sliding Puzzle, Drop 2048, Block Puzzle, Lights Out** — and more!
+
+All games are available in both **Solo** and **Multiplayer PK** modes. Challenge a friend in the same room or compete against players around the world in real time.
+
+## Our Story
+
+Puzzle PK started as a passion project — a place where the timeless appeal of classic puzzle games could meet the excitement of real-time multiplayer competition. We noticed that while there are many puzzle apps available, very few offer a seamless way to challenge a friend head-to-head in the same game, on the same board, in real time. That is exactly what PK mode delivers.
+
+## Contact Us
+
+We love hearing from our players! Whether you have a question, found a bug, have a game suggestion, or want to talk about advertising partnerships, please reach out:
+
+* **Email**: contact@puzzlepk.com
+* **Response time**: We typically respond within 1–2 business days.
+
+For advertising and business inquiries, please include "Business" in the subject line of your email.
+    `,
   },
   zh: {
     "update.title": "系统更新",
@@ -937,31 +1014,73 @@ We reserve the right to modify, suspend, or discontinue any game or feature at a
 欢迎使用 Puzzle PK（经典益智游戏对战平台）。您的隐私对我们至关重要。本隐私政策旨在向您说明，当您使用我们的网站、游戏及相关服务时，我们如何收集、使用和保护您的个人信息。
 
 ## 1. 我们收集的信息
-我们秉持“最少化收集”原则，仅收集维持游戏正常运行所必需的数据。
-* **账户信息**：当您注册账号时，我们仅收集您自定义的用户名以及经过加密哈希处理的密码。我们不需要您提供真实姓名或电子邮箱。
-* **游戏数据**：我们会保存在服务器上的数据包括：您的最高分、通关进度、对战历史记录以及解锁的成就。
+
+我们秉持”最少化收集”原则，仅收集维持游戏正常运行所必需的数据。
+
+* **账户信息**：当您注册账号时，我们仅收集您自定义的用户名以及经过加密哈希处理的密码。我们不需要您提供真实姓名或电子邮箱地址。
+* **游戏数据**：我们会在服务器上保存您的最高分、通关进度、对战历史记录以及解锁的成就。
 * **技术数据**：为了维持服务器的稳定性、防范 DDoS 攻击以及确保实时对战（PK模式）的公平性，我们的服务器可能会短暂记录您的 IP 地址和连接时间戳。
 
 ## 2. 我们如何使用您的信息
+
 * 用于提供、维护和改进我们的游戏平台。
 * 用于管理您的用户账户并验证您的登录状态。
 * 用于在全局排行榜和对战天梯中展示您的游戏昵称和分数。
 * 用于检测并防止作弊、恶意攻击或其他违反服务条款的行为。
+* 用于发送重要的服务通知（我们不发送营销邮件）。
 
 ## 3. 数据的分享与披露
-我们**绝不会**向任何第三方出售、出租或交易您的个人数据。您的所有数据仅用于运营 Puzzle PK。我们可能会公开分享一些匿名的、汇总的游戏统计数据（例如：“今日全服共完成一万局数独”），但这些数据绝不会包含任何可识别个人身份的信息。
 
-## 4. 第三方服务与广告
-为了维持网站的免费运营，我们可能会接入第三方广告网络（如 Google AdSense 或 Monetag）。这些广告提供商可能会使用 Cookie 或类似的技术来投放非个性化或个性化的广告。您可以随时在浏览器设置中清除 Cookie。
+我们**绝不会**向任何第三方出售、出租或交易您的个人数据。您的所有数据仅用于运营 Puzzle PK。我们可能会公开分享匿名的、汇总的游戏统计数据（例如：”今日全服共完成一万局数独”），但这些数据绝不会包含任何可识别个人身份的信息。
 
-## 5. 数据安全
+## 4. 广告与 Google AdSense Cookie
+
+为了维持 Puzzle PK **完全免费**，我们在网站上展示由 **Google AdSense** 及其他第三方广告网络提供的广告。
+
+**工作原理：**
+* Google AdSense 使用 Cookie 及类似追踪技术，收集您对本站及其他网站的访问信息，以便向您展示相关广告。
+* 当您访问本站时，Google 可能会在您的设备上设置 **DoubleClick Cookie** 及其他广告 Cookie，用于记录您已浏览的广告，并根据您的兴趣投放广告。
+* 我们**无法直接访问**这些广告 Cookie 所收集的数据。
+
+**您的选择：**
+* 您可以访问 [Google 广告设置](https://adssettings.google.com/) 来**选择退出个性化广告**。
+* 您也可以通过 [网络广告计划退出页面](http://optout.networkadvertising.org/) 进行退出，或直接在浏览器设置中管理 Cookie。
+* 退出后广告不会消失，但广告内容将不再根据您的个人兴趣定制。
+
+如需了解 Google 如何在使用我们服务时使用数据，请访问：[Google 合作伙伴网站数据使用方式](https://policies.google.com/technologies/partner-sites)。
+
+## 5. Cookie 说明
+
+我们使用以下类型的 Cookie：
+
+| 类型 | 用途 | 有效期 |
+|------|------|--------|
+| 会话 Cookie | 维持您的登录状态 | 浏览器关闭后失效 |
+| 偏好 Cookie | 记住您的主题/语言选择 | 1年 |
+| 分析 Cookie（Google） | 了解流量来源与用户行为 | 2年 |
+| 广告 Cookie（Google AdSense）| 投放相关广告 | 最长2年 |
+
+您可以随时在浏览器设置中禁用 Cookie，但请注意这可能影响网站功能及游戏体验。
+
+## 6. 数据安全
+
 我们采用行业标准的安全措施来保护您的数据，包括使用 bcrypt 对密码进行不可逆哈希加密，以及强制使用 SSL/TLS 加密所有网络传输。尽管如此，互联网环境并非绝对安全，我们无法保证数据的百分之百绝对安全。
 
-## 6. 您的权利
-您有权随时要求删除您的账户及所有关联的游戏数据。如需删除，请通过网站底部的联系方式与我们取得联系，或使用设置面板中的账号注销功能。
+## 7. 儿童隐私
 
-## 7. 隐私政策的更新
-我们可能会不时更新本隐私政策。任何重大变更都将在本页面发布，并更新顶部的“生效日期”。
+我们的游戏面向包括儿童在内的所有用户。在未获得家长同意的情况下，我们不会故意收集13岁以下儿童的个人信息。如果您认为您的孩子在我们网站上提供了个人信息，请立即通过 **contact@puzzlepk.com** 联系我们，我们将及时予以删除。
+
+## 8. 您的权利
+
+您有权随时要求删除您的账户及所有关联的游戏数据。如需删除，请通过 **contact@puzzlepk.com** 联系我们，或使用账户设置中的注销功能。
+
+## 9. 隐私政策的更新
+
+我们可能会不时更新本隐私政策。任何重大变更都将在本页面发布，并更新顶部的”生效日期”。建议您定期查阅本页面。
+
+## 10. 联系我们
+
+如果您对本隐私政策或我们的数据处理方式有任何疑问，请通过以下方式联系我们：**contact@puzzlepk.com**
     `,
     'legal.terms.title': '服务条款 (Terms of Service)',
     'legal.terms.content': `
@@ -1002,7 +1121,42 @@ Puzzle PK 是一个免费的在线游戏平台，主要提供单机益智游戏�
 我们保留在任何时候无需事先通知的情况下，修改、暂停或永久终止任何特定游戏模式或全局服务的权利。
     `,
     'legal.about.title': '关于我们 / 联系方式 (About Us / Contact)',
-    'legal.about.content': '欢迎来到 Puzzle PK！我们致力于为大家提供高质量的逻辑推理和脑力训练小游戏。如果您有任何问题、建议或商务合作需求，请联系我们：36663840@qq.com。',
+    'legal.about.content': `
+# 关于 Puzzle PK
+
+## 我们的使命
+
+Puzzle PK 是一个免费的在线益智游戏平台，致力于将经典脑力训练游戏的乐趣带给每一个人——无论是希望提升数学能力的学生，还是热爱每日挑战解谜的成年人。
+
+我们相信，优秀的益智游戏不需要华丽的画面或昂贵的订阅。打开浏览器，选择游戏，即刻开始。
+
+## 我们提供什么
+
+我们目前提供 **13款免费益智与脑力游戏**，包括：
+
+* **数独（Sudoku）** — 经典数字填充谜题，提供初级至专业四档难度。
+* **扫雷（Minesweeper）** — 永恒的逻辑游戏，支持单机模式和实时 PK 对战。
+* **24点（Math 24）** — 用四个数字和基本运算凑出24，提升口算能力的最佳游戏。
+* **推箱子（Sokoban）** — 经典仓库番游戏，将箱子推到目标位置。
+* **水管分色（Water Sort Puzzle）** — 将彩色液体分类倒入对应颜色的管中。
+* **密码战（Codebreaker / 1A2B）** — 利用演绎逻辑破解对方的秘密数字。
+* **俄罗斯方块对战、五子棋、六边形拼图、数字华容道、下落2048、方块拼图、关灯** — 以及更多！
+
+所有游戏均支持**单机**和**多人PK**模式，可以和好友实时同台竞技。
+
+## 我们的故事
+
+Puzzle PK 起源于一个兴趣项目——我们发现市面上虽然有很多益智类游戏，但很少有平台能让两个人在同一个游戏棋盘上实时正面较量。PK 模式正是为此而生：同一道题，同一块棋盘，看谁先赢。
+
+## 联系我们
+
+我们非常欢迎玩家们的反馈！无论您有疑问、发现了 Bug、有游戏建议，还是希望洽谈广告合作，请通过以下方式联系我们：
+
+* **电子邮件**：contact@puzzlepk.com
+* **回复时间**：我们通常会在 1-2 个工作日内回复。
+
+如需商务合作，请在邮件主题中注明"商务合作"，以便我们优先处理。
+    `,
 
     'game.change_settings': '切换游戏',
     'game.spectating': '观战中...',

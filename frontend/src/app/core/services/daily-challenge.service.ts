@@ -30,6 +30,24 @@ export interface TodayChallengeResponse {
   completion?: DailyChallengeCompletion;
 }
 
+// Raw shape from backend (UserDailyChallenge + nested Challenge)
+interface RawHistoryItem {
+  id: number;
+  user_id: number;
+  daily_challenge_id: number;
+  completed_at: string;
+  score: number;
+  time_taken: number;
+  xp_earned: number;
+  challenge: {
+    id: number;
+    date: string;
+    game_id: string;
+    mode: string;
+    difficulty: string;
+  };
+}
+
 export interface DailyChallengeHistory {
   id: number;
   date: string;
@@ -55,8 +73,17 @@ export class DailyChallengeService {
   }
 
   getHistory(): Observable<DailyChallengeHistory[]> {
-    return this.http.get<{ history: DailyChallengeHistory[] }>(`${this.apiUrl}/daily-challenge/history`)
-      .pipe(map(r => r.history ?? []));
+    return this.http.get<{ history: RawHistoryItem[] }>(`${this.apiUrl}/daily-challenge/history`)
+      .pipe(map(r => (r.history ?? []).map(item => ({
+        id:          item.id,
+        date:        item.challenge?.date       ?? '',
+        game_id:     item.challenge?.game_id    ?? '',
+        difficulty:  item.challenge?.difficulty ?? '',
+        score:       item.score,
+        time_taken:  item.time_taken,
+        xp_earned:   item.xp_earned,
+        completed_at: item.completed_at,
+      }))));
   }
 
   secondsUntilMidnight(): number {

@@ -124,6 +124,10 @@ export const routes: Routes = [
       {
         path: 'xp-config',
         loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent)
+      },
+      {
+        path: 'blog',
+        loadComponent: () => import('./features/admin/admin-blog.component').then(m => m.AdminBlogComponent)
       }
     ]
   },

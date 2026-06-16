@@ -1,5 +1,61 @@
 # Changelog
 
+## [2026-06-16] - 🗃️ 博客系统 DB 化：数据库存储 + Admin 管理 UI + API 驱动
+
+### ✨ 新功能
+
+**后端**
+- 新增 `domain.BlogPost` 模型（`gm_blog_posts` 表）：支持中英双语字段（title/desc/keywords/readTime/author/tags/content）、slug 唯一索引、published/sort_order 控制
+- `pkg/db/seed_blog.go`：使用 `//go:embed blog_seeds.json` 嵌入 10 篇默认文章种子数据（137KB），首次启动自动幂等插入（已有则跳过）
+- `pkg/db/postgres.go`：AutoMigrate 追加 BlogPost，初始化时调用 SeedBlog
+- 公开 API：`GET /api/v1/blog/posts`（列表，无 content）、`GET /api/v1/blog/posts/:slug`（全文+content）
+- Admin CRUD：`GET|POST|PUT|DELETE /api/v1/admin/blog/posts`、`PATCH /:id/toggle`（发布/下线）
+
+**前端**
+- `BlogService` 重构：从 `/api/v1/blog/posts` 读取列表和全文，API 响应直接包含 markdown content，无需再单独请求 `.md` 文件
+- `blog-post.component.ts`：改用 `getBlogPost(slug)` 单次请求同时获取 meta + content，语言切换时直接从已加载数据中选择，无额外网络请求
+- `app.routes.server.ts`：博客路由改为 `RenderMode.Server`（SSR 动态渲染），避免需要在 SSG 构建时访问 DB；其他路由保持 Prerender
+- 新增 `admin-blog.component.ts`：完整 Admin 博客管理 UI
+  - 文章列表：标题（英+中）、日期、发布状态一键切换、排序权重、快速预览链接
+  - 编辑弹窗三 Tab：元数据（英+中）/ 英文正文（Markdown，实时词数）/ 中文正文（Markdown，实时字符数）
+  - 完整 CRUD：新建、编辑、删除（带确认）、发布/下线切换
+- Admin 侧边导航新增 "Content" 分区及 Blog 菜单项
+- `app.routes.ts` 追加 `/admin/blog` 路由
+- `scripts/generate-sitemap.js`：Sitemap 生成优先读取 `public/assets/blog/index.json`（生产源），fallback 到 `src/assets/`
+
+---
+
+## [2026-06-16] - 📝 SEO & AdSense 合规：OG 封面图、博客扩充、隐私政策完善
+
+### ✨ 新功能 & 优化
+
+**OG 封面图**
+- 新增 `public/og-cover.png`（1200×630px）：深蓝背景、点阵网格、13款游戏色块展示
+- `index.html` og:image、`seo.service.ts`、`blog-post.component.ts` 统一指向 `/og-cover.png`
+
+**SEO 优化**
+- `index.html`：移除 `user-scalable=no`（Google 无障碍扣分）、移除 `Pragma/Expires` no-cache 头（PageSpeed 杀手）
+- `index.html` 标题更新为包含具体游戏名称的长尾关键词
+- `blog-post.component.ts`：新增 BlogPosting JSON-LD 结构化数据（Schema.org）、每篇文章独立 og:title/og:description
+- `scripts/generate-sitemap.js` 完整重写：自动读取 `public/assets/blog/index.json` 生成博客 URL、补充 `/leaderboard` 和 `/daily`、全部 URL 加 `<lastmod>`
+
+**导航调整**
+- 顶部导航移除 `/docs` 和 `/blog` 链接
+- Footer 统一整合：Docs · Blog · Privacy · Terms · About 内联排列
+
+**博客内容大幅扩充（AdSense 审核合规）**
+- 所有英文文章扩充至 900+ 词，中文文章 1900+ 汉字
+- 新增4篇全新双语文章：五子棋策略、水管排序攻略、方块对战策略、推箱子完整指南
+- 现有文章全部重写扩充：1A2B 算法详解、数独每日益处、扫雷逻辑指南
+- `public/assets/blog/index.json` 更新为 10 篇文章（+4 新增，+3 迁移扩充）
+- `src/assets/blog/index.json` 同步更新
+
+**隐私政策 & About 页**
+- 隐私政策：新增 Cookie/AdSense 条款、用户权利、联系方式（contact@puzzlepk.com）
+- About 页：改写为完整介绍页，列出全部13款游戏、使命说明、联系邮箱
+
+---
+
 ## [2026-06-16] - 🔄 用户留存系统深化：新手引导扩展 + PK 对战历史自动提交
 
 ### ✨ 新功能 & Bug 修复
