@@ -31,6 +31,9 @@ const staticPaths = [
   ['login',        'monthly','0.5', today],
   ['register',     'monthly','0.5', today],
   ['profile',      'monthly','0.5', today],
+  ['legal/privacy','monthly','0.3', today],
+  ['legal/terms',  'monthly','0.3', today],
+  ['legal/about',  'monthly','0.4', today],
   ...games.map(g => [`games/${g}`, 'weekly', '0.9', today]),
   ...games.map(g => [`docs/${g}`,  'monthly','0.7', today]),
 ];
@@ -83,12 +86,9 @@ if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, 'sitemap.xml'), xml, 'utf-8');
 console.log(`sitemap.xml generated — ${allPaths.length * langs.length} URLs`);
 
-// Cloudflare Pages SPA fallback redirects
-const redirects = `/en/* /en/index.html 200\n/zh/* /zh/index.html 200\n/* /index.html 200\n`;
-fs.writeFileSync(path.join(outDir, '_redirects'), redirects, 'utf-8');
-console.log('_redirects generated');
-
-// Routes for Angular SSG prerender — blog routes excluded (RenderMode.Server)
-const routesContent = prerenderPaths.map(([p]) => `/${p}`).join('\n') + '\n';
+// Routes for Angular SSG prerender — lang-prefixed, blog excluded (RenderMode.Server)
+const routesContent = prerenderPaths
+  .flatMap(([p]) => langs.map(lang => `/${lang}/${p}`))
+  .join('\n') + '\n';
 fs.writeFileSync(path.join(__dirname, '../routes.txt'), routesContent, 'utf-8');
-console.log(`routes.txt generated — ${prerenderPaths.length} prerender routes (blog excluded)`);
+console.log(`routes.txt generated — ${prerenderPaths.length * langs.length} prerender routes (blog excluded)`);
