@@ -12,7 +12,7 @@ func GetPublicSettings(c fiber.Ctx) error {
 	var settings []domain.SystemSetting
 	// Only fetch public settings to avoid leaking admin config
 	if err := db.DB.Where("key IN ?", []string{
-		"site_maintenance", "maintenance_message", "global_announcement", "registration_enabled", "multiplayer_enabled",
+		"site_maintenance", "maintenance_message", "global_announcement", "registration_enabled", "multiplayer_enabled", "pk_multi_round_enabled",
 		"ad_interstitial_frequency", "ad_interstitial_daily_limit",
 		"ad_pc_left_slot", "ad_pc_right_slot", "ad_mobile_lobby_slot",
 	}).Find(&settings).Error; err != nil {

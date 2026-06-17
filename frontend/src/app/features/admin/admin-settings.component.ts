@@ -72,6 +72,19 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
         </div>
 
+        <!-- Multi-Round PK Toggle -->
+        <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)]">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-lg font-bold">{{ i18n.t('admin.settings.multi_round.title')() }}</h3>
+              <p class="text-xs opacity-70 mt-1">{{ i18n.t('admin.settings.multi_round.desc')() }}</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.pk_multi_round_enabled" (ngModelChange)="saveSettings()">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-accent-from)]"></div>
+            </label>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -90,6 +103,7 @@ export class AdminSettingsComponent implements OnInit {
     global_announcement: '',
     simulator_enabled: true,
     multiplayer_enabled: true,
+    pk_multi_round_enabled: true,
     ad_interstitial_frequency: 3,
     ad_interstitial_daily_limit: 3,
     ad_pc_left_slot: '',
@@ -106,6 +120,7 @@ export class AdminSettingsComponent implements OnInit {
         this.settings.global_announcement = res.global_announcement || '';
         this.settings.simulator_enabled = res.simulator_enabled === 'true';
         this.settings.multiplayer_enabled = res.multiplayer_enabled === 'true';
+        this.settings.pk_multi_round_enabled = (res.pk_multi_round_enabled ?? 'true') === 'true';
         this.cdr.detectChanges();
       },
       error: () => this.toast.show('Failed to load settings', 'error')
@@ -120,7 +135,8 @@ export class AdminSettingsComponent implements OnInit {
       maintenance_message: this.settings.maintenance_message,
       global_announcement: this.settings.global_announcement,
       simulator_enabled: this.settings.simulator_enabled ? 'true' : 'false',
-      multiplayer_enabled: this.settings.multiplayer_enabled ? 'true' : 'false'
+      multiplayer_enabled: this.settings.multiplayer_enabled ? 'true' : 'false',
+      pk_multi_round_enabled: this.settings.pk_multi_round_enabled ? 'true' : 'false'
     };
 
     this.adminService.updateSettings(payload).subscribe({

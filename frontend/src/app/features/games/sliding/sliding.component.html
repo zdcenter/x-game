@@ -65,13 +65,17 @@
               <span class="hidden sm:inline">{{ t('game.leave')() || 'Leave' }}</span>
             </button>
             }
-            <button (click)="isMenuOpen.set(true)"
-              class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm">
+            <button
+              (click)="currentRoomMode() === GameMode.Single ? pkView.set('pk-lobby') : isMenuOpen.set(true)"
+              class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
+              @if (currentRoomMode() === GameMode.Single) {
+                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline text-[var(--color-accent-to)]">PK</span>
+              }
             </button>
           </ng-container>
         </app-game-header>
@@ -104,7 +108,7 @@
                 [isHost]="playerId === store.hostId()"
                 [isMe]="true"
                 [stats]="[
-                  (currentRoomMode() !== GameMode.Single ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                  (currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
                   { icon: '⏱️', value: formatTime(getElapsedMs(currentRoomMode() === GameMode.Single ? (store.myBoard()?.startAt || 0) : store.globalStartAt())), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
                   { icon: '🔄', value: store.myBoard()?.moves || 0 }
                 ]"
@@ -120,7 +124,7 @@
                         [isHost]="opp.id === store.hostId()"
                         [isMe]="false"
                         [stats]="[
-                          { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() },
+                          (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
                           { icon: '🔄', value: opp.board?.moves || 0 }
                         ]"
                         [status]="opp.board?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
@@ -216,6 +220,19 @@
       </div>
     </div>
   </div>
+
+  <!-- PK Lobby Full-Page Overlay -->
+  @if (pkView() === 'pk-lobby') {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
+      <app-game-pk-lobby
+        gameId="sliding"
+        [currentRoomId]="store.roomId()"
+        (createRoom)="handlePkCreate($event)"
+        (joinRoom)="handlePkJoin($event)"
+        (back)="pkView.set('game')">
+      </app-game-pk-lobby>
+    </div>
+  }
 
   <!-- Sidebar Overlay Backdrop -->
   @if (isMenuOpen()) {

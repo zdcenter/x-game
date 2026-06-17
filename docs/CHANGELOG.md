@@ -1,5 +1,75 @@
 # Changelog
 
+## [2026-06-18] - 🐛 修复多局制 Bug + Admin 多局制开关
+
+### 🐛 Bug 修复
+
+**多局制 PK 结算界面错误**
+- 修复灯谜 `getOverlayStatus()` 使用旧 mode 字符串 `'same_pk_speed'`（实为 `'speed'`）导致双方玩家均显示"你赢了"的 Bug
+- 修复灯谜 `getOverlaySubtitle()` 错误引用 `minesweeper.cleared` key 导致显示扫雷相关文字的 Bug
+- 修复所有 4 款多局制游戏（扫雷/滑块/灯谜/密码破译）每局结束均显示终局"游戏胜利/失败"界面的 Bug
+  - 实际应区分「局中结算」（`本局胜利/本局落败` + 当前比分 `X : Y`）与「系列赛终局」（`游戏胜利/游戏失败`）
+  - 新增 `isSeriesOver` getter：仅当某玩家 Wins ≥ Target 时才判定系列赛结束
+- `🏆 X/N` badge 现在仅在 `target > 1` 时显示，单局赛不再显示无意义的 `0/1`
+
+### ✨ 新功能
+
+**Admin 多局制开关（pk_multi_round_enabled）**
+- 后端 `SeedSettings()` 新增 `pk_multi_round_enabled`（默认 `true`），并加入 Public Settings API
+- 前端 `SettingsService` 新增 `pk_multi_round_enabled` 字段
+- `GamePkLobbyComponent` 注入 `SettingsService`：当 `pk_multi_round_enabled = false` 时隐藏「目标局数」选择区，创建时强制 `target = 1`
+- Admin 后台可直接通过 Settings 界面关闭多局制支持，对所有 4 款 PK 游戏生效
+
+### 🌐 国际化
+- 新增 i18n key：`game.round_won`（本局胜利）/ `game.round_lost`（本局落败）/ `game.all_lights_out`（所有灯已熄灭）
+
+---
+
+## [2026-06-17] - ⚔️ PK 全页大厅 + 多局制支持（扫雷/滑块/灯谜/密码破译）
+
+### ✨ 新功能
+
+**多局制 PK（先到 N 局者胜）**
+- 扫雷、滑块拼图、灯谜（Lights Out）、密码破译（Codebreaker）四款游戏的后端引擎新增 `Wins map[string]int` + `Target int` 字段
+- 通过 WS 查询参数 `target` 传入局数目标，后端 `InitGame` 读取并应用
+- 重启逻辑智能区分「继续当前系列」（Wins 保留）与「开新系列」（任一玩家达到 Target 后重置 Wins）
+- 前端 Badge 新增 `🏆 X/N` 显示，实时反映当前系列进度；`currentRoomTarget()` 来自 `BaseGameStore`
+
+**全页 PK 大厅（GamePkLobbyComponent）**
+- 新增共享组件 `GamePkLobbyComponent`（`app-game-pk-lobby`），替代游戏内 320px 窄侧边栏用于 PK 创建/加入
+- 桌面两栏布局：左侧 360px 固定创建表单（模式/难度/目标局数 1/3/5/10/密码），右侧 flex-grow 房间列表+在线玩家 Tab
+- 移动端单列 Accordion：折叠/展开创建表单，房间列表始终在下方可见
+- 条件样式全部使用 `[class]="ternary"` 字符串绑定，兼容 Angular 模板解析器
+- 已集成至：扫雷、滑块拼图、灯谜、密码破译（其他游戏后续集成）
+- 入口：游戏右上角人群图标（Single 模式点击 → 全页 PK 大厅；PK 模式点击 → 改设置侧边栏）
+- z-index 层次：游戏 < PK大厅(z-90) < WaitingRoom(z-100) < Navbar
+
+**i18n 新增键**
+- `game.pk_lobby_subtitle`、`game.no_online_players`（中英双语）
+
+### 📁 涉及文件
+
+**后端**
+- `backend/internal/engine/minesweeper/speed_engine.go`
+- `backend/internal/engine/sliding/speed_engine.go`
+- `backend/internal/engine/lightsout/engine.go`
+- `backend/internal/engine/codebreaker/engine.go`
+
+**前端**
+- `frontend/src/app/shared/components/game-pk-lobby/game-pk-lobby.component.ts` *(新建)*
+- `frontend/src/app/shared/components/game-pk-lobby/game-pk-lobby.component.html` *(新建)*
+- `frontend/src/app/features/games/minesweeper/minesweeper.component.{ts,html}`
+- `frontend/src/app/features/games/sliding/sliding.component.{ts,html}`
+- `frontend/src/app/features/games/lightsout/lightsout.component.{ts,html}`
+- `frontend/src/app/features/games/codebreaker/codebreaker.component.{ts,html}`
+- `frontend/src/app/features/games/minesweeper/store/minesweeper.store.ts`
+- `frontend/src/app/features/games/sliding/store/sliding.store.ts`
+- `frontend/src/app/features/games/lightsout/store/lightsout.store.ts`
+- `frontend/src/app/features/games/codebreaker/store/codebreaker.store.ts`
+- `frontend/src/app/core/i18n/core.translations.ts`
+
+---
+
 ## [2026-06-17] - 🔑 修复刷新后用户名消失 & Profile NaN
 
 ### 🐛 修复

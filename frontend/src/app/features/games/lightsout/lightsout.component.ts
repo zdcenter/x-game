@@ -11,6 +11,7 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { CommonModule } from '@angular/common';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
@@ -24,8 +25,9 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
   selector: 'app-lightsout',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     GameLobbyPanelComponent,
+    GamePkLobbyComponent,
     GameHeaderComponent,
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
@@ -50,6 +52,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
+  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal(false);
   showOverlay = signal(false);
   hintCell = signal<{r: number, c: number} | null>(null);
@@ -112,7 +115,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     }
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number}) {
     super.handleCreateRoom(event);
     if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
@@ -124,6 +127,16 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     if (params.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password, target: e.target });
+    this.pkView.set('game');
+  }
+
+  handlePkJoin(e: PkJoinRoomEvent) {
+    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
+    this.pkView.set('game');
   }
 
   override handleDismissRoom() {
@@ -168,28 +181,43 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     return this.wsService.isConnected();
   }
 
+  get isSeriesOver(): boolean {
+    if (this.store.currentRoomMode() === GameMode.Single) return true;
+    const target = this.store.currentRoomTarget();
+    if (target <= 1) return true;
+    const wins = this.store.pkWins();
+    return Object.values(wins).some(w => w >= target);
+  }
+
   getOverlayStatus(): 'win' | 'lose' {
-    if (this.store.currentRoomMode() === 'same_pk_speed') {
+    if (this.store.currentRoomMode() !== GameMode.Single) {
       return this.store.winners().includes(this.playerId) ? 'win' : 'lose';
     }
-    return 'win'; // single player finishes when won
+    return 'win';
   }
 
   getOverlayTitle(): string {
-    const status = this.getOverlayStatus();
-    if (status === 'win') {
-      return this.i18n.t('game.you_win')() || 'Victory!';
+    const won = this.getOverlayStatus() === 'win';
+    if (this.store.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+      return won ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
     }
-    return this.i18n.t('game.defeat')() || 'Defeat';
+    if (won) return this.i18n.t('game.you_win')();
+    return this.i18n.t('game.you_lose')();
   }
 
   getOverlaySubtitle(): string {
-    if (this.store.currentRoomMode() === 'same_pk_speed') {
-      return this.getOverlayStatus() === 'win' 
-        ? (this.i18n.t('game.cleared_first')() || 'You cleared the board first!') 
+    if (this.store.currentRoomMode() !== GameMode.Single) {
+      if (!this.isSeriesOver) {
+        const wins = this.store.pkWins();
+        const myW = wins[this.playerId] || 0;
+        const oppW = Object.entries(wins).filter(([k]) => k !== this.playerId).reduce((a, [, v]) => a + v, 0);
+        return `${myW} : ${oppW}`;
+      }
+      return this.getOverlayStatus() === 'win'
+        ? (this.i18n.t('game.cleared_first')() || 'You cleared the board first!')
         : (this.i18n.t('game.opponent_finished')() || 'An opponent cleared the board first!');
     }
-    return this.i18n.t('minesweeper.cleared')() || 'Board cleared!';
+    return this.i18n.t('game.all_lights_out')() || 'All lights out!';
   }
 
   getOverlayStats() {

@@ -33,6 +33,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_mine_30x24', desc: '30x24 (230)' }
     ],
     recommendations: ['sudoku', 'sliding'],
+    multiRound: true,
     tutorial: [
       { icon: '💣', title: 'tutorial.mine.goal',   description: 'tutorial.mine.goal_desc' },
       { icon: '👆', title: 'tutorial.mine.reveal',  description: 'tutorial.mine.reveal_desc' },
@@ -81,7 +82,8 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_slide_5x5', desc: '5x5 Grid' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_slide_6x6', desc: '6x6 Grid' }
     ],
-    recommendations: ['sudoku', 'hexa']
+    recommendations: ['sudoku', 'hexa'],
+    multiRound: true
   },
   {
     id: GameId.Hexa,
@@ -148,6 +150,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_codebreaker_hard', desc: '5-digit code' }
     ],
     recommendations: ['math24', 'sudoku'],
+    multiRound: true,
     tutorial: [
       { icon: '🔐', title: 'tutorial.codebreaker.goal',     description: 'tutorial.codebreaker.goal_desc' },
       { icon: '🟢', title: 'tutorial.codebreaker.feedback', description: 'tutorial.codebreaker.feedback_desc' },
@@ -229,7 +232,8 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_expert', desc: '7x7 Board' },
       { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_master', desc: '8x8 Board' }
     ],
-    recommendations: ['minesweeper', 'sudoku']
+    recommendations: ['minesweeper', 'sudoku'],
+    multiRound: true
   },
   {
     id: GameId.WaterSort,

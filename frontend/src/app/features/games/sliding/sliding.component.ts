@@ -14,6 +14,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -28,7 +29,7 @@ import { SlidingTutorialComponent } from './components/sliding-tutorial/sliding-
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GamePkLobbyComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -46,6 +47,7 @@ export class SlidingComponent extends BaseGameComponent {
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
 
+  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
   showOverlay = signal<boolean>(false);
@@ -230,6 +232,19 @@ export class SlidingComponent extends BaseGameComponent {
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
     this.store.joinRoom(roomId, mode, difficulty, hostId, target);
     this.isMenuOpen.set(false);
+    this.pkView.set('game');
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    if (e.password) this.wsService.setPendingPassword(e.password);
+    this.wsService.setPendingAction('create');
+    this.joinRoom(e.name, e.mode, e.difficulty, this.playerId, e.target);
+  }
+
+  handlePkJoin(e: PkJoinRoomEvent) {
+    if (e.password) this.wsService.setPendingPassword(e.password);
+    this.wsService.setPendingAction('join');
+    this.joinRoom(e.roomId, e.mode, e.difficulty, e.host);
   }
 
   override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
@@ -344,6 +359,14 @@ export class SlidingComponent extends BaseGameComponent {
     return `${m}:${s}`;
   }
 
+  get isSeriesOver(): boolean {
+    if (this.currentRoomMode() === GameMode.Single) return true;
+    const target = this.store.currentRoomTarget();
+    if (target <= 1) return true;
+    const wins = this.store.pkWins();
+    return Object.values(wins).some(w => w >= target);
+  }
+
   getOverlayStatus(): GameResultType {
     if (this.currentRoomMode() === GameMode.Single) return GameResult.Win;
     if (this.store.winners().includes(this.playerId)) return GameResult.Win;
@@ -351,12 +374,20 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   getOverlayTitle(): string {
-    if (this.currentRoomMode() === GameMode.Single) return this.t('game.you_win')();
-    if (this.store.winners().includes(this.playerId)) return this.t('game.you_win')();
-    return this.t('game.you_lose')();
+    const won = this.getOverlayStatus() === GameResult.Win;
+    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+      return won ? this.t('game.round_won')() : this.t('game.round_lost')();
+    }
+    return won ? this.t('game.you_win')() : this.t('game.you_lose')();
   }
 
   getOverlaySubtitle(): string {
+    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+      const wins = this.store.pkWins();
+      const myW = wins[this.playerId] || 0;
+      const oppW = Object.entries(wins).filter(([k]) => k !== this.playerId).reduce((a, [, v]) => a + v, 0);
+      return `${myW} : ${oppW}`;
+    }
     return `${this.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(this.currentRoomMode() === GameMode.Single ? (this.store.myBoard()?.startAt || 0) : this.store.globalStartAt()))}`;
   }
 

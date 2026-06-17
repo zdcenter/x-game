@@ -13,6 +13,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameService } from '../../../core/services/game.service';
@@ -32,6 +33,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     GameRulesModalComponent,
     GameWaitingRoomComponent,
     GameLobbyPanelComponent,
+    GamePkLobbyComponent,
     GameStartingOverlayComponent,
     GameHeaderComponent,
     HintButtonComponent,
@@ -61,6 +63,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   roomLifecycle: RoomLifecycleHandle;
 
   private tutorialService = inject(TutorialService);
+  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal(false);
   isMobileSidebarOpen = signal(false);
   showOverlay = signal(false);
@@ -172,6 +175,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   joinRoom(roomId: string, mode: string, difficulty: string, host: string, target: number = 1) {
     if (!roomId) return;
+    this.pkView.set('game');
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.roomId.set(roomId);
@@ -249,6 +253,16 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     const diff = room.difficulty || 'medium';
     this.joinRoom(room.roomId, room.mode, diff, room.host);
     this.isMobileSidebarOpen.set(false);
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    if (e.password) this.ws.setPendingPassword(e.password);
+    this.joinRoom(e.name, e.mode, e.difficulty, this.myPlayerId(), e.target);
+  }
+
+  handlePkJoin(e: PkJoinRoomEvent) {
+    if (e.password) this.ws.setPendingPassword(e.password);
+    this.joinRoom(e.roomId, e.mode, e.difficulty, e.host);
   }
 
   changeDifficulty(event: Event) {
@@ -355,16 +369,31 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     return `${maxA}A${bestB}B`;
   }
 
+  get isSeriesOver(): boolean {
+    if (this.currentRoomMode() === GameMode.Single) return true;
+    const target = this.store.currentRoomTarget();
+    if (target <= 1) return true;
+    const wins = this.store.pkWins();
+    return Object.values(wins).some(w => w >= target);
+  }
+
   get winnerText(): string {
     const winList = this.winners();
     if (winList.length === 0) return '';
-    if (winList.includes(this.myPlayerId())) {
-      return this.i18n.t('game.you_win')();
+    const won = winList.includes(this.myPlayerId());
+    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+      return won ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
     }
-    return this.i18n.t('game.you_lose')();
+    return won ? this.i18n.t('game.you_win')() : this.i18n.t('game.you_lose')();
   }
 
   get winDescription(): string {
+    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+      const wins = this.store.pkWins();
+      const myW = wins[this.myPlayerId()] || 0;
+      const oppW = Object.entries(wins).filter(([k]) => k !== this.myPlayerId()).reduce((a, [, v]) => a + v, 0);
+      return `${myW} : ${oppW}`;
+    }
     const attempts = this.myState()?.guesses.length || 0;
     return this.i18n.t('codebreaker.victory_desc')().replace('{attempts}', attempts.toString());
   }

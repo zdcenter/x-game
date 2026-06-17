@@ -1,0 +1,356 @@
+<div class="flex flex-col w-full h-full overflow-hidden">
+
+  <!-- ══════ Header ══════ -->
+  <div class="shrink-0">
+    <app-game-header
+      [title]="gameTitle()"
+      [subtitle]="t('game.pk_lobby_subtitle')"
+      [iconGradientClass]="'from-indigo-500 to-violet-600'"
+      [titleGradientClass]="'from-indigo-400 to-violet-400'"
+      [shadowClass]="'shadow-violet-500/20'"
+      [headerBgClass]="'bg-gradient-to-r from-indigo-900/20 to-violet-900/20 px-4 md:px-8 pb-2 mb-0'"
+      (back)="back.emit()">
+
+      <img [src]="gameIconPath()" game-icon class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-md" alt="icon"
+           onerror="this.style.display='none'">
+
+      <ng-container header-right>
+        <div class="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="font-bold text-emerald-400">{{ wsService.onlinePlayers().length }}</span>
+          <span class="hidden sm:inline">{{ t('game.online') }}</span>
+        </div>
+      </ng-container>
+    </app-game-header>
+  </div>
+
+  <!-- ══════ Main Body ══════ -->
+  <div class="flex-grow flex flex-col lg:flex-row overflow-hidden min-h-0">
+
+    <!-- ───── LEFT: Create Room Form ───── -->
+    <div class="lg:w-[360px] xl:w-[400px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-border-card)] overflow-hidden">
+
+      <!-- Mobile accordion toggle -->
+      <button
+        class="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)] font-bold text-sm text-[var(--color-text-main)]"
+        (click)="formOpen.set(!formOpen())">
+        <span class="flex items-center gap-2">
+          <span class="text-base">➕</span>
+          <span>{{ t('game.create_pk') }}</span>
+        </span>
+        <span class="transition-transform duration-200" [class.rotate-180]="formOpen()">▼</span>
+      </button>
+
+      <!-- Form body (always visible on desktop, accordion on mobile) -->
+      @if (formOpen()) {
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4 lg:p-5 space-y-5">
+
+          <!-- Section label (desktop only) -->
+          <h2 class="hidden lg:block text-sm font-black uppercase tracking-widest text-[var(--color-accent-from)]">
+            ➕ {{ t('game.create_pk') }}
+          </h2>
+
+          <!-- Room Name -->
+          <div>
+            <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
+            <input type="text" [value]="roomName()"
+                   (input)="updateInput(roomName, $event, 40)"
+                   class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors text-sm"
+                   placeholder="Room name">
+          </div>
+
+          <!-- Mode -->
+          @if (availableModes().length > 0) {
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
+              <div [class]="availableModes().length === 1 ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-2 gap-2'">
+                @for (mode of availableModes(); track mode.id) {
+                  <button (click)="roomMode.set(mode.id)"
+                          [class]="'px-3 py-3 rounded-xl border font-bold text-sm transition-all text-left ' + (roomMode() === mode.id ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)] border-[var(--color-accent-to)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-to)]')">
+                    <div class="flex items-center gap-2 mb-0.5">
+                      @if (mode.icon) { <span>{{ mode.icon }}</span> }
+                      <span>{{ mode.labelKey ? t(mode.labelKey) : mode.id }}</span>
+                    </div>
+                    @if (mode.descKey || mode.desc) {
+                      <div class="text-[10px] font-normal opacity-70 leading-tight mt-1">
+                        {{ mode.descKey ? t(mode.descKey) : mode.desc }}
+                      </div>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Difficulty -->
+          @if (availableDifficulties().length > 0) {
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.diff') }}</label>
+              <div class="grid grid-cols-3 gap-2">
+                @for (diff of availableDifficulties(); track diff.id) {
+                  <button (click)="roomDifficulty.set(diff.id)"
+                          [class]="'py-3 rounded-xl border font-bold text-xs transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ' + (roomDifficulty() === diff.id ? 'bg-[var(--color-accent-from)] text-[var(--color-bg-main)] border-[var(--color-accent-from)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]')">
+                    <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
+                    @if (diff.descKey || diff.desc) {
+                      <span class="text-[9px] font-normal opacity-70 leading-tight text-center px-1">
+                        {{ diff.descKey ? t(diff.descKey) : diff.desc }}
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Target (rounds to win) - hidden when admin disables multi-round -->
+          @if (isMultiRoundEnabled()) {
+          <div>
+            <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-1">{{ t('game.pk_target_label') }}</label>
+            <p class="text-[10px] opacity-50 mb-2">{{ t('game.pk_target_hint') }}</p>
+            <div class="grid grid-cols-4 gap-2">
+              @for (opt of pkTargetOptions; track opt) {
+                <button (click)="roomTarget.set(opt)"
+                        [class]="'py-3 rounded-xl border font-black text-sm transition-all text-center ' + (roomTarget() === opt ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)] border-[var(--color-accent-to)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-to)]')">
+                  {{ opt }}
+                </button>
+              }
+            </div>
+          </div>
+          }
+
+          <!-- Password (optional) -->
+          <div>
+            <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_password') }}</label>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+                   [value]="roomPassword()"
+                   (input)="updateInput(roomPassword, $event, 4, true)"
+                   class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors font-mono text-xl tracking-[0.5em] text-center"
+                   [placeholder]="t('game.room_password_placeholder')">
+            <p class="text-[10px] opacity-50 mt-1">{{ t('game.room_password_hint') }}</p>
+          </div>
+
+          <!-- Create Button -->
+          <button (click)="onConfirmCreate()"
+                  class="w-full py-4 rounded-xl font-black text-base bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <span>✚</span>
+            <span>{{ t('game.create_and_join') }}</span>
+          </button>
+
+        </div>
+      }
+    </div>
+
+    <!-- ───── RIGHT: Rooms + Online ───── -->
+    <div class="flex-grow flex flex-col min-h-0 overflow-hidden">
+
+      <!-- Right panel tabs -->
+      <div class="shrink-0 flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+        <button (click)="rightTab.set('rooms')"
+                [class]="'flex-1 py-3 font-bold text-sm transition-all uppercase tracking-widest ' + (rightTab() === 'rooms' ? 'text-[var(--color-accent-from)] bg-[var(--color-bg-main)]' : 'opacity-50 text-[var(--color-text-muted)]')">
+          🎮 {{ t('game.active_rooms') }}
+          <span class="ml-1 text-[10px] font-black opacity-80">({{ allRooms().length }})</span>
+        </button>
+        <button (click)="rightTab.set('online')"
+                [class]="'flex-1 py-3 font-bold text-sm transition-all uppercase tracking-widest ' + (rightTab() === 'online' ? 'text-[var(--color-accent-from)] bg-[var(--color-bg-main)]' : 'opacity-50 text-[var(--color-text-muted)]')">
+          👥 {{ t('game.online') }}
+          <span class="ml-1 text-[10px] font-black text-emerald-400">({{ wsService.onlinePlayers().length }})</span>
+        </button>
+      </div>
+
+      <!-- ── Rooms tab ── -->
+      @if (rightTab() === 'rooms') {
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4 space-y-5">
+
+          <!-- Challenge Banner -->
+          @if (challengeInfo()) {
+            <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-500/15 to-pink-500/10 border border-rose-500/35">
+              <span class="text-2xl shrink-0">⚔️</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-black text-rose-400">
+                  {{ t('share.challenge_banner').replace('[challenger]', challengeInfo()!.challenger) }}
+                </p>
+                @if (challengeInfo()!.score) {
+                  <p class="text-xs text-[var(--color-text-muted)]">
+                    {{ t('share.challenge_score').replace('[score]', challengeInfo()!.score) }}
+                  </p>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Broadcast messages -->
+          @for (msg of wsService.broadcastMessages(); track msg.timestamp) {
+            <div class="bg-gradient-to-r from-yellow-500/10 via-amber-500/20 to-orange-500/10 border border-yellow-500/30 rounded-xl p-3 flex items-center gap-3">
+              <span class="text-2xl animate-pulse shrink-0">📢</span>
+              <div class="text-sm font-bold text-[var(--color-text-main)] flex-1 min-w-0">
+                {{ t('game.broadcast_msg').replace('{player}', msg.senderName || msg.senderId).replace('{game}', gameLabel(msg.room.game)).replace('{mode}', modeLabel(msg.room.mode, msg.room.game)) }}
+                <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host, msg.room.hasPassword)"
+                        class="text-amber-400 hover:text-amber-300 underline font-black ml-1">
+                  {{ t('game.broadcast_join') }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- My Rooms -->
+          @if (myRooms().length > 0) {
+            <div>
+              <h3 class="text-xs font-black text-[var(--color-accent-to)] uppercase tracking-widest mb-3 px-1">{{ t('game.my_room') }}</h3>
+              <div class="space-y-3">
+                @for (room of myRooms(); track room.id) {
+                  <ng-container *ngTemplateOutlet="roomCard; context: { room: room, isMine: true }"></ng-container>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Other Active Rooms -->
+          <div>
+            <h3 class="text-xs font-black text-[var(--color-text-muted)] uppercase tracking-widest mb-3 px-1">
+              {{ t('game.active_rooms') }}
+            </h3>
+            @if (otherRooms().length > 0) {
+              <div class="space-y-3">
+                @for (room of otherRooms(); track room.id) {
+                  <ng-container *ngTemplateOutlet="roomCard; context: { room: room, isMine: false }"></ng-container>
+                }
+              </div>
+            } @else {
+              <div class="text-center py-10 border border-dashed border-[var(--color-border-card)] rounded-xl text-[var(--color-text-muted)] text-sm">
+                <div class="text-4xl mb-3">🎮</div>
+                <p class="font-bold">{{ t('game.no_rooms') }}</p>
+                <p class="text-xs mt-1 opacity-70">{{ t('game.create_one') }}</p>
+              </div>
+            }
+          </div>
+
+        </div>
+      }
+
+      <!-- ── Online tab ── -->
+      @if (rightTab() === 'online') {
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4 space-y-2">
+          @for (player of onlinePlayers(); track player.id) {
+            <div class="flex items-center p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)]">
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    {{ player.username?.charAt(0)?.toUpperCase() || '?' }}
+                  </div>
+                  <div [class]="'absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-bg-main)] ' + (player.status === 'idle' ? 'bg-emerald-400' : 'bg-yellow-400')"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-[var(--color-text-main)] leading-none truncate max-w-[140px]" [title]="player.username">
+                    {{ formatHost(player.username, 18) }}
+                  </div>
+                  <div class="text-[10px] opacity-60 uppercase mt-1">{{ player.status }}</div>
+                </div>
+              </div>
+            </div>
+          }
+          @empty {
+            <div class="text-center py-10 text-[var(--color-text-muted)] text-sm">
+              <div class="text-4xl mb-3">👥</div>
+              <p>{{ t('game.no_online_players') }}</p>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════ Room Card Template ══════ -->
+<ng-template #roomCard let-room="room" let-isMine="isMine">
+  <div [class]="'rounded-xl border-2 p-3 transition-all ' + (isMine ? 'border-[var(--color-accent-to)] bg-[var(--color-bg-card)]' : 'border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-to)]')">
+
+    <!-- Row 1: game chip + room name + status -->
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-[var(--color-border-card)] bg-[var(--color-bg-main)] flex items-center gap-1 shrink-0">
+        <img [src]="'/assets/games/icons/' + room.game + '.svg?v=2'" class="w-3 h-3 object-contain" alt="">
+        {{ gameLabel(room.game) }}
+      </span>
+      @if (room.hasPassword) { <span class="text-amber-400 text-xs shrink-0">🔒</span> }
+      <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate flex-1 min-w-0"
+            [title]="decodeName(room.id, 60)">
+        {{ decodeName(room.id) }}
+        @if (isMine) { <span class="text-[10px] text-[var(--color-accent-from)] font-normal ml-1">({{ t('game.host') }})</span> }
+      </span>
+      <span [class]="'text-xs font-bold uppercase px-2 py-0.5 rounded shrink-0 ' + (room.status === GameStatus.Playing ? 'bg-yellow-500 text-black' : room.status === GameStatus.Waiting ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)]' : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)]')">
+        {{ room.status }}
+      </span>
+    </div>
+
+    <!-- Row 2: meta + actions -->
+    <div class="flex items-end justify-between gap-2">
+      <div class="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wide flex flex-wrap gap-x-3 gap-y-0.5">
+        @if (!isMine) {
+          <span>{{ t('game.host') }}: <span class="text-[var(--color-accent-from)] font-bold">{{ formatHost(room.host) }}</span></span>
+        }
+        <span>{{ t('game.mode') }}: <span class="text-[var(--color-text-main)]">{{ modeLabel(room.mode, room.game) }}</span></span>
+        <span>{{ t('game.diff') }}: <span class="text-amber-400 font-bold">{{ diffLabel(room.difficulty, room.game) }}</span></span>
+        @if (room.createdAt) {
+          <span>{{ room.createdAt * 1000 | date:'HH:mm' }}</span>
+        }
+        <span>{{ room.players }} {{ t('game.players_count') }}</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        @if (currentRoomId === room.id) {
+          <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)"
+                  class="px-3 py-1.5 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded-lg shadow hover:opacity-80 transition-opacity">
+            {{ t('game.rejoin') }}
+          </button>
+        } @else if (room.status === GameStatus.Waiting || room.status === GameStatus.Playing) {
+          <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)"
+                  class="px-3 py-1.5 bg-[var(--color-accent-from)] text-[var(--color-bg-main)] text-xs font-bold rounded-lg shadow hover:opacity-80 transition-opacity">
+            {{ room.status === GameStatus.Playing ? t('game.rejoin') : (room.hasPassword ? '🔒 ' + t('game.join') : t('game.join')) }}
+          </button>
+        } @else {
+          <button disabled class="px-3 py-1.5 bg-[var(--color-bg-card)] opacity-40 text-[var(--color-text-muted)] text-xs font-bold rounded-lg cursor-not-allowed">
+            {{ t('game.finished') }}
+          </button>
+        }
+
+        @if (isMine) {
+          <button (click)="sendHeroBroadcast(room)"
+                  class="px-2 py-1.5 bg-amber-600/20 text-amber-400 border border-amber-500/40 text-xs font-bold rounded-lg hover:bg-amber-600 hover:text-white transition-colors">
+            📢
+          </button>
+          <button (click)="onDismissRoom(room.id)"
+                  class="px-2 py-1.5 bg-red-600/20 text-red-400 border border-red-500/40 text-xs font-bold rounded-lg hover:bg-red-600 hover:text-white transition-colors">
+            ✕
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- ══════ Password Prompt Modal ══════ -->
+@if (pwPromptOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[var(--color-overlay)] backdrop-blur-sm">
+    <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl p-6 w-full max-w-xs shadow-2xl text-[var(--color-text-main)] text-center">
+      <div class="text-3xl mb-3">🔒</div>
+      <h3 class="text-lg font-bold mb-4">{{ t('game.enter_password') }}</h3>
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+             [value]="pwInput()"
+             (input)="updateInput(pwInput, $event, 4, true)"
+             (keydown.enter)="onConfirmPassword()"
+             class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] font-mono text-2xl tracking-[0.5em] text-center mb-4"
+             placeholder="• • • •" autofocus>
+      <div class="flex gap-3">
+        <button (click)="pwPromptOpen.set(false)"
+                class="flex-1 py-2.5 rounded-xl font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] transition-colors text-sm hover:opacity-80">
+          {{ t('game.cancel') }}
+        </button>
+        <button (click)="onConfirmPassword()" [disabled]="pwInput().length !== 4"
+                class="flex-1 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg transition-all text-sm disabled:opacity-40">
+          {{ t('game.confirm') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

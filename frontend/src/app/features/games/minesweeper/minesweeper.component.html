@@ -52,15 +52,19 @@
             }
 
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="isMobileSidebarOpen.set(true)"
-              class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)]">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </button>
-}
+              <button
+                (click)="currentRoomMode() === GameMode.Single ? pkView.set('pk-lobby') : isMobileSidebarOpen.set(true)"
+                class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                @if (currentRoomMode() === GameMode.Single) {
+                  <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
+                }
+              </button>
+            }
 
           </div>
         </ng-container>
@@ -92,7 +96,7 @@
             [isMe]="true"
             [score]="currentRoomMode() === GameMode.Steal ? (getPlayerScores()[0]?.score || 0) : undefined"
             [stats]="[
-              (currentRoomMode() === GameMode.Speed ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+              (currentRoomMode() === GameMode.Speed && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
               { icon: '⏱️', value: store.status() === GameStatus.Playing ? elapsedTime() : (store.status() === GameStatus.Waiting ? '00:00' : elapsedTime()), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
               { icon: '💣', value: store.remainingMines() | number:'2.0' },
               (store.myErrors() > 0 ? { icon: '❌', value: store.myErrors(), colorClass: 'text-red-400' } : $any(null))
@@ -111,7 +115,7 @@
                       [isHost]="opp.id === store.hostId()"
                       [isMe]="false"
                       [stats]="[
-                        { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() },
+                        (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
                         { label: 'PROG', value: (opp.progress | number:'1.0-0') + '%' },
                         (opp.errors > 0 ? { icon: '❌', value: opp.errors, colorClass: 'text-red-400' } : $any(null))
                       ]"
@@ -260,6 +264,19 @@
   </div>
     }
 
+
+  <!-- PK Lobby Full-Page Overlay -->
+  @if (pkView() === 'pk-lobby') {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
+      <app-game-pk-lobby
+        gameId="minesweeper"
+        [currentRoomId]="currentRoomId()"
+        (createRoom)="handlePkCreate($event)"
+        (joinRoom)="handlePkJoin($event)"
+        (back)="pkView.set('game')">
+      </app-game-pk-lobby>
+    </div>
+  }
 
   <!-- PK Waiting Room (fixed overlay covers full screen below navbar) -->
   @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {

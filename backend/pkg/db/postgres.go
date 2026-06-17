@@ -251,6 +251,7 @@ func SeedSettings() {
 		{Key: "site_maintenance", Value: "false"},
 		{Key: "maintenance_message", Value: ""},
 		{Key: "multiplayer_enabled", Value: "true"},
+		{Key: "pk_multi_round_enabled", Value: "true"},
 		{Key: "simulator_enabled", Value: "true"},
 		{Key: "registration_enabled", Value: "true"},
 	}

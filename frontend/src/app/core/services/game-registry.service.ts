@@ -37,6 +37,8 @@ export interface GameConfig {
   difficulties: GameDifficulty[];
   /** Recommended games to show on the result screen */
   recommendations?: string[];
+  /** Whether this game's engine supports multi-round PK series (Wins tracking). */
+  multiRound?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
