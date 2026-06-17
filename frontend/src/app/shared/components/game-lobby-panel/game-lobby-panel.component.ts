@@ -10,6 +10,7 @@ import { CrossGameJoinService } from '../../../core/services/cross-game-join.ser
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { getLocalizedField } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { SettingsService } from '../../../core/services/settings.service';
 import { environment } from '../../../../environments/environment';
 
 export interface GameMode {
@@ -339,8 +340,8 @@ export interface GameDifficulty {
               </div>
             }
 
-            <!-- PK Target (rounds/score to win) — Create Mode Only, non-Single mode -->
-            @if (!isUpdateMode() && availableModes().length > 0) {
+            <!-- PK Target (rounds/score to win) — Create Mode Only, non-Single mode, game supports multiRound -->
+            @if (!isUpdateMode() && availableModes().length > 0 && isMultiRoundEnabled()) {
               <div>
                 <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.pk_target_label') }}</label>
                 <div class="grid grid-cols-4 gap-2">
@@ -421,6 +422,7 @@ export class GameLobbyPanelComponent implements OnInit {
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
+  private settings = inject(SettingsService);
 
   challengeInfo = computed(() => {
     const q = this.route.snapshot.queryParams;
@@ -460,6 +462,11 @@ export class GameLobbyPanelComponent implements OnInit {
   passwordInput = signal('');
 
   allGames = computed(() => this.gameRegistry.getAllConfigs());
+
+  isMultiRoundEnabled = computed(() => {
+    if (this.settings.settings().pk_multi_round_enabled === 'false') return false;
+    return this.gameRegistry.getConfig(this.newRoomGameId())?.multiRound === true;
+  });
   availableModes = computed(() => {
     const modes = this.gameRegistry.getConfig(this.newRoomGameId())?.modes || [];
     return modes.filter(m => m.id !== GameMode.Single);
@@ -597,7 +604,7 @@ export class GameLobbyPanelComponent implements OnInit {
       mode: mode,
       difficulty: diff,
       password: this.newRoomPassword(),
-      target: this.newRoomTarget()
+      target: this.isMultiRoundEnabled() ? this.newRoomTarget() : 1
     });
     this.isCreateModalOpen.set(false);
     this.newRoomPassword.set('');
