@@ -37,12 +37,23 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
           <!-- Right: Controls -->
           <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
-            <!-- Install App (desktop only) -->
-            @if (pwa.canInstall()) {
-              <button (click)="pwa.install()"
-                      class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10">
-                💻 {{ i18n.t('nav.installApp')() }}
-              </button>
+            <!-- Install App: Android (native prompt) or iOS (guide modal) -->
+            @if (!pwa.isStandalone()) {
+              @if (pwa.canInstall()) {
+                <button (click)="pwa.install()"
+                        class="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10">
+                  <span class="text-base leading-none">💻</span>
+                  <span class="hidden sm:inline">{{ i18n.t('nav.installApp')() }}</span>
+                  <span class="sm:hidden">{{ i18n.t('nav.install')() }}</span>
+                </button>
+              } @else if (pwa.isIos()) {
+                <button (click)="pwa.openIosGuide()"
+                        class="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10">
+                  <span class="text-base leading-none">📲</span>
+                  <span class="hidden sm:inline">{{ i18n.t('nav.installApp')() }}</span>
+                  <span class="sm:hidden">{{ i18n.t('nav.install')() }}</span>
+                </button>
+              }
             }
 
             <!-- Theme Toggle -->
@@ -119,6 +130,66 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
         <router-outlet></router-outlet>
         <app-share-modal></app-share-modal>
       </main>
+
+      <!-- iOS Install Guide — bottom sheet on mobile, centered modal on sm+ -->
+      @if (pwa.showIosGuide()) {
+        <div class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="pwa.closeIosGuide()"></div>
+          <div class="relative w-full sm:max-w-sm sm:mx-4 rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl"
+               style="background-color: var(--color-bg-card); border-top: 1px solid var(--color-border-card)">
+            <!-- Drag handle (mobile) -->
+            <div class="w-10 h-1 rounded-full mx-auto mb-5 sm:hidden" style="background-color: var(--color-border-card)"></div>
+
+            <h3 class="text-lg font-black text-center mb-6" style="color: var(--color-text-main)">
+              {{ i18n.t('nav.installGuideTitle')() }}
+            </h3>
+
+            <div class="space-y-4 mb-6">
+              <!-- Step 1 -->
+              <div class="flex items-start gap-3">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                      style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">1</span>
+                <div class="flex-1">
+                  <p class="text-sm font-medium" style="color: var(--color-text-main)">{{ i18n.t('nav.installGuideStep1')() }}</p>
+                  <span class="mt-1.5 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>
+                    </svg>
+                    Share
+                  </span>
+                </div>
+              </div>
+              <!-- Step 2 -->
+              <div class="flex items-start gap-3">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                      style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">2</span>
+                <div class="flex-1">
+                  <p class="text-sm font-medium" style="color: var(--color-text-main)">{{ i18n.t('nav.installGuideStep2')() }}</p>
+                  <span class="mt-1.5 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)]" style="color: var(--color-text-secondary)">
+                    ➕ {{ i18n.currentLang() === 'zh' ? '添加到主屏幕' : 'Add to Home Screen' }}
+                  </span>
+                </div>
+              </div>
+              <!-- Step 3 -->
+              <div class="flex items-start gap-3">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                      style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">3</span>
+                <p class="text-sm font-medium" style="color: var(--color-text-main)">{{ i18n.t('nav.installGuideStep3')() }}</p>
+              </div>
+            </div>
+
+            <p class="text-center text-xs mb-5" style="color: var(--color-text-secondary)">
+              🎮 {{ i18n.t('nav.installGuideTip')() }}
+            </p>
+
+            <button (click)="pwa.closeIosGuide()"
+                    class="w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 hover:scale-[1.02]"
+                    style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              {{ i18n.t('nav.installGuideDone')() }}
+            </button>
+          </div>
+        </div>
+      }
     </div>
   `
 })

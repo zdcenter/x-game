@@ -813,5 +813,12 @@
   "game.kicked_msg": "你已被踢出房间",
   "game.speed_mode": "速度模式",
   "game.steal_mode": "抢分模式",
-  "game.time": "时间"
+  "game.time": "时间",
+  "nav.install": "安装",
+  "nav.installGuideTitle": "添加到主屏幕",
+  "nav.installGuideStep1": "点击 Safari 底部的分享按钮 (↑)",
+  "nav.installGuideStep2": "向下滑动，点击「添加到主屏幕」",
+  "nav.installGuideStep3": "点击右上角「添加」确认",
+  "nav.installGuideTip": "无需应用商店，用起来和原生 App 一样！",
+  "nav.installGuideDone": "知道了！"
 }

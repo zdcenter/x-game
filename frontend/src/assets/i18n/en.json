@@ -811,5 +811,12 @@
   "game.kicked_msg": "You have been kicked from the room",
   "game.speed_mode": "Speed Mode",
   "game.steal_mode": "Steal Mode",
-  "game.time": "Time"
+  "game.time": "Time",
+  "nav.install": "Install",
+  "nav.installGuideTitle": "Add to Home Screen",
+  "nav.installGuideStep1": "Tap the Share button (↑) at the bottom of Safari",
+  "nav.installGuideStep2": "Scroll down and tap 'Add to Home Screen'",
+  "nav.installGuideStep3": "Tap 'Add' in the top-right to confirm",
+  "nav.installGuideTip": "Works just like a native app — no App Store needed!",
+  "nav.installGuideDone": "Got it!"
 }
