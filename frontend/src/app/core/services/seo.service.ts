@@ -56,7 +56,8 @@ export class SeoService {
       // --- Derive origin / URL (always absolute, even in SSR) ---
       const origin = getOrigin() || PROD_ORIGIN;
       const lang = this.i18n.currentLang();
-      const routePath = this.router.url.split('?')[0]; // e.g. /games/minesweeper
+      // Strip the lang prefix that Transloco routing adds (e.g. /zh/games/foo → /games/foo)
+      const routePath = this.router.url.split('?')[0].replace(/^\/(en|zh)/, '') || '/';
       const canonicalUrl = `${origin}/${lang}${routePath}`;
       const altLang = lang === 'en' ? 'zh' : 'en';
       const altUrl = `${origin}/${altLang}${routePath}`;

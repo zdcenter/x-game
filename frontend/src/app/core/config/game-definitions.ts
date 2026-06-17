@@ -91,7 +91,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/hexa/hexa.component').then(m => m.HexaComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Score, labelKey: 'game.same_pk_score_label', descKey: 'game.same_pk_score_desc', icon: '🏎️', desc: 'Same pieces for everyone!' },
+      { id: GameMode.SameScore, labelKey: 'game.same_pk_score_label', descKey: 'game.same_pk_score_desc', icon: '🏎️', desc: 'Same pieces for everyone!' },
       { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '⚡', desc: 'Shared board. Highest score wins!' }
     ],
     difficulties: [

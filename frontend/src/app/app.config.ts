@@ -7,7 +7,7 @@ import {
   inject,
 } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
-import { provideRouter, withInMemoryScrolling, UrlSerializer } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules, UrlSerializer } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideTransloco } from '@jsverse/transloco';
@@ -44,7 +44,7 @@ class GlobalErrorHandler implements ErrorHandler {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' }), withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([ssrNoopInterceptor, authInterceptor]), withFetch()),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
