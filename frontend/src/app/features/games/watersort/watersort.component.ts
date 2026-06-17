@@ -105,25 +105,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 
         <!-- Board Area -->
         <div class="flex-1 flex flex-col relative min-h-0 overflow-hidden mt-2 w-full">
-          @if (status === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
-            <app-game-waiting-room
-              [gameId]="'watersort'"
-              [mode]="currentRoomMode()"
-              [roomId]="currentRoomId()"
-              [difficulty]="_store.currentDifficulty() || 'easy'"
-              [players]="playersList()"
-              [hostId]="_store.hostId()"
-              [currentUserId]="playerId"
-              (leave)="returnToLobby()"
-              (start)="_store.startGame()"
-              (changeSettings)="openChangeSettings()"
-              [readyPlayers]="_store.readyPlayers()"
-              (kick)="_store.kickPlayer($event)"
-              (ready)="_store.ready()"
-              (cancelReady)="_store.cancelReady()"
-              [target]="_store.currentRoomTarget()">
-            </app-game-waiting-room>
-          } @else {
+          @if (currentRoomMode() === GameMode.Single || status !== GameStatus.Waiting) {
 
             <!-- Players / Opponents (Top) -->
             <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
@@ -261,6 +243,28 @@ import { TutorialService } from '../../../core/services/tutorial.service';
   </div>
   
   <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  @if (status === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
+      <app-game-waiting-room class="w-full h-full flex"
+        [gameId]="'watersort'"
+        [mode]="currentRoomMode()"
+        [roomId]="currentRoomId()"
+        [difficulty]="_store.currentDifficulty() || 'easy'"
+        [players]="playersList()"
+        [hostId]="_store.hostId()"
+        [currentUserId]="playerId"
+        (leave)="returnToLobby()"
+        (start)="_store.startGame()"
+        (changeSettings)="openChangeSettings()"
+        [readyPlayers]="_store.readyPlayers()"
+        (kick)="_store.kickPlayer($event)"
+        (ready)="_store.ready()"
+        (cancelReady)="_store.cancelReady()"
+        [target]="_store.currentRoomTarget()">
+      </app-game-waiting-room>
+    </div>
+  }
   <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
   `,
   styles: [`

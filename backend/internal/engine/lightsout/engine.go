@@ -23,6 +23,8 @@ type LightsoutEngine struct {
 	Size         int                     `json:"size"`
 	InitialBoard [][]bool                `json:"initialBoard"`
 	Winners      []string                `json:"winners"`
+	Wins         map[string]int          `json:"wins"`
+	Target       int                     `json:"target"`
 }
 
 func init() {
@@ -37,6 +39,7 @@ func (e *LightsoutEngine) InitGame(options interface{}) error {
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*PlayerState)
 	e.Winners = make([]string, 0)
+	e.Wins = make(map[string]int)
 	e.Difficulty = string(domain.DiffMedium)
 	e.Size = 5
 
@@ -44,6 +47,13 @@ func (e *LightsoutEngine) InitGame(options interface{}) error {
 		if diff, ok := opts["difficulty"].(string); ok {
 			e.Difficulty = diff
 		}
+		if t, ok := opts["target"].(int); ok && t > 0 {
+			e.Target = t
+		} else {
+			e.Target = 1
+		}
+	} else {
+		e.Target = 1
 	}
 
 	switch e.Difficulty {
@@ -106,6 +116,9 @@ func (e *LightsoutEngine) AddPlayer(playerID string) {
 			Moves:    0,
 			Finished: false,
 		}
+		if _, hasWins := e.Wins[playerID]; !hasWins {
+			e.Wins[playerID] = 0
+		}
 	}
 }
 
@@ -113,6 +126,7 @@ func (e *LightsoutEngine) RemovePlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 	delete(e.Players, playerID)
+	delete(e.Wins, playerID)
 }
 
 func (e *LightsoutEngine) HasPlayer(playerID string) bool {
@@ -132,6 +146,8 @@ func (e *LightsoutEngine) GetState() interface{} {
 		"size":       e.Size,
 		"players":    e.Players,
 		"winners":    e.Winners,
+		"wins":       e.Wins,
+		"target":     e.Target,
 	}
 }
 
@@ -152,6 +168,20 @@ func (e *LightsoutEngine) HandleAction(playerID string, action string, payload [
 	}
 
 	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
+		// Reset Wins only when someone has won the series
+		seriesOver := false
+		for _, w := range e.Wins {
+			if w >= e.Target {
+				seriesOver = true
+				break
+			}
+		}
+		if seriesOver {
+			for p := range e.Wins {
+				e.Wins[p] = 0
+			}
+		}
+
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		e.generateInitialBoard()
@@ -189,6 +219,7 @@ func (e *LightsoutEngine) HandleAction(playerID string, action string, payload [
 				if isBoardSolved(player.Board, e.Size) {
 					player.Finished = true
 					e.Winners = append(e.Winners, playerID)
+					e.Wins[playerID]++
 					e.State = engine.StateFinished
 				}
 			}

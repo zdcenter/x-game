@@ -16,6 +16,8 @@ type SpeedEngine struct {
 	BaseBoard     *Board
 	Boards        map[string]*Board
 	Winners       []string
+	Wins          map[string]int // Accumulated round wins across restarts
+	Target        int            // Series target: first to win Target rounds wins
 	GlobalStartAt int64
 }
 
@@ -26,6 +28,8 @@ func init() {
 type PKSpeedStateResponse struct {
 	Boards        map[string]*Board `json:"boards"`
 	Winners       []string          `json:"winners"`
+	Wins          map[string]int    `json:"wins"`
+	Target        int               `json:"target"`
 	Status        engine.GameState  `json:"status"`
 	GlobalStartAt int64             `json:"globalStartAt"`
 }
@@ -53,6 +57,14 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 				}
 			}
 		}
+
+		if t, ok := opts["target"].(int); ok && t > 0 {
+			e.Target = t
+		} else {
+			e.Target = 1
+		}
+	} else {
+		e.Target = 1
 	}
 
 	e.BaseBoard = NewBoard(size)
@@ -60,6 +72,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 
 	e.Boards = make(map[string]*Board)
 	e.Winners = make([]string, 0)
+	e.Wins = make(map[string]int)
 	e.State = engine.StateWaiting
 
 	return nil
@@ -72,6 +85,9 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 	if _, exists := e.Boards[playerID]; !exists {
 		e.Boards[playerID] = e.BaseBoard.Clone()
 		e.Boards[playerID].Status = engine.StateWaiting
+		if _, hasWins := e.Wins[playerID]; !hasWins {
+			e.Wins[playerID] = 0
+		}
 	}
 }
 
@@ -79,6 +95,7 @@ func (e *SpeedEngine) RemovePlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 	delete(e.Boards, playerID)
+	delete(e.Wins, playerID)
 }
 
 func (e *SpeedEngine) HasPlayer(playerID string) bool {
@@ -94,6 +111,8 @@ func (e *SpeedEngine) GetState() interface{} {
 	return PKSpeedStateResponse{
 		Boards:        e.Boards,
 		Winners:       e.Winners,
+		Wins:          e.Wins,
+		Target:        e.Target,
 		Status:        e.State,
 		GlobalStartAt: e.GlobalStartAt,
 	}
@@ -131,12 +150,26 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	}
 
 	if (actionType == string(domain.ActionRestartGame) || baseAction.Action == string(domain.ActionRestartGame)) && e.State == engine.StateFinished {
+		// Reset Wins only when someone has won the series
+		seriesOver := false
+		for _, w := range e.Wins {
+			if w >= e.Target {
+				seriesOver = true
+				break
+			}
+		}
+		if seriesOver {
+			for p := range e.Wins {
+				e.Wins[p] = 0
+			}
+		}
+
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
+		e.BaseBoard.Shuffle(e.BaseBoard.Size * e.BaseBoard.Size * 100)
 		for _, b := range e.Boards {
 			b.Status = engine.StateWaiting
 			b.Moves = 0
-			// Need a new shuffled board for everyone
 			newBoard := e.BaseBoard.Clone()
 			b.Cells = newBoard.Cells
 			b.EmptyIdx = newBoard.EmptyIdx
@@ -171,6 +204,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			if b.CheckWin() {
 				b.Status = engine.StateFinished
 				e.Winners = append(e.Winners, playerID)
+				e.Wins[playerID]++
 
 				// End game for everyone
 				e.State = engine.StateFinished

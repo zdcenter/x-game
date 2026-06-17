@@ -16,6 +16,8 @@ type SpeedEngine struct {
 	BaseBoard *Board // Used to generate the initial seed
 	Boards    map[string]*Board
 	Scores    map[string]int
+	Wins      map[string]int // Accumulated round wins across restarts
+	Target    int            // Series target: first to win Target rounds wins
 	Cooldowns map[string]int64
 	Errors    map[string]int
 	PenaltyMs int64
@@ -28,6 +30,8 @@ func init() {
 type PKSpeedStateResponse struct {
 	Boards    map[string]*Board `json:"boards"`
 	Scores    map[string]int    `json:"scores"`
+	Wins      map[string]int    `json:"wins"`
+	Target    int               `json:"target"`
 	Cooldowns map[string]int64  `json:"cooldowns"`
 	Errors    map[string]int    `json:"errors"`
 	Status    engine.GameState  `json:"status"`
@@ -76,12 +80,21 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 				}
 			}
 		}
+
+		if t, ok := opts["target"].(int); ok && t > 0 {
+			e.Target = t
+		} else {
+			e.Target = 1
+		}
+	} else {
+		e.Target = 1
 	}
 
 	e.BaseBoard = NewBoard(width, height, mines)
 	e.BaseBoard.GenerateMines(-1, -1) // PK mode always generates immediately
 	e.Boards = make(map[string]*Board)
 	e.Scores = make(map[string]int)
+	e.Wins = make(map[string]int)
 	e.Cooldowns = make(map[string]int64)
 	e.Errors = make(map[string]int)
 	e.State = engine.StateWaiting
@@ -98,6 +111,9 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 		e.Boards[playerID].Status = engine.StateWaiting
 		e.Scores[playerID] = 0
 		e.Errors[playerID] = 0
+		if _, hasWins := e.Wins[playerID]; !hasWins {
+			e.Wins[playerID] = 0
+		}
 	}
 }
 
@@ -106,6 +122,7 @@ func (e *SpeedEngine) RemovePlayer(playerID string) {
 	defer e.Mu.Unlock()
 	delete(e.Boards, playerID)
 	delete(e.Scores, playerID)
+	delete(e.Wins, playerID)
 	delete(e.Errors, playerID)
 }
 
@@ -122,6 +139,8 @@ func (e *SpeedEngine) GetState() interface{} {
 	return PKSpeedStateResponse{
 		Boards:    e.Boards,
 		Scores:    e.Scores,
+		Wins:      e.Wins,
+		Target:    e.Target,
 		Cooldowns: e.Cooldowns,
 		Errors:    e.Errors,
 		Status:    e.State,
@@ -187,6 +206,20 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	}
 
 	if (actionType == string(domain.ActionRestartGame) || baseAction.Action == string(domain.ActionRestartGame)) && e.State == engine.StateFinished {
+		// Reset Wins only when someone has won the series
+		seriesOver := false
+		for _, w := range e.Wins {
+			if w >= e.Target {
+				seriesOver = true
+				break
+			}
+		}
+		if seriesOver {
+			for p := range e.Wins {
+				e.Wins[p] = 0
+			}
+		}
+
 		e.State = engine.StateWaiting
 		// We need a new base board to randomize mines
 		e.BaseBoard = NewBoard(e.BaseBoard.Width, e.BaseBoard.Height, e.BaseBoard.Mines)
@@ -307,6 +340,7 @@ func (e *SpeedEngine) checkWinCondition(playerID string) {
 	if board.RevealedCnt >= totalSafeCells {
 		e.State = engine.StateFinished
 		e.Scores[playerID] = 1 // Mark the winner with score 1
+		e.Wins[playerID]++
 		// Reveal remaining mines for all players to show game over state
 		for _, b := range e.Boards {
 			b.Status = engine.StateFinished

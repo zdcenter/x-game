@@ -53,7 +53,12 @@
       <!-- Left Panel: My Guess History (Scrollable) -->
       <div class="flex-grow lg:flex-1 min-h-[250px] lg:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
         <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
-          <span>{{ i18n.t('codebreaker.guess_history')() }}</span>
+          <span class="flex items-center gap-2">
+            <span>{{ i18n.t('codebreaker.guess_history')() }}</span>
+            @if (currentRoomMode() !== GameMode.Single) {
+              <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[myPlayerId()] || 0) + '/' + store.currentRoomTarget() }}</span>
+            }
+          </span>
           <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() }}</span>
         </h3>
         
@@ -208,6 +213,7 @@
                 <span class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full font-bold">
                   {{ opponentState()?.id === hostId() ? '👑' : '👤' }} {{ opponentState()?.id }}
                 </span>
+                <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[opponentState()!.id] || 0) + '/' + store.currentRoomTarget() }}</span>
               }
             </span>
             @if (opponentState()) {

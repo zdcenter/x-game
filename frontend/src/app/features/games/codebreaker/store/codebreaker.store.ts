@@ -84,6 +84,8 @@ export class CodebreakerStore extends BaseGameStore {
     return this.players().find(p => p.id !== this.playerId()) || null;
   });
 
+  readonly pkWins = computed(() => ((this.rawState() as any)?.wins || {}) as Record<string, number>);
+
 
   constructor() {
     super();

@@ -30,6 +30,8 @@ type CodebreakerEngine struct {
 	SecretCode  string                  `json:"secretCode"`
 	DigitLength int                     `json:"digitLength"`
 	Winners     []string                `json:"winners"`
+	Wins        map[string]int          `json:"wins"`
+	Target      int                     `json:"target"`
 }
 
 func init() {
@@ -44,6 +46,7 @@ func (e *CodebreakerEngine) InitGame(options interface{}) error {
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*PlayerState)
 	e.Winners = make([]string, 0)
+	e.Wins = make(map[string]int)
 	e.Difficulty = string(domain.DiffMedium)
 	e.DigitLength = 4
 
@@ -51,6 +54,13 @@ func (e *CodebreakerEngine) InitGame(options interface{}) error {
 		if diff, ok := opts["difficulty"].(string); ok {
 			e.Difficulty = diff
 		}
+		if t, ok := opts["target"].(int); ok && t > 0 {
+			e.Target = t
+		} else {
+			e.Target = 1
+		}
+	} else {
+		e.Target = 1
 	}
 
 	// Calculate digit length based on difficulty
@@ -79,6 +89,9 @@ func (e *CodebreakerEngine) AddPlayer(playerID string) {
 			Guesses:  make([]*GuessRecord, 0),
 			Finished: false,
 		}
+		if _, hasWins := e.Wins[playerID]; !hasWins {
+			e.Wins[playerID] = 0
+		}
 	}
 }
 
@@ -86,6 +99,7 @@ func (e *CodebreakerEngine) RemovePlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 	delete(e.Players, playerID)
+	delete(e.Wins, playerID)
 }
 
 func (e *CodebreakerEngine) HasPlayer(playerID string) bool {
@@ -105,6 +119,8 @@ func (e *CodebreakerEngine) GetState() interface{} {
 		"digitLength": e.DigitLength,
 		"players":     e.Players,
 		"winners":     e.Winners,
+		"wins":        e.Wins,
+		"target":      e.Target,
 	}
 }
 
@@ -125,6 +141,20 @@ func (e *CodebreakerEngine) HandleAction(playerID string, action string, payload
 	}
 
 	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
+		// Reset Wins only when someone has won the series
+		seriesOver := false
+		for _, w := range e.Wins {
+			if w >= e.Target {
+				seriesOver = true
+				break
+			}
+		}
+		if seriesOver {
+			for p := range e.Wins {
+				e.Wins[p] = 0
+			}
+		}
+
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
 		for _, p := range e.Players {
@@ -164,6 +194,7 @@ func (e *CodebreakerEngine) HandleAction(playerID string, action string, payload
 				if a == e.DigitLength {
 					player.Finished = true
 					e.Winners = append(e.Winners, playerID)
+					e.Wins[playerID]++
 					e.State = engine.StateFinished
 				}
 			}

@@ -70,6 +70,8 @@ export class SlidingStore extends BaseGameStore {
     return (this.rawState() as any)?.boards || {};
   });
 
+  readonly pkWins = computed(() => ((this.rawState() as any)?.wins || {}) as Record<string, number>);
+
   readonly otherPlayers = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];
     const boards = (this.rawState() as any)?.boards || {};

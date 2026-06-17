@@ -113,7 +113,10 @@
               [playerName]="playerId"
               [isHost]="store.hostId() === playerId"
               [isMe]="true"
-              [stats]="[{ icon: '🦶', value: store.moves() }]"
+              [stats]="[
+                (store.currentRoomMode() !== GameMode.Single ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                { icon: '🦶', value: store.moves() }
+              ]"
               [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"
             ></app-player-badge>
 
@@ -122,7 +125,10 @@
               <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                 [playerName]="opp.id"
                 [isHost]="store.hostId() === opp.id"
-                [stats]="[{ icon: '💡', value: opp.remainingLights }]"
+                [stats]="[
+                  (store.currentRoomMode() !== GameMode.Single ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                  { icon: '💡', value: opp.remainingLights }
+                ]"
                 [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
               ></app-player-badge>
             }

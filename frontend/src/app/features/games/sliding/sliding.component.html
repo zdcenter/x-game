@@ -92,15 +92,7 @@
         <div
           class="flex-grow flex flex-col relative min-h-0 overflow-hidden bg-[var(--color-bg-base)] rounded-b-2xl lg:rounded-b-3xl">
 
-          @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
-          <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
-            [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
-            [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
-            (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
-            (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
-            [target]="store.currentRoomTarget()">
-          </app-game-waiting-room>
-          } @else {
+          @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
 
           <!-- Players / Opponents (Top) -->
           <div class="flex-none pt-1 pb-2 mb-1 border-b border-[var(--color-border-card)] shrink-0">
@@ -112,6 +104,7 @@
                 [isHost]="playerId === store.hostId()"
                 [isMe]="true"
                 [stats]="[
+                  (currentRoomMode() !== GameMode.Single ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
                   { icon: '⏱️', value: formatTime(getElapsedMs(currentRoomMode() === GameMode.Single ? (store.myBoard()?.startAt || 0) : store.globalStartAt())), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
                   { icon: '🔄', value: store.myBoard()?.moves || 0 }
                 ]"
@@ -122,11 +115,12 @@
                 <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
                   <ng-template #opponentsList>
                     @for (opp of store.otherPlayers(); track opp.id) {
-                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card" 
+                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                         [playerName]="opp.id"
-                        [isHost]="opp.id === store.hostId()" 
+                        [isHost]="opp.id === store.hostId()"
                         [isMe]="false"
                         [stats]="[
+                          { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() },
                           { icon: '🔄', value: opp.board?.moves || 0 }
                         ]"
                         [status]="opp.board?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
@@ -258,4 +252,17 @@
   </div>
     }
 
+
+  <!-- PK Waiting Room (fixed overlay) -->
+  @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
+      <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
+        [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
+        [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
+        (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
+        (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
+        [target]="store.currentRoomTarget()">
+      </app-game-waiting-room>
+    </div>
+  }
 </div>

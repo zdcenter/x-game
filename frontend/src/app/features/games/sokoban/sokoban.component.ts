@@ -97,25 +97,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 
       <div class="flex-grow flex flex-col relative min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden">
 
-      @if (store.status() === GameStatus.Waiting) {
-        <app-game-waiting-room
-          [gameId]="'sokoban'"
-          [mode]="store.currentRoomMode()"
-          [roomId]="store.roomId()"
-          [difficulty]="store.currentDifficulty()"
-          [players]="store.playersList()"
-          [hostId]="store.hostId()"
-          [currentUserId]="playerId"
-          [readyPlayers]="store.readyPlayers()"
-          (start)="store.startGame()"
-          (leave)="onLeaveClick()"
-          (changeSettings)="openChangeSettings()"
-          (ready)="store.ready()"
-          (cancelReady)="store.cancelReady()"
-          (kick)="store.kickPlayer($event)"
-          [target]="store.currentRoomTarget()"
-        ></app-game-waiting-room>
-      }
+
 
       @if (store.status() === GameStatus.Starting) {
         <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
@@ -295,6 +277,28 @@ import { TutorialService } from '../../../core/services/tutorial.service';
   </div>
 
   <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
+      <app-game-waiting-room class="w-full h-full flex"
+        [gameId]="'sokoban'"
+        [mode]="store.currentRoomMode()"
+        [roomId]="store.roomId()"
+        [difficulty]="store.currentDifficulty()"
+        [players]="store.playersList()"
+        [hostId]="store.hostId()"
+        [currentUserId]="playerId"
+        [readyPlayers]="store.readyPlayers()"
+        (start)="store.startGame()"
+        (leave)="onLeaveClick()"
+        (changeSettings)="openChangeSettings()"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+        (kick)="store.kickPlayer($event)"
+        [target]="store.currentRoomTarget()"
+      ></app-game-waiting-room>
+    </div>
+  }
   <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
   `
 })
