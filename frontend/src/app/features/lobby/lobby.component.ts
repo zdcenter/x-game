@@ -20,6 +20,7 @@ import { AdService } from '../../core/services/ad.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
+import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 
 @Component({
   selector: 'app-lobby',
@@ -41,7 +42,14 @@ export class LobbyComponent implements OnInit, OnDestroy {
   shareService = inject(ShareService);
   adService = inject(AdService);
   
-  games = signal<BackendGameConfig[]>([]);
+  // Pre-populated from static config so SSG prerender emits <img> tags in HTML.
+  // API call in ngOnInit will override with live data (visitCount, sortOrder, isActive).
+  games = signal<BackendGameConfig[]>(
+    GAME_DEFINITIONS.map(def => ({
+      id: def.id, name: def.id, overview: '', rules: '', config: '',
+      isActive: true, visitCount: 0, createdAt: '', updatedAt: '',
+    }))
+  );
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;

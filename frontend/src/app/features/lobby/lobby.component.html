@@ -68,7 +68,7 @@
 
         <!-- Games Grid -->
         <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-        @for (game of games(); track game.id) {
+        @for (game of games(); track game.id; let i = $index) {
           <!-- Dynamic Game Card -->
           <a [routerLink]="['/games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
@@ -82,6 +82,8 @@
               <div class="absolute inset-0 flex items-center justify-center">
                 <img [src]="'/assets/games/icons/' + game.id + '.svg?v=3'"
                      [alt]="getGameTitle(game.id)"
+                     [attr.fetchpriority]="i === 0 ? 'high' : null"
+                     [attr.loading]="i >= 4 ? 'lazy' : 'eager'"
                      class="w-[90%] h-[90%] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-all duration-500"
                      (error)="handleIconError($event, game.id)" />
               </div>
