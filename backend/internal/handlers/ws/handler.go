@@ -88,8 +88,9 @@ func Register(router fiber.Router) {
 		if action == "create" {
 			// Explicit create: only create, fail if exists
 			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target)
-			if err != nil {
-				// Room might already exist (e.g. reconnect after page refresh), try to join
+			if err != nil && err.Error() != string(domain.ErrHostRoomLimit) {
+				// Room might already exist (e.g. reconnect after page refresh), try to join.
+				// But never fall back when host already owns another room.
 				room, err = wsManager.JoinRoom(roomID)
 			}
 		} else if action == "join" {

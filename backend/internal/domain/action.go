@@ -81,4 +81,5 @@ const (
 	ErrWrongPassword      ErrorCode = "err_wrong_password"
 	ErrKickCooldown       ErrorCode = "err_kick_cooldown"
 	ErrMultiplayerDisabled ErrorCode = "err_multiplayer_disabled"
+	ErrHostRoomLimit       ErrorCode = "err_host_room_limit"
 )

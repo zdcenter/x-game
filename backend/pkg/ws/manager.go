@@ -132,6 +132,12 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 		return nil, fmt.Errorf(string(domain.ErrRoomAlreadyExists))
 	}
 
+	for _, existing := range Rooms {
+		if existing.Host == hostId {
+			return nil, fmt.Errorf(string(domain.ErrHostRoomLimit))
+		}
+	}
+
 	if mode == "" {
 		mode = "single"
 	}

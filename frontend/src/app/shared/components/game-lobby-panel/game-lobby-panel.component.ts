@@ -88,9 +88,13 @@ export interface GameDifficulty {
           }
 
           <div class="shrink-0">
-            <button (click)="openCreateRoomModal()" class="w-full mb-4 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2">
+            <button (click)="openCreateRoomModal()" [disabled]="myRooms().length > 0"
+                    class="w-full mb-1 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-accent-from)]">
               <span>➕</span> {{ t('game.create_pk') }}
             </button>
+            @if (myRooms().length > 0) {
+              <p class="text-[10px] text-center text-amber-400 opacity-80 mb-3">{{ t('game.room_limit_hint') }}</p>
+            }
           </div>
 
           <div class="space-y-6 flex-grow pb-12 md:pb-4">
