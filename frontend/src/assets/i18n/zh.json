@@ -820,5 +820,8 @@
   "nav.installGuideStep2": "向下滑动，点击「添加到主屏幕」",
   "nav.installGuideStep3": "点击右上角「添加」确认",
   "nav.installGuideTip": "无需应用商店，用起来和原生 App 一样！",
-  "nav.installGuideDone": "知道了！"
+  "nav.installGuideDone": "知道了！",
+  "footer.play": "游戏",
+  "footer.resources": "资源",
+  "footer.legal": "法律"
 }

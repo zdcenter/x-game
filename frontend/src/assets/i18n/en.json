@@ -818,5 +818,8 @@
   "nav.installGuideStep2": "Scroll down and tap 'Add to Home Screen'",
   "nav.installGuideStep3": "Tap 'Add' in the top-right to confirm",
   "nav.installGuideTip": "Works just like a native app — no App Store needed!",
-  "nav.installGuideDone": "Got it!"
+  "nav.installGuideDone": "Got it!",
+  "footer.play": "Play",
+  "footer.resources": "Resources",
+  "footer.legal": "Legal"
 }
