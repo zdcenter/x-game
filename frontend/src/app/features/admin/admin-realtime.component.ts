@@ -41,17 +41,17 @@ interface ActiveRoom {
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </span>
-            <ng-container i18n="@@admin.realtime.title">admin.realtime.title</ng-container>
+            {{ i18n.t('admin.realtime.title')() }}
           </h2>
-          <p class="opacity-70 text-sm mt-1"><ng-container i18n="@@admin.realtime.subtitle">admin.realtime.subtitle</ng-container></p>
+          <p class="opacity-70 text-sm mt-1">{{ i18n.t('admin.realtime.subtitle')() }}</p>
         </div>
         <div class="flex gap-4">
           <div class="bg-[var(--color-bg-card)] px-4 py-2 rounded-xl border border-[var(--color-border-card)] shadow-inner flex flex-col items-center">
-            <span class="text-xs opacity-70 font-bold uppercase"><ng-container i18n="@@admin.realtime.players">admin.realtime.players</ng-container></span>
+            <span class="text-xs opacity-70 font-bold uppercase">{{ i18n.t('admin.realtime.players')() }}</span>
             <span class="text-xl font-mono font-bold text-emerald-400">{{ players().length }}</span>
           </div>
           <div class="bg-[var(--color-bg-card)] px-4 py-2 rounded-xl border border-[var(--color-border-card)] shadow-inner flex flex-col items-center">
-            <span class="text-xs opacity-70 font-bold uppercase"><ng-container i18n="@@admin.realtime.rooms">admin.realtime.rooms</ng-container></span>
+            <span class="text-xs opacity-70 font-bold uppercase">{{ i18n.t('admin.realtime.rooms')() }}</span>
             <span class="text-xl font-mono font-bold text-blue-400">{{ rooms().length }}</span>
           </div>
         </div>
@@ -59,21 +59,21 @@ interface ActiveRoom {
 
       <!-- Online Players Section -->
       <div>
-        <h3 class="text-lg font-bold mb-4 opacity-90"><ng-container i18n="@@admin.realtime.players">admin.realtime.players</ng-container></h3>
+        <h3 class="text-lg font-bold mb-4 opacity-90">{{ i18n.t('admin.realtime.players')() }}</h3>
         <div class="overflow-x-auto rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] shadow-inner">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-[var(--color-bg-main)] opacity-90 text-sm uppercase tracking-wider border-b border-[var(--color-border-card)]">
-                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.realtime.col.username">admin.realtime.col.username</ng-container></th>
-                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.realtime.col.ip">admin.realtime.col.ip</ng-container></th>
-                <th class="px-6 py-4 font-semibold"><ng-container i18n="@@admin.realtime.col.status">admin.realtime.col.status</ng-container></th>
-                <th class="px-6 py-4 font-semibold text-right"><ng-container i18n="@@admin.realtime.col.connectedAt">admin.realtime.col.connectedAt</ng-container></th>
+                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.realtime.col.username')() }}</th>
+                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.realtime.col.ip')() }}</th>
+                <th class="px-6 py-4 font-semibold">{{ i18n.t('admin.realtime.col.status')() }}</th>
+                <th class="px-6 py-4 font-semibold text-right">{{ i18n.t('admin.realtime.col.connectedAt')() }}</th>
               </tr>
             </thead>
             <tbody>
               @if (players().length === 0) {
                 <tr>
-                  <td colspan="4" class="px-6 py-8 text-center opacity-50"><ng-container i18n="@@admin.realtime.players.empty">admin.realtime.players.empty</ng-container></td>
+                  <td colspan="4" class="px-6 py-8 text-center opacity-50">{{ i18n.t('admin.realtime.players.empty')() }}</td>
                 </tr>
               } @else {
                 @for (p of players(); track p.id) {
@@ -97,11 +97,11 @@ interface ActiveRoom {
 
       <!-- Active Rooms Section -->
       <div>
-        <h3 class="text-lg font-bold mb-4 opacity-90"><ng-container i18n="@@admin.realtime.rooms">admin.realtime.rooms</ng-container></h3>
+        <h3 class="text-lg font-bold mb-4 opacity-90">{{ i18n.t('admin.realtime.rooms')() }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           @if (rooms().length === 0) {
             <div class="col-span-full py-8 text-center opacity-50 border border-dashed border-[var(--color-border-card)] rounded-xl">
-              <ng-container i18n="@@admin.realtime.rooms.empty">admin.realtime.rooms.empty</ng-container>
+              {{ i18n.t('admin.realtime.rooms.empty')() }}
             </div>
           } @else {
             @for (r of rooms(); track r.id) {
@@ -132,13 +132,13 @@ interface ActiveRoom {
 
       <!-- Game Popularity & Analytics Section -->
       <div>
-        <h3 class="text-lg font-bold mb-4 opacity-90"><ng-container i18n="@@admin.realtime.popularity">admin.realtime.popularity</ng-container></h3>
+        <h3 class="text-lg font-bold mb-4 opacity-90">{{ i18n.t('admin.realtime.popularity')() }}</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           @for (g of games(); track g.id) {
             <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-4 shadow-sm flex flex-col items-center justify-center">
               <span class="text-sm font-bold uppercase mb-2 text-[var(--color-accent-from)]">{{ getLocalized(g.name) }}</span>
               <div class="text-3xl font-mono font-bold">{{ g.visitCount || 0 }}</div>
-              <span class="text-xs opacity-50 mt-1 uppercase tracking-widest"><ng-container i18n="@@admin.realtime.col.visits">admin.realtime.col.visits</ng-container></span>
+              <span class="text-xs opacity-50 mt-1 uppercase tracking-widest">{{ i18n.t('admin.realtime.col.visits')() }}</span>
             </div>
           }
         </div>

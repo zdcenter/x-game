@@ -3,48 +3,28 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // 1. Rewrite shared assets: point /assets/* directly to /en/assets/*
-  if (pathname.startsWith('/assets/')) {
-    return env.ASSETS.fetch(new Request(new URL('/en' + pathname, request.url)));
-  }
-
-  // Check if it's a static file (has an extension like .js, .css, .png, etc.)
-  // We consider it a static file if the last segment contains a dot.
+  // Static files (JS, CSS, images, etc.) — serve directly
   const lastSegment = pathname.split('/').pop();
-  const isStaticFile = lastSegment && lastSegment.includes('.');
-
-  if (!isStaticFile) {
-    // Try to fetch the requested path first. Cloudflare's Clean URLs will 
-    // automatically map /zh/lobby to /zh/lobby.html if it exists.
-    const res = await env.ASSETS.fetch(request);
-    if (res.status !== 404) {
-      return res;
-    }
-
-    // Try checking if there is a directory index.html for this route (SSG output)
-    let dirIndexPath = pathname;
-    if (!dirIndexPath.endsWith('/')) {
-      dirIndexPath += '/';
-    }
-    dirIndexPath += 'index.html';
-    
-    const indexRes = await env.ASSETS.fetch(new Request(new URL(dirIndexPath, request.url)));
-    if (indexRes.status !== 404) {
-      return indexRes;
-    }
-
-    // It's a route that doesn't exist statically (e.g. dynamic route).
-    // Apply language-specific SPA fallback.
-    if (pathname.startsWith('/zh/')) {
-      return env.ASSETS.fetch(new Request(new URL('/zh/index.html', request.url)));
-    }
-    if (pathname.startsWith('/en/')) {
-      return env.ASSETS.fetch(new Request(new URL('/en/index.html', request.url)));
-    }
-    // For root or other routes, serve the root language-sniffing index.html
-    return env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
+  if (lastSegment && lastSegment.includes('.')) {
+    return env.ASSETS.fetch(request);
   }
 
-  // It's a static file request. Fetch it directly.
-  return env.ASSETS.fetch(request);
+  // Root: redirect to default language
+  if (pathname === '/') {
+    return Response.redirect(new URL('/zh/lobby', request.url).toString(), 302);
+  }
+
+  // Try the exact prerendered path (Cloudflare uses Clean URLs, maps /zh/lobby → /zh/lobby/index.html)
+  const res = await env.ASSETS.fetch(request);
+  if (res.status !== 404) return res;
+
+  // Try explicit directory index (e.g. /zh/lobby/index.html)
+  const dirIndex = pathname.endsWith('/') ? pathname + 'index.html' : pathname + '/index.html';
+  const dirRes = await env.ASSETS.fetch(new Request(new URL(dirIndex, request.url)));
+  if (dirRes.status !== 404) return dirRes;
+
+  // SPA fallback: serve the Angular app shell.
+  // The router will handle the route client-side (blog, admin, unknown paths, etc.)
+  // index.html is the single-build app shell; Angular bootstraps and navigates to the URL.
+  return env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
 }

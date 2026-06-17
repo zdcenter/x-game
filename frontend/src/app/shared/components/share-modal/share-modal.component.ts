@@ -24,7 +24,7 @@ import * as QRCode from 'qrcode';
               <svg class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
               </svg>
-              <ng-container i18n="@@share.title">share.title</ng-container>
+              {{ i18n.t('share.title')() }}
             </h3>
             <button (click)="shareService.closeModal()" class="text-[var(--color-text-muted)] hover:text-red-400 transition-colors p-1 rounded-lg">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -44,11 +44,11 @@ import * as QRCode from 'qrcode';
                 <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4m0 0L8 6m4-4v13"/>
                 </svg>
-                <ng-container i18n="@@share.system_share">share.system_share</ng-container>
+                {{ i18n.t('share.system_share')() }}
               </button>
               <div class="flex items-center gap-3 text-[var(--color-text-muted)]">
                 <div class="flex-1 h-px bg-[var(--color-border-card)]"></div>
-                <span class="text-xs"><ng-container i18n="@@share.or_copy">share.or_copy</ng-container></span>
+                <span class="text-xs">{{ i18n.t('share.or_copy')() }}</span>
                 <div class="flex-1 h-px bg-[var(--color-border-card)]"></div>
               </div>
             }
@@ -61,7 +61,7 @@ import * as QRCode from 'qrcode';
                 <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                 </svg>
-                <ng-container i18n="@@share.copy_all">share.copy_all</ng-container>
+                {{ i18n.t('share.copy_all')() }}
               </button>
             </div>
 
@@ -69,7 +69,7 @@ import * as QRCode from 'qrcode';
             @if (shareService.currentShareData()?.isWin !== undefined) {
               <div class="space-y-2">
                 <p class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] px-1">
-                  <ng-container i18n="@@share.share_image">share.share_image</ng-container>
+                  {{ i18n.t('share.share_image')() }}
                 </p>
                 @if (isGenerating()) {
                   <div class="flex items-center justify-center gap-2 py-10 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)]">
@@ -77,7 +77,7 @@ import * as QRCode from 'qrcode';
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                     </svg>
-                    <ng-container i18n="@@share.generating">share.generating</ng-container>
+                    {{ i18n.t('share.generating')() }}
                   </div>
                 } @else if (imageObjectUrl()) {
                   <img [src]="imageObjectUrl()" alt="share card" class="w-full rounded-xl border border-[var(--color-border-card)] shadow-lg"/>
@@ -87,7 +87,7 @@ import * as QRCode from 'qrcode';
                       <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                       </svg>
-                      <ng-container i18n="@@share.download_image">share.download_image</ng-container>
+                      {{ i18n.t('share.download_image')() }}
                     </button>
                     @if (canShareImageFile()) {
                       <button (click)="shareImageFile()"
@@ -95,7 +95,7 @@ import * as QRCode from 'qrcode';
                         <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                         </svg>
-                        <ng-container i18n="@@share.share_image">share.share_image</ng-container>
+                        {{ i18n.t('share.share_image')() }}
                       </button>
                     }
                   </div>
@@ -106,18 +106,18 @@ import * as QRCode from 'qrcode';
             <!-- 3. QR code -->
             <div class="flex flex-col items-center gap-2 py-2">
               <p class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-                <ng-container i18n="@@share.qr_label">share.qr_label</ng-container>
+                {{ i18n.t('share.qr_label')() }}
               </p>
               <div class="bg-white p-3 rounded-xl shadow-inner group relative">
                 <canvas #qrcodeCanvas class="w-36 h-36 block"></canvas>
                 <div class="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <p class="text-white font-bold text-xs text-center px-3">
-                    <ng-container i18n="@@share.scan">share.scan</ng-container>
+                    {{ i18n.t('share.scan')() }}
                   </p>
                 </div>
               </div>
               <p class="text-xs text-[var(--color-text-muted)] text-center">
-                <ng-container i18n="@@share.scan_hint">share.scan_hint</ng-container>
+                {{ i18n.t('share.scan_hint')() }}
               </p>
             </div>
 
@@ -125,7 +125,7 @@ import * as QRCode from 'qrcode';
             @if (isAdmin()) {
               <div class="pt-2 border-t border-[var(--color-border-card)] space-y-2">
                 <p class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] px-1">
-                  <ng-container i18n="@@share.quick_share">share.quick_share</ng-container>
+                  {{ i18n.t('share.quick_share')() }}
                 </p>
                 <div class="flex gap-2">
                   <a [href]="twitterUrl()" target="_blank" rel="noopener"
@@ -161,7 +161,7 @@ import * as QRCode from 'qrcode';
 export class ShareModalComponent implements OnDestroy {
   shareService = inject(ShareService);
   private shareImageService = inject(ShareImageService);
-  private i18n = inject(I18nService);
+  protected i18n = inject(I18nService);
   private authStore = inject(AuthStore);
 
   isAdmin = computed(() => this.authStore.currentUser()?.role === 'admin');

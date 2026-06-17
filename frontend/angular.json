@@ -8,20 +8,6 @@
   "newProjectRoot": "projects",
   "projects": {
     "frontend": {
-      "projectType": "application",
-      "i18n": {
-        "sourceLocale": "en-US",
-        "locales": {
-          "en": {
-            "translation": "src/locale/messages.en.xlf",
-            "subPath": "en"
-          },
-          "zh": {
-            "translation": "src/locale/messages.zh.xlf",
-            "subPath": "zh"
-          }
-        }
-      },
       "schematics": {
         "@schematics/angular:component": {
           "type": "component",
@@ -54,6 +40,7 @@
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
+      "projectType": "application",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
@@ -61,18 +48,21 @@
             "serviceWorker": "ngsw-config.json",
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["qrcode"],
+            "allowedCommonJsDependencies": [
+              "qrcode"
+            ],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"],
-            "polyfills": ["@angular/localize/init"],
+            "styles": [
+              "src/styles.css"
+            ],
             "server": "src/main.server.ts",
             "prerender": {
-              "discoverRoutes": true,
+              "discoverRoutes": false,
               "routesFile": "routes.txt"
             }
           },
@@ -96,19 +86,12 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all",
-              "localize": ["zh", "en"]
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
-            },
-            "en": {
-              "localize": ["en"]
-            },
-            "zh": {
-              "localize": ["zh"]
             }
           },
           "defaultConfiguration": "production"
@@ -124,24 +107,12 @@
             },
             "development": {
               "buildTarget": "frontend:build:development"
-            },
-            "en": {
-              "buildTarget": "frontend:build:development,en"
-            },
-            "zh": {
-              "buildTarget": "frontend:build:development,zh"
             }
           },
           "defaultConfiguration": "development"
         },
         "test": {
           "builder": "@angular/build:unit-test"
-        },
-        "extract-i18n": {
-          "builder": "@angular/build:extract-i18n",
-          "options": {
-            "buildTarget": "frontend:build"
-          }
         }
       }
     }

@@ -237,7 +237,7 @@
 
     <div class="flex justify-between items-center mb-4 lg:hidden"
       >
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
     </div>
 
     <!-- Single Player Extra Controls (Play Again) -->
@@ -246,7 +246,7 @@
       style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
       <button (click)="store.playAgain()"
         class="w-full px-4 py-3 bg-[var(--color-accent-from)] hover:bg-[var(--color-accent-to)] text-white rounded-xl font-bold shadow-lg transition-all transform hover:scale-105 active:scale-95">
-        <ng-container i18n="@@game.play_again">game.play_again</ng-container>
+        {{ i18n.t('game.play_again')() }}
       </button>
     </div>
     }

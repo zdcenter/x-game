@@ -242,7 +242,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
              'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
         
         <div class="flex justify-between items-center mb-4 lg:hidden" >
-          <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">game.room_info</ng-container></h3>
+          <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
         </div>
 
         <!-- Right Sidebar (Lobby Panel) -->

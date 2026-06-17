@@ -41,7 +41,7 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
               <button (click)="pwa.install()" 
                       class="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded-lg shadow-lg transition-all hover:scale-105 backdrop-blur-md border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10 shrink-0"
                       title="Install Desktop App">
-                <span class="hidden sm:inline">💻 <ng-container i18n="@@nav.installApp">nav.installApp</ng-container></span>
+                <span class="hidden sm:inline">💻 {{ i18n.t('nav.installApp')() }}</span>
                 <span class="sm:hidden">💻 App</span>
               </button>
             }
@@ -76,12 +76,12 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
                 </span>
                 
                 <a routerLink="/profile" class="hidden sm:flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 cursor-pointer shrink-0" title="Profile & Achievements">
-                  🏆 <span class="hidden md:inline"><ng-container i18n="@@nav.profile">nav.profile</ng-container></span>
+                  🏆 <span class="hidden md:inline">{{ i18n.t('nav.profile')() }}</span>
                 </a>
 
                 @if (authStore.currentUser()?.role === 'guest') {
                   <span class="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded shadow bg-slate-500/20 text-slate-400 border border-slate-500/30 uppercase shrink-0 hidden sm:inline-block">
-                    <ng-container i18n="@@nav.guest">nav.guest</ng-container>
+                    {{ i18n.t('nav.guest')() }}
                   </span>
                 }
                 @if (authStore.isAdmin()) {
@@ -103,7 +103,7 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
                 <a routerLink="/login" 
                    class="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded shadow transition-all hover:scale-105 border hover:bg-slate-800"
                    style="background-color: var(--color-bg-main); border-color: var(--color-border-card); color: var(--color-text-main)">
-                  <ng-container i18n="@@nav.signin">nav.signin</ng-container>
+                  {{ i18n.t('nav.signin')() }}
                 </a>
               </div>
             }

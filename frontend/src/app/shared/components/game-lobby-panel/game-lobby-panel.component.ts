@@ -2,7 +2,7 @@ import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.
 import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -48,6 +48,25 @@ export interface GameDifficulty {
       <!-- Rooms Content -->
       @if (activeTab === 'rooms') {
         <div class="p-4 flex-grow overflow-y-auto custom-scrollbar relative flex flex-col">
+          <!-- Challenge Banner -->
+          @if (challengeInfo()) {
+            <div class="w-full mb-4 shrink-0 animate-slide-in">
+              <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-500/15 to-pink-500/10 border border-rose-500/35 shadow-[0_0_15px_rgba(244,63,94,0.12)]">
+                <span class="text-2xl shrink-0">⚔️</span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-black text-rose-400">
+                    {{ t('share.challenge_banner').replace('[challenger]', challengeInfo()!.challenger) }}
+                  </p>
+                  @if (challengeInfo()!.score) {
+                    <p class="text-xs text-[var(--color-text-muted)]">
+                      {{ t('share.challenge_score').replace('[score]', challengeInfo()!.score) }}
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
           <!-- Broadcast Messages Banner -->
           @if (wsService.broadcastMessages().length > 0) {
             <div class="w-full flex flex-col gap-2 mb-4 shrink-0">
@@ -376,11 +395,17 @@ export class GameLobbyPanelComponent implements OnInit {
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
 
+  challengeInfo = computed(() => {
+    const q = this.route.snapshot.queryParams;
+    if (!q['challenge']) return null;
+    return { challenger: q['challenge'] as string, score: (q['score'] as string) || '' };
+  });
 
   @Input() currentGameId: string = '';
   @Input() currentRoomId: string = '';

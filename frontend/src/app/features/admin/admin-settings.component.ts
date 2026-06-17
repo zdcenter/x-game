@@ -13,8 +13,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold"><ng-container i18n="@@admin.settings.title">admin.settings.title</ng-container></h2>
-          <p class="text-[var(--color-text-muted)] mt-1"><ng-container i18n="@@admin.settings.subtitle">admin.settings.subtitle</ng-container></p>
+          <h2 class="text-2xl font-bold">{{ i18n.t('admin.settings.title')() }}</h2>
+          <p class="text-[var(--color-text-muted)] mt-1">{{ i18n.t('admin.settings.subtitle')() }}</p>
         </div>
         <div>
           @if (isSaving()) {
@@ -28,8 +28,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)]">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-lg font-bold"><ng-container i18n="@@admin.settings.maintenance.title">admin.settings.maintenance.title</ng-container></h3>
-              <p class="text-xs opacity-70 mt-1"><ng-container i18n="@@admin.settings.maintenance.desc">admin.settings.maintenance.desc</ng-container></p>
+              <h3 class="text-lg font-bold">{{ i18n.t('admin.settings.maintenance.title')() }}</h3>
+              <p class="text-xs opacity-70 mt-1">{{ i18n.t('admin.settings.maintenance.desc')() }}</p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.site_maintenance" (ngModelChange)="saveSettings()">
@@ -38,7 +38,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
           @if (settings.site_maintenance) {
             <div class="mt-4 animate-fade-in">
-              <label class="block text-xs font-bold opacity-70 mb-2"><ng-container i18n="@@admin.settings.maintenance.message_label">admin.settings.maintenance.message_label</ng-container></label>
+              <label class="block text-xs font-bold opacity-70 mb-2">{{ i18n.t('admin.settings.maintenance.message_label')() }}</label>
               <textarea [(ngModel)]="settings.maintenance_message" (change)="saveSettings()" rows="2" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--color-accent-to)] text-sm" [placeholder]="i18n.t('admin.settings.maintenance.message_placeholder')()"></textarea>
             </div>
           }
@@ -48,8 +48,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)]">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-lg font-bold"><ng-container i18n="@@admin.settings.simulator.title">admin.settings.simulator.title</ng-container></h3>
-              <p class="text-xs opacity-70 mt-1"><ng-container i18n="@@admin.settings.simulator.desc">admin.settings.simulator.desc</ng-container></p>
+              <h3 class="text-lg font-bold">{{ i18n.t('admin.settings.simulator.title')() }}</h3>
+              <p class="text-xs opacity-70 mt-1">{{ i18n.t('admin.settings.simulator.desc')() }}</p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.simulator_enabled" (ngModelChange)="saveSettings()">
@@ -62,8 +62,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
         <div class="bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-border-card)]">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-lg font-bold"><ng-container i18n="@@admin.settings.multiplayer.title">admin.settings.multiplayer.title</ng-container></h3>
-              <p class="text-xs opacity-70 mt-1"><ng-container i18n="@@admin.settings.multiplayer.desc">admin.settings.multiplayer.desc</ng-container></p>
+              <h3 class="text-lg font-bold">{{ i18n.t('admin.settings.multiplayer.title')() }}</h3>
+              <p class="text-xs opacity-70 mt-1">{{ i18n.t('admin.settings.multiplayer.desc')() }}</p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" class="sr-only peer" [(ngModel)]="settings.multiplayer_enabled" (ngModelChange)="saveSettings()">

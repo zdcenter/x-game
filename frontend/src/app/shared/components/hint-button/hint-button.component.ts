@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdService } from '../../../core/services/ad.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-hint-button',
@@ -9,7 +10,7 @@ import { AdService } from '../../../core/services/ad.service';
   template: `
     @if (layout === 'minesweeper') {
       <div class="flex flex-col items-center">
-        <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest text-orange-500"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+        <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest text-orange-500">{{ i18n.t('game.hint_ad')() }}</span>
         <button (click)="onClick()"
           [disabled]="isAdLoading()"
           class="px-2 lg:px-3 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-orange-500/30 text-[10px] lg:text-sm font-bold bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-1 shadow-inner group disabled:opacity-50 disabled:cursor-not-allowed">
@@ -25,7 +26,7 @@ import { AdService } from '../../../core/services/ad.service';
         class="flex-1 flex flex-col items-center justify-center p-1.5 md:p-3 bg-orange-500/10 rounded-xl border border-orange-500/30 hover:bg-orange-500/20 transition-colors active:scale-95 text-orange-500 shadow-sm relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed">
         <div class="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 md:h-7 md:w-7 mb-0.5 md:mb-1', textClass: 'text-xl md:text-2xl mb-0.5 md:mb-1 drop-shadow-md' }"></ng-container>
-        <span class="text-[10px] md:text-xs font-black tracking-widest"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+        <span class="text-[10px] md:text-xs font-black tracking-widest">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 
@@ -34,7 +35,7 @@ import { AdService } from '../../../core/services/ad.service';
               [disabled]="isAdLoading()"
               (click)="onClick()">
         <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-4 w-4 sm:h-5 sm:w-5' }"></ng-container>
-        <span class="text-sm sm:text-base"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+        <span class="text-sm sm:text-base">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 
@@ -52,7 +53,7 @@ import { AdService } from '../../../core/services/ad.service';
               [disabled]="isAdLoading()"
               (click)="onClick()">
         <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-3 w-3 sm:h-4 sm:w-4' }"></ng-container>
-        <span class="text-xs sm:text-sm"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+        <span class="text-xs sm:text-sm">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 
@@ -61,7 +62,7 @@ import { AdService } from '../../../core/services/ad.service';
               [disabled]="isAdLoading()"
               (click)="onClick()">
         <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-3 w-3 sm:h-4 sm:w-4' }"></ng-container>
-        <span class="underline decoration-dashed underline-offset-2 opacity-70 group-hover:opacity-100"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+        <span class="underline decoration-dashed underline-offset-2 opacity-70 group-hover:opacity-100">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 
@@ -70,7 +71,7 @@ import { AdService } from '../../../core/services/ad.service';
               [disabled]="isAdLoading()"
               (click)="onClick()">
         <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 sm:h-6 sm:w-6 mb-1 text-orange-500' }"></ng-container>
-        <span class="truncate w-full text-center"><ng-container i18n="@@game.hint_ad">Hint</ng-container></span>
+        <span class="truncate w-full text-center">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 
@@ -90,6 +91,7 @@ export class HintButtonComponent {
   @Input() layout: 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'compact' | 'sokoban' = 'math24';
   @Output() hintApplied = new EventEmitter<void>();
 
+  protected i18n = inject(I18nService);
   private adService = inject(AdService);
   isAdLoading = signal(false);
 

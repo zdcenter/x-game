@@ -1,5 +1,5 @@
 import { GameResult, GameResultType } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
@@ -9,6 +9,7 @@ import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { XPResult } from '../../../core/services/game-stats.service';
 import { ShareService } from '../../../core/services/share.service';
+import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
 
 @Component({
@@ -34,31 +35,51 @@ import { getOrigin } from '../../../core/utils/browser.util';
           {{ subtitle }}
         </p>
 
-        <!-- New Record Banner -->
+        <!-- New Record Banner + Share -->
         @if (isNewRecord) {
           <div class="w-full mb-4 relative z-10">
-            <div class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-amber-400/20 border border-amber-400/40 text-amber-300 font-black text-sm animate-pulse">
-              🏆 {{ i18n.t('result.new_record')() }}
+            <div class="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-400/20 to-yellow-300/10 border border-amber-400/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+              <div class="flex items-center justify-center gap-2 text-amber-300 font-black text-sm animate-pulse">
+                🏆 {{ i18n.t('result.new_record')() }}
+              </div>
+              <button (click)="shareNewRecord()"
+                class="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                {{ i18n.t('share.new_record')() }}
+              </button>
             </div>
           </div>
         }
 
         <!-- XP Gain display -->
         @if (xpResult && xpResult.xp_earned > 0) {
-          <div class="w-full mb-6 relative z-10">
-            <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-              <div class="flex items-center gap-2">
-                @if (xpResult.leveled_up) {
-                  <span class="text-xl">⬆️</span>
-                  <span class="text-sm font-black text-[var(--color-accent-from)]">{{ i18n.t('result.level_up')() }} Lv.{{ xpResult.level }}</span>
-                } @else {
-                  <span class="text-xl">✨</span>
-                  <span class="text-sm font-bold text-[var(--color-text-muted)]">{{ i18n.t('xp.current_xp')() }}</span>
-                }
+          <div class="w-full mb-4 relative z-10">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                <div class="flex items-center gap-2">
+                  @if (xpResult.leveled_up) {
+                    <span class="text-xl">⬆️</span>
+                    <span class="text-sm font-black text-[var(--color-accent-from)]">{{ i18n.t('result.level_up')() }} Lv.{{ xpResult.level }}</span>
+                  } @else {
+                    <span class="text-xl">✨</span>
+                    <span class="text-sm font-bold text-[var(--color-text-muted)]">{{ i18n.t('xp.current_xp')() }}</span>
+                  }
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-lg font-black text-[var(--color-accent-to)]">+{{ xpResult.xp_earned }} XP</span>
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-lg font-black text-[var(--color-accent-to)]">+{{ xpResult.xp_earned }} XP</span>
-              </div>
+              @if (xpResult.leveled_up) {
+                <button (click)="shareLevelUp()"
+                  class="w-full py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-black text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  {{ i18n.t('share.level_up_share')() }}
+                </button>
+              }
             </div>
           </div>
         }
@@ -75,6 +96,24 @@ import { getOrigin } from '../../../core/utils/browser.util';
                 <div class="text-2xl font-black text-[var(--color-text-main)] font-mono">{{ stat.value }}</div>
               </div>
             }
+          </div>
+        }
+
+        <!-- Streak Share Banner -->
+        @if (streak() >= 3 && status === GameResult.Win) {
+          <div class="w-full mb-4 relative z-10">
+            <div class="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500/20 to-red-500/10 border border-orange-500/40 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
+              <div class="text-center text-sm font-black text-orange-400">
+                🔥 {{ i18n.t('share.streak_title')().replace('[count]', streak().toString()) }}
+              </div>
+              <button (click)="shareStreak()"
+                class="w-full py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-black text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                🔥 {{ i18n.t('share.streak_title')().replace('[count]', streak().toString()) }}
+              </button>
+            </div>
           </div>
         }
 
@@ -102,13 +141,13 @@ import { getOrigin } from '../../../core/utils/browser.util';
                 'bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)]': showNextLevel
               }"
               class="flex-1 px-4 py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all">
-              <ng-container i18n="@@game.restart">Play Again</ng-container>
+              {{ i18n.t('game.restart')() }}
             </button>
           }
 
           @if (showNextLevel) {
             <button (click)="handleNextLevel()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transform sm:hover:scale-105 transition-all">
-              <ng-container i18n="@@game.next_level">game.next_level</ng-container>
+              {{ i18n.t('game.next_level')() }}
             </button>
           }
         </div>
@@ -126,7 +165,7 @@ import { getOrigin } from '../../../core/utils/browser.util';
           }
           @if (showDismiss) {
             <button (click)="handleDismiss()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 transition-colors">
-              <ng-container i18n="@@game.dismiss_room">Dismiss Room</ng-container>
+              {{ i18n.t('game.dismiss_room')() }}
             </button>
           }
         </div>
@@ -136,7 +175,7 @@ import { getOrigin } from '../../../core/utils/browser.util';
       @if (recommendedGames.length > 0) {
         <div class="w-full max-w-4xl mt-4 flex flex-col items-center animate-fade-in shrink-0 pb-8">
           <div class="text-xs text-white/70 uppercase tracking-widest font-bold mb-4 bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-sm">
-            <ng-container i18n="@@game.recommendations">You might also like</ng-container>
+            {{ i18n.t('game.recommendations')() }}
           </div>
           <div class="flex gap-4 w-full overflow-x-auto pb-6 px-4 custom-scrollbar snap-x justify-start md:justify-center">
             @for (game of recommendedGames; track game.id) {
@@ -159,9 +198,11 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private gameRegistry = inject(GameRegistryService);
   private adService = inject(AdService);
   private shareService = inject(ShareService);
+  private streakService = inject(StreakService);
   authStore = inject(AuthStore);
 
   GameResult = GameResult;
+  streak = signal<number>(0);
 
   @Input() currentGameId?: string;
 
@@ -193,6 +234,10 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.playEffect();
     this.loadRecommendations();
+    if (this.currentGameId) {
+      const isWin = this.status === GameResult.Win;
+      this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));
+    }
   }
 
   private loadRecommendations() {
@@ -247,7 +292,9 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     if (!this.currentGameId) return;
     const config = this.gameRegistry.getConfig(this.currentGameId);
     const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
-    const url = `${getOrigin()}/games/${this.currentGameId}`;
+    const username = this.authStore.currentUser()?.username;
+    const challengeParam = username ? `?challenge=${encodeURIComponent(username)}` : '';
+    const url = `${getOrigin()}/games/${this.currentGameId}${challengeParam}`;
 
     const statsStr = (this.stats || [])
       .map(s => `${s.icon || ''}${s.value}`)
@@ -266,6 +313,43 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
       isWin: this.status === GameResult.Win,
       stats: this.stats,
     });
+  }
+
+  shareNewRecord() {
+    if (!this.currentGameId) return;
+    const config = this.gameRegistry.getConfig(this.currentGameId);
+    const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
+    const username = this.authStore.currentUser()?.username;
+    const challengeParam = username ? `?challenge=${encodeURIComponent(username)}` : '';
+    const url = `${getOrigin()}/games/${this.currentGameId}${challengeParam}`;
+    const bestStat = (this.stats || [])[0];
+    const statStr = bestStat ? `${bestStat.icon || ''}${bestStat.value}` : '';
+    const text = this.i18n.t('share.new_record_text')()
+      .replace('[game]', gameName)
+      .replace('[stat]', statStr);
+    this.shareService.share({ title: `Puzzle PK - ${gameName}`, text, url,
+      gameName, gameEmoji: config?.iconEmoji, isWin: true, stats: this.stats });
+  }
+
+  shareLevelUp() {
+    if (!this.xpResult) return;
+    const url = `${getOrigin()}/lobby`;
+    const text = this.i18n.t('share.level_up_text')().replace('[level]', String(this.xpResult.level));
+    this.shareService.share({ title: 'Puzzle PK', text, url });
+  }
+
+  shareStreak() {
+    if (!this.currentGameId) return;
+    const config = this.gameRegistry.getConfig(this.currentGameId);
+    const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
+    const username = this.authStore.currentUser()?.username;
+    const challengeParam = username ? `?challenge=${encodeURIComponent(username)}` : '';
+    const url = `${getOrigin()}/games/${this.currentGameId}${challengeParam}`;
+    const text = this.i18n.t('share.streak_text')()
+      .replace('[count]', String(this.streak()))
+      .replace('[game]', gameName);
+    this.shareService.share({ title: `Puzzle PK - ${gameName}`, text, url,
+      gameName, gameEmoji: config?.iconEmoji, isWin: true });
   }
 
   handleGoToGame(gameId: string) {

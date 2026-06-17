@@ -30,21 +30,28 @@ import { getHref } from '../../../core/utils/browser.util';
               <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
               <div class="flex items-center gap-2">
                 <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
-                @if (mode !== GameMode.Single) {
-                  <button (click)="copyInviteLink()" class="relative group p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/50 transition-all active:scale-95 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)]" [title]="i18n.t('game.copy_invite_link')() || 'Copy Invite Link'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                    @if (showCopiedToast()) {
-                      <span class="absolute -top-10 left-1/2 -translate-x-1/2 bg-[var(--color-accent-from)] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap animate-fade-in-up">
-                        {{ i18n.t('game.copied')() || 'Copied!' }}
-                      </span>
-                    }
-                  </button>
-                }
               </div>
             </div>
           </div>
+
+          <!-- Invite Card (PK mode only) -->
+          @if (mode !== GameMode.Single) {
+            <div class="shrink-0 mb-4">
+              <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/25 shadow-inner">
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-black text-blue-400 uppercase tracking-widest mb-0.5">{{ i18n.t('share.invite_pk')() }}</p>
+                  <p class="text-xs text-[var(--color-text-muted)] truncate font-mono">{{ roomId }}</p>
+                </div>
+                <button (click)="copyInviteLink()"
+                  class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-black text-xs transition-all active:scale-95 shadow-md">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  {{ i18n.t('game.copy_invite_link')() || 'Invite' }}
+                </button>
+              </div>
+            </div>
+          }
 
           <!-- Players List (Scrollable) -->
           <div class="flex-grow overflow-y-auto custom-scrollbar my-2 min-h-[100px] flex flex-wrap justify-center gap-4 sm:gap-6 py-2 px-2">

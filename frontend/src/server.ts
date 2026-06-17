@@ -25,6 +25,26 @@ const angularApp = new AngularNodeAppEngine();
  */
 
 /**
+ * Redirect bare paths (no lang prefix) to /zh/...
+ * e.g. /games/sudoku → /zh/games/sudoku
+ */
+app.use((req, res, next) => {
+  const p = req.path;
+  if (
+    p !== '/' &&
+    !p.startsWith('/en/') &&
+    !p.startsWith('/zh/') &&
+    !p.startsWith('/api/') &&
+    !p.startsWith('/ws/') &&
+    !/\.[a-z0-9]+$/i.test(p)
+  ) {
+    res.redirect(302, '/zh' + p + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
+    return;
+  }
+  next();
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(

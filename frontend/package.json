@@ -7,8 +7,8 @@
     "build": "node scripts/generate-version.js && node scripts/generate-sitemap.js && ng build && node scripts/post-build.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "zh": "ng serve --configuration=zh --port 4201 --host 0.0.0.0",
-    "en": "ng serve --configuration=en --port 4202 --host 0.0.0.0",
+    "zh": "ng serve --port 4201 --host 0.0.0.0",
+    "en": "ng serve --port 4202 --host 0.0.0.0",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
   },
   "private": true,
@@ -24,6 +24,7 @@
     "@angular/router": "^21.2.0",
     "@angular/service-worker": "^21.2.14",
     "@angular/ssr": "^21.2.15",
+    "@jsverse/transloco": "^8.4.0",
     "express": "^5.1.0",
     "marked": "^18.0.4",
     "qrcode": "^1.5.4",

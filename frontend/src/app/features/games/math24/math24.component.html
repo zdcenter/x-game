@@ -28,9 +28,7 @@
     } @else {
       <div class="flex-1 flex flex-col relative w-full h-full bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
         <ng-container *ngIf="store.currentRoomMode() === GameMode.Single; else pkHeader">
-        <app-game-header 
-          i18n-title="@@lobby.math24" title="lobby.math24"
-          i18n-subtitle="@@game.single_mode" subtitle="game.single_mode"
+        <app-game-header  [title]="i18n.t('lobby.math24')()" __TRANSLOCO_subtitle__game.single_mode__TRANSLOCO__ subtitle="game.single_mode"
           iconGradientClass="from-blue-500 to-indigo-600"
           titleGradientClass="from-blue-400 to-indigo-500"
           shadowClass="shadow-blue-500/20"
@@ -51,8 +49,7 @@
       </ng-container>
 
       <ng-template #pkHeader>
-        <app-game-header 
-          i18n-title="@@lobby.math24" title="lobby.math24"
+        <app-game-header  [title]="i18n.t('lobby.math24')()"
           [subtitle]="store.currentRoomMode() === 'same_pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.steal_mode')()"
           iconGradientClass="from-blue-500 to-indigo-600"
           titleGradientClass="from-blue-400 to-indigo-500"
@@ -147,7 +144,7 @@
          'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
        }">
     <div class="flex justify-between items-center mb-4 lg:hidden">
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
     </div>
     <app-game-lobby-panel 
       #lobbyPanel

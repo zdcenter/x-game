@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
 import { isBrowser } from '../utils/browser.util';
 
+export interface ProfileCardData {
+  username: string;
+  level: number;
+  totalGames: number;
+  topStats: { gameEmoji: string; gameName: string; value: string }[];
+  siteDomain: string;
+}
+
 export interface ShareCardData {
   gameName: string;
   gameEmoji?: string;
@@ -126,6 +134,68 @@ export class ShareImageService {
 
       x += boxW + gap;
     }
+  }
+
+  async generateProfileCard(data: ProfileCardData): Promise<Blob | null> {
+    if (!isBrowser()) return null;
+    try {
+      const W = 800, H = 420;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d')!;
+
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, '#0c1524');
+      bg.addColorStop(1, '#1a1040');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      const glow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 300);
+      glow.addColorStop(0, 'rgba(99,102,241,0.18)');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(99,102,241,0.40)'; ctx.lineWidth = 2;
+      this.rrect(ctx, 10, 10, W-20, H-20, 22); ctx.stroke();
+
+      ctx.fillStyle = 'rgba(99,102,241,0.3)';
+      ctx.beginPath(); ctx.arc(W/2, 80, 40, 0, Math.PI*2); ctx.fill();
+      ctx.font = '36px system-ui, Apple Color Emoji, Segoe UI Emoji, sans-serif';
+      ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+      ctx.fillText('👤', W/2, 94);
+
+      ctx.font = 'bold 28px system-ui, sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(data.username, W/2, 148);
+      ctx.font = 'bold 15px system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(167,139,250,0.9)';
+      ctx.fillText(`Lv.${data.level}  ·  ${data.totalGames} games played`, W/2, 176);
+
+      const stats = data.topStats.slice(0, 3);
+      if (stats.length > 0) {
+        const gap = 16, boxH = 80, boxW = 200;
+        const totalW = stats.length * boxW + (stats.length-1) * gap;
+        let x = Math.round((W - totalW) / 2);
+        for (const s of stats) {
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          this.rrect(ctx, x, 205, boxW, boxH, 12); ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.stroke();
+          ctx.font = '22px system-ui, Apple Color Emoji, Segoe UI Emoji, sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.fillText(s.gameEmoji, x+boxW/2, 230);
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.40)';
+          ctx.fillText(s.gameName.toUpperCase(), x+boxW/2, 252);
+          ctx.font = 'bold 20px system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(167,139,250,0.95)';
+          ctx.fillText(s.value, x+boxW/2, 274);
+          x += boxW + gap;
+        }
+      }
+
+      ctx.font = 'bold 15px system-ui, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.fillText(data.siteDomain, W/2, H-28);
+
+      return new Promise<Blob|null>(resolve => canvas.toBlob(b => resolve(b), 'image/png'));
+    } catch(e) { console.error('Profile card generation failed', e); return null; }
   }
 
   private rrect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {

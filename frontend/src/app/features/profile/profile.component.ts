@@ -11,6 +11,9 @@ import { AchievementService, AchievementWithStatus } from '../../core/services/a
 import { LeaderboardService, RankEntry } from '../../core/services/leaderboard.service';
 import { LevelBadgeComponent } from '../../shared/components/level-badge/level-badge.component';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
+import { ShareService } from '../../core/services/share.service';
+import { ShareImageService, ProfileCardData } from '../../core/services/share-image.service';
+import { getOrigin, isBrowser } from '../../core/utils/browser.util';
 
 type Tab = 'overview' | 'achievements' | 'rankings' | 'history';
 
@@ -50,6 +53,13 @@ type Tab = 'overview' | 'achievements' | 'rankings' | 'history';
               <p class="text-xs text-[var(--color-text-muted)] mt-1">
                 {{ i18n.t('xp.login_streak')() }}: {{ authStore.currentUser()!.login_streak }} {{ i18n.t('xp.days')() }}
               </p>
+              <button (click)="shareProfile()"
+                class="mt-2 flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] font-bold text-xs transition-all active:scale-95 self-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                {{ i18n.t('share.profile_card')() }}
+              </button>
             }
           </div>
         </div>
@@ -255,6 +265,8 @@ export class ProfileComponent implements OnInit {
   private statsService = inject(GameStatsService);
   private gameService = inject(GameService);
   private leaderboardService = inject(LeaderboardService);
+  private shareService = inject(ShareService);
+  private shareImageService = inject(ShareImageService);
 
   activeTab = signal<Tab>('overview');
 
@@ -400,5 +412,37 @@ export class ProfileComponent implements OnInit {
 
   rankMedal(rank: number): string {
     return ['🥇','🥈','🥉'][rank - 1] ?? String(rank);
+  }
+
+  async shareProfile() {
+    const user = this.authStore.currentUser();
+    if (!user) return;
+    const topStats = this.gamesWithStats().slice(0, 3).map(g => ({
+      gameEmoji: this.getGameEmoji(g.id),
+      gameName: this.getLocalized(g.name),
+      value: g.stats[0] ? (this.isTimeGame(g.id) ? this.formatTime(g.stats[0].BestTime) : String(g.stats[0].BestScore)) : '--'
+    }));
+    const totalGames = this.gamesWithStats().reduce((s, g) => s + g.stats.reduce((a: number, st: UserGameStat) => a + st.PlayCount, 0), 0);
+    const blob = await this.shareImageService.generateProfileCard({
+      username: user.username,
+      level: user.level ?? 1,
+      totalGames,
+      topStats,
+      siteDomain: getOrigin().replace('https://', '').replace('http://', ''),
+    } as ProfileCardData);
+    const url = `${getOrigin()}/profile`;
+    const text = this.i18n.t('share.profile_text')();
+    if (blob && isBrowser()) {
+      const file = new File([blob], 'profile-card.png', { type: 'image/png' });
+      if ((navigator as any).canShare?.({ files: [file] })) {
+        try { await navigator.share({ title: 'Puzzle PK Profile', text, url, files: [file] } as any); return; } catch {}
+      }
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl; a.download = 'profile-card.png'; a.click();
+      URL.revokeObjectURL(objUrl);
+    } else {
+      this.shareService.share({ title: 'Puzzle PK Profile', text, url });
+    }
   }
 }

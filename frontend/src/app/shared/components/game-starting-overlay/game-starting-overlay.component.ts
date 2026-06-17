@@ -13,7 +13,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           {{ countdown }}
         </span>
         <span class="text-2xl text-white mt-4 font-bold tracking-[0.3em] uppercase opacity-90">
-          <ng-container i18n="@@game.starting">game.starting</ng-container>
+          {{ i18n.t('game.starting')() }}
         </span>
       </div>
     </div>

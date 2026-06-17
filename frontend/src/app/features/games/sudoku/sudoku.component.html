@@ -18,9 +18,9 @@
             <h2 class="text-8xl sm:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 drop-shadow-[0_0_30px_rgba(250,204,21,0.5)] animate-pulse">
               {{ gameTimer.countdownDisplay() }}
             </h2>
-            <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base"><ng-container i18n="@@game.get_ready">game.get_ready</ng-container></p>
+            <p class="text-[var(--color-text-secondary)] font-bold tracking-[0.3em] uppercase text-sm sm:text-base">{{ i18n.t('game.get_ready')() }}</p>
             <div class="flex items-center gap-3 mt-4">
-              <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider"><ng-container i18n="@@game.mode">game.mode</ng-container>:</span>
+              <span class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{{ i18n.t('game.mode')() }}:</span>
               <span class="text-sm font-bold text-[var(--color-accent-from)]">{{ store.currentRoomMode() === GameMode.Steal ? i18n.t('game.sudoku_same_pk_steal_label')() : i18n.t('game.sudoku_same_pk_speed_label')() }}</span>
             </div>
           </div>
@@ -115,9 +115,7 @@
             @if (store.isFinished() && store.currentRoomMode() === GameMode.Single && showOverlay()) {
               <app-game-result-overlay
                 currentGameId="sudoku"
-                [status]="'win'"
-                i18n-title="@@game.win" title="game.win"
-                i18n-promptText="@@game.sudoku.next_level_prompt" promptText="Level cleared! Play next?"
+                [status]="'win'"  [title]="i18n.t('game.win')()" __TRANSLOCO_promptText__game.sudoku.next_level_prompt__TRANSLOCO__ promptText="Level cleared! Play next?"
                 [stats]="getSinglePlayerStats()"
                 [xpResult]="store.lastStatResult()?.xp_result"
                 [isNewRecord]="store.lastStatResult()?.isNewRecord"
@@ -150,7 +148,7 @@
              'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
            
            <div class="flex justify-between items-center mb-4 lg:hidden" >
-             <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+             <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
            </div>
         <app-game-lobby-panel
           #lobbyPanel

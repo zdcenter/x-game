@@ -60,11 +60,11 @@
             (change)="changeDifficulty($event)"
             class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-md px-3 py-1 text-sm font-medium text-[var(--color-text-main)] hover:border-orange-500/50 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer appearance-none shadow-sm"
           >
-            <option value="easy" i18n="@@game.diff_easy">Easy</option>
-            <option value="medium" i18n="@@game.diff_medium">Medium</option>
-            <option value="hard" i18n="@@game.diff_hard">Hard</option>
-            <option value="expert" i18n="@@game.diff_expert">Expert</option>
-            <option value="master" i18n="@@game.diff_master">Master</option>
+            <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
+            <option value="medium">{{ i18n.t('game.diff_medium')() }}</option>
+            <option value="hard">{{ i18n.t('game.diff_hard')() }}</option>
+            <option value="expert">{{ i18n.t('game.diff_expert')() }}</option>
+            <option value="master">{{ i18n.t('game.diff_master')() }}</option>
           </select>
         }
       </div>

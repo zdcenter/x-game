@@ -24,13 +24,13 @@ import { I18nService } from '../../core/i18n/i18n.service';
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <ng-container i18n="@@nav.lobby">Lobby</ng-container>
+            {{ i18n.t('nav.lobby')() }}
           </a>
 
           <h2 class="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 text-center cursor-pointer">
-            <a routerLink="/lobby" class="hover:opacity-80 transition-opacity"><ng-container i18n="@@auth.login.title">auth.login.title</ng-container></a>
+            <a routerLink="/lobby" class="hover:opacity-80 transition-opacity">{{ i18n.t('auth.login.title')() }}</a>
           </h2>
-          <p class="text-slate-400 text-center mb-8 font-medium tracking-wide"><ng-container i18n="@@auth.login.subtitle">auth.login.subtitle</ng-container></p>
+          <p class="text-slate-400 text-center mb-8 font-medium tracking-wide">{{ i18n.t('auth.login.subtitle')() }}</p>
 
           <form (ngSubmit)="onSubmit()" class="space-y-6">
             @if (errorMsg()) {
@@ -40,13 +40,13 @@ import { I18nService } from '../../core/i18n/i18n.service';
             }
 
             <div>
-              <label class="block text-sm font-semibold opacity-80 mb-2 uppercase tracking-wider"><ng-container i18n="@@auth.login.username">auth.login.username</ng-container></label>
+              <label class="block text-sm font-semibold opacity-80 mb-2 uppercase tracking-wider">{{ i18n.t('auth.login.username')() }}</label>
                 <input type="text" [(ngModel)]="username" name="username" required
                        class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-inner">
             </div>
 
             <div>
-              <label class="block text-sm font-semibold opacity-80 mb-2 uppercase tracking-wider"><ng-container i18n="@@auth.login.password">auth.login.password</ng-container></label>
+              <label class="block text-sm font-semibold opacity-80 mb-2 uppercase tracking-wider">{{ i18n.t('auth.login.password')() }}</label>
                 <input type="password" [(ngModel)]="password" name="password" required
                        class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all shadow-inner">
             </div>
@@ -66,12 +66,12 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
                   class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            <ng-container i18n="@@auth.play_as_guest">auth.play_as_guest</ng-container>
+            {{ i18n.t('auth.play_as_guest')() }}
           </button>
 
           <div class="mt-8 text-center text-slate-400 text-sm">
-            <ng-container i18n="@@auth.login.no_account">auth.login.no_account</ng-container>
-            <a routerLink="/register" class="text-indigo-400 font-bold hover:text-pink-400 transition-colors"><ng-container i18n="@@auth.login.create">auth.login.create</ng-container></a>
+            {{ i18n.t('auth.login.no_account')() }}
+            <a routerLink="/register" class="text-indigo-400 font-bold hover:text-pink-400 transition-colors">{{ i18n.t('auth.login.create')() }}</a>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@
       style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
 
       <!-- Header -->
-      <app-game-header i18n-title="@@app.title" title="Minesweeper"
+      <app-game-header  [title]="i18n.t('app.title')()"
         [subtitle]="currentRoomMode() === GameMode.Steal ? i18n.t('game.same_pk_steal_label')() : (currentRoomMode() === GameMode.Speed ? i18n.t('game.same_pk_speed_label')() : i18n.t('game.single_label')())"
         iconGradientClass="from-rose-500 to-orange-500" titleGradientClass="from-rose-400 to-orange-400"
         shadowClass="shadow-orange-500/20"
@@ -28,7 +28,7 @@
 
               <!-- Difficulty Selection -->
               <div class="flex flex-col items-center">
-                <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest hidden sm:block"><ng-container i18n="@@game.difficulty">game.difficulty</ng-container></span>
+                <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest hidden sm:block">{{ i18n.t('game.difficulty')() }}</span>
                 <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
                   class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-md lg:rounded-lg px-1 py-0.5 lg:px-3 lg:py-1.5 text-xs lg:text-base font-bold cursor-pointer outline-none focus:ring-2 focus:ring-orange-500 transition-all shadow-inner text-[var(--color-text-main)] max-w-[120px] sm:max-w-none">
                   @for (diff of predefinedDifficulties; track diff.id) {
@@ -47,7 +47,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              <span class="hidden sm:inline"><ng-container i18n="@@game.leave">game.leave</ng-container></span>
+              <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
             </button>
             }
 
@@ -167,7 +167,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <ng-container i18n="@@game.start_match">START</ng-container>
+            {{ i18n.t('game.start_match')() }}
           </button>
         </div>
         }
@@ -188,7 +188,7 @@
             class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
             {{ gameTimer.formatTime(frozenRemaining()) }}
           </div>
-          <p class="text-red-300 font-bold text-sm mt-2"><ng-container i18n="@@game.frozen_msg">game.frozen_msg</ng-container></p>
+          <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
         </div>
         }
 
@@ -259,7 +259,7 @@
 
     <div class="flex justify-between items-center mb-4 lg:hidden"
       >
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
     </div>
     <app-game-lobby-panel #lobbyPanel [currentGameId]="'minesweeper'" [currentRoomId]="currentRoomId()"
       (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)"

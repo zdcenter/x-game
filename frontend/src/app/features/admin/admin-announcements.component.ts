@@ -13,14 +13,14 @@ import { I18nService } from '../../core/i18n/i18n.service';
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold"><ng-container i18n="@@admin.announcements.title">admin.announcements.title</ng-container></h2>
-          <p class="text-[var(--color-text-muted)] mt-1"><ng-container i18n="@@admin.announcements.subtitle">admin.announcements.subtitle</ng-container></p>
+          <h2 class="text-2xl font-bold">{{ i18n.t('admin.announcements.title')() }}</h2>
+          <p class="text-[var(--color-text-muted)] mt-1">{{ i18n.t('admin.announcements.subtitle')() }}</p>
         </div>
         <button (click)="openCreateModal()" class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
           </svg>
-          <ng-container i18n="@@admin.announcements.add">admin.announcements.add</ng-container>
+          {{ i18n.t('admin.announcements.add')() }}
         </button>
       </div>
 
@@ -30,10 +30,10 @@ import { I18nService } from '../../core/i18n/i18n.service';
           <thead>
             <tr class="bg-[var(--color-bg-main)]/50 border-b border-[var(--color-border-card)]">
               <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-16">ID</th>
-              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70"><ng-container i18n="@@admin.announcements.col.content">admin.announcements.col.content</ng-container></th>
-              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-32"><ng-container i18n="@@admin.announcements.col.status">admin.announcements.col.status</ng-container></th>
-              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-24 text-center"><ng-container i18n="@@admin.announcements.col.order">admin.announcements.col.order</ng-container></th>
-              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-48 text-right"><ng-container i18n="@@admin.announcements.col.actions">admin.announcements.col.actions</ng-container></th>
+              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70">{{ i18n.t('admin.announcements.col.content')() }}</th>
+              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-32">{{ i18n.t('admin.announcements.col.status')() }}</th>
+              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-24 text-center">{{ i18n.t('admin.announcements.col.order')() }}</th>
+              <th class="py-4 px-6 text-xs font-bold uppercase tracking-wider opacity-70 w-48 text-right">{{ i18n.t('admin.announcements.col.actions')() }}</th>
             </tr>
           </thead>
           <tbody>
@@ -84,16 +84,16 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
           <div class="p-6 space-y-5">
             <div>
-              <label class="block text-sm font-bold opacity-70 mb-2"><ng-container i18n="@@admin.announcements.col.content">admin.announcements.col.content</ng-container></label>
+              <label class="block text-sm font-bold opacity-70 mb-2">{{ i18n.t('admin.announcements.col.content')() }}</label>
               <textarea [(ngModel)]="formData.content" rows="3" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--color-accent-to)] text-sm" [placeholder]="i18n.t('admin.announcements.placeholder')()"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-bold opacity-70 mb-2"><ng-container i18n="@@admin.announcements.col.order">admin.announcements.col.order</ng-container></label>
+                <label class="block text-sm font-bold opacity-70 mb-2">{{ i18n.t('admin.announcements.col.order')() }}</label>
                 <input type="number" [(ngModel)]="formData.sort_order" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 focus:outline-none focus:border-[var(--color-accent-to)] text-sm">
               </div>
               <div class="flex flex-col justify-end">
-                <label class="block text-sm font-bold opacity-70 mb-2"><ng-container i18n="@@admin.announcements.col.status">admin.announcements.col.status</ng-container></label>
+                <label class="block text-sm font-bold opacity-70 mb-2">{{ i18n.t('admin.announcements.col.status')() }}</label>
                 <div class="flex items-center h-[46px]">
                   <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" class="sr-only peer" [(ngModel)]="formData.is_active">
@@ -105,10 +105,10 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
           <div class="p-6 bg-[var(--color-bg-main)]/50 border-t border-[var(--color-border-card)] flex justify-end gap-3">
             <button (click)="closeModal()" class="px-5 py-2.5 rounded-xl font-bold border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] transition-colors text-[var(--color-text-main)]">
-              <ng-container i18n="@@admin.announcements.cancel">admin.announcements.cancel</ng-container>
+              {{ i18n.t('admin.announcements.cancel')() }}
             </button>
             <button (click)="saveAnnouncement()" class="px-5 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white hover:brightness-110 transition-all shadow-lg">
-              <ng-container i18n="@@admin.announcements.save">admin.announcements.save</ng-container>
+              {{ i18n.t('admin.announcements.save')() }}
             </button>
           </div>
         </div>

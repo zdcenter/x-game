@@ -1,9 +1,14 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { GAME_DEFINITIONS } from './core/config/game-definitions';
+import { langResolver } from './core/i18n/lang.resolver';
 
-export const routes: Routes = [
+// Shared children used by both the 'en' and 'zh' literal routes.
+// Using literal paths ('en'/'zh') instead of ':lang' prevents
+// bare paths like /games/sudoku from ever matching as a lang segment.
+const langChildren: Routes = [
   { path: '', redirectTo: 'lobby', pathMatch: 'full' },
+
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent),
@@ -14,7 +19,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register.component').then(m => m.RegisterComponent),
     data: { seo: { titleKey: 'seo.register.title', descKey: 'seo.register.desc', keywordsKey: 'seo.register.keywords' } }
   },
-  
+
   // -- Player Facing Routes --
   {
     path: '',
@@ -48,8 +53,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/legal/legal.component').then(m => m.LegalComponent),
         data: { seo: { titleKey: 'seo.legal.title', descKey: 'seo.legal.desc', keywordsKey: 'seo.legal.keywords' } }
       },
-      // Game routes — auto-generated from GAME_DEFINITIONS. To add a new game,
-      // add its entry to core/config/game-definitions.ts only.
+      // Game routes — auto-generated from GAME_DEFINITIONS
       ...GAME_DEFINITIONS.map(def => ({
         path: def.route.slice(1), // '/games/foo' -> 'games/foo'
         loadComponent: def.loadComponent,
@@ -85,52 +89,26 @@ export const routes: Routes = [
     data: { seo: { titleKey: 'seo.admin.title', descKey: 'seo.admin.desc', keywordsKey: 'seo.admin.keywords' } },
     children: [
       { path: '', redirectTo: 'realtime', pathMatch: 'full' },
-      {
-        path: 'users',
-        loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
-      },
-      {
-        path: 'games',
-        loadComponent: () => import('./features/admin/admin-games.component').then(m => m.AdminGamesComponent)
-      },
-      {
-        path: 'announcements',
-        loadComponent: () => import('./features/admin/admin-announcements.component').then(m => m.AdminAnnouncementsComponent)
-      },
-      {
-        path: 'realtime',
-        loadComponent: () => import('./features/admin/admin-realtime.component').then(m => m.AdminRealtimeComponent)
-      },
-      {
-        path: 'ads',
-        loadComponent: () => import('./features/admin/admin-ads.component').then(m => m.AdminAdsComponent)
-      },
-      {
-        path: 'settings',
-        loadComponent: () => import('./features/admin/admin-settings.component').then(m => m.AdminSettingsComponent)
-      },
-      {
-        path: 'achievements',
-        loadComponent: () => import('./features/admin/admin-achievements.component').then(m => m.AdminAchievementsComponent)
-      },
-      {
-        path: 'daily-challenges',
-        loadComponent: () => import('./features/admin/admin-daily-challenges.component').then(m => m.AdminDailyChallengesComponent)
-      },
-      {
-        path: 'leaderboard',
-        loadComponent: () => import('./features/admin/admin-leaderboard.component').then(m => m.AdminLeaderboardComponent)
-      },
-      {
-        path: 'xp-config',
-        loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent)
-      },
-      {
-        path: 'blog',
-        loadComponent: () => import('./features/admin/admin-blog.component').then(m => m.AdminBlogComponent)
-      }
+      { path: 'users', loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent) },
+      { path: 'games', loadComponent: () => import('./features/admin/admin-games.component').then(m => m.AdminGamesComponent) },
+      { path: 'announcements', loadComponent: () => import('./features/admin/admin-announcements.component').then(m => m.AdminAnnouncementsComponent) },
+      { path: 'realtime', loadComponent: () => import('./features/admin/admin-realtime.component').then(m => m.AdminRealtimeComponent) },
+      { path: 'ads', loadComponent: () => import('./features/admin/admin-ads.component').then(m => m.AdminAdsComponent) },
+      { path: 'settings', loadComponent: () => import('./features/admin/admin-settings.component').then(m => m.AdminSettingsComponent) },
+      { path: 'achievements', loadComponent: () => import('./features/admin/admin-achievements.component').then(m => m.AdminAchievementsComponent) },
+      { path: 'daily-challenges', loadComponent: () => import('./features/admin/admin-daily-challenges.component').then(m => m.AdminDailyChallengesComponent) },
+      { path: 'leaderboard', loadComponent: () => import('./features/admin/admin-leaderboard.component').then(m => m.AdminLeaderboardComponent) },
+      { path: 'xp-config', loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent) },
+      { path: 'blog', loadComponent: () => import('./features/admin/admin-blog.component').then(m => m.AdminBlogComponent) }
     ]
   },
 
   { path: '**', redirectTo: 'lobby' }
+];
+
+export const routes: Routes = [
+  { path: '', redirectTo: '/zh/lobby', pathMatch: 'full' },
+  { path: 'zh', resolve: { lang: langResolver }, children: langChildren },
+  { path: 'en', resolve: { lang: langResolver }, children: langChildren },
+  { path: '**', redirectTo: '/zh/lobby' }
 ];

@@ -21,18 +21,18 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
                 (click)="store.loadPrevLevel()"
                 [disabled]="store.localLevelIndex() <= 0"
                 [ngClass]="{'opacity-30 cursor-not-allowed': store.localLevelIndex() <= 0}">
-          <span class="mr-1">«</span> <ng-container i18n="@@game.prev_level">game.prev_level</ng-container>
+          <span class="mr-1">«</span> {{ i18n.t('game.prev_level')() }}
         </button>
         
         <!-- Level Badge -->
         <div class="px-5 py-1.5 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-sm sm:text-base font-black text-blue-400 -translate-y-2">
-          <ng-container i18n="@@game.level">game.level</ng-container> {{ store.localLevelIndex() + 1 }}
+          {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
         </div>
 
         <!-- Next Level -->
         <button class="text-[var(--color-text-muted)] hover:text-blue-400 font-bold transition-colors px-2 py-1"
                 (click)="store.loadNextLevel()">
-          <ng-container i18n="@@game.next_level">game.next_level</ng-container> <span class="ml-1">»</span>
+          {{ i18n.t('game.next_level')() }} <span class="ml-1">»</span>
         </button>
       </div>
 
@@ -44,7 +44,7 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
           <div class="absolute inset-0 z-50 bg-blue-900/40 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-blue-400/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
             <span class="text-6xl sm:text-8xl animate-pulse drop-shadow-lg">❄️</span>
             <div class="mt-4 text-2xl font-black text-white tracking-widest">{{ freezeRemaining() }}s</div>
-            <div class="text-sm font-bold text-blue-200 mt-2 uppercase"><ng-container i18n="@@game.frozen">Frozen Penalty</ng-container></div>
+            <div class="text-sm font-bold text-blue-200 mt-2 uppercase">{{ i18n.t('game.frozen')() }}</div>
           </div>
         }
 
@@ -52,7 +52,7 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
         @if (hintSolution()) {
           <div class="absolute inset-0 z-[60] bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-orange-500/50 shadow-[0_0_50px_rgba(249,115,22,0.2)] animate-scale-in">
             <div class="text-5xl sm:text-6xl mb-4 animate-bounce drop-shadow-lg">💡</div>
-            <div class="text-sm font-bold text-orange-500 uppercase tracking-widest mb-2"><ng-container i18n="@@game.hint_title">Hint</ng-container></div>
+            <div class="text-sm font-bold text-orange-500 uppercase tracking-widest mb-2">{{ i18n.t('game.hint_title')() }}</div>
             <div class="w-full max-w-[280px] bg-[var(--color-bg-main)] px-4 sm:px-6 py-4 rounded-xl border border-[var(--color-border-card)] shadow-inner mb-8 flex flex-col gap-2">
               @for (step of hintSolution(); track $index) {
                 <div class="text-2xl sm:text-3xl font-black font-mono text-[var(--color-text-main)] text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
@@ -62,7 +62,7 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
             </div>
             <button class="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all text-sm sm:text-base w-full max-w-[200px]"
                     (click)="hintSolution.set(null)">
-              <ng-container i18n="@@game.close">Close</ng-container>
+              {{ i18n.t('game.close')() }}
             </button>
           </div>
         }
@@ -119,11 +119,11 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
                   (click)="undo()"
                   [disabled]="store.currentBoardHistory().length <= 1"
                   [ngClass]="{'opacity-50 cursor-not-allowed': store.currentBoardHistory().length <= 1}">
-            <span>↩️</span> <ng-container i18n="@@game.undo">game.undo</ng-container>
+            <span>↩️</span> {{ i18n.t('game.undo')() }}
           </button>
           <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
                   (click)="reset()">
-            <span>🔄</span> <ng-container i18n="@@game.reset">game.reset</ng-container>
+            <span>🔄</span> {{ i18n.t('game.reset')() }}
           </button>
         </div>
       </div>

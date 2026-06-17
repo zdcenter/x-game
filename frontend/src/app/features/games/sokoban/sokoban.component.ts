@@ -274,7 +274,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
              'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': true}">
         <div class="flex justify-between items-center mb-4 lg:hidden"
              >
-          <h3 class="font-bold text-lg text-[var(--color-text-main)]"><ng-container i18n="@@game.room_info">Room Info</ng-container></h3>
+          <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
           <button (click)="isMobileSidebarOpen.set(false)" class="p-2 bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

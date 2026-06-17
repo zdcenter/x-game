@@ -21,7 +21,7 @@ import { ThemeService } from '../theme/theme.service';
               X
             </div>
             <span class="text-xl font-extrabold tracking-widest text-white">
-              <ng-container i18n="@@admin.title">admin.title</ng-container>
+              {{ i18n.t('admin.title')() }}
             </span>
           </a>
         </div>
@@ -30,27 +30,27 @@ import { ThemeService } from '../theme/theme.service';
         <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
           <a routerLink="/admin/realtime" routerLinkActive="bg-emerald-500/20 text-emerald-400 border-emerald-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>📊</span>
-            <span><ng-container i18n="@@admin.menu.realtime">admin.menu.realtime</ng-container></span>
+            <span>{{ i18n.t('admin.menu.realtime')() }}</span>
           </a>
           <a routerLink="/admin/users" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>👥</span>
-            <span><ng-container i18n="@@admin.menu.users">admin.menu.users</ng-container></span>
+            <span>{{ i18n.t('admin.menu.users')() }}</span>
           </a>
           <a routerLink="/admin/games" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>⚙️</span>
-            <span><ng-container i18n="@@admin.menu.games">Games</ng-container></span>
+            <span>{{ i18n.t('admin.menu.games')() }}</span>
           </a>
           <a routerLink="/admin/announcements" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>📢</span>
-            <span><ng-container i18n="@@admin.menu.announcements">admin.menu.announcements</ng-container></span>
+            <span>{{ i18n.t('admin.menu.announcements')() }}</span>
           </a>
           <a routerLink="/admin/ads" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>💰</span>
-            <span><ng-container i18n="@@admin.menu.ads">admin.menu.ads</ng-container></span>
+            <span>{{ i18n.t('admin.menu.ads')() }}</span>
           </a>
           <a routerLink="/admin/settings" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🛠️</span>
-            <span><ng-container i18n="@@admin.menu.settings">System Settings</ng-container></span>
+            <span>{{ i18n.t('admin.menu.settings')() }}</span>
           </a>
 
           <!-- Divider -->
@@ -59,19 +59,19 @@ import { ThemeService } from '../theme/theme.service';
 
           <a routerLink="/admin/achievements" routerLinkActive="bg-yellow-500/20 text-yellow-400 border-yellow-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🏅</span>
-            <span><ng-container i18n="@@admin.menu.achievements">Achievements</ng-container></span>
+            <span>{{ i18n.t('admin.menu.achievements')() }}</span>
           </a>
           <a routerLink="/admin/daily-challenges" routerLinkActive="bg-orange-500/20 text-orange-400 border-orange-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>📅</span>
-            <span><ng-container i18n="@@admin.menu.daily_challenges">Daily Challenges</ng-container></span>
+            <span>{{ i18n.t('admin.menu.daily_challenges')() }}</span>
           </a>
           <a routerLink="/admin/leaderboard" routerLinkActive="bg-blue-500/20 text-blue-400 border-blue-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🏆</span>
-            <span><ng-container i18n="@@admin.menu.leaderboard">Leaderboard</ng-container></span>
+            <span>{{ i18n.t('admin.menu.leaderboard')() }}</span>
           </a>
           <a routerLink="/admin/xp-config" routerLinkActive="bg-green-500/20 text-green-400 border-green-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>✨</span>
-            <span><ng-container i18n="@@admin.menu.xp_config">XP Config</ng-container></span>
+            <span>{{ i18n.t('admin.menu.xp_config')() }}</span>
           </a>
 
           <!-- Divider -->
@@ -96,7 +96,7 @@ import { ThemeService } from '../theme/theme.service';
             </div>
           </div>
           <button (click)="logout()" class="w-full py-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 text-inherit opacity-80 hover:opacity-100 rounded-lg text-sm font-bold transition-colors">
-            <ng-container i18n="@@auth.logout">auth.logout</ng-container>
+            {{ i18n.t('auth.logout')() }}
           </button>
         </div>
       </aside>
@@ -106,7 +106,7 @@ import { ThemeService } from '../theme/theme.service';
         <!-- Top Header -->
         <header class="h-16 bg-[var(--color-bg-card)] backdrop-blur-md border-b border-[var(--color-border-card)] flex items-center justify-between px-8">
           <div class="text-sm font-medium opacity-70">
-            Puzzle PK Platform / <span class="font-bold"><ng-container i18n="@@admin.header.breadcrumb">admin.header.breadcrumb</ng-container></span>
+            Puzzle PK Platform / <span class="font-bold">{{ i18n.t('admin.header.breadcrumb')() }}</span>
           </div>
           
           <div class="flex items-center space-x-2 sm:space-x-4">

@@ -8,6 +8,7 @@ import { AuthStore } from './core/auth/auth.store';
 import { CookieConsentComponent } from './shared/components/cookie-consent/cookie-consent.component';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { filter } from 'rxjs/operators';
+import { NavigationStart } from '@angular/router';
 import { ToastService } from './core/services/toast.service';
 import { I18nService } from './core/i18n/i18n.service';
 import { XpGainBadgeComponent } from './shared/components/xp-gain-badge/xp-gain-badge.component';
@@ -37,6 +38,23 @@ export class AppComponent implements OnInit {
   private swUpdate = inject(SwUpdate);
   private toastService = inject(ToastService);
   private i18n = inject(I18nService);
+
+  private readonly LANG_RE = /^\/(en|zh)(\/|$)/;
+
+  constructor() {
+    // Subscribe early (before ngOnInit) to also catch the initial navigation.
+    // routerLink="/games/X" bypasses LangUrlSerializer (uses createUrlTree, not parse());
+    // NavigationStart is the only reliable hook to intercept all bare-path navigations.
+    this.router.events
+      .pipe(filter((e): e is NavigationStart => e instanceof NavigationStart))
+      .subscribe(e => {
+        const url = e.url.split('?')[0];
+        if (url !== '/' && !this.LANG_RE.test(url) && !url.startsWith('/assets/')) {
+          const qs = e.url.includes('?') ? e.url.slice(e.url.indexOf('?')) : '';
+          this.router.navigateByUrl('/' + this.i18n.currentLang() + url + qs, { replaceUrl: true });
+        }
+      });
+  }
 
   ngOnInit() {
     this.settingsService.loadSettings().subscribe();
