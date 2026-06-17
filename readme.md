@@ -15,3 +15,6 @@
 4. 挑战直链 - 分享 URL 附加 ?challenge=username，GameLobbyPanel 检测后显示挑战横幅
 5. PK 等待室邀请卡 - 原来小图标改成全宽蓝色邀请卡块
 6. 个人成就卡片 - Profile 页加"分享主页"按钮，生成 Canvas 卡片
+
+
+git push 后, cloudflar 编译后 ,浏览器访问一直出现Redirecting to /zh/lobby 在循环，浏览器一直在转

@@ -16,17 +16,13 @@ export async function onRequest(context) {
     return Response.redirect(new URL(`/${lang}/lobby`, request.url).toString(), 302);
   }
 
-  // Try the exact prerendered path (Cloudflare uses Clean URLs, maps /zh/lobby → /zh/lobby/index.html)
-  const res = await env.ASSETS.fetch(request);
-  if (res.status !== 404) return res;
+  // Serve prerendered page via explicit index.html path.
+  // Avoids 301 trailing-slash redirects that env.ASSETS.fetch emits for bare directory paths,
+  // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
+  const cleanPath = pathname.replace(/\/+$/, '');
+  const prerendered = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
+  if (prerendered.status !== 404) return prerendered;
 
-  // Try explicit directory index (e.g. /zh/lobby/index.html)
-  const dirIndex = pathname.endsWith('/') ? pathname + 'index.html' : pathname + '/index.html';
-  const dirRes = await env.ASSETS.fetch(new Request(new URL(dirIndex, request.url)));
-  if (dirRes.status !== 404) return dirRes;
-
-  // SPA fallback: serve the Angular app shell.
-  // The router will handle the route client-side (blog, admin, unknown paths, etc.)
-  // index.html is the single-build app shell; Angular bootstraps and navigates to the URL.
+  // SPA fallback: Angular app shell handles client-side routing (blog, admin, unknown paths).
   return env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
 }
