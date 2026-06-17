@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-06-17] - 🔑 修复刷新后用户名消失 & Profile NaN
+
+### 🐛 修复
+
+- **auth.interceptor.ts**：新增 `X-Skip-Logout` 标头检查——携带此标头的请求 401 时不触发自动登出，防止后台刷新意外清掉用户状态
+- **auth.store.ts**：`refreshProfile()` 请求携带 `X-Skip-Logout: true`，避免因 API 401（token 过期/网络问题）导致静默登出、导航栏头像变 "?"
+- **xp.service.ts**：`levelProgress(xp)` 改用 `xp ?? 0` 兜底，防止旧 localStorage 数据缺 `xp` 字段时出现 NaN（影响 Profile 总览 XP 进度条）
+
+---
+
 ## [2026-06-16] - 🗃️ 博客系统 DB 化：数据库存储 + Admin 管理 UI + API 驱动
 
 ### ✨ 新功能

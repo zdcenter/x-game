@@ -149,9 +149,9 @@ export class SudokuStore extends BaseGameStore {
 
   // --- ROOM MANAGEMENT ---
   // override joinRoom if we want to set 'view' or we can just rely on effect
-  override joinRoom(roomId: string, mode: string, diff: string, hostId?: string) {
+  override joinRoom(roomId: string, mode: string, diff: string, hostId?: string, target: number = 1) {
     this.view.set('room');
-    super.joinRoom(roomId, mode, diff, hostId);
+    super.joinRoom(roomId, mode, diff, hostId, target);
   }
 
   override leaveRoom() {

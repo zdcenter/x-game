@@ -152,7 +152,7 @@ export class SlidingComponent extends BaseGameComponent {
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       return;
     } else {
       this.store.joinRoom('', GameMode.Single);
@@ -226,9 +226,9 @@ export class SlidingComponent extends BaseGameComponent {
     }
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId: string, target: number = 1) {
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
     this.isMenuOpen.set(false);
   }
 

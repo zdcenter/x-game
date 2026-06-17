@@ -12,6 +12,7 @@ type PKStealEngine struct {
 	Players       map[string]*Math24Player `json:"players"`
 	CurrentPuzzle *domain.Math24Puzzle     `json:"currentPuzzle"`
 	Difficulty    string                   `json:"difficulty"`
+	Target        int                      `json:"target"`
 	Winners       []string                 `json:"winners"`
 }
 
@@ -31,6 +32,11 @@ func (e *PKStealEngine) InitGame(options interface{}) error {
 	opts, _ := options.(map[string]interface{})
 	diff, _ := opts["difficulty"].(string)
 	e.Difficulty = diff
+	if t, ok := opts["target"].(int); ok && t > 0 {
+		e.Target = t
+	} else {
+		e.Target = 1
+	}
 
 	puzzles := getRandomPuzzles(e.Difficulty, 1)
 	if len(puzzles) > 0 {
@@ -119,7 +125,7 @@ func (e *PKStealEngine) HandleAction(playerID string, actionType string, payload
 				e.CurrentPuzzle = &puzzles[0]
 			}
 
-			if p.Score >= 5 {
+			if p.Score >= e.Target {
 				e.State = engine.StateFinished
 				e.Winners = append(e.Winners, playerID)
 				e.Broadcast()
@@ -141,6 +147,7 @@ func (e *PKStealEngine) GetState() interface{} {
 	return map[string]interface{}{
 		"status":     e.State,
 		"difficulty": e.Difficulty,
+		"target":     e.Target,
 		"players":    e.Players,
 		"puzzle":     e.CurrentPuzzle,
 		"winners":    e.Winners,

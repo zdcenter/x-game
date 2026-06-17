@@ -112,9 +112,9 @@ export class BlockStore extends BaseGameStore {
     });
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = GameDifficulty.Medium, hostId: string = '') {
+  override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = GameDifficulty.Medium, hostId: string = '', target: number = 1) {
     this.currentDifficulty.set(diff);
-    super.joinRoom(roomId, mode, diff, hostId);
+    super.joinRoom(roomId, mode, diff, hostId, target);
     
     // Set difficulty size
     const size = diff === GameDifficulty.Easy ? 8 : (diff === GameDifficulty.Hard ? 12 : 10);

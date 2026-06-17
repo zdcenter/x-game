@@ -46,6 +46,7 @@ export interface PendingJoinInfo {
   difficulty: string;
   host?: string;
   password?: string;
+  target?: number;
 }
 
 export interface RoomLifecycleHandle {
@@ -140,6 +141,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
           mode: joinInfo.mode,
           difficulty: joinInfo.difficulty,
           host: joinInfo.host,
+          target: joinInfo.target,
         };
       }
 

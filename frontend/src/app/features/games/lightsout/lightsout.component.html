@@ -94,6 +94,7 @@
         (ready)="store.ready()"
         (cancelReady)="store.cancelReady()"
         (kick)="store.kickPlayer($event)"
+        [target]="store.currentRoomTarget()"
       ></app-game-waiting-room>
     } @else {
       

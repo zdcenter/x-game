@@ -97,7 +97,8 @@
             [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
             [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
             (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
-            (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()">
+            (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
+            [target]="store.currentRoomTarget()">
           </app-game-waiting-room>
           } @else {
 

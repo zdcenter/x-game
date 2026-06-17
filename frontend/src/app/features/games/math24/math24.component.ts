@@ -156,7 +156,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target || 1);
       if (joinInfo.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
       }
@@ -215,7 +215,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     }
     const myPlayer = this.store.players()[this.playerId];
     if (myPlayer) {
-      if (this.store.currentRoomMode() === 'same_pk_steal') {
+      if (this.store.currentRoomMode() === GameMode.Steal) {
         return [{ label: 'Score', value: myPlayer.score || 0 }];
       } else {
         return [{ label: 'Solved', value: myPlayer.progress || 0 }];

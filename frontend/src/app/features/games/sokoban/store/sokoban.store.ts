@@ -150,8 +150,8 @@ export class SokobanStore extends BaseGameStore {
     this.startTimer();
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string) {
-    super.joinRoom(roomId, mode, difficulty, hostId);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string, target: number = 1) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target);
     this.isDead.set(false);
     
     if (mode === GameMode.Single) {

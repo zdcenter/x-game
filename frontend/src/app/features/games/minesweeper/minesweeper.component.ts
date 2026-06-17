@@ -186,7 +186,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
+      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
     } else {
       const savedDiff = storageGet('minesweeper_single_diff') || 'intermediate';
       this.changeSingleDifficulty(savedDiff);
@@ -213,13 +213,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string, target: number = 1) {
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.currentRoomId.set(roomId);
     this.isMobileSidebarOpen.set(false);
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
   }
 
   returnToLobby() {

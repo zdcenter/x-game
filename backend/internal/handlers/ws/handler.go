@@ -78,11 +78,16 @@ func Register(router fiber.Router) {
 		action := c.Query("action", "")               // "create" or "join"
 		password := c.Query("password", "")           // Optional 4-digit room password
 		playerID := c.Query("playerId", "anonymous")
+		targetStr := c.Query("target", "1")           // PK rounds target (1/3/5/10)
+		target := 1
+		if n, err2 := fmt.Sscanf(targetStr, "%d", &target); n != 1 || err2 != nil || target <= 0 {
+			target = 1
+		}
 		var room *wsManager.Room
 
 		if action == "create" {
 			// Explicit create: only create, fail if exists
-			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password)
+			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target)
 			if err != nil {
 				// Room might already exist (e.g. reconnect after page refresh), try to join
 				room, err = wsManager.JoinRoom(roomID)

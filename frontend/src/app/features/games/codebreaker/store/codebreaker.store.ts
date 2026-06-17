@@ -134,8 +134,8 @@ export class CodebreakerStore extends BaseGameStore {
     }
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string) {
-    super.joinRoom(roomId, mode, difficulty, hostId);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target);
     if (mode === GameMode.Single) {
       this.startGame(); // Auto start in single player for codebreaker
     }

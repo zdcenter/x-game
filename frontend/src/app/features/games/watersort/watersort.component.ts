@@ -120,7 +120,8 @@ import { TutorialService } from '../../../core/services/tutorial.service';
               [readyPlayers]="_store.readyPlayers()"
               (kick)="_store.kickPlayer($event)"
               (ready)="_store.ready()"
-              (cancelReady)="_store.cancelReady()">
+              (cancelReady)="_store.cancelReady()"
+              [target]="_store.currentRoomTarget()">
             </app-game-waiting-room>
           } @else {
 
@@ -363,7 +364,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this._store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      this._store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }

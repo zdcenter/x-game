@@ -122,7 +122,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     } else if (joinInfo) {
       if (joinInfo.mode !== GameMode.Single) {
         if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-        this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host);
+        this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
       } else {
         this.view.set('play');
         this.store.joinRoom('single_room', GameMode.Single, GameDifficulty.Medium);
@@ -143,10 +143,10 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     this.store.joinRoom('single_room', GameMode.Single, diff);
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string, target: number = 1) {
     this.isMobileSidebarOpen.set(false);
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
     this.view.set('room');
   }
 

@@ -19,7 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (error.status === 401 && !req.headers.has('X-Skip-Logout')) {
         authStore.logout();
         if (router.url.startsWith('/admin')) {
           router.navigate(['/admin/login']);

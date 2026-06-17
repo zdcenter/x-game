@@ -14,5 +14,6 @@
       (kick)="store.kickPlayer($event)"
       (ready)="store.ready()"
       (cancelReady)="store.cancelReady()"
+      [target]="store.currentRoomTarget()"
     ></app-game-waiting-room>
   

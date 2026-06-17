@@ -34,6 +34,7 @@ type Room struct {
 	Host          string                // Player ID who created the room
 	Mode          domain.GameMode       // "single", "pk_steal", "pk_speed"
 	Difficulty    domain.GameDifficulty // "easy", "medium", "hard"
+	Target        int                   // PK rounds target (e.g. 1/3/5/10), default 1
 	Password      string                // Optional 4-digit password (empty = public room)
 	CreatedAt     int64                 // Unix timestamp of creation
 	LastActivity  int64                 // Unix timestamp of last client action or join
@@ -116,7 +117,7 @@ func GetActiveRooms() []RoomSnapshot {
 }
 
 // CreateRoom creates a new room. Returns error if the room already exists or was recently dismissed.
-func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Room, error) {
+func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, target int) (*Room, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -133,6 +134,10 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Roo
 
 	if mode == "" {
 		mode = "single"
+	}
+
+	if target <= 0 {
+		target = 1
 	}
 
 	engineKey := gameId + "_" + mode
@@ -156,6 +161,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Roo
 		Host:          hostId,
 		Mode:          domain.GameMode(mode),
 		Difficulty:    domain.GameDifficulty(difficulty),
+		Target:        target,
 		Password:      password,
 		CreatedAt:     now,
 		LastActivity:  now,
@@ -164,7 +170,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string) (*Roo
 		KickedPlayers: make(map[string]time.Time),
 	}
 
-	options := getGameOptions(gameId, mode, difficulty)
+	options := getGameOptions(gameId, mode, difficulty, target)
 	r.Engine.InitGame(options)
 
 	if asyncEng, ok := r.Engine.(interface{ SetBroadcaster(func()) }); ok {
@@ -202,7 +208,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 
 	// If room doesn't exist AND hostId matches (meaning the caller is the creator), create it
 	if hostId != "" {
-		return CreateRoom(roomID, gameId, mode, difficulty, hostId, "")
+		return CreateRoom(roomID, gameId, mode, difficulty, hostId, "", 1)
 	}
 
 	return nil, fmt.Errorf(string(domain.ErrRoomNotFound))
@@ -308,10 +314,11 @@ func cleanupStaleRooms() {
 }
 
 // getGameOptions fetches the database config and merges it with standard options
-func getGameOptions(gameId, mode, difficulty string) map[string]interface{} {
+func getGameOptions(gameId, mode, difficulty string, target int) map[string]interface{} {
 	options := map[string]interface{}{
 		"mode":       mode,
 		"difficulty": difficulty,
+		"target":     target,
 	}
 	var gameConfig domain.GameConfig
 	if err := db.DB.First(&gameConfig, "id = ?", gameId).Error; err == nil {
@@ -543,7 +550,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 						r.Difficulty = domain.GameDifficulty(diff)
 						r.GameChangedAt = time.Now().Unix()
 
-						eng.InitGame(getGameOptions(gameId, mode, diff))
+						eng.InitGame(getGameOptions(gameId, mode, diff, r.Target))
 
 						for id := range r.Clients {
 							eng.AddPlayer(id)

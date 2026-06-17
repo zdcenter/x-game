@@ -27,6 +27,15 @@ export abstract class BaseGameStore implements GameStoreInterface {
   private _pkStatSubmitted = false;
 
   constructor() {
+    // Sync target from WS game state so currentRoomTarget is always up-to-date
+    // for both room creators (set in joinRoom) and joiners (set when state arrives).
+    effect(() => {
+      const t = (this.ws.gameState() as any)?.target;
+      if (t > 0) {
+        untracked(() => this.currentRoomTarget.set(t));
+      }
+    });
+
     // Auto-submit PK match result when game transitions Playing → Finished.
     // Runs once per room (guarded by _pkStatSubmitted flag).
     effect(() => {
@@ -55,6 +64,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly roomId = signal<string>('');
   readonly currentRoomMode = signal<GameModeType | string>(GameMode.Single);
   readonly currentDifficulty = signal<GameDifficultyType | string>(GameDifficulty.Medium);
+  readonly currentRoomTarget = signal<number>(1);
 
   readonly playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
@@ -121,15 +131,16 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly isPlaying = computed(() => this.status() === GameStatus.Playing);
   readonly isFinished = computed(() => this.status() === GameStatus.Finished);
 
-  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string) {
+  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
+    this.currentRoomTarget.set(target);
     this._pkPrevStatus = '';
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
     if (mode !== GameMode.Single) {
-      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId);
+      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, '', '', target);
     }
   }
 

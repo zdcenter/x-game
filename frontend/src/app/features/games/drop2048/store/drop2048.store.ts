@@ -108,8 +108,8 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     }, 1000 / 60);
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = '', hostId: string = '') {
-    super.joinRoom(roomId, mode, diff, hostId);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = '', hostId: string = '', target: number = 1) {
+    super.joinRoom(roomId, mode, diff, hostId, target);
     if (mode === GameMode.Single) {
       this.localStatus.set(GameStatus.Waiting);
       this.engine.stop();

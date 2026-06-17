@@ -339,6 +339,27 @@ export interface GameDifficulty {
               </div>
             }
 
+            <!-- PK Target (rounds/score to win) — Create Mode Only, non-Single mode -->
+            @if (!isUpdateMode() && availableModes().length > 0) {
+              <div>
+                <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.pk_target_label') }}</label>
+                <div class="grid grid-cols-4 gap-2">
+                  @for (opt of pkTargetOptions; track opt) {
+                    <button (click)="newRoomTarget.set(opt)"
+                            [class.bg-[var(--color-accent-to)]]="newRoomTarget() === opt"
+                            [class.text-[var(--color-bg-main)]]="newRoomTarget() === opt"
+                            [class.border-[var(--color-accent-to)]]="newRoomTarget() === opt"
+                            [class.bg-[var(--color-bg-card)]]="newRoomTarget() !== opt"
+                            [class.hover:border-[var(--color-accent-to)]]="newRoomTarget() !== opt"
+                            class="py-2.5 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-center">
+                      {{ opt }}
+                    </button>
+                  }
+                </div>
+                <p class="text-[10px] opacity-50 mt-1">{{ t('game.pk_target_hint') }}</p>
+              </div>
+            }
+
             <!-- Room Password (Create Mode Only) -->
             @if (!isUpdateMode()) {
               <div>
@@ -412,7 +433,7 @@ export class GameLobbyPanelComponent implements OnInit {
   @Input() isGlobal: boolean = false;
 
   @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string, password?: string}>();
-  @Output() createRoom = new EventEmitter<{name: string, gameId: string, mode: string, difficulty: string, password?: string}>();
+  @Output() createRoom = new EventEmitter<{name: string, gameId: string, mode: string, difficulty: string, password?: string, target: number}>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
@@ -425,6 +446,9 @@ export class GameLobbyPanelComponent implements OnInit {
   newRoomMode = signal('');
   newRoomDifficulty = signal('');
   newRoomPassword = signal('');
+  newRoomTarget = signal(1);
+
+  readonly pkTargetOptions = [1, 3, 5, 10];
 
   // Password prompt for joining password-protected rooms
   isPasswordPromptOpen = signal(false);
@@ -486,6 +510,7 @@ export class GameLobbyPanelComponent implements OnInit {
     this.newRoomName.set(`${this.playerId()}-${randomSuffix}`);
     const initialGame = this.isGlobal ? (this.allGames()[0]?.id || '') : this.currentGameId;
     this.selectGameForNewRoom(initialGame);
+    this.newRoomTarget.set(1);
     this.isCreateModalOpen.set(true);
   }
 
@@ -571,7 +596,8 @@ export class GameLobbyPanelComponent implements OnInit {
       gameId: this.newRoomGameId(),
       mode: mode,
       difficulty: diff,
-      password: this.newRoomPassword()
+      password: this.newRoomPassword(),
+      target: this.newRoomTarget()
     });
     this.isCreateModalOpen.set(false);
     this.newRoomPassword.set('');

@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { CrossGameJoinService } from './cross-game-join.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
-import { S2CEvent, WSErrorCode } from '../models/websocket.model';
+import { S2CEvent, WSErrorCode, WsQueryParam } from '../models/websocket.model';
 import { createWebSocket, isBrowser } from '../utils/browser.util';
 
 export interface WSMessage {
@@ -70,7 +70,7 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '') {
+  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '', target: number = 1) {
     // Auto-consume pendingPassword if no explicit password provided
     if (!password && this._pendingPassword) {
       password = this._pendingPassword;
@@ -107,12 +107,12 @@ export class WebSocketService {
     this.gameDisconnectIntentional = false;
 
     const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
-    let url = `${environment.wsUrl}/ws/join/${encodeURIComponent(roomId)}?game=${encodeURIComponent(gameId)}&playerId=${encodeURIComponent(playerId)}&mode=${encodeURIComponent(mode)}&difficulty=${encodeURIComponent(difficulty)}&hostId=${encodeURIComponent(cleanHostId)}`;
+    let url = `${environment.wsUrl}/ws/join/${encodeURIComponent(roomId)}?${WsQueryParam.Game}=${encodeURIComponent(gameId)}&${WsQueryParam.PlayerId}=${encodeURIComponent(playerId)}&${WsQueryParam.Mode}=${encodeURIComponent(mode)}&${WsQueryParam.Difficulty}=${encodeURIComponent(difficulty)}&${WsQueryParam.HostId}=${encodeURIComponent(cleanHostId)}&${WsQueryParam.Target}=${target}`;
     if (action) {
-      url += `&action=${encodeURIComponent(action)}`;
+      url += `&${WsQueryParam.Action}=${encodeURIComponent(action)}`;
     }
     if (password) {
-      url += `&password=${encodeURIComponent(password)}`;
+      url += `&${WsQueryParam.Password}=${encodeURIComponent(password)}`;
     }
     if (!isBrowser()) return;
     this.socket = createWebSocket(url);
@@ -194,7 +194,7 @@ export class WebSocketService {
       console.log(`Game WS reconnecting in ${delay}ms (attempt ${this.gameReconnectAttempts})`);
       this.reconnectTimeout = setTimeout(() => {
         if (!this.isConnected() && !this.gameDisconnectIntentional) {
-          this.connect(gameId, roomId, playerId, mode, difficulty, hostId, 'join');
+          this.connect(gameId, roomId, playerId, mode, difficulty, hostId, 'join', '', target);
         }
       }, delay);
     };

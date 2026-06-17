@@ -1,6 +1,20 @@
 import { GameIdType, GameModeType, GameDifficultyType, GameStatusType } from './game.model';
 
 /**
+ * WebSocket URL query param keys — no magic strings
+ */
+export enum WsQueryParam {
+  Game       = 'game',
+  PlayerId   = 'playerId',
+  Mode       = 'mode',
+  Difficulty = 'difficulty',
+  HostId     = 'hostId',
+  Action     = 'action',
+  Password   = 'password',
+  Target     = 'target',
+}
+
+/**
  * WebSocket 消息大类枚举
  */
 export enum MessageType {

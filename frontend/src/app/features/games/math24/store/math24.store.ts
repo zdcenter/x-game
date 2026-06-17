@@ -40,6 +40,8 @@ export class Math24Store extends BaseGameStore {
 
   players = computed(() => (this.rawState() as any)?.players || {});
 
+  pkTarget = computed<number>(() => (this.rawState() as any)?.target || this.currentRoomTarget());
+
   override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
   override readonly singlePlayerWinners = computed(() => {

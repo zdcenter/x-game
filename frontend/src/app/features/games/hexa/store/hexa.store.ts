@@ -107,8 +107,8 @@ export class HexaStore extends BaseGameStore {
     });
   }
 
-  override joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: string = '', hostId: string = '') {
-    super.joinRoom(roomId, mode, difficulty, hostId);
+  override joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: string = '', hostId: string = '', target: number = 1) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target);
     if (mode === GameMode.Single) {
       this.startSinglePlayer();
       if (this.auth.isAuthenticated()) {

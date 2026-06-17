@@ -12,6 +12,7 @@ type PKSpeedEngine struct {
 	Players    map[string]*Math24Player `json:"players"`
 	Puzzles    []domain.Math24Puzzle    `json:"puzzles"`
 	Difficulty string                   `json:"difficulty"`
+	Target     int                      `json:"target"`
 	Winners    []string                 `json:"winners"`
 }
 
@@ -31,9 +32,12 @@ func (e *PKSpeedEngine) InitGame(options interface{}) error {
 	opts, _ := options.(map[string]interface{})
 	diff, _ := opts["difficulty"].(string)
 	e.Difficulty = diff
-
-	// Speed mode: fetch 5 puzzles for everyone to solve sequentially
-	e.Puzzles = getRandomPuzzles(e.Difficulty, 5)
+	if t, ok := opts["target"].(int); ok && t > 0 {
+		e.Target = t
+	} else {
+		e.Target = 1
+	}
+	e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target)
 	e.State = engine.StateWaiting
 	return nil
 }
@@ -82,7 +86,7 @@ func (e *PKSpeedEngine) HandleAction(playerID string, actionType string, payload
 	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
-		e.Puzzles = getRandomPuzzles(e.Difficulty, 5)
+		e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target)
 		for _, p := range e.Players {
 			p.Progress = 0
 			p.FreezeUntil = 0
@@ -107,7 +111,7 @@ func (e *PKSpeedEngine) HandleAction(playerID string, actionType string, payload
 
 		if solveData.IsCorrect {
 			p.Progress++
-			if p.Progress >= len(e.Puzzles) {
+			if p.Progress >= e.Target {
 				e.State = engine.StateFinished
 				e.Winners = append(e.Winners, playerID)
 				e.Broadcast()
@@ -129,8 +133,9 @@ func (e *PKSpeedEngine) GetState() interface{} {
 	return map[string]interface{}{
 		"status":     e.State,
 		"difficulty": e.Difficulty,
+		"target":     e.Target,
 		"players":    e.Players,
-		"puzzles":    e.Puzzles, // Client knows which puzzle they are on via progress
+		"puzzles":    e.Puzzles,
 		"winners":    e.Winners,
 	}
 }

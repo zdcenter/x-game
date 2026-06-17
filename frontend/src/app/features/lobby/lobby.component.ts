@@ -73,7 +73,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.wsService.disconnectLobby();
   }
 
-  handleGlobalCreateRoom(event: {name: string, gameId: string, mode: string, difficulty: string, password?: string}) {
+  handleGlobalCreateRoom(event: {name: string, gameId: string, mode: string, difficulty: string, password?: string, target?: number}) {
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     this.crossGameJoin.setPendingJoin({
       game: event.gameId,
@@ -82,7 +82,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
       difficulty: event.difficulty,
       host: playerId,
       action: 'create',
-      password: event.password
+      password: event.password,
+      target: event.target
     });
     this.router.navigate([`/games/${event.gameId}`]);
   }

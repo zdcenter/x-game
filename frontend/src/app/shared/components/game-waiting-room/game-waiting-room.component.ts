@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -14,8 +14,8 @@ import { getHref } from '../../../core/utils/browser.util';
     'class': 'flex w-full h-full min-h-0'
   },
   template: `
-    <div class="flex-grow flex items-center justify-center p-4 sm:p-6 h-full w-full min-h-0">
-      <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] p-4 sm:p-8 max-w-2xl w-full max-h-full flex flex-col text-center relative overflow-hidden min-h-0">
+    <div class="flex-grow flex items-stretch sm:items-center justify-center p-2 sm:p-6 h-full w-full min-h-0">
+      <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] p-3 sm:p-8 max-w-2xl w-full sm:max-h-full flex flex-col text-center relative overflow-hidden min-h-0">
         <!-- Decorative bg -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--color-accent-from)] opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-[var(--color-accent-to)] opacity-5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
@@ -23,10 +23,10 @@ import { getHref } from '../../../core/utils/browser.util';
         <div class="relative z-10 flex flex-col h-full overflow-hidden min-h-0">
           <!-- Header (Title & Room Info) -->
           <div class="shrink-0">
-            <h2 class="text-3xl sm:text-4xl font-black mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">
+            <h2 class="text-2xl sm:text-4xl font-black mb-1 sm:mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 uppercase tracking-tight">
               {{ i18n.t('lobby.' + gameId)() }} - {{ i18n.t('game.waiting_room')() }}
             </h2>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-8 text-sm sm:text-base">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-4 mb-3 sm:mb-8 text-sm sm:text-base">
               <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.mode')() }}: <span class="text-[var(--color-accent-from)] font-bold ml-1">{{ getModeName(mode) }}</span></p>
               <div class="flex items-center gap-2">
                 <p class="text-[var(--color-text-muted)] font-medium bg-[var(--color-bg-main)] border border-[var(--color-border-card)] px-4 py-2 rounded-xl shadow-sm">{{ i18n.t('game.room_name')() }}: <span class="font-mono text-[var(--color-accent-from)] font-bold ml-1">{{ roomId }}</span></p>
@@ -49,6 +49,16 @@ import { getHref } from '../../../core/utils/browser.util';
                   </svg>
                   {{ i18n.t('game.copy_invite_link')() || 'Invite' }}
                 </button>
+              </div>
+            </div>
+          }
+
+          <!-- PK Rule Hint -->
+          @if (mode !== GameMode.Single && target() > 0) {
+            <div class="shrink-0 mb-3">
+              <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-xs text-[var(--color-text-muted)]">
+                <span class="text-base">🏆</span>
+                <span>{{ i18n.t('game.pk_rule_hint')().replace('{n}', target().toString()) }}</span>
               </div>
             </div>
           }
@@ -80,7 +90,7 @@ import { getHref } from '../../../core/utils/browser.util';
           </div>
 
           <!-- Actions Footer -->
-          <div class="shrink-0 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 mt-auto">
+          <div class="shrink-0 flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 pt-2 sm:pt-4 mt-auto">
             <button (click)="leave.emit()" class="px-8 py-3.5 rounded-xl border-2 border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold transition-all active:scale-95 shadow-sm">
               {{ i18n.t('game.leave')() }}
             </button>
@@ -129,6 +139,7 @@ export class GameWaitingRoomComponent {
   @Input({ required: true }) hostId!: string;
   @Input({ required: true }) currentUserId!: string;
   @Input() readyPlayers: Record<string, boolean> = {};
+  target = input<number>(1);
 
   @Output() leave = new EventEmitter<void>();
   @Output() start = new EventEmitter<void>();

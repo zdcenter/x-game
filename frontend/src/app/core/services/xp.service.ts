@@ -28,12 +28,13 @@ export class XpService {
   }
 
   levelProgress(xp: number): LevelProgress {
-    const level = this.calcLevel(xp);
+    const safeXp = xp ?? 0;
+    const level = this.calcLevel(safeXp);
     const start = this.xpForLevel(level);
     const end = this.xpForLevel(level + 1);
-    const current = xp - start;
+    const current = safeXp - start;
     const total = end - start;
-    return { level, xp, current, total, pct: total > 0 ? Math.round((current / total) * 100) : 0 };
+    return { level, xp: safeXp, current, total, pct: total > 0 ? Math.round((current / total) * 100) : 0 };
   }
 
   levelColor(level: number): string {

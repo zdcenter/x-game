@@ -5,6 +5,7 @@ import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
 import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
+import { I18nService } from '../../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-math24-pk-steal',
@@ -22,7 +23,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
             [playerName]="playerId"
             [isHost]="playerId === hostId"
             [isMe]="true"
-            [score]="store.players()[playerId]?.score || 0"
+            [stats]="[{ icon: '⭐', value: (store.players()[playerId]?.score || 0) + '/' + store.pkTarget() }]"
             [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === GameStatus.Finished ? GameStatus.Finished : 'playing')"
             [freezeCountdown]="isFrozen(store.players()[playerId]) ? getFrozenRemaining(store.players()[playerId]) : undefined"
           ></app-player-badge>
@@ -35,7 +36,7 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
                   [playerName]="$any(kv.key)"
                   [isHost]="kv.key === hostId"
                   [isMe]="false"
-                  [score]="kv.value.score"
+                  [stats]="[{ icon: '⭐', value: (kv.value.score || 0) + '/' + store.pkTarget() }]"
                   [status]="isFrozen(kv.value) ? 'frozen' : (store.status() === GameStatus.Finished ? GameStatus.Finished : 'playing')"
                   [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
                 ></app-player-badge>
@@ -43,6 +44,11 @@ import { PlayerListContainerComponent } from '../../../../../shared/components/p
             </ng-template>
           </app-player-list-container>
         </div>
+      </div>
+
+      <!-- Rule Banner -->
+      <div class="flex-none text-center text-[10px] text-[var(--color-text-muted)] py-1 border-b border-[var(--color-border-card)]/40">
+        {{ i18n.t('game.math24_steal_goal')().replace('{n}', store.pkTarget().toString()) }}
       </div>
 
       <!-- Main Board Area -->
@@ -81,7 +87,8 @@ export class Math24PkStealComponent {
   @Input({ required: true }) hostId!: string;
 
   store = inject(Math24Store);
-      frozenRemaining = signal(0);
+  i18n = inject(I18nService);
+  frozenRemaining = signal(0);
 
   roundWinner = signal<{name: string, isMe: boolean} | null>(null);
 
@@ -91,6 +98,7 @@ export class Math24PkStealComponent {
 
     effect(() => {
       const state = this.store.ws.gameState() as any;
+      if (!state) return;
       const currentRound = state.round || 0;
       const currentScores = state.players || {};
       const puzzle = state.puzzle;

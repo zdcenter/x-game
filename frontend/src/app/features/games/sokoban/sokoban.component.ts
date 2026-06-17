@@ -113,6 +113,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
           (ready)="store.ready()"
           (cancelReady)="store.cancelReady()"
           (kick)="store.kickPlayer($event)"
+          [target]="store.currentRoomTarget()"
         ></app-game-waiting-room>
       }
 
@@ -389,7 +390,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     const pendingCross = this.crossGameJoin.consumePendingJoin('sokoban');
     if (pendingCross) {
       if (pendingCross.password) this.wsService.setPendingPassword(pendingCross.password);
-      this.store.joinRoom(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
+      this.store.joinRoom(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host, pendingCross.target ?? 1);
       if (pendingCross.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
         this.showLobby.set(false);
@@ -400,7 +401,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       if (pending.mode !== GameMode.Single) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
         this.showLobby.set(false);

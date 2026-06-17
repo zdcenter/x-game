@@ -73,8 +73,14 @@ export class AuthStore {
 
   refreshProfile(): void {
     if (!this.token()) return;
-    this.http.get<User>(`${environment.apiUrl}/profile/me`).subscribe({
-      next: user => {
+    // X-Skip-Logout prevents authInterceptor from calling logout() on 401.
+    // Background refresh failure should not silently sign the user out.
+    // /profile/me returns { user: User, login_streak, ... } — extract .user
+    this.http.get<{ user: User }>(`${environment.apiUrl}/profile/me`, {
+      headers: { 'X-Skip-Logout': 'true' }
+    }).subscribe({
+      next: resp => {
+        const user = resp.user;
         storageSet('x_game_user', JSON.stringify(user));
         this.currentUser.set(user);
       },

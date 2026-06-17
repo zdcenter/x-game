@@ -149,7 +149,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       if (joinInfo.password) this.ws.setPendingPassword(joinInfo.password);
-      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
     } else {
       this.route.queryParams.subscribe(params => {
         // Only run if we don't already have an active room set by consumePendingOrReconnect
@@ -170,7 +170,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     }
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, host: string) {
+  joinRoom(roomId: string, mode: string, difficulty: string, host: string, target: number = 1) {
     if (!roomId) return;
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
@@ -179,7 +179,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     
-    this.store.joinRoom(roomId, mode, difficulty, host);
+    this.store.joinRoom(roomId, mode, difficulty, host, target);
 
     // Reset local helpers on join
     this.currentInput.set('');

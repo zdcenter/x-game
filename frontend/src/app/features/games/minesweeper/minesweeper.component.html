@@ -151,7 +151,7 @@
             [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
             [readyPlayers]="store.readyPlayers() || {}" (leave)="returnToLobby()" (start)="store.startGame()"
             (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)" (ready)="store.ready()"
-            (cancelReady)="store.cancelReady()"></app-game-waiting-room>
+            (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()"></app-game-waiting-room>
         </div>
         }
 
