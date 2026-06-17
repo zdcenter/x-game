@@ -9,9 +9,11 @@ export async function onRequest(context) {
     return env.ASSETS.fetch(request);
   }
 
-  // Root: redirect to default language
+  // Root: detect browser language via Accept-Language header (server-side, bot-friendly)
   if (pathname === '/') {
-    return Response.redirect(new URL('/zh/lobby', request.url).toString(), 302);
+    const acceptLang = request.headers.get('Accept-Language') ?? '';
+    const lang = acceptLang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    return Response.redirect(new URL(`/${lang}/lobby`, request.url).toString(), 302);
   }
 
   // Try the exact prerendered path (Cloudflare uses Clean URLs, maps /zh/lobby → /zh/lobby/index.html)
