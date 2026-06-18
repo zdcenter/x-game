@@ -32,8 +32,10 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   localScore = signal<number>(0);
   isDead = signal<boolean>(false);
   combos = signal<ComboText[]>([]);
-  particles = signal<{ id: string, x: number, y: number, color: string }[]>([]);
+  particles = signal<{ id: string, x: number, y: number, color: string, size: number }[]>([]);
   bestScore = signal<number>(parseInt(storageGet('drop2048_best') || '0', 10));
+  ghostRow = signal<number>(-1);
+  comboCount = signal<number>(0);
   
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
@@ -211,6 +213,8 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.isDead.set(false);
     this.combos.set([]);
     this.particles.set([]);
+    this.ghostRow.set(-1);
+    this.comboCount.set(0);
   }
 
   private syncState() {
@@ -225,16 +229,18 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.board.set(state.board);
     this.activeBlock.set(state.activeBlock);
     this.nextVal.set(state.nextVal);
-    
+
     if (state.score > this.bestScore()) {
       this.bestScore.set(state.score);
       storageSet('drop2048_best', state.score.toString());
     }
-    
+
     this.localScore.set(state.score);
     this.isDead.set(state.isDead);
     this.combos.set(state.combos);
     this.particles.set(state.particles);
+    this.ghostRow.set(state.ghostRow);
+    this.comboCount.set(state.comboCount);
   }
 
   moveLeft() { this.engine.handleAction({ type: Drop2048ActionType.MoveLeft }); this.updateSignals(); }

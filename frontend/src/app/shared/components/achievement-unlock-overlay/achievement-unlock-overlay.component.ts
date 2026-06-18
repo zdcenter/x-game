@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AchievementService } from '../../../core/services/achievement.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -17,12 +17,16 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       0%, 100% { opacity: 0.4; }
       50%       { opacity: 1; }
     }
+    @keyframes countdown {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
     .achieve-in  { animation: achieveIn 0.5s cubic-bezier(.22,1,.36,1) forwards; }
     .shimmer     { animation: shimmer 2s ease-in-out infinite; }
+    .countdown-bar { animation: countdown linear forwards; }
   `],
   template: `
     @if (achievementService.pendingUnlocks()[0]; as achievement) {
-      <!-- Backdrop -->
       <div class="fixed inset-0 z-[500] flex items-end justify-center pb-8 px-4 pointer-events-none">
         <div class="achieve-in w-full max-w-sm pointer-events-auto">
           <div class="relative rounded-2xl border shadow-2xl overflow-hidden"
@@ -64,16 +68,24 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 
               <!-- Dismiss button -->
               <button
-                (click)="achievementService.dismissNext()"
+                (click)="dismiss()"
                 class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full
                        bg-white/10 hover:bg-white/20 transition-colors text-sm font-bold">
                 ✕
               </button>
             </div>
 
-            <!-- Progress bar for queue -->
+            <!-- Countdown progress bar -->
+            <div class="h-0.5 mx-4 mb-3 rounded-full bg-white/10 overflow-hidden">
+              <div class="h-full rounded-full countdown-bar"
+                   [ngClass]="shimmerColor(achievement.rarity)"
+                   [style.animation-duration]="duration() + 'ms'">
+              </div>
+            </div>
+
+            <!-- Queue indicator -->
             @if (achievementService.pendingUnlocks().length > 1) {
-              <div class="px-4 pb-3">
+              <div class="px-4 pb-3 -mt-2">
                 <p class="text-[10px] opacity-50 text-center">
                   +{{ achievementService.pendingUnlocks().length - 1 }} more
                 </p>
@@ -85,9 +97,37 @@ import { I18nService } from '../../../core/i18n/i18n.service';
     }
   `
 })
-export class AchievementUnlockOverlayComponent {
+export class AchievementUnlockOverlayComponent implements OnDestroy {
   achievementService = inject(AchievementService);
   i18n = inject(I18nService);
+
+  duration = signal(4000);
+  private timer?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    effect(() => {
+      const achievement = this.achievementService.pendingUnlocks()[0];
+      this.clearTimer();
+      if (!achievement) return;
+
+      const ms = achievement.rarity === 'legendary' ? 6000
+               : achievement.rarity === 'epic'      ? 5000
+               : 4000;
+      this.duration.set(ms);
+      this.timer = setTimeout(() => this.achievementService.dismissNext(), ms);
+    });
+  }
+
+  dismiss() {
+    this.clearTimer();
+    this.achievementService.dismissNext();
+  }
+
+  ngOnDestroy() { this.clearTimer(); }
+
+  private clearTimer() {
+    if (this.timer) { clearTimeout(this.timer); this.timer = undefined; }
+  }
 
   shimmerColor(rarity: string): string {
     switch (rarity) {

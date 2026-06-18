@@ -5,12 +5,14 @@ export const DROP2048_ROWS = 7;
 export const DROP2048_COLS = 5;
 
 export interface DropBlock {
-  id: string; // Unique ID for DOM tracking
+  id: string;
   val: number;
   r: number;
   c: number;
-  mergedFrom?: string[]; // IDs of blocks that merged into this
+  mergedFrom?: string[];
   isNew?: boolean;
+  isMerging?: boolean;  // triggers merge-pop CSS animation
+  isLanding?: boolean;  // triggers landing-ring CSS animation
 }
 
 export interface ComboText {
@@ -18,6 +20,8 @@ export interface ComboText {
   text: string;
   r: number;
   c: number;
+  comboCount: number;
+  scoreGained: number;
 }
 
 export interface Drop2048State {
@@ -27,8 +31,10 @@ export interface Drop2048State {
   score: number;
   isDead: boolean;
   combos: ComboText[];
-  particles: { id: string, x: number, y: number, color: string }[];
+  particles: { id: string, x: number, y: number, color: string, size: number }[];
   level: number;
+  ghostRow: number;
+  comboCount: number;
 }
 
 export enum Drop2048ActionType {
@@ -49,18 +55,17 @@ export interface Drop2048EngineConfig {
 }
 
 export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Action> {
-  // Local state
   board: DropBlock[] = [];
   activeBlock: { id: string, val: number, c: number, r: number } | null = null;
   nextVal: number = 2;
   score: number = 0;
   isDead: boolean = false;
   combos: ComboText[] = [];
-  particles: { id: string, x: number, y: number, color: string }[] = [];
-  
+  particles: { id: string, x: number, y: number, color: string, size: number }[] = [];
+  lastComboCount: number = 0;
+
   status: GameStatusType = GameStatus.Waiting;
 
-  // Internal loop & logic
   private gravityInterval: number | null = null;
   private lastDropTime: number = 0;
   private config?: Drop2048EngineConfig;
@@ -74,8 +79,9 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     this.particles = [];
     this.activeBlock = null;
     this.nextVal = 2;
+    this.lastComboCount = 0;
     this.status = GameStatus.Playing;
-    
+
     this.stop();
     this.spawnBlock();
   }
@@ -123,7 +129,9 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       isDead: this.isDead,
       combos: this.combos,
       particles: this.particles,
-      level: this.getLevel()
+      level: this.getLevel(),
+      ghostRow: this.getGhostRow(),
+      comboCount: this.lastComboCount,
     };
   }
 
@@ -135,6 +143,16 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     if (this.score < 20000) return 5;
     if (this.score < 40000) return 6;
     return 7;
+  }
+
+  private getGhostRow(): number {
+    if (!this.activeBlock) return -1;
+    let r = this.activeBlock.r;
+    while (r < DROP2048_ROWS - 1) {
+      if (this.board.some(b => b.c === this.activeBlock!.c && b.r === r + 1)) break;
+      r++;
+    }
+    return r;
   }
 
   private getDropSpeed(): number {
@@ -153,7 +171,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
   private generateRandomValue(): number {
     const r = Math.random();
     const lvl = this.getLevel();
-    
+
     if (lvl >= 5) {
       if (r < 0.1) return 2;
       if (r < 0.3) return 4;
@@ -188,9 +206,9 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
 
     const val = this.nextVal;
     this.nextVal = this.generateRandomValue();
-    
+
     this.activeBlock = { id: this.generateId(), val, c: 2, r: 0 };
-    
+
     const blocked = this.board.some(b => b.c === 2 && b.r === 0);
     if (blocked) {
       this.gameOver();
@@ -202,16 +220,16 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
   private startGravity() {
     this.stop();
     this.lastDropTime = performance.now();
-    
+
     const loop = (timestamp: number) => {
       if (this.isDead || !this.activeBlock) {
         this.stop();
         return;
       }
-      
+
       const speed = this.getDropSpeed();
       const progress = timestamp - this.lastDropTime;
-      
+
       if (progress >= speed) {
         const curr = this.activeBlock;
         if (curr.r >= DROP2048_ROWS - 1 || this.board.some(b => b.c === curr.c && b.r === curr.r + 1)) {
@@ -221,16 +239,16 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         }
         this.lastDropTime = timestamp;
       }
-      
+
       this.gravityInterval = requestAnimationFrame(loop);
     };
-    
+
     this.gravityInterval = requestAnimationFrame(loop);
   }
 
   private moveActive(dc: number) {
     if (this.isDead || !this.activeBlock) return;
-    
+
     const nc = this.activeBlock.c + dc;
     if (nc >= 0 && nc < DROP2048_COLS) {
       this.activeBlock = { ...this.activeBlock, c: nc };
@@ -240,10 +258,10 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
 
   private dropActive() {
     if (this.isDead || !this.activeBlock) return;
-    
+
     const curr = this.activeBlock;
     this.activeBlock = null;
-    
+
     let targetR = DROP2048_ROWS - 1;
     for (let r = 0; r < DROP2048_ROWS; r++) {
       if (this.board.some(b => b.c === curr.c && b.r === r)) {
@@ -257,12 +275,18 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       return;
     }
 
-    const newBlock: DropBlock = { id: curr.id, val: curr.val, r: targetR, c: curr.c, isNew: true };
+    const newBlock: DropBlock = { id: curr.id, val: curr.val, r: targetR, c: curr.c, isNew: true, isLanding: true };
     this.board = [...this.board, newBlock];
-    
+
+    // Clear landing ring after animation
+    setTimeout(() => {
+      this.board = this.board.map(b => b.id === newBlock.id ? { ...b, isLanding: false } : b);
+    }, 400);
+
     if (this.config?.onSound) this.config.onSound('drop');
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
 
+    this.lastComboCount = 0;
     setTimeout(() => this.processMerges(0), 150);
   }
 
@@ -272,7 +296,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     let board = [...this.board];
     let hasMerged = false;
     let scoreGained = 0;
-    
+
     let toRemove = new Set<string>();
     let toUpdate = new Map<string, DropBlock>();
 
@@ -281,7 +305,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         const block = board.find(b => b.r === r && b.c === c && !toRemove.has(b.id));
         if (!block) continue;
 
-        const neighbors = board.filter(b => 
+        const neighbors = board.filter(b =>
           !toRemove.has(b.id) && b.id !== block.id && b.val === block.val &&
           ((b.r === r && Math.abs(b.c - c) === 1) || (b.c === c && Math.abs(b.r - r) === 1))
         );
@@ -290,12 +314,13 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
           hasMerged = true;
           const mergeScore = block.val * Math.pow(2, neighbors.length);
           scoreGained += mergeScore;
-          
+
           let updatedBlock = toUpdate.get(block.id) || { ...block };
           updatedBlock.val = mergeScore;
           updatedBlock.isNew = true;
+          updatedBlock.isMerging = true;
           toUpdate.set(block.id, updatedBlock);
-          
+
           neighbors.forEach(n => toRemove.add(n.id));
         }
       }
@@ -308,7 +333,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         if (idx >= 0) board[idx] = u;
       });
 
-      // Apply gravity to merged board
+      // Apply gravity
       for (let c = 0; c < DROP2048_COLS; c++) {
         let colBlocks = board.filter(b => b.c === c).sort((a, b) => b.r - a.r);
         let bottomFree = DROP2048_ROWS - 1;
@@ -322,42 +347,54 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
 
       this.board = board;
       this.score += scoreGained;
-      
+      this.lastComboCount = comboCount;
+
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         if (comboCount > 1) navigator.vibrate([30, 50, 30]);
         else navigator.vibrate(20);
       }
-      
+
       if (this.config?.onSound) this.config.onSound('merge', comboCount);
-      
-      if (comboCount > 0) {
-        const comboId = this.generateId();
-        const firstMerge = Array.from(toUpdate.values())[0];
-        if (firstMerge) {
-          this.combos = [...this.combos, { id: comboId, text: '+' + scoreGained, r: firstMerge.r, c: firstMerge.c }];
-          
-          const newParticles: any[] = [];
-          for (let i = 0; i < 8; i++) {
-            newParticles.push({
-              id: this.generateId(),
-              x: firstMerge.c,
-              y: firstMerge.r,
-              color: this.getColorForValue(firstMerge.val)
-            });
-          }
-          this.particles = [...this.particles, ...newParticles];
-          
-          setTimeout(() => {
-            this.combos = this.combos.filter(x => x.id !== comboId);
-          }, 1000);
-          setTimeout(() => {
-            const pIds = new Set(newParticles.map(p => p.id));
-            this.particles = this.particles.filter(x => !pIds.has(x.id));
-          }, 600);
+
+      // Show combo text + particles for every merge (not just comboCount > 0)
+      const comboId = this.generateId();
+      const firstMerge = Array.from(toUpdate.values())[0];
+      if (firstMerge) {
+        this.combos = [...this.combos, {
+          id: comboId,
+          text: comboCount >= 1 ? 'COMBO ×' + (comboCount + 1) + '!' : '+' + scoreGained,
+          r: firstMerge.r,
+          c: firstMerge.c,
+          comboCount,
+          scoreGained,
+        }];
+
+        const newParticles: { id: string, x: number, y: number, color: string, size: number }[] = [];
+        for (let i = 0; i < 16; i++) {
+          newParticles.push({
+            id: this.generateId(),
+            x: firstMerge.c,
+            y: firstMerge.r,
+            color: this.getColorForValue(firstMerge.val),
+            size: Math.round(4 + Math.random() * 10), // 4–14px
+          });
         }
+        this.particles = [...this.particles, ...newParticles];
+
+        setTimeout(() => {
+          this.combos = this.combos.filter(x => x.id !== comboId);
+        }, 1000);
+        setTimeout(() => {
+          const pIds = new Set(newParticles.map(p => p.id));
+          this.particles = this.particles.filter(x => !pIds.has(x.id));
+        }, 650);
       }
 
-      setTimeout(() => this.processMerges(comboCount + 1), 300);
+      // Clear isMerging before next round
+      setTimeout(() => {
+        this.board = this.board.map(b => ({ ...b, isMerging: false }));
+        this.processMerges(comboCount + 1);
+      }, 300);
     } else {
       if (this.config?.onSyncState) this.config.onSyncState();
       this.spawnBlock();
@@ -373,18 +410,18 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
 
   getColorForValue(val: number): string {
     switch (val) {
-      case 2: return '#ef4444'; // red-500
-      case 4: return '#22c55e'; // green-500
-      case 8: return '#eab308'; // yellow-500
-      case 16: return '#3b82f6'; // blue-500
-      case 32: return '#a855f7'; // purple-500
-      case 64: return '#ec4899'; // pink-500
-      case 128: return '#f97316'; // orange-500
-      case 256: return '#14b8a6'; // teal-500
-      case 512: return '#6366f1'; // indigo-500
-      case 1024: return '#e11d48'; // rose-600
-      case 2048: return '#d97706'; // amber-600
-      default: return '#fbbf24'; // amber-400
+      case 2:    return '#ff6b6b';
+      case 4:    return '#2ecc71';
+      case 8:    return '#f1c40f';
+      case 16:   return '#5dade2';
+      case 32:   return '#a569bd';
+      case 64:   return '#f1948a';
+      case 128:  return '#f39c12';
+      case 256:  return '#1abc9c';
+      case 512:  return '#7f8ff4';
+      case 1024: return '#ec407a';
+      case 2048: return '#ffca28';
+      default:   return '#fbbf24';
     }
   }
 }
