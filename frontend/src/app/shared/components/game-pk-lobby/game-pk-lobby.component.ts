@@ -38,7 +38,7 @@ export interface PkJoinRoomEvent {
   imports: [CommonModule, DatePipe, GameHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-pk-lobby.component.html',
-  host: { class: 'flex flex-col flex-1 min-h-0 overflow-hidden w-full' },
+  host: { class: 'flex flex-col flex-1 min-h-0 w-full' },
 })
 export class GamePkLobbyComponent implements OnInit, OnDestroy {
   GameStatus = GameStatus;

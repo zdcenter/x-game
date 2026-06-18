@@ -45,7 +45,7 @@
               {{ i18n.t('lobby.title')() }}
             </h1>
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="pkArenaOpen.set(true)"
+              <button (click)="router.navigate(['/pk-arena'])"
                 class="px-3 py-2 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl font-black text-[var(--color-bg-main)] shadow-lg active:scale-95 transition-all flex items-center gap-1.5 shrink-0 text-sm">
                 ⚔️ <span class="hidden xs:inline">PK</span>
               </button>
@@ -67,7 +67,7 @@
           <!-- PK Arena CTA Banner (Desktop only) -->
           @if (settingsService.settings().multiplayer_enabled === 'true') {
             <div class="hidden lg:flex mt-6 items-center gap-4">
-              <button (click)="pkArenaOpen.set(true)"
+              <button (click)="router.navigate(['/pk-arena'])"
                 class="px-6 py-3 rounded-2xl font-black text-base bg-gradient-to-r from-violet-500 to-rose-500 text-white shadow-lg hover:shadow-violet-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
                 ⚔️ {{ i18n.t('game.pk_arena')() }}
               </button>
@@ -155,22 +155,8 @@
           <app-game-lobby-panel
             class="flex-grow flex w-full h-full min-h-0 lg:bg-transparent"
             [isGlobal]="true"
-            (createRoom)="handleGlobalCreateRoom($event)"
-            (openPkLobby)="pkArenaOpen.set(true)">
+            (createRoom)="handleGlobalCreateRoom($event)">
           </app-game-lobby-panel>
-        </div>
-      }
-
-      <!-- PK Arena Full-Screen Overlay -->
-      @if (pkArenaOpen()) {
-        <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
-          <app-game-pk-lobby
-            gameId=""
-            [currentRoomId]="''"
-            (createRoom)="handlePkCreate($event)"
-            (joinRoom)="handlePkJoin($event)"
-            (back)="pkArenaOpen.set(false)">
-          </app-game-pk-lobby>
         </div>
       }
 

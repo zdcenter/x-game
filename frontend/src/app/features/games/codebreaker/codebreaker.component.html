@@ -35,7 +35,7 @@
             </div>
             @if (settingsService.settings().multiplayer_enabled === 'true') {
               <button
-                (click)="pkView.set('pk-lobby')"
+                (click)="navigateToPkArena()"
                 class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor">
@@ -284,18 +284,6 @@
   <!-- Modals & Overlays -->
   <app-game-rules-modal [gameId]="'codebreaker'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
-  <!-- PK Lobby Full-Page Overlay -->
-  @if (pkView() === 'pk-lobby') {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
-      <app-game-pk-lobby
-        gameId="codebreaker"
-        [currentRoomId]="roomId()"
-        (createRoom)="handlePkCreate($event)"
-        (joinRoom)="handlePkJoin($event)"
-        (back)="pkView.set('game')">
-      </app-game-pk-lobby>
-    </div>
-  }
 
   @if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
     <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
@@ -366,8 +354,7 @@
       [currentGameId]="'codebreaker'"
       [currentRoomId]="roomId()"
       (joinRoom)="handleJoinRoom($event)"
-      (createRoom)="handleCreateRoom($event)"
-      (openPkLobby)="pkView.set('pk-lobby')">
+      (createRoom)="handleCreateRoom($event)">
     </app-game-lobby-panel>
   </div>
     }

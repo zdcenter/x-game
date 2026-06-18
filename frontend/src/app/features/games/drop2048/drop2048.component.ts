@@ -6,7 +6,6 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Drop2048Store } from './store/drop2048.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
@@ -34,7 +33,6 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     Drop2048BoardComponent,
     GameRulesModalComponent,
     PlayerListContainerComponent,
-    GamePkLobbyComponent
   ],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html'
@@ -65,7 +63,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   showRules = signal(false);
   showOverlay = signal(false);
-  pkView = signal<'game' | 'pk-lobby'>('game');
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
 
   constructor() {
@@ -162,15 +159,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
     if (event.password) this.wsService.setPendingPassword(event.password);
     this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
-  }
-
-  handlePkCreate(e: PkCreateRoomEvent) {
-    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
-    this.pkView.set('game');
-  }
-  handlePkJoin(e: PkJoinRoomEvent) {
-    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
-    this.pkView.set('game');
   }
 
   onRoomCreated() {

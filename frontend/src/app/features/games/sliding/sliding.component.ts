@@ -14,7 +14,6 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -29,7 +28,7 @@ import { SlidingTutorialComponent } from './components/sliding-tutorial/sliding-
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GamePkLobbyComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -47,7 +46,6 @@ export class SlidingComponent extends BaseGameComponent {
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
 
-  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
   showOverlay = signal<boolean>(false);
@@ -232,19 +230,6 @@ export class SlidingComponent extends BaseGameComponent {
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
     this.store.joinRoom(roomId, mode, difficulty, hostId, target);
     this.isMenuOpen.set(false);
-    this.pkView.set('game');
-  }
-
-  handlePkCreate(e: PkCreateRoomEvent) {
-    if (e.password) this.wsService.setPendingPassword(e.password);
-    this.wsService.setPendingAction('create');
-    this.joinRoom(e.name, e.mode, e.difficulty, this.playerId, e.target);
-  }
-
-  handlePkJoin(e: PkJoinRoomEvent) {
-    if (e.password) this.wsService.setPendingPassword(e.password);
-    this.wsService.setPendingAction('join');
-    this.joinRoom(e.roomId, e.mode, e.difficulty, e.host);
   }
 
   override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {

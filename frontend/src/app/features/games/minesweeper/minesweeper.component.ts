@@ -11,7 +11,6 @@ import { MinesweeperStore, CellState } from './store/minesweeper.store';
 import { C2SAction } from '../../../core/models/websocket.model';
 import { CellComponent } from './components/cell/cell.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
@@ -32,7 +31,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GamePkLobbyComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, TutorialOverlayComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, TutorialOverlayComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -52,7 +51,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   private tutorialService = inject(TutorialService);
   private roomLifecycle!: RoomLifecycleHandle;
 
-  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal(false);
   showTutorial = signal(false);
   tutorialSteps = this.tutorialService.getStepsForGame(GameId.Minesweeper);
@@ -220,20 +218,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentDifficulty.set(difficulty);
     this.currentRoomId.set(roomId);
     this.isMobileSidebarOpen.set(false);
-    this.pkView.set('game');
     this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
     this.store.joinRoom(roomId, mode, difficulty, hostId, target);
   }
 
-  handlePkCreate(e: PkCreateRoomEvent) {
-    if (e.password) this.wsService.setPendingPassword(e.password);
-    this.joinRoom(e.name, e.mode, e.difficulty, this.playerId, e.target);
-  }
-
-  handlePkJoin(e: PkJoinRoomEvent) {
-    if (e.password) this.wsService.setPendingPassword(e.password);
-    this.joinRoom(e.roomId, e.mode, e.difficulty, e.host);
-  }
 
   returnToLobby() {
     this.currentRoomId.set('');

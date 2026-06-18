@@ -87,7 +87,7 @@ export interface GameDifficulty {
           }
 
           <div class="shrink-0">
-            <button (click)="openPkLobby.emit()"
+            <button (click)="router.navigate(['/pk-arena'])"
                     class="w-full mb-3 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow">
               ⚔️ {{ t('game.pk_arena') }}
             </button>
@@ -370,7 +370,7 @@ export class GameLobbyPanelComponent implements OnInit {
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
-  private router = inject(Router);
+  router = inject(Router);
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private crossGameJoin = inject(CrossGameJoinService);
@@ -389,8 +389,6 @@ export class GameLobbyPanelComponent implements OnInit {
 
   @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string, password?: string}>();
   @Output() createRoom = new EventEmitter<{name: string, gameId: string, mode: string, difficulty: string, password?: string, target: number}>();
-  @Output() openPkLobby = new EventEmitter<void>();
-
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
 

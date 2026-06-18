@@ -39,7 +39,7 @@
           <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🃏</div>
           <div header-right class="flex items-center gap-2">
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="pkView.set('pk-lobby')" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
+<button (click)="navigateToPkArena()" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -62,7 +62,7 @@
           <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🃏</div>
           <div header-right class="flex items-center gap-2">
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="pkView.set('pk-lobby')" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
+<button (click)="navigateToPkArena()" class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -156,22 +156,12 @@
       [currentRoomId]="store.roomId()"
       (joinRoom)="handleJoinRoom($event)"
       (createRoom)="handleCreateRoom($event)"
-      (dismissRoom)="handleDismissRoom()"
-      (openPkLobby)="pkView.set('pk-lobby')">
+      (dismissRoom)="handleDismissRoom()">
     </app-game-lobby-panel>
   </div>
     }
 
   
-  <!-- PK Lobby Full-Page Overlay -->
-  @if (pkView() === 'pk-lobby') {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
-      <app-game-pk-lobby gameId="math24" [currentRoomId]="store.roomId()"
-        (createRoom)="handlePkCreate($event)" (joinRoom)="handlePkJoin($event)" (back)="pkView.set('game')">
-      </app-game-pk-lobby>
-    </div>
-  }
-
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="'math24'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 

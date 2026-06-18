@@ -8,7 +8,6 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { CommonModule } from '@angular/common';
 import { BlockShape } from './utils/shapes';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
@@ -29,8 +28,7 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     GameRulesModalComponent,
-    PlayerBadgeComponent,
-    GamePkLobbyComponent
+    PlayerBadgeComponent
   ],
   templateUrl: './block.component.html',
 })
@@ -54,8 +52,6 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   
   showRules = signal(false);
   showOverlay = signal(false);
-  pkView = signal<'game' | 'pk-lobby'>('game');
-
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
@@ -116,14 +112,6 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  handlePkCreate(e: PkCreateRoomEvent) {
-    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
-    this.pkView.set('game');
-  }
-  handlePkJoin(e: PkJoinRoomEvent) {
-    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
-    this.pkView.set('game');
-  }
 
   override handleDismissRoom() {
     super.handleDismissRoom();

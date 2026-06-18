@@ -89,27 +89,25 @@ export class SudokuStore extends BaseGameStore {
     effect(() => {
       const status = this.gameStatus();
       const currentView = this.view();
+      const puzzle = this.rawState().puzzle;
 
       // When server sends GameStatus.Starting, show countdown overlay
       if (status === GameStatus.Starting && (currentView === 'room' || currentView === 'lobby')) {
         this.view.set('countdown');
-        // Pre-init the board so it's ready when countdown ends
-        const puzzle = this.rawState().puzzle;
         if (puzzle) {
           this.initBoard(puzzle);
         }
       }
 
       // When server sends GameStatus.Playing, transition to play view
-      if (status === GameStatus.Playing && (currentView === 'countdown' || currentView === 'room' || currentView === 'lobby')) {
-        this.view.set('play');
-        // Init board if not already done during countdown
-        if (this.board().length === 0 || currentView === 'lobby') {
-          const puzzle = this.rawState().puzzle;
-          if (puzzle) {
-            const savedState = localStorage.getItem(`sudoku_pk_${this.roomId()}`);
-            this.initBoard(puzzle, '', savedState || undefined);
-          }
+      if (status === GameStatus.Playing) {
+        if (currentView !== 'play') {
+          this.view.set('play');
+        }
+        // Init board whenever play state is reached and board is empty (handles late-arriving puzzle)
+        if (this.board().length === 0 && puzzle) {
+          const savedState = localStorage.getItem(`sudoku_pk_${this.roomId()}`);
+          this.initBoard(puzzle, '', savedState || undefined);
         }
       }
     });

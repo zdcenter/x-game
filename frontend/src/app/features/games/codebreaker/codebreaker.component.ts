@@ -13,7 +13,6 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameService } from '../../../core/services/game.service';
@@ -33,7 +32,6 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     GameRulesModalComponent,
     GameWaitingRoomComponent,
     GameLobbyPanelComponent,
-    GamePkLobbyComponent,
     GameStartingOverlayComponent,
     GameHeaderComponent,
     HintButtonComponent,
@@ -63,7 +61,6 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   roomLifecycle: RoomLifecycleHandle;
 
   private tutorialService = inject(TutorialService);
-  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal(false);
   isMobileSidebarOpen = signal(false);
   showOverlay = signal(false);
@@ -175,7 +172,6 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   joinRoom(roomId: string, mode: string, difficulty: string, host: string, target: number = 1) {
     if (!roomId) return;
-    this.pkView.set('game');
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.roomId.set(roomId);
@@ -255,22 +251,16 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     this.isMobileSidebarOpen.set(false);
   }
 
-  handlePkCreate(e: PkCreateRoomEvent) {
-    if (e.password) this.ws.setPendingPassword(e.password);
-    this.joinRoom(e.name, e.mode, e.difficulty, this.myPlayerId(), e.target);
-  }
-
-  handlePkJoin(e: PkJoinRoomEvent) {
-    if (e.password) this.ws.setPendingPassword(e.password);
-    this.joinRoom(e.roomId, e.mode, e.difficulty, e.host);
-  }
-
   changeDifficulty(event: Event) {
     const diff = (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
     this.currentDifficulty.set(diff);
     this.store.joinRoom(this.roomId(), this.currentRoomMode(), diff, this.hostId());
     this.currentInput.set('');
+  }
+
+  navigateToPkArena() {
+    this.router.navigate(['/pk-arena']);
   }
 
   onRestart() {

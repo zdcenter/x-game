@@ -66,7 +66,7 @@
             </button>
             }
             <button
-              (click)="pkView.set('pk-lobby')"
+              (click)="navigateToPkArena()"
               class="p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -219,19 +219,6 @@
     </div>
   </div>
 
-  <!-- PK Lobby Full-Page Overlay -->
-  @if (pkView() === 'pk-lobby') {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
-      <app-game-pk-lobby
-        gameId="sliding"
-        [currentRoomId]="store.roomId()"
-        (createRoom)="handlePkCreate($event)"
-        (joinRoom)="handlePkJoin($event)"
-        (back)="pkView.set('game')">
-      </app-game-pk-lobby>
-    </div>
-  }
-
   <!-- Sidebar Overlay Backdrop -->
   @if (isMenuOpen()) {
   <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMenuOpen.set(false)">
@@ -262,8 +249,7 @@
     }
 
     <app-game-lobby-panel #lobbyPanel class="flex-grow flex" [currentGameId]="'sliding'"
-      (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)"
-      (openPkLobby)="pkView.set('pk-lobby')">
+      (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)">
     </app-game-lobby-panel>
   </div>
     }

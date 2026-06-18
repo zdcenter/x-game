@@ -23,7 +23,6 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 
 @Component({
   selector: 'app-sokoban',
@@ -41,13 +40,12 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
     SokobanLobbyComponent,
     GameRulesModalComponent,
     TutorialOverlayComponent,
-    GamePkLobbyComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
     <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
       @if (showLobby()) {
-        <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0" (openLobby)="pkView.set('pk-lobby')" (levelSelect)="onLevelSelect($event)"></app-sokoban-lobby>
+        <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0" (openLobby)="navigateToPkArena()" (levelSelect)="onLevelSelect($event)"></app-sokoban-lobby>
       } @else {
       <div class="w-full h-full flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-3 lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
@@ -75,7 +73,7 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
               </button>
             }
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="pkView.set('pk-lobby')" class="p-1.5 lg:p-2 rounded-full text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95 flex items-center gap-1">
+<button (click)="navigateToPkArena()" class="p-1.5 lg:p-2 rounded-full text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95 flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -273,21 +271,11 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
           [currentGameId]="'sokoban'"
           [currentRoomId]="store.roomId()"
           (joinRoom)="handleJoinRoom($event)"
-          (createRoom)="handleCreateRoom($event)"
-          (openPkLobby)="pkView.set('pk-lobby')">
+          (createRoom)="handleCreateRoom($event)">
         </app-game-lobby-panel>
       </div>
     }
   </div>
-
-  <!-- PK Lobby Full-Page Overlay -->
-  @if (pkView() === 'pk-lobby') {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
-      <app-game-pk-lobby gameId="sokoban" [currentRoomId]="store.roomId()"
-        (createRoom)="handlePkCreate($event)" (joinRoom)="handlePkJoin($event)" (back)="pkView.set('game')">
-      </app-game-pk-lobby>
-    </div>
-  }
 
   <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
@@ -337,7 +325,6 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   override isMobileSidebarOpen = signal(false);
-  pkView = signal<'game' | 'pk-lobby'>('game');
   showLobby = signal(true);
   showRules = signal(false);
   showOverlay = signal(false);
@@ -492,15 +479,6 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
       this.showLobby.set(false);
     }
-  }
-
-  handlePkCreate(e: PkCreateRoomEvent) {
-    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
-    this.pkView.set('game');
-  }
-  handlePkJoin(e: PkJoinRoomEvent) {
-    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
-    this.pkView.set('game');
   }
 
   override handleDismissRoom() {

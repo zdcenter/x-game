@@ -77,6 +77,11 @@ const langChildren: Routes = [
         path: 'daily',
         loadComponent: () => import('./features/daily/daily.component').then(m => m.DailyComponent),
         data: { seo: { titleKey: 'seo.daily.title', descKey: 'seo.daily.desc', keywordsKey: 'seo.daily.keywords' } }
+      },
+      {
+        path: 'pk-arena',
+        loadComponent: () => import('./features/pk-arena/pk-arena.component').then(m => m.PkArenaComponent),
+        data: { seo: { titleKey: 'seo.lobby.title', descKey: 'seo.lobby.desc', keywordsKey: 'seo.lobby.keywords' } }
       }
     ]
   },

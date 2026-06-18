@@ -13,7 +13,6 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameService } from '../../../core/services/game.service';
@@ -22,7 +21,7 @@ import { AudioService } from '../../../core/services/audio.service';
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameResultOverlayComponent, GameRulesModalComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameHeaderComponent, GameStartingOverlayComponent, GamePkLobbyComponent],
+  imports: [CommonModule, GameResultOverlayComponent, GameRulesModalComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameHeaderComponent, GameStartingOverlayComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']
@@ -76,7 +75,6 @@ export class GomokuComponent implements OnInit, OnDestroy {
 
   showRules = signal(false);
   isMobileSidebarOpen = signal(false);
-  pkView = signal<'game' | 'pk-lobby'>('game');
   showResultOverlay = signal(false);
 
   // Computed state
@@ -239,13 +237,8 @@ export class GomokuComponent implements OnInit, OnDestroy {
     this.isMobileSidebarOpen.set(false);
   }
 
-  handlePkCreate(e: PkCreateRoomEvent) {
-    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
-    this.pkView.set('game');
-  }
-  handlePkJoin(e: PkJoinRoomEvent) {
-    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
-    this.pkView.set('game');
+  navigateToPkArena() {
+    this.router.navigate(['/pk-arena']);
   }
 
   onSurrender() {

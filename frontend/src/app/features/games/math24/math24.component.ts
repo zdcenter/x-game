@@ -7,7 +7,6 @@ import { Math24Store } from './store/math24.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-steal.component';
@@ -44,7 +43,6 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     PlayerBadgeComponent,
     GameRulesModalComponent,
     TutorialOverlayComponent,
-    GamePkLobbyComponent
   ],
   templateUrl: './math24.component.html'
 })
@@ -66,7 +64,6 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   private http = inject(HttpClient);
   private pendingDailyChallengeId = signal<string | null>(null);
   view = signal<'lobby' | 'room' | 'play'>('lobby');
-  pkView = signal<'game' | 'pk-lobby'>('game');
   startingCountdown = signal(3);
   showRules = signal(false);
   showOverlay = signal(false);
@@ -273,13 +270,4 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.roomLifecycle.clearReconnectInfo();
   }
 
-  handlePkCreate(e: PkCreateRoomEvent) {
-    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
-    this.pkView.set('game');
-  }
-
-  handlePkJoin(e: PkJoinRoomEvent) {
-    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
-    this.pkView.set('game');
-  }
 }

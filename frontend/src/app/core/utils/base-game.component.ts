@@ -81,6 +81,10 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     // Game-specific cleanup should be handled in the subclass.
   }
 
+  navigateToPkArena() {
+    this._baseRouter.navigate(['/pk-arena']);
+  }
+
   handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
     if (this.store.roomId() === event.roomId) return;
     this.wsService.setPendingAction('join');

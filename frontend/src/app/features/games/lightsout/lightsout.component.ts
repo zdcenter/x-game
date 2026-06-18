@@ -11,7 +11,6 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { CommonModule } from '@angular/common';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
@@ -27,7 +26,6 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
   imports: [
     CommonModule,
     GameLobbyPanelComponent,
-    GamePkLobbyComponent,
     GameHeaderComponent,
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
@@ -52,7 +50,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
-  pkView = signal<'game' | 'pk-lobby'>('game');
   showRules = signal(false);
   showOverlay = signal(false);
   hintCell = signal<{r: number, c: number} | null>(null);
@@ -127,16 +124,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     if (params.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
-  }
-
-  handlePkCreate(e: PkCreateRoomEvent) {
-    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password, target: e.target });
-    this.pkView.set('game');
-  }
-
-  handlePkJoin(e: PkJoinRoomEvent) {
-    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
-    this.pkView.set('game');
   }
 
   override handleDismissRoom() {
