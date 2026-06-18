@@ -6,6 +6,7 @@ import {
   APP_INITIALIZER,
   inject,
 } from '@angular/core';
+import { GameRegistryService } from './core/services/game-registry.service';
 import { TranslocoService } from '@jsverse/transloco';
 import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules, UrlSerializer } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
@@ -68,6 +69,16 @@ export const appConfig: ApplicationConfig = {
       useFactory: () => {
         const transloco = inject(TranslocoService);
         return () => transloco.load('zh').toPromise().then(() => transloco.load('en').toPromise());
+      },
+      multi: true,
+    },
+    // Merge DB game metadata (icon/modes/difficulties) into GameRegistryService at startup.
+    // Browser-only: SSR/prerender falls back silently to TS seed data.
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => {
+        const registry = inject(GameRegistryService);
+        return () => registry.loadFromDB();
       },
       multi: true,
     },

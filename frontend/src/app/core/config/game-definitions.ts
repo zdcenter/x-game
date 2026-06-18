@@ -1,3 +1,12 @@
+// game-definitions.ts — 路由骨架 + SSR/预渲染 fallback
+//
+// 分工说明：
+//   loadComponent / tutorial / recommendations → 编译期固化，永远保留在此文件
+//   icon / modes / difficulties / multiRound   → 此处为 SSR 静态 fallback
+//                                                浏览器启动时由 GameRegistryService.loadFromDB()
+//                                                从 gm_game_configs.config 覆盖（Admin 可管理）
+//
+// 新增游戏时：在此添加路由骨架 + 在 backend/pkg/db/postgres.go Seed() 中填写完整 Config JSON
 import { GameConfig } from '../services/game-registry.service';
 import { GameId, GameMode, GameDifficulty } from '../models/game.model';
 

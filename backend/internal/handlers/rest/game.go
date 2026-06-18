@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
@@ -14,12 +16,34 @@ func GetRooms(c fiber.Ctx) error {
 }
 
 func GetGames(c fiber.Ctx) error {
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	limit, _ := strconv.Atoi(c.Query("limit", "6"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 50 {
+		limit = 6
+	}
+	offset := (page - 1) * limit
+
+	var total int64
+	db.DB.Model(&domain.GameConfig{}).Where("is_active = ?", true).Count(&total)
+
 	var games []domain.GameConfig
-	// Only fetch active games, sorted by manual sortOrder first, then popularity
-	if err := db.DB.Where("is_active = ?", true).Order("sort_order ASC, visit_count DESC").Find(&games).Error; err != nil {
+	if err := db.DB.Where("is_active = ?", true).
+		Order("sort_order ASC, visit_count DESC").
+		Limit(limit).Offset(offset).
+		Find(&games).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
 	}
-	return c.JSON(games)
+
+	return c.JSON(fiber.Map{
+		"games":   games,
+		"total":   total,
+		"page":    page,
+		"limit":   limit,
+		"hasMore": int64(offset+len(games)) < total,
+	})
 }
 
 func GetAdminGames(c fiber.Ctx) error {
@@ -76,6 +100,20 @@ func UpdateGame(c fiber.Ctx) error {
 	// Fetch updated
 	db.DB.First(&game, "id = ?", id)
 	return c.JSON(game)
+}
+
+// GetGamesMeta returns id + config for all active games.
+// Used by the frontend GameRegistryService to merge DB metadata at runtime.
+func GetGamesMeta(c fiber.Ctx) error {
+	type GameMeta struct {
+		ID     string `json:"id"`
+		Config string `json:"config"`
+	}
+	var rows []GameMeta
+	if err := db.DB.Model(&domain.GameConfig{}).Select("id, config").Where("is_active = true").Scan(&rows).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch game meta"})
+	}
+	return c.JSON(rows)
 }
 
 func VisitGame(c fiber.Ctx) error {

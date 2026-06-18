@@ -125,6 +125,8 @@
   "game.diff_sokoban_professional": "Professional",
   "lobby.coming_soon": "Currently under development. Stay tuned for future updates.",
   "lobby.ready": "Ready",
+  "lobby.loading_more": "Loading more games...",
+  "lobby.all_games_loaded": "All games loaded",
   "lobby.select_level": "Select a difficulty and level to start playing",
   "lobby.development": "Development (Phase 4)",
   "auth.login.title": "Welcome Back",

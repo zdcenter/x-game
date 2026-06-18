@@ -156,7 +156,7 @@ export class DocsComponent {
   toc = signal<TocItem[]>([]);
 
   constructor() {
-    this.gameService.getGames().subscribe(games => {
+    this.gameService.getAllGames().subscribe(games => {
       // Sort games by sortOrder
       const sorted = [...games].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       this.games.set(sorted);

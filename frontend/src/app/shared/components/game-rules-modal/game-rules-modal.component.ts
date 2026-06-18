@@ -107,7 +107,7 @@ export class GameRulesModalComponent implements OnChanges {
   }
 
   private loadRules() {
-    this.gameService.getGames().subscribe(games => {
+    this.gameService.getAllGames().subscribe(games => {
       const game = games.find(g => g.id === this.gameId);
       if (game) {
         this.rawGameRules.set(game.rules);

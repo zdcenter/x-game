@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -21,6 +21,7 @@ import { FooterComponent } from '../../shared/components/footer/footer.component
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
+const PAGE_SIZE = 6;
 
 @Component({
   selector: 'app-lobby',
@@ -29,7 +30,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
-export class LobbyComponent implements OnInit, OnDestroy {
+export class LobbyComponent implements OnInit, OnDestroy, AfterViewInit {
   i18n = inject(I18nService);
   gameService = inject(GameService);
   private wsService = inject(WebSocketService);
@@ -41,24 +42,28 @@ export class LobbyComponent implements OnInit, OnDestroy {
   announcementService = inject(AnnouncementService);
   shareService = inject(ShareService);
   adService = inject(AdService);
-  
-  // Pre-populated from static config so SSG prerender emits <img> tags in HTML.
-  // API call in ngOnInit will override with live data (visitCount, sortOrder, isActive).
+
+  @ViewChild('scrollSentinel') scrollSentinel!: ElementRef<HTMLElement>;
+  private scrollObserver?: IntersectionObserver;
+
+  // Pre-populated from static config (first PAGE_SIZE) so SSG prerender emits <img> tags in HTML.
   games = signal<BackendGameConfig[]>(
-    GAME_DEFINITIONS.map(def => ({
+    GAME_DEFINITIONS.slice(0, PAGE_SIZE).map(def => ({
       id: def.id, name: def.id, overview: '', rules: '', config: '',
       isActive: true, visitCount: 0, createdAt: '', updatedAt: '',
     }))
   );
+  isLoadingGames = signal(false);
+  hasMoreGames = signal(true);
+  private currentPage = 1;
+
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
 
   ngOnInit() {
-    // Fetch active games
-    this.gameService.getGames().subscribe(games => {
-      this.games.set(games);
-    });
+    // Load first page
+    this.loadGames(1);
 
     // Fetch active announcements
     this.announcementService.getActiveAnnouncements().subscribe(anns => {
@@ -69,7 +74,38 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.wsService.connectLobby(player, player);
   }
 
+  ngAfterViewInit() {
+    if (!isBrowser()) return;
+    this.scrollObserver = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && this.hasMoreGames() && !this.isLoadingGames()) {
+        this.loadGames(this.currentPage + 1);
+      }
+    }, { threshold: 0.1 });
+    if (this.scrollSentinel?.nativeElement) {
+      this.scrollObserver.observe(this.scrollSentinel.nativeElement);
+    }
+  }
+
+  private loadGames(page: number) {
+    if (this.isLoadingGames()) return;
+    this.isLoadingGames.set(true);
+    this.gameService.getGames(page, PAGE_SIZE).subscribe({
+      next: res => {
+        if (page === 1) {
+          this.games.set(res.games);
+        } else {
+          this.games.update(prev => [...prev, ...res.games]);
+        }
+        this.currentPage = res.page;
+        this.hasMoreGames.set(res.hasMore);
+        this.isLoadingGames.set(false);
+      },
+      error: () => this.isLoadingGames.set(false),
+    });
+  }
+
   ngOnDestroy() {
+    this.scrollObserver?.disconnect();
     this.wsService.disconnectLobby();
   }
 

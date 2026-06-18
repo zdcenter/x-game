@@ -1,26 +1,9 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { GameMode, GameDifficulty } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GAME_DEFINITIONS } from '../config/game-definitions';
-
-/**
- * Central registry for all game metadata (modes, difficulties, routing info).
- * 
- * Each game module calls `register()` in its component constructor.
- * Shared components like GameLobbyPanel use `getConfig()` to look up labels
- * for ANY game — enabling proper cross-game room display.
- * 
- * Usage in a game component:
- *   constructor() {
- *     this.gameRegistry.register({
- *       id: 'minesweeper',
- *       route: '/games/minesweeper',
- *       titleKey: 'app.title',
- *       iconEmoji: '💣',
- *       modes: [...],
- *       difficulties: [...],
- *     });
- *   }
- */
+import { isBrowser } from '../utils/browser.util';
 
 export interface GameConfig {
   /** Unique game identifier, e.g. 'minesweeper', 'sudoku' */
@@ -45,9 +28,31 @@ export interface GameConfig {
 export class GameRegistryService {
   private registry = new Map<string, GameConfig>();
 
-  constructor() {
-    // Eagerly register all globally defined games
+  constructor(private http: HttpClient) {
+    // Eagerly register TS seed data — SSR-safe, synchronous
     GAME_DEFINITIONS.forEach(config => this.register(config));
+  }
+
+  /**
+   * Fetch DB config and merge over TS defaults (browser only).
+   * Called via APP_INITIALIZER so data is ready before first render.
+   * Silently falls back to TS seed if the request fails.
+   */
+  loadFromDB(): Promise<void> {
+    if (!isBrowser()) return Promise.resolve();
+    return firstValueFrom(
+      this.http.get<{ id: string; config: string }[]>('/api/v1/games/meta')
+    ).then(rows => {
+      rows.forEach(row => {
+        const meta = JSON.parse(row.config || '{}');
+        const entry = this.registry.get(row.id);
+        if (!entry) return;
+        if (meta.icon)                  entry.iconEmoji = meta.icon;
+        if (meta.modes?.length)         entry.modes = meta.modes;
+        if (meta.difficulties?.length)  entry.difficulties = meta.difficulties;
+        if (meta.multiRound != null)    entry.multiRound = meta.multiRound;
+      });
+    }).catch(() => {});
   }
 
   /**

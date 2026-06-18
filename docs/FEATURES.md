@@ -19,6 +19,8 @@
 - **自动化版本号**：在前端编译命令中嵌入了自定义 Node 脚本，全自动根据构建时间生成版本号（如 `v2023.10.23.1234`），与后端版本号一并以非侵入式的 UI Overlay 悬浮于全站右下角，供管理员与玩家精准识别系统构建版本。
 - **路由懒加载**：实现了核心游戏大厅（Lobby）与具体游戏页面（Minesweeper）的独立路由控制与分离渲染。
 - **广告商业化架构 (AdSense)**：全局集成了 Google AdSense 体系，提供独立的 `AdsenseComponent`。该组件完美适配了 SPA 单页应用的路由切换生命周期，能自适应各种广告布局格式，实现优雅的商业化变现方案。
+- **游戏元数据 DB 化（运行时覆盖层）**：`gm_game_configs.config`（JSONB）存储完整元数据（icon / multiRound / modes[] / difficulties[]）。`GameRegistryService.loadFromDB()` 通过 `APP_INITIALIZER` 在浏览器端拉取 `GET /api/v1/games/meta` 并覆盖 TS registry；SSR/预渲染期自动降级为 `game-definitions.ts` 静态 fallback，不影响构建。管理员可通过 Admin UI `/admin/games` 直接修改元数据，无需代码部署即时生效。
+- **大厅游戏列表无限滚动**：`GET /api/v1/games` 支持分页（`?page&limit`），返回 `{ games, total, hasMore }`。大厅组件用 `IntersectionObserver` 监听底部 sentinel，滚到底自动加载下一页并追加卡片，首屏默认加载 6 款游戏。
 
 ---
 
@@ -63,6 +65,7 @@
 - Real-Time Monitoring: Live graphs and stats of currently active rooms and online players using WebSocket connections.
 - Fake Traffic Simulator: Generates random background rooms and players to create a lively lobby environment. Controllable via the Admin Settings panel.
 - **Responsive Lobby Grid**: The game lobby uses CSS Grid `auto-fill` to dynamically adjust column count based on available width (up to 5 columns on 4K screens). When the multiplayer sidebar is hidden, cards automatically expand to fill the freed space.
+- **游戏元数据管理（Admin Games Settings）**：Admin Dashboard 的 Games 设置弹窗新增 icon emoji 输入框、multiRound 开关、modes JSON 和 difficulties JSON 文本框，管理员可直接编辑并保存至 `gm_game_configs.config`，无需修改代码或重新部署。
 
 ## UI/UX Design System (UI/UX 规范)
 

@@ -16,3 +16,27 @@ type GameConfig struct {
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
 }
+
+// GameMetaConfig is the typed representation of GameConfig.Config JSON.
+// Fields here are managed via Admin UI and served by GET /api/v1/games/meta.
+// Engine-specific params (e.g. penaltySeconds) live alongside these fields.
+type GameMetaConfig struct {
+	Icon         string         `json:"icon,omitempty"`
+	MultiRound   bool           `json:"multiRound,omitempty"`
+	Modes        []GameModeInfo `json:"modes,omitempty"`
+	Difficulties []GameDiffInfo `json:"difficulties,omitempty"`
+}
+
+type GameModeInfo struct {
+	ID       string `json:"id"`
+	LabelKey string `json:"labelKey"`
+	DescKey  string `json:"descKey,omitempty"`
+	Icon     string `json:"icon,omitempty"`
+}
+
+type GameDiffInfo struct {
+	ID       string `json:"id"`
+	LabelKey string `json:"labelKey"`
+	DescKey  string `json:"descKey,omitempty"`
+	Desc     string `json:"desc,omitempty"`
+}

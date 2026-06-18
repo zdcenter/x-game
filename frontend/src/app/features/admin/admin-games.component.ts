@@ -6,10 +6,19 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { GameConfig, getLocalizedField } from '../../core/services/game.service';
 import { ToastService } from '../../core/services/toast.service';
 
+interface ParsedMeta {
+  penaltySeconds?: number;
+  icon?: string;
+  multiRound?: boolean;
+  modesJson: string;        // JSON string of modes[] for textarea
+  difficultiesJson: string; // JSON string of difficulties[] for textarea
+  [key: string]: any;
+}
+
 interface AdminGame extends GameConfig {
   parsedOverview: { en: string; zh: string };
   parsedRules: { en: string; zh: string };
-  parsedConfig: { penaltySeconds: number };
+  parsedConfig: ParsedMeta;
   rawConfigText: string;
   activeRuleTab: 'en' | 'zh';
   activeOverviewTab: 'en' | 'zh';
@@ -109,21 +118,49 @@ interface AdminGame extends GameConfig {
               <button (click)="closeSettings()" class="text-slate-400 hover:text-white transition-colors">✕</button>
             </div>
             
-            <div class="flex-grow flex flex-col gap-4">
-              @if (selectedGameForSettings()!.id === 'minesweeper' || selectedGameForSettings()!.id === 'sudoku') {
-                <div class="flex flex-col gap-2">
-                  <label class="text-sm font-bold opacity-80 uppercase tracking-wider">Penalty Duration (Seconds)</label>
-                  <p class="text-xs text-slate-400 mb-2">The duration players are frozen when they make a mistake in PK mode.</p>
-                  <input type="number" [(ngModel)]="selectedGameForSettings()!.parsedConfig.penaltySeconds" 
-                         class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors">
+            <div class="flex-grow flex flex-col gap-4 overflow-y-auto custom-scrollbar max-h-[60vh]">
+              <!-- Icon & MultiRound -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-bold opacity-70 uppercase tracking-wider">Icon Emoji</label>
+                  <input type="text" [(ngModel)]="selectedGameForSettings()!.parsedConfig.icon" placeholder="💣"
+                         class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)] transition-colors text-center text-xl">
                 </div>
-              } @else {
-                <div class="flex flex-col gap-2">
-                  <label class="text-sm font-bold opacity-80 uppercase tracking-wider">Advanced Config (JSON)</label>
-                  <textarea [(ngModel)]="selectedGameForSettings()!.rawConfigText" rows="6" placeholder="{}"
-                            class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y font-mono"></textarea>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-bold opacity-70 uppercase tracking-wider">Multi-Round PK</label>
+                  <div class="flex items-center gap-2 h-[46px] px-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl">
+                    <button (click)="selectedGameForSettings()!.parsedConfig.multiRound = !selectedGameForSettings()!.parsedConfig.multiRound"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                            [class.bg-[var(--color-accent-to)]]="selectedGameForSettings()!.parsedConfig.multiRound"
+                            [class.bg-slate-700]="!selectedGameForSettings()!.parsedConfig.multiRound">
+                      <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm"
+                            [class.translate-x-6]="selectedGameForSettings()!.parsedConfig.multiRound"
+                            [class.translate-x-1]="!selectedGameForSettings()!.parsedConfig.multiRound"></span>
+                    </button>
+                    <span class="text-xs opacity-70">{{ selectedGameForSettings()!.parsedConfig.multiRound ? 'Enabled' : 'Disabled' }}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Penalty (for applicable games) -->
+              @if (selectedGameForSettings()!.parsedConfig.penaltySeconds !== undefined) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-bold opacity-70 uppercase tracking-wider">Penalty Seconds</label>
+                  <input type="number" [(ngModel)]="selectedGameForSettings()!.parsedConfig.penaltySeconds"
+                         class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-sm focus:outline-none focus:border-[var(--color-accent-to)] transition-colors">
                 </div>
               }
+              <!-- Modes JSON -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold opacity-70 uppercase tracking-wider">Modes (JSON array)</label>
+                <textarea [(ngModel)]="selectedGameForSettings()!.parsedConfig.modesJson" rows="4" placeholder='[{"id":"single","labelKey":"..."}]'
+                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y"></textarea>
+              </div>
+              <!-- Difficulties JSON -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-bold opacity-70 uppercase tracking-wider">Difficulties (JSON array)</label>
+                <textarea [(ngModel)]="selectedGameForSettings()!.parsedConfig.difficultiesJson" rows="5" placeholder='[{"id":"easy","labelKey":"...","desc":"..."}]'
+                          class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-[var(--color-accent-to)] transition-colors resize-y"></textarea>
+              </div>
             </div>
 
             <div class="mt-8 flex justify-end gap-3">
@@ -175,14 +212,20 @@ export class AdminGamesComponent implements OnInit {
             }
           } catch(e) {}
           
-          let parsedConfig = { penaltySeconds: 3 };
+          let parsedConfig: ParsedMeta = { modesJson: '[]', difficultiesJson: '[]' };
           let rawConfigText = '{}';
           try {
             if (g.config) {
               rawConfigText = g.config;
               const c = JSON.parse(g.config);
               if (c && typeof c === 'object') {
-                parsedConfig = { penaltySeconds: c.penaltySeconds || 3 };
+                parsedConfig = {
+                  penaltySeconds: c.penaltySeconds,
+                  icon: c.icon || '',
+                  multiRound: !!c.multiRound,
+                  modesJson: c.modes ? JSON.stringify(c.modes, null, 2) : '[]',
+                  difficultiesJson: c.difficulties ? JSON.stringify(c.difficulties, null, 2) : '[]',
+                };
               }
             }
           } catch(e) {}
@@ -241,11 +284,16 @@ export class AdminGamesComponent implements OnInit {
 
   saveGameSettings(game: AdminGame) {
     this.isUpdating.set(true);
-    let configJson = game.rawConfigText;
-    if (game.id === 'minesweeper' || game.id === 'sudoku') {
-      configJson = JSON.stringify(game.parsedConfig);
-    }
-    
+    // Reconstruct full config JSON from parsed fields
+    let merged: Record<string, any> = {};
+    try { merged = JSON.parse(game.rawConfigText || '{}'); } catch(e) {}
+    if (game.parsedConfig.icon !== undefined)       merged['icon'] = game.parsedConfig.icon;
+    if (game.parsedConfig.multiRound !== undefined) merged['multiRound'] = game.parsedConfig.multiRound;
+    if (game.parsedConfig.penaltySeconds !== undefined) merged['penaltySeconds'] = game.parsedConfig.penaltySeconds;
+    try { merged['modes'] = JSON.parse(game.parsedConfig.modesJson || '[]'); } catch(e) {}
+    try { merged['difficulties'] = JSON.parse(game.parsedConfig.difficultiesJson || '[]'); } catch(e) {}
+    const configJson = JSON.stringify(merged);
+
     // Update local config reference so next saveGameRules doesn't overwrite it with old one
     game.config = configJson;
     const sortVal = game.sortOrder !== undefined && game.sortOrder !== null ? Number(game.sortOrder) : 0;

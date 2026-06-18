@@ -61,6 +61,7 @@ func main() {
 	})
 
 	v1.Get("/games", rest.GetGames)
+	v1.Get("/games/meta", rest.GetGamesMeta)
 	v1.Post("/games/:id/visit", rest.VisitGame)
 	v1.Get("/rooms", rest.GetRooms) // HTTP polling fallback for room list
 

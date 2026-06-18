@@ -134,6 +134,21 @@
         }
         </div>
 
+        <!-- Infinite Scroll Sentinel + Loading Indicator -->
+        <div #scrollSentinel class="w-full max-w-[1600px] flex justify-center py-6">
+          @if (isLoadingGames()) {
+            <div class="flex items-center gap-3 text-[var(--color-text-muted)]">
+              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              <span class="text-sm font-medium">{{ i18n.t('lobby.loading_more')() }}</span>
+            </div>
+          } @else if (!hasMoreGames() && games().length > 0) {
+            <span class="text-xs text-[var(--color-text-muted)] opacity-50">— {{ i18n.t('lobby.all_games_loaded')() }} —</span>
+          }
+        </div>
+
         <!-- Footer -->
         <app-footer></app-footer>
       </div>

@@ -318,7 +318,7 @@ export class ProfileComponent implements OnInit {
 
   private loadStats(): void {
     this.isLoading.set(true);
-    this.gameService.getGames().subscribe(allGames => {
+    this.gameService.getAllGames().subscribe(allGames => {
       this.statsService.getAllStats().subscribe(stats => {
         const grouped = stats.reduce((acc, stat) => {
           if (!acc[stat.GameID]) acc[stat.GameID] = [];

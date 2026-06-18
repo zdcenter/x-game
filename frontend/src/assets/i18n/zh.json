@@ -127,6 +127,8 @@
   "sokoban.hint_keep_pushing": "继续加油！目前没有箱子卡死在死角。",
   "lobby.coming_soon": "游戏核心引擎开发中，敬请期待后续版本。",
   "lobby.ready": "已就绪",
+  "lobby.loading_more": "加载更多游戏...",
+  "lobby.all_games_loaded": "全部游戏已加载",
   "lobby.select_level": "请选择难度和关卡开始游戏",
   "lobby.development": "开发中 (第四期)",
   "auth.login.title": "欢迎回来",

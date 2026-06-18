@@ -1,5 +1,39 @@
 # Changelog
 
+## [2026-06-18] - 🗄️ 游戏元数据 DB 化 + 🔄 大厅无限滚动
+
+### 🗄️ 架构升级：游戏元数据 DB 化管理
+
+**问题背景**：游戏元数据（icon、modes、difficulties、multiRound）原先只存在 `game-definitions.ts` 中，每次修改需要代码部署。
+
+**方案**：DB 作「运行时覆盖层」，TS 作「编译期/SSR fallback」
+- 后端 `gm_game_configs.config`（JSONB）扩充为完整元数据：`icon` / `multiRound` / `modes[]` / `difficulties[]` 与现有业务参数（如 `penaltySeconds`）合并
+- 新增 `GET /api/v1/games/meta` 端点（无需 auth），只返回 `id + config` 字段
+- 前端 `GameRegistryService.loadFromDB()` 在 `APP_INITIALIZER` 中浏览器端执行，将 DB 数据覆盖 TS registry；SSR/预渲染期跳过（`ssrNoopInterceptor` 阻断，TS fallback 生效）
+- Admin UI（`/admin/games`）Settings 弹窗新增 icon emoji 输入、multiRound 开关、modes/difficulties JSON 文本框，保存后即时生效
+
+**后端变更**
+- `domain/game_config.go`：新增 `GameMetaConfig` / `GameModeInfo` / `GameDiffInfo` struct
+- `pkg/db/postgres.go`：13 个游戏 Config JSON 全量扩充 icon/multiRound/modes/difficulties
+- `handlers/rest/game.go`：新增 `GetGamesMeta`
+- `cmd/api/main.go`：注册 `v1.Get("/games/meta", ...)`
+
+**前端变更**
+- `game-registry.service.ts`：注入 `HttpClient`，新增 `loadFromDB()` Promise
+- `app.config.ts`：追加 `APP_INITIALIZER` 调用 `loadFromDB()`
+- `admin-games.component.ts`：扩展 Settings 弹窗（icon / multiRound / modesJson / difficultiesJson）
+
+### 🔄 功能升级：大厅游戏列表分页 + 无限滚动
+
+- **后端** `GET /api/v1/games` 支持分页参数 `?page=1&limit=6`，返回 `{ games, total, page, limit, hasMore }`
+- **前端** `GameService` 拆分为两个方法：
+  - `getGames(page, limit)` → 返回 `GamesPage`（供大厅分页加载）
+  - `getAllGames()` → 返回 `Observable<GameConfig[]>`（供 docs/profile/rules-modal 非分页场景使用，内部请求 `limit=100`）
+- **大厅组件** 改用 `IntersectionObserver` 监听底部 sentinel 元素，滚动到底自动触发下一页加载并追加游戏卡片；`isLoadingGames` 控制旋转加载图标，`hasMoreGames` 控制「全部游戏已加载」提示
+- SSG 预渲染 fallback 从全 13 张缩减为前 6 张，与首页 API 响应一致，避免水合后列表闪缩
+
+---
+
 ## [2026-06-18] - 🐛 Bug 修复 + 🏗️ 架构重构（BaseGameStore 多局模式封装）
 
 ### 🐛 Bug 修复
