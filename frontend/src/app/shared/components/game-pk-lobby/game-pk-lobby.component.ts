@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { C2SAction } from '../../../core/models/websocket.model';
 import {
   Component, Input, Output, EventEmitter, inject, signal, computed,
   ChangeDetectionStrategy, OnInit, OnDestroy
@@ -13,6 +14,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { ToastService } from '../../../core/services/toast.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { GameHeaderComponent } from '../game-header/game-header.component';
+import { isBrowser } from '../../../core/utils/browser.util';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -52,11 +54,6 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private toast   = inject(ToastService);
   private settings = inject(SettingsService);
 
-  readonly isMultiRoundEnabled = computed(() => {
-    if (this.settings.settings().pk_multi_round_enabled === 'false') return false;
-    return this.reg.getConfig(this.gameId)?.multiRound === true;
-  });
-
   // ── Inputs ────────────────────────────────────────────────────────────────
   @Input() gameId       : string = '';
   @Input() currentRoomId: string = '';
@@ -69,15 +66,20 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   // ── State ─────────────────────────────────────────────────────────────────
   playerId   = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
   rightTab   = signal<'rooms' | 'online'>('rooms');
-  formOpen   = signal(true);   // mobile accordion toggle
+  // desktop always shows form; mobile defaults collapsed so rooms panel is immediately visible
+  formOpen   = signal(isBrowser() ? window.innerWidth >= 1024 : true);
 
   // Create form fields
+  createGameId   = signal('');   // selected game for create form
   roomName       = signal('');
   roomMode       = signal('');
   roomDifficulty = signal('');
   roomPassword   = signal('');
   roomTarget     = signal(1);
   readonly pkTargetOptions = [1, 3, 5, 10];
+
+  // Room list filter
+  roomGameFilter = signal('');   // '' = all games
 
   // Password prompt for password-protected rooms
   pwPromptOpen   = signal(false);
@@ -88,20 +90,27 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   pwPromptHost   = signal('');
   pwInput        = signal('');
 
+  // Change-game modal for my rooms
+  changeRoomModalOpen = signal(false);
+  changeRoomId        = signal('');
+  changeRoomNewGame   = signal('');
+  changeRoomNewMode   = signal('');
+  changeRoomNewDiff   = signal('');
+
   // ── Computed ──────────────────────────────────────────────────────────────
-  gameTitle = computed(() => {
-    const cfg = this.reg.getConfig(this.gameId);
-    return cfg?.titleKey ? this.t(cfg.titleKey) : this.gameId;
+  allGames = computed(() => this.reg.getAllConfigs());
+
+  readonly isMultiRoundEnabled = computed(() => {
+    if (this.settings.settings().pk_multi_round_enabled === 'false') return false;
+    return this.reg.getConfig(this.createGameId())?.multiRound === true;
   });
 
-  gameIconPath = computed(() => `/assets/games/icons/${this.gameId}.svg?v=2`);
-
   availableModes = computed(() =>
-    (this.reg.getConfig(this.gameId)?.modes || []).filter(m => m.id !== GameMode.Single)
+    (this.reg.getConfig(this.createGameId())?.modes || []).filter(m => m.id !== GameMode.Single)
   );
 
   availableDifficulties = computed(() =>
-    this.reg.getConfig(this.gameId)?.difficulties || []
+    this.reg.getConfig(this.createGameId())?.difficulties || []
   );
 
   challengeInfo = computed(() => {
@@ -110,10 +119,30 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     return { challenger: q['challenge'] as string, score: (q['score'] as string) || '' };
   });
 
-  allRooms     = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single));
-  myRooms      = computed(() => this.allRooms().filter((r: any) => r.host === this.playerId()));
-  otherRooms   = computed(() => this.allRooms().filter((r: any) => r.host !== this.playerId()));
+  allRooms   = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single));
+  myRooms    = computed(() => this.allRooms().filter((r: any) => r.host === this.playerId()));
+  otherRooms = computed(() => {
+    const others = this.allRooms().filter((r: any) => r.host !== this.playerId());
+    const filter = this.roomGameFilter();
+    return filter ? others.filter((r: any) => r.game === filter) : others;
+  });
   onlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId()));
+
+  // Unique game IDs appearing in other rooms (for filter chips)
+  activeRoomGameIds = computed(() => {
+    const ids = this.allRooms()
+      .filter((r: any) => r.host !== this.playerId())
+      .map((r: any) => r.game as string);
+    return [...new Set(ids)];
+  });
+
+  // Change-game modal computed
+  changeRoomModes = computed(() =>
+    (this.reg.getConfig(this.changeRoomNewGame())?.modes || []).filter(m => m.id !== GameMode.Single)
+  );
+  changeRoomDiffs = computed(() =>
+    this.reg.getConfig(this.changeRoomNewGame())?.difficulties || []
+  );
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit() {
@@ -124,17 +153,23 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   // ── Form helpers ──────────────────────────────────────────────────────────
   private initForm() {
+    this.createGameId.set(this.gameId);
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.roomName.set(`${this.playerId()}-${suffix}`);
-
     const modes = this.availableModes();
     if (modes.length > 0) this.roomMode.set(modes[0].id);
-
     const diffs = this.availableDifficulties();
     if (diffs.length > 0) this.roomDifficulty.set(diffs[0].id);
-
     this.roomPassword.set('');
     this.roomTarget.set(1);
+  }
+
+  selectCreateGame(id: string) {
+    this.createGameId.set(id);
+    const modes = this.availableModes();
+    this.roomMode.set(modes[0]?.id || '');
+    const diffs = this.availableDifficulties();
+    this.roomDifficulty.set(diffs[0]?.id || '');
   }
 
   updateInput(sig: ReturnType<typeof signal<string>>, event: Event, maxLen = 100, numbersOnly = false) {
@@ -157,11 +192,11 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       const d = this.availableDifficulties();
       if (d.length) diff = d[0].id;
     }
-    const name = this.roomName().trim() || `${this.gameId}-${Date.now()}`;
+    const gameId = this.createGameId() || this.gameId;
+    const name = this.roomName().trim() || `${gameId}-${Date.now()}`;
     this.wsService.setPendingAction('create');
     const target = this.isMultiRoundEnabled() ? this.roomTarget() : 1;
-    this.createRoom.emit({ name, gameId: this.gameId, mode, difficulty: diff, password: this.roomPassword() || undefined, target });
-    // Re-randomise name for next time
+    this.createRoom.emit({ name, gameId, mode, difficulty: diff, password: this.roomPassword() || undefined, target });
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.roomName.set(`${this.playerId()}-${suffix}`);
     this.roomPassword.set('');
@@ -215,6 +250,35 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   sendHeroBroadcast(room: any) {
     this.wsService.sendLobby({ type: 'broadcast', room: { id: room.id, game: room.game, mode: room.mode, difficulty: room.difficulty, host: room.host } });
     this.toast.show(this.t('game.broadcast_success'), 'success');
+  }
+
+  // ── Change-game modal ─────────────────────────────────────────────────────
+  openChangeRoomModal(room: any) {
+    this.changeRoomId.set(room.id);
+    this.changeRoomNewGame.set(room.game);
+    this.changeRoomNewMode.set(room.mode);
+    this.changeRoomNewDiff.set(room.difficulty);
+    this.changeRoomModalOpen.set(true);
+  }
+
+  selectChangeRoomGame(id: string) {
+    this.changeRoomNewGame.set(id);
+    const modes = this.changeRoomModes();
+    this.changeRoomNewMode.set(modes[0]?.id || '');
+    const diffs = this.changeRoomDiffs();
+    this.changeRoomNewDiff.set(diffs[0]?.id || '');
+  }
+
+  onConfirmChangeRoomGame() {
+    this.wsService.send({
+      type: C2SAction.ChangeGame,
+      roomId: this.changeRoomId(),
+      game: this.changeRoomNewGame(),
+      mode: this.changeRoomNewMode(),
+      difficulty: this.changeRoomNewDiff()
+    });
+    this.changeRoomModalOpen.set(false);
+    this.toast.show(this.t('game.change_room_game') + ' ✓', 'success');
   }
 
   // ── Label helpers ─────────────────────────────────────────────────────────

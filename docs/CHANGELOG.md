@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-06-18] - ⚔️ PK 竞技大厅全面升级（跨游戏统管）
+
+### ✨ 功能升级
+
+**GamePkLobbyComponent — 升级为全局 PK 竞技大厅**
+- 顶部导航从「当前游戏标题」改为统一的 `⚔️ PK 竞技大厅`，不再局限于单一游戏
+- 创建表单新增全游戏选择器（4 列 icon 格），切换游戏后 Mode/Difficulty 自动联动更新
+- 房间列表新增游戏筛选条（chip 过滤，有多种游戏时才显示）；点击同一 chip 可取消筛选
+- 我的房间新增 `⚙` 换游戏按钮，弹窗内可选择新游戏/模式/难度，确认后发送 `change_game` WS 动作实时切换
+- 新增 i18n 键：`game.pk_lobby_title`、`game.all_games`、`game.change_room_game`、`game.change_room_game_title`、`game.filter_rooms`（中英双语）
+
 ## [2026-06-18] - 🐛 修复多局制 Bug + Admin 多局制开关
 
 ### 🐛 Bug 修复

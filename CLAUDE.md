@@ -44,8 +44,6 @@ npm run serve:ssr:frontend
 # Format check
 npx prettier --check .
 
-# Regenerate XLF translation files after editing core.translations.ts
-node generate-xlf.js
 ```
 
 ## Architecture
@@ -61,7 +59,7 @@ node generate-xlf.js
 
 - **Framework**: Angular 21 standalone components (no NgModules), Zoneless change detection with Signals throughout.
 - **Styling**: TailwindCSS v4 via `@tailwindcss/postcss`. Theme colors use CSS custom properties (no hardcoded colors).
-- **i18n**: Compile-time via `@angular/localize` with XLF files (`messages.en.xlf`, `messages.zh.xlf`). Two separate builds for en/zh. Static template text uses `i18n="@@id"` attribute; dynamic TS text uses `I18nService.t('key')()`. Source of truth: `core/i18n/core.translations.ts` → run `node generate-xlf.js` to emit XLF files.
+- **i18n**: Runtime via Transloco (`@jsverse/transloco`). Dynamic text uses `I18nService.t('key')()` in TS or `{{ t('key') }}` in templates. **Single source of truth: `src/assets/i18n/en.json` and `src/assets/i18n/zh.json`** — edit these files directly to add or update translation keys. The loader (`core/i18n/transloco-loader.ts`) imports the JSON files inline at build time.
 - **SSR/SSG**: 54 routes prerendered at build time (`RenderMode.Prerender`). Express SSR server in `server.ts`. Cloudflare Pages for production hosting with edge function in `functions/[[path]].js`.
 - **SSR Safety**: `ssrNoopInterceptor` shorts all HTTP requests during SSR. `browser.util.ts` wraps all browser APIs (`localStorage`, `WebSocket`, `window`). WebSocket connections guarded with `isBrowser()` check.
 - **Entry point**: `main.ts` bootstraps `AppComponent` with `appConfig` (provides router, HTTP client with fetch, SSR hydration with event replay).
