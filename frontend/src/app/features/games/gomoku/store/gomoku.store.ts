@@ -81,6 +81,15 @@ export class GomokuStore extends BaseGameStore {
     return (this.localEngine()?.players || []).map(id => ({ id }));
   });
 
+  // Backend sends players as []string array, not an object map
+  override readonly playersList = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return this.singlePlayerList();
+    const players = (this.rawState() as any)?.players;
+    if (!players) return [];
+    if (Array.isArray(players)) return players.map((id: string) => ({ id }));
+    return Object.keys(players).map(k => ({ id: k, ...players[k] }));
+  });
+
   isSpectator = computed<boolean>(() => {
     if (this.currentRoomMode() === GameMode.Single) return false;
     const p = this.playersList().map(pl => pl.id);
