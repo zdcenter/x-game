@@ -293,7 +293,7 @@ export class AdminDailyChallengesComponent implements OnInit {
   }
 
   confirmDelete(id: number): void {
-    if (!confirm('Delete this challenge?')) return;
+    if (!confirm(this.i18n.t('admin.daily.delete_confirm')())) return;
     this.http.delete(`${this.apiUrl}/admin/daily-challenges/${id}`).subscribe(() => this.load());
   }
 

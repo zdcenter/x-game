@@ -79,13 +79,6 @@ export class BlogService {
       .pipe(map(apiToMeta));
   }
 
-  /** @deprecated kept for compat — content now comes from getBlogPost() */
-  getPostContent(id: string, _lang: string): Observable<string> {
-    return this.getBlogPost(id).pipe(
-      map(p => (_lang === 'zh' ? p.zh.content ?? '' : p.en.content ?? ''))
-    );
-  }
-
   // ---- Admin API ----
 
   adminListAll(): Observable<BlogPostMeta[]> {

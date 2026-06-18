@@ -123,7 +123,7 @@ export class AdminSettingsComponent implements OnInit {
         this.settings.pk_multi_round_enabled = (res.pk_multi_round_enabled ?? 'true') === 'true';
         this.cdr.detectChanges();
       },
-      error: () => this.toast.show('Failed to load settings', 'error')
+      error: () => this.toast.show(this.i18n.t('admin.settings.load_error')(), 'error')
     });
   }
 
@@ -141,11 +141,11 @@ export class AdminSettingsComponent implements OnInit {
 
     this.adminService.updateSettings(payload).subscribe({
       next: () => {
-        this.toast.show('Settings saved successfully', 'success');
+        this.toast.show(this.i18n.t('admin.settings.saved')(), 'success');
         this.isSaving.set(false);
       },
       error: () => {
-        this.toast.show('Failed to save settings', 'error');
+        this.toast.show(this.i18n.t('admin.settings.save_error')(), 'error');
         this.isSaving.set(false);
       }
     });

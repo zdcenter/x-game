@@ -288,7 +288,7 @@ export class AdminAdsComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.toast.show('Failed to load ad settings', 'error');
+        this.toast.show(this.i18n.t('admin.ads.load_error')(), 'error');
         this.isLoading.set(false);
       }
     });
@@ -303,7 +303,7 @@ export class AdminAdsComponent implements OnInit {
       next: () => {
         this.toast.show(this.i18n.t('admin.settings.saved')() || 'Global strategy saved successfully', 'success');
       },
-      error: () => this.toast.show('Failed to save settings', 'error')
+      error: () => this.toast.show(this.i18n.t('admin.ads.save_error')(), 'error')
     });
   }
 
@@ -312,8 +312,8 @@ export class AdminAdsComponent implements OnInit {
       is_enabled: p.is_enabled,
       daily_total_limit: p.daily_total_limit
     }).subscribe({
-      next: () => this.toast.show('Placement saved', 'success'),
-      error: () => this.toast.show('Failed to save placement', 'error')
+      next: () => this.toast.show(this.i18n.t('admin.ads.placement_saved')(), 'success'),
+      error: () => this.toast.show(this.i18n.t('admin.ads.placement_error')(), 'error')
     });
   }
 
@@ -354,42 +354,35 @@ export class AdminAdsComponent implements OnInit {
 
     req.subscribe({
       next: () => {
-        this.toast.show('Network saved', 'success');
+        this.toast.show(this.i18n.t('admin.ads.network_saved')(), 'success');
         this.closeNetworkModal();
         this.fetchData();
       },
-      error: () => this.toast.show('Failed to save network', 'error')
+      error: () => this.toast.show(this.i18n.t('admin.ads.network_error')(), 'error')
     });
   }
 
   toggleNetwork(net: AdNetwork) {
     const p = this.selectedPlacement();
     if (!p) return;
-    
-    // Quick update for toggle
-    const payload = {
-      ...net,
-      placement_id: p.id
-    };
-    
+    const payload = { ...net, placement_id: p.id };
     this.adminService.updateAdNetwork(net.id, payload).subscribe({
-      next: () => this.toast.show(`Network ${net.is_enabled ? 'enabled' : 'disabled'}`, 'success'),
+      next: () => this.toast.show(this.i18n.t('admin.ads.network_saved')(), 'success'),
       error: () => {
-        this.toast.show('Failed to toggle network', 'error');
-        // Revert toggle visually on failure
+        this.toast.show(this.i18n.t('admin.ads.network_toggle_error')(), 'error');
         net.is_enabled = !net.is_enabled;
       }
     });
   }
 
   deleteNetwork(id: number) {
-    if (!confirm('Are you sure you want to delete this network?')) return;
+    if (!confirm(this.i18n.t('admin.ads.delete_confirm')())) return;
     this.adminService.deleteAdNetwork(id).subscribe({
       next: () => {
-        this.toast.show('Network deleted', 'success');
+        this.toast.show(this.i18n.t('admin.ads.network_deleted')(), 'success');
         this.fetchData();
       },
-      error: () => this.toast.show('Failed to delete network', 'error')
+      error: () => this.toast.show(this.i18n.t('admin.ads.network_delete_error')(), 'error')
     });
   }
 }

@@ -22,6 +22,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 
 @Component({
   selector: 'app-watersort',
@@ -30,7 +31,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
     GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
-    HintButtonComponent, TutorialOverlayComponent
+    HintButtonComponent, TutorialOverlayComponent, GamePkLobbyComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-hidden select-none overscroll-none">
@@ -93,10 +94,11 @@ import { TutorialService } from '../../../core/services/tutorial.service';
               }
 
               @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="isMobileSidebarOpen.set(true)" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95">
+<button (click)="pkView.set('pk-lobby')" class="p-1.5 lg:p-2 rounded-full text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95 flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
+                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
               </button>
 }
             </div>
@@ -235,13 +237,23 @@ import { TutorialService } from '../../../core/services/tutorial.service';
           [currentGameId]="'watersort'"
           [currentRoomId]="currentRoomId()"
           (joinRoom)="handleJoinRoom($event)"
-          (createRoom)="handleCreateRoom($event)">
+          (createRoom)="handleCreateRoom($event)"
+          (openPkLobby)="pkView.set('pk-lobby')">
         </app-game-lobby-panel>
       </div>
     }
 
   </div>
-  
+
+  <!-- PK Lobby Full-Page Overlay -->
+  @if (pkView() === 'pk-lobby') {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
+      <app-game-pk-lobby gameId="watersort" [currentRoomId]="currentRoomId()"
+        (createRoom)="handlePkCreate($event)" (joinRoom)="handlePkJoin($event)" (back)="pkView.set('game')">
+      </app-game-pk-lobby>
+    </div>
+  }
+
   <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
   @if (status === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
@@ -306,6 +318,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   showRules = signal(false);
   showOverlay = signal(false);
   showTutorial = signal(false);
+  pkView = signal<'game' | 'pk-lobby'>('game');
   tutorialSteps = this.tutorialService.getStepsForGame(GameId.WaterSort);
 
   get store() { return this._store; }
@@ -725,10 +738,17 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this.roomLifecycle.clearReconnectInfo();
   }
 
+  handlePkCreate(e: PkCreateRoomEvent) {
+    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
+    this.pkView.set('game');
+  }
+  handlePkJoin(e: PkJoinRoomEvent) {
+    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
+    this.pkView.set('game');
+  }
+
   openChangeSettings() {
-    if (this.lobbyPanel) {
-      this.lobbyPanel.openCreateRoomModal();
-    }
+    this.pkView.set('pk-lobby');
   }
 
   dismissRoom() {

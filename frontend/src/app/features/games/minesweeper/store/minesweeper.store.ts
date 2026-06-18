@@ -202,11 +202,6 @@ export class MinesweeperStore extends BaseGameStore {
     this.tick.set(this.tick() + 1);
   }
 
-  /** @deprecated Use leaveRoom() instead */
-  leaveGame() {
-    this.leaveRoom();
-  }
-
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
        const engine = this.localEngine();

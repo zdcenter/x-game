@@ -13,6 +13,7 @@ import { HexaBoardComponent } from './components/hexa-board/hexa-board.component
 import { HexPiece, HexCoord } from './store/hexa-engine';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -37,7 +38,8 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameStartingOverlayComponent,
     GameHeaderComponent,
     PlayerBadgeComponent,
-    PlayerListContainerComponent],
+    PlayerListContainerComponent,
+    GamePkLobbyComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html'
 })
@@ -56,6 +58,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   showRules = signal(false);
   showOverlay = signal(false);
+  pkView = signal<'game' | 'pk-lobby'>('game');
 
   get t() {
     return this.i18n.t.bind(this.i18n);
@@ -154,6 +157,15 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
+    this.pkView.set('game');
+  }
+  handlePkJoin(e: PkJoinRoomEvent) {
+    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
+    this.pkView.set('game');
   }
 
   override ngOnDestroy(): void {

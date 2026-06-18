@@ -138,7 +138,7 @@ export class AdminAnnouncementsComponent implements OnInit {
   loadAnnouncements() {
     this.announcementService.getAdminAnnouncements().subscribe({
       next: (data) => this.announcements.set(data),
-      error: () => this.toast.show('Failed to load announcements', 'error')
+      error: () => this.toast.show(this.i18n.t('admin.announcements.load_error')(), 'error')
     });
   }
 
@@ -160,30 +160,28 @@ export class AdminAnnouncementsComponent implements OnInit {
 
   saveAnnouncement() {
     if (!this.formData.content.trim()) {
-      this.toast.show('Content cannot be empty', 'error');
+      this.toast.show(this.i18n.t('admin.announcements.empty_content')(), 'error');
       return;
     }
 
     const ann = this.currentAnn();
     if (ann) {
-      // Update
       this.announcementService.updateAnnouncement(ann.id, this.formData).subscribe({
         next: () => {
-          this.toast.show('Announcement updated', 'success');
+          this.toast.show(this.i18n.t('admin.announcements.update_success')(), 'success');
           this.loadAnnouncements();
           this.closeModal();
         },
-        error: () => this.toast.show('Failed to update announcement', 'error')
+        error: () => this.toast.show(this.i18n.t('admin.announcements.update_error')(), 'error')
       });
     } else {
-      // Create
       this.announcementService.createAnnouncement(this.formData).subscribe({
         next: () => {
-          this.toast.show('Announcement created', 'success');
+          this.toast.show(this.i18n.t('admin.announcements.create_success')(), 'success');
           this.loadAnnouncements();
           this.closeModal();
         },
-        error: () => this.toast.show('Failed to create announcement', 'error')
+        error: () => this.toast.show(this.i18n.t('admin.announcements.create_error')(), 'error')
       });
     }
   }
@@ -192,21 +190,21 @@ export class AdminAnnouncementsComponent implements OnInit {
     const updatedStatus = !ann.is_active;
     this.announcementService.updateAnnouncement(ann.id, { is_active: updatedStatus }).subscribe({
       next: () => {
-        this.toast.show('Status updated', 'success');
+        this.toast.show(this.i18n.t('admin.announcements.status_updated')(), 'success');
         this.loadAnnouncements();
       },
-      error: () => this.toast.show('Failed to update status', 'error')
+      error: () => this.toast.show(this.i18n.t('admin.announcements.status_error')(), 'error')
     });
   }
 
   deleteAnnouncement(id: number) {
-    if (confirm('Are you sure you want to delete this announcement?')) {
+    if (confirm(this.i18n.t('admin.announcements.delete_confirm')())) {
       this.announcementService.deleteAnnouncement(id).subscribe({
         next: () => {
-          this.toast.show('Announcement deleted', 'success');
+          this.toast.show(this.i18n.t('admin.announcements.delete_success')(), 'success');
           this.loadAnnouncements();
         },
-        error: () => this.toast.show('Failed to delete announcement', 'error')
+        error: () => this.toast.show(this.i18n.t('admin.announcements.delete_error')(), 'error')
       });
     }
   }

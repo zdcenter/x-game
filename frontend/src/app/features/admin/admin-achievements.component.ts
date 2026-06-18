@@ -40,14 +40,14 @@ import { AchievementWithStatus } from '../../core/services/achievement.service';
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-[var(--color-border-card)] text-[var(--color-text-muted)] text-xs uppercase tracking-wider">
-                  <th class="text-left px-4 py-3">Icon</th>
-                  <th class="text-left px-4 py-3">Title</th>
-                  <th class="text-left px-4 py-3">Category</th>
-                  <th class="text-left px-4 py-3">Rarity</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.col.icon')() }}</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.col.title')() }}</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.col.category')() }}</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.col.rarity')() }}</th>
                   <th class="text-left px-4 py-3">XP</th>
-                  <th class="text-left px-4 py-3">Unlocks</th>
-                  <th class="text-left px-4 py-3">Active</th>
-                  <th class="text-left px-4 py-3">Actions</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.unlock_count')() }}</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.col.active')() }}</th>
+                  <th class="text-left px-4 py-3">{{ i18n.t('admin.achievements.col.actions')() }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -74,8 +74,8 @@ import { AchievementWithStatus } from '../../core/services/achievement.service';
                     </td>
                     <td class="px-4 py-3">
                       <div class="flex gap-2">
-                        <button (click)="openEdit(a)" class="text-xs px-2 py-1 rounded-lg border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)] transition-colors">Edit</button>
-                        <button (click)="confirmDelete(a.id)" class="text-xs px-2 py-1 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">Del</button>
+                        <button (click)="openEdit(a)" class="text-xs px-2 py-1 rounded-lg border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)] transition-colors">{{ i18n.t('admin.form.edit')() }}</button>
+                        <button (click)="confirmDelete(a.id)" class="text-xs px-2 py-1 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">{{ i18n.t('admin.form.delete')() }}</button>
                       </div>
                     </td>
                   </tr>
@@ -90,7 +90,7 @@ import { AchievementWithStatus } from '../../core/services/achievement.service';
       @if (showModal()) {
         <div class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" (click)="closeModal()">
           <div class="w-full max-w-md bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] p-6 shadow-2xl" (click)="$event.stopPropagation()">
-            <h2 class="text-lg font-black mb-4">{{ editMode() ? 'Edit Achievement' : 'New Achievement' }}</h2>
+            <h2 class="text-lg font-black mb-4">{{ editMode() ? i18n.t('admin.achievements.edit')() : i18n.t('admin.achievements.create')() }}</h2>
             <div class="flex flex-col gap-3">
               <div class="grid grid-cols-2 gap-3">
                 <input [(ngModel)]="form.icon_emoji" placeholder="Icon emoji" class="px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-center text-2xl" />
@@ -106,9 +106,9 @@ import { AchievementWithStatus } from '../../core/services/achievement.service';
               <input [(ngModel)]="form.condition_params" placeholder='condition_params JSON e.g. {"count":10}' class="px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-sm font-mono" />
             </div>
             <div class="flex gap-3 mt-5">
-              <button (click)="closeModal()" class="flex-1 py-2 rounded-xl border border-[var(--color-border-card)] text-sm font-bold text-[var(--color-text-muted)]">Cancel</button>
+              <button (click)="closeModal()" class="flex-1 py-2 rounded-xl border border-[var(--color-border-card)] text-sm font-bold text-[var(--color-text-muted)]">{{ i18n.t('admin.form.cancel')() }}</button>
               <button (click)="save()" class="flex-1 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-sm shadow">
-                {{ editMode() ? 'Update' : 'Create' }}
+                {{ editMode() ? i18n.t('admin.form.update')() : i18n.t('admin.form.create')() }}
               </button>
             </div>
           </div>
@@ -131,10 +131,10 @@ export class AdminAchievementsComponent implements OnInit {
   form: any = this.emptyForm();
 
   statsCards = () => [
-    { label: 'Total', value: this.achievements().length },
-    { label: 'Active', value: this.achievements().filter(a => a.is_active).length },
-    { label: 'Legendary', value: this.achievements().filter(a => a.rarity === 'legendary').length },
-    { label: 'Epic', value: this.achievements().filter(a => a.rarity === 'epic').length },
+    { label: this.i18n.t('admin.achievements.stat.total')(), value: this.achievements().length },
+    { label: this.i18n.t('admin.achievements.stat.active')(), value: this.achievements().filter(a => a.is_active).length },
+    { label: this.i18n.t('admin.achievements.stat.legendary')(), value: this.achievements().filter(a => a.rarity === 'legendary').length },
+    { label: this.i18n.t('admin.achievements.stat.epic')(), value: this.achievements().filter(a => a.rarity === 'epic').length },
   ];
 
   ngOnInit(): void {
@@ -175,7 +175,7 @@ export class AdminAchievementsComponent implements OnInit {
   }
 
   confirmDelete(id: string): void {
-    if (!confirm('Delete this achievement?')) return;
+    if (!confirm(this.i18n.t('admin.achievements.delete_confirm')())) return;
     this.http.delete(`${this.apiUrl}/admin/achievements/${id}`).subscribe(() => this.load());
   }
 

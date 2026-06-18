@@ -2,6 +2,7 @@ import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -23,7 +24,7 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent],
+  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePkLobbyComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
@@ -48,6 +49,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
   showRules = signal(false);
   showOverlay = signal(false);
+  pkView = signal<'game' | 'pk-lobby'>('game');
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -128,6 +130,15 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
+    this.pkView.set('game');
+  }
+  handlePkJoin(e: PkJoinRoomEvent) {
+    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
+    this.pkView.set('game');
   }
 
   returnToLobby() {

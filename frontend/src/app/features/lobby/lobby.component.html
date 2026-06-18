@@ -45,10 +45,9 @@
               {{ i18n.t('lobby.title')() }}
             </h1>
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="isGlobalLobbyOpen.set(true)" class="p-2 sm:p-3 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl text-emerald-400 shadow-sm active:scale-95 transition-all hover:bg-[var(--color-bg-main)] z-10 flex shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+              <button (click)="pkArenaOpen.set(true)"
+                class="px-3 py-2 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-xl font-black text-[var(--color-bg-main)] shadow-lg active:scale-95 transition-all flex items-center gap-1.5 shrink-0 text-sm">
+                ⚔️ <span class="hidden xs:inline">PK</span>
               </button>
             }
           </div>
@@ -60,10 +59,27 @@
               {{ i18n.t('lobby.title')() }}
             </h1>
           </div>
-          
+
           <p class="text-sm sm:text-lg opacity-80 max-w-2xl mx-auto text-center px-4">
             {{ i18n.t('lobby.subtitle')() }}
           </p>
+
+          <!-- PK Arena CTA Banner (Desktop only) -->
+          @if (settingsService.settings().multiplayer_enabled === 'true') {
+            <div class="hidden lg:flex mt-6 items-center gap-4">
+              <button (click)="pkArenaOpen.set(true)"
+                class="px-6 py-3 rounded-2xl font-black text-base bg-gradient-to-r from-violet-500 to-rose-500 text-white shadow-lg hover:shadow-violet-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
+                ⚔️ {{ i18n.t('game.pk_arena')() }}
+              </button>
+              <button (click)="isGlobalLobbyOpen.set(true)"
+                class="px-4 py-3 rounded-2xl font-bold text-sm bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] active:scale-95 transition-all flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {{ i18n.t('game.room_info')() }}
+              </button>
+            </div>
+          }
         </div>
 
         <!-- Games Grid -->
@@ -139,8 +155,22 @@
           <app-game-lobby-panel
             class="flex-grow flex w-full h-full min-h-0 lg:bg-transparent"
             [isGlobal]="true"
-            (createRoom)="handleGlobalCreateRoom($event)">
+            (createRoom)="handleGlobalCreateRoom($event)"
+            (openPkLobby)="pkArenaOpen.set(true)">
           </app-game-lobby-panel>
+        </div>
+      }
+
+      <!-- PK Arena Full-Screen Overlay -->
+      @if (pkArenaOpen()) {
+        <div class="fixed top-[64px] inset-x-0 bottom-0 z-[90] bg-[var(--color-bg-main)] flex flex-col overflow-hidden">
+          <app-game-pk-lobby
+            gameId=""
+            [currentRoomId]="''"
+            (createRoom)="handlePkCreate($event)"
+            (joinRoom)="handlePkJoin($event)"
+            (back)="pkArenaOpen.set(false)">
+          </app-game-pk-lobby>
         </div>
       }
 

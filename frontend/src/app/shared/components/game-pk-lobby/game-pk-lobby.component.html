@@ -12,10 +12,18 @@
       <span game-icon class="text-2xl sm:text-3xl leading-none select-none">⚔️</span>
 
       <ng-container header-right>
-        <div class="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="font-bold text-emerald-400">{{ wsService.onlinePlayers().length }}</span>
-          <span class="hidden sm:inline">{{ t('game.online') }}</span>
+        <div class="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+            <span class="font-bold text-violet-400">{{ totalActiveRooms() }}</span>
+            <span class="hidden sm:inline opacity-70">{{ t('game.active_rooms_count') }}</span>
+          </div>
+          <span class="opacity-30">·</span>
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-emerald-400">{{ totalOnline() }}</span>
+            <span class="hidden sm:inline opacity-70">{{ t('game.online') }}</span>
+          </div>
         </div>
       </ng-container>
     </app-game-header>
@@ -25,11 +33,9 @@
   <div class="flex-grow flex flex-col lg:flex-row overflow-hidden min-h-0">
 
     <!-- ───── LEFT: Create Room Form ───── -->
-    <!-- mobile: accordion with max-h so inner scroll works; desktop: fixed-width side panel -->
-    <div
-      class="lg:w-[360px] xl:w-[400px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-border-card)] overflow-hidden max-h-[52vh] lg:max-h-none">
+    <div class="lg:w-[360px] xl:w-[400px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--color-border-card)] overflow-hidden">
 
-      <!-- Mobile accordion toggle -->
+      <!-- Mobile accordion toggle (hidden on desktop) -->
       <button
         class="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)] font-bold text-sm text-[var(--color-text-main)] shrink-0"
         (click)="formOpen.set(!formOpen())">
@@ -40,114 +46,29 @@
         <span class="transition-transform duration-200" [class.rotate-180]="formOpen()">▼</span>
       </button>
 
-      @if (formOpen()) {
-      <div class="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-5 space-y-5 min-h-0">
-
-        <h2 class="hidden lg:block text-sm font-black uppercase tracking-widest text-[var(--color-accent-from)]">
-          ➕ {{ t('game.create_pk') }}
-        </h2>
-
-        <!-- ① 游戏选择器 -->
-        <div>
-          <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.select_game') }}</label>
-          <div class="grid grid-cols-4 gap-1.5">
-            @for (g of allGames(); track g.id) {
-            <button (click)="selectCreateGame(g.id)"
-              [class]="'flex flex-col items-center gap-1 px-1 py-2 rounded-xl border text-[10px] font-bold transition-all ' + (createGameId() === g.id ? 'bg-gradient-to-br from-rose-500/30 to-violet-500/30 border-violet-500 text-[var(--color-text-main)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-violet-500/60')">
-              <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-5 h-5 object-contain" alt="">
-              <span class="leading-tight text-center line-clamp-1">{{ t(g.titleKey) }}</span>
-            </button>
-            }
-          </div>
-        </div>
-
-        <!-- Room Name -->
-        <div>
-          <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
-          <input type="text" [value]="roomName()" (input)="updateInput(roomName, $event, 40)"
-            class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors text-sm"
-            placeholder="Room name">
-        </div>
-
-        <!-- Mode -->
-        @if (availableModes().length > 0) {
-        <div>
-          <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
-          <div [class]="availableModes().length === 1 ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-2 gap-2'">
-            @for (mode of availableModes(); track mode.id) {
-            <button (click)="roomMode.set(mode.id)"
-              [class]="'px-3 py-3 rounded-xl border font-bold text-sm transition-all text-left ' + (roomMode() === mode.id ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)] border-[var(--color-accent-to)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-to)]')">
-              <div class="flex items-center gap-2 mb-0.5">
-                @if (mode.icon) { <span>{{ mode.icon }}</span> }
-                <span>{{ mode.labelKey ? t(mode.labelKey) : mode.id }}</span>
-              </div>
-              @if (mode.descKey || mode.desc) {
-              <div class="text-[10px] font-normal opacity-70 leading-tight mt-1">
-                {{ mode.descKey ? t(mode.descKey) : mode.desc }}
-              </div>
-              }
-            </button>
-            }
-          </div>
-        </div>
-        }
-
-        <!-- Difficulty -->
-        @if (availableDifficulties().length > 0) {
-        <div>
-          <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.diff') }}</label>
-          <div class="grid grid-cols-3 gap-2">
-            @for (diff of availableDifficulties(); track diff.id) {
-            <button (click)="roomDifficulty.set(diff.id)"
-              [class]="'py-3 rounded-xl border font-bold text-xs transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ' + (roomDifficulty() === diff.id ? 'bg-[var(--color-accent-from)] text-[var(--color-bg-main)] border-[var(--color-accent-from)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]')">
-              <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
-              @if (diff.descKey || diff.desc) {
-              <span class="text-[9px] font-normal opacity-70 leading-tight text-center px-1">
-                {{ diff.descKey ? t(diff.descKey) : diff.desc }}
-              </span>
-              }
-            </button>
-            }
-          </div>
-        </div>
-        }
-
-        <!-- Target (rounds to win) -->
-        @if (isMultiRoundEnabled()) {
-        <div>
-          <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-1">{{ t('game.pk_target_label') }}</label>
-          <p class="text-[10px] opacity-50 mb-2">{{ t('game.pk_target_hint') }}</p>
-          <div class="grid grid-cols-4 gap-2">
-            @for (opt of pkTargetOptions; track opt) {
-            <button (click)="roomTarget.set(opt)"
-              [class]="'py-3 rounded-xl border font-black text-sm transition-all text-center ' + (roomTarget() === opt ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)] border-[var(--color-accent-to)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-to)]')">
-              {{ opt }}
-            </button>
-            }
-          </div>
-        </div>
-        }
-
-        <!-- Password -->
-        <div>
-          <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_password') }}</label>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" [value]="roomPassword()"
-            (input)="updateInput(roomPassword, $event, 4, true)"
-            class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors font-mono text-xl tracking-[0.5em] text-center"
-            [placeholder]="t('game.room_password_placeholder')">
-          <p class="text-[10px] opacity-50 mt-1">{{ t('game.room_password_hint') }}</p>
-        </div>
-
-        <!-- Create Button -->
-        <button (click)="onConfirmCreate()" [disabled]="myRooms().length > 0"
-          class="w-full py-4 rounded-xl font-black text-base bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg hover:shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:brightness-75">
-          <span>✚</span>
-          <span>{{ t('game.create_and_join') }}</span>
+      <!-- Desktop: always visible, scrollable within panel height -->
+      <div class="hidden lg:flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar p-5 space-y-4">
+        <!-- Quick Match -->
+        <button (click)="onQuickMatch()"
+          class="w-full py-3 rounded-2xl font-black text-sm bg-gradient-to-r from-violet-500 to-rose-500 text-white shadow-lg hover:shadow-violet-500/30 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2">
+          ⚡ {{ t('game.quick_match') }}
         </button>
-        @if (myRooms().length > 0) {
-        <p class="text-[11px] text-center text-amber-400 opacity-80 -mt-2">{{ t('game.room_limit_hint') }}</p>
-        }
+        <div class="border-t border-[var(--color-border-card)] pt-4">
+          <h2 class="text-xs font-black uppercase tracking-widest text-[var(--color-accent-from)] mb-4">➕ {{ t('game.create_pk') }}</h2>
+          <ng-container *ngTemplateOutlet="createFormTpl"></ng-container>
+        </div>
+      </div>
 
+      <!-- Mobile: accordion, constrained height so scroll works -->
+      @if (formOpen()) {
+      <div class="lg:hidden flex flex-col overflow-y-auto custom-scrollbar p-4 space-y-4" style="max-height:52vh">
+        <button (click)="onQuickMatch()"
+          class="w-full py-3 rounded-2xl font-black text-sm bg-gradient-to-r from-violet-500 to-rose-500 text-white shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2">
+          ⚡ {{ t('game.quick_match') }}
+        </button>
+        <div class="border-t border-[var(--color-border-card)] pt-4">
+          <ng-container *ngTemplateOutlet="createFormTpl"></ng-container>
+        </div>
       </div>
       }
     </div>
@@ -205,6 +126,24 @@
               {{ t('game.broadcast_join') }}
             </button>
           </div>
+        </div>
+        }
+
+        <!-- Current Room Banner (visible when user is already in a room) -->
+        @if (currentRoom()) {
+        <div class="rounded-2xl border-2 border-emerald-500/60 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-4 flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.12)]">
+          <img [src]="'/assets/games/icons/' + currentRoom()!.game + '.svg?v=2'" class="w-9 h-9 object-contain drop-shadow-md shrink-0" alt="">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400">{{ t('game.current_room') }}</span>
+            </div>
+            <p class="font-bold text-sm text-[var(--color-text-main)] truncate mt-0.5">{{ decodeName(currentRoom()!.id) }}</p>
+            <p class="text-[10px] text-[var(--color-text-muted)] mt-0.5">{{ modeLabel(currentRoom()!.mode, currentRoom()!.game) }} · {{ diffLabel(currentRoom()!.difficulty, currentRoom()!.game) }}</p>
+          </div>
+          <button (click)="onJoinRoom(currentRoom()!.id, currentRoom()!.game, currentRoom()!.mode, currentRoom()!.difficulty, currentRoom()!.host, currentRoom()!.hasPassword)"
+            class="px-4 py-2 rounded-xl font-bold text-sm bg-emerald-500 text-white hover:bg-emerald-400 active:scale-95 transition-all shadow shrink-0">
+            {{ t('game.rejoin') }}
+          </button>
         </div>
         }
 
@@ -382,6 +321,112 @@
       </div>
     </div>
   </div>
+</ng-template>
+
+<!-- ══════ Create Room Form Template ══════ -->
+<ng-template #createFormTpl>
+
+  <!-- ① 游戏选择器 -->
+  <div>
+    <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.select_game') }}</label>
+    <div class="grid grid-cols-4 gap-1.5">
+      @for (g of allGames(); track g.id) {
+      <button (click)="selectCreateGame(g.id)"
+        [class]="'flex flex-col items-center gap-1 px-1 py-2 rounded-xl border text-[10px] font-bold transition-all ' + (createGameId() === g.id ? 'bg-gradient-to-br from-rose-500/30 to-violet-500/30 border-violet-500 text-[var(--color-text-main)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-violet-500/60')">
+        <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-5 h-5 object-contain" alt="">
+        <span class="leading-tight text-center line-clamp-1">{{ t(g.titleKey) }}</span>
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Room Name -->
+  <div>
+    <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
+    <input type="text" [value]="roomName()" (input)="updateInput(roomName, $event, 40)"
+      class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors text-sm"
+      placeholder="Room name">
+  </div>
+
+  <!-- Mode -->
+  @if (availableModes().length > 0) {
+  <div>
+    <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
+    <div [class]="availableModes().length === 1 ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-2 gap-2'">
+      @for (mode of availableModes(); track mode.id) {
+      <button (click)="roomMode.set(mode.id)"
+        [class]="'px-3 py-3 rounded-xl border font-bold text-sm transition-all text-left ' + (roomMode() === mode.id ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)] border-[var(--color-accent-to)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-to)]')">
+        <div class="flex items-center gap-2 mb-0.5">
+          @if (mode.icon) { <span>{{ mode.icon }}</span> }
+          <span>{{ mode.labelKey ? t(mode.labelKey) : mode.id }}</span>
+        </div>
+        @if (mode.descKey || mode.desc) {
+        <div class="text-[10px] font-normal opacity-70 leading-tight mt-1">
+          {{ mode.descKey ? t(mode.descKey) : mode.desc }}
+        </div>
+        }
+      </button>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Difficulty -->
+  @if (availableDifficulties().length > 0) {
+  <div>
+    <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.diff') }}</label>
+    <div class="grid grid-cols-3 gap-2">
+      @for (diff of availableDifficulties(); track diff.id) {
+      <button (click)="roomDifficulty.set(diff.id)"
+        [class]="'py-3 rounded-xl border font-bold text-xs transition-all flex flex-col items-center gap-1 min-h-[56px] justify-center ' + (roomDifficulty() === diff.id ? 'bg-[var(--color-accent-from)] text-[var(--color-bg-main)] border-[var(--color-accent-from)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]')">
+        <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
+        @if (diff.descKey || diff.desc) {
+        <span class="text-[9px] font-normal opacity-70 leading-tight text-center px-1">
+          {{ diff.descKey ? t(diff.descKey) : diff.desc }}
+        </span>
+        }
+      </button>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Target (rounds to win) -->
+  @if (isMultiRoundEnabled()) {
+  <div>
+    <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-1">{{ t('game.pk_target_label') }}</label>
+    <p class="text-[10px] opacity-50 mb-2">{{ t('game.pk_target_hint') }}</p>
+    <div class="grid grid-cols-4 gap-2">
+      @for (opt of pkTargetOptions; track opt) {
+      <button (click)="roomTarget.set(opt)"
+        [class]="'py-3 rounded-xl border font-black text-sm transition-all text-center ' + (roomTarget() === opt ? 'bg-[var(--color-accent-to)] text-[var(--color-bg-main)] border-[var(--color-accent-to)]' : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-to)]')">
+        {{ opt }}
+      </button>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Password -->
+  <div>
+    <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_password') }}</label>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" [value]="roomPassword()"
+      (input)="updateInput(roomPassword, $event, 4, true)"
+      class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors font-mono text-xl tracking-[0.5em] text-center"
+      [placeholder]="t('game.room_password_placeholder')">
+    <p class="text-[10px] opacity-50 mt-1">{{ t('game.room_password_hint') }}</p>
+  </div>
+
+  <!-- Create Button -->
+  <button (click)="onConfirmCreate()" [disabled]="myRooms().length > 0"
+    class="w-full py-4 rounded-xl font-black text-base bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg hover:shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:brightness-75">
+    <span>✚</span>
+    <span>{{ t('game.create_and_join') }}</span>
+  </button>
+  @if (myRooms().length > 0) {
+  <p class="text-[11px] text-center text-amber-400 opacity-80 -mt-2">{{ t('game.room_limit_hint') }}</p>
+  }
+
 </ng-template>
 
 <!-- ══════ Password Prompt Modal ══════ -->

@@ -10,7 +10,6 @@ import { CrossGameJoinService } from '../../../core/services/cross-game-join.ser
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { getLocalizedField } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { SettingsService } from '../../../core/services/settings.service';
 import { environment } from '../../../../environments/environment';
 
 export interface GameMode {
@@ -88,13 +87,10 @@ export interface GameDifficulty {
           }
 
           <div class="shrink-0">
-            <button (click)="openCreateRoomModal()" [disabled]="myRooms().length > 0"
-                    class="w-full mb-1 py-3 rounded-xl font-bold border border-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)] hover:text-[var(--color-bg-main)] transition-colors flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-accent-from)]">
-              <span>➕</span> {{ t('game.create_pk') }}
+            <button (click)="openPkLobby.emit()"
+                    class="w-full mb-3 py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow">
+              ⚔️ {{ t('game.pk_arena') }}
             </button>
-            @if (myRooms().length > 0) {
-              <p class="text-[10px] text-center text-amber-400 opacity-80 mb-3">{{ t('game.room_limit_hint') }}</p>
-            }
           </div>
 
           <div class="space-y-6 flex-grow pb-12 md:pb-4">
@@ -265,29 +261,15 @@ export interface GameDifficulty {
         <div class="fixed inset-0 z-50 flex items-start justify-center px-4 pb-4 pt-0 bg-[var(--color-overlay)] backdrop-blur-sm transition-opacity overflow-y-auto">
           <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-t-none rounded-b-2xl md:rounded-b-3xl p-5 md:p-8 w-full max-w-md shadow-2xl transform transition-all text-[var(--color-text-main)] h-fit max-h-[80vh] md:max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-4 md:mb-6 shrink-0">
-              <h2 class="text-xl md:text-2xl font-bold">
-                {{ isUpdateMode() ? (t('game.update_settings') || 'Update Room') : t('game.create_room_title') }}
-                @if (!isGlobal && !isUpdateMode()) {
-                  - {{ t('lobby.' + currentGameId) }}
-                }
-              </h2>
+              <h2 class="text-xl md:text-2xl font-bold">{{ t('game.update_settings') }}</h2>
               <button (click)="isCreateModalOpen.set(false)" class="text-xl opacity-50 hover:opacity-100 transition-opacity">
                 ✕
               </button>
             </div>
             
             <div class="space-y-5 md:space-y-6 overflow-y-auto overflow-x-hidden flex-1 pr-1 custom-scrollbar">
-              <!-- Room Name -->
-              @if (!isUpdateMode()) {
-                <div>
-                  <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_name') }}</label>
-                  <input type="text" [value]="newRoomName()" (input)="updateRoomName($event)"
-                         class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors"
-                         placeholder="Enter room name">
-                </div>
-              }
-                          <!-- Game Selection (Global Mode Only or Update Mode) -->
-              @if (isGlobal || isUpdateMode()) {
+              <!-- Game Selection -->
+              @if (true) {
                 <div>
                   <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.select_game') }}</label>
                   <div class="grid grid-cols-3 gap-2">
@@ -344,45 +326,13 @@ export interface GameDifficulty {
               </div>
             }
 
-            <!-- PK Target (rounds/score to win) — Create Mode Only, non-Single mode, game supports multiRound -->
-            @if (!isUpdateMode() && availableModes().length > 0 && isMultiRoundEnabled()) {
-              <div>
-                <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.pk_target_label') }}</label>
-                <div class="grid grid-cols-4 gap-2">
-                  @for (opt of pkTargetOptions; track opt) {
-                    <button (click)="newRoomTarget.set(opt)"
-                            [class.bg-[var(--color-accent-to)]]="newRoomTarget() === opt"
-                            [class.text-[var(--color-bg-main)]]="newRoomTarget() === opt"
-                            [class.border-[var(--color-accent-to)]]="newRoomTarget() === opt"
-                            [class.bg-[var(--color-bg-card)]]="newRoomTarget() !== opt"
-                            [class.hover:border-[var(--color-accent-to)]]="newRoomTarget() !== opt"
-                            class="py-2.5 rounded-xl border border-[var(--color-border-card)] font-bold text-sm transition-all text-center">
-                      {{ opt }}
-                    </button>
-                  }
-                </div>
-                <p class="text-[10px] opacity-50 mt-1">{{ t('game.pk_target_hint') }}</p>
-              </div>
-            }
-
-            <!-- Room Password (Create Mode Only) -->
-            @if (!isUpdateMode()) {
-              <div>
-                <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_password') }}</label>
-                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" [value]="newRoomPassword()" (input)="updateRoomPassword($event)"
-                       class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] transition-colors font-mono text-lg tracking-[0.5em] text-center"
-                       [placeholder]="t('game.room_password_placeholder')">
-                <p class="text-[10px] opacity-50 mt-1">{{ t('game.room_password_hint') }}</p>
-              </div>
-            }
-
             <!-- Action Buttons -->
             <div class="pt-2 pb-6 md:pb-2 flex gap-3 shrink-0 mt-2">
               <button (click)="isCreateModalOpen.set(false)" class="flex-1 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] transition-colors">
                 {{ t('game.cancel') }}
               </button>
               <button (click)="onConfirmCreateRoom()" class="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:brightness-110 active:scale-95">
-                {{ isUpdateMode() ? (t('game.update') || 'Update') : t('game.create_and_join') }}
+                {{ t('game.update') }}
               </button>
             </div>
           </div>
@@ -426,7 +376,6 @@ export class GameLobbyPanelComponent implements OnInit {
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
-  private settings = inject(SettingsService);
 
   challengeInfo = computed(() => {
     const q = this.route.snapshot.queryParams;
@@ -440,6 +389,7 @@ export class GameLobbyPanelComponent implements OnInit {
 
   @Output() joinRoom = new EventEmitter<{roomId: string, mode: string, difficulty: string, host: string, password?: string}>();
   @Output() createRoom = new EventEmitter<{name: string, gameId: string, mode: string, difficulty: string, password?: string, target: number}>();
+  @Output() openPkLobby = new EventEmitter<void>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
   playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
@@ -447,14 +397,9 @@ export class GameLobbyPanelComponent implements OnInit {
   isCreateModalOpen = signal(false);
   isUpdateMode = signal(false);
   updatingRoomId = signal('');
-  newRoomName = signal('');
   newRoomGameId = signal('');
   newRoomMode = signal('');
   newRoomDifficulty = signal('');
-  newRoomPassword = signal('');
-  newRoomTarget = signal(1);
-
-  readonly pkTargetOptions = [1, 3, 5, 10];
 
   // Password prompt for joining password-protected rooms
   isPasswordPromptOpen = signal(false);
@@ -467,10 +412,6 @@ export class GameLobbyPanelComponent implements OnInit {
 
   allGames = computed(() => this.gameRegistry.getAllConfigs());
 
-  isMultiRoundEnabled = computed(() => {
-    if (this.settings.settings().pk_multi_round_enabled === 'false') return false;
-    return this.gameRegistry.getConfig(this.newRoomGameId())?.multiRound === true;
-  });
   availableModes = computed(() => {
     const modes = this.gameRegistry.getConfig(this.newRoomGameId())?.modes || [];
     return modes.filter(m => m.id !== GameMode.Single);
@@ -514,21 +455,9 @@ export class GameLobbyPanelComponent implements OnInit {
     return name;
   }
 
-  openCreateRoomModal() {
-    this.isUpdateMode.set(false);
-    this.updatingRoomId.set('');
-    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    this.newRoomName.set(`${this.playerId()}-${randomSuffix}`);
-    const initialGame = this.isGlobal ? (this.allGames()[0]?.id || '') : this.currentGameId;
-    this.selectGameForNewRoom(initialGame);
-    this.newRoomTarget.set(1);
-    this.isCreateModalOpen.set(true);
-  }
-
   openUpdateRoomModal(room: any) {
     this.isUpdateMode.set(true);
     this.updatingRoomId.set(room.id);
-    this.newRoomName.set(room.id); // not editable anyway
     this.selectGameForNewRoom(room.game);
     this.newRoomMode.set(room.mode);
     this.newRoomDifficulty.set(room.difficulty);
@@ -551,19 +480,6 @@ export class GameLobbyPanelComponent implements OnInit {
     }
   }
 
-  updateRoomName(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.newRoomName.set(input.value);
-  }
-
-  updateRoomPassword(event: Event) {
-    const input = event.target as HTMLInputElement;
-    // Only allow 4-digit numbers
-    const val = input.value.replace(/[^0-9]/g, '').slice(0, 4);
-    input.value = val;
-    this.newRoomPassword.set(val);
-  }
-
   updatePasswordInput(event: Event) {
     const input = event.target as HTMLInputElement;
     const val = input.value.replace(/[^0-9]/g, '').slice(0, 4);
@@ -572,46 +488,14 @@ export class GameLobbyPanelComponent implements OnInit {
   }
 
   onConfirmCreateRoom() {
-    if (this.isUpdateMode()) {
-      this.wsService.send({
-        type: 'change_game',
-        roomId: this.updatingRoomId(),
-        game: this.newRoomGameId(),
-        mode: this.newRoomMode(),
-        difficulty: this.newRoomDifficulty()
-      });
-      this.isCreateModalOpen.set(false);
-      return;
-    }
-
-    let mode = this.newRoomMode();
-    if (!mode) {
-      const modes = this.availableModes();
-      if (modes.length > 0) {
-        mode = modes[0].id;
-      }
-    }
-
-    let diff = this.newRoomDifficulty();
-    if (!diff) {
-      const diffs = this.availableDifficulties();
-      if (diffs.length > 0) {
-        diff = diffs[0].id;
-      }
-    }
-
-    const roomName = this.newRoomName().trim() || `${this.newRoomGameId()}-${Date.now()}`;
-    this.wsService.setPendingAction('create');
-    this.createRoom.emit({
-      name: roomName,
-      gameId: this.newRoomGameId(),
-      mode: mode,
-      difficulty: diff,
-      password: this.newRoomPassword(),
-      target: this.isMultiRoundEnabled() ? this.newRoomTarget() : 1
+    this.wsService.send({
+      type: 'change_game',
+      roomId: this.updatingRoomId(),
+      game: this.newRoomGameId(),
+      mode: this.newRoomMode(),
+      difficulty: this.newRoomDifficulty()
     });
     this.isCreateModalOpen.set(false);
-    this.newRoomPassword.set('');
   }
 
   onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean) {

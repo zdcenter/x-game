@@ -14,7 +14,6 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { ToastService } from '../../../core/services/toast.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { GameHeaderComponent } from '../game-header/game-header.component';
-import { isBrowser } from '../../../core/utils/browser.util';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -39,6 +38,7 @@ export interface PkJoinRoomEvent {
   imports: [CommonModule, DatePipe, GameHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-pk-lobby.component.html',
+  host: { class: 'flex flex-col flex-1 min-h-0 overflow-hidden w-full' },
 })
 export class GamePkLobbyComponent implements OnInit, OnDestroy {
   GameStatus = GameStatus;
@@ -66,8 +66,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   // ── State ─────────────────────────────────────────────────────────────────
   playerId   = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
   rightTab   = signal<'rooms' | 'online'>('rooms');
-  // desktop always shows form; mobile defaults collapsed so rooms panel is immediately visible
-  formOpen   = signal(isBrowser() ? window.innerWidth >= 1024 : true);
+  formOpen   = signal(false); // mobile accordion only; desktop always shows form via CSS
 
   // Create form fields
   createGameId   = signal('');   // selected game for create form
@@ -135,6 +134,15 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       .map((r: any) => r.game as string);
     return [...new Set(ids)];
   });
+
+  // Current room (user is in it)
+  currentRoom = computed(() =>
+    this.currentRoomId ? this.allRooms().find((r: any) => r.id === this.currentRoomId) ?? null : null
+  );
+
+  // Stats ticker
+  totalActiveRooms = computed(() => this.allRooms().length);
+  totalOnline      = computed(() => this.wsService.onlinePlayers().length);
 
   // Change-game modal computed
   changeRoomModes = computed(() =>
@@ -319,5 +327,15 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   formatHost(name: string, max = 12): string {
     if (!name) return '';
     return name.length > max ? name.slice(0, max) + '…' : name;
+  }
+
+  onQuickMatch() {
+    const gameId = this.createGameId() || this.gameId;
+    const waiting = this.otherRooms().find((r: any) => r.game === gameId && r.status === GameStatus.Waiting);
+    if (waiting) {
+      this.onJoinRoom(waiting.id, waiting.game, waiting.mode, waiting.difficulty, waiting.host, waiting.hasPassword);
+    } else {
+      this.onConfirmCreate();
+    }
   }
 }

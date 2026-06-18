@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BlogService, BlogPostMeta, AdminBlogPostInput } from '../../core/services/blog.service';
 import { ToastService } from '../../core/services/toast.service';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 type EditTab = 'meta' | 'content_en' | 'content_zh';
 
@@ -15,15 +16,15 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-bold">📝 Blog Management</h2>
-          <p class="text-[var(--color-text-muted)] mt-1">Manage bilingual blog posts (EN + ZH)</p>
+          <h2 class="text-2xl font-bold">📝 {{ i18n.t('admin.blog.title')() }}</h2>
+          <p class="text-[var(--color-text-muted)] mt-1">{{ i18n.t('admin.blog.subtitle')() }}</p>
         </div>
         <button (click)="openCreate()"
           class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
           </svg>
-          New Post
+          {{ i18n.t('admin.blog.add')() }}
         </button>
       </div>
 
@@ -33,11 +34,11 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
           <thead>
             <tr class="bg-[var(--color-bg-main)]/50 border-b border-[var(--color-border-card)]">
               <th class="py-3 px-4 w-12 opacity-60 uppercase text-xs tracking-wider">ID</th>
-              <th class="py-3 px-4 opacity-60 uppercase text-xs tracking-wider">Title (EN)</th>
-              <th class="py-3 px-4 w-28 opacity-60 uppercase text-xs tracking-wider">Date</th>
-              <th class="py-3 px-4 w-24 opacity-60 uppercase text-xs tracking-wider">Status</th>
-              <th class="py-3 px-4 w-20 opacity-60 uppercase text-xs tracking-wider text-center">Order</th>
-              <th class="py-3 px-4 w-44 opacity-60 uppercase text-xs tracking-wider text-right">Actions</th>
+              <th class="py-3 px-4 opacity-60 uppercase text-xs tracking-wider">{{ i18n.t('admin.blog.col.title_en')() }}</th>
+              <th class="py-3 px-4 w-28 opacity-60 uppercase text-xs tracking-wider">{{ i18n.t('admin.blog.col.date')() }}</th>
+              <th class="py-3 px-4 w-24 opacity-60 uppercase text-xs tracking-wider">{{ i18n.t('admin.blog.col.status')() }}</th>
+              <th class="py-3 px-4 w-20 opacity-60 uppercase text-xs tracking-wider text-center">{{ i18n.t('admin.blog.col.order')() }}</th>
+              <th class="py-3 px-4 w-44 opacity-60 uppercase text-xs tracking-wider text-right">{{ i18n.t('admin.blog.col.actions')() }}</th>
             </tr>
           </thead>
           <tbody>
@@ -56,7 +57,7 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
                     [class]="post.published
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
                       : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'">
-                    {{ post.published ? '✓ Published' : '⏸ Draft' }}
+                    {{ post.published ? '✓ ' + i18n.t('admin.blog.published')() : '⏸ ' + i18n.t('admin.blog.draft')() }}
                   </button>
                 </td>
                 <td class="py-3 px-4 text-center font-mono text-xs">{{ post.sort_order }}</td>
@@ -79,7 +80,7 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="py-12 text-center text-sm opacity-40 italic">No posts found.</td>
+                <td colspan="6" class="py-12 text-center text-sm opacity-40 italic">{{ i18n.t('admin.blog.no_posts')() }}</td>
               </tr>
             }
           </tbody>
@@ -93,7 +94,7 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
         <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-4xl shadow-2xl my-8">
           <!-- Modal Header -->
           <div class="flex items-center justify-between p-6 border-b border-[var(--color-border-card)]">
-            <h3 class="text-xl font-bold">{{ isEditing() ? 'Edit Post' : 'New Post' }}</h3>
+            <h3 class="text-xl font-bold">{{ isEditing() ? i18n.t('admin.blog.edit')() : i18n.t('admin.blog.new')() }}</h3>
             <button (click)="closeModal()" class="p-2 hover:bg-[var(--color-bg-main)]/50 rounded-lg transition-colors text-lg">✕</button>
           </div>
 
@@ -233,7 +234,7 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
             <button (click)="save()" [disabled]="saving()"
               class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg disabled:opacity-50 text-sm flex items-center gap-2">
               @if (saving()) { <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
-              {{ isEditing() ? 'Save Changes' : 'Create Post' }}
+              {{ isEditing() ? i18n.t('admin.blog.save')() : i18n.t('admin.blog.create')() }}
             </button>
           </div>
         </div>
@@ -256,6 +257,7 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
 export class AdminBlogComponent implements OnInit {
   private blogService = inject(BlogService);
   private toast = inject(ToastService);
+  i18n = inject(I18nService);
 
   posts = signal<BlogPostMeta[]>([]);
   modalOpen = signal(false);
@@ -331,7 +333,7 @@ export class AdminBlogComponent implements OnInit {
     this.form.tags_zh = this.tagsZHStr.split(',').map(t => t.trim()).filter(Boolean);
 
     if (!this.form.slug.trim()) {
-      this.toast.show('Slug is required', 'error');
+      this.toast.show(this.i18n.t('admin.blog.slug_required')(), 'error');
       return;
     }
 
@@ -343,13 +345,13 @@ export class AdminBlogComponent implements OnInit {
 
     req.subscribe({
       next: () => {
-        this.toast.show(id ? 'Post updated!' : 'Post created!', 'success');
+        this.toast.show(this.i18n.t('admin.blog.save_success')(), 'success');
         this.saving.set(false);
         this.closeModal();
         this.loadPosts();
       },
       error: () => {
-        this.toast.show('Failed to save post', 'error');
+        this.toast.show(this.i18n.t('admin.blog.save_error')(), 'error');
         this.saving.set(false);
       },
     });
@@ -362,18 +364,19 @@ export class AdminBlogComponent implements OnInit {
         this.posts.update(list =>
           list.map(p => p.dbId === post.dbId ? { ...p, published: res.published } : p)
         );
+        this.toast.show(this.i18n.t('admin.blog.toggle_success')(), 'success');
       },
     });
   }
 
   deletePost(post: BlogPostMeta) {
-    if (!post.dbId || !confirm(`Delete "${post.en.title}"? This cannot be undone.`)) return;
+    if (!post.dbId || !confirm(this.i18n.t('admin.blog.delete_confirm')())) return;
     this.blogService.adminDelete(post.dbId).subscribe({
       next: () => {
-        this.toast.show('Post deleted', 'success');
+        this.toast.show(this.i18n.t('admin.blog.delete_success')(), 'success');
         this.posts.update(list => list.filter(p => p.dbId !== post.dbId));
       },
-      error: () => this.toast.show('Delete failed', 'error'),
+      error: () => this.toast.show(this.i18n.t('admin.blog.delete_error')(), 'error'),
     });
   }
 

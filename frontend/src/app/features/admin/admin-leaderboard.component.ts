@@ -126,7 +126,7 @@ export class AdminLeaderboardComponent implements OnInit {
   }
 
   confirmDelete(statId: number): void {
-    if (!confirm('Remove this entry from leaderboard?')) return;
+    if (!confirm(this.i18n.t('admin.leaderboard.delete_confirm')())) return;
     this.http.delete(`${this.apiUrl}/admin/leaderboard/stat/${statId}`).subscribe(() => this.load());
   }
 

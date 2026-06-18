@@ -8,6 +8,7 @@ import { AuthStore } from '../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
 import { GameConfig as RegistryGameConfig, GameRegistryService } from '../../core/services/game-registry.service';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { HttpClient } from '@angular/common/http';
 import { environment as versionEnv } from '../../../environments/version';
 import { environment as appEnvironment } from '../../../environments/environment';
@@ -25,7 +26,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, FooterComponent, DailyChallengeBannerComponent],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, FooterComponent, DailyChallengeBannerComponent, GamePkLobbyComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
@@ -52,6 +53,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   );
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
+  pkArenaOpen = signal(false);
   frontendVersion = versionEnv.version;
 
   ngOnInit() {
@@ -137,6 +139,16 @@ export class LobbyComponent implements OnInit, OnDestroy {
       span.textContent = this.getGameEmoji(gameId);
       parent.appendChild(span);
     }
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    this.handleGlobalCreateRoom({ name: e.name, gameId: e.gameId, mode: e.mode, difficulty: e.difficulty, password: e.password, target: e.target });
+    this.pkArenaOpen.set(false);
+  }
+
+  handlePkJoin(_e: PkJoinRoomEvent) {
+    // Cross-game joins are handled directly inside game-pk-lobby via CrossGameJoinService
+    this.pkArenaOpen.set(false);
   }
 
   shareGame(event: Event, gameId: string) {

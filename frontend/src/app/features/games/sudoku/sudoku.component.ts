@@ -15,6 +15,7 @@ import { SudokuPkStealComponent } from './components/sudoku-pk-steal/sudoku-pk-s
 import { SudokuPkSpeedComponent } from './components/sudoku-pk-speed/sudoku-pk-speed.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../../shared/components/game-pk-lobby/game-pk-lobby.component';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -45,7 +46,8 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameLobbyPanelComponent,
     GameHeaderComponent,
     PlayerBadgeComponent,
-    TutorialOverlayComponent
+    TutorialOverlayComponent,
+    GamePkLobbyComponent
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,6 +71,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
   view = this.store.view;
+  pkView = signal<'game' | 'pk-lobby'>('game');
   showOverlay = signal(false);
   showTutorial = signal(false);
   tutorialSteps = this.tutorialService.getStepsForGame('sudoku');
@@ -184,6 +187,16 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   override handleDismissRoom() {
     super.handleDismissRoom();
     this.roomLifecycle.clearReconnectInfo();
+  }
+
+  handlePkCreate(e: PkCreateRoomEvent) {
+    this.handleCreateRoom({ name: e.name, mode: e.mode, difficulty: e.difficulty, password: e.password });
+    this.pkView.set('game');
+  }
+
+  handlePkJoin(e: PkJoinRoomEvent) {
+    this.handleJoinRoom({ roomId: e.roomId, mode: e.mode, difficulty: e.difficulty, host: e.host, password: e.password });
+    this.pkView.set('game');
   }
 
   override ngOnDestroy() {

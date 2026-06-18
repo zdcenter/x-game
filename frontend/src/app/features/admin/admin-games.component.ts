@@ -191,7 +191,7 @@ export class AdminGamesComponent implements OnInit {
         }));
       },
       error: (err) => {
-        this.toastService.show('Failed to load games: ' + (err.error?.error || err.message), 'error');
+        this.toastService.show(this.i18n.t('admin.games.load_error')() + ': ' + (err.error?.error || err.message), 'error');
       }
     });
   }
@@ -205,10 +205,10 @@ export class AdminGamesComponent implements OnInit {
         const updated = this.games().map(g => g.id === game.id ? { ...g, isActive: newStatus, rules: game.rules } : g);
         this.games.set(updated);
         this.isUpdating.set(false);
-        this.toastService.show(`Game ${newStatus ? 'activated' : 'deactivated'}`, 'success');
+        this.toastService.show(this.i18n.t('admin.games.update_success')(), 'success');
       },
       error: (err) => {
-        this.toastService.show('Update failed: ' + (err.error?.error || err.message), 'error');
+        this.toastService.show(this.i18n.t('admin.games.update_error')() + ': ' + (err.error?.error || err.message), 'error');
         this.isUpdating.set(false);
       }
     });
@@ -221,11 +221,11 @@ export class AdminGamesComponent implements OnInit {
     const sortVal = game.sortOrder !== undefined && game.sortOrder !== null ? Number(game.sortOrder) : 0;
     this.adminService.updateGame(game.id, overviewJson, rulesJson, game.config, game.isActive, sortVal).subscribe({
       next: (res) => {
-        this.toastService.show('Rules saved successfully!', 'success');
+        this.toastService.show(this.i18n.t('admin.games.rules_saved')(), 'success');
         this.isUpdating.set(false);
       },
       error: (err) => {
-        this.toastService.show('Update failed: ' + (err.error?.error || err.message), 'error');
+        this.toastService.show(this.i18n.t('admin.games.update_error')() + ': ' + (err.error?.error || err.message), 'error');
         this.isUpdating.set(false);
       }
     });
@@ -252,12 +252,12 @@ export class AdminGamesComponent implements OnInit {
     
     this.adminService.updateGame(game.id, game.overview, game.rules, configJson, game.isActive, sortVal).subscribe({
       next: (res) => {
-        this.toastService.show('Settings saved successfully!', 'success');
+        this.toastService.show(this.i18n.t('admin.games.update_success')(), 'success');
         this.isUpdating.set(false);
         this.closeSettings();
       },
       error: (err) => {
-        this.toastService.show('Update failed: ' + (err.error?.error || err.message), 'error');
+        this.toastService.show(this.i18n.t('admin.games.update_error')() + ': ' + (err.error?.error || err.message), 'error');
         this.isUpdating.set(false);
       }
     });

@@ -35,19 +35,19 @@ const DEFAULT_SETTINGS: XpSetting[] = [
         <h1 class="text-2xl font-black text-[var(--color-text-main)]">✨ {{ i18n.t('admin.xp.title')() }}</h1>
         <button (click)="saveAll()" [disabled]="isSaving()"
                 class="px-5 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-sm shadow hover:shadow-lg transition-all disabled:opacity-50">
-          {{ isSaving() ? 'Saving...' : 'Save All' }}
+          {{ isSaving() ? i18n.t('admin.xp.saving')() : i18n.t('admin.xp.save_all')() }}
         </button>
       </div>
 
       @if (savedMsg()) {
         <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 font-bold text-sm">
-          ✓ Settings saved successfully
+          ✓ {{ i18n.t('admin.xp.save_success')() }}
         </div>
       }
 
       <!-- XP formula info -->
       <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] p-5">
-        <h2 class="font-black text-[var(--color-text-main)] mb-3">Level Formula</h2>
+        <h2 class="font-black text-[var(--color-text-main)] mb-3">{{ i18n.t('admin.xp.formula_label')() }}</h2>
         <div class="flex items-center gap-4 text-sm">
           <div class="flex-1 font-mono bg-[var(--color-bg-main)] rounded-xl px-4 py-3 border border-[var(--color-border-card)]">
             level = floor(sqrt(xp / 100)) + 1
