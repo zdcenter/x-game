@@ -353,7 +353,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       } else {
         this.gameTimer.stopCountdown();
       }
-    }, { allowSignalWrites: true });
+    });
 
     effect(() => {
       const result = this.store.lastStatResult();
@@ -363,7 +363,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
         this.dailyService.finish(0, t).subscribe();
         this.pendingDailyChallengeId.set(null);
       }
-    }, { allowSignalWrites: true });
+    });
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'sokoban',

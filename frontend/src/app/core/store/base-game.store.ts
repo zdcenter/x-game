@@ -62,7 +62,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
         this._pkStatSubmitted = false;
       }
       this._pkPrevStatus = cur as string;
-    }, { allowSignalWrites: false });
+    });
   }
 
   readonly roomId = signal<string>('');
