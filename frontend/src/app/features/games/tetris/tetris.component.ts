@@ -271,7 +271,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     });
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({

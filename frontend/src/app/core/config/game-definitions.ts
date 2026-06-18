@@ -261,6 +261,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     id: GameId.Sokoban,
     route: '/games/sokoban',
     titleKey: 'app.title.sokoban',
+    multiRound: true,
     iconEmoji: '📦',
     loadComponent: () => import('../../features/games/sokoban/sokoban.component').then(m => m.SokobanComponent),
     modes: [

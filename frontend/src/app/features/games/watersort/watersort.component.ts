@@ -726,7 +726,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this.roomLifecycle.clearReconnectInfo();
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     this.navigateToPkArena();
   }
 

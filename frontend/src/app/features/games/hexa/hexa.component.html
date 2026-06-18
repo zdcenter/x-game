@@ -1,4 +1,4 @@
-<div class="h-full w-full flex flex-col relative text-[var(--color-text-main)] overflow-hidden">
+<div class="h-[calc(100dvh-64px)] w-full flex flex-col relative text-[var(--color-text-main)] overflow-hidden">
   
   <svg width="0" height="0" style="position: absolute; pointer-events: none;" aria-hidden="true">
     <defs>
@@ -107,6 +107,7 @@
         (kick)="store.kickPlayer($event)"
         (ready)="store.ready()"
         (cancelReady)="store.cancelReady()"
+        [target]="store.currentRoomTarget()"
       >
             </app-game-waiting-room>
           } @else {

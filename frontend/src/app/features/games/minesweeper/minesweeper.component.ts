@@ -194,6 +194,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   override ngOnDestroy() {
+    super.ngOnDestroy();
     this.wsService.disconnect(GameId.Minesweeper);
     this.gameTimer.stopCountdown();
     if (this.elapsedInterval) {
@@ -253,7 +254,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   handleCellReveal(cell: any) { this.store.revealCell(cell.x, cell.y); }
   handleCellFlag(cell: any) { this.store.toggleFlag(cell.x, cell.y); }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
@@ -319,14 +320,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     return scores[this.playerId] > 0;
   }
 
-  get isSeriesOver(): boolean {
-    if (this.currentRoomMode() === GameMode.Single) return true;
-    const target = this.store.currentRoomTarget();
-    if (target <= 1) return true;
-    const wins = this.store.pkWins();
-    return Object.values(wins).some(w => w >= target);
-  }
-
   getOverlayStatus(): GameResultType {
     if (this.currentRoomMode() === GameMode.Speed) {
       return this.hasWonSpeedMode() ? GameResult.Win : GameResult.Lose;
@@ -336,7 +329,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   getOverlayTitle(): string {
     const status = this.getOverlayStatus();
-    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+    if (this.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
       return status === GameResult.Win ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
     }
     if (status === GameResult.Win) {
@@ -346,11 +339,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   getOverlaySubtitle(): string {
-    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
-      const wins = this.store.pkWins();
-      const myW = wins[this.playerId] || 0;
-      const oppW = Object.entries(wins).filter(([k]) => k !== this.playerId).reduce((a, [, v]) => a + v, 0);
-      return `${myW} : ${oppW}`;
+    if (this.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
+      return this.store.pkScoreLabel();
     }
     if (this.currentRoomMode() === GameMode.Speed) {
       return this.hasWonSpeedMode() ? this.i18n.t('game.cleared_first')() : this.i18n.t('game.opponent_finished')();

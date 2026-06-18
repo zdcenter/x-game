@@ -13,7 +13,8 @@
 ### 前端技术栈 (Angular 21 + TailwindCSS v4)
 - **Zoneless 无区化渲染**：全盘采用 Angular 21 最新的 Signals 响应式特性，性能极致优化，告别 `zone.js` 的性能损耗。
 - **无缝切游 (Switch Room Game)**：多人房间结算页面支持房主一键切换游戏，带领全房间玩家瞬间转移至新游戏并保持原状，免除退回大厅重组房间的繁琐步骤。
-- **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 13 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。
+- **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 13 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。多局系列赛通用信号（`pkWins` / `isSeriesOver` / `pkScoreLabel`）全部内置于基类，各游戏无需重复实现；系列赛重启时 `_pkStatSubmitted` 自动重置，确保每局战绩独立提交。
+- **统一游戏组件基类（BaseGameComponent）**：`openChangeSettings()`、`navigateToPkArena()`、`handleJoinRoom()` 等 8 个公共方法上移至基类，消除 11 款游戏的重复样板代码；`GameStoreInterface` 接口新增 `pkWins` / `isSeriesOver` / `pkScoreLabel` 三项约束，确保编译时类型安全。`lobbyPanel` 通过 `@ViewChild override` 模式让子类可选复写而不重复声明。
 - **现代美学 UI**：结合 TailwindCSS v4 的原子化 CSS 特性，实现了全面现代化、毛玻璃（Glassmorphism）、微动画（Micro-animations）、金色脉冲光晕等具有震撼视觉的高级游戏界面。
 - **自动化版本号**：在前端编译命令中嵌入了自定义 Node 脚本，全自动根据构建时间生成版本号（如 `v2023.10.23.1234`），与后端版本号一并以非侵入式的 UI Overlay 悬浮于全站右下角，供管理员与玩家精准识别系统构建版本。
 - **路由懒加载**：实现了核心游戏大厅（Lobby）与具体游戏页面（Minesweeper）的独立路由控制与分离渲染。
@@ -77,7 +78,7 @@
 - **综合包厢模式 (Party Room Mode)**：为了提供最好的朋友开黑（Party）体验，我们的房间设计不再死板地绑定于某一款游戏。玩家聚在一个房间里后，**房主可以随时更改房间设置，无缝切换到其他游戏或难度**。后端会自动热重载新的游戏引擎，并通过广播带领房间内所有玩家集体、平滑地转场到新的游戏界面，真正实现了“一个房间，玩遍全站”的派对体验。
 - **大厅公屏广播：“发英雄帖” (Global Lobby Broadcast)**：在全局竞技大厅或游戏内房间面板，房主可一键发送英雄帖。大厅顶部会以跑马灯形式滚动系统高亮广播，其他在线玩家点击广播内的链接即可瞬间跨游戏加入对战，极大盘活全局活跃度。
 - **全页 PK 竞技大厅 (GamePkLobbyComponent)**：点击游戏右上角人群图标，单机模式下直接展开全页 PK 大厅，统管所有游戏房间。顶部导航显示统一的"⚔️ PK 竞技大厅"标题而非单一游戏名称。桌面端两栏布局（左：创建表单，右：活跃房间+在线玩家 Tab）；移动端折叠式 Accordion。新增三大能力：①创建表单内置全游戏选择器（4列 icon 格，切换游戏自动联动 Mode/Difficulty）；②房间列表支持按游戏筛选（chip 过滤条，仅有多种游戏时显示）；③我的房间可通过 ⚙ 按钮触发"换游戏"弹窗实时切换游戏/模式/难度（走 change_game WS 动作）。
-- **多局制 PK 系列赛 (Best-of-N)**：创建房间时可指定目标局数（1 / 3 / 5 / 10），先赢 N 局者获得系列赛冠军。玩家 Badge 实时显示 `🏆 当前局/总局`。系列赛结束后自动重置 Wins，支持再来一局开启新系列。已支持游戏：扫雷（速度模式）、滑块拼图、灯谜、密码破译。
+- **多局制 PK 系列赛 (Best-of-N)**：创建房间时可指定目标局数（1 / 3 / 5 / 10），先赢 N 局者获得系列赛冠军。玩家 Badge 实时显示 `🏆 当前局/总局`。系列赛结束后自动重置 Wins，支持再来一局开启新系列。已支持游戏：扫雷（速度模式）、滑块拼图、灯谜、密码破译。多局通用逻辑（`pkWins` / `isSeriesOver` / `pkScoreLabel`）已全部内置于 `BaseGameStore`，各游戏无需重复实现；同时修复了系列赛重启时 `_pkStatSubmitted` 未重置导致后续局对战统计不提交的 Bug。
 - **动态竞技房间**：每款游戏内部也有独立大厅。玩家可创建房间、调整难度模式、邀请在线玩家。支持跨设备的双人实时对战和计分同步。
 - **私密好友房 (Private Room Password)**：创建房间时支持设置 4 位纯数字密码保护。大厅中带有锁定图标 🔒 的房间加入时需验证密码。结合包厢模式，密码验证状态在切游戏时会无缝跨路由传递；且房主断网重连可自动免密直连。
 - **全端社交裂变与分享系统 (Social Sharing & Promotion)**：
@@ -261,7 +262,7 @@
 - **全局记录**：每次 `SubmitStat` / `puzzle/finish` 写入 `gm_match_history`，记录游戏、模式、难度、结果、用时、XP 获得。
 - **时间线展示**：个人资料页「历史」标签展示最近 20 场，含游戏图标、结果徽章（胜/负/完成）、XP 收益。
 - **API**：`GET /api/v1/history?limit=20&gameId=&mode=` 支持按游戏和模式过滤。
-- **PK 对战自动提交**：`BaseGameStore` 构造函数 `effect()` 检测 PK 模式 Playing→Finished 状态迁移，自动调用 `_submitPKStat()` 提交对战统计；子类可 override `extractPKStatPayload()` 提供游戏特定的 score/time 提取逻辑。
+- **PK 对战自动提交**：`BaseGameStore` 构造函数 `effect()` 检测 PK 模式 Playing→Finished 状态迁移，自动调用 `_submitPKStat()` 提交对战统计；子类可 override `extractPKStatPayload()` 提供游戏特定的 score/time 提取逻辑。多局系列赛场景下，`_pkStatSubmitted` 标志在每局结束后（Finished → Waiting）自动重置，确保每局独立计入历史记录而非只记第一局。
 
 ### 9.6 新手引导
 - **游戏内嵌步骤引导**：`TutorialOverlayComponent` 分步展示引导卡片（图标 + 标题 + 描述）。

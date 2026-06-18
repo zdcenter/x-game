@@ -1,5 +1,56 @@
 # Changelog
 
+## [2026-06-18] - 🐛 Bug 修复 + 🏗️ 架构重构（BaseGameStore 多局模式封装）
+
+### 🐛 Bug 修复
+
+**多局模式 PK（Multi-Round Series）**
+- 修复第 2+ 局不提交战绩的问题：`_pkStatSubmitted` 原先只在 `joinRoom` 时重置，重启后不重置；现在改为 `Finished → Waiting`（host 重启）时自动重置，确保每局均提交战绩
+- 新增 `BaseGameStore.pkWins` / `isSeriesOver` / `pkScoreLabel` 三个 computed signal，统一处理多局逻辑，不再需要每个游戏各写一遍
+
+### 🏗️ 架构重构
+
+**BaseGameStore — 多局系列赛封装**
+- `pkWins: Signal<Record<string, number>>` — 读取后端 `wins` 字段，各玩家已赢局数
+- `isSeriesOver: Signal<boolean>` — 自动判断系列赛是否结束（有人达到 target 局）
+- `pkScoreLabel: Signal<string>` — PK 比分标签（如 "1 : 0"），系列结束时返回空字符串
+- 4 个游戏（minesweeper, sliding, codebreaker, lightsout）的 `isSeriesOver`/`pkWins` 本地实现全部删除，改用基类
+
+**GameStoreInterface** — 新增 `pkWins`、`isSeriesOver`、`pkScoreLabel` 三个接口声明，编译期保证所有 store 实现
+
+---
+
+## [2026-06-18] - 🐛 Bug 修复 + 🏗️ 架构重构（BaseGameComponent 封装）
+
+### 🐛 Bug 修复
+
+**数独（Sudoku）**
+- 修复 PK 模式倒计时界面高度异常（仅占屏幕少许高度）：将外层容器从 `h-full` 改为 `h-[calc(100dvh-64px)]`
+- 修复 PK 模式进入游戏后无棋盘/无数据：`effect` 现在追踪 `rawState().puzzle` 信号，puzzle 到达即初始化棋盘，不再依赖 view 切换时机
+
+**五子棋（Gomoku）**
+- 修复等待房间不显示房主皇冠图标（👑）：后端返回 `"players": []string`（数组而非对象），`Object.keys(array)` 返回数字索引导致玩家 ID 匹配失败；新增 `playersList` override 检测并转换数组格式
+
+**密码破译（Codebreaker）**
+- 移除本地 `hostId` signal（可能与服务端 host 状态脱节），改用 `store.hostId()`（派生自 WS 实时数据）
+
+### ✨ 功能升级 / 架构重构
+
+**BaseGameComponent — 新增通用封装**
+- 新增 `openChangeSettings()` 方法：通过 `lobbyPanel` 和 `store.gameId` 打开修改房间设置弹窗，消除了 9 款游戏中完全相同的重复代码
+- `GameStoreInterface` 新增 `gameId: string` 和 `currentRoomTarget: Signal<number>` 必要属性
+
+**游戏容器高度统一**
+- 将 Block、Drop2048、Gomoku、Hexa、Lightsout、Sliding、Codebreaker 等 7 款游戏的外层 `h-full` / `flex-1` 改为 `h-[calc(100dvh-64px)]`（防止倒计时/空内容视图塌陷）
+
+**等待房间 `[target]` 绑定补全**
+- Block、Hexa 的 `<app-game-waiting-room>` 补全 `[target]="store.currentRoomTarget()"` 绑定
+
+**生命周期修复**
+- Minesweeper 组件补全缺失的 `super.ngOnDestroy()` 调用
+
+---
+
 ## [2026-06-18] - ⚔️ PK 竞技大厅全面升级（跨游戏统管）
 
 ### ✨ 功能升级

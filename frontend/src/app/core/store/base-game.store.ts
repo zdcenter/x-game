@@ -57,6 +57,10 @@ export abstract class BaseGameStore implements GameStoreInterface {
         this._pkStatSubmitted = true;
         untracked(() => this._submitPKStat());
       }
+      // Reset for each new round when host restarts mid-series
+      if (cur === GameStatus.Waiting && this._pkPrevStatus === GameStatus.Finished) {
+        this._pkStatSubmitted = false;
+      }
       this._pkPrevStatus = cur as string;
     }, { allowSignalWrites: false });
   }
@@ -130,6 +134,31 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly isStarting = computed(() => this.status() === GameStatus.Starting);
   readonly isPlaying = computed(() => this.status() === GameStatus.Playing);
   readonly isFinished = computed(() => this.status() === GameStatus.Finished);
+
+  // ── 多局模式 (Multi-Round) ────────────────────────────────────────────────
+  /** 各玩家本系列已累积赢局数。只要后端 GetState 包含 wins 字段即可读取。 */
+  readonly pkWins = computed<Record<string, number>>(
+    () => ((this.rawState() as any)?.wins || {}) as Record<string, number>
+  );
+
+  /** 当前系列是否已决出胜负（有人达到 target 局）。 */
+  readonly isSeriesOver = computed<boolean>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return true;
+    const target = this.currentRoomTarget();
+    if (target <= 1) return true;
+    const wins = this.pkWins();
+    return Object.values(wins).some(w => w >= target);
+  });
+
+  /** PK 多局时显示的比分标签，如 "1 : 0"。系列结束或单机时返回空字符串。 */
+  readonly pkScoreLabel = computed<string>(() => {
+    if (this.isSeriesOver()) return '';
+    const wins = this.pkWins();
+    const me = this.playerId();
+    const myW = wins[me] || 0;
+    const oppW = Object.entries(wins).filter(([k]) => k !== me).reduce((a, [, v]) => a + v, 0);
+    return `${myW} : ${oppW}`;
+  });
 
   joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
     this.roomId.set(roomId);

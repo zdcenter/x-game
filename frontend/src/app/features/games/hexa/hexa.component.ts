@@ -291,7 +291,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     history.back();
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({

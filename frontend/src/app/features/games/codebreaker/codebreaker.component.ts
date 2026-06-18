@@ -89,7 +89,6 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
   currentRoomMode = signal<string>(GameMode.Single);
   currentDifficulty = signal<string>(GameDifficulty.Medium);
   roomId = signal<string>('');
-  hostId = signal<string>('');
 
   get mappedPlayers() {
     return this.players().map(p => ({ id: p.id }));
@@ -175,7 +174,6 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.roomId.set(roomId);
-    this.hostId.set(host);
 
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
     
@@ -230,7 +228,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
         game: 'codebreaker',
         mode: this.currentRoomMode(),
         difficulty: this.currentDifficulty(),
-        host: this.hostId()
+        host: this.store.hostId()
       });
     }
   }
@@ -255,7 +253,7 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     const diff = (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
     this.currentDifficulty.set(diff);
-    this.store.joinRoom(this.roomId(), this.currentRoomMode(), diff, this.hostId());
+    this.store.joinRoom(this.roomId(), this.currentRoomMode(), diff, this.store.hostId());
     this.currentInput.set('');
   }
 
@@ -359,30 +357,19 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     return `${maxA}A${bestB}B`;
   }
 
-  get isSeriesOver(): boolean {
-    if (this.currentRoomMode() === GameMode.Single) return true;
-    const target = this.store.currentRoomTarget();
-    if (target <= 1) return true;
-    const wins = this.store.pkWins();
-    return Object.values(wins).some(w => w >= target);
-  }
-
   get winnerText(): string {
     const winList = this.winners();
     if (winList.length === 0) return '';
     const won = winList.includes(this.myPlayerId());
-    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+    if (this.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
       return won ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
     }
     return won ? this.i18n.t('game.you_win')() : this.i18n.t('game.you_lose')();
   }
 
   get winDescription(): string {
-    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
-      const wins = this.store.pkWins();
-      const myW = wins[this.myPlayerId()] || 0;
-      const oppW = Object.entries(wins).filter(([k]) => k !== this.myPlayerId()).reduce((a, [, v]) => a + v, 0);
-      return `${myW} : ${oppW}`;
+    if (this.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
+      return this.store.pkScoreLabel();
     }
     const attempts = this.myState()?.guesses.length || 0;
     return this.i18n.t('codebreaker.victory_desc')().replace('{attempts}', attempts.toString());

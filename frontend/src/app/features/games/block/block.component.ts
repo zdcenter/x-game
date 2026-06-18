@@ -146,7 +146,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     return key ? this.i18n.t(key as string)() : diff;
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({

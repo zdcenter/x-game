@@ -180,7 +180,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     }
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({

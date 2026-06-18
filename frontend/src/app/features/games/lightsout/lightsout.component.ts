@@ -137,7 +137,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     this.gameTimer.stopCountdown();
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.store.roomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
@@ -168,14 +168,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     return this.wsService.isConnected();
   }
 
-  get isSeriesOver(): boolean {
-    if (this.store.currentRoomMode() === GameMode.Single) return true;
-    const target = this.store.currentRoomTarget();
-    if (target <= 1) return true;
-    const wins = this.store.pkWins();
-    return Object.values(wins).some(w => w >= target);
-  }
-
   getOverlayStatus(): 'win' | 'lose' {
     if (this.store.currentRoomMode() !== GameMode.Single) {
       return this.store.winners().includes(this.playerId) ? 'win' : 'lose';
@@ -185,7 +177,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   getOverlayTitle(): string {
     const won = this.getOverlayStatus() === 'win';
-    if (this.store.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+    if (this.store.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
       return won ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
     }
     if (won) return this.i18n.t('game.you_win')();
@@ -194,11 +186,8 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   getOverlaySubtitle(): string {
     if (this.store.currentRoomMode() !== GameMode.Single) {
-      if (!this.isSeriesOver) {
-        const wins = this.store.pkWins();
-        const myW = wins[this.playerId] || 0;
-        const oppW = Object.entries(wins).filter(([k]) => k !== this.playerId).reduce((a, [, v]) => a + v, 0);
-        return `${myW} : ${oppW}`;
+      if (!this.store.isSeriesOver()) {
+        return this.store.pkScoreLabel();
       }
       return this.getOverlayStatus() === 'win'
         ? (this.i18n.t('game.cleared_first')() || 'You cleared the board first!')

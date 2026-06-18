@@ -125,6 +125,18 @@ func (e *ClassicEngine) GetState() interface{} {
 }
 ```
 
+> 🚨 **`players` 必须是 `map[string]*...` 对象，禁止用 `[]string` 数组！**
+> 前端 `playersList()` 用 `Object.keys(players)` 提取玩家 ID。若后端发的是数组，
+> `Object.keys` 会返回下标 `"0"`、`"1"`，导致等候室皇冠图标消失、玩家名显示为数字。
+>
+> ```go
+> // ❌ 错误 — 前端拿到下标，不是玩家名
+> Players []string
+>
+> // ✅ 正确 — 前端能正确读出玩家 ID
+> Players map[string]*Player
+```
+
 **`action` 字符串必须与前端 `C2SAction` 枚举的值对应**（`core/models/websocket.model.ts`），两端共用同一套字符串，不能自造。
 
 #### 3. 注册 blank import（自动化）
@@ -375,7 +387,7 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   override ngOnDestroy() {
-    super.ngOnDestroy();  // 必须！
+    super.ngOnDestroy();  // 必须！缺少此调用会导致基类清理逻辑不执行
     this.store.leaveRoom();
   }
 
@@ -385,22 +397,199 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
       this.lifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
   }
+
+  // ⬇️ 以下方法基类已提供，无需重写
+  // openChangeSettings() — 已在 BaseGameComponent，自动读取 store.gameId / store.hostId()
+  // lobbyPanel — 已在 BaseGameComponent 声明，@ViewChild 在子类里加 override 即可
 }
 ```
 
-**模板中的通用 overlay（直接复制）：**
+**模板中的通用结构（关键规范）：**
 
 ```html
-<!-- 倒计时开局遮罩 -->
-@if (store.status() === GameStatus.Starting) {
-  <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"/>
-}
+<!-- 🚨 最外层 div 必须写死高度，不能用 h-full 或 flex-1 -->
+<!-- h-full 依赖父级 flex 高度，在倒计时等内容为空时会塌陷 -->
+<div class="h-[calc(100dvh-64px)] w-full flex flex-col lg:flex-row overflow-hidden bg-[var(--color-bg-main)]">
 
-<!-- 结果面板 -->
-@if (store.status() === GameStatus.Finished) {
-  <app-game-result-overlay [winners]="store.singlePlayerWinners()" .../>
+  <!-- 左侧游戏区 -->
+  <div class="flex-grow flex flex-col relative min-w-0 overflow-hidden">
+
+    <!-- 倒计时开局遮罩 -->
+    @if (store.status() === GameStatus.Starting) {
+      <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"/>
+    }
+
+    <!-- 结果面板 -->
+    @if (store.status() === GameStatus.Finished) {
+      <app-game-result-overlay [winners]="store.singlePlayerWinners()" .../>
+    }
+  </div>
+
+  <!-- 右侧等候室面板（多人） -->
+  <!--
+    ⚠️  多局系列赛（Multi-Round Series）说明：
+    如果游戏支持 "先赢 3/5/10 局" 的系列赛模式，请阅读下方 §F 章节。
+  -->
+  @if (settingsService.settings().multiplayer_enabled === 'true') {
+    <div class="flex-shrink-0 ...">
+      <app-game-lobby-panel
+        [currentGameId]="'mygame'"
+        [currentRoomId]="store.roomId()"
+        (joinRoom)="handleJoinRoom($event)"
+        (createRoom)="handleCreateRoom($event)"
+        (dismissRoom)="handleDismissRoom()"
+      />
+    </div>
+  }
+</div>
+
+<!-- 等候室（覆盖全屏，游戏开始前显示） -->
+@if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
+  <div class="absolute inset-0 z-50">
+    <app-game-waiting-room
+      [gameId]="'mygame'"
+      [mode]="store.currentRoomMode()"
+      [roomId]="store.roomId()"
+      [difficulty]="store.currentDifficulty()"
+      [players]="store.playersList()"
+      [hostId]="store.hostId()"
+      [currentUserId]="playerId"
+      [readyPlayers]="store.readyPlayers()"
+      [target]="store.currentRoomTarget()"
+      (start)="store.startGame()"
+      (leave)="store.leaveRoom()"
+      (changeSettings)="openChangeSettings()"
+      (ready)="store.ready()"
+      (cancelReady)="store.cancelReady()"
+      (kick)="store.kickPlayer($event)"
+    />
+  </div>
 }
 ```
+
+**若需要 `GameLobbyPanelComponent` 的 ViewChild（用于 `openChangeSettings`），在子类中声明时加 `override`：**
+
+```typescript
+// 父类已声明 protected lobbyPanel?: GameLobbyPanelComponent
+// 子类覆盖时加 override，让 @ViewChild 生效
+@ViewChild(GameLobbyPanelComponent) override lobbyPanel!: GameLobbyPanelComponent;
+```
+
+> `openChangeSettings()` 已在 `BaseGameComponent` 实现，会自动读取 `store.gameId`、`store.hostId()` 等，新游戏无需重写。
+
+---
+
+### F. 多局系列赛（Multi-Round Series）
+
+> 适用于"先赢 N 局即胜"的 PK 模式，如 minesweeper / sliding / codebreaker / lightsout。
+
+#### F1. 启用多局功能
+
+在 `game-definitions.ts` 的游戏条目里加一个字段：
+
+```typescript
+{
+  id: GameId.MyGame,
+  // ...
+  multiRound: true   // ← 加这一行，pk-lobby 才会显示局数选择器（1/3/5/10）
+}
+```
+
+#### F2. 后端引擎必须维护 `wins` + `target` 字段
+
+`GetState()` 必须返回这两个字段，否则前端无法判断系列状态：
+
+```go
+return map[string]interface{}{
+    "status":  e.State,
+    "wins":    e.Wins,    // map[string]int  ← 各玩家累积赢局数
+    "target":  e.Target,  // int             ← 系列目标局数（从 options["target"] 读取）
+    // ... 其它字段
+}
+```
+
+`InitGame` 里必须读取 target：
+
+```go
+if t, ok := opts["target"].(int); ok && t > 0 {
+    e.Target = t
+} else {
+    e.Target = 1
+}
+```
+
+`HandleAction` 里的 `restart_game`：**只有系列结束时才清零 wins**，否则只重置棋盘/状态：
+
+```go
+if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
+    seriesOver := false
+    for _, w := range e.Wins { if w >= e.Target { seriesOver = true; break } }
+    if seriesOver {
+        for p := range e.Wins { e.Wins[p] = 0 }
+    }
+    e.State = engine.StateWaiting
+    // 重置棋盘 ...
+}
+```
+
+#### F3. 前端 — BaseGameStore 已全部封装，无需手写
+
+`BaseGameStore` 提供三个 computed signal，**新游戏直接用，不要自己写**：
+
+| Signal | 类型 | 说明 |
+|---|---|---|
+| `store.pkWins()` | `Record<string, number>` | 各玩家已赢局数，自动读 `rawState().wins` |
+| `store.isSeriesOver()` | `boolean` | 有人达到 target 局时为 true |
+| `store.pkScoreLabel()` | `string` | 比分字符串如 `"1 : 0"`；系列结束时返回 `""` |
+
+`_pkStatSubmitted` 在每次重启（`Finished → Waiting`）时自动重置，无需关心。
+
+#### F4. 结果 overlay — 直接使用基类 Signal
+
+每一局结束后的 overlay 需要区分"本局结果"（系列未结束）和"系列结果"（系列结束）：
+
+```typescript
+// 在游戏组件里
+getOverlayTitle(): string {
+  const won = this.store.winners().includes(this.playerId);
+  // 🔑 用 store.isSeriesOver()，不要自己计算
+  if (this.store.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
+    return won ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
+  }
+  return won ? this.i18n.t('game.you_win')() : this.i18n.t('game.you_lose')();
+}
+
+getOverlaySubtitle(): string {
+  if (this.store.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
+    return this.store.pkScoreLabel();  // 直接用，如 "1 : 0"
+  }
+  // 系列结束时显示游戏专属描述 ...
+  return this.i18n.t('game.you_won_the_series')();
+}
+```
+
+```html
+<app-game-result-overlay
+  [title]="getOverlayTitle()"
+  [subtitle]="getOverlaySubtitle()"
+  [showRestart]="store.hostId() === store.playerId()"
+  [showLeave]="store.currentRoomMode() !== GameMode.Single"
+  (restart)="store.restartGame()"
+  (leave)="onLeaveClick()"
+/>
+```
+
+> 🚨 **showRestart 只给 host**：非 host 点击 restart 会被后端忽略，体验极差。
+
+#### F5. 常见坑
+
+| 场景 | 错误做法 | 正确做法 |
+|---|---|---|
+| 结果标题区分回合 vs 系列 | 自己写 `isSeriesOver` getter | 用 `store.isSeriesOver()` Signal |
+| 显示比分 | 手动计算 myW/oppW | 用 `store.pkScoreLabel()` |
+| 系列战绩提交 | 只提交第 1 局 | 基类自动处理，每局自动提交 |
+| 后端 target 读取 | 写死 target = 1 | 从 `options["target"].(int)` 读取 |
+| game-definitions 忘加 | target 选择器不显示 | 加 `multiRound: true` |
 
 ---
 
@@ -434,14 +623,6 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
 
 ### D. 多语言（i18n）
 
-#### 静态模板文本
-
-HTML 里的固定文字使用 `i18n` 属性：
-
-```html
-<h1 i18n="@@mygame.title">我的游戏</h1>
-```
-
 #### TypeScript 动态文本
 
 ```typescript
@@ -449,20 +630,40 @@ private i18n = inject(I18nService);
 label = this.i18n.t('mygame.win_message');  // 返回 Signal<string>
 ```
 
+#### 模板绑定
+
+```html
+{{ i18n.t('mygame.title')() }}
+```
+
 #### 添加翻译词条
 
-在 `frontend/src/app/core/i18n/core.translations.ts` 中添加中英文：
+直接编辑这两个 JSON 文件（**唯一数据源**）：
 
-```typescript
-'mygame.title':       { zh: '我的游戏', en: 'My Game' },
-'mygame.win_message': { zh: '你赢了！', en: 'You Win!' },
+- `frontend/src/assets/i18n/zh.json`
+- `frontend/src/assets/i18n/en.json`
+
+```json
+// zh.json
+{
+  "mygame": {
+    "title": "我的游戏",
+    "win_message": "你赢了！"
+  }
+}
 ```
 
-然后运行：
-
-```bash
-cd frontend && node generate-xlf.js
+```json
+// en.json
+{
+  "mygame": {
+    "title": "My Game",
+    "win_message": "You Win!"
+  }
+}
 ```
+
+> loader (`core/i18n/transloco-loader.ts`) 在构建时内联这两个文件，运行时无需额外请求。
 
 ---
 
@@ -507,9 +708,32 @@ this.http.post<{ isNewRecord: boolean }>(`${env.apiUrl}/mypuzzle/puzzle/${id}/fi
 
 2. **SEO 文案**（如果需要）：在 i18n 文件中添加 `seo.<gameId>.title`、`seo.<gameId>.desc`、`seo.<gameId>.keywords` 词条，路由会自动读取。
 
-3. **数据库种子**（解谜游戏）：准备题目数据，添加到种子脚本或通过管理后台导入。
+3. **🗄️ 数据库种子 — 所有游戏都要加**
 
-4. **编译验证**：
+   > `game-definitions.ts` 和 `gm_game_configs` 存的是**不同内容**，不可互相替代：
+   > - **前端 TS**：路由/懒加载/模式能力标志（编译期固化）
+   > - **后端 DB**：游戏名文字、规则 Markdown、引擎 config 参数、isActive 开关、visitCount（运行时可变）
+   >
+   > 🚨 漏掉 DB 条目：管理后台看不到该游戏；`visitCount` 统计失效；引擎无法读取 `config` 参数。
+
+   在 `backend/pkg/db/postgres.go` 的 `Seed()` 函数中添加：
+
+   ```go
+   {
+     ID:       "mygame",
+     Name:     `{"en": "My Game", "zh": "我的游戏"}`,
+     Overview: `{"en": "Short description.", "zh": "简短介绍。"}`,
+     Rules:    `{"en": "# Rules\n\n...", "zh": "# 规则\n\n..."}`,
+     Config:   `{}`,   // 若引擎需要额外参数，在此填写 JSON
+     IsActive: true,
+   },
+   ```
+
+   后端启动时 `Seed()` 会自动 upsert（只更新字段，不重置 visitCount）。
+
+4. **数据库种子（解谜游戏追加）**：准备题目数据，添加到种子脚本或通过管理后台导入。
+
+5. **编译验证**：
    ```bash
    # 后端
    cd backend && go build ./cmd/api/...
@@ -661,10 +885,20 @@ Chrome = 所有垂直方向占用的非棋盘像素之和：
 | WS 动作字符串 | 用 `C2SAction.Move` 枚举，禁止 `'move'` 字面量 |
 | 颜色样式 | 用 `var(--color-bg-card)` CSS 变量，禁止 `bg-slate-900` |
 | UI 文本 | 走 i18n，禁止硬编码中英文字符串 |
+| 翻译词条 | 编辑 `src/assets/i18n/zh.json` + `en.json`，不要碰 `core.translations.ts` |
 | 棋盘尺寸 | 用 `boardSizePx()` TS 信号；禁止 `min(85vmin, ...)` CSS 公式、`flex-1 h-full` |
 | 游戏区 overflow | 一律 `overflow-hidden`，禁止 `overflow-y-auto` |
 | 布局最小高度 | 禁止 `min-h-[600px]` 等固定值，用 `flex-1 min-h-0` 代替 |
+| **最外层 div 高度** | **必须用 `h-[calc(100dvh-64px)]`，禁止 `h-full`/`flex-1`（空内容时会塌陷）** |
 | 玩家信息卡 | `[stats]="[{ icon: '⏱️', value: '01:23' }]"` emoji 图标形式 |
 | 多人 status | 不在 `singlePlayerStatus` 里写多人逻辑，基类已处理 |
 | 解谜统计 | 只调 `/finish`，不额外调 `submitStat` |
 | engine imports | 跑 `go generate ./cmd/api/...`，不手动改 `engines_gen.go` |
+| **后端 players 字段** | **必须 `map[string]*Player`，禁止 `[]string` 数组（皇冠图标消失 bug 根因）** |
+| **等候室 `[target]`** | **`[target]="store.currentRoomTarget()"` 必须传，否则多轮目标失效** |
+| `openChangeSettings()` | 基类已提供，子类无需重写；`lobbyPanel` @ViewChild 加 `override` 关键字 |
+| `super.ngOnDestroy()` | override ngOnDestroy 必须调用，否则基类清理逻辑不执行 |
+| **多局 isSeriesOver** | **用 `store.isSeriesOver()` Signal，禁止在组件里自己写 getter 重复逻辑** |
+| **多局比分标签** | **用 `store.pkScoreLabel()`，禁止手算 myW/oppW** |
+| **多局 game-definitions** | **必须加 `multiRound: true`，否则 pk-lobby 的局数选择器不显示** |
+| **多局后端 target** | **`InitGame` 里从 `options["target"].(int)` 读取；`wins` 只在系列结束时清零** |

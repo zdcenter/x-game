@@ -7,6 +7,7 @@ import { GameService } from '../services/game.service';
 import { SettingsService } from '../services/settings.service';
 import { isBrowser } from './browser.util';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
+import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -23,7 +24,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public settingsService = inject(SettingsService);
   private _baseRoute = inject(ActivatedRoute);
   private _baseRouter = inject(Router);
-  
+
   isMobileSidebarOpen = signal<boolean>(false);
 
   @HostBinding('class') get hostClass() {
@@ -31,7 +32,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   // Each subclass must implement these to hook into the base room logic
-  abstract get store(): GameStoreInterface; 
+  abstract get store(): GameStoreInterface;
   abstract get playerId(): string;
 
   /**
@@ -61,7 +62,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             difficulty: q['diff'],
             host: q['host'] || ''
           });
-          
+
           this._baseRouter.navigate([], {
             relativeTo: this._baseRoute,
             queryParams: { joinRoom: null, mode: null, diff: null, host: null },
@@ -103,5 +104,19 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   handleDismissRoom() {
     this.wsService.send({ type: 'dismiss_room' });
     this.store.leaveRoom();
+  }
+
+  openChangeSettings() {
+    const panel = (this as any).lobbyPanel as GameLobbyPanelComponent | undefined;
+    if (panel && this.store.roomId()) {
+      this.isMobileSidebarOpen.set(true);
+      panel.openUpdateRoomModal({
+        id: this.store.roomId(),
+        game: this.store.gameId,
+        mode: this.store.currentRoomMode(),
+        difficulty: '',
+        host: this.store.hostId()
+      });
+    }
   }
 }

@@ -1,4 +1,4 @@
-<div class="h-full w-full overflow-hidden flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative select-none">
+<div class="h-[calc(100dvh-64px)] w-full overflow-hidden flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative select-none">
   
   <div class="flex-grow flex flex-col items-center overflow-y-auto overflow-x-hidden relative min-w-0 overscroll-none">
     <!-- Cyber decoration -->
@@ -213,7 +213,7 @@
               <span>{{ i18n.t('codebreaker.opponent_history')() }}</span>
               @if (opponentState()) {
                 <span class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full font-bold">
-                  {{ opponentState()?.id === hostId() ? '👑' : '👤' }} {{ opponentState()?.id }}
+                  {{ opponentState()?.id === store.hostId() ? '👑' : '👤' }} {{ opponentState()?.id }}
                 </span>
                 @if (store.currentRoomTarget() > 1) {
                   <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[opponentState()!.id] || 0) + '/' + store.currentRoomTarget() }}</span>
@@ -293,7 +293,7 @@
         [roomId]="roomId()"
         [difficulty]="currentDifficulty()"
         [players]="mappedPlayers"
-        [hostId]="hostId()"
+        [hostId]="store.hostId()"
         [currentUserId]="myPlayerId()"
         (start)="store.startGame()"
         (leave)="returnToLobby()"

@@ -200,7 +200,7 @@ export class SlidingComponent extends BaseGameComponent {
     });
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.roomId()) {
       this.isMenuOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({
@@ -344,14 +344,6 @@ export class SlidingComponent extends BaseGameComponent {
     return `${m}:${s}`;
   }
 
-  get isSeriesOver(): boolean {
-    if (this.currentRoomMode() === GameMode.Single) return true;
-    const target = this.store.currentRoomTarget();
-    if (target <= 1) return true;
-    const wins = this.store.pkWins();
-    return Object.values(wins).some(w => w >= target);
-  }
-
   getOverlayStatus(): GameResultType {
     if (this.currentRoomMode() === GameMode.Single) return GameResult.Win;
     if (this.store.winners().includes(this.playerId)) return GameResult.Win;
@@ -360,18 +352,15 @@ export class SlidingComponent extends BaseGameComponent {
 
   getOverlayTitle(): string {
     const won = this.getOverlayStatus() === GameResult.Win;
-    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
+    if (this.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
       return won ? this.t('game.round_won')() : this.t('game.round_lost')();
     }
     return won ? this.t('game.you_win')() : this.t('game.you_lose')();
   }
 
   getOverlaySubtitle(): string {
-    if (this.currentRoomMode() !== GameMode.Single && !this.isSeriesOver) {
-      const wins = this.store.pkWins();
-      const myW = wins[this.playerId] || 0;
-      const oppW = Object.entries(wins).filter(([k]) => k !== this.playerId).reduce((a, [, v]) => a + v, 0);
-      return `${myW} : ${oppW}`;
+    if (this.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
+      return this.store.pkScoreLabel();
     }
     return `${this.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(this.currentRoomMode() === GameMode.Single ? (this.store.myBoard()?.startAt || 0) : this.store.globalStartAt()))}`;
   }

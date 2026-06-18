@@ -175,7 +175,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.router.navigate(['/lobby']);
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.store.roomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({

@@ -12,11 +12,26 @@ import { GameModeType, GameDifficultyType, GameStatusType } from '../models/game
 export interface GameStoreInterface {
   // ===== 必须提供的 Signal 状态 =====
 
+  /** 游戏唯一 ID，与后端引擎注册 key 一致 */
+  readonly gameId: string;
+
   /** 当前房间 ID（空字符串表示未加入房间） */
   readonly roomId: Signal<string>;
 
   /** 当前房间模式 */
   readonly currentRoomMode: Signal<GameModeType | string>;
+
+  /** 多轮目标局数 */
+  readonly currentRoomTarget: Signal<number>;
+
+  /** 各玩家已赢局数 */
+  readonly pkWins: Signal<Record<string, number>>;
+
+  /** 当前系列是否已决出胜负 */
+  readonly isSeriesOver: Signal<boolean>;
+
+  /** PK 多局比分标签，如 "1 : 0"；系列结束或单机时为空字符串 */
+  readonly pkScoreLabel: Signal<string>;
 
   /** 当前房主 ID（单机模式下返回当前玩家 ID） */
   readonly hostId: Signal<string>;

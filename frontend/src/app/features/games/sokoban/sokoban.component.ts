@@ -452,7 +452,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     }
   }
 
-  openChangeSettings() {
+  override openChangeSettings() {
     if (this.lobbyPanel && this.store.roomId()) {
       this.isMobileSidebarOpen.set(true);
       this.lobbyPanel.openUpdateRoomModal({

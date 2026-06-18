@@ -197,19 +197,6 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.store.view.set('lobby');
   }
 
-  openChangeSettings() {
-    if (this.lobbyPanel && this.store.roomId()) {
-      this.isMobileSidebarOpen.set(true);
-      this.lobbyPanel.openUpdateRoomModal({
-        id: this.store.roomId(),
-        game: 'sudoku',
-        mode: this.store.currentRoomMode(),
-        difficulty: '',
-        host: this.store.hostId()
-      });
-    }
-  }
-
   startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}) {
     this.view.set('play');
     this.store.currentPuzzleId.set(level.id);
