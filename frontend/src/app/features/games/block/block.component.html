@@ -109,7 +109,18 @@
             <div class="w-full flex flex-col items-center justify-start py-2 lg:py-4 shrink-0">
                 <!-- 彻底抛弃 Flexbox 自动推算，使用物理级绝对尺寸 -->
                 <div class="relative flex items-center justify-center shrink-0 mb-4"
+                     [class.block-shake]="isShaking()"
                      style="width: min(75vmin, 500px); height: min(75vmin, 500px);">
+                  <!-- Clear Badge -->
+                  @if (showClear()) {
+                    <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                      <div class="block-clear-badge font-black text-2xl lg:text-3xl px-5 py-2.5 rounded-2xl text-white"
+                           [style.background]="clearCount() >= 3 ? 'linear-gradient(135deg,#7c3aed,#db2777)' : clearCount() >= 2 ? 'linear-gradient(135deg,#f59e0b,#ef4444)' : 'linear-gradient(135deg,#10b981,#3b82f6)'"
+                           style="box-shadow: 0 0 30px rgba(245,158,11,0.7); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                        {{ clearCount() >= 3 ? '🌟 PERFECT ×' + clearCount() : clearCount() >= 2 ? '🔥 DOUBLE ×' + clearCount() : '✨ CLEAR!' }}
+                      </div>
+                    </div>
+                  }
                   <div class="w-full h-full relative flex items-center justify-center bg-[var(--color-bg-card)] p-1 sm:p-2 rounded-xl shadow-2xl border border-[var(--color-border-card)] touch-none select-none overflow-hidden">
                     <div #boardElement 
                          class="grid gap-1 block-board p-1 rounded-lg w-full h-full"

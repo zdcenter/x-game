@@ -79,10 +79,10 @@ export class LocalWatersortEngine implements ILocalEngine<any, WatersortAction> 
     const space = 4 - tTo.colors.length;
     const toPour = Math.min(count, space);
 
-    for (let i = 0; i < toPour; i++) {
-      tFrom.colors.pop();
-      tTo.colors.push(colorToPour);
-    }
+    // Create new array references so Angular's ngOnChanges detects the change
+    this.tubes[from] = { colors: tFrom.colors.slice(0, tFrom.colors.length - toPour) };
+    this.tubes[to] = { colors: [...tTo.colors, ...Array(toPour).fill(colorToPour)] };
+    this.tubes = [...this.tubes];
 
     this.moves++;
     if (this.onPour) this.onPour();

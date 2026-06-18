@@ -22,6 +22,9 @@ export class HexaStore extends BaseGameStore {
   availablePieces = signal<HexPiece[]>([]);
   gameOver = signal<boolean>(false);
   bestScore = signal<number>(0);
+  comboTrigger = signal<number>(0);
+  shakeTrigger = signal<number>(0);
+  fillPct = computed(() => this.cells().filter(c => c.filled).length / 61);
 
   // PK Mode
   globalStartAt = computed(() => this.rawState()?.globalStartAt || 0);
@@ -129,13 +132,21 @@ export class HexaStore extends BaseGameStore {
 
   placePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number) {
     if (this.gameOver() || this.status() !== GameStatus.Playing) return;
-    
-    const preScore = this.engine.score;
+
+    const prevCombo = this.engine.combo;
     this.engine.handleAction({ type: HexaActionType.PlacePiece, piece, origin, pieceIndex });
     this.updateSignals();
 
-    const postScore = this.engine.score;
-    const linesCleared = (postScore - preScore) > piece.shape.length;
+    const newCombo = this.engine.combo;
+    const linesCleared = newCombo > prevCombo;
+
+    if (linesCleared) {
+      this.comboTrigger.set(newCombo);
+      setTimeout(() => this.comboTrigger.set(0), 1100);
+      if (newCombo >= 2) {
+        this.shakeTrigger.update(n => n + 1);
+      }
+    }
 
     // Play sound effects
     if (linesCleared) {

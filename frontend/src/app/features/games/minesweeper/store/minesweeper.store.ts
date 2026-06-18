@@ -90,9 +90,10 @@ export class MinesweeperStore extends BaseGameStore {
   });
 
   readonly board = computed<Cell[][]>(() => this.myBoardData()?.cells || []);
-  override readonly singlePlayerStatus = computed<GameStatusType>(() =>
-    this.localEngine()?.status || 'waiting'
-  );
+  override readonly singlePlayerStatus = computed<GameStatusType>(() => {
+    this.tick();
+    return this.localEngine()?.status || 'waiting';
+  });
   
   readonly scores = computed<Record<string, number>>(() => {
     if (this.currentRoomMode() === GameMode.Single) return { [this.playerId()]: 0 };
@@ -198,6 +199,10 @@ export class MinesweeperStore extends BaseGameStore {
     }
     
     this.tick.set(this.tick() + 1);
+  }
+
+  protected override onSinglePlayerRestart() {
+    this.startGame();
   }
 
   override startGame() {

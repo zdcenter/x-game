@@ -108,6 +108,10 @@ export class LightsoutStore extends BaseGameStore {
     return diff === GameDifficulty.Easy ? 4 : diff === GameDifficulty.Hard ? 6 : diff === GameDifficulty.Expert ? 7 : diff === GameDifficulty.Master ? 8 : 5;
   }
 
+  protected override onSinglePlayerRestart() {
+    this.startGame();
+  }
+
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
       const diff = this.currentDifficulty() as string;

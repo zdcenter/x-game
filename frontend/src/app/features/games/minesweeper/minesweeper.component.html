@@ -226,7 +226,7 @@
           [showRestart]="currentRoomMode() === GameMode.Single || store.host() === playerId"
           [showDismiss]="currentRoomMode() !== GameMode.Single && store.host() === playerId"
           [showLeave]="currentRoomMode() === GameMode.Single || store.host() !== playerId" (leave)="goBack()"
-          (restart)="store.restartGame()" (dismiss)="dismissRoom()"
+          (restart)="currentRoomMode() === GameMode.Single ? changeSingleDifficulty(currentDifficulty()) : store.restartGame()" (dismiss)="dismissRoom()"
           [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
           (changeRoomGame)="store.changeRoomGame($event)">
         </app-game-result-overlay>

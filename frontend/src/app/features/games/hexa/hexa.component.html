@@ -150,18 +150,32 @@
             <!-- The Grid Area -->
             <div class="w-full flex flex-col items-center justify-start py-4 shrink-0" #boardArea>
               
+              <!-- Outer: danger glow only (no shake) -->
               <div class="relative flex items-center justify-center shrink-0"
+                   [class.hexa-danger-1]="store.fillPct() > 0.6 && store.fillPct() <= 0.8"
+                   [class.hexa-danger-2]="store.fillPct() > 0.8"
                    style="width: min(80vmin, 500px); height: min(80vmin, 500px);">
-                <div class="w-full h-full relative flex items-center justify-center">
-                  <app-hexa-board
-                    class="block w-[90%] h-[90%]"
-                    [cells]="store.cells()"
-                    [previewPiece]="draggedPiece"
-                    [previewOrigin]="previewOrigin">
-                  </app-hexa-board>
+                <!-- Inner: shake only (separate from danger animation) -->
+                <div class="absolute inset-0 flex items-center justify-center" [class.hexa-shake]="isShaking()">
+                  <div class="w-full h-full relative flex items-center justify-center">
+                    <app-hexa-board
+                      class="block w-[90%] h-[90%]"
+                      [cells]="store.cells()"
+                      [previewPiece]="draggedPiece"
+                      [previewOrigin]="previewOrigin">
+                    </app-hexa-board>
+                  </div>
                 </div>
 
-
+                <!-- Combo Badge (on outer, always visible) -->
+                @if (showCombo()) {
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                    <div class="hexa-combo-badge font-black text-2xl lg:text-3xl px-5 py-2 rounded-2xl text-white"
+                         style="background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 0 30px rgba(245,158,11,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                      🔥 COMBO ×{{ comboCount() }}!
+                    </div>
+                  </div>
+                }
               </div>
             </div>
 

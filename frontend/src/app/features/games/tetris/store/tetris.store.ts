@@ -36,6 +36,10 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   bestScore = signal<number>(0);
   isDead = signal<boolean>(false);
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
+  ghostY = signal<number>(-1);
+  shakeTrigger = signal<number>(0);
+  levelUpSignal = signal<number>(0);
+  comboTrigger = signal<number>(0);
 
   readonly singlePlayerStatus = computed(() => this.localStatus());
 
@@ -94,11 +98,9 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
 
     // Setup an interval to continually poll and update signals since the engine's setInterval runs independently
     setInterval(() => {
-      if (this.engine.status === GameStatus.Playing) {
+      if (this.engine.status === GameStatus.Playing ||
+          (this.engine.isDead && this.localStatus() === GameStatus.Playing)) {
         this.updateSignals();
-        if (this.engine.isDead) {
-          this.onGameOver();
-        }
       }
     }, 1000 / 60); // 60fps refresh for UI mapping
   }
@@ -131,7 +133,10 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       }
 
       this.engine.initGame({
-        onSound: (s) => this.audio.playTetris(s)
+        onSound: (s) => this.audio.playTetris(s),
+        onHardDrop: () => this.shakeTrigger.update(n => n + 1),
+        onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
+        onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
       });
       this.updateSignals();
     } else {
@@ -177,7 +182,10 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       },
       onSyncState: () => {
         this.syncState();
-      }
+      },
+      onHardDrop: () => this.shakeTrigger.update(n => n + 1),
+      onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
+      onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
@@ -213,6 +221,10 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.lines.set(state.lines);
     this.level.set(state.level);
     this.isDead.set(state.isDead);
+    this.ghostY.set(state.ghostY);
+    if (state.isDead && this.localStatus() !== GameStatus.Finished) {
+      this.onGameOver();
+    }
   }
 
   // Movements wrapper

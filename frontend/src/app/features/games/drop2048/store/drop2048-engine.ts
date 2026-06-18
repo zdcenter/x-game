@@ -52,6 +52,8 @@ export interface Drop2048EngineConfig {
   seed?: number;
   onSound?: (sound: 'move' | 'drop' | 'merge', comboCount?: number) => void;
   onSyncState?: () => void;
+  onBigMerge?: (val: number) => void;
+  onLevelUp?: (newLevel: number) => void;
 }
 
 export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Action> {
@@ -346,7 +348,12 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       }
 
       this.board = board;
+      const prevLevel = this.getLevel();
       this.score += scoreGained;
+      const newLevel = this.getLevel();
+      if (newLevel > prevLevel && this.config?.onLevelUp) {
+        this.config.onLevelUp(newLevel);
+      }
       this.lastComboCount = comboCount;
 
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -360,6 +367,9 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       const comboId = this.generateId();
       const firstMerge = Array.from(toUpdate.values())[0];
       if (firstMerge) {
+        if (firstMerge.val >= 128 && this.config?.onBigMerge) {
+          this.config.onBigMerge(firstMerge.val);
+        }
         this.combos = [...this.combos, {
           id: comboId,
           text: comboCount >= 1 ? 'COMBO ×' + (comboCount + 1) + '!' : '+' + scoreGained,

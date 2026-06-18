@@ -63,16 +63,36 @@
           </span>
           <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() }}</span>
         </h3>
+
+        <!-- Hot Meter -->
+        @if ((myState()?.guesses?.length || 0) > 0) {
+          <div class="mb-3 flex items-center gap-2">
+            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest shrink-0">BEST</span>
+            <div class="flex-grow h-2.5 rounded-full overflow-hidden bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+              <div class="h-full rounded-full transition-all duration-700 ease-out"
+                [style.width.%]="(maxAchievedA() / digitLength()) * 100"
+                [class]="maxAchievedA() === 0 ? 'bg-blue-400/50' : maxAchievedA() < digitLength() / 2 ? 'bg-blue-400' : maxAchievedA() < digitLength() - 1 ? 'bg-amber-400' : 'bg-rose-500'">
+              </div>
+            </div>
+            <span class="text-[10px] font-black font-mono shrink-0"
+              [class]="maxAchievedA() === 0 ? 'text-blue-400' : maxAchievedA() < digitLength() / 2 ? 'text-blue-400' : maxAchievedA() < digitLength() - 1 ? 'text-amber-400' : 'text-rose-500'">
+              {{ maxAchievedA() }}A / {{ digitLength() }}
+            </span>
+          </div>
+        }
         
         <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
           @if (myState() && myState()!.guesses.length > 0) {
             @for (rec of myState()!.guesses; track $index) {
-              <div class="flex items-center justify-between p-2.5 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-emerald-500/30 transition-all font-mono">
+              <div class="flex items-center justify-between p-2.5 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-emerald-500/30 transition-all font-mono"
+                [class.guess-row-new]="$last && revealLatest()">
                 <span class="text-xs text-[var(--color-text-muted)]">#{{ $index + 1 }}</span>
                 <span class="font-black text-lg text-[var(--color-text-main)] tracking-widest pl-2">{{ rec.guess }}</span>
                 <div class="flex gap-1.5 ml-auto">
-                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">{{ rec.a }}A</span>
-                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">{{ rec.b }}B</span>
+                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    [class.result-badge]="$last && revealLatest()">{{ rec.a }}A</span>
+                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    [class.result-badge-b]="$last && revealLatest()">{{ rec.b }}B</span>
                 </div>
               </div>
             }

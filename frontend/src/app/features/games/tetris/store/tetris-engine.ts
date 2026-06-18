@@ -33,6 +33,8 @@ export interface TetrisState {
   level: number;
   status: GameStatusType;
   isDead: boolean;
+  ghostY: number;
+  comboCount: number;
 }
 
 export interface TetrisConfig {
@@ -41,6 +43,9 @@ export interface TetrisConfig {
   onSound?: (sound: 'move' | 'rotate' | 'land' | 'clear') => void;
   onGarbageSent?: (lines: number) => void;
   onSyncState?: () => void;
+  onHardDrop?: () => void;
+  onLevelUp?: (level: number) => void;
+  onCombo?: (count: number) => void;
 }
 
 export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
@@ -54,11 +59,12 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   level = 1;
   status: GameStatusType = GameStatus.Waiting;
   isDead = false;
+  comboCount = 0;
 
   private dropInterval: any;
   private localGarbageApplied = 0;
   private prng: PRNG | undefined;
-  
+
   private config: TetrisConfig = {};
 
   constructor() {}
@@ -73,6 +79,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     this.canHold = true;
     this.localGarbageApplied = 0;
     this.isDead = false;
+    this.comboCount = 0;
     this.status = GameStatus.Playing;
     
     if (config.seed) {
@@ -101,8 +108,19 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       lines: this.lines,
       level: this.level,
       status: this.status,
-      isDead: this.isDead
+      isDead: this.isDead,
+      ghostY: this.getGhostY(),
+      comboCount: this.comboCount,
     };
+  }
+
+  private getGhostY(): number {
+    if (!this.currentPiece) return -1;
+    let y = this.currentPiece.y;
+    while (!this.checkCollision(this.currentPiece.x, y + 1, this.currentPiece.shape, this.grid)) {
+      y++;
+    }
+    return y;
   }
 
   handleAction(action: TetrisAction): void {
@@ -228,6 +246,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     }
     this.currentPiece = { ...this.currentPiece, y };
     this.config.onSound?.('land');
+    this.config.onHardDrop?.();
     this.lockPiece();
   }
 
@@ -274,10 +293,23 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     if (linesCleared > 0) {
       this.grid = newGrid;
       this.lines += linesCleared;
-      
+
+      const prevLevel = this.level;
       const lineScores = [0, 100, 300, 500, 800];
       this.score += lineScores[linesCleared] * this.level;
       this.level = Math.floor(this.lines / 10) + 1;
+
+      if (this.level > prevLevel) {
+        this.config.onLevelUp?.(this.level);
+      }
+
+      this.comboCount++;
+      if (this.comboCount >= 2) {
+        const comboBonus = this.comboCount * 50 * this.level;
+        this.score += comboBonus;
+        this.config.onCombo?.(this.comboCount);
+      }
+
       this.updateDropSpeed();
       this.config.onSound?.('clear');
 
@@ -285,6 +317,8 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
         const garbageSent = linesCleared === 4 ? 4 : linesCleared - 1;
         this.config.onGarbageSent?.(garbageSent);
       }
+    } else {
+      this.comboCount = 0;
     }
 
     this.config.onSyncState?.();

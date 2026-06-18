@@ -39,7 +39,8 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     PlayerBadgeComponent,
     PlayerListContainerComponent],
   providers: [HexaStore],
-  templateUrl: './hexa.component.html'
+  templateUrl: './hexa.component.html',
+  styleUrl: './hexa.component.css'
 })
 export class HexaComponent extends BaseGameComponent implements OnInit, OnDestroy {
   GameDifficulty = GameDifficulty;
@@ -56,6 +57,9 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   showRules = signal(false);
   showOverlay = signal(false);
+  isShaking = signal(false);
+  showCombo = signal(false);
+  comboCount = signal(0);
   get t() {
     return this.i18n.t.bind(this.i18n);
   }
@@ -103,6 +107,19 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
           this.store.startGame();
         }
       }
+    });
+
+    effect(() => {
+      const trigger = this.store.shakeTrigger();
+      if (trigger > 0) {
+        this.isShaking.set(false);
+        setTimeout(() => { this.isShaking.set(true); setTimeout(() => this.isShaking.set(false), 420); }, 0);
+      }
+    });
+
+    effect(() => {
+      const c = this.store.comboTrigger();
+      if (c > 0) { this.comboCount.set(c); this.showCombo.set(true); setTimeout(() => this.showCombo.set(false), 1100); }
     });
 
     // Handle PK Start countdown

@@ -27,6 +27,7 @@ export interface BlockEngineConfig {
   difficulty?: string;
   onSound?: (sound: 'place' | 'clear' | 'error') => void;
   onSyncState?: () => void;
+  onLinesClear?: (count: number) => void;
 }
 
 export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
@@ -156,13 +157,14 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
     });
 
     const linesCleared = rowsToClear.length + colsToClear.length;
-    
+
     // Calculate score
     let points = blocksPlaced; // 1 point per block
     if (linesCleared > 0) {
       // Exponential doubling
       points += 20 * Math.pow(2, linesCleared - 1);
       if (this.config?.onSound) this.config.onSound('clear');
+      this.config?.onLinesClear?.(linesCleared);
     } else {
       if (this.config?.onSound) this.config.onSound('place');
     }

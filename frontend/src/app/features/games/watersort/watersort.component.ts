@@ -160,10 +160,11 @@ import { TutorialService } from '../../../core/services/tutorial.service';
                     [class.hover:scale-105]="pouringState === null"
                     [style.transform]="getTubeTransform($index)"
                     [style.z-index]="getTubeZIndex($index)"
-                    [colors]="tube.colors" 
+                    [colors]="tube.colors"
                     [capacity]="4"
                     [selected]="selectedTubeIndex === $index"
                     [isBlindMode]="isBlindMode()"
+                    [completed]="isTubeCompleted(tube.colors)"
                     (tubeClick)="onTubeClick($index)"
                   ></app-tube>
                 }
@@ -426,6 +427,10 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     return this.i18n.t(`game.diff_watersort_${diff}`)();
   }
 
+  isTubeCompleted(colors: string[]): boolean {
+    return colors.length === 4 && colors.every(c => c === colors[0]);
+  }
+
   isHost(): boolean {
     return this._store.hostId() === this.myId;
   }
@@ -684,6 +689,8 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   playAgain() {
+    this.selectedTubeIndex = null;
+    this.pouringState = null;
     this._store.restartGame();
   }
 

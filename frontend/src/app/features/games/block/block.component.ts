@@ -31,6 +31,25 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
     PlayerBadgeComponent
   ],
   templateUrl: './block.component.html',
+  styles: [`
+    @keyframes block-shake {
+      0%, 100% { transform: translate3d(0, 0, 0); }
+      14%  { transform: translate3d(-5px, 2px, 0) rotate(-0.4deg); }
+      28%  { transform: translate3d(5px, -2px, 0) rotate(0.4deg); }
+      42%  { transform: translate3d(-4px, 1px, 0); }
+      56%  { transform: translate3d(4px, -1px, 0); }
+      70%  { transform: translate3d(-2px, 1px, 0); }
+    }
+    .block-shake { animation: block-shake 0.4s cubic-bezier(.36,.07,.19,.97); }
+
+    @keyframes block-clear-pop {
+      0%   { opacity: 0; transform: scale(0.4); }
+      22%  { opacity: 1; transform: scale(1.15); }
+      72%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.85) translateY(-10px); }
+    }
+    .block-clear-badge { animation: block-clear-pop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  `]
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
   GameDifficulty = GameDifficulty;
@@ -52,6 +71,9 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   
   showRules = signal(false);
   showOverlay = signal(false);
+  isShaking = signal(false);
+  showClear = signal(false);
+  clearCount = signal(0);
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
@@ -69,6 +91,19 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
         this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
       },
+    });
+
+    effect(() => {
+      const trigger = this.store.shakeTrigger();
+      if (trigger > 0) {
+        this.isShaking.set(false);
+        setTimeout(() => { this.isShaking.set(true); setTimeout(() => this.isShaking.set(false), 420); }, 0);
+      }
+    });
+
+    effect(() => {
+      const c = this.store.clearTrigger();
+      if (c > 0) { this.clearCount.set(c); this.showClear.set(true); setTimeout(() => this.showClear.set(false), 1100); }
     });
 
     effect((onCleanup) => {

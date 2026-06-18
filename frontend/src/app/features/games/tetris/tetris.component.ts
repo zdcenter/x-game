@@ -52,6 +52,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
+  isShaking = signal(false);
+  showLevelUp = signal(false);
+  levelUpNum = signal(0);
+  showCombo = signal(false);
+  comboCount = signal(0);
+
   // Touch Handling properties
   private touchStartX = 0;
   private touchStartY = 0;
@@ -87,6 +93,24 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
       },
+    });
+
+    effect(() => {
+      const trigger = this.store.shakeTrigger();
+      if (trigger > 0) {
+        this.isShaking.set(false);
+        setTimeout(() => { this.isShaking.set(true); setTimeout(() => this.isShaking.set(false), 420); }, 0);
+      }
+    });
+
+    effect(() => {
+      const lv = this.store.levelUpSignal();
+      if (lv > 0) { this.levelUpNum.set(lv); this.showLevelUp.set(true); setTimeout(() => this.showLevelUp.set(false), 1600); }
+    });
+
+    effect(() => {
+      const c = this.store.comboTrigger();
+      if (c > 0) { this.comboCount.set(c); this.showCombo.set(true); setTimeout(() => this.showCombo.set(false), 1100); }
     });
   }
 
@@ -233,11 +257,20 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     }
 
     const current = this.store.currentPiece();
-    if (current && 
+    if (current &&
         x >= current.x && x < current.x + current.shape[0].length &&
         y >= current.y && y < current.y + current.shape.length &&
         current.shape[y - current.y][x - current.x] !== 0) {
       return this.getPieceColor(current.type);
+    }
+
+    // Ghost piece preview
+    const ghostY = this.store.ghostY();
+    if (ghostY !== -1 && current && ghostY !== current.y &&
+        x >= current.x && x < current.x + current.shape[0].length &&
+        y >= ghostY && y < ghostY + current.shape.length &&
+        current.shape[y - ghostY]?.[x - current.x] !== 0) {
+      return this.getPieceColor(current.type) + '40';
     }
 
     return 'var(--color-bg-card)';

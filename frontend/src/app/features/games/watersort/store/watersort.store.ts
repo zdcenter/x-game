@@ -62,6 +62,10 @@ export class WatersortStore extends BaseGameStore {
 
 
 
+  protected override onSinglePlayerRestart() {
+    this.startGame();
+  }
+
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = new LocalWatersortEngine();

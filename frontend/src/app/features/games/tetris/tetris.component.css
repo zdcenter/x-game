@@ -1,1 +1,26 @@
+@keyframes tetris-shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  12%  { transform: translate3d(-4px, 3px, 0) rotate(-0.4deg); }
+  25%  { transform: translate3d(4px, -2px, 0) rotate(0.4deg); }
+  37%  { transform: translate3d(-3px, 2px, 0); }
+  50%  { transform: translate3d(3px, -1px, 0); }
+  62%  { transform: translate3d(-2px, 1px, 0); }
+  75%  { transform: translate3d(2px, -1px, 0); }
+}
+.tetris-shake { animation: tetris-shake 0.38s cubic-bezier(.36,.07,.19,.97); }
 
+@keyframes level-up-pop {
+  0%   { opacity: 0; transform: scale(0.4) translateY(24px); }
+  22%  { opacity: 1; transform: scale(1.18) translateY(0); }
+  72%  { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.85) translateY(-12px); }
+}
+.level-up-badge { animation: level-up-pop 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+@keyframes combo-pop {
+  0%   { opacity: 0; transform: scale(0.5) translateX(-50%) translateY(10px); }
+  20%  { opacity: 1; transform: scale(1.2) translateX(-50%) translateY(0); }
+  70%  { opacity: 1; transform: scale(1) translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: scale(0.8) translateX(-50%) translateY(-16px); }
+}
+.combo-badge { animation: combo-pop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }

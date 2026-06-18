@@ -28,3 +28,23 @@ button:active:not(:disabled) {
   transform: scale(0.95);
   filter: brightness(1.1);
 }
+
+@keyframes guess-row-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.guess-row-new {
+  animation: guess-row-enter 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes result-badge-pop {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+  65%  { opacity: 1; transform: scale(1.2) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.guess-row-new .result-badge {
+  animation: result-badge-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+.guess-row-new .result-badge-b {
+  animation: result-badge-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both;
+}

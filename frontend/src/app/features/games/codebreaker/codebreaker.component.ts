@@ -69,10 +69,16 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
 
   // User input signals
   currentInput = signal<string>('');
-  
+
   // Helper scratchpad: tracks digit markers (none, cross, check)
   // mapped to 0-9
   helperMarks = signal<Record<string, 'none' | 'cross' | 'check'>>({});
+
+  revealLatest = signal(false);
+  maxAchievedA = computed(() => {
+    const guesses = this.myState()?.guesses || [];
+    return guesses.length ? Math.max(...guesses.map(g => g.a)) : 0;
+  });
   
   hintResult = signal<{pos: number, val: string} | null>(null);
 
@@ -307,6 +313,8 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     }
     this.store.submitGuess(val);
     this.currentInput.set('');
+    this.revealLatest.set(false);
+    setTimeout(() => { this.revealLatest.set(true); setTimeout(() => this.revealLatest.set(false), 900); }, 0);
   }
 
   // Hint logic

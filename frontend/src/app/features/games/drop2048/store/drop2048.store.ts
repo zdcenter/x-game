@@ -38,6 +38,8 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   comboCount = signal<number>(0);
   
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
+  shakeTrigger = signal<number>(0);
+  levelUpSignal = signal<number>(0);
 
   readonly score = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localScore();
@@ -155,7 +157,9 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
           if (sound === 'move' || sound === 'drop' || sound === 'merge') {
             this.audio.playDrop2048(sound, combo);
           }
-        }
+        },
+        onBigMerge: () => this.shakeTrigger.update(n => n + 1),
+        onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); }
       });
       this.updateSignals();
     } else {
@@ -200,7 +204,9 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
           this.audio.playDrop2048(sound, combo);
         }
       },
-      onSyncState: () => this.syncState()
+      onSyncState: () => this.syncState(),
+      onBigMerge: () => this.shakeTrigger.update(n => n + 1),
+      onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); }
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();

@@ -34,6 +34,8 @@ export class BlockStore extends BaseGameStore {
   localScore = signal(0);
   localHand = signal<(BlockShape | null)[]>([null, null, null]);
   isDead = signal(false);
+  clearTrigger = signal<number>(0);
+  shakeTrigger = signal<number>(0);
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
@@ -154,7 +156,12 @@ export class BlockStore extends BaseGameStore {
       difficulty: this.currentDifficulty(),
       seed,
       onSound: (sound) => this.audio.playBlock(sound),
-      onSyncState: () => this.syncState()
+      onSyncState: () => this.syncState(),
+      onLinesClear: (c) => {
+        this.clearTrigger.set(c);
+        setTimeout(() => this.clearTrigger.set(0), 1100);
+        if (c >= 2) this.shakeTrigger.update(n => n + 1);
+      }
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
@@ -167,7 +174,12 @@ export class BlockStore extends BaseGameStore {
       difficulty: this.currentDifficulty(),
       seed,
       onSound: (sound) => this.audio.playBlock(sound),
-      onSyncState: () => this.syncState()
+      onSyncState: () => this.syncState(),
+      onLinesClear: (c) => {
+        this.clearTrigger.set(c);
+        setTimeout(() => this.clearTrigger.set(0), 1100);
+        if (c >= 2) this.shakeTrigger.update(n => n + 1);
+      }
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();

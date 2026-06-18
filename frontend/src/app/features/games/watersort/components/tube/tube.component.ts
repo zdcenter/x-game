@@ -6,9 +6,10 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div 
+    <div
       class="tube-wrapper group cursor-pointer flex flex-col items-center justify-end relative h-36 w-10 sm:h-48 sm:w-12 md:h-56 md:w-14"
       [class.selected]="selected"
+      [class.completed]="completed"
       (click)="onClick()"
     >
       <!-- Glass Tube -->
@@ -53,6 +54,19 @@ import { CommonModule } from '@angular/common';
     .dark .glass-tube {
       box-shadow: inset 0 -4px 10px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.4);
     }
+
+    @keyframes tube-complete-glow {
+      0%, 100% { box-shadow: inset 0 -4px 10px rgba(0,0,0,0.1), 0 0 8px rgba(255,255,255,0.15); }
+      50% { box-shadow: inset 0 -4px 10px rgba(0,0,0,0.1), 0 0 22px 6px rgba(255,255,255,0.5); }
+    }
+    /* completed: only glow on the glass, NO transform on tube-wrapper to keep .selected working */
+    .tube-wrapper.completed .glass-tube {
+      border-color: rgba(255,255,255,0.6) !important;
+      animation: tube-complete-glow 1.8s ease-in-out infinite;
+    }
+    .tube-wrapper.completed .liquid-layer {
+      filter: brightness(1.2) saturate(1.3);
+    }
   `]
 })
 export class TubeComponent implements OnChanges {
@@ -60,6 +74,7 @@ export class TubeComponent implements OnChanges {
   @Input() capacity: number = 4;
   @Input() selected: boolean = false;
   @Input() isBlindMode: boolean = false;
+  @Input() completed: boolean = false;
   
   @Output() tubeClick = new EventEmitter<void>();
 
