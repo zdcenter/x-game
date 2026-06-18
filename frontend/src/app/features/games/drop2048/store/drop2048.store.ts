@@ -29,6 +29,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   board = signal<DropBlock[]>([]);
   activeBlock = signal<{ id: string, val: number, c: number, r: number } | null>(null);
   nextVal = signal<number>(2);
+  nextVal2 = signal<number>(4);
   localScore = signal<number>(0);
   isDead = signal<boolean>(false);
   combos = signal<ComboText[]>([]);
@@ -36,7 +37,8 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   bestScore = signal<number>(parseInt(storageGet('drop2048_best') || '0', 10));
   ghostRow = signal<number>(-1);
   comboCount = signal<number>(0);
-  
+  level = signal<number>(1);
+
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
   shakeTrigger = signal<number>(0);
   levelUpSignal = signal<number>(0);
@@ -48,7 +50,6 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     return st.players[this.playerId()].score || 0;
   });
 
-  level = computed(() => Math.floor(this.score() / 500) + 1);
 
   readonly singlePlayerStatus = computed(() => this.localStatus());
 
@@ -76,6 +77,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
           board: this.board(),
           activeBlock: this.activeBlock(),
           nextVal: this.nextVal(),
+          nextVal2: this.nextVal2(),
           localScore: this.localScore(),
           isDead: this.isDead(),
           localStatus: this.localStatus()
@@ -221,6 +223,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.particles.set([]);
     this.ghostRow.set(-1);
     this.comboCount.set(0);
+    this.level.set(1);
   }
 
   private syncState() {
@@ -235,6 +238,8 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.board.set(state.board);
     this.activeBlock.set(state.activeBlock);
     this.nextVal.set(state.nextVal);
+    this.nextVal2.set(state.nextVal2);
+    this.level.set(state.level);
 
     if (state.score > this.bestScore()) {
       this.bestScore.set(state.score);

@@ -41,7 +41,15 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
                {{ store.nextVal() }}
             </div>
           </div>
-          <div *ngIf="store.currentRoomMode() === GameMode.Single" class="flex flex-col items-end text-white/20 mt-2">
+          <div class="flex flex-col items-end text-white/25 mb-2">
+            <span class="text-[9px] tracking-widest uppercase mb-1">AFTER</span>
+            <div class="w-9 h-9 flex items-center justify-center text-white text-sm block-3d shadow-md opacity-60"
+                 [ngStyle]="getBlockStyle(store.nextVal2())"
+                 style="border-radius: 6px;">
+               {{ store.nextVal2() }}
+            </div>
+          </div>
+          <div *ngIf="store.currentRoomMode() === GameMode.Single" class="flex flex-col items-end text-white/20 mt-1">
             <span class="text-[10px] tracking-widest uppercase">BEST</span>
             <span class="text-2xl">{{ store.bestScore() }}</span>
           </div>

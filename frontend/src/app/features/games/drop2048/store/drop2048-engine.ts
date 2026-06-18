@@ -28,6 +28,7 @@ export interface Drop2048State {
   board: DropBlock[];
   activeBlock: { id: string, val: number, c: number, r: number } | null;
   nextVal: number;
+  nextVal2: number;
   score: number;
   isDead: boolean;
   combos: ComboText[];
@@ -60,6 +61,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
   board: DropBlock[] = [];
   activeBlock: { id: string, val: number, c: number, r: number } | null = null;
   nextVal: number = 2;
+  nextVal2: number = 4;
   score: number = 0;
   isDead: boolean = false;
   combos: ComboText[] = [];
@@ -80,7 +82,8 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     this.combos = [];
     this.particles = [];
     this.activeBlock = null;
-    this.nextVal = 2;
+    this.nextVal = this.generateRandomValue();
+    this.nextVal2 = this.generateRandomValue();
     this.lastComboCount = 0;
     this.status = GameStatus.Playing;
 
@@ -93,6 +96,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     this.board = state.board || [];
     this.activeBlock = state.activeBlock || null;
     this.nextVal = state.nextVal || 2;
+    this.nextVal2 = state.nextVal2 || this.generateRandomValue();
     this.score = state.localScore || 0;
     this.isDead = state.isDead || false;
     this.status = GameStatus.Playing;
@@ -127,6 +131,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       board: this.board,
       activeBlock: this.activeBlock,
       nextVal: this.nextVal,
+      nextVal2: this.nextVal2,
       score: this.score,
       isDead: this.isDead,
       combos: this.combos,
@@ -138,13 +143,16 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
   }
 
   getLevel(): number {
-    if (this.score < 1000) return 1;
-    if (this.score < 3000) return 2;
-    if (this.score < 6000) return 3;
-    if (this.score < 10000) return 4;
-    if (this.score < 20000) return 5;
-    if (this.score < 40000) return 6;
-    return 7;
+    if (this.score < 2000)   return 1;
+    if (this.score < 5000)   return 2;
+    if (this.score < 10000)  return 3;
+    if (this.score < 18000)  return 4;
+    if (this.score < 30000)  return 5;
+    if (this.score < 50000)  return 6;
+    if (this.score < 80000)  return 7;
+    if (this.score < 120000) return 8;
+    if (this.score < 180000) return 9;
+    return 10;
   }
 
   private getGhostRow(): number {
@@ -158,45 +166,41 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
   }
 
   private getDropSpeed(): number {
-    const lvl = this.getLevel();
-    switch (lvl) {
-      case 1: return 1000;
-      case 2: return 800;
-      case 3: return 600;
-      case 4: return 500;
-      case 5: return 400;
-      case 6: return 300;
-      default: return 200;
-    }
+    const speeds = [1500, 1200, 950, 750, 560, 400, 300, 240, 190, 150];
+    return speeds[Math.min(this.getLevel() - 1, 9)];
   }
 
   private generateRandomValue(): number {
-    const r = Math.random();
     const lvl = this.getLevel();
+    // Level-based minimum ceiling (ensures early game starts small)
+    const levelFloors = [8, 16, 32, 32, 64, 64, 128, 128, 256, 256];
+    const levelFloor = levelFloors[Math.min(lvl - 1, 9)];
 
-    if (lvl >= 5) {
-      if (r < 0.1) return 2;
-      if (r < 0.3) return 4;
-      if (r < 0.5) return 8;
-      if (r < 0.7) return 16;
-      if (r < 0.85) return 32;
-      if (r < 0.95) return 64;
-      return 128;
-    } else if (lvl >= 3) {
-      if (r < 0.2) return 2;
-      if (r < 0.45) return 4;
-      if (r < 0.65) return 8;
-      if (r < 0.85) return 16;
-      if (r < 0.95) return 32;
-      return 64;
-    } else {
-      if (r < 0.3) return 2;
-      if (r < 0.55) return 4;
-      if (r < 0.75) return 8;
-      if (r < 0.88) return 16;
-      if (r < 0.96) return 32;
-      return 64;
+    // Board-aware ceiling: grows with the board's max tile, no hard cap
+    const boardMax = this.board.length > 0
+      ? Math.max(...this.board.map(b => b.val))
+      : 0;
+    // Generate at most 1/4 of boardMax so players still need 2 merges to "reach" the top
+    const ceiling = Math.min(Math.max(levelFloor, boardMax > 0 ? boardMax / 4 : levelFloor), 1024);
+
+    // Build candidate pool: powers of 2 from 2 up to ceiling
+    const pool: number[] = [];
+    for (let v = 2; v <= ceiling; v *= 2) pool.push(v);
+
+    const n = pool.length;
+    if (n === 1) return pool[0];
+
+    // Weight peak at index n-2 (ceiling/2), tails at both ends
+    const weights = pool.map((_, i) => Math.max(2, 10 - Math.abs(i - (n - 2)) * 3));
+    const total = weights.reduce((s, w) => s + w, 0);
+
+    let acc = 0;
+    const r = Math.random();
+    for (let i = 0; i < pool.length; i++) {
+      acc += weights[i] / total;
+      if (r < acc) return pool[i];
     }
+    return pool[pool.length - 1];
   }
 
   private generateId(): string {
@@ -207,7 +211,8 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     if (this.isDead) return;
 
     const val = this.nextVal;
-    this.nextVal = this.generateRandomValue();
+    this.nextVal = this.nextVal2;
+    this.nextVal2 = this.generateRandomValue();
 
     this.activeBlock = { id: this.generateId(), val, c: 2, r: 0 };
 
