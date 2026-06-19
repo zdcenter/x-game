@@ -221,9 +221,16 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   private rotate() {
     if (!this.currentPiece) return;
     const rotated = rotateMatrix(this.currentPiece.shape);
-    if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y, rotated, this.grid)) {
-      this.currentPiece = { ...this.currentPiece, shape: rotated };
-      this.config.onSound?.('rotate');
+    // SRS-style wall kick: try offsets until one fits
+    const kicks = [[0,0], [-1,0], [1,0], [-2,0], [2,0], [0,-1]];
+    for (const [dx, dy] of kicks) {
+      const nx = this.currentPiece.x + dx;
+      const ny = this.currentPiece.y + dy;
+      if (!this.checkCollision(nx, ny, rotated, this.grid)) {
+        this.currentPiece = { ...this.currentPiece, x: nx, y: ny, shape: rotated };
+        this.config.onSound?.('rotate');
+        return;
+      }
     }
   }
 
@@ -353,7 +360,9 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
 
   private updateDropSpeed() {
     this.stopGameLoop();
-    const speed = Math.max(100, 1000 - (this.level - 1) * 100);
+    // 20-level curve: smooth progression with no hard cap
+    const speeds = [1000,900,800,700,600,500,400,300,200,150,120,100,80,65,50,40,33,27,20,15];
+    const speed = speeds[Math.min(this.level - 1, 19)];
     this.dropInterval = setInterval(() => {
       if (this.status === GameStatus.Playing) {
         this.softDrop();

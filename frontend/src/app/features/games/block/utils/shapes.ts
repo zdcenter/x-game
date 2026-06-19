@@ -44,12 +44,49 @@ export const BLOCK_SHAPES: BlockShape[] = [
   { id: 23, color: 'bg-purple-500', matrix: [[0,0,1], [1,1,1], [0,0,1]] },
 ];
 
+// Weight per shape (index = shape array position). Medium shapes (3-4 cells) appear most.
+// Small (1-2 cells) and huge (5x1, 3x3) shapes are rarer to avoid frustration.
+const SHAPE_WEIGHTS = [
+  4,   // 1:  1×1        (1 cell)
+  10,  // 2:  2×2        (4 cells)
+  4,   // 3:  3×3        (9 cells)
+  8,   // 4:  1×2
+  8,   // 5:  2×1
+  12,  // 6:  1×3
+  12,  // 7:  3×1
+  8,   // 8:  1×4
+  8,   // 9:  4×1
+  5,   // 10: 1×5
+  5,   // 11: 5×1
+  12,  // 12-15: small-L ×4
+  12,
+  12,
+  12,
+  7,   // 16-19: large-L ×4
+  7,
+  7,
+  7,
+  6,   // 20-23: T/cross ×4
+  6,
+  6,
+  6,
+];
+
+const WEIGHT_TOTAL = SHAPE_WEIGHTS.reduce((s, w) => s + w, 0);
+
+function weightedRandomShape(): BlockShape {
+  let r = Math.random() * WEIGHT_TOTAL;
+  for (let i = 0; i < BLOCK_SHAPES.length; i++) {
+    r -= SHAPE_WEIGHTS[i];
+    if (r <= 0) return BLOCK_SHAPES[i];
+  }
+  return BLOCK_SHAPES[BLOCK_SHAPES.length - 1];
+}
+
 export function getRandomShapes(count: number): BlockShape[] {
   const result: BlockShape[] = [];
   for (let i = 0; i < count; i++) {
-    const randomIdx = Math.floor(Math.random() * BLOCK_SHAPES.length);
-    // Deep clone to avoid mutating original templates
-    const shape = BLOCK_SHAPES[randomIdx];
+    const shape = weightedRandomShape();
     result.push({
       id: shape.id,
       color: shape.color,

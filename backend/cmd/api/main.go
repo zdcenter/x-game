@@ -114,6 +114,17 @@ func main() {
 	sokoban.Use(middleware.OptionalProtected())
 	rest.RegisterPuzzleRoutes(sokoban, "sokoban", rest.NewSokobanRepo())
 
+	// Idiom game routes
+	idiom := v1.Group("/idiom")
+	idiom.Use(middleware.OptionalProtected())
+	idiom.Get("/fill", rest.IdiomGetFill)
+	idiom.Post("/fill/submit", rest.IdiomSubmitFill)
+	idiom.Get("/daily/state", rest.IdiomDailyState)
+	idiom.Post("/daily/guess", rest.IdiomDailyGuess)
+	idiom.Get("/stats", rest.IdiomStats)
+	idiom.Get("/history", rest.IdiomHistory)
+	idiom.Get("/daily/social", rest.IdiomDailySocial)
+
 	// Admin routes
 	admin := v1.Group("/admin")
 	admin.Use(middleware.Protected())
@@ -156,6 +167,12 @@ func main() {
 	// Leaderboard management
 	admin.Get("/leaderboard", rest.AdminGetLeaderboard)
 	admin.Delete("/leaderboard/stat/:statId", rest.AdminDeleteLeaderboardEntry)
+
+	// Idiom management
+	admin.Get("/idioms", rest.AdminListIdioms)
+	admin.Post("/idioms", rest.AdminCreateIdiom)
+	admin.Put("/idioms/:id", rest.AdminUpdateIdiom)
+	admin.Delete("/idioms/:id", rest.AdminDeleteIdiom)
 
 	// Legacy simulator endpoints (can be removed later or kept for backwards compatibility)
 	// Blog admin CRUD

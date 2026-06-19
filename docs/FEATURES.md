@@ -13,7 +13,7 @@
 ### 前端技术栈 (Angular 21 + TailwindCSS v4)
 - **Zoneless 无区化渲染**：全盘采用 Angular 21 最新的 Signals 响应式特性，性能极致优化，告别 `zone.js` 的性能损耗。
 - **无缝切游 (Switch Room Game)**：多人房间结算页面支持房主一键切换游戏，带领全房间玩家瞬间转移至新游戏并保持原状，免除退回大厅重组房间的繁琐步骤。
-- **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 13 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。多局系列赛通用信号（`pkWins` / `isSeriesOver` / `pkScoreLabel`）全部内置于基类，各游戏无需重复实现；系列赛重启时 `_pkStatSubmitted` 自动重置，确保每局战绩独立提交。
+- **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 14 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。多局系列赛通用信号（`pkWins` / `isSeriesOver` / `pkScoreLabel`）全部内置于基类，各游戏无需重复实现；系列赛重启时 `_pkStatSubmitted` 自动重置，确保每局战绩独立提交。
 - **统一游戏组件基类（BaseGameComponent）**：`openChangeSettings()`、`navigateToPkArena()`、`handleJoinRoom()` 等 8 个公共方法上移至基类，消除 11 款游戏的重复样板代码；`GameStoreInterface` 接口新增 `pkWins` / `isSeriesOver` / `pkScoreLabel` 三项约束，确保编译时类型安全。`lobbyPanel` 通过 `@ViewChild override` 模式让子类可选复写而不重复声明。
 - **现代美学 UI**：结合 TailwindCSS v4 的原子化 CSS 特性，实现了全面现代化、毛玻璃（Glassmorphism）、微动画（Micro-animations）、金色脉冲光晕等具有震撼视觉的高级游戏界面。
 - **自动化版本号**：在前端编译命令中嵌入了自定义 Node 脚本，全自动根据构建时间生成版本号（如 `v2023.10.23.1234`），与后端版本号一并以非侵入式的 UI Overlay 悬浮于全站右下角，供管理员与玩家精准识别系统构建版本。
@@ -47,6 +47,15 @@
 - **Sokoban (推箱子)**
   - Modes: Single Player (单机解谜), PK Speed (竞速对决)
   - 核心功能: 动态响应式绝对布局、支持点击空地自动 BFS（广度优先搜索）智能寻路，以及无限次完美撤销。
+- **成语益智 (Idiom Quiz)** *(第 14 款游戏)*
+  - 三模式：填空闯关分级学习 + 每日猜词（全球同题 Wordle 风格）+ PK 极速填空（联机对战）
+  - 数据库：2000 条精选成语（来自 pwxcoo/chinese-xinhua），含释义、故事、出处、拼音
+  - **填空闯关分级**：简单 / 中级 / 困难三难度选关，智能推荐当前最适难度（掌握率 <80% 推荐当前级别）；`?difficulty=` 参数过滤加权抽题池
+  - 间隔复习：连续答对 3 次→标记已掌握；14 天未复习→自动重入练习池（艾宾浩斯遗忘曲线）
+  - 每日 Wordle：日期作随机种子稳定出题，六次猜测，两遍着色算法（正确处理重复汉字）
+  - 猜测历史持久化：`gm_user_idiom_daily_guesses` 表保存每次猜词，刷新页面不丢进度
+  - 分享功能：生成 emoji 彩格战绩图，支持 Web Share API + 剪贴板降级
+  - **PK 极速填空**：双方收到同一道填空题，先答对得分；答错自动解锁重填；2 秒后自动出下一题；先得 N 分赢得系列赛；完整等待室 / 倒计时 / 结果覆盖层流程
 
 ## Global Features: Single Player (3/4/5 位数难度练习), PK Speed (同屏竞速破译)
 

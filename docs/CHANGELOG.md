@@ -1,5 +1,52 @@
 # Changelog
 
+## [2026-06-20] - ⚡ 成语填空分级闯关 + 联机 PK 模式
+
+### 填空闯关：分级学习体系
+
+- **三难度选关 UI**：进入填空模式后先展示简单 / 中级 / 困难三张卡片，每张显示掌握进度条（已掌握 / 总数）
+- **智能推荐**：根据当前难度掌握率自动高亮「✦ 推荐」标签（easy <80% → 推荐 easy，以此类推）；三个难度全部可直接进入，不设硬锁
+- **后端过滤**：`GET /idiom/fill?difficulty=easy|medium|hard`，`weightedPickIdiom` 按难度过滤 seen/unseen 池
+- **Header 快速切换**：填空界面右上角显示当前难度 chip，点击或按返回键可回到选关页
+
+### 成语填空 PK 模式（联机对战）
+
+**后端**
+- 新引擎 `backend/internal/engine/idiom/engine.go`（`idiom_pk_speed`）：双方收到同一道填空题（同成语、同挖空位、同候选字盘）；先答对得 1 分，答错 600ms 后自动解锁重填；得分方触发后 2 秒自动出下一题；先达到 `target` 分赢得系列赛
+- 支持 `start` / `restart_game` / `forfeit` / `input`（提交答案）动作
+- `go generate` 自动注册，engines_gen.go 新增 `idiom` 包
+
+**前端**
+- 新 Store `idiom-pk.store.ts`：继承 `BaseGameStore`，computed 暴露 `display` / `keyboard` / `myWins` / `opponentWins` / `roundWinner` / `isRoundOver` / `iWonRound` 等信号；`submitFillAnswer(answer)` 通过 WS 发送 `input` 动作
+- `game-definitions.ts`：成语游戏加 `Speed` 模式（`multiRound: true`）
+- `idiom.component.ts` 集成 PK 生命周期：query param 自动进入 PK 房间，支持断线重连；PK 视图包含等待室 → 倒计时覆盖层 → 对战界面（得分点阵、填空格、候选字盘、局胜 banner）→ 结果覆盖层
+
+---
+
+## [2026-06-19] - 📖 成语益智游戏上线（第 14 款）
+
+### 新游戏：成语益智 (`/games/idiom`)
+
+**双模式设计**
+
+- **填空闯关**：随机抽取成语并挖空 1~2 字，玩家从候选字盘（20 字）点选填入。后端加权抽题（错多分高、答对减权），连续答对 3 次标记「已掌握」，14 天未复习自动重入池。
+- **每日猜词**：全球玩家每天猜同一个 4 字成语，6 次机会，绿/黄/灰三色反馈（两遍着色算法，正确处理重复汉字）。猜测记录存库，刷新不丢进度，完成后可分享 emoji 战绩图。
+
+**后端**
+- 新增 4 张表：`gm_idioms`、`gm_idiom_daily_challenges`、`gm_user_idiom_daily_guesses`、`gm_user_idiom_progress`
+- 种子数据：2000 条精选成语（pwxcoo/chinese-xinhua），`//go:embed` 嵌入二进制，幂等 seed
+- 6 个 REST 接口：`/fill`、`/fill/submit`、`/daily/state`、`/daily/guess`、`/stats`、`/daily/social`
+- 算法：两遍 Wordle 着色、日期种子稳定出题、干扰字盘过滤答案字、遗忘曲线权重调度
+
+**前端**
+- `idiom.component.ts`：全 Signals 实现，无外部 Store 依赖，双 Tab 切换
+- `idiom.service.ts`：6 个 HTTP 接口封装
+- `game-definitions.ts` + `game.model.ts`：路由与 GameId 注册
+- 中英文 i18n 键全量添加
+- `postgres.go Seed()`：完整 Config + Rules + Overview 注册
+
+---
+
 ## [2026-06-18] - 🗄️ 游戏元数据 DB 化 + 🔄 大厅无限滚动
 
 ### 🗄️ 架构升级：游戏元数据 DB 化管理

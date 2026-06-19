@@ -82,6 +82,10 @@ import { ThemeService } from '../theme/theme.service';
             <span>📝</span>
             <span>Blog</span>
           </a>
+          <a routerLink="/admin/idioms" routerLinkActive="bg-teal-500/20 text-teal-400 border-teal-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>📖</span>
+            <span>成语词库</span>
+          </a>
         </nav>
 
         <!-- Current User Info -->

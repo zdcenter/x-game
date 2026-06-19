@@ -10,6 +10,7 @@ import { playMath24Sound } from './audio/math24.sound';
 import { playBlockSound } from './audio/block.sound';
 import { playSudokuSound } from './audio/sudoku.sound';
 import { playPuzzleSound } from './audio/puzzle.sound';
+import { playIdiomSound } from './audio/idiom.sound';
 import { storageGet, storageSet, createAudioContext } from '../utils/browser.util';
 
 @Injectable({
@@ -164,6 +165,15 @@ export class AudioService {
     this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playPuzzleSound(this.audioCtx, this.masterGain, name);
+    }
+  }
+
+  // --- Idiom Sounds ---
+  playIdiom(name: 'fill' | 'erase' | 'correct' | 'wrong' | 'mastered' | 'correcting_done' | 'next') {
+    if (this.isMuted()) return;
+    this.initWebAudio();
+    if (this.audioCtx && this.masterGain) {
+      playIdiomSound(this.audioCtx, this.masterGain, name);
     }
   }
 }

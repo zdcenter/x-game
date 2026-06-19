@@ -34,7 +34,6 @@ export class LocalCodebreakerEngine implements ILocalEngine<any, CodebreakerActi
     this.finished = false;
     this.status = GameStatus.Playing;
     this.secretCode = this.generateSecret(this.digitLength);
-    console.log('[Dev Secret Code]:', this.secretCode);
   }
 
   getState() {
