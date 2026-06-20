@@ -192,6 +192,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
                 @for (ch of pkStore.display(); track $index; let i = $index) {
                   <div class="w-[22vmin] h-[22vmin] min-w-[76px] min-h-[76px] max-w-[100px] max-h-[100px] rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-black border-2 transition-all duration-200"
                     [class]="pkCellClass(i, ch, pkActive)"
+                    [style.animation-delay]="pkStore.iWonRound() ? (i * 80) + 'ms' : '0ms'"
                     (click)="pkUndoChar(i, ch)">
                     @if (ch !== '_') {
                       {{ ch }}
@@ -206,15 +207,26 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
                 }
               </div>
 
-              <!-- Wrong shake hint / locked hint -->
+              <!-- Error / locked hint -->
               @if (pkStore.myState()?.locked) {
-                <div class="anim-slide-up px-5 py-2.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-sm font-black text-red-400 text-center">
-                  🔒 本轮已锁定（错 3 次），等待下一轮
+                <div class="anim-slide-up flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-sm font-black text-red-400">
+                  🔒 <span>本轮已用完 3 次机会，等待下一轮</span>
+                  <div class="flex gap-1 ml-1">
+                    @for (n of [1,2,3]; track n) {
+                      <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                    }
+                  </div>
                 </div>
-              } @else if (pkStore.myState()?.last_wrong) {
-                <span class="anim-slide-up text-sm font-bold text-red-400">
-                  ❌ 不对，还剩 {{ 3 - (pkStore.myState()?.wrong_count ?? 0) }} 次机会
-                </span>
+              } @else if ((pkStore.myState()?.wrong_count ?? 0) > 0 && !pkStore.isRoundOver()) {
+                <div class="anim-slide-up flex items-center gap-2 px-4 py-2 rounded-2xl bg-red-500/8 border border-red-500/20 text-sm font-bold text-red-400">
+                  <div class="flex gap-1">
+                    @for (n of [1,2,3]; track n) {
+                      <span class="w-2 h-2 rounded-full transition-all duration-300"
+                        [class]="n <= (pkStore.myState()?.wrong_count ?? 0) ? 'bg-red-400 scale-110' : 'bg-red-400/20'"></span>
+                    }
+                  </div>
+                  <span>还剩 {{ 3 - (pkStore.myState()?.wrong_count ?? 0) }} 次机会</span>
+                </div>
               }
 
               <!-- Keyboard (hidden when round is over or player is locked) -->
@@ -1065,6 +1077,9 @@ export class IdiomComponent implements OnInit, OnDestroy {
         this.gameTimer.stopCountdown();
       }
       if (s === GameStatus.Finished) {
+        if (this.pkStore.winners().includes(this.pkStore.playerId())) {
+          this.audio.playWin();
+        }
         const t = setTimeout(() => this.showPkOverlay.set(true), 1200);
         onCleanup(() => clearTimeout(t));
       } else {
@@ -1150,12 +1165,13 @@ export class IdiomComponent implements OnInit, OnDestroy {
   }
 
   pkCellClass(i: number, ch: string, activeIdx: number): string {
-    if (ch !== '_') return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] cursor-default';
+    // Round-over state applies to ALL cells (blank and fixed)
     if (this.pkStore.isRoundOver()) {
       return this.pkStore.iWonRound()
-        ? 'border-green-500 bg-green-500 text-white'
-        : 'border-red-400 bg-red-400/20 text-[var(--color-text-main)]';
+        ? 'border-green-400 bg-green-500 text-white anim-correct shadow-[0_0_18px_rgba(34,197,94,0.55)]'
+        : 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] opacity-50 cursor-default';
     }
+    if (ch !== '_') return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] cursor-default';
     if (this.pkStore.myState()?.last_wrong) {
       return 'border-red-500 bg-red-500 text-white anim-shake';
     }
