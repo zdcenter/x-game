@@ -192,7 +192,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
                 @for (ch of pkStore.display(); track $index; let i = $index) {
                   <div class="w-[22vmin] h-[22vmin] min-w-[76px] min-h-[76px] max-w-[100px] max-h-[100px] rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-black border-2 transition-all duration-200"
                     [class]="pkCellClass(i, ch, pkActive)"
-                    [style.animation-delay]="pkStore.iWonRound() ? (i * 80) + 'ms' : '0ms'"
+                    [style.animation-delay]="pkStore.iWonRound() ? (i * 80 + 'ms') : pkStore.myState()?.last_wrong ? (i * 60 + 'ms') : '0ms'"
                     (click)="pkUndoChar(i, ch)">
                     @if (ch !== '_') {
                       {{ ch }}
@@ -1165,16 +1165,19 @@ export class IdiomComponent implements OnInit, OnDestroy {
   }
 
   pkCellClass(i: number, ch: string, activeIdx: number): string {
-    // Round-over state applies to ALL cells (blank and fixed)
+    // Round-over: ALL cells (blank + fixed) get green/dim treatment
     if (this.pkStore.isRoundOver()) {
       return this.pkStore.iWonRound()
         ? 'border-green-400 bg-green-500 text-white anim-correct shadow-[0_0_18px_rgba(34,197,94,0.55)]'
         : 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] opacity-50 cursor-default';
     }
-    if (ch !== '_') return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] cursor-default';
+    // Wrong shake: ALL cells shake (like single-player), blank cells go red
     if (this.pkStore.myState()?.last_wrong) {
-      return 'border-red-500 bg-red-500 text-white anim-shake';
+      return ch !== '_'
+        ? 'border-red-400/60 bg-[var(--color-bg-card)] text-[var(--color-text-main)] anim-shake cursor-default'
+        : 'border-red-500 bg-red-500 text-white anim-shake';
     }
+    if (ch !== '_') return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] cursor-default';
     if (this.pkFillAnswer()[i]) return 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-violet-600/15 text-[var(--color-text-main)]';
     if (activeIdx === i) return 'border-purple-400 bg-purple-500/15 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.3)] cursor-text';
     return 'border-dashed border-purple-300/25 bg-[var(--color-bg-card)] cursor-default';
