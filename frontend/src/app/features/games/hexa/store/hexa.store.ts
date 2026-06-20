@@ -157,7 +157,7 @@ export class HexaStore extends BaseGameStore {
 
     if (this.gameOver()) {
       if (this.currentRoomMode() !== GameMode.Single) {
-        this.ws.send({ action: C2SAction.GameOver });
+        this.ws.send({ action: C2SAction.GameOver, score: this.score() });
       } else {
         if (this.auth.isAuthenticated()) {
           this.submitSingleStat({ score: this.score(), won: false }).subscribe();

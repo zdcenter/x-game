@@ -109,7 +109,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 	}
 
 	// Update score/progress
-	if actionType == "update" && e.State == engine.StatePlaying {
+	if (actionType == "update" || actionType == string(domain.ActionMove)) && e.State == engine.StatePlaying {
 
 		if p, ok := e.state.Players[playerID]; ok {
 			p.Score = act.Score
@@ -136,6 +136,9 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 	// Force end for testing or manual game over
 	if (actionType == "game_over" || actionType == string(domain.ActionForfeit)) && e.State == engine.StatePlaying {
 		if p, ok := e.state.Players[playerID]; ok {
+			if act.Score > 0 {
+				p.Score = act.Score
+			}
 			p.Finished = true
 
 			// Check if all finished

@@ -112,7 +112,7 @@ func (e *PKAttackEngine) HandleAction(playerID string, actionType string, payloa
 		}
 
 		switch actionType {
-		case "update":
+		case "update", string(domain.ActionMove):
 			p.Score = act.Score
 			p.Lines = act.Lines
 			if act.Matrix != nil {
@@ -132,6 +132,12 @@ func (e *PKAttackEngine) HandleAction(playerID string, actionType string, payloa
 			}
 
 		case "game_over", string(domain.ActionForfeit):
+			if act.Score > 0 {
+				p.Score = act.Score
+			}
+			if act.Lines > 0 {
+				p.Lines = act.Lines
+			}
 			p.Finished = true
 			e.checkGameEnd()
 			e.Broadcast()

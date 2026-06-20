@@ -179,8 +179,24 @@ func (e *SpeedEngine) checkGameEnd() {
 			break
 		}
 	}
-	if allFinished && len(e.Players) > 0 {
-		e.State = engine.StateFinished
+	if !allFinished || len(e.Players) == 0 {
+		return
+	}
+	e.State = engine.StateFinished
+
+	// If no one already won via board submission, award the player(s) with most progress
+	if len(e.Winners) == 0 {
+		maxProgress := -1
+		for _, p := range e.Players {
+			if p.Progress > maxProgress {
+				maxProgress = p.Progress
+			}
+		}
+		for _, p := range e.Players {
+			if p.Progress == maxProgress {
+				e.Winners = append(e.Winners, p.ID)
+			}
+		}
 	}
 }
 

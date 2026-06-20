@@ -31,6 +31,7 @@ type SokobanEngine struct {
 	Difficulty    string                  `json:"difficulty"`
 	GlobalStartAt int64                   `json:"globalStartAt"`
 	Players       map[string]*PlayerState `json:"players"`
+	Winners       []string                `json:"winners"`
 	LevelMap      [][]string              `json:"-"`
 }
 
@@ -183,6 +184,7 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 	if actionType == "restart_game" && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.GlobalStartAt = 0
+		e.Winners = []string{}
 		return e.State, nil
 	}
 
@@ -347,7 +349,8 @@ func (e *SokobanEngine) checkGameOverLocked() (bool, []string) {
 				if e.Mode == string(domain.ModeSpeed) {
 					// In speed, first one to finish ends the game and wins
 					e.State = engine.StateFinished
-					return true, []string{p.ID}
+					e.Winners = []string{p.ID}
+					return true, e.Winners
 				}
 			} else {
 				allFinished = false
@@ -362,7 +365,8 @@ func (e *SokobanEngine) checkGameOverLocked() (bool, []string) {
 				winners = append(winners, id)
 			}
 			e.State = engine.StateFinished
-			return true, winners
+			e.Winners = winners
+			return true, e.Winners
 		}
 	} else if e.Mode == string(domain.ModeSpeed) && allFinished {
 		// Just in case everyone finished somehow at same time
@@ -370,7 +374,8 @@ func (e *SokobanEngine) checkGameOverLocked() (bool, []string) {
 			winners = append(winners, id)
 		}
 		e.State = engine.StateFinished
-		return true, winners
+		e.Winners = winners
+		return true, e.Winners
 	}
 
 	return false, nil
@@ -403,11 +408,13 @@ func (e *SokobanEngine) GetState() interface{} {
 		Status        string                  `json:"status"`
 		GlobalStartAt int64                   `json:"globalStartAt"`
 		Players       map[string]*PlayerState `json:"players"`
+		Winners       []string                `json:"winners"`
 	}{
 		Mode:          e.Mode,
 		Difficulty:    e.Difficulty,
 		Status:        string(e.State),
 		GlobalStartAt: e.GlobalStartAt,
 		Players:       sanitizedPlayers,
+		Winners:       e.Winners,
 	}
 }

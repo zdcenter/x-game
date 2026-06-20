@@ -191,7 +191,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
         });
       }
     } else {
-      this.ws.send({ action: C2SAction.GameOver });
+      this.ws.send({ action: C2SAction.GameOver, score: this.engine.score });
     }
   }
 

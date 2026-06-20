@@ -2,7 +2,7 @@ package block
 
 type PlayerInfo struct {
 	ID       string  `json:"id"`
-	Score    int     `json:string(domain.ModeScore)`
+	Score    int     `json:"score"`
 	Matrix   [][]int `json:"matrix"`
 	Finished bool    `json:"finished"`
 	Hand     []int   `json:"hand"` // Indices of currently held shapes

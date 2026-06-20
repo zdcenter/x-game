@@ -166,7 +166,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
         });
       }
     } else {
-      this.ws.send({ action: C2SAction.GameOver });
+      this.ws.send({ action: C2SAction.GameOver, score: this.engine.score, lines: this.engine.lines });
     }
   }
 

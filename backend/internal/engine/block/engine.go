@@ -120,6 +120,9 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 			e.Broadcast()
 
 		case "game_over", string(domain.ActionForfeit):
+			if act.Score > 0 {
+				p.Score = act.Score
+			}
 			p.Finished = true
 			e.checkGameEnd()
 			e.Broadcast()

@@ -12,7 +12,7 @@ import (
 
 type StealPlayer struct {
 	ID          string `json:"id"`
-	Score       int    `json:string(domain.ModeScore)`
+	Score       int    `json:"score"`
 	FreezeUntil int64  `json:"freezeUntil"` // Unix milliseconds
 	Finished    bool   `json:"finished"`
 }
