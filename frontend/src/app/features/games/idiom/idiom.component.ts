@@ -194,11 +194,14 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
                     [class]="pkCellClass(i, ch, pkActive)"
                     [style.animation-delay]="pkStore.iWonRound() ? (i * 80 + 'ms') : pkStore.myState()?.last_wrong ? (i * 60 + 'ms') : '0ms'"
                     (click)="pkUndoChar(i, ch)">
-                    @if (ch !== '_') {
+                    @if (pkStore.isRoundOver()) {
+                      <!-- Round over: always show full correct word from server -->
+                      <span [class]="pkStore.iWonRound() ? 'anim-char-pop' : ''">{{ pkStore.currentWord()[i] }}</span>
+                    } @else if (ch !== '_') {
                       {{ ch }}
                     } @else if (pkFillAnswer()[i]) {
                       <span class="anim-char-pop">{{ pkFillAnswer()[i] }}</span>
-                    } @else if (pkActive === i && !pkStore.isRoundOver()) {
+                    } @else if (pkActive === i) {
                       <span class="anim-cursor text-purple-400 font-thin text-4xl leading-none">|</span>
                     } @else {
                       <span class="text-purple-300/25 text-3xl">—</span>
