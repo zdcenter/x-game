@@ -204,7 +204,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     const name = this.roomName().trim() || `${gameId}-${Date.now()}`;
     this.wsService.setPendingAction('create');
     const target = this.isMultiRoundEnabled() ? this.roomTarget() : 1;
-    this.createRoom.emit({ name, gameId, mode, difficulty: diff, password: this.roomPassword() || undefined, target });
+    const pwd = this.roomPassword().trim();
+    this.createRoom.emit({ name, gameId, mode, difficulty: diff, password: pwd || undefined, target });
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.roomName.set(`${this.playerId()}-${suffix}`);
     this.roomPassword.set('');

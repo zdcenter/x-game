@@ -160,7 +160,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     return `${myW} : ${oppW}`;
   });
 
-  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
+  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1, password: string = '') {
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
@@ -169,7 +169,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
     if (mode !== GameMode.Single) {
-      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, '', '', target);
+      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, '', password, target);
     }
   }
 

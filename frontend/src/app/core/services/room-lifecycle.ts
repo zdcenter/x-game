@@ -136,11 +136,15 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
       const joinInfo = crossGameJoin.consumePendingJoin(config.gameId);
       if (joinInfo) {
         wsService.setPendingAction(joinInfo.action || 'join');
+        if (joinInfo.password) {
+          wsService.setPendingPassword(joinInfo.password);
+        }
         return {
           roomId: joinInfo.roomId,
           mode: joinInfo.mode,
           difficulty: joinInfo.difficulty,
           host: joinInfo.host,
+          password: joinInfo.password,
           target: joinInfo.target,
         };
       }

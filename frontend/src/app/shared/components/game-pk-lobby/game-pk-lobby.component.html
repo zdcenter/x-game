@@ -260,12 +260,14 @@
         <img [src]="'/assets/games/icons/' + room.game + '.svg?v=2'" class="w-3 h-3 object-contain" alt="">
         {{ gameLabel(room.game) }}
       </span>
-      @if (room.hasPassword) { <span class="text-amber-400 text-xs shrink-0">🔒</span> }
       <span class="font-mono text-sm font-bold text-[var(--color-text-main)] truncate flex-1 min-w-0"
         [title]="decodeName(room.id, 60)">
         {{ decodeName(room.id) }}
         @if (isMine) { <span class="text-[10px] text-violet-400 font-normal ml-1">({{ t('game.host') }})</span> }
       </span>
+      @if (room.hasPassword) {
+        <span class="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/50 text-amber-400 shrink-0">🔒 {{ t('game.room_private') || '私密' }}</span>
+      }
       <span
         [class]="'text-xs font-bold uppercase px-2 py-0.5 rounded shrink-0 ' + (room.status === GameStatus.Playing ? 'bg-yellow-500 text-black' : room.status === GameStatus.Waiting ? 'bg-violet-600 text-white' : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)]')">
         {{ room.status }}
@@ -294,8 +296,9 @@
         </button>
         } @else if (room.status === GameStatus.Waiting || room.status === GameStatus.Playing) {
         <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)"
-          class="px-3 py-1.5 bg-violet-600 text-white text-xs font-bold rounded-lg shadow hover:opacity-80 transition-opacity">
-          {{ room.status === GameStatus.Playing ? t('game.rejoin') : (room.hasPassword ? '🔒 ' + t('game.join') : t('game.join')) }}
+          [class]="'px-3 py-1.5 text-xs font-bold rounded-lg shadow hover:opacity-80 transition-opacity flex items-center gap-1 ' + (room.hasPassword ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black' : 'bg-violet-600 text-white')">
+          @if (room.hasPassword && room.status !== GameStatus.Playing) { <span>🔒</span> }
+          {{ room.status === GameStatus.Playing ? t('game.rejoin') : t('game.join') }}
         </button>
         } @else {
         <button disabled
@@ -408,14 +411,60 @@
   </div>
   }
 
-  <!-- Password -->
+  <!-- Password: public / private toggle -->
   <div>
     <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.room_password') }}</label>
-    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" [value]="roomPassword()"
-      (input)="updateInput(roomPassword, $event, 4, true)"
-      class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-[var(--color-accent-to)] transition-colors font-mono text-xl tracking-[0.5em] text-center"
-      [placeholder]="t('game.room_password_placeholder')">
-    <p class="text-[10px] opacity-50 mt-1">{{ t('game.room_password_hint') }}</p>
+
+    <!-- Toggle chips -->
+    <div class="flex gap-2 mb-3">
+      <!-- Public chip -->
+      <button type="button" (click)="roomPassword.set('')"
+              class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-all active:scale-95"
+              [class.bg-[var(--color-accent-to)]]="roomPassword() === ''"
+              [class.text-[var(--color-bg-main)]]="roomPassword() === ''"
+              [class.border-[var(--color-accent-to)]]="roomPassword() === ''"
+              [class.bg-[var(--color-bg-main)]]="roomPassword() !== ''"
+              [class.text-[var(--color-text-muted)]]="roomPassword() !== ''"
+              [class.border-[var(--color-border-card)]]="roomPassword() !== ''">
+        <span>🌐</span>
+        <span>{{ t('game.room_public') || '公开房间' }}</span>
+      </button>
+      <!-- Private chip -->
+      <button type="button" (click)="roomPassword.set(roomPassword() || ' ')"
+              class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-all active:scale-95"
+              [class.bg-amber-500]="roomPassword() !== ''"
+              [class.text-black]="roomPassword() !== ''"
+              [class.border-amber-500]="roomPassword() !== ''"
+              [class.bg-[var(--color-bg-main)]]="roomPassword() === ''"
+              [class.text-[var(--color-text-muted)]]="roomPassword() === ''"
+              [class.border-[var(--color-border-card)]]="roomPassword() === ''">
+        <span>🔒</span>
+        <span>{{ t('game.room_private') || '私密房间' }}</span>
+      </button>
+    </div>
+
+    <!-- 4-digit PIN input — only visible when private -->
+    @if (roomPassword() !== '') {
+      <div class="relative">
+        <input #pwdInput type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+               [value]="roomPassword().trim()"
+               (input)="updateInput(roomPassword, $event, 4, true)"
+               class="w-full bg-[var(--color-bg-main)] border-2 border-amber-500/60 rounded-xl px-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:border-amber-400 transition-colors font-mono text-2xl tracking-[1em] text-center pr-10"
+               placeholder="0 0 0 0"
+               autofocus>
+        <!-- Clear button -->
+        @if (roomPassword().trim().length > 0) {
+          <button type="button" (click)="roomPassword.set(' ')"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors text-lg">
+            ✕
+          </button>
+        }
+      </div>
+      <p class="text-[11px] text-amber-400 mt-1.5 flex items-center gap-1">
+        <span>🔒</span>
+        <span>{{ t('game.room_password_hint') }}</span>
+      </p>
+    }
   </div>
 
   <!-- Create Button -->
@@ -433,21 +482,43 @@
 <!-- ══════ Password Prompt Modal ══════ -->
 @if (pwPromptOpen()) {
 <div class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[var(--color-overlay)] backdrop-blur-sm">
-  <div
-    class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl p-6 w-full max-w-xs shadow-2xl text-[var(--color-text-main)] text-center">
-    <div class="text-3xl mb-3">🔒</div>
-    <h3 class="text-lg font-bold mb-4">{{ t('game.enter_password') }}</h3>
-    <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" [value]="pwInput()"
-      (input)="updateInput(pwInput, $event, 4, true)" (keydown.enter)="onConfirmPassword()"
-      class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-4 py-3 text-inherit focus:outline-none focus:border-[var(--color-accent-to)] font-mono text-2xl tracking-[0.5em] text-center mb-4"
-      placeholder="• • • •" autofocus>
+  <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl p-6 w-full max-w-xs shadow-2xl text-[var(--color-text-main)] text-center">
+    <div class="w-14 h-14 rounded-2xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center mx-auto mb-3">
+      <span class="text-3xl">🔒</span>
+    </div>
+    <h3 class="text-base font-black mb-1">{{ t('game.enter_password') }}</h3>
+    <p class="text-xs text-[var(--color-text-muted)] mb-4">{{ t('game.room_password_hint') }}</p>
+
+    <!-- PIN input: visible input overlaid behind dot display -->
+    <div class="relative mb-4" #pinWrap (click)="pinWrap.querySelector('input')?.focus()">
+      <!-- Dot display (pointer-events-none so clicks pass through to input) -->
+      <div class="flex justify-center gap-3 pointer-events-none select-none">
+        @for (i of [0,1,2,3]; track i) {
+          <div class="w-12 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all duration-150 z-10 relative"
+               [class.border-amber-400]="pwInput().length > i"
+               [class.bg-amber-400/10]="pwInput().length > i"
+               [class.border-[var(--color-border-card)]]="pwInput().length <= i"
+               [class.bg-[var(--color-bg-card)]]="pwInput().length <= i"
+               [class.text-amber-300]="pwInput().length > i"
+               [class.text-[var(--color-text-muted)]]="pwInput().length <= i">
+            {{ pwInput().length > i ? '●' : '○' }}
+          </div>
+        }
+      </div>
+      <!-- Real input — visible but transparent text, covers the dot area -->
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" [value]="pwInput()"
+        (input)="updateInput(pwInput, $event, 4, true)" (keydown.enter)="onConfirmPassword()"
+        class="absolute inset-0 w-full h-full opacity-0 cursor-text z-20"
+        autofocus>
+    </div>
+
     <div class="flex gap-3">
       <button (click)="pwPromptOpen.set(false)"
         class="flex-1 py-2.5 rounded-xl font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] transition-colors text-sm hover:opacity-80">
         {{ t('game.cancel') }}
       </button>
       <button (click)="onConfirmPassword()" [disabled]="pwInput().length !== 4"
-        class="flex-1 py-2.5 rounded-xl font-bold bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-lg transition-all text-sm disabled:opacity-40">
+        class="flex-1 py-2.5 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed">
         {{ t('game.confirm') }}
       </button>
     </div>
