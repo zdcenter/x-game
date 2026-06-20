@@ -13,11 +13,13 @@ import { ToastService } from './core/services/toast.service';
 import { I18nService } from './core/i18n/i18n.service';
 import { XpGainBadgeComponent } from './shared/components/xp-gain-badge/xp-gain-badge.component';
 import { AchievementUnlockOverlayComponent } from './shared/components/achievement-unlock-overlay/achievement-unlock-overlay.component';
+import { EditRoomOverlayComponent } from './shared/components/edit-room-overlay/edit-room-overlay.component';
+import { EditRoomService } from './core/services/edit-room.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent, CookieConsentComponent, XpGainBadgeComponent, AchievementUnlockOverlayComponent],
+  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent, CookieConsentComponent, XpGainBadgeComponent, AchievementUnlockOverlayComponent, EditRoomOverlayComponent],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
       <app-maintenance></app-maintenance>
@@ -27,6 +29,16 @@ import { AchievementUnlockOverlayComponent } from './shared/components/achieveme
       <app-cookie-consent></app-cookie-consent>
       <app-xp-gain-badge />
       <app-achievement-unlock-overlay />
+      <!-- 修改房间设置覆盖层：渲染在根级，脱离所有 transform 上下文 -->
+      <app-edit-room-overlay
+        [isOpen]="editRoomService.isOpen()"
+        [gameId]="editRoomService.gameId()"
+        [mode]="editRoomService.mode()"
+        [difficulty]="editRoomService.difficulty()"
+        [target]="editRoomService.target()"
+        (apply)="editRoomService.apply($event)"
+        (closed)="editRoomService.close()">
+      </app-edit-room-overlay>
     }
   `
 })
@@ -38,6 +50,7 @@ export class AppComponent implements OnInit {
   private swUpdate = inject(SwUpdate);
   private toastService = inject(ToastService);
   private i18n = inject(I18nService);
+  editRoomService = inject(EditRoomService);
 
   private readonly LANG_RE = /^\/(en|zh)(\/|$)/;
 

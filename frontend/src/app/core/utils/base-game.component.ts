@@ -109,13 +109,14 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   openChangeSettings() {
     const panel = (this as any).lobbyPanel as GameLobbyPanelComponent | undefined;
     if (panel && this.store.roomId()) {
-      this.isMobileSidebarOpen.set(true);
+      // 直接打开全屏覆盖层，不再强制展开手机侧边栏
+      const s = this.store as any;
       panel.openUpdateRoomModal({
         id: this.store.roomId(),
         game: this.store.gameId,
         mode: this.store.currentRoomMode(),
-        difficulty: '',
-        host: this.store.hostId()
+        difficulty: s.currentDifficulty?.() ?? '',
+        target: this.store.currentRoomTarget(),
       });
     }
   }

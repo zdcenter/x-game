@@ -14,6 +14,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { ToastService } from '../../../core/services/toast.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { GameHeaderComponent } from '../game-header/game-header.component';
+import { EditRoomService } from '../../../core/services/edit-room.service';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -52,7 +53,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private cross   = inject(CrossGameJoinService);
   private reg     = inject(GameRegistryService);
   private toast   = inject(ToastService);
-  private settings = inject(SettingsService);
+  private settings    = inject(SettingsService);
+  private editRoomSvc = inject(EditRoomService);
 
   // ── Inputs ────────────────────────────────────────────────────────────────
   @Input() gameId       : string = '';
@@ -90,12 +92,6 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   pwPromptHost   = signal('');
   pwInput        = signal('');
 
-  // Change-game modal for my rooms
-  changeRoomModalOpen = signal(false);
-  changeRoomId        = signal('');
-  changeRoomNewGame   = signal('');
-  changeRoomNewMode   = signal('');
-  changeRoomNewDiff   = signal('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
   allGames        = computed(() => this.reg.getAllConfigs());
@@ -146,14 +142,6 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   totalActiveRooms = computed(() => this.allRooms().length);
   totalOnline      = computed(() => this.wsService.onlinePlayers().length);
 
-  // Change-game modal computed
-  changeRoomModes = computed(() =>
-    (this.reg.getConfig(this.changeRoomNewGame())?.modes || []).filter(m => m.id !== GameMode.Single)
-  );
-  changeRoomDiffs = computed(() =>
-    this.reg.getConfig(this.changeRoomNewGame())?.difficulties || []
-  );
-
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit() {
     this.initForm();
@@ -163,15 +151,12 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   // ── Form helpers ──────────────────────────────────────────────────────────
   private initForm() {
-    // 方案B: 记忆上次选择
     const lastGame = typeof localStorage !== 'undefined' ? localStorage.getItem('pk_last_game_id') : null;
     const startGame = this.gameId || lastGame || '';
     if (startGame) {
       this.selectCreateGame(startGame);
-      this.createStep.set('settings'); // 已有上次选择，直接跳到设置步
     } else {
       this.createGameId.set('');
-      this.createStep.set('game');
     }
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.roomName.set(`${this.playerId()}-${suffix}`);
@@ -181,16 +166,15 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   selectCreateGame(id: string) {
     this.createGameId.set(id);
+    if (!id) return; // 清空选择
     const modes = this.availableModes();
     this.roomMode.set(modes[0]?.id || '');
     const diffs = this.availableDifficulties();
     this.roomDifficulty.set(diffs[0]?.id || '');
   }
 
-  // 选游戏并进入设置步（方案A 两步向导）
   pickGameAndNext(id: string) {
     this.selectCreateGame(id);
-    this.createStep.set('settings');
   }
 
   // 方案C: 同款创建
@@ -285,33 +269,15 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     this.toast.show(this.t('game.broadcast_success'), 'success');
   }
 
-  // ── Change-game modal ─────────────────────────────────────────────────────
+  // ── Change-game overlay（通过 EditRoomService + AppComponent 全局覆盖层）──
   openChangeRoomModal(room: any) {
-    this.changeRoomId.set(room.id);
-    this.changeRoomNewGame.set(room.game);
-    this.changeRoomNewMode.set(room.mode);
-    this.changeRoomNewDiff.set(room.difficulty);
-    this.changeRoomModalOpen.set(true);
-  }
-
-  selectChangeRoomGame(id: string) {
-    this.changeRoomNewGame.set(id);
-    const modes = this.changeRoomModes();
-    this.changeRoomNewMode.set(modes[0]?.id || '');
-    const diffs = this.changeRoomDiffs();
-    this.changeRoomNewDiff.set(diffs[0]?.id || '');
-  }
-
-  onConfirmChangeRoomGame() {
-    this.wsService.send({
-      type: C2SAction.ChangeGame,
-      roomId: this.changeRoomId(),
-      game: this.changeRoomNewGame(),
-      mode: this.changeRoomNewMode(),
-      difficulty: this.changeRoomNewDiff()
+    this.editRoomSvc.open({
+      roomId:     room.id,
+      gameId:     room.game,
+      mode:       room.mode,
+      difficulty: room.difficulty,
+      target:     room.target ?? 1,
     });
-    this.changeRoomModalOpen.set(false);
-    this.toast.show(this.t('game.change_room_game') + ' ✓', 'success');
   }
 
   // ── Label helpers ─────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { EditRoomService } from '../../../core/services/edit-room.service';
 
 export interface GameMode {
   id: string;
@@ -45,6 +46,7 @@ export class GameLobbyPanelComponent implements OnInit {
   private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
+  private editRoomService = inject(EditRoomService);
 
   @Input() currentGameId: string = '';
   @Input() currentRoomId: string = '';
@@ -63,13 +65,6 @@ export class GameLobbyPanelComponent implements OnInit {
     return { challenger: q['challenge'] as string, score: (q['score'] as string) || '' };
   });
 
-  isCreateModalOpen = signal(false);
-  isUpdateMode = signal(false);
-  updatingRoomId = signal('');
-  newRoomGameId = signal('');
-  newRoomMode = signal('');
-  newRoomDifficulty = signal('');
-
   isPasswordPromptOpen = signal(false);
   passwordPromptRoomId = signal('');
   passwordPromptGame = signal('');
@@ -77,17 +72,6 @@ export class GameLobbyPanelComponent implements OnInit {
   passwordPromptDifficulty = signal('');
   passwordPromptHost = signal('');
   passwordInput = signal('');
-
-  allGames = computed(() => this.gameRegistry.getAllConfigs());
-
-  availableModes = computed(() => {
-    const modes = this.gameRegistry.getConfig(this.newRoomGameId())?.modes || [];
-    return modes.filter(m => m.id !== GameMode.Single);
-  });
-
-  availableDifficulties = computed(() =>
-    this.gameRegistry.getConfig(this.newRoomGameId())?.difficulties || []
-  );
 
   gameRooms = computed(() =>
     this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single)
@@ -117,20 +101,13 @@ export class GameLobbyPanelComponent implements OnInit {
   }
 
   openUpdateRoomModal(room: any) {
-    this.isUpdateMode.set(true);
-    this.updatingRoomId.set(room.id);
-    this.selectGameForNewRoom(room.game);
-    this.newRoomMode.set(room.mode);
-    this.newRoomDifficulty.set(room.difficulty);
-    this.isCreateModalOpen.set(true);
-  }
-
-  selectGameForNewRoom(gameId: string) {
-    this.newRoomGameId.set(gameId);
-    const modes = this.availableModes();
-    this.newRoomMode.set(modes.length > 0 ? modes[0].id : '');
-    const diffs = this.availableDifficulties();
-    this.newRoomDifficulty.set(diffs.length > 0 ? diffs[0].id : '');
+    this.editRoomService.open({
+      roomId:     room.id,
+      gameId:     room.game || this.currentGameId,
+      mode:       room.mode || '',
+      difficulty: room.difficulty || '',
+      target:     room.target ?? 1,
+    });
   }
 
   updatePasswordInput(event: Event) {
@@ -138,17 +115,6 @@ export class GameLobbyPanelComponent implements OnInit {
     const val = input.value.replace(/[^0-9]/g, '').slice(0, 4);
     input.value = val;
     this.passwordInput.set(val);
-  }
-
-  onConfirmCreateRoom() {
-    this.wsService.send({
-      type: 'change_game',
-      roomId: this.updatingRoomId(),
-      game: this.newRoomGameId(),
-      mode: this.newRoomMode(),
-      difficulty: this.newRoomDifficulty(),
-    });
-    this.isCreateModalOpen.set(false);
   }
 
   onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean) {
