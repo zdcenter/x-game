@@ -25,77 +25,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
     .shimmer     { animation: shimmer 2s ease-in-out infinite; }
     .countdown-bar { animation: countdown linear forwards; }
   `],
-  template: `
-    @if (achievementService.pendingUnlocks()[0]; as achievement) {
-      <div class="fixed inset-0 z-[500] flex items-end justify-center pb-8 px-4 pointer-events-none">
-        <div class="achieve-in w-full max-w-sm pointer-events-auto">
-          <div class="relative rounded-2xl border shadow-2xl overflow-hidden"
-               [class]="achievementService.rarityColor(achievement.rarity) + ' ' + achievementService.rarityGlow(achievement.rarity)">
-
-            <!-- Shimmer bar top -->
-            <div class="absolute top-0 left-0 right-0 h-0.5 shimmer"
-                 [ngClass]="shimmerColor(achievement.rarity)"></div>
-
-            <div class="flex items-center gap-4 p-4">
-              <!-- Icon -->
-              <div class="w-16 h-16 rounded-xl flex items-center justify-center text-4xl flex-shrink-0
-                          border shadow-inner"
-                   [ngClass]="iconBg(achievement.rarity)">
-                {{ achievement.icon_emoji }}
-              </div>
-
-              <!-- Content -->
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold uppercase tracking-widest opacity-70 mb-0.5">
-                  {{ i18n.t('achievement.unlocked')() }}
-                </p>
-                <h3 class="font-black text-lg leading-tight truncate">
-                  {{ i18n.t(achievement.title_key)() || achievement.title_key }}
-                </h3>
-                <p class="text-xs opacity-60 mt-0.5 truncate">
-                  {{ i18n.t(achievement.desc_key)() || achievement.desc_key }}
-                </p>
-                <div class="flex items-center gap-2 mt-1.5">
-                  <span class="text-xs font-bold px-2 py-0.5 rounded-full border opacity-80"
-                        [ngClass]="rarityBadge(achievement.rarity)">
-                    {{ i18n.t('achievement.rarity.' + achievement.rarity)() }}
-                  </span>
-                  <span class="text-xs font-bold text-[var(--color-accent-to)]">
-                    +{{ achievement.xp_reward }} XP
-                  </span>
-                </div>
-              </div>
-
-              <!-- Dismiss button -->
-              <button
-                (click)="dismiss()"
-                class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full
-                       bg-white/10 hover:bg-white/20 transition-colors text-sm font-bold">
-                ✕
-              </button>
-            </div>
-
-            <!-- Countdown progress bar -->
-            <div class="h-0.5 mx-4 mb-3 rounded-full bg-white/10 overflow-hidden">
-              <div class="h-full rounded-full countdown-bar"
-                   [ngClass]="shimmerColor(achievement.rarity)"
-                   [style.animation-duration]="duration() + 'ms'">
-              </div>
-            </div>
-
-            <!-- Queue indicator -->
-            @if (achievementService.pendingUnlocks().length > 1) {
-              <div class="px-4 pb-3 -mt-2">
-                <p class="text-[10px] opacity-50 text-center">
-                  +{{ achievementService.pendingUnlocks().length - 1 }} more
-                </p>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    }
-  `
+  templateUrl: './achievement-unlock-overlay.component.html',
 })
 export class AchievementUnlockOverlayComponent implements OnDestroy {
   achievementService = inject(AchievementService);

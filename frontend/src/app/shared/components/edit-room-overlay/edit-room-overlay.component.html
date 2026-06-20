@@ -1,0 +1,165 @@
+@if (isOpen) {
+  <!-- Backdrop -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[var(--color-overlay)] backdrop-blur-sm"
+       (click)="closed.emit()">
+
+    <!-- Panel -->
+    <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
+         (click)="$event.stopPropagation()">
+
+      <!-- ── Header ── -->
+      <div class="shrink-0 flex items-center justify-between px-5 pt-5 pb-3">
+        <div class="flex items-center gap-2.5">
+          @if (step() === 'settings' && editGameId()) {
+            <img [src]="'/assets/games/icons/' + editGameId() + '.svg?v=2'" class="w-7 h-7 object-contain shrink-0" alt="">
+          }
+          <h3 class="text-base font-black text-[var(--color-text-main)]">⚙️ {{ t('game.update_settings') }}</h3>
+        </div>
+        <button (click)="closed.emit()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors text-lg">✕</button>
+      </div>
+
+      <!-- ── Step Indicator ── -->
+      <div class="shrink-0 flex items-center gap-2 px-5 pb-3">
+        <button (click)="step.set('game')"
+                class="flex items-center gap-1.5 text-xs font-bold transition-colors"
+                [class.text-[var(--color-accent-from)]]="step() === 'game'"
+                [class.text-[var(--color-text-muted)]]="step() !== 'game'">
+          <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-black shrink-0"
+                [class.border-[var(--color-accent-from)]]="step() === 'game'"
+                [class.border-transparent]="step() !== 'game'"
+                [class.bg-[var(--color-accent-from)]]="step() !== 'game'"
+                [class.text-[var(--color-bg-main)]]="step() !== 'game'"
+                [class.text-[var(--color-accent-from)]]="step() === 'game'">1</span>
+          {{ t('game.select_game') }}
+        </button>
+        <div class="h-px flex-1 bg-[var(--color-border-card)]"></div>
+        <span class="flex items-center gap-1.5 text-xs font-bold"
+              [class.text-[var(--color-accent-from)]]="step() === 'settings'"
+              [class.text-[var(--color-text-muted)]]="step() !== 'settings'">
+          <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-black shrink-0"
+                [class.border-[var(--color-accent-from)]]="step() === 'settings'"
+                [class.border-[var(--color-border-card)]]="step() !== 'settings'">2</span>
+          {{ t('game.settings') || '设置' }}
+        </span>
+      </div>
+
+      <!-- ── Body (scrollable) ── -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar px-5 pb-5 space-y-4 min-h-0">
+
+        <!-- STEP 1: 选游戏 -->
+        @if (step() === 'game') {
+          <p class="text-xs text-[var(--color-text-muted)]">{{ t('game.select_game_hint') }}</p>
+          <div class="grid grid-cols-3 gap-2">
+            @for (g of allGames(); track g.id) {
+              <button (click)="pickGame(g.id)"
+                      class="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-xs font-bold transition-all active:scale-95"
+                      [class.bg-gradient-to-br]="editGameId() === g.id"
+                      [class.from-rose-500/20]="editGameId() === g.id"
+                      [class.to-violet-500/20]="editGameId() === g.id"
+                      [class.border-violet-500]="editGameId() === g.id"
+                      [class.text-[var(--color-text-main)]]="editGameId() === g.id"
+                      [class.bg-[var(--color-bg-card)]]="editGameId() !== g.id"
+                      [class.border-[var(--color-border-card)]]="editGameId() !== g.id"
+                      [class.text-[var(--color-text-muted)]]="editGameId() !== g.id"
+                      [class.hover:border-violet-400]="editGameId() !== g.id">
+                <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-8 h-8 object-contain drop-shadow-sm" alt="">
+                <span class="leading-tight text-center line-clamp-2 text-[11px]">{{ t(g.titleKey) }}</span>
+              </button>
+            }
+          </div>
+        }
+
+        <!-- STEP 2: 填设置 -->
+        @if (step() === 'settings') {
+
+          <!-- Mode -->
+          @if (availableModes().length > 0) {
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
+              <div [class]="availableModes().length === 1 ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-2 gap-2'">
+                @for (mode of availableModes(); track mode.id) {
+                  <button (click)="editMode.set(mode.id)"
+                          class="px-3 py-3 rounded-xl border font-bold text-sm transition-all text-left"
+                          [class.bg-[var(--color-accent-to)]]="editMode() === mode.id"
+                          [class.text-[var(--color-bg-main)]]="editMode() === mode.id"
+                          [class.border-[var(--color-accent-to)]]="editMode() === mode.id"
+                          [class.bg-[var(--color-bg-card)]]="editMode() !== mode.id"
+                          [class.border-[var(--color-border-card)]]="editMode() !== mode.id">
+                    <div class="flex items-center gap-2 mb-0.5">
+                      @if (mode.icon) { <span>{{ mode.icon }}</span> }
+                      <span>{{ mode.labelKey ? t(mode.labelKey) : mode.id }}</span>
+                    </div>
+                    @if (mode.descKey || mode.desc) {
+                      <div class="text-[10px] font-normal opacity-70 leading-tight mt-0.5">
+                        {{ mode.descKey ? t(mode.descKey) : mode.desc }}
+                      </div>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Difficulty -->
+          @if (availableDifficulties().length > 0) {
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.diff') }}</label>
+              <div class="grid grid-cols-3 gap-2">
+                @for (diff of availableDifficulties(); track diff.id) {
+                  <button (click)="editDifficulty.set(diff.id)"
+                          class="py-3 rounded-xl border font-bold text-xs transition-all flex flex-col items-center gap-1 min-h-[52px] justify-center"
+                          [class.bg-[var(--color-accent-from)]]="editDifficulty() === diff.id"
+                          [class.text-[var(--color-bg-main)]]="editDifficulty() === diff.id"
+                          [class.border-[var(--color-accent-from)]]="editDifficulty() === diff.id"
+                          [class.bg-[var(--color-bg-card)]]="editDifficulty() !== diff.id"
+                          [class.border-[var(--color-border-card)]]="editDifficulty() !== diff.id">
+                    <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
+                    @if (diff.descKey || diff.desc) {
+                      <span class="text-[9px] font-normal opacity-70 leading-tight text-center px-1">
+                        {{ diff.descKey ? t(diff.descKey) : diff.desc }}
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- 多局目标 -->
+          @if (isMultiRoundEnabled()) {
+            <div>
+              <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-1">{{ t('game.pk_target_label') }}</label>
+              <p class="text-[10px] opacity-50 mb-2">{{ t('game.pk_target_hint') }}</p>
+              <div class="grid grid-cols-4 gap-2">
+                @for (opt of [1, 3, 5, 10]; track opt) {
+                  <button (click)="editTarget.set(opt)"
+                          class="py-3 rounded-xl border font-black text-sm transition-all text-center"
+                          [class.bg-[var(--color-accent-to)]]="editTarget() === opt"
+                          [class.text-[var(--color-bg-main)]]="editTarget() === opt"
+                          [class.border-[var(--color-accent-to)]]="editTarget() === opt"
+                          [class.bg-[var(--color-bg-card)]]="editTarget() !== opt"
+                          [class.border-[var(--color-border-card)]]="editTarget() !== opt">
+                    {{ opt }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- 操作按钮 -->
+          <div class="flex gap-3 pt-2">
+            <button (click)="step.set('game')"
+                    class="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] transition-all text-sm font-bold shrink-0">
+              ← {{ t('game.change') || '换游戏' }}
+            </button>
+            <button (click)="onConfirm()"
+                    class="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:brightness-110 active:scale-95 transition-all">
+              ✓ {{ t('game.update') }}
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

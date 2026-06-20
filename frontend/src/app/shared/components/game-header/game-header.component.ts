@@ -10,61 +10,7 @@ import { getOrigin } from '../../../core/utils/browser.util';
   selector: 'app-game-header',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="relative p-2 sm:p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border-b border-[var(--color-border-card)] shadow-md rounded-t-2xl lg:rounded-t-3xl"
-         [ngClass]="headerBgClass">
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-          <button (click)="back.emit()" class="p-1.5 sm:p-2 bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] rounded-full transition-colors text-[var(--color-text-main)] hover:text-white shadow-md z-10 shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <div class="flex items-center gap-2 sm:gap-4 min-w-0">
-            <div class="w-8 h-8 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg shrink-0"
-                 [ngClass]="[iconGradientClass, shadowClass]">
-              <ng-content select="[game-icon]"></ng-content>
-            </div>
-            <div class="min-w-0 flex flex-col justify-center">
-              <h1 class="text-base sm:text-2xl md:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r tracking-tight uppercase flex items-center gap-1 sm:gap-2 truncate"
-                  [ngClass]="titleGradientClass">
-                <span class="truncate">{{ title }}</span>
-                <a *ngIf="showRulesBtn" [href]="gameId ? ('/docs/' + gameId) : '/docs'" target="_blank" class="opacity-70 hover:opacity-100 transition-colors p-0.5 sm:p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 text-[var(--color-text-main)] shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </a>
-                <button *ngIf="gameId" (click)="shareGame()" class="opacity-70 hover:opacity-100 transition-colors p-0.5 sm:p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 text-blue-500 shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                </button>
-                <button (click)="audioService.toggleMute()" class="opacity-70 hover:opacity-100 transition-colors p-0.5 sm:p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 text-[var(--color-text-main)] shrink-0">
-                  <!-- Volume Up Icon (Unmuted) -->
-                  <svg *ngIf="!audioService.isMuted()" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 19l-7-7H2V5h2l7-7v21z" />
-                  </svg>
-                  <!-- Volume Off/Mute Icon -->
-                  <svg *ngIf="audioService.isMuted()" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1V10a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                  </svg>
-                </button>
-              </h1>
-              <p class="text-[10px] sm:text-xs md:text-sm text-[var(--color-text-main)] opacity-70 font-medium sm:mt-1 truncate hidden sm:block" *ngIf="subtitle">
-                {{ subtitle }}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-1 sm:gap-2 z-10 shrink-0 ml-2">
-          <ng-content select="[header-center]"></ng-content>
-          <ng-content select="[header-right]"></ng-content>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {
   @Input() title: string = '';
