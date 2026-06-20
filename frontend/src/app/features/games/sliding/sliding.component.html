@@ -36,12 +36,17 @@
                   class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest hidden sm:block">{{
                   t('game.difficulty')() }}</span>
                 @if (currentRoomMode() === GameMode.Single) {
-                <select [ngModel]="store.currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
-                  class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-md lg:rounded-lg px-1 py-0.5 lg:px-3 lg:py-1.5 text-xs lg:text-base font-bold cursor-pointer outline-none focus:ring-2 focus:ring-pink-500 transition-all shadow-inner">
-                  @for (diff of difficulties; track diff.id) {
-                  <option [value]="diff.id">{{ t(diff.labelKey)() }}</option>
-                  }
-                </select>
+                <div class="relative">
+                  <select [ngModel]="store.currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
+                    class="appearance-none bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-md lg:rounded-lg pl-1 pr-5 py-0.5 lg:pl-3 lg:pr-7 lg:py-1.5 text-xs lg:text-sm font-bold cursor-pointer outline-none focus:ring-2 focus:ring-pink-500 transition-all shadow-inner text-[var(--color-text-main)]">
+                    @for (diff of difficulties; track diff.id) {
+                    <option [value]="diff.id">{{ t(diff.labelKey)() }}</option>
+                    }
+                  </select>
+                  <svg class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
                 } @else {
                 <div
                   class="text-xs lg:text-base font-bold px-1 py-0.5 lg:px-3 lg:py-1.5 text-pink-400 bg-[var(--color-bg-main)] rounded-lg border border-[var(--color-border-card)]">

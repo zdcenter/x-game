@@ -25,12 +25,17 @@
               </span>
               @if (currentRoomMode() === GameMode.Single) {
                 <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
-                <select [value]="currentDifficulty()" (change)="changeDifficulty($event)" 
-                        class="px-2 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
-                  <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
-                  <option value="medium">{{ i18n.t('game.diff_medium')() }}</option>
-                  <option value="hard">{{ i18n.t('game.diff_hard')() }}</option>
-                </select>
+                <div class="relative">
+                  <select [value]="currentDifficulty()" (change)="changeDifficulty($event)"
+                          class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
+                    <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
+                    <option value="medium">{{ i18n.t('game.diff_medium')() }}</option>
+                    <option value="hard">{{ i18n.t('game.diff_hard')() }}</option>
+                  </select>
+                  <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
               }
             </div>
             @if (settingsService.settings().multiplayer_enabled === 'true') {
