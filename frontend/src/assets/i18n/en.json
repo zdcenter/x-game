@@ -940,6 +940,7 @@
   "footer.resources": "Resources",
   "footer.legal": "Legal",
   "lobby.idiom": "Idiom Quiz",
+  "lobby.idiom.desc": "Learn Chinese idioms through fill-in-blank challenges and daily Wordle.",
   "idiom.subtitle": "Fill Blanks · Daily Wordle",
   "idiom.start_fill": "Start Quiz",
   "idiom.correct": "Correct!",

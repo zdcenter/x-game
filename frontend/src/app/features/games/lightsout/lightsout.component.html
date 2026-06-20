@@ -115,8 +115,18 @@
 
       <div class="flex-grow flex flex-col items-center justify-start p-2 lg:p-4 w-full h-full relative">
         
+        <!-- Mobile floating HUD (PK only) -->
+        @if (store.currentRoomMode() !== GameMode.Single) {
+          <app-game-player-mini-hud
+            class="lg:hidden"
+            [myPlayer]="{ playerName: playerId, isHost: store.hostId() === playerId, stats: [{ icon: '🦶', value: store.moves() }], status: store.isFinished() ? 'finished' : 'playing' }"
+            [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: store.hostId() === opp.id, stats: [{ icon: '💡', value: opp.remainingLights }], status: opp.finished ? 'finished' : 'playing' }))">
+          </app-game-player-mini-hud>
+        }
+
         <!-- Players Info Row -->
-        <div class="flex-none py-2 mb-2 w-full max-w-[800px] border-b border-[var(--color-border-card)]">
+        <div class="flex-none py-1 mb-1 w-full max-w-[800px] border-b border-[var(--color-border-card)]"
+             [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
           <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
             <!-- Local Player -->
             <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"

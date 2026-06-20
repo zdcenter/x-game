@@ -80,8 +80,18 @@
 
           <!-- Main Game Area -->
           @if (store.currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
-            <!-- Players Status Bar (Moved outside game area to match Hexa) -->
-            <div class="flex-none py-2 border-b border-[var(--color-border-card)] shrink-0 w-full">
+            <!-- Mobile floating HUD (PK only) -->
+            @if (store.currentRoomMode() !== GameMode.Single) {
+              <app-game-player-mini-hud
+                class="lg:hidden"
+                [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
+                [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
+              </app-game-player-mini-hud>
+            }
+
+            <!-- Players Status Bar -->
+            <div class="flex-none py-1 border-b border-[var(--color-border-card)] shrink-0 w-full"
+                 [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
               <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
                   @if (store.currentRoomMode() === GameMode.Single) {
                     <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"

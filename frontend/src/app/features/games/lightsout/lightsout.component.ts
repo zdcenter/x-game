@@ -19,6 +19,7 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-lightsout',
@@ -32,7 +33,8 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
     PlayerBadgeComponent,
     GameResultOverlayComponent,
     GameRulesModalComponent,
-    HintButtonComponent
+    HintButtonComponent,
+    GamePlayerMiniHudComponent
   ],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html'

@@ -65,10 +65,20 @@
           }
           @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
 
+            <!-- Mobile floating HUD (PK only) -->
+            @if (currentRoomMode() !== GameMode.Single) {
+              <app-game-player-mini-hud
+                class="lg:hidden"
+                [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), stats: [{ icon: '≣', value: store.lines() }], status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
+                [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
+              </app-game-player-mini-hud>
+            }
+
             <!-- Players / Opponents (Top) -->
-            <div class="flex-none pt-1 pb-2 mb-1 border-b border-[var(--color-border-card)] shrink-0">
+            <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0"
+                 [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
               <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
-                
+
                 <!-- Local Player (You) -->
                 <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                   [playerName]="playerId"

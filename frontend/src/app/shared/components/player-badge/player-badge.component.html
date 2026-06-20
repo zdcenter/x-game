@@ -1,6 +1,6 @@
 <!-- Card Layout (used for Steal, Hexa, Sliding, Codebreaker, Sokoban) -->
 <ng-container *ngIf="layout === 'card'">
-  <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl border transition-all duration-300 relative overflow-hidden shadow-sm"
+  <div class="flex items-center gap-2 px-2 py-1 rounded-xl border transition-all duration-300 relative overflow-hidden shadow-sm"
        [ngClass]="{
          'border-blue-400 bg-gradient-to-r from-blue-500/20 to-blue-600/10 shadow-[0_0_15px_rgba(59,130,246,0.3)]': isMe,
          'border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:border-white/20': !isMe,
@@ -9,7 +9,7 @@
        }">
 
     <!-- Avatar -->
-    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[var(--color-bg-main)] flex items-center justify-center font-black text-sm md:text-base border-2 border-[var(--color-border-card)] shadow-inner relative z-10 shrink-0 text-[var(--color-text-main)]" [class.border-blue-400]="isMe" [class.border-emerald-400]="status === GameStatus.Finished">
+    <div class="w-8 h-8 rounded-full bg-[var(--color-bg-main)] flex items-center justify-center font-black text-sm border-2 border-[var(--color-border-card)] shadow-inner relative z-10 shrink-0 text-[var(--color-text-main)]" [class.border-blue-400]="isMe" [class.border-emerald-400]="status === GameStatus.Finished">
       <span *ngIf="isHost && !isSpectating()" class="absolute -top-1 -right-1 text-xs drop-shadow-md z-20">👑</span>
       <span *ngIf="isSpectating()" class="absolute -top-1 -right-1 text-xs drop-shadow-md z-20">👁️</span>
       {{ avatarChar }}
@@ -19,7 +19,7 @@
     <div class="flex items-center min-w-0 z-10 flex-1 justify-between gap-1.5">
       <!-- Name -->
       <div class="flex items-center gap-1 shrink w-16 md:w-auto">
-        <span class="text-sm md:text-base font-bold truncate tracking-wide"
+        <span class="text-sm font-bold truncate tracking-wide"
               [class.text-blue-400]="isMe"
               [class.text-emerald-400]="!isMe && status === GameStatus.Finished"
               [class.text-[var(--color-text-muted)]]="!isMe && status !== GameStatus.Finished">
@@ -31,16 +31,16 @@
       <div class="flex items-center gap-1.5 shrink-0 justify-end flex-nowrap overflow-hidden">
         <ng-container *ngIf="filteredStats.length > 0">
             <div *ngFor="let stat of filteredStats" class="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded shadow-inner border border-white/5 leading-none truncate" [ngClass]="stat.colorClass || 'text-[var(--color-text-main)]'">
-              <span *ngIf="stat.icon" class="text-xs md:text-sm opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
-              <span class="text-sm md:text-base font-mono font-bold tracking-tight truncate" [class.text-emerald-400]="status === GameStatus.Finished">{{ stat.value }}</span>
+              <span *ngIf="stat.icon" class="text-xs opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
+              <span class="text-sm font-mono font-bold tracking-tight truncate" [class.text-emerald-400]="status === GameStatus.Finished">{{ stat.value }}</span>
               <span *ngIf="stat.label && !stat.icon" class="text-[10px] font-bold opacity-60 uppercase">{{ stat.label }}</span>
             </div>
         </ng-container>
         <ng-container *ngIf="subText">
-          <span class="text-[10px] md:text-xs font-mono font-bold text-[var(--color-text-muted)] truncate max-w-[50px] md:max-w-[100px] bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{{ subText }}</span>
+          <span class="text-[10px] font-mono font-bold text-[var(--color-text-muted)] truncate max-w-[100px] bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{{ subText }}</span>
         </ng-container>
         <ng-container *ngIf="score !== undefined">
-          <span class="text-sm md:text-base font-black leading-none text-amber-400 drop-shadow-md truncate max-w-[40px] md:max-w-none ml-1">{{ score }}</span>
+          <span class="text-sm font-black leading-none text-amber-400 drop-shadow-md truncate ml-1">{{ score }}</span>
         </ng-container>
       </div>
     </div>
@@ -55,6 +55,61 @@
       <span class="text-lg animate-pulse">🥶</span>
       <span *ngIf="freezeCountdown !== undefined" class="text-[10px] text-white font-bold mt-0.5">{{ freezeCountdown }}s</span>
     </div>
+  </div>
+</ng-container>
+
+<!-- Mini Layout (floating HUD badge, mobile PK overlay) -->
+<ng-container *ngIf="layout === 'mini'">
+  <div class="flex items-center gap-1.5 px-2 py-1 rounded-xl shadow-lg transition-all duration-300"
+       style="backdrop-filter: blur(8px);"
+       [ngClass]="{
+         'bg-blue-500/25 border border-blue-400/60': isMe,
+         'bg-[var(--color-bg-card)] border border-[var(--color-border-card)]/70': !isMe && status !== 'finished',
+         'bg-emerald-500/15 border border-emerald-500/50': status === 'finished'
+       }">
+
+    <!-- Avatar 20px -->
+    <div class="w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 relative text-white"
+         [ngClass]="{
+           'bg-gradient-to-br from-blue-500 to-violet-600': isMe && status !== 'finished',
+           'bg-gradient-to-br from-emerald-500 to-teal-600': status === 'finished',
+           'bg-gradient-to-br from-gray-500 to-gray-700': !isMe && status !== 'finished'
+         }">
+      <span *ngIf="isHost" class="absolute -top-1 -right-1 text-[8px] leading-none">👑</span>
+      {{ avatarChar }}
+    </div>
+
+    <!-- Name -->
+    <span class="text-[11px] font-bold truncate max-w-[60px]"
+          [ngClass]="{
+            'text-blue-400': isMe && status !== 'finished',
+            'text-emerald-400': status === 'finished',
+            'text-[var(--color-text-muted)]': !isMe && status !== 'finished'
+          }">
+      {{ isMe ? (i18n.t('game.you')() || 'You') : playerName }}
+    </span>
+
+    <!-- Primary stat (first stat, or score) -->
+    <ng-container *ngIf="filteredStats.length > 0">
+      <span class="text-[11px] font-mono font-bold shrink-0"
+            [class.text-emerald-400]="status === 'finished'"
+            [class.text-[var(--color-text-secondary)]]="status !== 'finished'">
+        <span *ngIf="filteredStats[0].icon" class="opacity-80">{{ filteredStats[0].icon }}</span>{{ filteredStats[0].value }}
+      </span>
+    </ng-container>
+    <ng-container *ngIf="filteredStats.length === 0 && score !== undefined">
+      <span class="text-[11px] font-mono font-bold shrink-0"
+            [class.text-emerald-400]="status === 'finished'"
+            [class.text-amber-400]="status !== 'finished'">{{ score }}</span>
+    </ng-container>
+
+    <!-- Status dot -->
+    <span class="w-1.5 h-1.5 rounded-full shrink-0"
+          [ngClass]="{
+            'bg-emerald-400': status === 'finished',
+            'bg-blue-400 animate-pulse': status === 'frozen',
+            'bg-green-400': status !== 'finished' && status !== 'frozen'
+          }"></span>
   </div>
 </ng-container>
 

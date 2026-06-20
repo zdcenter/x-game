@@ -22,6 +22,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-watersort',
@@ -30,7 +31,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
     GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
-    HintButtonComponent, TutorialOverlayComponent
+    HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent
   ],
   template: `
 <div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-hidden select-none overscroll-none">
@@ -108,8 +109,18 @@ import { TutorialService } from '../../../core/services/tutorial.service';
         <div class="flex-1 flex flex-col relative min-h-0 overflow-hidden mt-2 w-full">
           @if (currentRoomMode() === GameMode.Single || status !== GameStatus.Waiting) {
 
+            <!-- Mobile floating HUD (PK only) -->
+            @if (currentRoomMode() !== GameMode.Single) {
+              <app-game-player-mini-hud
+                class="lg:hidden"
+                [myPlayer]="{ playerName: playerId, isHost: playerId === _store.hostId(), stats: [{ icon: '🔄', value: myMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }"
+                [opponents]="opponentId() ? [{ playerName: opponentId()!, isHost: opponentId() === _store.hostId(), stats: [{ icon: '🔄', value: opponentMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }] : []">
+              </app-game-player-mini-hud>
+            }
+
             <!-- Players / Opponents (Top) -->
-            <div class="flex-none pt-2 pb-4 mb-2 border-b border-[var(--color-border-card)] shrink-0">
+            <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0"
+                 [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
               <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
                 
                 <!-- Local Player (You) -->

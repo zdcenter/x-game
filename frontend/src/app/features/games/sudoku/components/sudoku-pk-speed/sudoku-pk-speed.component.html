@@ -50,8 +50,15 @@
         </app-game-header>
       </div>
 
-      <!-- Top Progress Bars -->
-      <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center pb-2 px-2">
+      <!-- Mobile floating HUD -->
+      <app-game-player-mini-hud
+        class="lg:hidden"
+        [myPlayer]="{ playerName: store.playerId(), isHost: store.playerId() === store.hostId(), stats: [{ icon: '📝', value: (store.players()[store.playerId()]?.progress || 0) + '/81' }], status: store.players()[store.playerId()]?.finished ? 'finished' : 'playing' }"
+        [opponents]="getPlayers().filter(p => p.id !== store.playerId()).map(p => ({ playerName: p.id, isHost: p.id === store.hostId(), stats: [{ icon: '📝', value: p.progress + '/81' }], status: p.finished ? 'finished' : 'playing' }))">
+      </app-game-player-mini-hud>
+
+      <!-- Top Progress Bars (desktop only) -->
+      <div class="hidden lg:flex w-full max-w-[800px] mx-auto gap-2 lg:gap-4 items-center pb-2 px-2">
         <!-- Local Player -->
         <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
           [playerName]="store.playerId()"

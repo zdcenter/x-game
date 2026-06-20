@@ -27,11 +27,12 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
 import { FormsModule } from '@angular/forms';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, TutorialOverlayComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -41,6 +42,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   GameMode = GameMode;
   GameStatus = GameStatus;
   GameDifficulty = GameDifficulty;
+  Math = Math;
   store = inject(MinesweeperStore);
   i18n = inject(I18nService);
   authStore = inject(AuthStore);

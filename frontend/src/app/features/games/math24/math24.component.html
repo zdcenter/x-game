@@ -121,7 +121,7 @@
         <!-- Single Player Mode -->
         <ng-container *ngIf="store.currentRoomMode() === GameMode.Single">
           <!-- Local Player (You) -->
-          <div class="flex-none py-2 border-b border-[var(--color-border-card)] shrink-0 w-full mb-4 mt-[-8px]">
+          <div class="flex-none py-1 border-b border-[var(--color-border-card)] shrink-0 w-full mb-2 mt-[-4px]">
             <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 justify-center">
               <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
                 [playerName]="playerId"

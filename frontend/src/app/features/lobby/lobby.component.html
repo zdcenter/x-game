@@ -84,7 +84,7 @@
                 <img [src]="'/assets/games/icons/' + game.id + '.svg?v=3'"
                      [alt]="getGameTitle(game.id)"
                      [attr.fetchpriority]="i === 0 ? 'high' : null"
-                     [attr.loading]="i >= 4 ? 'lazy' : 'eager'"
+                     [attr.loading]="i >= 8 ? 'lazy' : 'eager'"
                      class="w-[90%] h-[90%] object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-all duration-500"
                      (error)="handleIconError($event, game.id)" />
               </div>

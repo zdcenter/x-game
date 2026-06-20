@@ -16,19 +16,21 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-block',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     GameLobbyPanelComponent,
     GameHeaderComponent,
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     GameRulesModalComponent,
-    PlayerBadgeComponent
+    PlayerBadgeComponent,
+    GamePlayerMiniHudComponent
   ],
   templateUrl: './block.component.html',
   styles: [`

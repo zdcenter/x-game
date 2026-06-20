@@ -51,8 +51,18 @@
             <div class="flex-1 flex flex-col relative w-full min-h-0">
               <div class="flex-1 overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-4">
           
+          <!-- Mobile floating HUD (PK only) -->
+          @if (store.currentRoomMode() !== GameMode.Single) {
+            <app-game-player-mini-hud
+              class="lg:hidden"
+              [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
+              [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
+            </app-game-player-mini-hud>
+          }
+
           <!-- Top Opponents Panel in PK Mode / Local Player Panel in Single -->
-          <div class="flex-none pt-1 pb-2 mb-1 border-b border-[var(--color-border-card)]">
+          <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)]"
+               [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
             <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
               <!-- Local Player (You) -->
               <app-player-badge

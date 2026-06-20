@@ -105,7 +105,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
       }
 
       @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
-        <div class="flex-none py-2 border-b border-[var(--color-border-card)] w-full relative z-10">
+        <div class="flex-none py-1 border-b border-[var(--color-border-card)] w-full relative z-10">
           <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar"
                [class.justify-center]="store.currentRoomMode() === GameMode.Single">
 

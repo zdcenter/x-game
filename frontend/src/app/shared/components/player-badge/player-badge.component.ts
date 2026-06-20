@@ -13,7 +13,7 @@ export class PlayerBadgeComponent {
   GameStatus = GameStatus;
   i18n = inject(I18nService);
 
-  @Input() layout: 'card' | 'bar' = 'card';
+  @Input() layout: 'card' | 'bar' | 'mini' = 'card';
   @Input({ required: true }) playerName!: string;
   @Input() isHost: boolean = false;
   @Input() isMe: boolean = false;

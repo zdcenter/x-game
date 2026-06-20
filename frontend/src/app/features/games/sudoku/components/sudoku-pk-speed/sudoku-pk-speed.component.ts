@@ -12,11 +12,12 @@ import { GameHeaderComponent } from '../../../../../shared/components/game-heade
 import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
 import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
+import { GamePlayerMiniHudComponent } from '../../../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-sudoku-pk-speed',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
   templateUrl: './sudoku-pk-speed.component.html',
   styleUrl: './sudoku-pk-speed.component.css'})
 export class SudokuPkSpeedComponent {

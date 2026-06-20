@@ -5,19 +5,27 @@ import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
 import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
+import { GamePlayerMiniHudComponent } from '../../../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-math24-pk-speed',
   standalone: true,
-  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent, PlayerListContainerComponent],
+  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
   template: `
     <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
-      
-      <!-- Top Progress Board -->
-      <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] w-full">
+
+      <!-- Mobile floating HUD -->
+      <app-game-player-mini-hud
+        class="lg:hidden"
+        [myPlayer]="{ playerName: playerId, isHost: playerId === hostId, stats: [{ icon: '🧩', value: (store.players()[playerId]?.progress || 0) + '/' + totalPuzzles }], status: isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === GameStatus.Finished ? 'finished' : 'playing') }"
+        [opponents]="opponentHudConfigs">
+      </app-game-player-mini-hud>
+
+      <!-- Top Progress Board (desktop only) -->
+      <div class="hidden lg:block flex-none py-1 mb-1 border-b border-[var(--color-border-card)] w-full">
         <div class="flex items-center gap-2 lg:gap-4 max-w-[800px] mx-auto px-2">
-          
+
           <!-- Local Player -->
           <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
             [playerName]="playerId"
@@ -93,6 +101,17 @@ export class Math24PkSpeedComponent {
 
   get myProgress(): number {
     return this.store.players()[this.playerId]?.progress || 0;
+  }
+
+  get opponentHudConfigs() {
+    return Object.entries(this.store.players())
+      .filter(([k]) => k !== this.playerId)
+      .map(([k, v]: [string, any]) => ({
+        playerName: k,
+        isHost: k === this.hostId,
+        stats: [{ icon: '🧩', value: (v.progress || 0) + '/' + this.totalPuzzles }],
+        status: this.isFrozen(v) ? 'frozen' : (this.store.status() === GameStatus.Finished ? 'finished' : 'playing')
+      }));
   }
 
   constructor() {

@@ -1,0 +1,32 @@
+<div class="pointer-events-auto">
+  <app-player-badge
+    layout="mini"
+    [playerName]="myPlayer.playerName"
+    [isHost]="myPlayer.isHost ?? false"
+    [isMe]="true"
+    [score]="myPlayer.score"
+    [stats]="myPlayer.stats ?? []"
+    [status]="myPlayer.status">
+  </app-player-badge>
+</div>
+
+<div class="flex flex-col items-end gap-1 pointer-events-auto">
+  @for (opp of visibleOpponents; track opp.playerName) {
+    <app-player-badge
+      layout="mini"
+      [playerName]="opp.playerName"
+      [isHost]="opp.isHost ?? false"
+      [isMe]="false"
+      [score]="opp.score"
+      [stats]="opp.stats ?? []"
+      [status]="opp.status">
+    </app-player-badge>
+  }
+  @if (extraCount > 0) {
+    <div class="px-2 py-1 rounded-xl text-[11px] font-bold text-[var(--color-text-muted)] shadow-lg
+                bg-[var(--color-bg-card)] border border-[var(--color-border-card)]/70"
+         style="backdrop-filter: blur(8px);">
+      +{{ extraCount }}
+    </div>
+  }
+</div>

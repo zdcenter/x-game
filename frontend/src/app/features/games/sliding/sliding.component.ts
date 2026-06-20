@@ -24,11 +24,12 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { SlidingTutorialComponent } from './components/sliding-tutorial/sliding-tutorial.component';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, SlidingTutorialComponent, GamePlayerMiniHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
