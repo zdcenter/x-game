@@ -23,6 +23,7 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { WebSocketService } from '../../../core/services/websocket.service';
 
 type IdiomView = 'lobby' | 'fill' | 'wordle';
 
@@ -1032,6 +1033,7 @@ export class IdiomComponent implements OnInit, OnDestroy {
   settingsService = inject(SettingsService);
   pkStore = inject(IdiomPKStore);
   gameTimer = inject(GameTimerService);
+  private wsService = inject(WebSocketService);
   GameStatus = GameStatus;
   GameMode = GameMode;
 
@@ -1168,6 +1170,7 @@ export class IdiomComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.pkStore.leaveRoom();
+    this.wsService.disconnectLobby();
   }
 
   navigateToPkArena() {
@@ -1302,6 +1305,8 @@ export class IdiomComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+    this.wsService.connectLobby(playerId, playerId);
     this.loadWordleState();
     if (this.authStore.isAuthenticated()) {
       this.svc.getStats().subscribe(s => this.idiomStats.set(s));
