@@ -134,6 +134,7 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewInit {
       case 'codebreaker': return '🔐';
       case 'drop2048': return '🧊';
       case 'block': return '🟩';
+      case 'idiom': return '📖';
       default: return '🎮';
     }
   }
