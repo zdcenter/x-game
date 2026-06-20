@@ -298,7 +298,6 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     iconEmoji: '📖',
     loadComponent: () => import('../../features/games/idiom/idiom.component').then(m => m.IdiomComponent),
     modes: [
-      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'idiom.pk_speed_desc', icon: '⚡', desc: 'Same idiom. First to answer correctly wins!' },
     ],
     difficulties: [],
