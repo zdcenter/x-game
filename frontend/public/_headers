@@ -1,0 +1,23 @@
+# HTML pages — never cache so browsers always get fresh chunk references after deployment
+/index.html
+  Cache-Control: no-store, must-revalidate
+
+/*/index.html
+  Cache-Control: no-store, must-revalidate
+
+# Hashed JS/CSS chunks — cache forever (content-addressed, hash changes on every build)
+/chunk-*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/main.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/styles.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/chunk-*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static assets — cache 1 week
+/assets/*
+  Cache-Control: public, max-age=604800
