@@ -14,10 +14,12 @@ import (
 const distractorPool = "的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取据处队南给色光门即保治北造百规热领七海口东导器压志世金增争济阶油思术极交受联什认六共权收证改清己美再采转更刷加粮格并示才几石类精采满号"
 
 type PKPlayerState struct {
-	ID        string `json:"id"`
-	LastWrong bool   `json:"last_wrong"`
-	Attempts  int    `json:"attempts"`
-	Correct   bool   `json:"correct"`
+	ID         string `json:"id"`
+	LastWrong  bool   `json:"last_wrong"`
+	Attempts   int    `json:"attempts"`
+	Correct    bool   `json:"correct"`
+	WrongCount int    `json:"wrong_count"`
+	Locked     bool   `json:"locked"`
 }
 
 type IdiomPKEngine struct {
@@ -134,6 +136,8 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 			p.LastWrong = false
 			p.Attempts = 0
 			p.Correct = false
+			p.WrongCount = 0
+			p.Locked = false
 		}
 		e.Winners = []string{}
 		e.RoundWinner = ""
@@ -155,6 +159,10 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 	case string(domain.ActionInput):
 		// Another player already won this round; ignore late submissions
 		if e.RoundWinner != "" {
+			return e.State, nil
+		}
+		// Locked players cannot submit
+		if player.Locked {
 			return e.State, nil
 		}
 
@@ -184,8 +192,12 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 			}
 		} else {
 			player.LastWrong = true
+			player.WrongCount++
+			if player.WrongCount >= 3 {
+				player.Locked = true
+			}
 			e.Broadcast()
-			// Clear LastWrong flag after brief delay so player can retry
+			// Clear LastWrong shake flag after brief delay
 			go func() {
 				time.Sleep(600 * time.Millisecond)
 				e.Mu.Lock()
@@ -193,6 +205,17 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 				if p, ok := e.Players[playerID]; ok {
 					p.LastWrong = false
 					e.Broadcast()
+				}
+				// If all players are now locked, auto-advance to next round
+				allLocked := true
+				for _, p := range e.Players {
+					if !p.Locked {
+						allLocked = false
+						break
+					}
+				}
+				if allLocked {
+					go e.scheduleNextRound()
 				}
 			}()
 		}
@@ -222,6 +245,8 @@ func (e *IdiomPKEngine) scheduleNextRound() {
 		p.LastWrong = false
 		p.Attempts = 0
 		p.Correct = false
+		p.WrongCount = 0
+		p.Locked = false
 	}
 	e.RoundWinner = ""
 	e.RoundNum++

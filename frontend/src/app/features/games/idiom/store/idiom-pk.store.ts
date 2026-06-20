@@ -9,6 +9,8 @@ export interface IdiomPKPlayerState {
   last_wrong: boolean;
   attempts: number;
   correct: boolean;
+  wrong_count: number;
+  locked: boolean;
 }
 
 export interface IdiomPKState {

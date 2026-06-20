@@ -93,7 +93,10 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
     .anim-cursor     { display:inline-block; animation: cursor-blink 1s step-end infinite; }
   `],
   template: `
-<div class="h-[calc(100vh-64px)] w-full flex flex-col bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative overflow-hidden">
+<div class="h-[calc(100vh-64px)] w-full flex flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300">
+
+  <!-- ===== 左侧：游戏内容区 ===== -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
   <!-- ===================== PK MODE ===================== -->
   @if (pkRoomId()) {
@@ -113,7 +116,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
           <div header-right class="flex items-center gap-2">
             @if (pkStore.status() === 'playing' || pkStore.status() === 'finished') {
               <div class="flex items-center gap-1 text-sm font-black">
-                <span class="text-purple-400">{{ pkStore.myWins() }}</span>
+                <span class="text-green-400">{{ pkStore.myWins() }}</span>
                 <span class="text-[var(--color-text-secondary)]">:</span>
                 <span class="text-red-400">{{ pkStore.opponentWins() }}</span>
                 <span class="text-[10px] text-[var(--color-text-secondary)] ml-1">/ {{ pkStore.target() }}</span>
@@ -161,7 +164,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
                   <!-- My wins -->
                   <div class="flex gap-1">
                     @for (i of pkWinDots(pkStore.myWins(), pkStore.target()); track i.idx) {
-                      <span class="w-3 h-3 rounded-full" [class]="i.filled ? 'bg-purple-500' : 'bg-[var(--color-border-card)]'"></span>
+                      <span class="w-3 h-3 rounded-full" [class]="i.filled ? 'bg-green-500' : 'bg-[var(--color-border-card)]'"></span>
                     }
                   </div>
                   <span class="text-xs text-[var(--color-text-secondary)]">VS</span>
@@ -202,13 +205,19 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
                 }
               </div>
 
-              <!-- Wrong shake hint -->
-              @if (pkStore.myState()?.last_wrong) {
-                <span class="anim-slide-up text-sm font-bold text-red-400">❌ 不对，再试一次</span>
+              <!-- Wrong shake hint / locked hint -->
+              @if (pkStore.myState()?.locked) {
+                <div class="anim-slide-up px-5 py-2.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-sm font-black text-red-400 text-center">
+                  🔒 本轮已锁定（错 3 次），等待下一轮
+                </div>
+              } @else if (pkStore.myState()?.last_wrong) {
+                <span class="anim-slide-up text-sm font-bold text-red-400">
+                  ❌ 不对，还剩 {{ 3 - (pkStore.myState()?.wrong_count ?? 0) }} 次机会
+                </span>
               }
 
-              <!-- Keyboard (hidden when round is over) -->
-              @if (!pkStore.isRoundOver()) {
+              <!-- Keyboard (hidden when round is over or player is locked) -->
+              @if (!pkStore.isRoundOver() && !pkStore.myState()?.locked) {
                 <div class="grid grid-cols-4 gap-3 w-full max-w-[340px]">
                   @for (ch of pkStore.keyboard(); track ch + $index) {
                     <button (click)="onPkKeyPress(ch)"
@@ -284,11 +293,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
           </div>
         </app-game-header>
 
-        <!-- 手机：单列；PC：左内容 + 右竞技大厅面板 -->
-        <div class="flex-1 flex overflow-hidden">
-
-          <!-- 左栏：模式卡片 + 统计（可滚动） -->
-          <div class="flex-1 overflow-y-auto p-4 lg:p-6 lg:border-r lg:border-[var(--color-border-card)]">
+        <div class="flex-1 overflow-y-auto p-4 lg:p-6">
           <div class="w-full max-w-lg mx-auto flex flex-col gap-4">
 
             <!-- ── 模式选择 ─────────────────────────── -->
@@ -469,19 +474,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
             </div><!-- /stats+history -->
 
           </div><!-- /max-w-lg -->
-          </div><!-- /左栏 overflow-y-auto -->
-
-          <!-- 右栏：竞技大厅面板（PC 专属） -->
-          @if (settingsService.settings().multiplayer_enabled === 'true') {
-            <div class="hidden lg:flex flex-col w-80 xl:w-96 shrink-0">
-              <app-game-lobby-panel
-                class="flex-1 flex"
-                [currentGameId]="'idiom'">
-              </app-game-lobby-panel>
-            </div>
-          }
-
-        </div><!-- /flex row -->
+        </div><!-- /lobby 内容 -->
       </div><!-- /.bg-card rounded -->
     </div><!-- /.flex-1 outer -->
   }
@@ -523,9 +516,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
           </div>
         </app-game-header>
 
-        <div class="flex-1 flex overflow-hidden">
-        <!-- 填空内容（左，可滚动） -->
-        <div class="flex-1 overflow-y-auto flex flex-col items-center px-4 pt-6 pb-4 gap-6 lg:border-r lg:border-[var(--color-border-card)]">
+        <div class="flex-1 overflow-y-auto flex flex-col items-center px-4 pt-6 pb-4 gap-6">
 
           <!-- ── 难度选关（未选难度时显示） ── -->
           @if (!fillDifficulty()) {
@@ -794,18 +785,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
           }
 
           } <!-- /答题区 @if fillDifficulty() -->
-        </div><!-- /填空内容左栏 -->
-
-        <!-- 竞技大厅面板（PC 右栏） -->
-        @if (settingsService.settings().multiplayer_enabled === 'true') {
-          <div class="hidden lg:flex flex-col w-80 xl:w-96 shrink-0">
-            <app-game-lobby-panel
-              class="flex-1 flex"
-              [currentGameId]="'idiom'">
-            </app-game-lobby-panel>
-          </div>
-        }
-        </div><!-- /flex-row 容器 -->
+        </div><!-- /填空内容 -->
       </div>
     </div>
   }
@@ -855,7 +835,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
         <div class="flex-1 flex overflow-y-auto lg:overflow-hidden">
 
           <!-- 棋盘 + 键盘居中组合（占剩余空间，内部居中对齐） -->
-          <div class="flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-center overflow-y-auto lg:overflow-hidden xl:border-r xl:border-[var(--color-border-card)]">
+          <div class="flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-center overflow-y-auto lg:overflow-hidden">
 
           <!-- ═══ 左：进度 + 提示(手机) + 棋盘 ═══ -->
           <div class="flex flex-col items-center justify-start lg:justify-center px-4 py-4 gap-3 lg:pr-2">
@@ -995,15 +975,6 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
           </div><!-- /键盘栏 -->
           </div><!-- /棋盘+键盘居中组合 -->
 
-          <!-- 竞技大厅面板（xl+ 第三列） -->
-          @if (settingsService.settings().multiplayer_enabled === 'true') {
-            <div class="hidden xl:flex flex-col w-80 shrink-0">
-              <app-game-lobby-panel
-                class="flex-1 flex"
-                [currentGameId]="'idiom'">
-              </app-game-lobby-panel>
-            </div>
-          }
         </div><!-- /外层 flex 容器 -->
 
         <!-- 提示块模板 -->
@@ -1036,6 +1007,16 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
 
   <!-- Tutorial overlay -->
   <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
+
+  </div><!-- /左侧游戏内容区 -->
+
+  <!-- ===== 右侧：竞技大厅面板（PC 专属，跨所有视图持久显示） ===== -->
+  @if (settingsService.settings().multiplayer_enabled === 'true') {
+    <div class="hidden lg:flex flex-col w-80 xl:w-96 shrink-0 border-l border-[var(--color-border-card)]">
+      <app-game-lobby-panel class="flex-1 flex" [currentGameId]="'idiom'"></app-game-lobby-panel>
+    </div>
+  }
+
 </div>
   `
 })
@@ -1124,7 +1105,8 @@ export class IdiomComponent implements OnInit, OnDestroy {
   // PK fill keyboard handler
   onPkKeyPress(ch: string) {
     const display = this.pkStore.display();
-    if (!display.length || this.pkStore.isRoundOver() || this.pkStore.myState()?.last_wrong) return;
+    const myState = this.pkStore.myState();
+    if (!display.length || this.pkStore.isRoundOver() || myState?.last_wrong || myState?.locked) return;
     const active = this.pkActiveBlank();
     if (active === -1 || display[active] !== '_') return;
 
@@ -1135,7 +1117,9 @@ export class IdiomComponent implements OnInit, OnDestroy {
 
     const allFilled = display.every((c, i) => c !== '_' || !!ans[i]);
     if (allFilled) {
-      this.pkStore.submitFillAnswer(ans);
+      // Assemble full 4-char word: fixed chars from display + filled chars from ans
+      const fullAns = display.map((c, i) => c !== '_' ? c : ans[i]);
+      this.pkStore.submitFillAnswer(fullAns);
     } else {
       for (let j = active + 1; j < 4; j++) {
         if (display[j] === '_' && !ans[j]) { this.pkActiveBlank.set(j); return; }
