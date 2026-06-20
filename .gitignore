@@ -27,5 +27,6 @@ frontend/out-tsc/
 Thumbs.db
 
 
-deploy/
+deploy/*
+!deploy/nginx/
 build/
