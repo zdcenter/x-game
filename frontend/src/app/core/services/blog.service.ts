@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface BlogLanguageMeta {
   title: string;
@@ -66,16 +67,17 @@ function apiToMeta(p: BlogPostAPI): BlogPostMeta {
 @Injectable({ providedIn: 'root' })
 export class BlogService {
   private http = inject(HttpClient);
+  private base = environment.apiUrl;
 
   getBlogPosts(): Observable<BlogPostMeta[]> {
     return this.http
-      .get<BlogPostAPI[]>('/api/v1/blog/posts')
+      .get<BlogPostAPI[]>(`${this.base}/blog/posts`)
       .pipe(map(posts => posts.map(apiToMeta)));
   }
 
   getBlogPost(slug: string): Observable<BlogPostMeta> {
     return this.http
-      .get<BlogPostAPI>(`/api/v1/blog/posts/${slug}`)
+      .get<BlogPostAPI>(`${this.base}/blog/posts/${slug}`)
       .pipe(map(apiToMeta));
   }
 
@@ -83,34 +85,34 @@ export class BlogService {
 
   adminListAll(): Observable<BlogPostMeta[]> {
     return this.http
-      .get<BlogPostAPI[]>('/api/v1/admin/blog/posts')
+      .get<BlogPostAPI[]>(`${this.base}/admin/blog/posts`)
       .pipe(map(posts => posts.map(apiToMeta)));
   }
 
   adminGet(id: number): Observable<BlogPostMeta> {
     return this.http
-      .get<BlogPostAPI>(`/api/v1/admin/blog/posts/${id}`)
+      .get<BlogPostAPI>(`${this.base}/admin/blog/posts/${id}`)
       .pipe(map(apiToMeta));
   }
 
   adminCreate(body: AdminBlogPostInput): Observable<BlogPostMeta> {
     return this.http
-      .post<BlogPostAPI>('/api/v1/admin/blog/posts', body)
+      .post<BlogPostAPI>(`${this.base}/admin/blog/posts`, body)
       .pipe(map(apiToMeta));
   }
 
   adminUpdate(id: number, body: AdminBlogPostInput): Observable<BlogPostMeta> {
     return this.http
-      .put<BlogPostAPI>(`/api/v1/admin/blog/posts/${id}`, body)
+      .put<BlogPostAPI>(`${this.base}/admin/blog/posts/${id}`, body)
       .pipe(map(apiToMeta));
   }
 
   adminDelete(id: number): Observable<void> {
-    return this.http.delete<void>(`/api/v1/admin/blog/posts/${id}`);
+    return this.http.delete<void>(`${this.base}/admin/blog/posts/${id}`);
   }
 
   adminToggle(id: number): Observable<{ published: boolean }> {
-    return this.http.patch<{ published: boolean }>(`/api/v1/admin/blog/posts/${id}/toggle`, {});
+    return this.http.patch<{ published: boolean }>(`${this.base}/admin/blog/posts/${id}/toggle`, {});
   }
 }
 

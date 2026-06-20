@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { GameMode, GameDifficulty } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GAME_DEFINITIONS } from '../config/game-definitions';
 import { isBrowser } from '../utils/browser.util';
@@ -41,7 +42,7 @@ export class GameRegistryService {
   loadFromDB(): Promise<void> {
     if (!isBrowser()) return Promise.resolve();
     return firstValueFrom(
-      this.http.get<{ id: string; config: string }[]>('/api/v1/games/meta')
+      this.http.get<{ id: string; config: string }[]>(`${environment.apiUrl}/games/meta`)
     ).then(rows => {
       rows.forEach(row => {
         const meta = JSON.parse(row.config || '{}');

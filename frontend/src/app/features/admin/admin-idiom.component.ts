@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../core/services/toast.service';
+import { environment } from '../../../environments/environment';
 
 interface Idiom {
   id: number;
@@ -260,6 +261,7 @@ const EMPTY_FORM = (): Partial<Idiom> => ({
 })
 export class AdminIdiomComponent implements OnInit {
   private http = inject(HttpClient);
+  private base = `${environment.apiUrl}/admin/idioms`;
   private toast = inject(ToastService);
 
   items = signal<Idiom[]>([]);
@@ -291,7 +293,7 @@ export class AdminIdiomComponent implements OnInit {
     if (this.filterDiff) params['difficulty'] = this.filterDiff;
     if (this.filterDaily) params['daily_target'] = this.filterDaily;
 
-    this.http.get<PageResult>('/api/v1/admin/idioms', { params }).subscribe({
+    this.http.get<PageResult>(`${this.base}`, { params }).subscribe({
       next: res => {
         this.items.set(res.items ?? []);
         this.total.set(res.total);
@@ -330,8 +332,8 @@ export class AdminIdiomComponent implements OnInit {
     this.saving.set(true);
     const id = this.editingId();
     const req = id
-      ? this.http.put<Idiom>(`/api/v1/admin/idioms/${id}`, f)
-      : this.http.post<Idiom>('/api/v1/admin/idioms', f);
+      ? this.http.put<Idiom>(`${this.base}/${id}`, f)
+      : this.http.post<Idiom>(`${this.base}`, f);
 
     req.subscribe({
       next: () => {
@@ -354,7 +356,7 @@ export class AdminIdiomComponent implements OnInit {
     const item = this.deleteTarget();
     if (!item) return;
     this.saving.set(true);
-    this.http.delete(`/api/v1/admin/idioms/${item.id}`).subscribe({
+    this.http.delete(`${this.base}/${item.id}`).subscribe({
       next: () => {
         this.toast.show(`「${item.word}」已删除`, 'success');
         this.saving.set(false);

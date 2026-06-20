@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface TableInfo {
   name: string;
@@ -257,7 +258,7 @@ type AdminDbTab = 'backup' | 'restore' | 'history';
 })
 export class AdminDatabaseComponent implements OnInit {
   private http = inject(HttpClient);
-  private base = '/api/v1/admin/db';
+  private base = `${environment.apiUrl}/admin/db`;
 
   tabs = [
     { id: 'backup' as AdminDbTab, label: '📦 备份' },

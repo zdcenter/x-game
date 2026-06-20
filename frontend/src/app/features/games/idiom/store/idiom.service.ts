@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { environment } from '../../../../../environments/environment';
 import { Observable } from 'rxjs';
 
 export interface CharResult {
@@ -97,7 +98,7 @@ export interface SocialStats {
 @Injectable({ providedIn: 'root' })
 export class IdiomService {
   private http = inject(HttpClient);
-  private base = '/api/v1/idiom';
+  private base = `${environment.apiUrl}/idiom`;
 
   getDailyState(): Observable<DailyStateResponse> {
     return this.http.get<DailyStateResponse>(`${this.base}/daily/state`);
