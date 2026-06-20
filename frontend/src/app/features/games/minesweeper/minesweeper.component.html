@@ -82,6 +82,16 @@
 
       <!-- Main Content Wrapper -->
       <div class="relative flex-grow flex flex-col min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden mt-2">
+        @if (currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
+          <div class="absolute inset-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
+            <app-game-waiting-room class="w-full h-full flex" [gameId]="'minesweeper'" [mode]="currentRoomMode()" [roomId]="currentRoomId()"
+              [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
+              [readyPlayers]="store.readyPlayers() || {}" (leave)="returnToLobby()" (start)="store.startGame()"
+              (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)" (ready)="store.ready()"
+              (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()">
+            </app-game-waiting-room>
+          </div>
+        }
 
       <!-- Players / Opponents (Top) -->
       <div class="flex-none py-2 mb-2 border-b border-[var(--color-border-card)] shrink-0 w-full">
@@ -263,17 +273,6 @@
     }
 
 
-  <!-- PK Waiting Room (fixed overlay covers full screen below navbar) -->
-  @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
-      <app-game-waiting-room class="w-full h-full flex" [gameId]="'minesweeper'" [mode]="currentRoomMode()" [roomId]="currentRoomId()"
-        [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
-        [readyPlayers]="store.readyPlayers() || {}" (leave)="returnToLobby()" (start)="store.startGame()"
-        (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)" (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()">
-      </app-game-waiting-room>
-    </div>
-  }
 
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="'minesweeper'" [isOpen]="showRules()"

@@ -214,8 +214,16 @@
             </app-game-result-overlay>
           }
 
-        }
-      </div>
+          } @else {
+            <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
+              [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
+              [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
+              (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
+              (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
+              [target]="store.currentRoomTarget()">
+            </app-game-waiting-room>
+          }
+        </div>
     </div>
   </div>
 
@@ -255,16 +263,4 @@
     }
 
 
-  <!-- PK Waiting Room (fixed overlay) -->
-  @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
-      <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
-        [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
-        [currentUserId]="playerId" (leave)="returnToLobby()" (start)="store.startGame()"
-        (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
-        (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
-        [target]="store.currentRoomTarget()">
-      </app-game-waiting-room>
-    </div>
-  }
 </div>

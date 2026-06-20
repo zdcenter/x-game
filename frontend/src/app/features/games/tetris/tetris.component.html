@@ -51,7 +51,19 @@
         </app-game-header>
 
         <!-- Board Area (Since Dark Card is absolute, flex-1 works perfectly here) -->
-        <div class="flex-1 flex flex-col min-h-0 overflow-hidden mt-2 w-full relative">          @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
+        <div class="flex-1 flex flex-col min-h-0 overflow-hidden mt-2 w-full relative">
+          @if (currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
+            <div class="absolute inset-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
+              <app-game-waiting-room class="w-full h-full flex" [gameId]="'tetris'"
+                [mode]="currentRoomMode()" [roomId]="currentRoomId()" [difficulty]="GameDifficulty.Medium"
+                [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
+                [readyPlayers]="store.readyPlayers() || {}" (leave)="returnToLobby()" (start)="store.startGame()"
+                (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)"
+                (ready)="store.ready()" (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()">
+              </app-game-waiting-room>
+            </div>
+          }
+          @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
 
             <!-- Players / Opponents (Top) -->
             <div class="flex-none pt-1 pb-2 mb-1 border-b border-[var(--color-border-card)] shrink-0">
@@ -262,18 +274,6 @@
 
   </div>
 
-  <!-- PK Waiting Room (fixed overlay) -->
-  @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
-      <app-game-waiting-room class="w-full h-full flex" [gameId]="'tetris'"
-        [mode]="currentRoomMode()" [roomId]="currentRoomId()" [difficulty]="GameDifficulty.Medium"
-        [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
-        [readyPlayers]="store.readyPlayers() || {}" (leave)="returnToLobby()" (start)="store.startGame()"
-        (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)"
-        (ready)="store.ready()" (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()">
-      </app-game-waiting-room>
-    </div>
-  }
 
   <app-game-rules-modal [gameId]="'tetris'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 </div>

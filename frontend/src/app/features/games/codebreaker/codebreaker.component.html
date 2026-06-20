@@ -49,6 +49,29 @@
       </app-game-header>
     </div>
 
+    @if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
+      <div class="flex-1 min-h-0 overflow-hidden">
+        <app-game-waiting-room
+          [gameId]="'codebreaker'"
+          [mode]="currentRoomMode()"
+          [roomId]="roomId()"
+          [difficulty]="currentDifficulty()"
+          [players]="mappedPlayers"
+          [hostId]="store.hostId()"
+          [currentUserId]="myPlayerId()"
+          (start)="store.startGame()"
+          (leave)="returnToLobby()"
+          (changeSettings)="openChangeSettings()"
+          [readyPlayers]="store.readyPlayers()"
+          (kick)="store.kickPlayer($event)"
+          (ready)="store.ready()"
+          (cancelReady)="store.cancelReady()"
+          [target]="store.currentRoomTarget()">
+        </app-game-waiting-room>
+      </div>
+    }
+
+    @if (currentRoomMode() === GameMode.Single || status() !== GameStatus.Waiting) {
     <!-- Main Content Area -->
     <main class="flex-grow w-full max-w-5xl px-2 lg:px-4 flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 z-10 pb-4 lg:pb-8 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 lg:mt-6 mb-auto lg:max-h-[850px]">
       
@@ -279,6 +302,7 @@
       }
 
     </main>
+    }
   </div>
 
   <!-- Hint Overlay -->
@@ -305,28 +329,6 @@
   <app-game-rules-modal [gameId]="'codebreaker'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
 
-  @if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
-    <div class="absolute inset-0 z-50 flex flex-col bg-[var(--color-bg-main)]">
-      <app-game-waiting-room
-        [gameId]="'codebreaker'"
-        [mode]="currentRoomMode()"
-        [roomId]="roomId()"
-        [difficulty]="currentDifficulty()"
-        [players]="mappedPlayers"
-        [hostId]="store.hostId()"
-        [currentUserId]="myPlayerId()"
-        (start)="store.startGame()"
-        (leave)="returnToLobby()"
-        (changeSettings)="openChangeSettings()"
-        [readyPlayers]="store.readyPlayers()"
-        (kick)="store.kickPlayer($event)"
-        (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()"
-        [target]="store.currentRoomTarget()"
-      >
-      </app-game-waiting-room>
-    </div>
-  }
 
   <!-- Starting Overlay -->
   @if (status() === GameStatus.Starting) {
