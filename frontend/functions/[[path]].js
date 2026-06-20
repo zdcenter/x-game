@@ -12,8 +12,12 @@ export async function onRequest(context) {
   // Root: detect browser language via Accept-Language header (server-side, bot-friendly)
   if (pathname === '/') {
     const acceptLang = request.headers.get('Accept-Language') ?? '';
-    const lang = acceptLang.toLowerCase().startsWith('zh') ? 'zh' : 'en';
-    return Response.redirect(new URL(`/${lang}/lobby`, request.url).toString(), 302);
+    const isZh = acceptLang.toLowerCase().startsWith('zh');
+    // Use 301 for English (Googlebot default) so it's treated as canonical,
+    // 302 for Chinese (language-based, may vary per user).
+    const code = isZh ? 302 : 301;
+    const lang = isZh ? 'zh' : 'en';
+    return Response.redirect(new URL(`/${lang}/lobby`, request.url).toString(), code);
   }
 
   // Serve prerendered page via explicit index.html path.
