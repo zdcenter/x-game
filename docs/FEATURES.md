@@ -292,6 +292,13 @@
 - **排行榜管理** (`/admin/leaderboard`)：多维过滤 + 条目删除（防作弊）。
 - **XP 配置** (`/admin/xp-config`)：滑动条调整 10 个 XP 参数，实时同步至 `system_settings`。
 
+### 9.9 数据库备份与恢复 (`/admin/database`)
+- **表信息面板**：列出所有 23 张 `gm_` 表，实时显示行数与存储大小（`pg_stat_user_tables`）。
+- **备份（ZIP + JSON）**：多选或全选表，一键生成 ZIP 备份包（`manifest.json` + 每表独立 JSON 文件），支持「浏览器直接下载」或「保存到服务器 `BACKUP_DIR`」两种模式；无需 pg_dump，纯 Go 实现。
+- **备份历史**：列出服务器端所有已保存 ZIP，按时间倒序；支持下载、删除及一键跳转至恢复流程。
+- **恢复（事务安全）**：上传 ZIP → 调用 `/backup/inspect` 自动解析 manifest 显示表清单 → 勾选要恢复的表 → 输入 `CONFIRM` → 后端在事务内 DELETE + `json_populate_recordset` 批量 INSERT → Commit 后自动重置各表 sequence；任何步骤失败全量回滚。
+- **安全防护**：文件名 path traversal 校验、表名白名单（仅限已存在的 `gm_` 表）、`AdminProtected()` 中间件双重守卫。
+
 ---
 
 ### 8. 水管分色 (Water Sort Puzzle)

@@ -186,6 +186,16 @@ func main() {
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)
 
+	// Database management
+	admin.Get("/db/tables", rest.AdminDBTables)
+	admin.Post("/db/backup/download", rest.AdminDBBackupDownload)
+	admin.Post("/db/backup/save", rest.AdminDBBackupSave)
+	admin.Post("/db/backup/inspect", rest.AdminDBInspectBackup)
+	admin.Get("/db/backups", rest.AdminDBListBackups)
+	admin.Get("/db/backups/:name/download", rest.AdminDBDownloadSavedBackup)
+	admin.Delete("/db/backups/:name", rest.AdminDBDeleteBackup)
+	admin.Post("/db/restore", rest.AdminDBRestore)
+
 	// WebSocket routes
 	ws.Register(v1.Group("/ws"))
 

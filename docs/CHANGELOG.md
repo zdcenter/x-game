@@ -1,5 +1,34 @@
 # Changelog
 
+## [2026-06-20] - 🗄️ 后台数据库备份与恢复管理
+
+### 功能概述
+
+Admin 面板新增「数据库管理」模块，支持全量或按表备份、下载、服务器保存、恢复，无需 pg_dump 依赖。
+
+### 后端
+
+- **`backend/internal/handlers/rest/admin_db.go`**（新文件）：
+  - `GET /admin/db/tables` — 列出所有 `gm_` 前缀表，含行数（`pg_stat_user_tables`）和大小
+  - `POST /admin/db/backup/download` — 选择表 → 生成 ZIP（`manifest.json` + 每表一个 JSON 文件）→ 流式返回浏览器下载
+  - `POST /admin/db/backup/save` — 同上但保存到服务器 `BACKUP_DIR`（环境变量，默认 `./backups/`）
+  - `POST /admin/db/backup/inspect` — 上传 ZIP，返回 manifest（表列表 + 创建时间），不执行恢复
+  - `GET /admin/db/backups` — 列出服务器已保存备份（含大小、时间、表清单，按时间倒序）
+  - `GET /admin/db/backups/:name/download` — 下载指定已保存备份
+  - `DELETE /admin/db/backups/:name` — 删除指定已保存备份
+  - `POST /admin/db/restore` — multipart 上传 ZIP，`confirm=CONFIRM` 防误操作；事务内 DELETE + `json_populate_recordset` 批量 INSERT；Commit 后重置各表 sequence
+- 所有路由注册在 `AdminProtected()` 中间件之下，非 admin 用户无法访问
+- 文件名安全校验（防 path traversal）、表名白名单校验（防 SQL 注入）
+
+### 前端
+
+- **`frontend/src/app/features/admin/admin-database.component.ts`**（新文件）：三 Tab UI
+  - **备份**：勾选/全选表，「下载备份 ZIP」（浏览器直接下载）或「保存到服务器」
+  - **恢复**：拖拽/选择 ZIP 文件，调用 `/inspect` API 自动解析 manifest 显示表列表，勾选要恢复的表，输入 `CONFIRM`，执行恢复
+  - **备份历史**：列出服务器端所有 ZIP，支持下载、恢复（跳转恢复 Tab 并预填信息）、删除
+- 路由 `/admin/database` 已注册
+- Admin 侧边栏新增「🗄️ 数据库管理」导航项（System 分组）
+
 ## [2026-06-20] - ⚡ 成语填空分级闯关 + 联机 PK 模式
 
 ### 填空闯关：分级学习体系

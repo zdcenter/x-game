@@ -86,6 +86,15 @@ import { ThemeService } from '../theme/theme.service';
             <span>📖</span>
             <span>成语词库</span>
           </a>
+
+          <!-- Divider -->
+          <div class="border-t border-[var(--color-border-card)] my-2 opacity-40"></div>
+          <p class="px-4 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] opacity-50 mb-1">System</p>
+
+          <a routerLink="/admin/database" routerLinkActive="bg-cyan-500/20 text-cyan-400 border-cyan-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>🗄️</span>
+            <span>数据库管理</span>
+          </a>
         </nav>
 
         <!-- Current User Info -->
