@@ -1,5 +1,48 @@
 # Changelog
 
+## [2026-06-20] - 🔍 SEO 全面优化：静态博客预渲染 + 生产环境 API 修复 + nginx CORS
+
+### SEO 优化
+
+**博客迁移为静态 JSON（93 个页面完整预渲染）**
+- `blog.service.ts`：公开读取方法从 API 改为静态 JSON（`/assets/blog/index.json` + `/assets/blog/{slug}.json`），Admin 写入方法保持调用 API
+- 新增 `scripts/export-blog.js`：从生产 API 导出全部博客文章到静态 JSON 文件，发布新文章时执行一次即可
+- `app.routes.server.ts`：移除 `RenderMode.Server` blog 配置，所有路由统一为 `RenderMode.Prerender`
+- `ssr-noop.interceptor.ts`：新增 `/assets/` 路径白名单，允许静态资源请求在预渲染期通过（API 请求仍被拦截）
+- 预渲染路由从 54 条增至 **93 条**（新增博客文章 20 条、博客列表页 2 条、idiom 游戏页 4 条）
+
+**Sitemap 清理**
+- `generate-sitemap.js`：移除 `login` / `register` / `profile` 三个无 SEO 价值路径，减少无效爬取配额消耗
+- `prerenderPaths` 现在包含所有路径（含博客文章），与 `app.routes.server.ts` 对齐
+
+**robots.txt**
+- 新增 `Disallow: /admin/`、`/en/admin/`、`/zh/admin/`，防止 Google 爬取后台登录页
+
+**根路径重定向**
+- `functions/[[path]].js`：根路径 `/` 跳转英文版改用 **301**（原 302），Googlebot 默认获得 301 → `/en/lobby`，中文用户仍为 302
+
+### 生产环境 API URL 修复
+
+此前前端部分服务硬编码 `/api/v1/` 导致生产环境（`www.puzzlepk.com`）调用本地地址失败：
+- `blog.service.ts`：改用 `environment.apiUrl`
+- `game-registry.service.ts`：改用 `environment.apiUrl`
+- `idiom.service.ts`：改用 `environment.apiUrl`
+- `admin-idiom.component.ts`：改用 `environment.apiUrl`
+
+### nginx CORS 修复
+
+- `deploy/nginx/puzzlepk.conf`：
+  - 移除已下线的前端 server block（前端已迁移至 Cloudflare Pages）
+  - `Access-Control-Allow-Headers` 新增 `x-skip-logout`（`auth.interceptor.ts` 防自动登出标头）
+  - CORS 头从 server 级别改为在 `if ($request_method = OPTIONS)` 块内重复声明（nginx `add_header` 不继承 if 块）
+
+### Cloudflare Pages Chunk MIME 修复
+
+- `functions/[[path]].js`：Cloudflare 自动将 HTML `<link rel="modulepreload" href="chunk-X.js">` 转为 HTTP `Link` 头时使用相对路径，浏览器按请求路径解析导致加载到 HTML 而非 JS 文件
+- 修复：边缘函数拦截响应，将 Link 头中的相对路径统一改写为绝对路径（`<chunk-X.js>` → `</chunk-X.js>`）
+
+---
+
 ## [2026-06-20] - 🗄️ 后台数据库备份与恢复管理
 
 ### 功能概述

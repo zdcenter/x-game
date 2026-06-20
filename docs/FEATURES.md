@@ -99,8 +99,10 @@
   - **房间直达裂变**：在联机房间内点击“分享”，会自动生成带有房间号、模式、房主ID参数的专属邀请链接。朋友点击即可瞬间拉起对应的游戏并直通对战房间。
   - **动态 SEO 与富文本预览 (Open Graph)**：集成了 `SeoService`，支持按当前游玩的游戏动态更新 `og:image` 与 `og:title/description`。在即时通讯软件发送链接时，会自动带出极其精美的游戏卡片预览，极大地提高转化率。
   - **OG 封面图**：`public/og-cover.png`（1200×630px）作为所有页面的默认分享图；博客文章页额外注入 BlogPosting JSON-LD 结构化数据，提升 Google 富文本搜索结果展示。
-  - **Sitemap 自动生成**：`scripts/generate-sitemap.js` 自动读取博客索引，覆盖所有路由与博客文章，含 `<lastmod>` 时间戳，帮助搜索引擎高效爬取。
-  - **博客内容中心**：10 篇双语（英文+中文）博客文章，覆盖五子棋、水管排序、方块对战、推箱子、扫雷、数独、1A2B、24点等游戏攻略与教育指南，均达到 900+ 英文词 / 1900+ 中文字，满足 AdSense 内容质量要求。
+  - **Sitemap 自动生成**：`scripts/generate-sitemap.js` 自动扫描 `features/games/` 目录与博客索引，生成含 `<lastmod>`、`hreflang`、`x-default` 的双语 sitemap（共 92 个 URL），同步输出 Angular SSG 用 `routes.txt`。
+  - **全站静态预渲染（93 条路由）**：`app.routes.server.ts` 所有路由统一 `RenderMode.Prerender`，包含博客文章、游戏页、文档页。Googlebot 访问任一 URL 均获得完整 HTML，无 JS 执行需求。
+  - **博客内容中心（静态 JSON 驱动）**：10 篇双语博客文章存储于 `public/assets/blog/{slug}.json`；`blog.service.ts` 读取静态文件（预渲染友好），Admin 面板写入 DB 后通过 `scripts/export-blog.js` 一键导出同步。文章均达到 900+ 英文词 / 1900+ 中文字，满足 AdSense 内容质量要求。
+  - **robots.txt 精细配置**：允许全站爬取，Disallow `/admin/` 路径节省爬取配额；Cloudflare 托管层额外屏蔽 AI 训练爬虫（GPTBot、ClaudeBot 等）。
   - **AdSense 合规**：隐私政策含 Cookie/广告披露条款及用户退出链接；About 页含联系邮箱（contact@puzzlepk.com）。
 - **结果页智能推荐 (Smart Game Recommendation)**：每局单机或联机游戏结束后，胜利/失败的 Overlay 面板底部会智能展示一排相关游戏的精美入口卡片。结合 `GameRegistryService` 动态匹配相关游戏，有效提高用户粘性和游戏间引流。
 
@@ -292,7 +294,13 @@
 - **排行榜管理** (`/admin/leaderboard`)：多维过滤 + 条目删除（防作弊）。
 - **XP 配置** (`/admin/xp-config`)：滑动条调整 10 个 XP 参数，实时同步至 `system_settings`。
 
-### 9.9 数据库备份与恢复 (`/admin/database`)
+### 9.9 Cloudflare Pages 生产部署
+
+- **边缘函数**（`functions/[[path]].js`）：语言检测（Accept-Language）→ 根路径 301/302 跳转；显式加载预渲染 `index.html` 避免 Cloudflare 301 trailing-slash 重定向循环；修复 HTTP `Link` 头相对路径（Cloudflare 自动 Early Hints 生成，需改写为绝对路径防 MIME 错误）。
+- **nginx 反代**（`deploy/nginx/puzzlepk.conf`）：仅代理 `api.puzzlepk.com:8443`，前端由 Cloudflare Pages 全权托管；CORS 头在 OPTIONS if 块内显式声明（含 `x-skip-logout` 自定义头）。
+- **缓存策略**（`public/_headers`）：HTML 页面 `no-store`，JS/CSS chunk 文件 `max-age=31536000 immutable`。
+
+### 9.10 数据库备份与恢复 (`/admin/database`)
 - **表信息面板**：列出所有 23 张 `gm_` 表，实时显示行数与存储大小（`pg_stat_user_tables`）。
 - **备份（ZIP + JSON）**：多选或全选表，一键生成 ZIP 备份包（`manifest.json` + 每表独立 JSON 文件），支持「浏览器直接下载」或「保存到服务器 `BACKUP_DIR`」两种模式；无需 pg_dump，纯 Go 实现。
 - **备份历史**：列出服务器端所有已保存 ZIP，按时间倒序；支持下载、删除及一键跳转至恢复流程。
