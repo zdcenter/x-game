@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
 
+# Block admin panel — protected by auth, no SEO value
+Disallow: /admin/
+Disallow: /en/admin/
+Disallow: /zh/admin/
+
 Sitemap: https://www.puzzlepk.com/sitemap.xml
