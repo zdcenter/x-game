@@ -95,7 +95,7 @@ import { getHref } from '../../../core/utils/browser.util';
           </div>
 
           <!-- ── Players List ── -->
-          <div class="flex-grow overflow-y-auto custom-scrollbar px-4 sm:px-6 pb-3 min-h-[120px]">
+          <div class="flex-grow overflow-y-auto custom-scrollbar px-4 sm:px-6 pt-4 pb-3 min-h-[120px]">
             <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
               @for (player of sortedPlayers; track player.id) {
                 <div class="relative flex flex-col items-center p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 w-[calc(50%-6px)] sm:w-36"
@@ -107,8 +107,8 @@ import { getHref } from '../../../core/utils/browser.util';
 
                   <!-- Host badge -->
                   @if (player.id === hostId) {
-                    <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-md whitespace-nowrap">
-                      {{ i18n.t('game.host')() }}
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap z-10">
+                      👑 {{ i18n.t('game.host')() }}
                     </span>
                   }
 

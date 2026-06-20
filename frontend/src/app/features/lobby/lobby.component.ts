@@ -21,7 +21,7 @@ import { FooterComponent } from '../../shared/components/footer/footer.component
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 
 @Component({
   selector: 'app-lobby',

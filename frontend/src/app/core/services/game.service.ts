@@ -32,7 +32,7 @@ export class GameService {
   private http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
-  getGames(page = 1, limit = 6): Observable<GamesPage> {
+  getGames(page = 1, limit = 8): Observable<GamesPage> {
     return this.http.get<GamesPage>(`${this.baseUrl}/games?page=${page}&limit=${limit}`);
   }
 

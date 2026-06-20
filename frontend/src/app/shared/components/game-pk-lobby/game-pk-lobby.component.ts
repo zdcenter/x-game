@@ -68,8 +68,9 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   rightTab   = signal<'rooms' | 'online'>('rooms');
   formOpen   = signal(false); // mobile accordion only; desktop always shows form via CSS
 
-  // Create form fields
-  createGameId   = signal('');   // selected game for create form
+  // Create form — step wizard
+  createStep     = signal<'game' | 'settings'>('game'); // 步骤：选游戏 or 填设置
+  createGameId   = signal('');
   roomName       = signal('');
   roomMode       = signal('');
   roomDifficulty = signal('');
@@ -97,7 +98,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   changeRoomNewDiff   = signal('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  allGames = computed(() => this.reg.getAllConfigs());
+  allGames        = computed(() => this.reg.getAllConfigs());
+  selectedGameCfg = computed(() => this.allGames().find(g => g.id === this.createGameId()));
 
   readonly isMultiRoundEnabled = computed(() => {
     if (this.settings.settings().pk_multi_round_enabled === 'false') return false;
@@ -161,13 +163,18 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   // ── Form helpers ──────────────────────────────────────────────────────────
   private initForm() {
-    this.createGameId.set(this.gameId);
+    // 方案B: 记忆上次选择
+    const lastGame = typeof localStorage !== 'undefined' ? localStorage.getItem('pk_last_game_id') : null;
+    const startGame = this.gameId || lastGame || '';
+    if (startGame) {
+      this.selectCreateGame(startGame);
+      this.createStep.set('settings'); // 已有上次选择，直接跳到设置步
+    } else {
+      this.createGameId.set('');
+      this.createStep.set('game');
+    }
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.roomName.set(`${this.playerId()}-${suffix}`);
-    const modes = this.availableModes();
-    if (modes.length > 0) this.roomMode.set(modes[0].id);
-    const diffs = this.availableDifficulties();
-    if (diffs.length > 0) this.roomDifficulty.set(diffs[0].id);
     this.roomPassword.set('');
     this.roomTarget.set(1);
   }
@@ -178,6 +185,21 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     this.roomMode.set(modes[0]?.id || '');
     const diffs = this.availableDifficulties();
     this.roomDifficulty.set(diffs[0]?.id || '');
+  }
+
+  // 选游戏并进入设置步（方案A 两步向导）
+  pickGameAndNext(id: string) {
+    this.selectCreateGame(id);
+    this.createStep.set('settings');
+  }
+
+  // 方案C: 同款创建
+  createSameKind(room: any) {
+    this.selectCreateGame(room.game);
+    this.roomMode.set(room.mode);
+    this.roomDifficulty.set(room.difficulty);
+    this.createStep.set('settings');
+    this.formOpen.set(true); // 移动端展开表单
   }
 
   updateInput(sig: ReturnType<typeof signal<string>>, event: Event, maxLen = 100, numbersOnly = false) {
@@ -206,6 +228,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     const target = this.isMultiRoundEnabled() ? this.roomTarget() : 1;
     const pwd = this.roomPassword().trim();
     this.createRoom.emit({ name, gameId, mode, difficulty: diff, password: pwd || undefined, target });
+    // 方案B: 保存上次选择
+    if (typeof localStorage !== 'undefined') localStorage.setItem('pk_last_game_id', gameId);
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.roomName.set(`${this.playerId()}-${suffix}`);
     this.roomPassword.set('');
