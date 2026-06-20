@@ -1014,7 +1014,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
   <!-- ===== 右侧：竞技大厅面板（PC 专属，跨所有视图持久显示） ===== -->
   @if (settingsService.settings().multiplayer_enabled === 'true') {
     <div class="hidden lg:flex flex-col w-80 xl:w-96 shrink-0 border-l border-[var(--color-border-card)]">
-      <app-game-lobby-panel class="flex-1 flex" [currentGameId]="'idiom'"></app-game-lobby-panel>
+      <app-game-lobby-panel class="flex-1 flex" [currentGameId]="'idiom'" (joinRoom)="handleLobbyJoinRoom($event)"></app-game-lobby-panel>
     </div>
   }
 
@@ -1171,6 +1171,11 @@ export class IdiomComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.pkStore.leaveRoom();
     this.wsService.disconnectLobby();
+  }
+
+  handleLobbyJoinRoom(room: any) {
+    if (room.password) this.wsService.setPendingPassword(room.password);
+    this.joinPkRoom(room.roomId, room.mode, room.difficulty || '', room.host);
   }
 
   navigateToPkArena() {
