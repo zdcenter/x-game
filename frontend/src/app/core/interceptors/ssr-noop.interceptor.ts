@@ -21,7 +21,11 @@ import { isBrowser } from '../utils/browser.util';
  */
 export const ssrNoopInterceptor: HttpInterceptorFn = (req, next) => {
   if (!isBrowser()) {
-    // Server side – skip the request entirely.
+    // Static assets (e.g. /assets/blog/*.json) are served by Angular's prerender
+    // server and must go through — only block dynamic API calls.
+    if (req.url.startsWith('/assets/')) {
+      return next(req);
+    }
     return EMPTY;
   }
   return next(req);

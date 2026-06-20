@@ -28,9 +28,6 @@ const staticPaths = [
   ['daily',        'daily',  '0.9', today],
   ['blog',         'weekly', '0.8', today],
   ['docs',         'monthly','0.7', today],
-  ['login',        'monthly','0.5', today],
-  ['register',     'monthly','0.5', today],
-  ['profile',      'monthly','0.5', today],
   ['legal/privacy','monthly','0.3', today],
   ['legal/terms',  'monthly','0.3', today],
   ['legal/about',  'monthly','0.4', today],
@@ -49,9 +46,8 @@ const blogPostPaths = blogPosts.map(post => [
 const allPaths = [...staticPaths, ...blogPostPaths];
 
 // Routes that Angular SSG should prerender at build time.
-// Blog routes are RenderMode.Server (DB-backed) — exclude them so Angular
-// doesn't try to call the API during the build when no server is running.
-const prerenderPaths = staticPaths.filter(([p]) => p !== 'blog');
+// Blog content is now static JSON, so all routes including blog can be prerendered.
+const prerenderPaths = [...staticPaths, ...blogPostPaths];
 
 function urlEntry(p, changefreq, priority, lastmod, lang) {
   let xml = `  <url>\n`;
@@ -86,9 +82,9 @@ if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, 'sitemap.xml'), xml, 'utf-8');
 console.log(`sitemap.xml generated — ${allPaths.length * langs.length} URLs`);
 
-// Routes for Angular SSG prerender — lang-prefixed, blog excluded (RenderMode.Server)
+// Routes for Angular SSG prerender — lang-prefixed, all routes included
 const routesContent = prerenderPaths
   .flatMap(([p]) => langs.map(lang => `/${lang}/${p}`))
   .join('\n') + '\n';
 fs.writeFileSync(path.join(__dirname, '../routes.txt'), routesContent, 'utf-8');
-console.log(`routes.txt generated — ${prerenderPaths.length * langs.length} prerender routes (blog excluded)`);
+console.log(`routes.txt generated — ${prerenderPaths.length * langs.length} prerender routes`);

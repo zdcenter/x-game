@@ -70,15 +70,11 @@ export class BlogService {
   private base = environment.apiUrl;
 
   getBlogPosts(): Observable<BlogPostMeta[]> {
-    return this.http
-      .get<BlogPostAPI[]>(`${this.base}/blog/posts`)
-      .pipe(map(posts => posts.map(apiToMeta)));
+    return this.http.get<BlogPostMeta[]>('/assets/blog/index.json');
   }
 
   getBlogPost(slug: string): Observable<BlogPostMeta> {
-    return this.http
-      .get<BlogPostAPI>(`${this.base}/blog/posts/${slug}`)
-      .pipe(map(apiToMeta));
+    return this.http.get<BlogPostMeta>(`/assets/blog/${slug}.json`);
   }
 
   // ---- Admin API ----
