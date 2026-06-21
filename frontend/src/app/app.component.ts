@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { UiOverlayComponent } from './core/components/ui-overlay/ui-overlay.component';
 import { SeoService } from './core/services/seo.service';
 import { SettingsService } from './core/services/settings.service';
