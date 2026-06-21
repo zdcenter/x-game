@@ -17,12 +17,12 @@ func GetRooms(c fiber.Ctx) error {
 
 func GetGames(c fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
-	limit, _ := strconv.Atoi(c.Query("limit", "6"))
+	limit, _ := strconv.Atoi(c.Query("limit", "8"))
 	if page < 1 {
 		page = 1
 	}
-	if limit < 1 || limit > 50 {
-		limit = 6
+	if limit < 1 || limit > 100 {
+		limit = 8
 	}
 	offset := (page - 1) * limit
 

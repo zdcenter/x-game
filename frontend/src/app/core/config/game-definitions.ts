@@ -92,7 +92,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_slide_6x6', desc: '6x6 Grid' }
     ],
     recommendations: ['sudoku', 'hexa'],
-    multiRound: true
+    multiRound: true,
+    tutorial: [
+      { icon: '🔲', title: 'tutorial.sliding.goal',     description: 'tutorial.sliding.goal_desc' },
+      { icon: '👆', title: 'tutorial.sliding.move',     description: 'tutorial.sliding.move_desc' },
+      { icon: '🧩', title: 'tutorial.sliding.strategy', description: 'tutorial.sliding.strategy_desc' },
+      { icon: '💡', title: 'tutorial.sliding.hint',     description: 'tutorial.sliding.hint_desc' },
+    ]
   },
   {
     id: GameId.Hexa,
@@ -108,7 +114,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     difficulties: [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
     ],
-    recommendations: ['tetris', 'drop2048']
+    recommendations: ['tetris', 'drop2048'],
+    tutorial: [
+      { icon: '🔶', title: 'tutorial.hexa.goal',  description: 'tutorial.hexa.goal_desc' },
+      { icon: '👆', title: 'tutorial.hexa.place', description: 'tutorial.hexa.place_desc' },
+      { icon: '💥', title: 'tutorial.hexa.clear', description: 'tutorial.hexa.clear_desc' },
+      { icon: '🚫', title: 'tutorial.hexa.end',   description: 'tutorial.hexa.end_desc' },
+    ]
   },
   {
     id: GameId.Tetris,
@@ -124,7 +136,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     difficulties: [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
     ],
-    recommendations: ['drop2048', 'hexa']
+    recommendations: ['drop2048', 'hexa'],
+    tutorial: [
+      { icon: '🧱', title: 'tutorial.tetris.goal',     description: 'tutorial.tetris.goal_desc' },
+      { icon: '🕹️', title: 'tutorial.tetris.controls', description: 'tutorial.tetris.controls_desc' },
+      { icon: '💥', title: 'tutorial.tetris.scoring',  description: 'tutorial.tetris.scoring_desc' },
+      { icon: '📐', title: 'tutorial.tetris.strategy', description: 'tutorial.tetris.strategy_desc' },
+    ]
   },
   {
     id: GameId.Gomoku,
@@ -141,7 +159,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_gomoku_medium', desc: 'Medium AI (15x15)' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
     ],
-    recommendations: ['codebreaker', 'minesweeper']
+    recommendations: ['codebreaker', 'minesweeper'],
+    tutorial: [
+      { icon: '⚫', title: 'tutorial.gomoku.goal',    description: 'tutorial.gomoku.goal_desc' },
+      { icon: '🎯', title: 'tutorial.gomoku.turn',    description: 'tutorial.gomoku.turn_desc' },
+      { icon: '🛡️', title: 'tutorial.gomoku.defense', description: 'tutorial.gomoku.defense_desc' },
+      { icon: '🤖', title: 'tutorial.gomoku.ai',      description: 'tutorial.gomoku.ai_desc' },
+    ]
   },
   {
     id: GameId.Codebreaker,
@@ -205,7 +229,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     difficulties: [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_drop2048_standard', desc: 'Standard 5x7 Board' }
     ],
-    recommendations: ['tetris', 'hexa']
+    recommendations: ['tetris', 'hexa'],
+    tutorial: [
+      { icon: '🟦', title: 'tutorial.drop2048.goal',  description: 'tutorial.drop2048.goal_desc' },
+      { icon: '👆', title: 'tutorial.drop2048.drop',  description: 'tutorial.drop2048.drop_desc' },
+      { icon: '🔀', title: 'tutorial.drop2048.merge', description: 'tutorial.drop2048.merge_desc' },
+      { icon: '🚫', title: 'tutorial.drop2048.end',   description: 'tutorial.drop2048.end_desc' },
+    ]
   },
   {
     id: GameId.Block,
@@ -222,7 +252,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '10x10 Board' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '12x12 Board' }
     ],
-    recommendations: ['tetris', 'hexa']
+    recommendations: ['tetris', 'hexa'],
+    tutorial: [
+      { icon: '🟩', title: 'tutorial.block.goal',  description: 'tutorial.block.goal_desc' },
+      { icon: '👆', title: 'tutorial.block.place', description: 'tutorial.block.place_desc' },
+      { icon: '💥', title: 'tutorial.block.clear', description: 'tutorial.block.clear_desc' },
+      { icon: '🚫', title: 'tutorial.block.end',   description: 'tutorial.block.end_desc' },
+    ]
   },
   {
     id: GameId.LightsOut,
@@ -242,7 +278,13 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_master', desc: '8x8 Board' }
     ],
     recommendations: ['minesweeper', 'sudoku'],
-    multiRound: true
+    multiRound: true,
+    tutorial: [
+      { icon: '💡', title: 'tutorial.lightsout.goal',   description: 'tutorial.lightsout.goal_desc' },
+      { icon: '👆', title: 'tutorial.lightsout.toggle', description: 'tutorial.lightsout.toggle_desc' },
+      { icon: '🧠', title: 'tutorial.lightsout.logic',  description: 'tutorial.lightsout.logic_desc' },
+      { icon: '💡', title: 'tutorial.lightsout.hint',   description: 'tutorial.lightsout.hint_desc' },
+    ]
   },
   {
     id: GameId.WaterSort,
