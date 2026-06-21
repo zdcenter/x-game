@@ -106,6 +106,8 @@ const langChildren: Routes = [
       { path: 'xp-config', loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent) },
       { path: 'blog', loadComponent: () => import('./features/admin/admin-blog.component').then(m => m.AdminBlogComponent) },
       { path: 'idioms', loadComponent: () => import('./features/admin/admin-idiom.component').then(m => m.AdminIdiomComponent) },
+      { path: 'distribute', loadComponent: () => import('./features/admin/admin-distribute.component').then(m => m.AdminDistributeComponent) },
+      { path: 'articles', loadComponent: () => import('./features/admin/admin-articles.component').then(m => m.AdminArticlesComponent) },
       { path: 'database', loadComponent: () => import('./features/admin/admin-database.component').then(m => m.AdminDatabaseComponent) }
     ]
   },

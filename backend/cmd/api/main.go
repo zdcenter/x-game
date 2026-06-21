@@ -182,6 +182,23 @@ func main() {
 	admin.Put("/blog/posts/:id", rest.AdminUpdateBlogPost)
 	admin.Delete("/blog/posts/:id", rest.AdminDeleteBlogPost)
 	admin.Patch("/blog/posts/:id/toggle", rest.AdminToggleBlogPost)
+	admin.Get("/blog/distributions", rest.GetBlogDistributions)
+	admin.Post("/blog/posts/:id/distribute", rest.RecordBlogDistribution)
+
+	// Content promotion system
+	content := admin.Group("/content")
+	content.Get("/categories", rest.GetContentCategories)
+	content.Post("/categories", rest.CreateContentCategory)
+	content.Put("/categories/:id", rest.UpdateContentCategory)
+	content.Delete("/categories/:id", rest.DeleteContentCategory)
+	content.Get("/articles", rest.ListContentArticles)
+	content.Get("/articles/:id", rest.GetContentArticle)
+	content.Post("/articles", rest.CreateContentArticle)
+	content.Put("/articles/:id", rest.UpdateContentArticle)
+	content.Delete("/articles/:id", rest.DeleteContentArticle)
+	content.Patch("/articles/:id/toggle", rest.ToggleContentArticle)
+	content.Get("/articles/:id/distributions", rest.GetContentDistributions)
+	content.Post("/articles/:id/distribute", rest.RecordContentDistribution)
 
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)

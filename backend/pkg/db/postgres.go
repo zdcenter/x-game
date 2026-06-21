@@ -58,6 +58,11 @@ func InitPostgres() {
 		&domain.UserDailyChallenge{},
 		&domain.MatchHistory{},
 		&domain.BlogPost{},
+		&domain.BlogDistribution{},
+		// Content promotion system
+		&domain.ContentCategory{},
+		&domain.ContentArticle{},
+		&domain.ContentDistribution{},
 		// Idiom game
 		&domain.Idiom{},
 		&domain.IdiomDailyChallenge{},

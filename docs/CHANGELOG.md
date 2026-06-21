@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026-06-21] - 📣 推广文章管理系统 + 博客内联分发按钮
+
+### 新功能：推广文章管理系统（`/admin/articles`）
+- 后端新增 3 张表：`gm_content_categories`（无限层级分类）、`gm_content_articles`（双语文章）、`gm_content_distributions`（分发记录）
+- REST API：分类 CRUD、文章 CRUD + toggle/publish、分发 record + 历史查询
+- 前端新建 `ContentService`，支持无限分类树 + 文章增删改查
+- 新增 `AdminArticlesComponent`：左侧无限分类树（DFS 展开 + 深度缩进），右侧文章列表（按分类过滤），文章编辑 Modal（元数据 + ZH内容 + EN内容三标签），分发 Modal（6 平台一键复制 + 历史记录展示）
+- 侧边栏 Content 分组新增「📣 推广文章」入口，替换旧「📡 分发中心」
+
+### 改进：博客管理后台内联分发（`/admin/blog`）
+- 每篇博客行 hover 时显示「📡」分发按钮
+- 点击弹出分发 Modal：6 平台 × (ZH/EN) 分别复制按钮
+- 复制时自动调用 platform-formatter 格式化，并记录到 `gm_blog_distributions`
+
+### 技术改动
+- `PlatformFormatterService`：新增 `FormattablePost` 通用接口，URL 支持 `sourceUrl` 覆盖，`formatForPlatform` 参数类型从 `BlogPostMeta` 改为 `FormattablePost`（结构兼容，无破坏性变更）
+- `ContentArticle` 新增 `source_url` 字段，用于发布时附带原文链接
+
 ## [2026-06-20] - 🔍 SEO 全面优化：静态博客预渲染 + 生产环境 API 修复 + nginx CORS
 
 ### SEO 优化

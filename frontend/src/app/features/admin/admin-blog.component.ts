@@ -2,15 +2,34 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BlogService, BlogPostMeta, AdminBlogPostInput } from '../../core/services/blog.service';
+import { DistributeService } from '../../core/services/distribute.service';
+import { PlatformFormatterService, PlatformId } from '../../core/services/platform-formatter.service';
+import { PlatformDistribPanelComponent } from './platform-distrib-panel.component';
 import { ToastService } from '../../core/services/toast.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
 type EditTab = 'meta' | 'content_en' | 'content_zh';
 
+async function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+  document.body.appendChild(el);
+  el.focus();
+  el.select();
+  const ok = document.execCommand('copy');
+  document.body.removeChild(el);
+  if (!ok) throw new Error('execCommand copy failed');
+}
+
 @Component({
   selector: 'app-admin-blog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PlatformDistribPanelComponent],
   template: `
     <div class="space-y-6">
       <!-- Header -->
@@ -43,16 +62,38 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
           </thead>
           <tbody>
             @for (post of posts(); track post.dbId) {
-              <tr class="border-b border-[var(--color-border-card)]/50 hover:bg-[var(--color-bg-main)]/30 transition-colors group">
+              <tr (click)="toggleDistrib(post)"
+                class="border-b border-[var(--color-border-card)]/50 transition-colors group cursor-pointer select-none"
+                [class.bg-cyan-500/5]="distribOpenId() === post.dbId"
+                [class.hover:bg-cyan-500/5]="distribOpenId() === post.dbId"
+                [class.hover:bg-[var(--color-bg-main)]/30]="distribOpenId() !== post.dbId">
                 <td class="py-3 px-4 font-mono opacity-40">#{{ post.dbId }}</td>
                 <td class="py-3 px-4">
-                  <div class="font-medium truncate max-w-xs">{{ post.en.title }}</div>
-                  <div class="text-[var(--color-text-muted)] text-xs mt-0.5 truncate max-w-xs">{{ post.zh.title }}</div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-medium truncate max-w-xs">{{ post.en.title }}</span>
+                    <button (click)="copyTitle(post, 'en'); $event.stopPropagation()"
+                      class="opacity-0 group-hover:opacity-100 shrink-0 px-1.5 py-0.5 text-[10px] rounded border transition-all"
+                      [class]="titleCopyKey() === post.dbId + '_en'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 opacity-100'
+                        : 'border-[var(--color-border-card)] hover:border-cyan-500/50 hover:text-cyan-400'">
+                      {{ titleCopyKey() === post.dbId + '_en' ? '✓' : 'EN' }}
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-[var(--color-text-muted)] text-xs truncate max-w-xs">{{ post.zh.title }}</span>
+                    <button (click)="copyTitle(post, 'zh'); $event.stopPropagation()"
+                      class="opacity-0 group-hover:opacity-100 shrink-0 px-1.5 py-0.5 text-[10px] rounded border transition-all"
+                      [class]="titleCopyKey() === post.dbId + '_zh'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 opacity-100'
+                        : 'border-[var(--color-border-card)] hover:border-cyan-500/50 hover:text-cyan-400'">
+                      {{ titleCopyKey() === post.dbId + '_zh' ? '✓' : 'ZH' }}
+                    </button>
+                  </div>
                   <div class="font-mono text-xs text-blue-400 opacity-70 mt-0.5">{{ post.id }}</div>
                 </td>
                 <td class="py-3 px-4 font-mono text-xs opacity-70">{{ post.date }}</td>
                 <td class="py-3 px-4">
-                  <button (click)="togglePost(post)"
+                  <button (click)="togglePost(post); $event.stopPropagation()"
                     class="px-2.5 py-1 rounded-full text-xs font-bold border transition-colors"
                     [class]="post.published
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
@@ -62,22 +103,35 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
                 </td>
                 <td class="py-3 px-4 text-center font-mono text-xs">{{ post.sort_order }}</td>
                 <td class="py-3 px-4 text-right">
-                  <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a [href]="'/blog/' + post.id" target="_blank"
-                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Preview">
+                  <div class="flex items-center justify-end gap-1">
+                    <span class="text-xs opacity-40 mr-1">{{ distribOpenId() === post.dbId ? '▲' : '▼' }}</span>
+                    <a [href]="'/blog/' + post.id" target="_blank" (click)="$event.stopPropagation()"
+                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Preview">
                       🔗
                     </a>
-                    <button (click)="openEdit(post)"
-                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Edit">
+                    <button (click)="openEdit(post); $event.stopPropagation()"
+                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Edit">
                       ✏️
                     </button>
-                    <button (click)="deletePost(post)"
-                      class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors" title="Delete">
+                    <button (click)="deletePost(post); $event.stopPropagation()"
+                      class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Delete">
                       🗑️
                     </button>
                   </div>
                 </td>
               </tr>
+              <!-- 手风琴：分发平台 -->
+              @if (distribOpenId() === post.dbId) {
+                <tr class="border-b border-cyan-500/10 bg-cyan-500/5">
+                  <td colspan="6" class="px-4 py-3">
+                    <app-platform-distrib-panel
+                      [distribKey]="distribKey()"
+                      [loading]="distribLoading()"
+                      (copy)="copyBlogPost($event.platformId, $event.lang)">
+                    </app-platform-distrib-panel>
+                  </td>
+                </tr>
+              }
             } @empty {
               <tr>
                 <td colspan="6" class="py-12 text-center text-sm opacity-40 italic">{{ i18n.t('admin.blog.no_posts')() }}</td>
@@ -240,6 +294,7 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
         </div>
       </div>
     }
+
   `,
   styles: [`
     .input-field {
@@ -255,15 +310,24 @@ type EditTab = 'meta' | 'content_en' | 'content_zh';
   `],
 })
 export class AdminBlogComponent implements OnInit {
-  private blogService = inject(BlogService);
-  private toast = inject(ToastService);
+  private blogService   = inject(BlogService);
+  private distributeService = inject(DistributeService);
+  private formatter     = inject(PlatformFormatterService);
+  private toast         = inject(ToastService);
   i18n = inject(I18nService);
 
-  posts = signal<BlogPostMeta[]>([]);
+  posts     = signal<BlogPostMeta[]>([]);
   modalOpen = signal(false);
-  saving = signal(false);
+  saving    = signal(false);
   editingId = signal<number | null>(null);
   activeTab = signal<EditTab>('meta');
+
+  // Distribute state
+  distribOpenId  = signal<number | null>(null);
+  distribFull    = signal<BlogPostMeta | null>(null);
+  distribLoading = signal(false);
+  distribKey     = signal(''); // "platformId_lang" while copying
+  titleCopyKey   = signal(''); // "dbId_lang" while copying title
 
   readonly tabs: { id: EditTab; label: string }[] = [
     { id: 'meta',       label: '📋 Metadata (EN + ZH)' },
@@ -273,7 +337,6 @@ export class AdminBlogComponent implements OnInit {
 
   isEditing = computed(() => this.editingId() !== null);
 
-  // Form model
   form: AdminBlogPostInput = this.emptyForm();
   tagsENStr = '';
   tagsZHStr = '';
@@ -379,6 +442,58 @@ export class AdminBlogComponent implements OnInit {
       error: () => this.toast.show(this.i18n.t('admin.blog.delete_error')(), 'error'),
     });
   }
+
+  // ---- Distribute ----
+  toggleDistrib(post: BlogPostMeta, event?: Event) {
+    event?.stopPropagation();
+    if (!post.dbId) return;
+    if (this.distribOpenId() === post.dbId) {
+      this.distribOpenId.set(null);
+      this.distribFull.set(null);
+      return;
+    }
+    this.distribOpenId.set(post.dbId);
+    this.distribFull.set(null);
+    this.distribKey.set('');
+    this.distribLoading.set(true);
+    this.blogService.adminGet(post.dbId).subscribe({
+      next: (full) => { this.distribFull.set(full); this.distribLoading.set(false); },
+      error: () => { this.distribLoading.set(false); },
+    });
+  }
+
+  async copyTitle(post: BlogPostMeta, lang: 'en' | 'zh') {
+    const key = `${post.dbId}_${lang}`;
+    const text = lang === 'zh' ? post.zh.title : post.en.title;
+    this.titleCopyKey.set(key);
+    try {
+      await copyToClipboard(text);
+      this.toast.show('标题已复制', 'success');
+    } catch { this.toast.show('复制失败', 'error'); }
+    setTimeout(() => { if (this.titleCopyKey() === key) this.titleCopyKey.set(''); }, 2000);
+  }
+
+  async copyBlogPost(platformId: PlatformId, lang: 'en' | 'zh') {
+    const full = this.distribFull();
+    if (!full) return;
+    const key = `${platformId}_${lang}`;
+    this.distribKey.set(key);
+    try {
+      const text = await this.formatter.formatForPlatform(platformId, full, lang);
+      await copyToClipboard(text);
+      if (full.dbId) {
+        this.distributeService.record(full.dbId, platformId, lang).subscribe();
+      }
+      this.toast.show('已复制到剪贴板！', 'success');
+    } catch {
+      this.toast.show('复制失败', 'error');
+    }
+    setTimeout(() => {
+      if (this.distribKey() === key) this.distribKey.set('');
+    }, 2000);
+  }
+
+
 
   wordCount(text: string): number {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
