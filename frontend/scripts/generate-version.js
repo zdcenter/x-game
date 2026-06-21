@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const now = new Date();
+// Force UTC+8 so version timestamp matches CST regardless of build server timezone
+const now = new Date(Date.now() + 8 * 60 * 60 * 1000);
 const pad = (n) => n.toString().padStart(2, '0');
-const version = `v${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())}.${pad(now.getHours())}${pad(now.getMinutes())}`;
+const version = `v${now.getUTCFullYear()}.${pad(now.getUTCMonth() + 1)}.${pad(now.getUTCDate())}.${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}`;
 
 const content = `export const environment = {
   version: '${version}'
