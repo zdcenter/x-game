@@ -280,7 +280,7 @@
   "game.or_custom": "或自定义",
   "game.how_to_start": "如何开始？",
   "game.select_game": "选择游戏",
-  "game.select_game_hint": "选择想要挑战的游戏",
+  "game.select_game_hint": "点击下方游戏卡片，选好后自动进入设置",
   "game.change": "更换",
   "game.same_kind": "同款",
   "game.create_same_kind": "创建同款房间",

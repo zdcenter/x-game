@@ -20,27 +20,43 @@
 
       <!-- ── Step Indicator ── -->
       <div class="shrink-0 flex items-center gap-2 px-5 pb-3">
+        <!-- Step 1 -->
         <button (click)="step.set('game')"
-                class="flex items-center gap-1.5 text-xs font-bold transition-colors"
-                [class.text-[var(--color-accent-from)]]="step() === 'game'"
-                [class.text-[var(--color-text-muted)]]="step() !== 'game'">
-          <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-black shrink-0"
-                [class.border-[var(--color-accent-from)]]="step() === 'game'"
-                [class.border-transparent]="step() !== 'game'"
-                [class.bg-[var(--color-accent-from)]]="step() !== 'game'"
-                [class.text-[var(--color-bg-main)]]="step() !== 'game'"
-                [class.text-[var(--color-accent-from)]]="step() === 'game'">1</span>
-          {{ t('game.select_game') }}
+                class="flex items-center gap-1.5 text-xs font-bold transition-colors group">
+          <!-- active: 描边圆圈；completed: 填充渐变 ✓ -->
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all"
+                [class]="step() === 'game'
+                  ? 'border-2 border-[var(--color-accent-from)] text-[var(--color-accent-from)]'
+                  : 'bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white'">
+            {{ step() === 'game' ? '1' : '✓' }}
+          </span>
+          <span class="transition-colors"
+                [class]="step() === 'game'
+                  ? 'text-[var(--color-accent-from)]'
+                  : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] underline underline-offset-2 decoration-dotted'">
+            {{ t('game.select_game') }}
+          </span>
         </button>
-        <div class="h-px flex-1 bg-[var(--color-border-card)]"></div>
-        <span class="flex items-center gap-1.5 text-xs font-bold"
-              [class.text-[var(--color-accent-from)]]="step() === 'settings'"
-              [class.text-[var(--color-text-muted)]]="step() !== 'settings'">
-          <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-black shrink-0"
-                [class.border-[var(--color-accent-from)]]="step() === 'settings'"
-                [class.border-[var(--color-border-card)]]="step() !== 'settings'">2</span>
-          {{ t('game.settings') || '设置' }}
-        </span>
+
+        <!-- 连接线：step2 激活时变渐变色 -->
+        <div class="h-px flex-1 transition-all rounded"
+             [class]="step() === 'settings'
+               ? 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]'
+               : 'bg-[var(--color-border-card)]'"></div>
+
+        <!-- Step 2：改为 button，有游戏时可点跳转 -->
+        <button (click)="editGameId() && step.set('settings')"
+                class="flex items-center gap-1.5 text-xs font-bold transition-colors"
+                [class.opacity-40]="!editGameId() && step() === 'game'">
+          <!-- active: 填充渐变；inactive: 仅描边 -->
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 transition-all"
+                [class]="step() === 'settings'
+                  ? 'bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-sm'
+                  : 'border-2 border-[var(--color-border-card)] text-[var(--color-text-muted)]'">2</span>
+          <span [class]="step() === 'settings' ? 'text-[var(--color-accent-from)] font-black' : 'text-[var(--color-text-muted)]'">
+            {{ t('game.settings') || '设置' }}
+          </span>
+        </button>
       </div>
 
       <!-- ── Body (scrollable) ── -->
@@ -48,11 +64,15 @@
 
         <!-- STEP 1: 选游戏 -->
         @if (step() === 'game') {
-          <p class="text-xs text-[var(--color-text-muted)]">{{ t('game.select_game_hint') }}</p>
+          <!-- 操作提示：明确告知可点击 -->
+          <div class="flex items-center gap-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-2.5">
+            <span class="text-lg shrink-0">👇</span>
+            <p class="text-xs text-[var(--color-text-secondary)] leading-snug">{{ t('game.select_game_hint') }}</p>
+          </div>
           <div class="grid grid-cols-3 gap-2">
             @for (g of allGames(); track g.id) {
               <button (click)="pickGame(g.id)"
-                      class="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-xs font-bold transition-all active:scale-95"
+                      class="relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-xs font-bold transition-all active:scale-95 hover:scale-[1.03]"
                       [class.bg-gradient-to-br]="editGameId() === g.id"
                       [class.from-rose-500/20]="editGameId() === g.id"
                       [class.to-violet-500/20]="editGameId() === g.id"
@@ -61,7 +81,12 @@
                       [class.bg-[var(--color-bg-card)]]="editGameId() !== g.id"
                       [class.border-[var(--color-border-card)]]="editGameId() !== g.id"
                       [class.text-[var(--color-text-muted)]]="editGameId() !== g.id"
-                      [class.hover:border-violet-400]="editGameId() !== g.id">
+                      [class.hover:border-violet-400]="editGameId() !== g.id"
+                      [class.hover:text-[var(--color-text-main)]]="editGameId() !== g.id">
+                <!-- 选中时显示勾 -->
+                @if (editGameId() === g.id) {
+                  <span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-[9px] text-white font-black">✓</span>
+                }
                 <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-8 h-8 object-contain drop-shadow-sm" alt="">
                 <span class="leading-tight text-center line-clamp-2 text-[11px]">{{ t(g.titleKey) }}</span>
               </button>
