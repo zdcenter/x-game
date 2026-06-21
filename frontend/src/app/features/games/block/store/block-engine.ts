@@ -27,7 +27,7 @@ export interface BlockEngineConfig {
   difficulty?: string;
   onSound?: (sound: 'place' | 'clear' | 'error') => void;
   onSyncState?: () => void;
-  onLinesClear?: (count: number) => void;
+  onLinesClear?: (count: number, rows: number[], cols: number[]) => void;
 }
 
 export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
@@ -164,7 +164,7 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
       // Exponential doubling
       points += 20 * Math.pow(2, linesCleared - 1);
       if (this.config?.onSound) this.config.onSound('clear');
-      this.config?.onLinesClear?.(linesCleared);
+      this.config?.onLinesClear?.(linesCleared, rowsToClear, colsToClear);
     } else {
       if (this.config?.onSound) this.config.onSound('place');
     }

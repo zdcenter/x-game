@@ -60,8 +60,8 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   showRules = signal(false);
   showOverlay = signal(false);
   isShaking = signal(false);
-  showCombo = signal(false);
-  comboCount = signal(0);
+  floatItems = signal<{ id: number; text: string; tier: 1 | 2; xPct: number }[]>([]);
+  particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
   get t() {
     return this.i18n.t.bind(this.i18n);
   }
@@ -120,8 +120,36 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     });
 
     effect(() => {
-      const c = this.store.comboTrigger();
-      if (c > 0) { this.comboCount.set(c); this.showCombo.set(true); setTimeout(() => this.showCombo.set(false), 1100); }
+      const gain = this.store.lastScoreGain();
+      if (!gain) return;
+
+      if (gain.combo === 0) return;
+
+      const tier: 1 | 2 = gain.combo >= 2 ? 2 : 1;
+      const text = gain.combo >= 2
+        ? `COMBO ×${gain.combo}  +${gain.score}`
+        : `CLEAR!  +${gain.score}`;
+
+      const item = { id: gain.ts, text, tier, xPct: 32 + Math.random() * 36 };
+      this.floatItems.update(items => [...items, item]);
+      setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1150);
+
+      if (gain.combo >= 1) {
+        const colors = ['#fbbf24', '#f97316', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8', '#a3e635'];
+        const count = gain.combo >= 2 ? 14 : 9;
+        const sparks = Array.from({ length: count }, (_, i) => ({
+          id: `${gain.ts}-${i}`,
+          color: colors[i % colors.length],
+          size: 5 + Math.random() * 7,
+          tx: (Math.random() * 240 - 120),
+          ty: (Math.random() * 240 - 120),
+        }));
+        this.particles.update(p => [...p, ...sparks]);
+        setTimeout(() => {
+          this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`)));
+        }, 720);
+
+      }
     });
 
     // Handle PK Start countdown
@@ -182,11 +210,10 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   // --- Drag and Drop Logic --- //
 
   onDragStart(event: MouseEvent | TouchEvent, piece: HexPiece, index: number, pieceElement: HTMLElement) {
-    // 触发并恢复音频上下文，因为这是用户的明确交互
-    this.audioService.initAudio();
+    this.audioService.initAudio(); // fire-and-forget: warm up AudioContext without blocking drag
 
     if (this.store.gameOver() || (this.currentRoomMode() !== GameMode.Single && this.store.status() !== GameStatus.Playing)) return;
-    
+
     event.preventDefault();
     this.isDragging = true;
     this.draggedPiece = piece;
@@ -307,7 +334,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       this.store.leaveRoom();
       this.roomLifecycle.clearReconnectInfo();
     }
-    history.back();
+    this.navigateToLobby();
   }
 
   override openChangeSettings() {

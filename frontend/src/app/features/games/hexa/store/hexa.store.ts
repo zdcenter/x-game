@@ -24,6 +24,8 @@ export class HexaStore extends BaseGameStore {
   bestScore = signal<number>(0);
   comboTrigger = signal<number>(0);
   shakeTrigger = signal<number>(0);
+  lastScoreGain = signal<{ score: number; combo: number; ts: number } | null>(null);
+  clearingCells = signal<Map<string, string>>(new Map());
   fillPct = computed(() => this.cells().filter(c => c.filled).length / 61);
 
   // PK Mode
@@ -133,12 +135,39 @@ export class HexaStore extends BaseGameStore {
   placePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number) {
     if (this.gameOver() || this.status() !== GameStatus.Playing) return;
 
+    // Snapshot filled-cell colors before action (engine deletes color on clear)
+    const prevFilled = new Map<string, string>();
+    for (const [k, cell] of this.engine.cells.entries()) {
+      if (cell.filled && cell.color) prevFilled.set(k, cell.color);
+    }
+
+    const prevScore = this.score();
     const prevCombo = this.engine.combo;
     this.engine.handleAction({ type: HexaActionType.PlacePiece, piece, origin, pieceIndex });
+
+    // Compute clearing map BEFORE updateSignals so both render in the same frame
+    const clearingMap = new Map<string, string>();
+    for (const [k, cell] of this.engine.cells.entries()) {
+      if (!cell.filled && prevFilled.has(k)) {
+        clearingMap.set(k, prevFilled.get(k)!);
+      }
+    }
+    if (clearingMap.size > 0) {
+      this.clearingCells.set(clearingMap);
+    }
+
     this.updateSignals();
+
+    if (clearingMap.size > 0) {
+      setTimeout(() => this.clearingCells.set(new Map()), 480);
+    }
 
     const newCombo = this.engine.combo;
     const linesCleared = newCombo > prevCombo;
+    const scoreGained = this.score() - prevScore;
+    if (scoreGained > 0) {
+      this.lastScoreGain.set({ score: scoreGained, combo: linesCleared ? newCombo : 0, ts: Date.now() });
+    }
 
     if (linesCleared) {
       this.comboTrigger.set(newCombo);

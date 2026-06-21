@@ -10,7 +10,6 @@ import { GameRegistryService } from './core/services/game-registry.service';
 import { TranslocoService } from '@jsverse/transloco';
 import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules, UrlSerializer } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
-import { provideServiceWorker } from '@angular/service-worker';
 import { provideTransloco } from '@jsverse/transloco';
 
 import { routes } from './app.routes';
@@ -47,10 +46,24 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' }), withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([ssrNoopInterceptor, authInterceptor]), withFetch()),
-    provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000',
-    }),
+    // Register sw.js (a self-killing SW) so legacy ngsw caches get cleared.
+    // Also listen for SW_KILL_ALL message to unregister any remaining SW registrations.
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {
+        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+          navigator.serviceWorker.addEventListener('message', (e) => {
+            if (e.data?.type === 'SW_KILL_ALL') {
+              navigator.serviceWorker.getRegistrations().then(regs =>
+                regs.forEach(reg => reg.unregister())
+              );
+            }
+          });
+        }
+      },
+      multi: true,
+    },
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: UrlSerializer, useClass: LangUrlSerializer },
     provideClientHydration(withEventReplay()),

@@ -23,7 +23,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected gameService = inject(GameService);
   public settingsService = inject(SettingsService);
   private _baseRoute = inject(ActivatedRoute);
-  private _baseRouter = inject(Router);
+  protected _baseRouter = inject(Router);
 
   isMobileSidebarOpen = signal<boolean>(false);
 
@@ -42,9 +42,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.wsService.connectLobby(this.playerId, this.playerId);
 
-    // Extract gameId from URL (e.g. /games/sudoku?foo=bar -> sudoku)
+    // Extract gameId from URL (e.g. /zh/games/sudoku -> sudoku)
+    // URL has lang prefix: ['', 'zh', 'games', 'gameId']
     const urlPath = this._baseRouter.url.split('?')[0];
-    const gameId = urlPath.split('/')[2];
+    const segments = urlPath.split('/');
+    const gamesIdx = segments.indexOf('games');
+    const gameId = gamesIdx >= 0 ? segments[gamesIdx + 1] : null;
     if (gameId) {
       this.gameService.visitGame(gameId).subscribe({
         error: err => console.error('Failed to update visit count', err)
@@ -104,6 +107,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   handleDismissRoom() {
     this.wsService.send({ type: 'dismiss_room' });
     this.store.leaveRoom();
+  }
+
+  protected navigateToLobby(): void {
+    // Preserve lang prefix: URL is /zh/... or /en/...
+    const lang = this._baseRouter.url.split('/')[1] || 'zh';
+    this._baseRouter.navigate([lang, 'lobby']);
   }
 
   openChangeSettings() {

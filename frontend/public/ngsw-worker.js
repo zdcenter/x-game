@@ -1,4 +1,4 @@
-// Kill SW: clear all caches and unregister all service workers for this origin
+// Kill old Angular ngsw: clear all caches and unregister all service workers
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil(

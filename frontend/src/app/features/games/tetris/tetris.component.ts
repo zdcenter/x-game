@@ -289,7 +289,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       this.store.leaveRoom();
       this.roomLifecycle.clearReconnectInfo();
     }
-    history.back();
+    this.navigateToLobby();
   }
 
   dismissRoom() {

@@ -7,6 +7,7 @@ import { CrossGameJoinService } from '../../../core/services/cross-game-join.ser
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { AudioService } from '../../../core/services/audio.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
 import { BlockShape } from './utils/shapes';
@@ -44,13 +45,20 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
     }
     .block-shake { animation: block-shake 0.4s cubic-bezier(.36,.07,.19,.97); }
 
-    @keyframes block-clear-pop {
-      0%   { opacity: 0; transform: scale(0.4); }
-      22%  { opacity: 1; transform: scale(1.15); }
-      72%  { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.85) translateY(-10px); }
+    /* Score float-up */
+    @keyframes block-score-float {
+      0%   { transform: translateX(-50%) translateY(0)      scale(0.6); opacity: 0; }
+      14%  { transform: translateX(-50%) translateY(-18px)  scale(1.25); opacity: 1; }
+      100% { transform: translateX(-50%) translateY(-100px) scale(0.9); opacity: 0; }
     }
-    .block-clear-badge { animation: block-clear-pop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .block-score-float { animation: block-score-float 1.2s ease-out forwards; }
+
+    /* Spark particles */
+    .block-spark { animation: block-spark 0.72s cubic-bezier(0.1, 1, 0.3, 1) forwards; }
+    @keyframes block-spark {
+      0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
   `]
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
@@ -62,6 +70,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   private crossGameJoin = inject(CrossGameJoinService);
   gameRegistry = inject(GameRegistryService);
   i18n = inject(I18nService);
+  private audioService = inject(AudioService);
 
   @HostBinding('class') override get hostClass() { return 'block h-full w-full'; }
 
@@ -74,8 +83,9 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   showRules = signal(false);
   showOverlay = signal(false);
   isShaking = signal(false);
-  showClear = signal(false);
-  clearCount = signal(0);
+
+  floatItems = signal<{ id: number; text: string; tier: 1 | 2 | 3; xPct: number }[]>([]);
+  particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
@@ -104,8 +114,31 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     });
 
     effect(() => {
-      const c = this.store.clearTrigger();
-      if (c > 0) { this.clearCount.set(c); this.showClear.set(true); setTimeout(() => this.showClear.set(false), 1100); }
+      const gain = this.store.lastScoreGain();
+      if (!gain) return;
+
+      const tier: 1 | 2 | 3 = gain.lines >= 4 ? 3 : gain.lines >= 2 ? 2 : 1;
+      const text = gain.lines >= 4
+        ? `PERFECT ×${gain.lines}  +${gain.score}`
+        : gain.lines >= 2
+        ? `DOUBLE ×${gain.lines}  +${gain.score}`
+        : `CLEAR!  +${gain.score}`;
+
+      const item = { id: gain.ts, text, tier, xPct: 30 + Math.random() * 40 };
+      this.floatItems.update(items => [...items, item]);
+      setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1200);
+
+      const colors = ['#fbbf24', '#f97316', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8', '#a3e635', '#fb7185'];
+      const count = gain.lines >= 4 ? 18 : gain.lines >= 2 ? 13 : 9;
+      const sparks = Array.from({ length: count }, (_, i) => ({
+        id: `${gain.ts}-${i}`,
+        color: colors[i % colors.length],
+        size: 5 + Math.random() * 8,
+        tx: Math.random() * 280 - 140,
+        ty: Math.random() * 280 - 140,
+      }));
+      this.particles.update(p => [...p, ...sparks]);
+      setTimeout(() => this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`))), 750);
     });
 
     effect((onCleanup) => {
@@ -174,7 +207,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     if (this.currentRoomId() && this.currentRoomId() !== 'local') {
       this.store.leaveRoom();
     }
-    history.back();
+    this.navigateToLobby();
   }
 
   getDifficultyName() {
@@ -242,7 +275,9 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   onDragStart(event: MouseEvent | TouchEvent, shape: BlockShape, index: number) {
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
-    
+
+    this.audioService.initAudio(); // fire-and-forget
+
     // Prevent default to avoid scrolling on touch devices
     if (event.cancelable) {
       event.preventDefault();

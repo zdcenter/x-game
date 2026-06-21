@@ -6,8 +6,6 @@ import { SettingsService } from './core/services/settings.service';
 import { MaintenanceComponent } from './shared/components/maintenance/maintenance.component';
 import { AuthStore } from './core/auth/auth.store';
 import { CookieConsentComponent } from './shared/components/cookie-consent/cookie-consent.component';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { filter } from 'rxjs/operators';
 import { NavigationStart } from '@angular/router';
 import { ToastService } from './core/services/toast.service';
 import { I18nService } from './core/i18n/i18n.service';
@@ -47,7 +45,6 @@ export class AppComponent implements OnInit {
   settingsService = inject(SettingsService);
   private router = inject(Router);
   private authStore = inject(AuthStore);
-  private swUpdate = inject(SwUpdate);
   private toastService = inject(ToastService);
   private i18n = inject(I18nService);
   editRoomService = inject(EditRoomService);
@@ -71,24 +68,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.settingsService.loadSettings().subscribe();
-    this.checkForUpdates();
     this.authStore.refreshProfile();
-  }
-
-  private checkForUpdates() {
-    if (!this.swUpdate.isEnabled) return;
-
-    this.swUpdate.versionUpdates
-      .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
-      .subscribe(() => {
-        // Automatically activate the new version in the background.
-        // The next time the user refreshes or opens a new tab, they will see the new version,
-        // without needing to close all tabs. This is completely silent and non-intrusive.
-        this.swUpdate.activateUpdate();
-      });
-
-    // Check for update on load
-    this.swUpdate.checkForUpdate();
   }
 
   canBypassMaintenance(): boolean {

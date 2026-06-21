@@ -12,6 +12,11 @@ export class HexaBoardComponent {
   @Input() cells: HexCell[] = [];
   @Input() previewPiece: HexPiece | null = null;
   @Input() previewOrigin: HexCoord | null = null;
+  @Input() clearingCells: Map<string, string> = new Map();
+
+  cellKey(cell: HexCell): string { return `${cell.q},${cell.r},${cell.s}`; }
+  isClearing(cell: HexCell): boolean { return this.clearingCells.has(this.cellKey(cell)); }
+  clearingColor(cell: HexCell): string { return this.clearingCells.get(this.cellKey(cell)) || 'url(#pieceGrad)'; }
   
   // Hex sizing for SVG viewport
   readonly size = 10; // "Radius" of a single hex

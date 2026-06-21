@@ -121,26 +121,48 @@
                 <div class="relative flex items-center justify-center shrink-0 mb-4"
                      [class.block-shake]="isShaking()"
                      style="width: min(75vmin, 500px); height: min(75vmin, 500px);">
-                  <!-- Clear Badge -->
-                  @if (showClear()) {
-                    <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                      <div class="block-clear-badge font-black text-2xl lg:text-3xl px-5 py-2.5 rounded-2xl text-white"
-                           [style.background]="clearCount() >= 3 ? 'linear-gradient(135deg,#7c3aed,#db2777)' : clearCount() >= 2 ? 'linear-gradient(135deg,#f59e0b,#ef4444)' : 'linear-gradient(135deg,#10b981,#3b82f6)'"
-                           style="box-shadow: 0 0 30px rgba(245,158,11,0.7); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                        {{ clearCount() >= 3 ? '🌟 PERFECT ×' + clearCount() : clearCount() >= 2 ? '🔥 DOUBLE ×' + clearCount() : '✨ CLEAR!' }}
+
+                  <!-- Score Float-up Texts -->
+                  <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+                    @for (item of floatItems(); track item.id) {
+                      <div class="absolute font-black block-score-float drop-shadow-lg whitespace-nowrap"
+                           [class.text-2xl]="item.tier === 1"
+                           [class.text-3xl]="item.tier === 2"
+                           [class.text-4xl]="item.tier === 3"
+                           [class.text-cyan-400]="item.tier === 1"
+                           [class.text-orange-400]="item.tier === 2"
+                           [class.text-yellow-300]="item.tier === 3"
+                           [style.left]="item.xPct + '%'"
+                           style="top: 45%; transform: translateX(-50%); text-shadow: 0 2px 10px rgba(0,0,0,0.9);">
+                        {{ item.text }}
                       </div>
-                    </div>
-                  }
+                    }
+                  </div>
+
+                  <!-- Spark Particles -->
+                  <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden flex items-center justify-center">
+                    @for (p of particles(); track p.id) {
+                      <div class="absolute rounded-full block-spark mix-blend-screen"
+                           [style.background-color]="p.color"
+                           [style.width.px]="p.size"
+                           [style.height.px]="p.size"
+                           [style.--tx]="p.tx + 'px'"
+                           [style.--ty]="p.ty + 'px'"
+                           style="box-shadow: 0 0 6px currentColor;">
+                      </div>
+                    }
+                  </div>
+
                   <div class="w-full h-full relative flex items-center justify-center bg-[var(--color-bg-card)] p-1 sm:p-2 rounded-xl shadow-2xl border border-[var(--color-border-card)] touch-none select-none overflow-hidden">
-                    <div #boardElement 
+                    <div #boardElement
                          class="grid gap-1 block-board p-1 rounded-lg w-full h-full"
                        [style.gridTemplateColumns]="'repeat(' + store.boardSize() + ', minmax(0, 1fr))'">
-                  
+
                   <!-- Cells -->
                   @for (row of store.board(); track rIndex; let rIndex = $index) {
                     @for (cell of row; track cIndex; let cIndex = $index) {
-                      <div class="w-full h-full aspect-square rounded-sm transition-colors duration-200"
-                           [ngClass]="cell > 0 ? 'block-piece' : 'block-empty'">
+                      <div class="w-full h-full aspect-square rounded-sm"
+                           [ngClass]="store.clearingSet().has(rIndex + '-' + cIndex) ? 'block-clearing' : (cell > 0 ? 'block-piece' : 'block-empty')">
                       </div>
                     }
                   }

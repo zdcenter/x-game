@@ -3,14 +3,16 @@
       <svg [attr.viewBox]="viewBox" class="w-full h-full drop-shadow-lg overflow-visible">
         <!-- Grid Cells -->
         <g *ngFor="let cell of cells">
-          <polygon 
-            [attr.points]="hexPoints(cell.q, cell.r)" 
-            [attr.fill]="cell.filled ? (cell.color || 'url(#pieceGrad)') : 'var(--color-hexa-empty)'"
-            [attr.stroke]="cell.filled ? 'rgba(255,255,255,0.2)' : 'var(--color-hexa-empty-stroke)'"
-            [attr.stroke-width]="cell.filled ? '0.8' : '1.2'"
+          <polygon
+            [attr.points]="hexPoints(cell.q, cell.r)"
+            [attr.fill]="cell.filled ? (cell.color || 'url(#pieceGrad)') : (isClearing(cell) ? clearingColor(cell) : 'var(--color-hexa-empty)')"
+            [attr.stroke]="(cell.filled || isClearing(cell)) ? 'rgba(255,255,255,0.2)' : 'var(--color-hexa-empty-stroke)'"
+            [attr.stroke-width]="(cell.filled || isClearing(cell)) ? '0.8' : '1.2'"
             stroke-linejoin="round"
-            class="transition-colors duration-200"
-            [attr.filter]="cell.filled ? 'url(#shadow3dLight)' : null">
+            [class.hexa-cell-clearing]="isClearing(cell)"
+            [class.transition-colors]="!isClearing(cell)"
+            class="duration-200"
+            [attr.filter]="(cell.filled || isClearing(cell)) ? 'url(#shadow3dLight)' : null">
           </polygon>
         </g>
         

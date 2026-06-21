@@ -27,10 +27,30 @@
   animation: hexa-danger-red 0.7s ease-in-out infinite;
 }
 
-@keyframes hexa-combo-pop {
-  0%   { opacity: 0; transform: scale(0.4); }
-  22%  { opacity: 1; transform: scale(1.15); }
-  72%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.85) translateY(-10px); }
+/* Hex cell dissolve on clear — mirrors block-clear-cell timing exactly */
+@keyframes hexa-cell-clear {
+  0%   { opacity: 1;    transform: scale(1);    filter: brightness(1); }
+  20%  { opacity: 1;    transform: scale(1.16); filter: brightness(3.0) saturate(1.6) drop-shadow(0 0 6px rgba(255,255,200,0.95)); }
+  62%  { opacity: 0.65; transform: scale(0.85); filter: brightness(1.3) drop-shadow(0 0 2px rgba(255,255,200,0.4)); }
+  100% { opacity: 0;    transform: scale(0.08); filter: brightness(0.5); }
 }
-.hexa-combo-badge { animation: hexa-combo-pop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.hexa-cell-clearing {
+  animation: hexa-cell-clear 0.45s ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Score float-up */
+@keyframes hexa-score-float {
+  0%   { transform: translateX(-50%) translateY(0)     scale(0.6); opacity: 0; }
+  14%  { transform: translateX(-50%) translateY(-16px) scale(1.22); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-96px) scale(0.88); opacity: 0; }
+}
+.hexa-score-float { animation: hexa-score-float 1.15s ease-out forwards; }
+
+/* Spark particles */
+.hexa-spark { animation: hexa-spark 0.72s cubic-bezier(0.1, 1, 0.3, 1) forwards; }
+@keyframes hexa-spark {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}

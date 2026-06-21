@@ -42,11 +42,11 @@ export class AudioService {
     }
   }
 
-  initAudio() {
-    this.initWebAudio();
+  async initAudio(): Promise<void> {
+    await this.initWebAudio();
   }
   
-  private initWebAudio() {
+  private async initWebAudio(): Promise<void> {
     if (!this.audioCtx) {
       this.audioCtx = createAudioContext();
       if (!this.audioCtx) return;
@@ -55,14 +55,14 @@ export class AudioService {
       this.masterGain.connect(this.audioCtx.destination);
     }
     if (this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
+      await this.audioCtx.resume();
     }
   }
 
   // --- UI Sounds ---
-  playUI(name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown') {
+  async playUI(name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playUISound(this.audioCtx, this.masterGain, name);
     }
@@ -76,9 +76,9 @@ export class AudioService {
   playCountdown() { this.playUI('countdown'); }
 
   // --- Minesweeper Sounds ---
-  playMinesweeper(name: 'dig' | 'flag' | 'explosion' | 'win') {
+  async playMinesweeper(name: 'dig' | 'flag' | 'explosion' | 'win') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playMinesweeperSound(this.audioCtx, this.masterGain, name);
     }
@@ -88,90 +88,90 @@ export class AudioService {
   playFlag() { this.playMinesweeper('flag'); }
 
   // --- Sokoban Sounds ---
-  playSokoban(name: 'move' | 'push' | 'bump' | 'target') {
+  async playSokoban(name: 'move' | 'push' | 'bump' | 'target') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playSokobanSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- WaterSort Sounds ---
-  playWaterSort(name: 'clink' | 'pour' | 'bottle_full') {
+  async playWaterSort(name: 'clink' | 'pour' | 'bottle_full') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playWaterSortSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Gomoku Sounds ---
-  playGomoku(name: 'stoneDrop' | 'stoneWin') {
+  async playGomoku(name: 'stoneDrop' | 'stoneWin') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playGomokuSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Drop2048 Sounds ---
-  playDrop2048(name: 'move' | 'drop' | 'merge', combo: number = 0) {
+  async playDrop2048(name: 'move' | 'drop' | 'merge', combo: number = 0) {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playDrop2048Sound(this.audioCtx, this.masterGain, name, combo);
     }
   }
 
   // --- Tetris Sounds ---
-  playTetris(name: 'move' | 'rotate' | 'land' | 'clear') {
+  async playTetris(name: 'move' | 'rotate' | 'land' | 'clear') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playTetrisSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Math24 Sounds ---
-  playMath24(name: 'flip' | 'correct' | 'error') {
+  async playMath24(name: 'flip' | 'correct' | 'error') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playMath24Sound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Block/Hexa Sounds ---
-  playBlock(name: 'place' | 'clear' | 'error') {
+  async playBlock(name: 'place' | 'clear' | 'error') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playBlockSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Sudoku Sounds ---
-  playSudoku(name: 'input' | 'clear' | 'success' | 'error') {
+  async playSudoku(name: 'input' | 'clear' | 'success' | 'error') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playSudokuSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Puzzle Sounds (Sliding, Codebreaker, LightsOut) ---
-  playPuzzle(name: 'move' | 'toggle' | 'guess' | 'success' | 'error') {
+  async playPuzzle(name: 'move' | 'toggle' | 'guess' | 'success' | 'error') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playPuzzleSound(this.audioCtx, this.masterGain, name);
     }
   }
 
   // --- Idiom Sounds ---
-  playIdiom(name: 'fill' | 'erase' | 'correct' | 'wrong' | 'mastered' | 'correcting_done' | 'next') {
+  async playIdiom(name: 'fill' | 'erase' | 'correct' | 'wrong' | 'mastered' | 'correcting_done' | 'next') {
     if (this.isMuted()) return;
-    this.initWebAudio();
+    await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playIdiomSound(this.audioCtx, this.masterGain, name);
     }

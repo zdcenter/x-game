@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { Injectable, computed, inject, signal, effect } from '@angular/core';
+import { Injectable, computed, inject, signal, effect, Signal } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameTimerService } from '../../../../core/services/game-timer.service';
 import { AudioService } from '../../../../core/services/audio.service';
@@ -36,8 +36,14 @@ export class BlockStore extends BaseGameStore {
   isDead = signal(false);
   clearTrigger = signal<number>(0);
   shakeTrigger = signal<number>(0);
+  clearingCells = signal<string[]>([]);
+  clearingSet = computed(() => new Set(this.clearingCells()));
+  lastScoreGain = signal<{ score: number; lines: number; ts: number } | null>(null);
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
+
+  private _pendingClearRows: number[] = [];
+  private _pendingClearCols: number[] = [];
 
   readonly singlePlayerStatus = computed(() => this.localStatus());
 
@@ -157,7 +163,9 @@ export class BlockStore extends BaseGameStore {
       seed,
       onSound: (sound) => this.audio.playBlock(sound),
       onSyncState: () => this.syncState(),
-      onLinesClear: (c) => {
+      onLinesClear: (c, rows, cols) => {
+        this._pendingClearRows = rows;
+        this._pendingClearCols = cols;
         this.clearTrigger.set(c);
         setTimeout(() => this.clearTrigger.set(0), 1100);
         if (c >= 2) this.shakeTrigger.update(n => n + 1);
@@ -175,7 +183,9 @@ export class BlockStore extends BaseGameStore {
       seed,
       onSound: (sound) => this.audio.playBlock(sound),
       onSyncState: () => this.syncState(),
-      onLinesClear: (c) => {
+      onLinesClear: (c, rows, cols) => {
+        this._pendingClearRows = rows;
+        this._pendingClearCols = cols;
         this.clearTrigger.set(c);
         setTimeout(() => this.clearTrigger.set(0), 1100);
         if (c >= 2) this.shakeTrigger.update(n => n + 1);
@@ -186,6 +196,10 @@ export class BlockStore extends BaseGameStore {
   }
 
   placeShape(handIndex: number, startRow: number, startCol: number) {
+    this._pendingClearRows = [];
+    this._pendingClearCols = [];
+    const prevScore = this.localScore();
+
     this.engine.handleAction({
       type: BlockActionType.Place,
       handIndex,
@@ -193,6 +207,29 @@ export class BlockStore extends BaseGameStore {
       startCol
     });
     this.updateSignals();
+
+    const gained = this.localScore() - prevScore;
+    if (this._pendingClearRows.length > 0 || this._pendingClearCols.length > 0) {
+      const size = this.boardSize();
+      const keys: string[] = [];
+      this._pendingClearRows.forEach(r => {
+        for (let c = 0; c < size; c++) keys.push(`${r}-${c}`);
+      });
+      this._pendingClearCols.forEach(c => {
+        for (let r = 0; r < size; r++) {
+          const k = `${r}-${c}`;
+          if (!keys.includes(k)) keys.push(k);
+        }
+      });
+      this.clearingCells.set(keys);
+      setTimeout(() => this.clearingCells.set([]), 460);
+      this.lastScoreGain.set({
+        score: gained,
+        lines: this._pendingClearRows.length + this._pendingClearCols.length,
+        ts: Date.now()
+      });
+    }
+
     if (this.engine.isDead) {
       this.onGameOver();
     }

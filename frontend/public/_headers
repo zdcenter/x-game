@@ -1,3 +1,10 @@
+# Service worker scripts — never cache so browsers always fetch the latest killer script
+/sw.js
+  Cache-Control: no-store, must-revalidate
+
+/ngsw-worker.js
+  Cache-Control: no-store, must-revalidate
+
 # HTML pages — never cache so browsers always get fresh chunk references after deployment
 /index.html
   Cache-Control: no-store, must-revalidate

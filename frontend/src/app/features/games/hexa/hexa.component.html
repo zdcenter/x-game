@@ -162,8 +162,8 @@
               
               <!-- Outer: danger glow only (no shake) -->
               <div class="relative flex items-center justify-center shrink-0"
-                   [class.hexa-danger-1]="store.fillPct() > 0.6 && store.fillPct() <= 0.8"
-                   [class.hexa-danger-2]="store.fillPct() > 0.8"
+                   [class.hexa-danger-1]="store.fillPct() > 0.78 && store.fillPct() <= 0.90 && !store.gameOver()"
+                   [class.hexa-danger-2]="store.fillPct() > 0.90 && !store.gameOver()"
                    style="width: min(80vmin, 500px); height: min(80vmin, 500px);">
                 <!-- Inner: shake only (separate from danger animation) -->
                 <div class="absolute inset-0 flex items-center justify-center" [class.hexa-shake]="isShaking()">
@@ -172,20 +172,40 @@
                       class="block w-[90%] h-[90%]"
                       [cells]="store.cells()"
                       [previewPiece]="draggedPiece"
-                      [previewOrigin]="previewOrigin">
+                      [previewOrigin]="previewOrigin"
+                      [clearingCells]="store.clearingCells()">
                     </app-hexa-board>
                   </div>
                 </div>
 
-                <!-- Combo Badge (on outer, always visible) -->
-                @if (showCombo()) {
-                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                    <div class="hexa-combo-badge font-black text-2xl lg:text-3xl px-5 py-2 rounded-2xl text-white"
-                         style="background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 0 30px rgba(245,158,11,0.8); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                      🔥 COMBO ×{{ comboCount() }}!
+<!-- Score Float-up Texts -->
+                <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+                  @for (item of floatItems(); track item.id) {
+                    <div class="absolute font-black hexa-score-float drop-shadow-lg whitespace-nowrap"
+                         [class.text-2xl]="item.tier === 1"
+                         [class.text-3xl]="item.tier === 2"
+                         [class.text-cyan-400]="item.tier === 1"
+                         [class.text-orange-400]="item.tier === 2"
+                         [style.left]="item.xPct + '%'"
+                         style="top: 55%; transform: translateX(-50%); text-shadow: 0 2px 10px rgba(0,0,0,0.9);">
+                      {{ item.text }}
                     </div>
-                  </div>
-                }
+                  }
+                </div>
+
+                <!-- Spark Particles -->
+                <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden flex items-center justify-center">
+                  @for (p of particles(); track p.id) {
+                    <div class="absolute rounded-full hexa-spark mix-blend-screen"
+                         [style.background-color]="p.color"
+                         [style.width.px]="p.size"
+                         [style.height.px]="p.size"
+                         [style.--tx]="p.tx + 'px'"
+                         [style.--ty]="p.ty + 'px'"
+                         style="box-shadow: 0 0 6px currentColor;">
+                    </div>
+                  }
+                </div>
               </div>
             </div>
 
