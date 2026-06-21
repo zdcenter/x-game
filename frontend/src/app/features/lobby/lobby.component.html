@@ -3,19 +3,19 @@
       <!-- LEFT: Main Games Content -->
       <div class="flex-grow flex flex-col items-center p-4 lg:p-8 relative">
         
-        <!-- Global Announcement Marquee -->
-        @if (activeAnnouncements().length > 0) {
-          <div class="w-full max-w-[1600px] mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden">
-            <span class="mr-3 text-xl shrink-0 animate-pulse z-20 bg-[var(--color-bg-card)] pr-2">📣</span>
-            <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
-              <div class="animate-marquee inline-block text-sm font-bold text-blue-400">
-                @for (ann of activeAnnouncements(); track ann.id) {
-                  <span class="mx-8">✨ {{ ann.content }}</span>
-                }
-              </div>
+        <!-- Global Announcement Marquee: always in DOM to prevent CLS; invisible when empty -->
+        <div class="w-full max-w-[1600px] mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden transition-all"
+             [class.invisible]="activeAnnouncements().length === 0"
+             [class.pointer-events-none]="activeAnnouncements().length === 0">
+          <span class="mr-3 text-xl shrink-0 animate-pulse z-20 bg-[var(--color-bg-card)] pr-2">📣</span>
+          <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
+            <div class="animate-marquee inline-block text-sm font-bold text-blue-400">
+              @for (ann of activeAnnouncements(); track ann.id) {
+                <span class="mx-8">✨ {{ ann.content }}</span>
+              }
             </div>
           </div>
-        }
+        </div>
 
 
         <!-- Daily Challenge Banner -->
@@ -95,7 +95,7 @@
               <div class="absolute top-6 right-6 flex items-center gap-2">
                 <div class="flex items-center gap-1 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-main)] px-2 py-1 rounded-full border border-[var(--color-border-card)] shadow-sm">
                   <span class="text-xs">🔥</span>
-                  <span class="font-bold">{{ game.visitCount || 0 }}</span>
+                  <span class="font-bold min-w-[2ch] text-right tabular-nums">{{ game.visitCount || 0 }}</span>
                 </div>
                 <button (click)="shareGame($event, game.id)" 
                         class="p-1.5 bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-[var(--color-text-muted)] hover:text-blue-400 shadow-sm transition-all hover:scale-110"
