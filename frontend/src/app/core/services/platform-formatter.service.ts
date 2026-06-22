@@ -35,9 +35,7 @@ export type PlatformId = typeof PLATFORM_DEFS[number]['id'];
 
 @Injectable({ providedIn: 'root' })
 export class PlatformFormatterService {
-  private get siteOrigin(): string {
-    return typeof window !== 'undefined' ? window.location.origin : 'https://puzzlepk.com';
-  }
+  private readonly siteOrigin = 'https://www.puzzlepk.com';
 
   private buildUrl(post: FormattablePost, lang: 'en' | 'zh'): string {
     if (post.sourceUrl) return post.sourceUrl;
@@ -213,15 +211,44 @@ export class PlatformFormatterService {
     return `🎮 ${title.slice(0, 280 - overhead - 2)}…${link}\n\n${htags}`;
   }
 
-  private formatZhihu(title: string, desc: string, content: string, url: string): string {
-    const intro  = url ? `> 本文首发于 [Puzzle PK 益智游戏平台](${url})\n\n` : '';
-    const footer = url ? `\n\n---\n原文链接：${url}` : '';
-    return `${intro}# ${title}\n\n${desc}\n\n${content}${footer}`.trim();
+  private async formatZhihu(title: string, desc: string, content: string, url: string): Promise<string> {
+    const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
+    const intro  = url
+      ? `<blockquote style="border-left:4px solid #0066ff;margin:0 0 24px;padding:10px 16px;background:#f0f5ff;border-radius:0 6px 6px 0;"><p style="margin:0;color:#0052cc;font-size:14px;">本文首发于 <a href="${url}" style="color:#0066ff;">Puzzle PK 益智游戏平台</a></p></blockquote>`
+      : '';
+    const footer = url
+      ? `<hr style="border:none;border-top:1px solid #e8e8e8;margin:32px 0;"><p style="font-size:13px;color:#999;text-align:center;">原文链接：<a href="${url}" style="color:#0066ff;">${url}</a></p>`
+      : '';
+    return `<!-- 知乎专栏文章 -->
+<div style="max-width:700px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;">
+
+  ${intro}
+  <h1 style="font-size:26px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
+  <p style="font-size:16px;color:#666;margin:0 0 28px;padding-bottom:20px;border-bottom:2px solid #0066ff;line-height:1.75;">${desc}</p>
+
+  ${bodyHtml}
+
+  ${footer}
+
+</div>`.trim();
   }
 
-  private formatBilibili(title: string, desc: string, content: string, url: string): string {
-    const footer = url ? `\n\n---\n本文同步发布于 Puzzle PK 益智游戏平台：${url}\n版权归作者所有，转载请注明出处。` : '';
-    return `# ${title}\n\n${desc}\n\n${content}${footer}`.trim();
+  private async formatBilibili(title: string, desc: string, content: string, url: string): Promise<string> {
+    const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
+    const footer   = url
+      ? `<hr style="border:none;border-top:1px solid #ddd;margin:28px 0;"><p style="font-size:13px;color:#999;text-align:center;">本文同步发布于 <a href="${url}" style="color:#00a1d6;">Puzzle PK 益智游戏平台</a>，版权归作者所有，转载请注明出处。</p>`
+      : '';
+    return `<!-- B站专栏文章 -->
+<div style="max-width:680px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;">
+
+  <h1 style="font-size:24px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
+  <p style="font-size:15px;color:#666;margin:0 0 24px;padding-bottom:18px;border-bottom:2px solid #00a1d6;line-height:1.7;">${desc}</p>
+
+  ${bodyHtml}
+
+  ${footer}
+
+</div>`.trim();
   }
 
   private async formatWeChat(title: string, desc: string, content: string, url: string): Promise<string> {
@@ -269,11 +296,27 @@ export class PlatformFormatterService {
 </div>`.trim();
   }
 
-  // 掘金：和知乎类似，Markdown，加掘金专属引导语
-  private formatJuejin(title: string, desc: string, content: string, url: string): string {
-    const intro  = url ? `> 本文同步发布于 [Puzzle PK 益智游戏平台](${url})\n\n` : '';
-    const footer = url ? `\n\n---\n\n如果觉得有帮助，欢迎点赞收藏～\n原文链接：${url}` : '';
-    return `${intro}## ${title}\n\n${desc}\n\n${content}${footer}`.trim();
+  // 掘金：富文本编辑器，输出 HTML
+  private async formatJuejin(title: string, desc: string, content: string, url: string): Promise<string> {
+    const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
+    const intro  = url
+      ? `<blockquote style="border-left:4px solid #1e80ff;margin:0 0 24px;padding:10px 16px;background:#e8f3ff;border-radius:0 6px 6px 0;"><p style="margin:0;color:#1e6bd6;font-size:14px;">本文同步发布于 <a href="${url}" style="color:#1e80ff;">Puzzle PK 益智游戏平台</a></p></blockquote>`
+      : '';
+    const footer = url
+      ? `<hr style="border:none;border-top:1px solid #e4e6eb;margin:32px 0;"><p style="font-size:13px;color:#8a919f;text-align:center;">如果觉得有帮助，欢迎点赞收藏～<br>原文链接：<a href="${url}" style="color:#1e80ff;">${url}</a></p>`
+      : '';
+    return `<!-- 掘金文章 -->
+<div style="max-width:700px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;">
+
+  ${intro}
+  <h1 style="font-size:26px;font-weight:800;color:#1d2129;margin:0 0 12px;line-height:1.4;">${title}</h1>
+  <p style="font-size:16px;color:#4e5969;margin:0 0 28px;padding-bottom:20px;border-bottom:2px solid #1e80ff;line-height:1.75;">${desc}</p>
+
+  ${bodyHtml}
+
+  ${footer}
+
+</div>`.trim();
   }
 
   // Hacker News：「Show HN」格式，只需标题 + 一段说明，链接单独贴
@@ -348,10 +391,26 @@ export class PlatformFormatterService {
   }
 
   // 思否 SegmentFault：Markdown，和掘金风格类似
-  private formatSegmentFault(title: string, desc: string, content: string, url: string): string {
-    const intro  = url ? `> 本文同步发布于 [Puzzle PK 益智游戏平台](${url})\n\n` : '';
-    const footer = url ? `\n\n---\n\n感谢阅读，欢迎点赞收藏。原文：${url}` : '';
-    return `${intro}# ${title}\n\n${desc}\n\n${content}${footer}`.trim();
+  private async formatSegmentFault(title: string, desc: string, content: string, url: string): Promise<string> {
+    const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
+    const intro  = url
+      ? `<blockquote style="border-left:4px solid #009a29;margin:0 0 24px;padding:10px 16px;background:#f0fbf4;border-radius:0 6px 6px 0;"><p style="margin:0;color:#007a22;font-size:14px;">本文同步发布于 <a href="${url}" style="color:#009a29;">Puzzle PK 益智游戏平台</a></p></blockquote>`
+      : '';
+    const footer = url
+      ? `<hr style="border:none;border-top:1px solid #e6e6e6;margin:32px 0;"><p style="font-size:13px;color:#999;text-align:center;">感谢阅读，欢迎点赞收藏。原文：<a href="${url}" style="color:#009a29;">${url}</a></p>`
+      : '';
+    return `<!-- 思否文章 -->
+<div style="max-width:700px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;">
+
+  ${intro}
+  <h1 style="font-size:26px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
+  <p style="font-size:16px;color:#555;margin:0 0 28px;padding-bottom:20px;border-bottom:2px solid #009a29;line-height:1.75;">${desc}</p>
+
+  ${bodyHtml}
+
+  ${footer}
+
+</div>`.trim();
   }
 
   // V2EX：纯文本，标题精炼，正文简短+链接，节点建议

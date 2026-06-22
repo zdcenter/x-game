@@ -101,9 +101,13 @@ async function copyToClipboard(text: string): Promise<void> {
                 <td class="py-3 px-4 text-right">
                   <div class="flex items-center justify-end gap-1">
                     <span class="text-xs opacity-40 mr-1">{{ distribOpenId() === post.dbId ? '▲' : '▼' }}</span>
-                    <a [href]="'/blog/' + post.id" target="_blank" (click)="$event.stopPropagation()"
-                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Preview">
-                      🔗
+                    <a [href]="'/zh/blog/' + post.id" target="_blank" (click)="$event.stopPropagation()"
+                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="预览中文">
+                      🇨🇳
+                    </a>
+                    <a [href]="'/en/blog/' + post.id" target="_blank" (click)="$event.stopPropagation()"
+                      class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Preview EN">
+                      🇺🇸
                     </a>
                     <button (click)="openEdit(post); $event.stopPropagation()"
                       class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Edit">
