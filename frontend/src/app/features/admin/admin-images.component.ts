@@ -231,7 +231,7 @@ function formatDate(s: string): string {
                     }
                   </div>
 
-                  <!-- Action buttons -->
+                  <!-- Action buttons row 1: copy + svg convert + delete -->
                   <div class="flex items-center gap-1">
                     <button (click)="copyUrl(img)"
                       class="flex-1 py-1 rounded-lg text-[10px] font-bold transition-colors border"
@@ -254,6 +254,20 @@ function formatDate(s: string): string {
                       🗑
                     </button>
                   </div>
+
+                  <!-- Action buttons row 2: watermark -->
+                  <button (click)="quickWatermark(img)"
+                    [disabled]="watermarkingKey() === img.key"
+                    class="w-full py-1 rounded-lg text-[10px] font-bold border transition-colors disabled:opacity-40"
+                    [class]="watermarkingKey() === img.key
+                      ? 'border-amber-500/50 text-amber-400'
+                      : 'border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-amber-500/50 hover:text-amber-400'">
+                    @if (watermarkingKey() === img.key) {
+                      <span class="inline-block w-2.5 h-2.5 border border-amber-400/40 border-t-amber-400 rounded-full animate-spin mr-1"></span>加水印中...
+                    } @else {
+                      🏷 加品牌水印
+                    }
+                  </button>
                 </div>
               </div>
             }
@@ -287,10 +301,11 @@ export class AdminImagesComponent implements OnInit {
   previewDims  = signal<{w: number; h: number} | null>(null);
 
   // watermark
-  watermarkOpen = signal(false);
-  wBrandText    = signal(localStorage.getItem('ppk_brand_text') ?? 'Puzzle PK · puzzlepk.com');
-  wPosition     = signal<'br' | 'bl' | 'bc'>('br');
-  wSaving       = signal(false);
+  watermarkOpen   = signal(false);
+  watermarkingKey = signal<string | null>(null); // tracks card-level watermark in progress
+  wBrandText      = signal(localStorage.getItem('ppk_brand_text') ?? 'Puzzle PK · puzzlepk.com');
+  wPosition       = signal<'br' | 'bl' | 'bc'>('br');
+  wSaving         = signal(false);
 
   private dragCounter = 0;
 
@@ -489,6 +504,47 @@ export class AdminImagesComponent implements OnInit {
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   // ── Watermark ───────────────────────────────────────────────────────────────
+
+  // One-click watermark directly from image card (uses current wBrandText + wPosition settings)
+  async quickWatermark(img: ImageItem) {
+    this.watermarkingKey.set(img.key);
+    this.svc.getImageBlob(img.key).subscribe({
+      next: async (blob) => {
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const el = new Image();
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+            el.src = blobUrl;
+          });
+          URL.revokeObjectURL(blobUrl);
+
+          const canvas = document.createElement('canvas');
+          canvas.width  = image.naturalWidth  || 1200;
+          canvas.height = image.naturalHeight || 630;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(image, 0, 0);
+          this.drawBrandPill(ctx, canvas.width, canvas.height);
+
+          const pngBlob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'));
+          const base = img.key.split('/').pop()!.replace(/\.[^.]+$/, '');
+          this.svc.uploadBlob(pngBlob, `${base}-branded.png`).subscribe({
+            next: (newImg) => {
+              this.images.update(list => [newImg, ...list]);
+              this.toast.show('✓ 已保存带品牌标识版本', 'success');
+              this.watermarkingKey.set(null);
+            },
+            error: () => { this.toast.show('上传失败', 'error'); this.watermarkingKey.set(null); },
+          });
+        } catch {
+          this.toast.show('处理失败', 'error');
+          this.watermarkingKey.set(null);
+        }
+      },
+      error: () => { this.toast.show('获取图片失败', 'error'); this.watermarkingKey.set(null); },
+    });
+  }
 
   onWBrandInput(e: Event) {
     const v = (e.target as HTMLInputElement).value;
