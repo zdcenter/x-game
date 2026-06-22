@@ -154,56 +154,66 @@ function formatDate(s: string): string {
         } @else {
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-4">
             @for (img of filtered(); track img.key) {
-              <div class="group relative rounded-xl overflow-hidden border-2 cursor-pointer transition-all select-none"
+              <div class="group relative rounded-xl overflow-hidden border-2 transition-all select-none flex flex-col"
                    [class]="selected().has(img.key)
                      ? 'border-[var(--color-accent-from)] shadow-lg shadow-[var(--color-accent-from)]/20'
-                     : 'border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50'"
-                   (click)="toggleSelect(img, $event)"
-                   (dblclick)="openPreview(img)">
+                     : 'border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50'">
 
-                <!-- Thumbnail -->
-                <div class="aspect-square bg-[var(--color-bg-main)] overflow-hidden">
+                <!-- Thumbnail — click = preview -->
+                <div class="aspect-square bg-[var(--color-bg-main)] overflow-hidden cursor-zoom-in relative"
+                     (click)="openPreview(img)">
                   <img [src]="img.url" [alt]="img.key"
                     class="w-full h-full object-cover transition-transform group-hover:scale-105"
                     loading="lazy"
                     (load)="onThumbLoad($event, img.key)"
                     (error)="onImgError($event)">
-                </div>
 
-                <!-- Selection indicator -->
-                @if (selected().has(img.key)) {
-                  <div class="absolute top-2 left-2 w-5 h-5 bg-[var(--color-accent-from)] rounded-full flex items-center justify-center shadow-lg">
-                    <span class="text-white text-xs font-bold">✓</span>
+                  <!-- Hover zoom hint -->
+                  <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-white text-2xl drop-shadow">🔍</span>
                   </div>
-                }
 
-                <!-- Hover overlay -->
-                <div class="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
-                  <button (click)="openPreview(img); $event.stopPropagation()"
-                    class="w-full py-1.5 rounded-lg text-xs font-bold bg-white/20 hover:bg-white/30 text-white transition-colors">
-                    👁 预览原图
-                  </button>
-                  <button (click)="copyUrl(img); $event.stopPropagation()"
-                    class="w-full py-1.5 rounded-lg text-xs font-bold transition-colors"
-                    [class]="copied() === img.key
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-white/20 hover:bg-white/30 text-white'">
-                    {{ copied() === img.key ? '✓ 已复制' : '📋 复制链接' }}
-                  </button>
-                  <button (click)="deleteSingle(img); $event.stopPropagation()"
-                    class="w-full py-1.5 rounded-lg text-xs font-bold bg-rose-500/80 hover:bg-rose-500 text-white transition-colors">
-                    🗑 删除
-                  </button>
+                  <!-- Selection checkbox (top-left) -->
+                  <div class="absolute top-2 left-2 transition-opacity"
+                       [class]="selected().has(img.key) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+                       (click)="toggleSelect(img, $event); $event.stopPropagation()">
+                    <div class="w-5 h-5 rounded-full flex items-center justify-center shadow-lg transition-colors"
+                         [class]="selected().has(img.key)
+                           ? 'bg-[var(--color-accent-from)]'
+                           : 'bg-black/50 border border-white/50'">
+                      @if (selected().has(img.key)) {
+                        <span class="text-white text-[10px] font-bold">✓</span>
+                      }
+                    </div>
+                  </div>
                 </div>
 
-                <!-- File info bar -->
-                <div class="px-2 py-1.5 bg-[var(--color-bg-card)] border-t border-[var(--color-border-card)]">
+                <!-- Info + action bar -->
+                <div class="px-2 pt-1.5 pb-2 bg-[var(--color-bg-card)] border-t border-[var(--color-border-card)] flex flex-col gap-1.5">
+                  <!-- Filename -->
                   <p class="text-[10px] font-mono truncate opacity-70" [title]="img.key">{{ shortName(img.key) }}</p>
+
+                  <!-- Size + dimensions -->
                   <div class="flex items-center justify-between gap-1">
-                    <p class="text-[10px] opacity-40">{{ formatBytes(img.size) }}</p>
+                    <span class="text-[10px] opacity-40">{{ formatBytes(img.size) }}</span>
                     @if (dims().get(img.key); as d) {
-                      <p class="text-[10px] opacity-40 font-mono">{{ d.w }}×{{ d.h }}</p>
+                      <span class="text-[10px] opacity-40 font-mono">{{ d.w }}×{{ d.h }}</span>
                     }
+                  </div>
+
+                  <!-- Action buttons -->
+                  <div class="flex items-center gap-1">
+                    <button (click)="copyUrl(img)"
+                      class="flex-1 py-1 rounded-lg text-[10px] font-bold transition-colors border"
+                      [class]="copied() === img.key
+                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                        : 'bg-transparent border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-[var(--color-accent-from)]/60 hover:text-[var(--color-accent-from)]'">
+                      {{ copied() === img.key ? '✓ 已复制' : '📋 复制' }}
+                    </button>
+                    <button (click)="deleteSingle(img)"
+                      class="px-2 py-1 rounded-lg text-[10px] font-bold border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-rose-500/50 hover:text-rose-400 transition-colors">
+                      🗑
+                    </button>
                   </div>
                 </div>
               </div>
