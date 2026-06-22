@@ -7,6 +7,7 @@ import { PlatformFormatterService, PlatformId } from '../../core/services/platfo
 import { PlatformDistribPanelComponent } from './platform-distrib-panel.component';
 import { MdEditorComponent } from '../../shared/components/md-editor/md-editor.component';
 import { ImagePickerComponent } from '../../shared/components/image-picker/image-picker.component';
+import { ImageService } from '../../core/services/image.service';
 import { ToastService } from '../../core/services/toast.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -42,6 +43,13 @@ async function copyToClipboard(text: string): Promise<void> {
           <h2 class="text-2xl font-bold">📝 {{ i18n.t('admin.blog.title')() }}</h2>
           <p class="text-[var(--color-text-muted)] mt-1">{{ i18n.t('admin.blog.subtitle')() }}</p>
         </div>
+        <button (click)="generateAllCovers()" [disabled]="batchGenerating()"
+          class="px-4 py-2.5 rounded-xl border border-violet-500/40 text-violet-400 text-sm font-medium hover:bg-violet-500/10 transition-colors flex items-center gap-2 disabled:opacity-40">
+          @if (batchGenerating()) {
+            <span class="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin"></span>
+          } @else { 🎨 }
+          批量生成封面
+        </button>
         <button (click)="openCreate()"
           class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -117,6 +125,13 @@ async function copyToClipboard(text: string): Promise<void> {
                     <button (click)="openEdit(post); $event.stopPropagation()"
                       class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Edit">
                       ✏️
+                    </button>
+                    <button (click)="generateCover(post); $event.stopPropagation()" title="生成封面"
+                      [disabled]="generatingCover() === post.dbId"
+                      class="p-1.5 text-violet-400 hover:bg-violet-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-40">
+                      @if (generatingCover() === post.dbId) {
+                        <span class="w-4 h-4 border-2 border-violet-400/30 border-t-violet-400 rounded-full animate-spin inline-block"></span>
+                      } @else { 🎨 }
                     </button>
                     <button (click)="deletePost(post); $event.stopPropagation()"
                       class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Delete">
@@ -313,6 +328,7 @@ export class AdminBlogComponent implements OnInit {
   private blogService   = inject(BlogService);
   private distributeService = inject(DistributeService);
   private formatter     = inject(PlatformFormatterService);
+  private imageSvc      = inject(ImageService);
   private toast         = inject(ToastService);
   i18n = inject(I18nService);
 
@@ -321,6 +337,8 @@ export class AdminBlogComponent implements OnInit {
   saving    = signal(false);
   editingId = signal<number | null>(null);
   activeTab = signal<EditTab>('meta');
+  generatingCover = signal<number | null>(null);
+  batchGenerating = signal(false);
 
   // Distribute state
   distribOpenId  = signal<number | null>(null);
@@ -391,6 +409,31 @@ export class AdminBlogComponent implements OnInit {
   }
 
   closeModal() { this.editMode.set(false); }
+
+  generateCover(post: BlogPostMeta) {
+    if (!post.dbId) return;
+    this.generatingCover.set(post.dbId);
+    this.imageSvc.generateBlogCover(post.dbId).subscribe({
+      next: (res) => {
+        this.posts.update(list => list.map(p => p.dbId === post.dbId ? { ...p, cover_image: res.url } : p));
+        this.toast.show('封面生成成功', 'success');
+        this.generatingCover.set(null);
+      },
+      error: () => { this.toast.show('生成失败', 'error'); this.generatingCover.set(null); },
+    });
+  }
+
+  generateAllCovers() {
+    this.batchGenerating.set(true);
+    this.imageSvc.generateBlogCoversBatch().subscribe({
+      next: (res) => {
+        this.toast.show(`✓ 生成 ${res.total} 张封面`, 'success');
+        this.loadPosts();
+        this.batchGenerating.set(false);
+      },
+      error: () => { this.toast.show('批量生成失败', 'error'); this.batchGenerating.set(false); },
+    });
+  }
 
   save() {
     this.form.tags_en = this.tagsENStr.split(',').map(t => t.trim()).filter(Boolean);

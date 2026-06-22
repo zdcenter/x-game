@@ -11,6 +11,7 @@ import { PlatformFormatterService, PlatformId, FormattablePost } from '../../cor
 import { PlatformDistribPanelComponent } from './platform-distrib-panel.component';
 import { MdEditorComponent } from '../../shared/components/md-editor/md-editor.component';
 import { ImagePickerComponent } from '../../shared/components/image-picker/image-picker.component';
+import { ImageService } from '../../core/services/image.service';
 import { ToastService } from '../../core/services/toast.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -96,6 +97,14 @@ async function copyToClipboard(text: string): Promise<void> {
             📥 导入文章
           </label>
           <input id="art-import-file" type="file" accept=".json" multiple class="hidden" (change)="onFileChange($event)">
+          <!-- Batch generate covers -->
+          <button (click)="generateAllCovers()" [disabled]="batchGenerating()"
+            class="px-4 py-2.5 rounded-xl border border-violet-500/40 text-violet-400 text-sm font-medium hover:bg-violet-500/10 transition-colors flex items-center gap-2 disabled:opacity-40">
+            @if (batchGenerating()) {
+              <span class="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin"></span>
+            } @else { 🎨 }
+            批量生成封面
+          </button>
           <!-- New Article -->
           <button (click)="openCreateArticle()"
             class="px-5 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg flex items-center gap-2 text-sm">
@@ -201,6 +210,13 @@ async function copyToClipboard(text: string): Promise<void> {
                         </span>
                         <button (click)="openEditArticle(art); $event.stopPropagation()" title="编辑"
                           class="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors">✏️</button>
+                        <button (click)="generateCover(art); $event.stopPropagation()" title="生成封面"
+                          [disabled]="generatingCover() === art.id"
+                          class="p-1.5 text-violet-400 hover:bg-violet-500/20 rounded-lg transition-colors disabled:opacity-40">
+                          @if (generatingCover() === art.id) {
+                            <span class="w-4 h-4 border-2 border-violet-400/30 border-t-violet-400 rounded-full animate-spin inline-block"></span>
+                          } @else { 🎨 }
+                        </button>
                         <button (click)="deleteArticle(art); $event.stopPropagation()" title="删除"
                           class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors">🗑️</button>
                       </div>
@@ -544,6 +560,7 @@ async function copyToClipboard(text: string): Promise<void> {
 export class AdminArticlesComponent implements OnInit {
   private svc       = inject(ContentService);
   private formatter = inject(PlatformFormatterService);
+  private imageSvc  = inject(ImageService);
   private toast     = inject(ToastService);
   i18n              = inject(I18nService);
 
@@ -562,6 +579,8 @@ export class AdminArticlesComponent implements OnInit {
   editingArtId = signal<number | null>(null);
   savingArt    = signal(false);
   artTab       = signal<ArticleEditTab>('meta');
+  generatingCover = signal<number | null>(null);
+  batchGenerating = signal(false);
   artForm: ArticleFormData = this.emptyArtForm();
 
   // Distribute
@@ -1019,6 +1038,30 @@ An elimination technique for medium-difficulty puzzles...`,
         this.articles.update(list => list.filter(a => a.id !== art.id));
       },
       error: () => this.toast.show(this.i18n.t('admin.articles.delete_error')(), 'error'),
+    });
+  }
+
+  generateCover(art: ContentArticleMeta) {
+    this.generatingCover.set(art.id);
+    this.imageSvc.generateArticleCover(art.id).subscribe({
+      next: (res) => {
+        this.articles.update(list => list.map(a => a.id === art.id ? { ...a, cover_image: res.url } : a));
+        this.toast.show('封面生成成功', 'success');
+        this.generatingCover.set(null);
+      },
+      error: () => { this.toast.show('生成失败', 'error'); this.generatingCover.set(null); },
+    });
+  }
+
+  generateAllCovers() {
+    this.batchGenerating.set(true);
+    this.imageSvc.generateArticleCoversBatch().subscribe({
+      next: (res) => {
+        this.toast.show(`✓ 生成 ${res.total} 张封面`, 'success');
+        this.loadArticles();
+        this.batchGenerating.set(false);
+      },
+      error: () => { this.toast.show('批量生成失败', 'error'); this.batchGenerating.set(false); },
     });
   }
 

@@ -211,6 +211,12 @@ func main() {
 	admin.Post("/images/upload", rest.AdminUploadImages)
 	admin.Delete("/images", rest.AdminDeleteImages)
 
+	// Cover image generation (batch before :id to avoid route conflict)
+	admin.Post("/blog/posts/covers/batch", rest.AdminGenerateBlogCoversBatch)
+	admin.Post("/blog/posts/:id/cover", rest.AdminGenerateBlogCover)
+	admin.Post("/content/articles/covers/batch", rest.AdminGenerateArticleCoversBatch)
+	admin.Post("/content/articles/:id/cover", rest.AdminGenerateArticleCover)
+
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)
 

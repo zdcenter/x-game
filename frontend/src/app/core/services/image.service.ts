@@ -31,4 +31,20 @@ export class ImageService {
   deleteMany(keys: string[]): Observable<{ deleted: number }> {
     return this.http.delete<{ deleted: number }>(`${this.base}/admin/images`, { body: { keys } });
   }
+
+  generateBlogCover(id: number): Observable<{ url: string }> {
+    return this.http.post<{ url: string }>(`${this.base}/admin/blog/posts/${id}/cover`, {});
+  }
+
+  generateBlogCoversBatch(): Observable<{ results: any[]; total: number }> {
+    return this.http.post<{ results: any[]; total: number }>(`${this.base}/admin/blog/posts/covers/batch`, {});
+  }
+
+  generateArticleCover(id: number): Observable<{ url: string }> {
+    return this.http.post<{ url: string }>(`${this.base}/admin/content/articles/${id}/cover`, {});
+  }
+
+  generateArticleCoversBatch(): Observable<{ results: any[]; total: number }> {
+    return this.http.post<{ results: any[]; total: number }>(`${this.base}/admin/content/articles/covers/batch`, {});
+  }
 }
