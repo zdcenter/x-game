@@ -568,14 +568,36 @@ async function copyToClipboard(text: string): Promise<void> {
           </div>
 
           <!-- Prompt text -->
-          <div class="p-5">
-            <textarea readonly rows="12"
-              class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-4 text-sm font-mono leading-relaxed resize-none focus:outline-none text-[var(--color-text-muted)] select-all"
-              [value]="promptModal()!.prompt"></textarea>
+          <div class="px-5 pt-4 pb-2 flex-1">
+            <div class="relative">
+              <textarea rows="11" (input)="onPromptInput($event)"
+                class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-4 text-sm font-mono leading-relaxed resize-none focus:outline-none focus:border-amber-500/50 text-[var(--color-text-muted)]"
+                [value]="promptModal()!.prompt"></textarea>
+              <button (click)="resetPrompt()" title="重置为原始提示词"
+                class="absolute top-2 right-2 px-2 py-1 text-[10px] rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-amber-400 hover:border-amber-500/40 transition-colors">
+                ↺ 重置
+              </button>
+            </div>
+          </div>
+
+          <!-- Brand append toggle -->
+          <div class="px-5 pb-4 flex items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <div class="relative w-8 h-4 flex-shrink-0">
+                <input type="checkbox" class="sr-only" [checked]="brandAppend()" (change)="toggleBrandAppend()">
+                <div class="w-8 h-4 rounded-full transition-colors"
+                     [class]="brandAppend() ? 'bg-amber-500' : 'bg-[var(--color-border-card)]'"></div>
+                <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform"
+                     [class]="brandAppend() ? 'translate-x-4' : ''"></div>
+              </div>
+              <span class="text-xs text-[var(--color-text-muted)]">自动追加品牌留白指令</span>
+            </label>
+            <span class="text-xs opacity-30">·</span>
+            <span class="text-xs opacity-40 italic">让 AI 在右下角留出干净区域，方便后期叠加水印</span>
           </div>
 
           <!-- Footer -->
-          <div class="px-5 pb-5 flex items-center justify-end gap-3">
+          <div class="px-5 pb-5 border-t border-[var(--color-border-card)] pt-4 flex items-center justify-end gap-3">
             <button (click)="promptModal.set(null)"
               class="px-4 py-2 rounded-xl border border-[var(--color-border-card)] text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors">
               关闭
@@ -631,8 +653,9 @@ export class AdminArticlesComponent implements OnInit {
   artTab       = signal<ArticleEditTab>('meta');
   generatingCover = signal<number | null>(null);
   batchGenerating = signal(false);
-  promptModal     = signal<{ title: string; prompt: string } | null>(null);
+  promptModal     = signal<{ title: string; prompt: string; original: string } | null>(null);
   promptCopied    = signal(false);
+  brandAppend     = signal((localStorage.getItem('ppk_brand_append') ?? '1') === '1');
   artForm: ArticleFormData = this.emptyArtForm();
 
   // Distribute
@@ -1146,8 +1169,23 @@ An elimination technique for medium-difficulty puzzles...`,
       slug: art.slug,
       tags,
     });
-    this.promptModal.set({ title: art.title_en || art.title_zh || art.slug, prompt });
+    this.promptModal.set({ title: art.title_en || art.title_zh || art.slug, prompt, original: prompt });
     this.promptCopied.set(false);
+  }
+
+  onPromptInput(e: Event) {
+    const text = (e.target as HTMLTextAreaElement).value;
+    this.promptModal.update(m => m ? { ...m, prompt: text } : null);
+  }
+
+  resetPrompt() {
+    this.promptModal.update(m => m ? { ...m, prompt: m.original } : null);
+  }
+
+  toggleBrandAppend() {
+    const v = !this.brandAppend();
+    this.brandAppend.set(v);
+    localStorage.setItem('ppk_brand_append', v ? '1' : '0');
   }
 
   async copyPrompt() {

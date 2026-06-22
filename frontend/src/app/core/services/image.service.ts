@@ -40,6 +40,13 @@ export class ImageService {
     });
   }
 
+  getImageBlob(key: string): Observable<Blob> {
+    return this.http.get(`${this.base}/admin/images/raw`, {
+      params: { key },
+      responseType: 'blob',
+    });
+  }
+
   uploadBlob(blob: Blob, filename: string): Observable<ImageItem> {
     const fd = new FormData();
     fd.append('files', new File([blob], filename, { type: blob.type }));

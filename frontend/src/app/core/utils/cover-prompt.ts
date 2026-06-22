@@ -120,5 +120,7 @@ Lighting: dramatic cinematic lighting, volumetric light rays, soft bloom glow on
 
 Style: ultra-detailed digital artwork, 4K resolution, professional editorial photography aesthetic, ${mood}, no text, no watermarks, no UI elements, no people.
 
+Branding zone: Keep the bottom-right corner area (approximately 240×50px) naturally dark, uncluttered, and free of bright objects — this area will have a site logo overlay added in post-production.
+
 --ar 19:10 --v 6.1 --style raw --q 2`;
 }

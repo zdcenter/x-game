@@ -80,7 +80,37 @@ function formatDate(s: string): string {
               class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-500/70 hover:bg-rose-500 text-white transition-colors">
               🗑 删除
             </button>
+            <button (click)="watermarkOpen.update(v => !v)"
+              class="px-3 py-1 rounded-lg text-xs font-bold transition-colors"
+              [class]="watermarkOpen() ? 'bg-amber-500 text-white' : 'bg-white/15 hover:bg-white/25 text-white'">
+              🏷 加水印
+            </button>
           </div>
+
+          <!-- Watermark panel -->
+          @if (watermarkOpen()) {
+            <div class="flex items-center gap-3 px-5 py-3 bg-white/5 rounded-2xl backdrop-blur flex-wrap justify-center"
+                 (click)="$event.stopPropagation()">
+              <span class="text-white/50 text-xs flex-shrink-0">品牌文字</span>
+              <input [value]="wBrandText()" (input)="onWBrandInput($event)"
+                class="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-xs text-white focus:outline-none focus:border-amber-400/60 w-52"
+                placeholder="Puzzle PK · puzzlepk.com">
+              <select [ngModel]="wPosition()" (ngModelChange)="wPosition.set($event)"
+                class="px-2 py-1.5 bg-white/10 border border-white/20 rounded-lg text-xs text-white focus:outline-none">
+                <option value="br">右下角</option>
+                <option value="bl">左下角</option>
+                <option value="bc">底部居中</option>
+              </select>
+              <button (click)="applyWatermark()" [disabled]="wSaving()"
+                class="px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-40"
+                [class]="wSaving() ? 'bg-white/20 text-white' : 'bg-amber-500 hover:bg-amber-400 text-white'">
+                @if (wSaving()) {
+                  <span class="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin"></span>
+                } @else { 💾 }
+                保存新版本
+              </button>
+            </div>
+          }
 
           <!-- Counter -->
           @if (filtered().length > 1) {
@@ -256,6 +286,12 @@ export class AdminImagesComponent implements OnInit {
   previewIndex = signal(0);
   previewDims  = signal<{w: number; h: number} | null>(null);
 
+  // watermark
+  watermarkOpen = signal(false);
+  wBrandText    = signal(localStorage.getItem('ppk_brand_text') ?? 'Puzzle PK · puzzlepk.com');
+  wPosition     = signal<'br' | 'bl' | 'bc'>('br');
+  wSaving       = signal(false);
+
   private dragCounter = 0;
 
   filtered = computed(() => {
@@ -333,7 +369,11 @@ export class AdminImagesComponent implements OnInit {
     this.previewDims.set(this.dims().get(img.key) ?? null);
   }
 
-  closePreview() { this.preview.set(null); this.previewDims.set(null); }
+  closePreview() {
+    this.preview.set(null);
+    this.previewDims.set(null);
+    this.watermarkOpen.set(false);
+  }
 
   navigate(dir: -1 | 1) {
     const list = this.filtered();
@@ -444,6 +484,104 @@ export class AdminImagesComponent implements OnInit {
       },
       error: () => this.toast.show('删除失败', 'error'),
     });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  // ── Watermark ───────────────────────────────────────────────────────────────
+
+  onWBrandInput(e: Event) {
+    const v = (e.target as HTMLInputElement).value;
+    this.wBrandText.set(v);
+    localStorage.setItem('ppk_brand_text', v);
+  }
+
+  async applyWatermark() {
+    const img = this.preview();
+    if (!img) return;
+    this.wSaving.set(true);
+
+    this.svc.getImageBlob(img.key).subscribe({
+      next: async (blob) => {
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const el = new Image();
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+            el.src = blobUrl;
+          });
+          URL.revokeObjectURL(blobUrl);
+
+          const canvas = document.createElement('canvas');
+          canvas.width  = image.naturalWidth  || 1200;
+          canvas.height = image.naturalHeight || 630;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(image, 0, 0);
+          this.drawBrandPill(ctx, canvas.width, canvas.height);
+
+          const pngBlob = await new Promise<Blob>(res => canvas.toBlob(b => res(b!), 'image/png'));
+          const base = img.key.split('/').pop()!.replace(/\.[^.]+$/, '');
+          this.svc.uploadBlob(pngBlob, `${base}-branded.png`).subscribe({
+            next: (newImg) => {
+              this.images.update(list => [newImg, ...list]);
+              this.toast.show('✓ 已保存带品牌标识版本', 'success');
+              this.wSaving.set(false);
+              this.watermarkOpen.set(false);
+            },
+            error: () => { this.toast.show('上传失败', 'error'); this.wSaving.set(false); },
+          });
+        } catch {
+          this.toast.show('处理失败', 'error');
+          this.wSaving.set(false);
+        }
+      },
+      error: () => { this.toast.show('获取图片失败', 'error'); this.wSaving.set(false); },
+    });
+  }
+
+  private drawBrandPill(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    const text     = this.wBrandText();
+    const position = this.wPosition();
+    const fontSize = Math.max(14, Math.round(w * 0.017));
+
+    ctx.font = `600 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+    const textW = ctx.measureText(text).width;
+    const padX  = fontSize * 1.1;
+    const padY  = fontSize * 0.6;
+    const boxW  = textW + padX * 2;
+    const boxH  = fontSize + padY * 2;
+    const margin = Math.round(w * 0.014);
+
+    let x: number, y: number;
+    if (position === 'bl') { x = margin; }
+    else if (position === 'bc') { x = (w - boxW) / 2; }
+    else { x = w - boxW - margin; }
+    y = h - boxH - margin;
+
+    // Dark pill
+    ctx.fillStyle = 'rgba(0,0,0,0.58)';
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(x, y, boxW, boxH, boxH / 2);
+    } else {
+      const r = boxH / 2;
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + boxW, y, x + boxW, y + boxH, r);
+      ctx.arcTo(x + boxW, y + boxH, x, y + boxH, r);
+      ctx.arcTo(x, y + boxH, x, y, r);
+      ctx.arcTo(x, y, x + boxW, y, r);
+    }
+    ctx.fill();
+
+    // Subtle stroke
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Text
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.fillText(text, x + padX, y + padY + fontSize * 0.82);
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
