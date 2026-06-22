@@ -14,6 +14,7 @@ import { ImagePickerComponent } from '../../shared/components/image-picker/image
 import { ImageService } from '../../core/services/image.service';
 import { ToastService } from '../../core/services/toast.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { generateCoverPrompt } from '../../core/utils/cover-prompt';
 
 type ArticleEditTab = 'meta' | 'content_zh' | 'content_en';
 
@@ -217,6 +218,8 @@ async function copyToClipboard(text: string): Promise<void> {
                             <span class="w-4 h-4 border-2 border-violet-400/30 border-t-violet-400 rounded-full animate-spin inline-block"></span>
                           } @else { 🎨 }
                         </button>
+                        <button (click)="showPrompt(art); $event.stopPropagation()" title="AI 封面提示词"
+                          class="p-1.5 text-amber-400 hover:bg-amber-500/20 rounded-lg transition-colors">✨</button>
                         <button (click)="deleteArticle(art); $event.stopPropagation()" title="删除"
                           class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors">🗑️</button>
                       </div>
@@ -542,6 +545,53 @@ async function copyToClipboard(text: string): Promise<void> {
       </div>
     }
 
+    <!-- ── AI 封面提示词弹窗 ──────────────────────────────────────────────── -->
+    @if (promptModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+           (click)="promptModal.set(null)">
+        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden"
+             (click)="$event.stopPropagation()">
+
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-card)]">
+            <div>
+              <h3 class="font-bold flex items-center gap-2">✨ AI 封面提示词</h3>
+              <p class="text-xs text-[var(--color-text-muted)] mt-0.5 opacity-70">{{ promptModal()!.title }}</p>
+            </div>
+            <button (click)="promptModal.set(null)" class="p-1.5 hover:bg-[var(--color-bg-main)]/50 rounded-lg text-lg leading-none transition-colors">✕</button>
+          </div>
+
+          <!-- Hint -->
+          <div class="px-5 py-2.5 bg-amber-500/5 border-b border-amber-500/20 flex items-start gap-2">
+            <span class="text-amber-400 mt-0.5 flex-shrink-0">💡</span>
+            <p class="text-xs text-amber-300/80">将此提示词粘贴到 <strong class="text-amber-400">Midjourney</strong>、<strong class="text-amber-400">DALL-E 3</strong> 或 <strong class="text-amber-400">Stable Diffusion</strong> 中，即可生成高质量封面图。生成后上传到图片管理器再设置为封面即可。</p>
+          </div>
+
+          <!-- Prompt text -->
+          <div class="p-5">
+            <textarea readonly rows="12"
+              class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl p-4 text-sm font-mono leading-relaxed resize-none focus:outline-none text-[var(--color-text-muted)] select-all"
+              [value]="promptModal()!.prompt"></textarea>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-5 pb-5 flex items-center justify-end gap-3">
+            <button (click)="promptModal.set(null)"
+              class="px-4 py-2 rounded-xl border border-[var(--color-border-card)] text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors">
+              关闭
+            </button>
+            <button (click)="copyPrompt()"
+              class="px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+              [class]="promptCopied()
+                ? 'bg-emerald-500 text-white'
+                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:brightness-110 shadow-lg'">
+              {{ promptCopied() ? '✓ 已复制！' : '📋 复制提示词' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
   `,
   styles: [`
     .input-field {
@@ -581,6 +631,8 @@ export class AdminArticlesComponent implements OnInit {
   artTab       = signal<ArticleEditTab>('meta');
   generatingCover = signal<number | null>(null);
   batchGenerating = signal(false);
+  promptModal     = signal<{ title: string; prompt: string } | null>(null);
+  promptCopied    = signal(false);
   artForm: ArticleFormData = this.emptyArtForm();
 
   // Distribute
@@ -1063,6 +1115,30 @@ An elimination technique for medium-difficulty puzzles...`,
       },
       error: () => { this.toast.show('批量生成失败', 'error'); this.batchGenerating.set(false); },
     });
+  }
+
+  // ===== AI Prompt =====
+  showPrompt(art: ContentArticleMeta) {
+    const tags = (() => { try { return JSON.parse(art.tags_en); } catch { return []; } })();
+    const prompt = generateCoverPrompt({
+      titleEN: art.title_en,
+      titleZH: art.title_zh,
+      descEN: art.desc_en,
+      slug: art.slug,
+      tags,
+    });
+    this.promptModal.set({ title: art.title_en || art.title_zh || art.slug, prompt });
+    this.promptCopied.set(false);
+  }
+
+  async copyPrompt() {
+    const p = this.promptModal();
+    if (!p) return;
+    try {
+      await navigator.clipboard.writeText(p.prompt);
+      this.promptCopied.set(true);
+      setTimeout(() => this.promptCopied.set(false), 3000);
+    } catch { this.toast.show('复制失败', 'error'); }
   }
 
   // ===== Distribute =====
