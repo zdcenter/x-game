@@ -118,3 +118,23 @@ func (c *Client) DeleteMany(ctx context.Context, keys []string) error {
 	}
 	return nil
 }
+
+type GetObjectResult struct {
+	Body        io.ReadCloser
+	ContentType string
+}
+
+func (c *Client) GetObject(ctx context.Context, key string) (*GetObjectResult, error) {
+	out, err := c.s3.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, err
+	}
+	ct := ""
+	if out.ContentType != nil {
+		ct = *out.ContentType
+	}
+	return &GetObjectResult{Body: out.Body, ContentType: ct}, nil
+}

@@ -1095,11 +1095,30 @@ An elimination technique for medium-difficulty puzzles...`,
 
   generateCover(art: ContentArticleMeta) {
     this.generatingCover.set(art.id);
-    this.imageSvc.generateArticleCover(art.id).subscribe({
-      next: (res) => {
-        this.articles.update(list => list.map(a => a.id === art.id ? { ...a, cover_image: res.url } : a));
-        this.toast.show('封面生成成功', 'success');
-        this.generatingCover.set(null);
+    this.imageSvc.getArticleCoverSvg(art.id).subscribe({
+      next: async ({ svg, key }) => {
+        try {
+          const { svgToPng } = await import('../../core/utils/svg-to-png');
+          const blob = await svgToPng(svg, 1200, 630);
+          this.imageSvc.uploadBlob(blob, key.split('/').pop()!).subscribe({
+            next: (item) => {
+              this.imageSvc.setArticleCoverImage(art.id, item.url).subscribe({
+                next: () => {
+                  this.articles.update(list => list.map(a =>
+                    a.id === art.id ? { ...a, cover_image: item.url } : a
+                  ));
+                  this.toast.show('PNG 封面生成成功', 'success');
+                  this.generatingCover.set(null);
+                },
+                error: () => { this.toast.show('封面保存失败', 'error'); this.generatingCover.set(null); },
+              });
+            },
+            error: () => { this.toast.show('上传失败', 'error'); this.generatingCover.set(null); },
+          });
+        } catch {
+          this.toast.show('PNG 转换失败', 'error');
+          this.generatingCover.set(null);
+        }
       },
       error: () => { this.toast.show('生成失败', 'error'); this.generatingCover.set(null); },
     });

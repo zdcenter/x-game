@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ImageItem {
@@ -32,16 +33,40 @@ export class ImageService {
     return this.http.delete<{ deleted: number }>(`${this.base}/admin/images`, { body: { keys } });
   }
 
-  generateBlogCover(id: number): Observable<{ url: string }> {
-    return this.http.post<{ url: string }>(`${this.base}/admin/blog/posts/${id}/cover`, {});
+  getImageRaw(key: string): Observable<string> {
+    return this.http.get(`${this.base}/admin/images/raw`, {
+      params: { key },
+      responseType: 'text',
+    });
+  }
+
+  uploadBlob(blob: Blob, filename: string): Observable<ImageItem> {
+    const fd = new FormData();
+    fd.append('files', new File([blob], filename, { type: blob.type }));
+    return this.http.post<ImageItem[]>(`${this.base}/admin/images/upload`, fd).pipe(
+      map(items => items[0])
+    );
+  }
+
+  // Cover generation — returns SVG string + target PNG key
+  getBlogCoverSvg(id: number): Observable<{ svg: string; key: string }> {
+    return this.http.post<{ svg: string; key: string }>(`${this.base}/admin/blog/posts/${id}/cover`, {});
+  }
+
+  setBlogCoverImage(id: number, url: string): Observable<{ ok: boolean }> {
+    return this.http.patch<{ ok: boolean }>(`${this.base}/admin/blog/posts/${id}/cover`, { url });
   }
 
   generateBlogCoversBatch(): Observable<{ results: any[]; total: number }> {
     return this.http.post<{ results: any[]; total: number }>(`${this.base}/admin/blog/posts/covers/batch`, {});
   }
 
-  generateArticleCover(id: number): Observable<{ url: string }> {
-    return this.http.post<{ url: string }>(`${this.base}/admin/content/articles/${id}/cover`, {});
+  getArticleCoverSvg(id: number): Observable<{ svg: string; key: string }> {
+    return this.http.post<{ svg: string; key: string }>(`${this.base}/admin/content/articles/${id}/cover`, {});
+  }
+
+  setArticleCoverImage(id: number, url: string): Observable<{ ok: boolean }> {
+    return this.http.patch<{ ok: boolean }>(`${this.base}/admin/content/articles/${id}/cover`, { url });
   }
 
   generateArticleCoversBatch(): Observable<{ results: any[]; total: number }> {

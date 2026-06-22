@@ -210,6 +210,15 @@ function formatDate(s: string): string {
                         : 'bg-transparent border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-[var(--color-accent-from)]/60 hover:text-[var(--color-accent-from)]'">
                       {{ copied() === img.key ? '✓ 已复制' : '📋 复制' }}
                     </button>
+                    @if (img.key.endsWith('.svg')) {
+                      <button (click)="convertToPng(img)" [disabled]="converting() === img.key"
+                        title="转换为 PNG"
+                        class="px-2 py-1 rounded-lg text-[10px] font-bold border border-[var(--color-border-card)] text-amber-400 hover:border-amber-500/50 transition-colors disabled:opacity-40">
+                        @if (converting() === img.key) {
+                          <span class="inline-block w-3 h-3 border border-amber-400/40 border-t-amber-400 rounded-full animate-spin"></span>
+                        } @else { 🔄 }
+                      </button>
+                    }
                     <button (click)="deleteSingle(img)"
                       class="px-2 py-1 rounded-lg text-[10px] font-bold border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:border-rose-500/50 hover:text-rose-400 transition-colors">
                       🗑
@@ -239,6 +248,8 @@ export class AdminImagesComponent implements OnInit {
 
   // key → {w, h}
   dims = signal<Map<string, {w: number; h: number}>>(new Map());
+
+  converting = signal<string | null>(null);
 
   // lightbox
   preview      = signal<ImageItem | null>(null);
@@ -270,6 +281,36 @@ export class AdminImagesComponent implements OnInit {
     this.svc.list().subscribe({
       next: (items) => { this.images.set(items); this.loading.set(false); },
       error: () => { this.toast.show('加载失败', 'error'); this.loading.set(false); },
+    });
+  }
+
+  // ── SVG → PNG conversion ─────────────────────────────────────────────────────
+
+  async convertToPng(img: ImageItem) {
+    if (!img.key.endsWith('.svg')) return;
+    this.converting.set(img.key);
+    this.svc.getImageRaw(img.key).subscribe({
+      next: async (svgText) => {
+        try {
+          const { svgToPng } = await import('../../core/utils/svg-to-png');
+          const blob = await svgToPng(svgText, 1200, 630);
+          const pngName = img.key.replace(/\.svg$/, '.png').split('/').pop()!;
+          this.svc.uploadBlob(blob, pngName).subscribe({
+            next: (newImg) => {
+              this.svc.deleteMany([img.key]).subscribe(() => {
+                this.images.update(list => [newImg, ...list.filter(i => i.key !== img.key)]);
+                this.toast.show('✓ 已转换为 PNG', 'success');
+                this.converting.set(null);
+              });
+            },
+            error: () => { this.toast.show('上传失败', 'error'); this.converting.set(null); },
+          });
+        } catch {
+          this.toast.show('PNG 转换失败', 'error');
+          this.converting.set(null);
+        }
+      },
+      error: () => { this.toast.show('获取 SVG 失败', 'error'); this.converting.set(null); },
     });
   }
 

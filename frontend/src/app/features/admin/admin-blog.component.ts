@@ -467,11 +467,30 @@ export class AdminBlogComponent implements OnInit {
   generateCover(post: BlogPostMeta) {
     if (!post.dbId) return;
     this.generatingCover.set(post.dbId);
-    this.imageSvc.generateBlogCover(post.dbId).subscribe({
-      next: (res) => {
-        this.posts.update(list => list.map(p => p.dbId === post.dbId ? { ...p, cover_image: res.url } : p));
-        this.toast.show('封面生成成功', 'success');
-        this.generatingCover.set(null);
+    this.imageSvc.getBlogCoverSvg(post.dbId).subscribe({
+      next: async ({ svg, key }) => {
+        try {
+          const { svgToPng } = await import('../../core/utils/svg-to-png');
+          const blob = await svgToPng(svg, 1200, 630);
+          this.imageSvc.uploadBlob(blob, key.split('/').pop()!).subscribe({
+            next: (item) => {
+              this.imageSvc.setBlogCoverImage(post.dbId!, item.url).subscribe({
+                next: () => {
+                  this.posts.update(list => list.map(p =>
+                    p.dbId === post.dbId ? { ...p, cover_image: item.url } : p
+                  ));
+                  this.toast.show('PNG 封面生成成功', 'success');
+                  this.generatingCover.set(null);
+                },
+                error: () => { this.toast.show('封面保存失败', 'error'); this.generatingCover.set(null); },
+              });
+            },
+            error: () => { this.toast.show('上传失败', 'error'); this.generatingCover.set(null); },
+          });
+        } catch {
+          this.toast.show('PNG 转换失败', 'error');
+          this.generatingCover.set(null);
+        }
       },
       error: () => { this.toast.show('生成失败', 'error'); this.generatingCover.set(null); },
     });

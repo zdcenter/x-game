@@ -208,14 +208,17 @@ func main() {
 
 	// Image manager (R2)
 	admin.Get("/images", rest.AdminListImages)
+	admin.Get("/images/raw", rest.AdminGetImageRaw)
 	admin.Post("/images/upload", rest.AdminUploadImages)
 	admin.Delete("/images", rest.AdminDeleteImages)
 
 	// Cover image generation (batch before :id to avoid route conflict)
 	admin.Post("/blog/posts/covers/batch", rest.AdminGenerateBlogCoversBatch)
 	admin.Post("/blog/posts/:id/cover", rest.AdminGenerateBlogCover)
+	admin.Patch("/blog/posts/:id/cover", rest.AdminSetBlogCoverImage)
 	admin.Post("/content/articles/covers/batch", rest.AdminGenerateArticleCoversBatch)
 	admin.Post("/content/articles/:id/cover", rest.AdminGenerateArticleCover)
+	admin.Patch("/content/articles/:id/cover", rest.AdminSetArticleCoverImage)
 
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)
