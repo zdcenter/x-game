@@ -210,7 +210,7 @@ async function copyToClipboard(text: string): Promise<void> {
                           <app-platform-distrib-panel
                             [distribKey]="distribKey()"
                             [loading]="distribLoading()"
-                            (copy)="copyArticle($event.platformId, $event.lang)">
+                            (copy)="copyArticle($event.platformId, $event.lang, $event.url)">
                           </app-platform-distrib-panel>
                           @if (!distribLoading() && distributions().length > 0) {
                             <div class="mt-2 pt-2 border-t border-cyan-500/10 flex flex-wrap gap-1.5">
@@ -1049,7 +1049,7 @@ An elimination technique for medium-difficulty puzzles...`,
     }
   }
 
-  async copyArticle(platformId: PlatformId, lang: 'en' | 'zh') {
+  async copyArticle(platformId: PlatformId, lang: 'en' | 'zh', url: string) {
     const full = this.distribArt();
     if (!full) return;
     const key = `${platformId}_${lang}`;
@@ -1064,6 +1064,8 @@ An elimination technique for medium-difficulty puzzles...`,
       };
       const text = await this.formatter.formatForPlatform(platformId, post, lang);
       await copyToClipboard(text);
+      // 复制成功后再打开平台页，避免 focus 转移导致 clipboard API 失败
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
       this.svc.recordDistribution(full.id, platformId, lang).subscribe({
         next: () => this.svc.getDistributions(full.id).subscribe({ next: ds => this.distributions.set(ds) }),
       });

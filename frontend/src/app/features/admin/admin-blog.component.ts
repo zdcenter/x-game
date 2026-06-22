@@ -62,11 +62,7 @@ async function copyToClipboard(text: string): Promise<void> {
           </thead>
           <tbody>
             @for (post of posts(); track post.dbId) {
-              <tr (click)="toggleDistrib(post)"
-                class="border-b border-[var(--color-border-card)]/50 transition-colors group cursor-pointer select-none"
-                [class.bg-cyan-500/5]="distribOpenId() === post.dbId"
-                [class.hover:bg-cyan-500/5]="distribOpenId() === post.dbId"
-                [class.hover:bg-[var(--color-bg-main)]/30]="distribOpenId() !== post.dbId">
+              <tr (click)="toggleDistrib(post)" [class]="rowClass(post)">
                 <td class="py-3 px-4 font-mono opacity-40">#{{ post.dbId }}</td>
                 <td class="py-3 px-4">
                   <div class="flex items-center gap-1.5">
@@ -127,7 +123,7 @@ async function copyToClipboard(text: string): Promise<void> {
                     <app-platform-distrib-panel
                       [distribKey]="distribKey()"
                       [loading]="distribLoading()"
-                      (copy)="copyBlogPost($event.platformId, $event.lang)">
+                      (copy)="copyBlogPost($event.platformId, $event.lang, $event.url)">
                     </app-platform-distrib-panel>
                   </td>
                 </tr>
@@ -473,7 +469,7 @@ export class AdminBlogComponent implements OnInit {
     setTimeout(() => { if (this.titleCopyKey() === key) this.titleCopyKey.set(''); }, 2000);
   }
 
-  async copyBlogPost(platformId: PlatformId, lang: 'en' | 'zh') {
+  async copyBlogPost(platformId: PlatformId, lang: 'en' | 'zh', url: string) {
     const full = this.distribFull();
     if (!full) return;
     const key = `${platformId}_${lang}`;
@@ -481,6 +477,8 @@ export class AdminBlogComponent implements OnInit {
     try {
       const text = await this.formatter.formatForPlatform(platformId, full, lang);
       await copyToClipboard(text);
+      // 复制成功后再打开平台页，避免 focus 转移导致 clipboard API 失败
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
       if (full.dbId) {
         this.distributeService.record(full.dbId, platformId, lang).subscribe();
       }
@@ -494,6 +492,13 @@ export class AdminBlogComponent implements OnInit {
   }
 
 
+
+  rowClass(post: BlogPostMeta): string {
+    const base = 'border-b border-[var(--color-border-card)]/50 transition-colors group cursor-pointer select-none';
+    return this.distribOpenId() === post.dbId
+      ? `${base} bg-cyan-500/5`
+      : `${base} hover:bg-[var(--color-bg-main)]/30`;
+  }
 
   wordCount(text: string): number {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
