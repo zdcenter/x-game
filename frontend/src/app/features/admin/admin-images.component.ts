@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, signal, computed, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal, computed, HostListener, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImageService, ImageItem } from '../../core/services/image.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -8,6 +8,12 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function formatDate(s: string): string {
+  if (!s) return '';
+  const d = new Date(s);
+  return d.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 @Component({
@@ -21,6 +27,65 @@ function formatBytes(bytes: number): string {
         <div class="border-4 border-dashed border-[var(--color-accent-from)] rounded-3xl px-16 py-10 text-center">
           <div class="text-5xl mb-3">🖼</div>
           <p class="text-xl font-bold text-[var(--color-accent-from)]">松开即上传</p>
+        </div>
+      </div>
+    }
+
+    <!-- ── Lightbox ──────────────────────────────────────────────────────────── -->
+    @if (preview()) {
+      <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md"
+           (click)="closePreview()">
+        <div class="relative flex flex-col items-center gap-4 max-w-[95vw] max-h-[95vh]"
+             (click)="$event.stopPropagation()">
+
+          <!-- Close -->
+          <button (click)="closePreview()"
+            class="absolute -top-10 right-0 text-white/60 hover:text-white text-2xl leading-none transition-colors">✕</button>
+
+          <!-- Prev / Next -->
+          @if (filtered().length > 1) {
+            <button (click)="navigate(-1)"
+              class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-14 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl flex items-center justify-center transition-colors">‹</button>
+            <button (click)="navigate(1)"
+              class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-14 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white text-xl flex items-center justify-center transition-colors">›</button>
+          }
+
+          <!-- Full image -->
+          <img [src]="preview()!.url" [alt]="preview()!.key"
+            class="max-h-[75vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+            (load)="onPreviewLoad($event)">
+
+          <!-- Info bar -->
+          <div class="flex items-center gap-6 px-6 py-3 bg-white/5 rounded-2xl backdrop-blur text-sm text-white/70 flex-wrap justify-center">
+            <span class="font-mono text-white/90 text-xs truncate max-w-[200px]" [title]="preview()!.key">{{ shortName(preview()!.key) }}</span>
+            @if (previewDims()) {
+              <span class="flex items-center gap-1">
+                <span class="opacity-50">📐</span>
+                {{ previewDims()!.w }} × {{ previewDims()!.h }}
+              </span>
+            }
+            <span>{{ formatBytes(preview()!.size) }}</span>
+            <span>{{ formatDate(preview()!.last_modified) }}</span>
+
+            <button (click)="copyUrl(preview()!)"
+              class="px-3 py-1 rounded-lg text-xs font-bold transition-colors"
+              [class]="copied() === preview()!.key ? 'bg-emerald-500 text-white' : 'bg-white/15 hover:bg-white/25 text-white'">
+              {{ copied() === preview()!.key ? '✓ 已复制' : '📋 复制链接' }}
+            </button>
+            <a [href]="preview()!.url" target="_blank" rel="noopener"
+              class="px-3 py-1 rounded-lg text-xs font-bold bg-white/15 hover:bg-white/25 text-white transition-colors">
+              🔗 原图
+            </a>
+            <button (click)="deleteSingle(preview()!); closePreview()"
+              class="px-3 py-1 rounded-lg text-xs font-bold bg-rose-500/70 hover:bg-rose-500 text-white transition-colors">
+              🗑 删除
+            </button>
+          </div>
+
+          <!-- Counter -->
+          @if (filtered().length > 1) {
+            <p class="text-white/30 text-xs">{{ previewIndex() + 1 }} / {{ filtered().length }}</p>
+          }
         </div>
       </div>
     }
@@ -94,13 +159,14 @@ function formatBytes(bytes: number): string {
                      ? 'border-[var(--color-accent-from)] shadow-lg shadow-[var(--color-accent-from)]/20'
                      : 'border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50'"
                    (click)="toggleSelect(img, $event)"
-                   (dblclick)="copyUrl(img)">
+                   (dblclick)="openPreview(img)">
 
                 <!-- Thumbnail -->
                 <div class="aspect-square bg-[var(--color-bg-main)] overflow-hidden">
                   <img [src]="img.url" [alt]="img.key"
                     class="w-full h-full object-cover transition-transform group-hover:scale-105"
                     loading="lazy"
+                    (load)="onThumbLoad($event, img.key)"
                     (error)="onImgError($event)">
                 </div>
 
@@ -113,6 +179,10 @@ function formatBytes(bytes: number): string {
 
                 <!-- Hover overlay -->
                 <div class="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+                  <button (click)="openPreview(img); $event.stopPropagation()"
+                    class="w-full py-1.5 rounded-lg text-xs font-bold bg-white/20 hover:bg-white/30 text-white transition-colors">
+                    👁 预览原图
+                  </button>
                   <button (click)="copyUrl(img); $event.stopPropagation()"
                     class="w-full py-1.5 rounded-lg text-xs font-bold transition-colors"
                     [class]="copied() === img.key
@@ -129,7 +199,12 @@ function formatBytes(bytes: number): string {
                 <!-- File info bar -->
                 <div class="px-2 py-1.5 bg-[var(--color-bg-card)] border-t border-[var(--color-border-card)]">
                   <p class="text-[10px] font-mono truncate opacity-70" [title]="img.key">{{ shortName(img.key) }}</p>
-                  <p class="text-[10px] opacity-40">{{ formatBytes(img.size) }}</p>
+                  <div class="flex items-center justify-between gap-1">
+                    <p class="text-[10px] opacity-40">{{ formatBytes(img.size) }}</p>
+                    @if (dims().get(img.key); as d) {
+                      <p class="text-[10px] opacity-40 font-mono">{{ d.w }}×{{ d.h }}</p>
+                    }
+                  </div>
                 </div>
               </div>
             }
@@ -140,8 +215,9 @@ function formatBytes(bytes: number): string {
   `,
 })
 export class AdminImagesComponent implements OnInit {
-  private svc   = inject(ImageService);
-  private toast = inject(ToastService);
+  private svc        = inject(ImageService);
+  private toast      = inject(ToastService);
+  private platformId = inject(PLATFORM_ID);
 
   images   = signal<ImageItem[]>([]);
   loading  = signal(true);
@@ -151,6 +227,14 @@ export class AdminImagesComponent implements OnInit {
   selected = signal<Set<string>>(new Set());
   searchQuery = '';
 
+  // key → {w, h}
+  dims = signal<Map<string, {w: number; h: number}>>(new Map());
+
+  // lightbox
+  preview      = signal<ImageItem | null>(null);
+  previewIndex = signal(0);
+  previewDims  = signal<{w: number; h: number} | null>(null);
+
   private dragCounter = 0;
 
   filtered = computed(() => {
@@ -159,8 +243,17 @@ export class AdminImagesComponent implements OnInit {
   });
 
   formatBytes = formatBytes;
+  formatDate  = formatDate;
 
   ngOnInit() { this.load(); }
+
+  @HostListener('document:keydown', ['$event'])
+  onKey(e: KeyboardEvent) {
+    if (!this.preview()) return;
+    if (e.key === 'Escape') { this.closePreview(); }
+    else if (e.key === 'ArrowLeft')  { this.navigate(-1); }
+    else if (e.key === 'ArrowRight') { this.navigate(1); }
+  }
 
   load() {
     this.loading.set(true);
@@ -170,7 +263,45 @@ export class AdminImagesComponent implements OnInit {
     });
   }
 
-  // ── Upload ──────────────────────────────────────────────────────────────────
+  // ── Thumbnail dimension tracking ─────────────────────────────────────────────
+
+  onThumbLoad(e: Event, key: string) {
+    const img = e.target as HTMLImageElement;
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    if (!w || !h) return;
+    this.dims.update(m => { const n = new Map(m); n.set(key, {w, h}); return n; });
+  }
+
+  // ── Lightbox ─────────────────────────────────────────────────────────────────
+
+  openPreview(img: ImageItem) {
+    const idx = this.filtered().findIndex(i => i.key === img.key);
+    this.previewIndex.set(idx >= 0 ? idx : 0);
+    this.preview.set(img);
+    this.previewDims.set(this.dims().get(img.key) ?? null);
+  }
+
+  closePreview() { this.preview.set(null); this.previewDims.set(null); }
+
+  navigate(dir: -1 | 1) {
+    const list = this.filtered();
+    if (!list.length) return;
+    const next = (this.previewIndex() + dir + list.length) % list.length;
+    this.previewIndex.set(next);
+    const img = list[next];
+    this.preview.set(img);
+    this.previewDims.set(this.dims().get(img.key) ?? null);
+  }
+
+  onPreviewLoad(e: Event) {
+    const img = e.target as HTMLImageElement;
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    if (w && h) this.previewDims.set({w, h});
+  }
+
+  // ── Upload ───────────────────────────────────────────────────────────────────
 
   onFileInput(e: Event) {
     const files = Array.from((e.target as HTMLInputElement).files ?? []);
@@ -210,7 +341,7 @@ export class AdminImagesComponent implements OnInit {
     });
   }
 
-  // ── Selection ───────────────────────────────────────────────────────────────
+  // ── Selection ────────────────────────────────────────────────────────────────
 
   toggleSelect(img: ImageItem, e: MouseEvent) {
     this.selected.update(s => {
@@ -223,7 +354,7 @@ export class AdminImagesComponent implements OnInit {
 
   clearSelection() { this.selected.set(new Set()); }
 
-  // ── Copy ────────────────────────────────────────────────────────────────────
+  // ── Copy ─────────────────────────────────────────────────────────────────────
 
   async copyUrl(img: ImageItem) {
     try {
@@ -236,7 +367,7 @@ export class AdminImagesComponent implements OnInit {
     }
   }
 
-  // ── Delete ──────────────────────────────────────────────────────────────────
+  // ── Delete ───────────────────────────────────────────────────────────────────
 
   deleteSingle(img: ImageItem) {
     if (!confirm(`删除 ${this.shortName(img.key)}？`)) return;
@@ -264,7 +395,7 @@ export class AdminImagesComponent implements OnInit {
     });
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   shortName(key: string): string {
     return key.split('/').pop() ?? key;
