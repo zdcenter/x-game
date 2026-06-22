@@ -5,6 +5,8 @@ import { BlogService, BlogPostMeta, AdminBlogPostInput } from '../../core/servic
 import { DistributeService } from '../../core/services/distribute.service';
 import { PlatformFormatterService, PlatformId } from '../../core/services/platform-formatter.service';
 import { PlatformDistribPanelComponent } from './platform-distrib-panel.component';
+import { MdEditorComponent } from '../../shared/components/md-editor/md-editor.component';
+import { ImagePickerComponent } from '../../shared/components/image-picker/image-picker.component';
 import { ToastService } from '../../core/services/toast.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -29,11 +31,13 @@ async function copyToClipboard(text: string): Promise<void> {
 @Component({
   selector: 'app-admin-blog',
   standalone: true,
-  imports: [CommonModule, FormsModule, PlatformDistribPanelComponent],
+  imports: [CommonModule, FormsModule, PlatformDistribPanelComponent, MdEditorComponent, ImagePickerComponent],
   template: `
-    <div class="space-y-6">
+    <div class="h-full flex flex-col">
+      @if (!editMode()) {
+      <div class="space-y-6 flex-1 min-h-0 flex flex-col">
       <!-- Header -->
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between flex-shrink-0">
         <div>
           <h2 class="text-2xl font-bold">📝 {{ i18n.t('admin.blog.title')() }}</h2>
           <p class="text-[var(--color-text-muted)] mt-1">{{ i18n.t('admin.blog.subtitle')() }}</p>
@@ -48,7 +52,8 @@ async function copyToClipboard(text: string): Promise<void> {
       </div>
 
       <!-- Posts Table -->
-      <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] overflow-hidden">
+      <div class="flex-1 min-h-0 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] overflow-hidden flex flex-col">
+        <div class="overflow-y-auto flex-1">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
             <tr class="bg-[var(--color-bg-main)]/50 border-b border-[var(--color-border-card)]">
@@ -139,36 +144,53 @@ async function copyToClipboard(text: string): Promise<void> {
             }
           </tbody>
         </table>
+        </div>
       </div>
-    </div>
+      </div>
 
-    <!-- Edit / Create Modal -->
-    @if (modalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-4xl shadow-2xl my-8">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b border-[var(--color-border-card)]">
-            <h3 class="text-xl font-bold">{{ isEditing() ? i18n.t('admin.blog.edit')() : i18n.t('admin.blog.new')() }}</h3>
-            <button (click)="closeModal()" class="p-2 hover:bg-[var(--color-bg-main)]/50 rounded-lg transition-colors text-lg">✕</button>
+      } @else {
+      <!-- ── Inline blog editor ── -->
+      <div class="flex flex-col flex-1 min-h-0 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] overflow-hidden">
+
+        <!-- Top bar -->
+        <div class="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border-card)] flex-shrink-0">
+          <div class="flex items-center gap-4">
+            <button (click)="closeModal()" class="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors">
+              ← 返回列表
+            </button>
+            <span class="opacity-20">|</span>
+            <h3 class="text-base font-bold">{{ isEditing() ? i18n.t('admin.blog.edit')() : i18n.t('admin.blog.new')() }}</h3>
           </div>
-
-          <!-- Tab nav -->
-          <div class="flex border-b border-[var(--color-border-card)] px-6">
-            @for (tab of tabs; track tab.id) {
-              <button (click)="activeTab.set(tab.id)"
-                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
-                [class]="activeTab() === tab.id
-                  ? 'border-[var(--color-accent-from)] text-[var(--color-accent-from)]'
-                  : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
-                {{ tab.label }}
-              </button>
-            }
+          <div class="flex items-center gap-2">
+            <button (click)="closeModal()" class="px-4 py-2 rounded-xl border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)]/50 transition-colors text-sm font-medium">
+              Cancel
+            </button>
+            <button (click)="save()" [disabled]="saving()"
+              class="px-5 py-2 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg disabled:opacity-50 text-sm flex items-center gap-2">
+              @if (saving()) { <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
+              {{ isEditing() ? i18n.t('admin.blog.save')() : i18n.t('admin.blog.create')() }}
+            </button>
           </div>
+        </div>
 
-          <div class="p-6 space-y-4">
+        <!-- Tabs -->
+        <div class="flex border-b border-[var(--color-border-card)] px-6 flex-shrink-0">
+          @for (tab of tabs; track tab.id) {
+            <button (click)="activeTab.set(tab.id)"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
+              [class]="activeTab() === tab.id
+                ? 'border-[var(--color-accent-from)] text-[var(--color-accent-from)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
+              {{ tab.label }}
+            </button>
+          }
+        </div>
 
-            <!-- Tab: Meta -->
-            @if (activeTab() === 'meta') {
+        <!-- Tab content -->
+        <div class="flex-1 min-h-0 overflow-hidden">
+
+          @if (activeTab() === 'meta') {
+            <div class="h-full overflow-y-auto p-6 space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
                   <label class="block text-xs font-semibold opacity-60 mb-1.5">SLUG (URL identifier)</label>
@@ -188,6 +210,10 @@ async function copyToClipboard(text: string): Promise<void> {
                 <div class="col-span-2 flex items-center gap-3">
                   <input [(ngModel)]="form.published" type="checkbox" id="pub" class="w-4 h-4 rounded accent-emerald-500">
                   <label for="pub" class="text-sm font-medium">Published (visible to public)</label>
+                </div>
+                <div class="col-span-2">
+                  <label class="block text-xs font-semibold opacity-60 mb-1.5">🖼 Cover Image</label>
+                  <app-image-picker [(ngModel)]="form.cover_image"></app-image-picker>
                 </div>
               </div>
 
@@ -248,52 +274,26 @@ async function copyToClipboard(text: string): Promise<void> {
                   <input [(ngModel)]="tagsZHStr" type="text" placeholder="逻辑, 策略, 指南" class="input-field w-full">
                 </div>
               </div>
-            }
+            </div>
+          }
 
-            <!-- Tab: Content EN -->
-            @if (activeTab() === 'content_en') {
-              <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-semibold opacity-60">🇺🇸 English Content (Markdown)</label>
-                  <span class="text-xs opacity-40 font-mono">{{ wordCount(form.content_en) }} words</span>
-                </div>
-                <textarea [(ngModel)]="form.content_en" rows="32"
-                  class="w-full px-4 py-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl text-sm font-mono focus:outline-none focus:border-[var(--color-accent-from)] resize-y leading-relaxed"
-                  placeholder="# Your article title&#10;&#10;Start writing in Markdown...">
-                </textarea>
-              </div>
-            }
+          @if (activeTab() === 'content_en') {
+            <div class="h-full p-4">
+              <app-md-editor [(ngModel)]="form.content_en" lang="en" [stretch]="true"></app-md-editor>
+            </div>
+          }
 
-            <!-- Tab: Content ZH -->
-            @if (activeTab() === 'content_zh') {
-              <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-semibold opacity-60">🇨🇳 Chinese Content (Markdown)</label>
-                  <span class="text-xs opacity-40 font-mono">{{ charCount(form.content_zh) }} chars</span>
-                </div>
-                <textarea [(ngModel)]="form.content_zh" rows="32"
-                  class="w-full px-4 py-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl text-sm font-mono focus:outline-none focus:border-[var(--color-accent-from)] resize-y leading-relaxed"
-                  placeholder="# 文章标题&#10;&#10;在这里用 Markdown 编写中文内容...">
-                </textarea>
-              </div>
-            }
+          @if (activeTab() === 'content_zh') {
+            <div class="h-full p-4">
+              <app-md-editor [(ngModel)]="form.content_zh" lang="zh" [stretch]="true"></app-md-editor>
+            </div>
+          }
 
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="flex items-center justify-end gap-3 p-6 border-t border-[var(--color-border-card)]">
-            <button (click)="closeModal()" class="px-5 py-2.5 rounded-xl border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)]/50 transition-colors text-sm font-medium">
-              Cancel
-            </button>
-            <button (click)="save()" [disabled]="saving()"
-              class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg disabled:opacity-50 text-sm flex items-center gap-2">
-              @if (saving()) { <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
-              {{ isEditing() ? i18n.t('admin.blog.save')() : i18n.t('admin.blog.create')() }}
-            </button>
-          </div>
         </div>
       </div>
-    }
+      }
+
+    </div>
 
   `,
   styles: [`
@@ -317,7 +317,7 @@ export class AdminBlogComponent implements OnInit {
   i18n = inject(I18nService);
 
   posts     = signal<BlogPostMeta[]>([]);
-  modalOpen = signal(false);
+  editMode = signal(false);
   saving    = signal(false);
   editingId = signal<number | null>(null);
   activeTab = signal<EditTab>('meta');
@@ -353,7 +353,7 @@ export class AdminBlogComponent implements OnInit {
     this.tagsZHStr = '';
     this.editingId.set(null);
     this.activeTab.set('meta');
-    this.modalOpen.set(true);
+    this.editMode.set(true);
   }
 
   openEdit(post: BlogPostMeta) {
@@ -365,6 +365,7 @@ export class AdminBlogComponent implements OnInit {
           date:         full.date,
           published:    full.published ?? true,
           sort_order:   full.sort_order ?? 0,
+          cover_image:  full.cover_image ?? '',
           title_en:     full.en.title,
           desc_en:      full.en.description,
           keywords_en:  full.en.keywords,
@@ -384,12 +385,12 @@ export class AdminBlogComponent implements OnInit {
         this.tagsZHStr = (full.zh.tags ?? []).join(', ');
         this.editingId.set(post.dbId!);
         this.activeTab.set('meta');
-        this.modalOpen.set(true);
+        this.editMode.set(true);
       },
     });
   }
 
-  closeModal() { this.modalOpen.set(false); }
+  closeModal() { this.editMode.set(false); }
 
   save() {
     this.form.tags_en = this.tagsENStr.split(',').map(t => t.trim()).filter(Boolean);
@@ -479,7 +480,14 @@ export class AdminBlogComponent implements OnInit {
     const key = `${platformId}_${lang}`;
     this.distribKey.set(key);
     try {
-      const text = await this.formatter.formatForPlatform(platformId, full, lang);
+      const postObj: import('../../core/services/platform-formatter.service').FormattablePost = {
+        id: full.id,
+        sourceUrl: undefined,
+        coverImage: full.cover_image || undefined,
+        en: { title: full.en.title, description: full.en.description, content: full.en.content, tags: full.en.tags },
+        zh: { title: full.zh.title, description: full.zh.description, content: full.zh.content, tags: full.zh.tags },
+      };
+      const text = await this.formatter.formatForPlatform(platformId, postObj, lang);
       await copyToClipboard(text);
       // 复制成功后再打开平台页，避免 focus 转移导致 clipboard API 失败
       if (url) window.open(url, '_blank', 'noopener,noreferrer');
@@ -515,7 +523,7 @@ export class AdminBlogComponent implements OnInit {
   private emptyForm(): AdminBlogPostInput {
     const today = new Date().toISOString().split('T')[0];
     return {
-      slug: '', date: today, published: true, sort_order: 0,
+      slug: '', date: today, published: true, sort_order: 0, cover_image: '',
       title_en: '', desc_en: '', keywords_en: '', read_time_en: '5 min read', author_en: 'Puzzle PK Team',
       tags_en: [], content_en: '',
       title_zh: '', desc_zh: '', keywords_zh: '', read_time_zh: '5 分钟阅读', author_zh: 'Puzzle PK 团队',

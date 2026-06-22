@@ -8,6 +8,7 @@ type BlogPost struct {
 	Date       string    `gorm:"type:varchar(10)"             json:"date"`
 	Published  bool      `gorm:"default:true;index"           json:"published"`
 	SortOrder  int       `gorm:"default:0;index"              json:"sort_order"`
+	CoverImage string    `gorm:"type:varchar(500)"            json:"cover_image"`
 	TitleEN    string    `gorm:"type:varchar(300)"            json:"title_en"`
 	DescEN     string    `gorm:"type:text"                    json:"desc_en"`
 	KeywordsEN string    `gorm:"type:varchar(600)"            json:"keywords_en"`

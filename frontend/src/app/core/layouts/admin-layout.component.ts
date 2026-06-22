@@ -78,6 +78,10 @@ import { ThemeService } from '../theme/theme.service';
           <div class="border-t border-[var(--color-border-card)] my-2 opacity-40"></div>
           <p class="px-4 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] opacity-50 mb-1">Content</p>
 
+          <a routerLink="/admin/images" routerLinkActive="bg-violet-500/20 text-violet-400 border-violet-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
+            <span>🖼</span>
+            <span>图片管理</span>
+          </a>
           <a routerLink="/admin/blog" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>📝</span>
             <span>Blog</span>

@@ -104,6 +104,7 @@ const langChildren: Routes = [
       { path: 'daily-challenges', loadComponent: () => import('./features/admin/admin-daily-challenges.component').then(m => m.AdminDailyChallengesComponent) },
       { path: 'leaderboard', loadComponent: () => import('./features/admin/admin-leaderboard.component').then(m => m.AdminLeaderboardComponent) },
       { path: 'xp-config', loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent) },
+      { path: 'images', loadComponent: () => import('./features/admin/admin-images.component').then(m => m.AdminImagesComponent) },
       { path: 'blog', loadComponent: () => import('./features/admin/admin-blog.component').then(m => m.AdminBlogComponent) },
       { path: 'idioms', loadComponent: () => import('./features/admin/admin-idiom.component').then(m => m.AdminIdiomComponent) },
       { path: 'distribute', loadComponent: () => import('./features/admin/admin-distribute.component').then(m => m.AdminDistributeComponent) },

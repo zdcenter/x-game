@@ -177,6 +177,8 @@ export class BlogPostComponent implements OnInit {
 
         // BlogPosting JSON-LD
         const origin = (typeof window !== 'undefined' && window.location?.origin) || PROD_ORIGIN;
+        const coverImg = raw.cover_image ? raw.cover_image : `${origin}/og-cover.png`;
+        this.metaService.updateTag({ property: 'og:image', content: coverImg });
         this.setJsonLd({
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
@@ -189,7 +191,7 @@ export class BlogPostComponent implements OnInit {
           url: `${origin}/${lang}/blog/${raw.id}`,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `${origin}/${lang}/blog/${raw.id}` },
           keywords: meta.keywords,
-          image: `${origin}/og-cover.png`,
+          image: raw.cover_image || `${origin}/og-cover.png`,
           inLanguage: lang === 'zh' ? 'zh-CN' : 'en-US',
         });
 

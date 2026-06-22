@@ -19,6 +19,7 @@ export interface BlogPostMeta {
   date: string;
   published?: boolean;
   sort_order?: number;
+  cover_image?: string;
   en: BlogLanguageMeta;
   zh: BlogLanguageMeta;
 }
@@ -30,6 +31,7 @@ interface BlogPostAPI {
   date: string;
   published: boolean;
   sort_order: number;
+  cover_image: string;
   en: { title: string; description: string; keywords: string; readTime: string; author: string; tags: string[]; content?: string };
   zh: { title: string; description: string; keywords: string; readTime: string; author: string; tags: string[]; content?: string };
   created_at: string;
@@ -43,6 +45,7 @@ function apiToMeta(p: BlogPostAPI): BlogPostMeta {
     date: p.date,
     published: p.published,
     sort_order: p.sort_order,
+    cover_image: p.cover_image,
     en: {
       title: p.en.title,
       description: p.en.description,
@@ -117,6 +120,7 @@ export interface AdminBlogPostInput {
   date: string;
   published: boolean;
   sort_order: number;
+  cover_image: string;
   title_en: string; desc_en: string; keywords_en: string; read_time_en: string; author_en: string; tags_en: string[]; content_en: string;
   title_zh: string; desc_zh: string; keywords_zh: string; read_time_zh: string; author_zh: string; tags_zh: string[]; content_zh: string;
 }

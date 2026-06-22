@@ -23,15 +23,16 @@ type blogLangDTO struct {
 }
 
 type blogPostDTO struct {
-	ID        uint        `json:"id"`
-	Slug      string      `json:"id_slug"` // keep same key name as legacy "id" field for frontend compat
-	Date      string      `json:"date"`
-	Published bool        `json:"published"`
-	SortOrder int         `json:"sort_order"`
-	EN        blogLangDTO `json:"en"`
-	ZH        blogLangDTO `json:"zh"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID         uint        `json:"id"`
+	Slug       string      `json:"id_slug"` // keep same key name as legacy "id" field for frontend compat
+	Date       string      `json:"date"`
+	Published  bool        `json:"published"`
+	SortOrder  int         `json:"sort_order"`
+	CoverImage string      `json:"cover_image"`
+	EN         blogLangDTO `json:"en"`
+	ZH         blogLangDTO `json:"zh"`
+	CreatedAt  time.Time   `json:"created_at"`
+	UpdatedAt  time.Time   `json:"updated_at"`
 }
 
 type blogPostInput struct {
@@ -53,6 +54,7 @@ type blogPostInput struct {
 	AuthorZH   string   `json:"author_zh"`
 	TagsZH     []string `json:"tags_zh"`
 	ContentZH  string   `json:"content_zh"`
+	CoverImage string   `json:"cover_image"`
 }
 
 func toDTO(p domain.BlogPost, withContent bool) blogPostDTO {
@@ -61,13 +63,14 @@ func toDTO(p domain.BlogPost, withContent bool) blogPostDTO {
 	json.Unmarshal([]byte(p.TagsZH), &tagsZH)
 
 	dto := blogPostDTO{
-		ID:        p.ID,
-		Slug:      p.Slug,
-		Date:      p.Date,
-		Published: p.Published,
-		SortOrder: p.SortOrder,
-		CreatedAt: p.CreatedAt,
-		UpdatedAt: p.UpdatedAt,
+		ID:         p.ID,
+		Slug:       p.Slug,
+		Date:       p.Date,
+		Published:  p.Published,
+		SortOrder:  p.SortOrder,
+		CoverImage: p.CoverImage,
+		CreatedAt:  p.CreatedAt,
+		UpdatedAt:  p.UpdatedAt,
 		EN: blogLangDTO{
 			Title:    p.TitleEN,
 			Desc:     p.DescEN,
@@ -159,6 +162,7 @@ func AdminCreateBlogPost(c fiber.Ctx) error {
 		Date:       input.Date,
 		Published:  input.Published,
 		SortOrder:  input.SortOrder,
+		CoverImage: input.CoverImage,
 		TitleEN:    input.TitleEN,
 		DescEN:     input.DescEN,
 		KeywordsEN: input.KeywordsEN,
@@ -197,24 +201,25 @@ func AdminUpdateBlogPost(c fiber.Ctx) error {
 	tagsZH, _ := json.Marshal(input.TagsZH)
 
 	db.DB.Model(&post).Updates(map[string]any{
-		"slug":        strings.TrimSpace(input.Slug),
-		"date":        input.Date,
-		"published":   input.Published,
-		"sort_order":  input.SortOrder,
-		"title_en":    input.TitleEN,
-		"desc_en":     input.DescEN,
-		"keywords_en": input.KeywordsEN,
+		"slug":         strings.TrimSpace(input.Slug),
+		"date":         input.Date,
+		"published":    input.Published,
+		"sort_order":   input.SortOrder,
+		"cover_image":  input.CoverImage,
+		"title_en":     input.TitleEN,
+		"desc_en":      input.DescEN,
+		"keywords_en":  input.KeywordsEN,
 		"read_time_en": input.ReadTimeEN,
-		"author_en":   input.AuthorEN,
-		"tags_en":     string(tagsEN),
-		"content_en":  input.ContentEN,
-		"title_zh":    input.TitleZH,
-		"desc_zh":     input.DescZH,
-		"keywords_zh": input.KeywordsZH,
+		"author_en":    input.AuthorEN,
+		"tags_en":      string(tagsEN),
+		"content_en":   input.ContentEN,
+		"title_zh":     input.TitleZH,
+		"desc_zh":      input.DescZH,
+		"keywords_zh":  input.KeywordsZH,
 		"read_time_zh": input.ReadTimeZH,
-		"author_zh":   input.AuthorZH,
-		"tags_zh":     string(tagsZH),
-		"content_zh":  input.ContentZH,
+		"author_zh":    input.AuthorZH,
+		"tags_zh":      string(tagsZH),
+		"content_zh":   input.ContentZH,
 	})
 	return c.JSON(toDTO(post, true))
 }

@@ -17,6 +17,7 @@ type ContentArticle struct {
 	AuthorEN   string    `gorm:"type:varchar(120)"                 json:"author_en"`
 	AuthorZH   string    `gorm:"type:varchar(120)"                 json:"author_zh"`
 	SourceURL  string    `gorm:"type:varchar(500)"                 json:"source_url"`
+	CoverImage string    `gorm:"type:varchar(500)"                 json:"cover_image"`
 	Published  bool      `gorm:"default:false;index"               json:"published"`
 	SortOrder  int       `gorm:"default:0;index"                   json:"sort_order"`
 	Date       string    `gorm:"type:varchar(10)"                  json:"date"`

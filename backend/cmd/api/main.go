@@ -12,6 +12,7 @@ import (
 	ws "github.com/x-game/backend/internal/handlers/ws"
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/middleware"
+	"github.com/x-game/backend/pkg/r2"
 	"github.com/x-game/backend/pkg/simulator"
 )
 
@@ -22,6 +23,11 @@ func main() {
 	// Load .env file if it exists
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on environment variables")
+	}
+
+	// Initialize R2 client (non-fatal if not configured)
+	if err := r2.Init(); err != nil {
+		log.Println("R2 not initialized:", err)
 	}
 
 	// Initialize Fiber app
@@ -199,6 +205,11 @@ func main() {
 	content.Patch("/articles/:id/toggle", rest.ToggleContentArticle)
 	content.Get("/articles/:id/distributions", rest.GetContentDistributions)
 	content.Post("/articles/:id/distribute", rest.RecordContentDistribution)
+
+	// Image manager (R2)
+	admin.Get("/images", rest.AdminListImages)
+	admin.Post("/images/upload", rest.AdminUploadImages)
+	admin.Delete("/images", rest.AdminDeleteImages)
 
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)

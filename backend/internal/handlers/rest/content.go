@@ -90,6 +90,7 @@ type articleListItem struct {
 	DescZH     string    `json:"desc_zh"`
 	TagsEN     string    `json:"tags_en"`
 	TagsZH     string    `json:"tags_zh"`
+	CoverImage string    `json:"cover_image"`
 	Published  bool      `json:"published"`
 	SortOrder  int       `json:"sort_order"`
 	Date       string    `json:"date"`
@@ -99,7 +100,7 @@ type articleListItem struct {
 
 func ListContentArticles(c fiber.Ctx) error {
 	query := db.DB.Model(&domain.ContentArticle{}).
-		Select("id, slug, category_id, title_en, title_zh, desc_en, desc_zh, tags_en, tags_zh, published, sort_order, date, created_at, updated_at")
+		Select("id, slug, category_id, title_en, title_zh, desc_en, desc_zh, tags_en, tags_zh, cover_image, published, sort_order, date, created_at, updated_at")
 	if catID := c.Query("category_id"); catID != "" {
 		query = query.Where("category_id = ?", catID)
 	}
@@ -134,6 +135,7 @@ type articleInput struct {
 	AuthorEN   string   `json:"author_en"`
 	AuthorZH   string   `json:"author_zh"`
 	SourceURL  string   `json:"source_url"`
+	CoverImage string   `json:"cover_image"`
 	Published  bool     `json:"published"`
 	SortOrder  int      `json:"sort_order"`
 	Date       string   `json:"date"`
@@ -159,7 +161,7 @@ func CreateContentArticle(c fiber.Ctx) error {
 		ContentEN: input.ContentEN, ContentZH: input.ContentZH,
 		TagsEN: tagsSliceToJSON(input.TagsEN), TagsZH: tagsSliceToJSON(input.TagsZH),
 		AuthorEN: input.AuthorEN, AuthorZH: input.AuthorZH,
-		SourceURL: input.SourceURL,
+		SourceURL: input.SourceURL, CoverImage: input.CoverImage,
 		Published: input.Published, SortOrder: input.SortOrder, Date: input.Date,
 	}
 	if err := db.DB.Create(&art).Error; err != nil {
@@ -185,7 +187,7 @@ func UpdateContentArticle(c fiber.Ctx) error {
 		"content_en": input.ContentEN, "content_zh": input.ContentZH,
 		"tags_en": tagsSliceToJSON(input.TagsEN), "tags_zh": tagsSliceToJSON(input.TagsZH),
 		"author_en": input.AuthorEN, "author_zh": input.AuthorZH,
-		"source_url": input.SourceURL,
+		"source_url": input.SourceURL, "cover_image": input.CoverImage,
 		"published": input.Published, "sort_order": input.SortOrder, "date": input.Date,
 	})
 	db.DB.First(&art, id)

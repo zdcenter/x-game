@@ -4,6 +4,7 @@ import { marked, Renderer } from 'marked';
 export interface FormattablePost {
   id: string;           // slug (used for auto-URL if sourceUrl absent)
   sourceUrl?: string;   // explicit backlink URL
+  coverImage?: string;
   en: { title: string; description: string; content?: string; tags: string[] };
   zh: { title: string; description: string; content?: string; tags: string[] };
 }
@@ -11,7 +12,7 @@ export interface FormattablePost {
 export const PLATFORM_DEFS = [
   // 中文平台
   { id: 'wechat',        name: '微信公众号',    icon: '💚',  langs: ['zh'] as const,        url: 'https://mp.weixin.qq.com/cgi-bin/home',                   hint: '适合有粉丝基础的深度内容，打开率高、转化率强，内容留存久' },
-  { id: 'zhihu',         name: '知乎',          icon: '💬',  langs: ['zh'] as const,        url: 'https://zhuanlan.zhihu.com/write',                        hint: '中文技术 / 故事长文首选，长尾搜索流量好，适合深度内容' },
+  { id: 'zhihu',         name: '知乎',          icon: '💬',  langs: ['zh'] as const,        url: 'https://zhuanlan.zhihu.com/write',                        hint: '复制的是 Markdown 源码，粘贴到 mdnice.com 渲染后，再全选复制富文本粘贴到知乎编辑器，格式完美保留' },
   { id: 'juejin',        name: '掘金',          icon: '💎',  langs: ['zh'] as const,        url: 'https://juejin.cn/editor/drafts/new?v=2',                 hint: '中文开发者最集中的平台，技术文章曝光快，有推荐算法加持' },
   { id: 'segmentfault',  name: '思否',          icon: '🧩',  langs: ['zh'] as const,        url: 'https://segmentfault.com/write',                          hint: '中文技术问答 + 文章社区，技术深度内容收录持久，适合教程类' },
   { id: 'v2ex',          name: 'V2EX',          icon: '🌐',  langs: ['zh'] as const,        url: 'https://www.v2ex.com/t/new',                              hint: '独立开发者和技术人聚集地，/indie 节点精准曝光，互动质量高' },
@@ -178,13 +179,13 @@ export class PlatformFormatterService {
       case 'x':         return this.formatX(l.title, l.description, l.tags, url, lang);
       case 'zhihu':     return this.formatZhihu(post.zh.title, post.zh.description, post.zh.content ?? '', url);
       case 'bilibili':  return this.formatBilibili(post.zh.title, post.zh.description, post.zh.content ?? '', url);
-      case 'wechat':    return this.formatWeChat(post.zh.title, post.zh.description, post.zh.content ?? '', url);
-      case 'blogger':      return this.formatBlogger(l.title, l.description, l.content ?? '', url);
+      case 'wechat':    return this.formatWeChat(post.zh.title, post.zh.description, post.zh.content ?? '', url, post.coverImage);
+      case 'blogger':      return this.formatBlogger(l.title, l.description, l.content ?? '', url, post.coverImage);
       case 'reddit':       return this.formatReddit(l.title, l.description, l.content ?? '', l.tags, url);
       case 'juejin':       return this.formatJuejin(post.zh.title, post.zh.description, post.zh.content ?? '', url);
       case 'hackernews':    return this.formatHackerNews(post.en.title, post.en.description, url);
       case 'producthunt':   return this.formatProductHunt(post.en.title, post.en.description, url);
-      case 'medium':        return this.formatMedium(post.en.title, post.en.description, post.en.content ?? '', post.en.tags, url);
+      case 'medium':        return this.formatMedium(post.en.title, post.en.description, post.en.content ?? '', post.en.tags, url, post.coverImage);
       case 'devto':         return this.formatDevTo(post.en.title, post.en.description, post.en.content ?? '', post.en.tags, url);
       case 'indiehackers':  return this.formatIndieHackers(post.en.title, post.en.description, post.en.content ?? '', url);
       case 'segmentfault':  return this.formatSegmentFault(post.zh.title, post.zh.description, post.zh.content ?? '', url);
@@ -211,26 +212,10 @@ export class PlatformFormatterService {
     return `🎮 ${title.slice(0, 280 - overhead - 2)}…${link}\n\n${htags}`;
   }
 
-  private async formatZhihu(title: string, desc: string, content: string, url: string): Promise<string> {
-    const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
-    const intro  = url
-      ? `<blockquote style="border-left:4px solid #0066ff;margin:0 0 24px;padding:10px 16px;background:#f0f5ff;border-radius:0 6px 6px 0;"><p style="margin:0;color:#0052cc;font-size:14px;">本文首发于 <a href="${url}" style="color:#0066ff;">Puzzle PK 益智游戏平台</a></p></blockquote>`
-      : '';
-    const footer = url
-      ? `<hr style="border:none;border-top:1px solid #e8e8e8;margin:32px 0;"><p style="font-size:13px;color:#999;text-align:center;">原文链接：<a href="${url}" style="color:#0066ff;">${url}</a></p>`
-      : '';
-    return `<!-- 知乎专栏文章 -->
-<div style="max-width:700px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;">
-
-  ${intro}
-  <h1 style="font-size:26px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
-  <p style="font-size:16px;color:#666;margin:0 0 28px;padding-bottom:20px;border-bottom:2px solid #0066ff;line-height:1.75;">${desc}</p>
-
-  ${bodyHtml}
-
-  ${footer}
-
-</div>`.trim();
+  private formatZhihu(title: string, desc: string, content: string, url: string): string {
+    const intro  = url ? `> 本文首发于 [Puzzle PK 益智游戏平台](${url})\n\n` : '';
+    const footer = url ? `\n\n---\n原文链接：${url}` : '';
+    return `${intro}# ${title}\n\n${desc}\n\n${content}${footer}`.trim();
   }
 
   private async formatBilibili(title: string, desc: string, content: string, url: string): Promise<string> {
@@ -251,15 +236,18 @@ export class PlatformFormatterService {
 </div>`.trim();
   }
 
-  private async formatWeChat(title: string, desc: string, content: string, url: string): Promise<string> {
+  private async formatWeChat(title: string, desc: string, content: string, url: string, coverImage?: string): Promise<string> {
     const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
     const footer   = url
       ? `<p style="font-size:12px;color:#999;text-align:center;margin-top:32px;">本文首发于 <a href="${url}" style="color:#07c160;text-decoration:none;">Puzzle PK 益智游戏平台</a></p>`
       : '';
+    const coverHtml = coverImage
+      ? `<img src="${coverImage}" alt="${title}" style="width:100%;max-height:400px;object-fit:cover;border-radius:8px;margin:0 0 20px;display:block;" />\n`
+      : '';
     return `<!-- 微信公众号文章 -->
 <section style="max-width:680px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB',sans-serif;">
 
-  <h1 style="font-size:24px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
+  ${coverHtml}<h1 style="font-size:24px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
   <p style="font-size:15px;color:#666;margin:0 0 24px;padding-bottom:20px;border-bottom:2px solid #07c160;line-height:1.7;">${desc}</p>
 
   ${bodyHtml}
@@ -270,15 +258,18 @@ export class PlatformFormatterService {
 </section>`.trim();
   }
 
-  private async formatBlogger(title: string, desc: string, content: string, url: string): Promise<string> {
+  private async formatBlogger(title: string, desc: string, content: string, url: string, coverImage?: string): Promise<string> {
     const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('blogger') });
     const footer   = url
       ? `<p style="font-size:13px;color:#9ca3af;text-align:center;">
   Originally published at <a href="${url}" style="color:#4f46e5;text-decoration:underline;">${url}</a>
 </p>`
       : '';
+    const coverHtml = coverImage
+      ? `\n  <img src="${coverImage}" alt="${title}" style="width:100%;max-height:460px;object-fit:cover;border-radius:10px;margin:0 0 28px;display:block;" />`
+      : '';
     return `<!-- Blogger Post: ${title} -->
-<div style="max-width:720px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;color:#374151;">
+<div style="max-width:720px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;color:#374151;">${coverHtml}
 
   <!-- Title -->
   <h1 style="font-size:32px;font-weight:800;color:#1e1b4b;margin:0 0 14px;line-height:1.3;">${title}</h1>
@@ -385,9 +376,10 @@ export class PlatformFormatterService {
   }
 
   // Medium：Markdown + canonical link frontmatter 风格页眉
-  private formatMedium(title: string, desc: string, content: string, _tags: string[], url: string): string {
+  private formatMedium(title: string, desc: string, content: string, _tags: string[], url: string, coverImage?: string): string {
     const canonical = url ? `\n\n---\n\n*Originally published at [puzzlepk.com](${url})*` : '';
-    return `# ${title}\n\n*${desc}*\n\n${content}${canonical}`.trim();
+    const coverMd   = coverImage ? `![Cover Image](${coverImage})\n\n` : '';
+    return `# ${title}\n\n*${desc}*\n\n${coverMd}${content}${canonical}`.trim();
   }
 
   // 思否 SegmentFault：Markdown，和掘金风格类似

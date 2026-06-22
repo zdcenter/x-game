@@ -9,6 +9,8 @@ import {
 } from '../../core/services/content.service';
 import { PlatformFormatterService, PlatformId, FormattablePost } from '../../core/services/platform-formatter.service';
 import { PlatformDistribPanelComponent } from './platform-distrib-panel.component';
+import { MdEditorComponent } from '../../shared/components/md-editor/md-editor.component';
+import { ImagePickerComponent } from '../../shared/components/image-picker/image-picker.component';
 import { ToastService } from '../../core/services/toast.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 
@@ -30,6 +32,7 @@ interface ArticleFormData {
   tags_en_str: string; tags_zh_str: string;
   author_en: string; author_zh: string;
   source_url: string;
+  cover_image: string;
   published: boolean; sort_order: number; date: string;
 }
 
@@ -70,9 +73,11 @@ async function copyToClipboard(text: string): Promise<void> {
 @Component({
   selector: 'app-admin-articles',
   standalone: true,
-  imports: [CommonModule, FormsModule, PlatformDistribPanelComponent],
+  imports: [CommonModule, FormsModule, PlatformDistribPanelComponent, MdEditorComponent, ImagePickerComponent],
   template: `
-    <div class="space-y-4 h-full flex flex-col">
+    <div class="h-full flex flex-col">
+      @if (!editMode()) {
+      <div class="space-y-4 flex-1 min-h-0 flex flex-col">
       <!-- Header -->
       <div class="flex items-center justify-between flex-shrink-0 gap-3 flex-wrap">
         <div>
@@ -237,6 +242,147 @@ async function copyToClipboard(text: string): Promise<void> {
           </div>
         </div>
       </div>
+      </div>
+
+      } @else {
+      <!-- ── Inline article editor ── -->
+      <div class="flex flex-col flex-1 min-h-0 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] overflow-hidden">
+
+        <!-- Top bar -->
+        <div class="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border-card)] flex-shrink-0">
+          <div class="flex items-center gap-4">
+            <button (click)="closeArtModal()" class="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors">
+              ← 返回列表
+            </button>
+            <span class="opacity-20">|</span>
+            <h3 class="text-base font-bold">{{ editingArtId() ? i18n.t('admin.articles.edit')() : i18n.t('admin.articles.new')() }}</h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <button (click)="closeArtModal()" class="px-4 py-2 rounded-xl border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)]/50 transition-colors text-sm font-medium">
+              {{ i18n.t('admin.articles.cancel')() }}
+            </button>
+            <button (click)="saveArticle()" [disabled]="savingArt()"
+              class="px-5 py-2 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg disabled:opacity-50 text-sm flex items-center gap-2">
+              @if (savingArt()) { <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
+              {{ editingArtId() ? i18n.t('admin.articles.save')() : i18n.t('admin.articles.create')() }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-[var(--color-border-card)] px-6 flex-shrink-0">
+          @for (tab of artTabs; track tab.id) {
+            <button (click)="artTab.set(tab.id)"
+              class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
+              [class]="artTab() === tab.id
+                ? 'border-[var(--color-accent-from)] text-[var(--color-accent-from)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
+              {{ tab.label }}
+            </button>
+          }
+        </div>
+
+        <!-- Tab content -->
+        <div class="flex-1 min-h-0 overflow-hidden">
+
+          @if (artTab() === 'meta') {
+            <div class="h-full overflow-y-auto p-6 space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">Slug</label>
+                  <input [(ngModel)]="artForm.slug" type="text" class="input-field w-full font-mono" placeholder="e.g. sudoku-guide-2025">
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">分类</label>
+                  <select [(ngModel)]="artForm.category_id" class="input-field w-full">
+                    <option [ngValue]="null">— {{ i18n.t('admin.articles.uncategorized')() }} —</option>
+                    @for (node of categoryFlat(); track node.cat.id) {
+                      <option [ngValue]="node.cat.id">{{ '　'.repeat(node.depth) }}{{ node.cat.name_zh || node.cat.name_en }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">日期</label>
+                  <input [(ngModel)]="artForm.date" type="date" class="input-field w-full">
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">Sort Order</label>
+                  <input [(ngModel)]="artForm.sort_order" type="number" class="input-field w-full">
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">原文链接（可选）</label>
+                  <input [(ngModel)]="artForm.source_url" type="url" class="input-field w-full" placeholder="https://...">
+                </div>
+                <div class="col-span-2">
+                  <label class="block text-xs opacity-50 mb-1">🖼 封面图片</label>
+                  <app-image-picker [(ngModel)]="artForm.cover_image"></app-image-picker>
+                </div>
+                <div class="flex items-center gap-3 pt-5">
+                  <input [(ngModel)]="artForm.published" type="checkbox" id="art-pub" class="w-4 h-4 rounded accent-emerald-500">
+                  <label for="art-pub" class="text-sm font-medium">已发布</label>
+                </div>
+              </div>
+
+              <hr class="border-[var(--color-border-card)]">
+              <h4 class="font-bold text-sm opacity-70">🇨🇳 中文元数据</h4>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                  <label class="block text-xs opacity-50 mb-1">标题（中文）</label>
+                  <input [(ngModel)]="artForm.title_zh" type="text" class="input-field w-full">
+                </div>
+                <div class="col-span-2">
+                  <label class="block text-xs opacity-50 mb-1">摘要（中文）</label>
+                  <textarea [(ngModel)]="artForm.desc_zh" rows="2" class="input-field w-full resize-none"></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">作者（中文）</label>
+                  <input [(ngModel)]="artForm.author_zh" type="text" class="input-field w-full">
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">标签（逗号分隔）</label>
+                  <input [(ngModel)]="artForm.tags_zh_str" type="text" class="input-field w-full" placeholder="策略, 教程">
+                </div>
+              </div>
+
+              <hr class="border-[var(--color-border-card)]">
+              <h4 class="font-bold text-sm opacity-70">🇺🇸 English Metadata</h4>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                  <label class="block text-xs opacity-50 mb-1">Title (EN)</label>
+                  <input [(ngModel)]="artForm.title_en" type="text" class="input-field w-full">
+                </div>
+                <div class="col-span-2">
+                  <label class="block text-xs opacity-50 mb-1">Description (EN)</label>
+                  <textarea [(ngModel)]="artForm.desc_en" rows="2" class="input-field w-full resize-none"></textarea>
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">Author (EN)</label>
+                  <input [(ngModel)]="artForm.author_en" type="text" class="input-field w-full">
+                </div>
+                <div>
+                  <label class="block text-xs opacity-50 mb-1">Tags (comma-separated)</label>
+                  <input [(ngModel)]="artForm.tags_en_str" type="text" class="input-field w-full" placeholder="strategy, tutorial">
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (artTab() === 'content_zh') {
+            <div class="h-full p-4">
+              <app-md-editor [(ngModel)]="artForm.content_zh" lang="zh" [stretch]="true"></app-md-editor>
+            </div>
+          }
+
+          @if (artTab() === 'content_en') {
+            <div class="h-full p-4">
+              <app-md-editor [(ngModel)]="artForm.content_en" lang="en" [stretch]="true"></app-md-editor>
+            </div>
+          }
+
+        </div>
+      </div>
+      }
+
     </div>
 
     <!-- ============ Import Preview Modal ============ -->
@@ -380,147 +526,6 @@ async function copyToClipboard(text: string): Promise<void> {
       </div>
     }
 
-    <!-- ============ Article Edit Modal ============ -->
-    @if (artModalOpen()) {
-      <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl w-full max-w-4xl shadow-2xl my-8">
-          <div class="flex items-center justify-between p-6 border-b border-[var(--color-border-card)]">
-            <h3 class="text-xl font-bold">{{ editingArtId() ? i18n.t('admin.articles.edit')() : i18n.t('admin.articles.new')() }}</h3>
-            <button (click)="closeArtModal()" class="p-2 hover:bg-[var(--color-bg-main)]/50 rounded-lg text-lg">✕</button>
-          </div>
-
-          <!-- Tabs -->
-          <div class="flex border-b border-[var(--color-border-card)] px-6">
-            @for (tab of artTabs; track tab.id) {
-              <button (click)="artTab.set(tab.id)"
-                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px"
-                [class]="artTab() === tab.id
-                  ? 'border-[var(--color-accent-from)] text-[var(--color-accent-from)]'
-                  : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
-                {{ tab.label }}
-              </button>
-            }
-          </div>
-
-          <div class="p-6 space-y-4">
-
-            @if (artTab() === 'meta') {
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">Slug</label>
-                  <input [(ngModel)]="artForm.slug" type="text" class="input-field w-full font-mono" placeholder="e.g. sudoku-guide-2025">
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">分类</label>
-                  <select [(ngModel)]="artForm.category_id" class="input-field w-full">
-                    <option [ngValue]="null">— {{ i18n.t('admin.articles.uncategorized')() }} —</option>
-                    @for (node of categoryFlat(); track node.cat.id) {
-                      <option [ngValue]="node.cat.id">{{ '　'.repeat(node.depth) }}{{ node.cat.name_zh || node.cat.name_en }}</option>
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">日期</label>
-                  <input [(ngModel)]="artForm.date" type="date" class="input-field w-full">
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">Sort Order</label>
-                  <input [(ngModel)]="artForm.sort_order" type="number" class="input-field w-full">
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">原文链接（可选）</label>
-                  <input [(ngModel)]="artForm.source_url" type="url" class="input-field w-full" placeholder="https://...">
-                </div>
-                <div class="flex items-center gap-3 pt-5">
-                  <input [(ngModel)]="artForm.published" type="checkbox" id="art-pub" class="w-4 h-4 rounded accent-emerald-500">
-                  <label for="art-pub" class="text-sm font-medium">已发布</label>
-                </div>
-              </div>
-
-              <hr class="border-[var(--color-border-card)]">
-              <h4 class="font-bold text-sm opacity-70">🇨🇳 中文元数据</h4>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
-                  <label class="block text-xs opacity-50 mb-1">标题（中文）</label>
-                  <input [(ngModel)]="artForm.title_zh" type="text" class="input-field w-full">
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs opacity-50 mb-1">摘要（中文）</label>
-                  <textarea [(ngModel)]="artForm.desc_zh" rows="2" class="input-field w-full resize-none"></textarea>
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">作者（中文）</label>
-                  <input [(ngModel)]="artForm.author_zh" type="text" class="input-field w-full">
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">标签（逗号分隔）</label>
-                  <input [(ngModel)]="artForm.tags_zh_str" type="text" class="input-field w-full" placeholder="策略, 教程">
-                </div>
-              </div>
-
-              <hr class="border-[var(--color-border-card)]">
-              <h4 class="font-bold text-sm opacity-70">🇺🇸 English Metadata</h4>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
-                  <label class="block text-xs opacity-50 mb-1">Title (EN)</label>
-                  <input [(ngModel)]="artForm.title_en" type="text" class="input-field w-full">
-                </div>
-                <div class="col-span-2">
-                  <label class="block text-xs opacity-50 mb-1">Description (EN)</label>
-                  <textarea [(ngModel)]="artForm.desc_en" rows="2" class="input-field w-full resize-none"></textarea>
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">Author (EN)</label>
-                  <input [(ngModel)]="artForm.author_en" type="text" class="input-field w-full">
-                </div>
-                <div>
-                  <label class="block text-xs opacity-50 mb-1">Tags (comma-separated)</label>
-                  <input [(ngModel)]="artForm.tags_en_str" type="text" class="input-field w-full" placeholder="strategy, tutorial">
-                </div>
-              </div>
-            }
-
-            @if (artTab() === 'content_zh') {
-              <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-semibold opacity-60">🇨🇳 中文内容（Markdown）</label>
-                  <span class="text-xs opacity-40 font-mono">{{ artForm.content_zh.length }} chars</span>
-                </div>
-                <textarea [(ngModel)]="artForm.content_zh" rows="32"
-                  class="w-full px-4 py-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl text-sm font-mono focus:outline-none focus:border-[var(--color-accent-from)] resize-y leading-relaxed"
-                  placeholder="# 文章标题&#10;&#10;正文内容...">
-                </textarea>
-              </div>
-            }
-
-            @if (artTab() === 'content_en') {
-              <div>
-                <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-semibold opacity-60">🇺🇸 English Content (Markdown)</label>
-                  <span class="text-xs opacity-40 font-mono">{{ wordCount(artForm.content_en) }} words</span>
-                </div>
-                <textarea [(ngModel)]="artForm.content_en" rows="32"
-                  class="w-full px-4 py-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl text-sm font-mono focus:outline-none focus:border-[var(--color-accent-from)] resize-y leading-relaxed"
-                  placeholder="# Article Title&#10;&#10;Content here...">
-                </textarea>
-              </div>
-            }
-          </div>
-
-          <div class="flex items-center justify-end gap-3 p-6 border-t border-[var(--color-border-card)]">
-            <button (click)="closeArtModal()" class="px-5 py-2.5 rounded-xl border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)]/50 transition-colors text-sm font-medium">
-              {{ i18n.t('admin.articles.cancel')() }}
-            </button>
-            <button (click)="saveArticle()" [disabled]="savingArt()"
-              class="px-6 py-2.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg disabled:opacity-50 text-sm flex items-center gap-2">
-              @if (savingArt()) { <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
-              {{ editingArtId() ? i18n.t('admin.articles.save')() : i18n.t('admin.articles.create')() }}
-            </button>
-          </div>
-        </div>
-      </div>
-    }
-
   `,
   styles: [`
     .input-field {
@@ -553,7 +558,7 @@ export class AdminArticlesComponent implements OnInit {
   catForm: CatFormData = this.emptyCatForm();
 
   // Article modal
-  artModalOpen = signal(false);
+  editMode = signal(false);
   editingArtId = signal<number | null>(null);
   savingArt    = signal(false);
   artTab       = signal<ArticleEditTab>('meta');
@@ -826,6 +831,7 @@ An elimination technique for medium-difficulty puzzles...`,
           author_zh: item.author_zh ?? '',
           author_en: item.author_en ?? '',
           source_url: item.source_url ?? '',
+          cover_image: '',
           published: item.published ?? false,
           sort_order: item.sort_order ?? 0,
           date: item.date ?? new Date().toISOString().split('T')[0],
@@ -938,7 +944,7 @@ An elimination technique for medium-difficulty puzzles...`,
     this.artForm = { ...this.emptyArtForm(), category_id: this.selectedCategoryId() };
     this.editingArtId.set(null);
     this.artTab.set('meta');
-    this.artModalOpen.set(true);
+    this.editMode.set(true);
   }
 
   openEditArticle(art: ContentArticleMeta) {
@@ -954,16 +960,17 @@ An elimination technique for medium-difficulty puzzles...`,
           tags_zh_str: parseTags(full.tags_zh).join(', '),
           author_en: full.author_en, author_zh: full.author_zh,
           source_url: full.source_url,
+          cover_image: full.cover_image ?? '',
           published: full.published, sort_order: full.sort_order, date: full.date,
         };
         this.editingArtId.set(full.id);
         this.artTab.set('meta');
-        this.artModalOpen.set(true);
+        this.editMode.set(true);
       },
     });
   }
 
-  closeArtModal() { this.artModalOpen.set(false); }
+  closeArtModal() { this.editMode.set(false); }
 
   saveArticle() {
     if (!this.artForm.slug.trim()) { this.toast.show('Slug 不能为空', 'error'); return; }
@@ -977,6 +984,7 @@ An elimination technique for medium-difficulty puzzles...`,
       tags_zh: this.artForm.tags_zh_str.split(',').map(t => t.trim()).filter(Boolean),
       author_en: this.artForm.author_en, author_zh: this.artForm.author_zh,
       source_url: this.artForm.source_url,
+      cover_image: this.artForm.cover_image,
       published: this.artForm.published, sort_order: this.artForm.sort_order, date: this.artForm.date,
     };
     const id = this.editingArtId();
@@ -1059,6 +1067,7 @@ An elimination technique for medium-difficulty puzzles...`,
       const post: FormattablePost = {
         id: full.slug,
         sourceUrl: full.source_url || undefined,
+        coverImage: full.cover_image || undefined,
         en: { title: full.title_en, description: full.desc_en, content: full.content_en, tags: parseTags(full.tags_en) },
         zh: { title: full.title_zh, description: full.desc_zh, content: full.content_zh, tags: parseTags(full.tags_zh) },
       };
@@ -1095,7 +1104,7 @@ An elimination technique for medium-difficulty puzzles...`,
       content_en: '', content_zh: '',
       tags_en_str: '', tags_zh_str: '',
       author_en: '', author_zh: '',
-      source_url: '',
+      source_url: '', cover_image: '',
       published: true, sort_order: 0, date: today,
     };
   }

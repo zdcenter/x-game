@@ -34,6 +34,7 @@ export interface ContentArticleMeta {
   desc_zh: string;
   tags_en: string; // JSON string
   tags_zh: string;
+  cover_image?: string;
   published: boolean;
   sort_order: number;
   date: string;
@@ -58,6 +59,7 @@ export interface ContentArticleInput {
   tags_en: string[]; tags_zh: string[];
   author_en: string; author_zh: string;
   source_url: string;
+  cover_image: string;
   published: boolean;
   sort_order: number;
   date: string;
