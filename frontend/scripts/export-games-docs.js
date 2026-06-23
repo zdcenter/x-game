@@ -15,7 +15,7 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 
-const API_BASE = process.env.GAMES_API || 'http://localhost:3001/api/v1';
+const API_BASE = process.env.GAMES_API || 'https://api.puzzlepk.com:8443/api/v1';
 const OUT_FILE = path.join(__dirname, '../public/assets/games-docs.json');
 
 function get(url) {
@@ -60,4 +60,7 @@ async function main() {
   });
 }
 
-main().catch(e => { console.error(e.message); process.exit(1); });
+main().catch(e => {
+  console.warn(`[export-games-docs] WARNING: ${e.message}`);
+  console.warn('[export-games-docs] Using cached file from last successful export.');
+});

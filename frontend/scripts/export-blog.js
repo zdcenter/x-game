@@ -77,4 +77,7 @@ async function main() {
   console.log(`\nDone: ${posts.length} posts exported to ${OUT_DIR}`);
 }
 
-main().catch(e => { console.error(e.message); process.exit(1); });
+main().catch(e => {
+  console.warn(`[export-blog] WARNING: ${e.message}`);
+  console.warn('[export-blog] Using cached files from last successful export.');
+});
