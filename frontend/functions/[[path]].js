@@ -20,6 +20,15 @@ export async function onRequest(context) {
     return Response.redirect(new URL(`/${lang}/lobby`, request.url).toString(), code);
   }
 
+  // Language root paths (/en, /en/, /zh, /zh/) — redirect server-side so Googlebot
+  // receives a proper 301/302 rather than a JS-only client-side Angular redirect.
+  if (pathname === '/en' || pathname === '/en/') {
+    return Response.redirect(new URL('/en/lobby', request.url).toString(), 301);
+  }
+  if (pathname === '/zh' || pathname === '/zh/') {
+    return Response.redirect(new URL('/zh/lobby', request.url).toString(), 302);
+  }
+
   // Serve prerendered page via explicit index.html path.
   // Avoids 301 trailing-slash redirects that env.ASSETS.fetch emits for bare directory paths,
   // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
