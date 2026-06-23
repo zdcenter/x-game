@@ -1,11 +1,14 @@
-import { Component, inject, signal, computed, effect, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, computed, effect, ElementRef, ViewChild, DOCUMENT } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameConfig, getLocalizedField } from '../../core/services/game.service';
 import { marked } from 'marked';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
+import { getOrigin } from '../../core/utils/browser.util';
+
+const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
 interface TocItem {
   id: string;
@@ -138,6 +141,9 @@ export class DocsComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
+  private titleService = inject(Title);
+  private metaService = inject(Meta);
+  private doc = inject(DOCUMENT);
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
@@ -156,7 +162,7 @@ export class DocsComponent {
   toc = signal<TocItem[]>([]);
 
   constructor() {
-    this.gameService.getAllGames().subscribe(games => {
+    this.gameService.getAllGamesDocs().subscribe(games => {
       // Sort games by sortOrder
       const sorted = [...games].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       this.games.set(sorted);
@@ -174,13 +180,38 @@ export class DocsComponent {
       }
     });
 
-    // Re-render when current game or language changes
+    // Re-render content + update SEO when current game or language changes
     effect(() => {
       const game = this.currentGame();
       const lang = this.i18n.currentLang();
       if (game) {
         const md = getLocalizedField(game.rules, lang);
         this.renderMarkdown(md);
+
+        // Per-page SEO: unique title/description/canonical for each game docs page
+        const gameTitle = this.getGameTitle(game.id);
+        const gameDesc = this.getGameDesc(game.id);
+        const pageTitle = lang === 'zh'
+          ? `${gameTitle} 玩法教程 - Puzzle PK`
+          : `How to Play ${gameTitle} - Rules & Tutorial | Puzzle PK`;
+        const desc = gameDesc || (lang === 'zh'
+          ? `学习如何玩 ${gameTitle}，查看规则和攻略。`
+          : `Learn how to play ${gameTitle}. Read the rules, strategies, and tutorials.`);
+        const origin = getOrigin() || PROD_ORIGIN;
+        const canonicalUrl = `${origin}/${lang}/docs/${game.id}`;
+        const altLang = lang === 'en' ? 'zh' : 'en';
+        const altUrl = `${origin}/${altLang}/docs/${game.id}`;
+
+        this.titleService.setTitle(pageTitle);
+        this.metaService.updateTag({ name: 'description', content: desc });
+        this.metaService.updateTag({ property: 'og:title', content: pageTitle });
+        this.metaService.updateTag({ property: 'og:description', content: desc });
+        this.metaService.updateTag({ property: 'og:url', content: canonicalUrl });
+
+        this.setLinkTag('canonical', canonicalUrl);
+        this.setLinkTag('alternate', canonicalUrl, lang);
+        this.setLinkTag('alternate', altUrl, altLang);
+        this.setLinkTag('alternate', `${origin}/en/docs/${game.id}`, 'x-default');
       }
     });
   }
@@ -212,6 +243,20 @@ export class DocsComponent {
     return desc;
   }
 
+  private setLinkTag(rel: string, href: string, hreflang?: string): void {
+    const head = this.doc.head;
+    if (!head) return;
+    const selector = hreflang ? `link[rel="${rel}"][hreflang="${hreflang}"]` : `link[rel="${rel}"]:not([hreflang])`;
+    let link = head.querySelector(selector) as HTMLLinkElement | null;
+    if (!link) {
+      link = this.doc.createElement('link');
+      link.setAttribute('rel', rel);
+      if (hreflang) link.setAttribute('hreflang', hreflang);
+      head.appendChild(link);
+    }
+    link.setAttribute('href', href);
+  }
+
   private renderMarkdown(md: string) {
     // 1. Generate HTML using marked
     const rawHtml = marked.parse(md, { async: false }) as string;
@@ -220,7 +265,7 @@ export class DocsComponent {
     const tocItems: TocItem[] = [];
     let idCounter = 0;
     
-    const htmlWithIds = rawHtml.replace(/<h([23])>(.*?)<\/h\1>/g, (match, levelStr, text) => {
+    const htmlWithIds = rawHtml.replace(/<h([23])>(.*?)<\/h\1>/g, (_match, levelStr, text) => {
       const level = parseInt(levelStr, 10);
       const id = `heading-${idCounter++}`;
       // Clean up text (remove internal HTML tags if any)

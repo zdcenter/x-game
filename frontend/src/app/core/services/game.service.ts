@@ -43,6 +43,15 @@ export class GameService {
     );
   }
 
+  /**
+   * SSR-safe variant: loads game docs content from pre-exported static JSON.
+   * Allowed by ssrNoopInterceptor (/assets/ path passes through during SSG).
+   * Run `node scripts/export-games-docs.js` after editing game rules in admin.
+   */
+  getAllGamesDocs(): Observable<GameConfig[]> {
+    return this.http.get<GameConfig[]>('/assets/games-docs.json');
+  }
+
   visitGame(id: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/games/${id}/visit`, {});
   }
