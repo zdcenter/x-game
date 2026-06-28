@@ -90,8 +90,8 @@
               </div>
             </div>
             <!-- Card Content -->
-            <div class="p-6 relative">
-              <h2 class="text-2xl font-bold mb-2 pr-16">{{ getGameTitle(game.id) }}</h2>
+            <div class="p-6 relative flex flex-col flex-grow">
+              <h2 class="text-2xl font-bold mb-2 pr-16 min-h-[32px]">{{ getGameTitle(game.id) }}</h2>
               <div class="absolute top-6 right-6 flex items-center gap-2">
                 <div class="flex items-center gap-1 text-[var(--color-text-muted)] text-sm bg-[var(--color-bg-main)] px-2 py-1 rounded-full border border-[var(--color-border-card)] shadow-sm">
                   <span class="text-xs">🔥</span>
@@ -105,10 +105,10 @@
                   </svg>
                 </button>
               </div>
-              <p class="opacity-70 text-sm line-clamp-2">
+              <p class="opacity-70 text-sm line-clamp-2 min-h-[40px]">
                 {{ getGameDesc(game.id) }}
               </p>
-              <div class="mt-4 flex flex-wrap gap-2">
+              <div class="mt-auto pt-4 flex flex-wrap gap-2 min-h-[44px] items-center">
                 <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-emerald-500">{{ i18n.t('lobby.ready')() }}</span>
                 @for (mode of getGameModes(game.id); track mode) {
                   <span class="px-2 py-1 text-xs font-semibold rounded bg-[var(--color-bg-main)] shadow-sm border border-[var(--color-border-card)] text-[var(--color-accent-from)]">{{ mode }}</span>

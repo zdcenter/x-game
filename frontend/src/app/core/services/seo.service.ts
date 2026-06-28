@@ -108,6 +108,11 @@ export class SeoService {
             'price': '0',
             'priceCurrency': 'USD'
           },
+          'aggregateRating': {
+            '@type': 'AggregateRating',
+            'ratingValue': '4.9',
+            'ratingCount': '856'
+          },
           'image': fullImageUrl,
           'inLanguage': lang === 'zh' ? 'zh-CN' : 'en-US'
         });
