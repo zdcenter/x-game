@@ -203,7 +203,7 @@
 
                 @if (store.status() !== GameStatus.Waiting || currentRoomMode() === GameMode.Single) {
                   <div #board
-                    class="inline-flex flex-col gap-1 relative z-0 m-auto will-change-transform origin-center transition-transform duration-75"
+                    class="inline-flex flex-col gap-1 relative z-0 origin-center"
                     [class.opacity-50]="isFrozen()" [class.animate-board-shake]="store.status() === GameStatus.Finished">
                     @for (row of store.board(); track $index) {
                     <div class="flex gap-1">
