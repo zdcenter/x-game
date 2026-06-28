@@ -60,15 +60,15 @@
 
   <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
     
-    <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
+    <!-- LEFT: SEO Description (Desktop only, xl+ screens) -->
+    <div class="hidden xl:flex w-[280px] 2xl:w-[360px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
       <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
            [innerHTML]="t('game.nonogram.seo_desc')()">
       </div>
     </div>
 
     <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center">
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 w-full">
       <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
            
@@ -161,6 +161,27 @@
             </div>
           }
 
+          @if (store.status() === GameStatus.Finished && showOverlay()) {
+            <app-game-result-overlay
+              currentGameId="nonogram"
+              [status]="getGameResult()"
+              [title]="getGameResult() === 'win' ? t('game.you_win')() : t('game.you_lose')()"
+              [stats]="[
+                { label: t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
+              ]"
+              [xpResult]="store.lastStatResult()?.xp_result"
+              [isNewRecord]="store.lastStatResult()?.isNewRecord"
+              [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
+              [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
+              [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
+              (restart)="handleRestart()"
+              (leave)="onLeaveClick()"
+              (dismiss)="handleDismissRoom()"
+              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+              (changeRoomGame)="store.changeRoomGame($event)">
+            </app-game-result-overlay>
+          }
+
         </div>
       </div>
       
@@ -174,17 +195,7 @@
 
     <!-- Right Sidebar (Lobby Panel) -->
     @if (settingsService.settings().multiplayer_enabled === 'true') {
-      <div class="flex-shrink-0 transition-transform duration-300 self-stretch flex flex-col justify-center lg:relative lg:inset-auto lg:w-[320px] xl:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:bg-transparent lg:flex">
-        
-        @if (store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished) {
-          <div class="backdrop-blur-xl border rounded-2xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] mb-4"
-            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-            <button (click)="store.playAgain()"
-              class="w-full px-4 py-3 bg-[var(--color-accent-from)] hover:bg-[var(--color-accent-to)] text-white rounded-xl font-bold shadow-lg transition-all transform hover:scale-105 active:scale-95">
-              {{ t('game.play_again')() }}
-            </button>
-          </div>
-        }
+      <div class="flex-shrink-0 transition-transform duration-300 self-stretch flex flex-col justify-center lg:relative lg:inset-auto lg:w-[260px] xl:w-[300px] 2xl:w-[360px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:bg-transparent lg:flex">
 
         <app-game-lobby-panel #lobbyPanel class="flex-grow flex" [currentGameId]="'nonogram'"
           (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)">
@@ -192,7 +203,7 @@
       </div>
     } @else {
       <!-- Empty Right Column for balance if Multiplayer disabled -->
-      <div class="hidden lg:block w-[320px] xl:w-[400px] flex-shrink-0"></div>
+      <div class="hidden xl:block w-[280px] 2xl:w-[360px] flex-shrink-0"></div>
     }
   </div>
 </div>

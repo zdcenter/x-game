@@ -81,6 +81,14 @@ export class NonogramStore extends BaseGameStore {
 
   private tick = signal(0);
 
+  readonly timeSpent = computed(() => {
+    this.tick(); // subscribe to tick updates
+    const state = this.localState();
+    if (!state || !state.startAt) return 0;
+    const end = state.endAt || Date.now();
+    return Math.floor((end - state.startAt) / 1000);
+  });
+
   constructor() {
     super();
     effect(() => {
@@ -89,6 +97,23 @@ export class NonogramStore extends BaseGameStore {
         this.audio.playPuzzle('success');
       } else if (s === GameStatus.Starting) {
         this.audio.playPuzzle('move');
+      }
+    });
+
+    // Timer tick for timeSpent updates
+    effect((onCleanup) => {
+      const s = this.status();
+      if (s === GameStatus.Playing) {
+        const interval = setInterval(() => this.tick.update(v => v + 1), 1000);
+        onCleanup(() => clearInterval(interval));
+      }
+    });
+
+    // Submit stats when game finishes in single mode
+    effect(() => {
+      const s = this.status();
+      if (s === GameStatus.Finished && this.currentRoomMode() === GameMode.Single) {
+        this.submitSingleStat({ time: this.timeSpent(), won: true }).subscribe();
       }
     });
 

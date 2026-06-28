@@ -1,4 +1,4 @@
-import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
@@ -6,6 +6,7 @@ import { GameHeaderComponent } from '../../../shared/components/game-header/game
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -17,7 +18,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -38,6 +39,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   private roomLifecycle: RoomLifecycleHandle;
 
   showRules = signal<boolean>(false);
+  showOverlay = signal<boolean>(false);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -78,6 +80,16 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => this.returnToLobby(),
     });
+
+    // Show result overlay with a delay after game finishes
+    effect((onCleanup) => {
+      if (this.store.status() === GameStatus.Finished) {
+        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        onCleanup(() => clearTimeout(timer));
+      } else {
+        this.showOverlay.set(false);
+      }
+    });
   }
 
   override ngOnInit() {
@@ -108,27 +120,39 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   
   readonly cellSize = computed(() => {
      const w = this.store.width();
+     const h = this.store.height();
      const maxH = this.maxHintsCount();
-     // Left/Top hints use 'auto' in CSS so they don't take full cell widths.
-     // Estimate them as roughly 50% of maxH in terms of cell equivalents.
-     const hintColsEstimated = Math.max(1.5, maxH * 0.5);
-     const totalGridCols = w + hintColsEstimated;
-     const totalGridRows = this.store.height() + hintColsEstimated;
-     
-     const isDesktop = this.windowSize.size().w >= 1024;
-     // On desktop, the card is up to 800px wide. We can use up to 700px for the board.
-     const availableWidth = isDesktop ? 700 : this.windowSize.size().w - 32;
-     
-     // Relax the height constraint significantly. We'd rather have a large readable board 
-     // that might require a slight scroll on very short screens, than a tiny unreadable board.
-     const availableHeight = this.windowSize.size().h - 120; 
-     
-     const sizeW = Math.floor(availableWidth / totalGridCols);
-     const sizeH = Math.floor(availableHeight / totalGridRows);
-     
-     // Base the cell size primarily on width, but apply a loose height constraint.
-     // Also increase the absolute maximum size to 120px for massive grids on 4K monitors.
-     return Math.max(30, Math.min(sizeW, Math.max(sizeH, 40), 120));
+     // Hint area uses CSS 'auto' — estimate as ~40% of maxH cell-equivalents
+     const hintEq = Math.max(2, maxH * 0.4);
+     const totalCols = w + hintEq;
+     const totalRows = h + hintEq;
+
+     const vw = this.windowSize.size().w;
+     const vh = this.windowSize.size().h;
+
+     let availW: number;
+     if (vw >= 1536) {
+       // 2xl: left(360) + right(360) + gaps(80) + padding(48)
+       availW = vw - 360 - 360 - 128;
+     } else if (vw >= 1280) {
+       // xl: left(280) + right(300) + gaps(80) + padding(48)
+       availW = vw - 280 - 300 - 128;
+     } else if (vw >= 1024) {
+       // lg: NO left panel, right(260) + gaps(48) + padding(32)
+       availW = vw - 260 - 80;
+     } else {
+       // mobile/tablet: full width minus card+page padding
+       availW = vw - 40;
+     }
+
+     // Height: header(~80px), draw toggle(~60px), padding(~40px)
+     const availH = vh - 180;
+
+     const sizeW = Math.floor(availW / totalCols);
+     const sizeH = Math.floor(availH / totalRows);
+
+     // Use the smaller constraint, minimum 28px, maximum 120px
+     return Math.max(28, Math.min(sizeW, sizeH, 120));
   });
 
   handleCellClick(x: number, y: number, event: MouseEvent) {
@@ -143,5 +167,21 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   onContextMenu(event: Event) {
     event.preventDefault(); // Prevent native right-click menu
+  }
+
+  getGameResult(): 'win' | 'lose' {
+    if (this.store.currentRoomMode() === GameMode.Single) return 'win';
+    const raw = this.wsService.gameState();
+    if (!raw || !raw.winners) return 'lose';
+    return raw.winners.includes(this.playerId) ? 'win' : 'lose';
+  }
+
+  handleRestart() {
+    this.store.playAgain();
+  }
+
+  onLeaveClick() {
+    this.store.leaveRoom();
+    this.navigateToLobby();
   }
 }

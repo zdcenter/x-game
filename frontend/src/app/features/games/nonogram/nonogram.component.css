@@ -8,10 +8,10 @@
   display: grid;
   /* Top-left | Col Hints
      Row Hints| Main Grid */
-  grid-template-columns: auto calc(var(--grid-width) * var(--cell-size) * 1px);
-  grid-template-rows: auto calc(var(--grid-height) * var(--cell-size) * 1px);
+  grid-template-columns: auto calc(var(--grid-width) * var(--cell-size));
+  grid-template-rows: auto calc(var(--grid-height) * var(--cell-size));
   background-color: white;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: 2px solid #94a3b8; /* slate-400 */
 }
@@ -34,7 +34,7 @@
 }
 
 .col-hint-item {
-  font-size: calc(var(--cell-size) * 0.4px);
+  font-size: calc(var(--cell-size) * 0.4);
   line-height: 1.2;
 }
 
@@ -46,7 +46,7 @@
 }
 
 .row-hint-item {
-  font-size: calc(var(--cell-size) * 0.5px);
+  font-size: calc(var(--cell-size) * 0.5);
 }
 
 .cells-grid {
