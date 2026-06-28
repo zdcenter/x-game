@@ -10,7 +10,7 @@
   }
 
   <!-- Top Full-Width Game Header -->
-  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-10 relative">
+  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
     <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
       <app-game-header [title]="t('sliding.title')() || 'Sliding Puzzle'"
         [subtitle]="currentRoomMode() === 'same_pk_speed' ? t('sliding.mode.same_pk_speed')() : t('sliding.mode.single')()"
@@ -95,7 +95,7 @@
     class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
     
     <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 self-stretch justify-center">
+    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
       <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
            [innerHTML]="t('game.sliding.seo_desc')()">
       </div>

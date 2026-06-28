@@ -175,6 +175,27 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.router.navigate(['/lobby']);
   }
 
+  getSubtitle(): string {
+    const v = this.view();
+    if (v === 'lobby') {
+      return this.i18n.t('lobby.select_level')();
+    } else if (v === 'play' && this.store.currentRoomMode() === GameMode.Single) {
+      return this.i18n.t('game.single_mode')();
+    } else {
+      return this.store.currentRoomMode() === GameMode.Speed ? this.i18n.t('game.speed_mode')() : this.i18n.t('game.steal_mode')();
+    }
+  }
+
+  onHeaderBack(): void {
+    if (this.view() === 'lobby') {
+      this.router.navigate(['/']);
+    } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
+      this.view.set('lobby');
+    } else {
+      this.returnToLobby();
+    }
+  }
+
   override openChangeSettings() {
     if (this.lobbyPanel && this.store.roomId()) {
       this.isMobileSidebarOpen.set(true);

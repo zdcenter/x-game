@@ -1,313 +1,380 @@
-<div class="h-[calc(100dvh-64px)] w-full overflow-hidden flex flex-col lg:flex-row bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300 relative select-none">
-  
-  <div class="flex-grow flex flex-col items-center overflow-y-auto overflow-x-hidden relative min-w-0 overscroll-none">
-    <!-- Cyber decoration -->
-    <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden flex justify-center items-center opacity-[0.03]">
-      <span class="text-[30rem] rotate-12">🕵️🔢</span>
-    </div>
+<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+  <!-- Cyber decoration -->
+  <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden flex justify-center items-center opacity-[0.03]">
+    <span class="text-[30rem] rotate-12">🕵️🔢</span>
+  </div>
 
-    <!-- Header -->
-    <div class="w-full">
-      <app-game-header  [title]="i18n.t('lobby.codebreaker')()"
-        [subtitle]="currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() + (currentDifficulty() ? ' - ' + (currentDifficulty() === GameDifficulty.Easy ? i18n.t('game.diff_easy')() : (currentDifficulty() === GameDifficulty.Hard ? i18n.t('game.diff_hard')() : i18n.t('game.diff_medium')())) : '') : i18n.t('codebreaker.game_mode_pk')()"
+  <!-- Rules Modal -->
+  <app-game-rules-modal [gameId]="'codebreaker'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  <!-- Tutorial Modal -->
+  @if (showTutorial()) {
+    <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
+  }
+
+  <!-- Top Full-Width Game Header -->
+  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
+    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
+      <app-game-header
+        [title]="i18n.t('lobby.codebreaker')()"
+        [subtitle]="getSubtitle()"
         iconGradientClass="from-teal-500 to-emerald-500"
         titleGradientClass="from-teal-400 to-emerald-400"
         shadowClass="shadow-emerald-500/20"
+        headerBgClass="bg-gradient-to-r from-teal-900/30 to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
         (back)="returnToLobby()"
-        (rules)="showRules.set(true)">
-        
+        (rules)="showRules.set(true)"
+      >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🔐</div>
 
-        <ng-container header-right>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider hidden sm:inline">
-                {{ currentRoomMode() === GameMode.Single ? i18n.t('gomoku.mode.single')() : i18n.t('codebreaker.game_mode_pk')() }}
-              </span>
-              @if (currentRoomMode() === GameMode.Single) {
-                <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)] hidden sm:inline"></span>
-                <div class="relative">
-                  <select [value]="currentDifficulty()" (change)="changeDifficulty($event)"
-                          class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
-                    <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
-                    <option value="medium">{{ i18n.t('game.diff_medium')() }}</option>
-                    <option value="hard">{{ i18n.t('game.diff_hard')() }}</option>
-                  </select>
-                  <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                  </svg>
-                </div>
-              }
+        <ng-container header-center>
+          @if (currentRoomMode() === GameMode.Single) {
+            <div class="relative ml-2 hidden sm:block">
+              <select [value]="currentDifficulty()" (change)="changeDifficulty($event)"
+                      class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-teal-500">
+                <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
+                <option value="medium">{{ i18n.t('game.diff_medium')() }}</option>
+                <option value="hard">{{ i18n.t('game.diff_hard')() }}</option>
+              </select>
+              <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
             </div>
+          }
+        </ng-container>
+
+        <ng-container header-right>
+          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button
-                (click)="navigateToPkArena()"
-                class="p-1.5 md:p-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg text-[var(--color-accent-to)] shadow-sm active:scale-95 transition-all z-10 hover:bg-[var(--color-bg-card)] flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
+                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK Arena</span>
               </button>
             }
+          </div>
         </ng-container>
       </app-game-header>
     </div>
+  </div>
 
-    @if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
-      <div class="flex-1 min-h-0 overflow-hidden">
-        <app-game-waiting-room
-          [gameId]="'codebreaker'"
-          [mode]="currentRoomMode()"
-          [roomId]="roomId()"
-          [difficulty]="currentDifficulty()"
-          [players]="mappedPlayers"
-          [hostId]="store.hostId()"
-          [currentUserId]="myPlayerId()"
-          (start)="store.startGame()"
-          (leave)="returnToLobby()"
-          (changeSettings)="openChangeSettings()"
-          [readyPlayers]="store.readyPlayers()"
-          (kick)="store.kickPlayer($event)"
-          (ready)="store.ready()"
-          (cancelReady)="store.cancelReady()"
-          [target]="store.currentRoomTarget()">
-        </app-game-waiting-room>
+  <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
+    
+    <!-- LEFT: SEO Description (Desktop only) -->
+    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
+           [innerHTML]="i18n.t('game.codebreaker.seo_desc')()">
       </div>
-    }
+    </div>
 
-    @if (currentRoomMode() === GameMode.Single || status() !== GameStatus.Waiting) {
-    <!-- Main Content Area -->
-    <main class="flex-grow w-full max-w-5xl px-2 lg:px-4 flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 z-10 pb-4 lg:pb-8 min-h-0 overflow-y-auto lg:overflow-hidden mt-2 lg:mt-6 mb-auto lg:max-h-[850px]">
-      
-      <!-- Left Panel: My Guess History (Scrollable) -->
-      <div class="flex-grow lg:flex-1 min-h-[250px] lg:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
-        <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
-          <span class="flex items-center gap-2">
-            <span>{{ i18n.t('codebreaker.guess_history')() }}</span>
-            @if (currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1) {
-              <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[myPlayerId()] || 0) + '/' + store.currentRoomTarget() }}</span>
-            }
-          </span>
-          <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() }}</span>
-        </h3>
+    <!-- CENTER: Game Arena -->
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center z-10">
+      <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
+           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        
+        @if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
+          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
+            <app-game-waiting-room
+              [gameId]="'codebreaker'"
+              [mode]="currentRoomMode()"
+              [roomId]="roomId()"
+              [difficulty]="currentDifficulty()"
+              [players]="mappedPlayers"
+              [hostId]="store.hostId()"
+              [currentUserId]="myPlayerId()"
+              (start)="store.startGame()"
+              (leave)="returnToLobby()"
+              (changeSettings)="openChangeSettings()"
+              [readyPlayers]="store.readyPlayers()"
+              (kick)="store.kickPlayer($event)"
+              (ready)="store.ready()"
+              (cancelReady)="store.cancelReady()"
+              [target]="store.currentRoomTarget()">
+            </app-game-waiting-room>
+          </div>
+        }
 
-        <!-- Hot Meter -->
-        @if ((myState()?.guesses?.length || 0) > 0) {
-          <div class="mb-3 flex items-center gap-2">
-            <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest shrink-0">BEST</span>
-            <div class="flex-grow h-2.5 rounded-full overflow-hidden bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-              <div class="h-full rounded-full transition-all duration-700 ease-out"
-                [style.width.%]="(maxAchievedA() / digitLength()) * 100"
-                [class]="maxAchievedA() === 0 ? 'bg-blue-400/50' : maxAchievedA() < digitLength() / 2 ? 'bg-blue-400' : maxAchievedA() < digitLength() - 1 ? 'bg-amber-400' : 'bg-rose-500'">
+        @if (currentRoomMode() === GameMode.Single || status() !== GameStatus.Waiting) {
+          <!-- Main Content Area -->
+          <div class="flex-grow w-full flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 pb-4 lg:pb-8 p-2 lg:p-4 min-h-0 overflow-y-auto lg:overflow-hidden lg:max-h-[850px]">
+            
+            <!-- Left Panel: My Guess History (Scrollable) -->
+            <div class="flex-grow lg:flex-1 min-h-[250px] lg:min-h-0 bg-[var(--color-bg-base)] rounded-2xl border border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
+              <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
+                <span class="flex items-center gap-2">
+                  <span>{{ i18n.t('codebreaker.guess_history')() }}</span>
+                  @if (currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1) {
+                    <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[myPlayerId()] || 0) + '/' + store.currentRoomTarget() }}</span>
+                  }
+                </span>
+                <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() }}</span>
+              </h3>
+
+              <!-- Hot Meter -->
+              @if ((myState()?.guesses?.length || 0) > 0) {
+                <div class="mb-3 flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest shrink-0">BEST</span>
+                  <div class="flex-grow h-2.5 rounded-full overflow-hidden bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                    <div class="h-full rounded-full transition-all duration-700 ease-out"
+                      [style.width.%]="(maxAchievedA() / digitLength()) * 100"
+                      [class]="maxAchievedA() === 0 ? 'bg-blue-400/50' : maxAchievedA() < digitLength() / 2 ? 'bg-blue-400' : maxAchievedA() < digitLength() - 1 ? 'bg-amber-400' : 'bg-rose-500'">
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-black font-mono shrink-0"
+                    [class]="maxAchievedA() === 0 ? 'text-blue-400' : maxAchievedA() < digitLength() / 2 ? 'text-blue-400' : maxAchievedA() < digitLength() - 1 ? 'text-amber-400' : 'text-rose-500'">
+                    {{ maxAchievedA() }}A / {{ digitLength() }}
+                  </span>
+                </div>
+              }
+              
+              <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                @if (myState() && myState()!.guesses.length > 0) {
+                  @for (rec of myState()!.guesses; track $index) {
+                    <div class="flex items-center justify-between p-2.5 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-emerald-500/30 transition-all font-mono"
+                      [class.guess-row-new]="$last && revealLatest()">
+                      <span class="text-xs text-[var(--color-text-muted)]">#{{ $index + 1 }}</span>
+                      <span class="font-black text-lg text-[var(--color-text-main)] tracking-widest pl-2">{{ rec.guess }}</span>
+                      <div class="flex gap-1.5 ml-auto">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          [class.result-badge]="$last && revealLatest()">{{ rec.a }}A</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          [class.result-badge-b]="$last && revealLatest()">{{ rec.b }}B</span>
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <div class="h-full flex flex-col items-center justify-center text-center p-4 text-[var(--color-text-muted)] text-sm space-y-2">
+                    <span class="text-3xl mb-1">🕵️</span>
+                    <p class="font-bold text-[var(--color-text-main)]">{{ i18n.t('codebreaker.how_to_play')() }}</p>
+                    <p class="text-xs">{{ i18n.t('codebreaker.rules_intro_pre')() }}<strong>{{ digitLength() }}{{ i18n.t('codebreaker.rules_intro_strong')() }}</strong>{{ i18n.t('codebreaker.rules_intro_post')() }}</p>
+                    <div class="flex gap-2">
+                      <span class="text-[10px] sm:text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded whitespace-nowrap">{{ i18n.t('codebreaker.rules_a')() }}</span>
+                      <span class="text-[10px] sm:text-xs text-amber-500 font-bold bg-amber-500/10 px-2 py-1 rounded whitespace-nowrap">{{ i18n.t('codebreaker.rules_b')() }}</span>
+                    </div>
+                    <div class="mt-4 p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] w-full text-left shadow-inner">
+                      <p class="text-[10px] opacity-80 mb-1">{{ i18n.t('codebreaker.rules_ex_title')() }}</p>
+                      <p class="text-[10px] opacity-80">{{ i18n.t('codebreaker.rules_ex_guess')() }} <span class="text-emerald-500 font-bold ml-1">1A</span><span class="text-amber-500 font-bold ml-1">2B</span></p>
+                    </div>
+                  </div>
+                }
               </div>
             </div>
-            <span class="text-[10px] font-black font-mono shrink-0"
-              [class]="maxAchievedA() === 0 ? 'text-blue-400' : maxAchievedA() < digitLength() / 2 ? 'text-blue-400' : maxAchievedA() < digitLength() - 1 ? 'text-amber-400' : 'text-rose-500'">
-              {{ maxAchievedA() }}A / {{ digitLength() }}
-            </span>
+
+            <!-- Center Panel: Inputs and Soft Keyboard -->
+            <div class="flex-grow lg:w-[400px] shrink-0 bg-[var(--color-bg-base)] rounded-2xl border border-[var(--color-border-card)] p-4 lg:p-6 shadow-lg flex flex-col justify-between overflow-y-auto custom-scrollbar">
+              
+              <!-- Code Display Inputs -->
+              <div class="flex flex-col items-center justify-center gap-4 my-2">
+                <div class="flex gap-2">
+                  @for (item of [].constructor(digitLength()); track $index) {
+                    <div class="w-12 h-14 md:w-14 md:h-16 rounded-xl border-2 border-[var(--color-border-card)] bg-[var(--color-bg-main)] flex items-center justify-center text-2xl md:text-3xl font-black text-[var(--color-accent-from)] shadow-inner transition-all duration-200 relative"
+                         [class.border-emerald-500]="currentInput().length === $index"
+                         [class.shadow-[0_0_12px_rgba(16,185,129,0.2)]]="currentInput().length === $index"
+                         [class.animate-pulse]="myState()?.guesses?.length === 0 && currentInput().length === 0 && $index === 0">
+                      {{ currentInput()[$index] || '•' }}
+                      <div class="absolute bottom-1 left-0 right-0 text-center text-[10px] md:text-xs text-[var(--color-text-muted)] opacity-50 pointer-events-none font-bold">
+                        {{ i18n.t('codebreaker.helper_pos')().replace('{n}', ($index + 1).toString()) }}
+                      </div>
+                      
+                      <!-- Arrow pointing to the first input slot from the left -->
+                      @if (myState()?.guesses?.length === 0 && currentInput().length === 0 && $index === 0) {
+                        <div class="absolute -left-10 top-1/2 -translate-y-1/2 text-emerald-400 animate-pulse pointer-events-none drop-shadow-[0_2px_4px_rgba(16,185,129,0.4)]">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 12h15" />
+                          </svg>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <span class="text-xs font-bold tracking-wider transition-all duration-500"
+                        [ngClass]="myState()?.guesses?.length === 0 && currentInput().length === 0 ? 'text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]' : 'text-[var(--color-text-muted)]'">
+                    {{ i18n.t('codebreaker.input_hint_pre')() }}<strong class="text-[var(--color-text-main)] text-sm mx-1">{{ digitLength() }}</strong>{{ i18n.t('codebreaker.input_hint_post')() }}
+                  </span>
+                  @if (currentRoomMode() === GameMode.Single) {
+                    <app-hint-button layout="compact" (hintApplied)="applyHint()"></app-hint-button>
+                  }
+                </div>
+              </div>
+
+              <!-- Numeric Soft Keyboard -->
+              <div class="grid grid-cols-4 gap-2.5 max-w-sm mx-auto w-full my-4">
+                @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
+                  <button (click)="pressKey(num)" 
+                          [disabled]="currentInput().includes(num)"
+                          class="py-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-base md:text-lg font-black transition-all active:scale-95 shadow-sm disabled:opacity-30 disabled:pointer-events-none touch-manipulation">
+                    {{ num }}
+                  </button>
+                }
+                <!-- Control buttons -->
+                <button (click)="deleteLast()" 
+                        class="py-3 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center transition-all active:scale-95 shadow-sm touch-manipulation" title="Delete">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
+                  </svg>
+                </button>
+                <button (click)="submitGuess()" 
+                        [disabled]="currentInput().length !== digitLength()"
+                        class="py-3 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] text-xs md:text-sm font-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:pointer-events-none touch-manipulation">
+                  {{ i18n.t('codebreaker.keyboard.submit')() }}
+                </button>
+              </div>
+
+              <!-- Helpers Number Scratchpad -->
+              <div class="bg-[var(--color-bg-main)] rounded-xl p-3 border border-dashed border-[var(--color-border-card)] mx-auto w-full max-w-sm mt-4 select-none">
+                <div class="flex items-center justify-between mb-3 border-b border-[var(--color-border-card)] pb-2">
+                  <div class="flex flex-col">
+                    <span class="text-xs font-bold text-[var(--color-text-main)] flex items-center gap-1.5">
+                      📝 {{ i18n.t('codebreaker.helper_board')() }}
+                    </span>
+                    <span class="text-[10px] text-[var(--color-text-muted)] opacity-80">{{ i18n.t('codebreaker.helper_desc')() }}</span>
+                  </div>
+                </div>
+                
+                <div class="flex flex-col gap-2 w-full">
+                  <!-- Global row -->
+                  <div class="flex items-center justify-between w-full">
+                     <span class="text-[10px] text-[var(--color-text-muted)] w-8 text-center shrink-0 font-bold">{{ i18n.t('codebreaker.helper_global')() }}</span>
+                     @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
+                       <div (click)="cycleHelperMark('global-' + num)"
+                            class="cursor-pointer w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs sm:text-sm font-mono font-bold transition-all shadow-[0_1px_2px_rgba(0,0,0,0.1)] touch-manipulation"
+                            [ngClass]="{
+                              'bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)]': (helperMarks()['global-' + num] || 'none') === 'none',
+                              'bg-red-500/10 text-red-500 line-through opacity-60 border border-transparent': helperMarks()['global-' + num] === 'cross',
+                              'bg-emerald-500 text-white shadow-md border border-transparent': helperMarks()['global-' + num] === 'check'
+                            }">
+                         {{ num }}
+                       </div>
+                     }
+                  </div>
+                  
+                  <!-- Position rows -->
+                  @for (pos of [].constructor(digitLength()); track $index; let outerIdx = $index) {
+                    <div class="flex items-center justify-between w-full">
+                       <span class="text-[10px] text-[var(--color-text-muted)] w-8 text-center shrink-0 opacity-70">{{ i18n.t('codebreaker.helper_pos')().replace('{n}', (outerIdx + 1).toString()) }}</span>
+                       @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
+                         <div (click)="cycleHelperMark('pos' + outerIdx + '-' + num)"
+                              class="cursor-pointer w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-[10px] sm:text-xs font-mono font-bold transition-all touch-manipulation"
+                              [ngClass]="{
+                                'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]/50 opacity-80': (helperMarks()['pos' + outerIdx + '-' + num] || 'none') === 'none',
+                                'bg-red-500/10 text-red-500 line-through opacity-60 border border-transparent': helperMarks()['pos' + outerIdx + '-' + num] === 'cross',
+                                'bg-emerald-500 text-white shadow-sm border border-transparent': helperMarks()['pos' + outerIdx + '-' + num] === 'check'
+                              }">
+                           {{ num }}
+                         </div>
+                       }
+                    </div>
+                  }
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Panel: Opponent Progress (PK mode only) -->
+            @if (currentRoomMode() !== GameMode.Single) {
+              <div class="flex-grow lg:flex-1 min-h-[200px] lg:min-h-0 bg-[var(--color-bg-base)] rounded-2xl border border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
+                <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
+                  <span class="flex items-center gap-1.5">
+                    <span>{{ i18n.t('codebreaker.opponent_history')() }}</span>
+                    @if (opponentState()) {
+                      <span class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full font-bold">
+                        {{ opponentState()?.id === store.hostId() ? '👑' : '👤' }} {{ opponentState()?.id }}
+                      </span>
+                      @if (store.currentRoomTarget() > 1) {
+                        <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[opponentState()!.id] || 0) + '/' + store.currentRoomTarget() }}</span>
+                      }
+                    }
+                  </span>
+                  @if (opponentState()) {
+                    <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ opponentState()!.guesses.length }} {{ i18n.t('codebreaker.guess')() }}</span>
+                  }
+                </h3>
+
+                <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                  @if (opponentState() && opponentState()!.guesses.length > 0) {
+                    <div class="mb-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col gap-1.5 font-mono text-xs text-indigo-300">
+                      <div class="flex justify-between items-center">
+                        <span>{{ i18n.t('codebreaker.opponent_attempts')().replace('{count}', opponentState()!.guesses.length.toString()) }}</span>
+                        @if (opponentState()?.finished) {
+                          <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">🎉 已破译</span>
+                        } @else {
+                          <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">⚡ 正在推理</span>
+                        }
+                      </div>
+                      <div>{{ i18n.t('codebreaker.opponent_best')().replace('{best}', getOpponentBestResult()) }}</div>
+                    </div>
+
+                    @for (rec of opponentState()!.guesses; track $index) {
+                      <div class="flex items-center justify-between p-2 bg-[var(--color-bg-main)]/50 rounded-xl border border-[var(--color-border-card)]/50 font-mono text-xs opacity-60">
+                        <span>#{{ $index + 1 }}</span>
+                        <span class="font-black tracking-widest pl-2">****</span>
+                        <div class="flex gap-1">
+                          <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80">{{ rec.a }}A</span>
+                          <span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400/80">{{ rec.b }}B</span>
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--color-text-muted)] text-sm">
+                      👤 <span>对方还没有进行尝试</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
           </div>
         }
         
-        <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-          @if (myState() && myState()!.guesses.length > 0) {
-            @for (rec of myState()!.guesses; track $index) {
-              <div class="flex items-center justify-between p-2.5 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] hover:border-emerald-500/30 transition-all font-mono"
-                [class.guess-row-new]="$last && revealLatest()">
-                <span class="text-xs text-[var(--color-text-muted)]">#{{ $index + 1 }}</span>
-                <span class="font-black text-lg text-[var(--color-text-main)] tracking-widest pl-2">{{ rec.guess }}</span>
-                <div class="flex gap-1.5 ml-auto">
-                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                    [class.result-badge]="$last && revealLatest()">{{ rec.a }}A</span>
-                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                    [class.result-badge-b]="$last && revealLatest()">{{ rec.b }}B</span>
-                </div>
-              </div>
-            }
-          } @else {
-            <div class="h-full flex flex-col items-center justify-center text-center p-4 text-[var(--color-text-muted)] text-sm space-y-2">
-              <span class="text-3xl mb-1">🕵️</span>
-              <p class="font-bold text-[var(--color-text-main)]">{{ i18n.t('codebreaker.how_to_play')() }}</p>
-              <p class="text-xs">{{ i18n.t('codebreaker.rules_intro_pre')() }}<strong>{{ digitLength() }}{{ i18n.t('codebreaker.rules_intro_strong')() }}</strong>{{ i18n.t('codebreaker.rules_intro_post')() }}</p>
-              <div class="flex gap-2">
-                <span class="text-[10px] sm:text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded whitespace-nowrap">{{ i18n.t('codebreaker.rules_a')() }}</span>
-                <span class="text-[10px] sm:text-xs text-amber-500 font-bold bg-amber-500/10 px-2 py-1 rounded whitespace-nowrap">{{ i18n.t('codebreaker.rules_b')() }}</span>
-              </div>
-              <div class="mt-4 p-3 bg-[var(--color-bg-main)] rounded-xl border border-[var(--color-border-card)] w-full text-left shadow-inner">
-                <p class="text-[10px] opacity-80 mb-1">{{ i18n.t('codebreaker.rules_ex_title')() }}</p>
-                <p class="text-[10px] opacity-80">{{ i18n.t('codebreaker.rules_ex_guess')() }} <span class="text-emerald-500 font-bold ml-1">1A</span><span class="text-amber-500 font-bold ml-1">2B</span></p>
-              </div>
-            </div>
-          }
-        </div>
+        <!-- Starting Overlay -->
+        @if (status() === GameStatus.Starting) {
+          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+        }
+
+        <!-- Results Overlay -->
+        @if (status() === GameStatus.Finished && showOverlay()) {
+          <app-game-result-overlay
+            currentGameId="codebreaker"
+            [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"
+            [title]="winnerText"
+            [subtitle]="winDescription"
+            [xpResult]="store.lastStatResult()?.xp_result"
+            [isNewRecord]="store.lastStatResult()?.isNewRecord"
+            [showRestart]="true"
+            [showLeave]="true"
+            (restart)="onRestart()"
+            (leave)="returnToLobby()"
+                [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+                (changeRoomGame)="store.changeRoomGame($event)">
+          </app-game-result-overlay>
+        }
       </div>
+    </div>
 
-      <!-- Center Panel: Inputs and Soft Keyboard -->
-      <div class="flex-grow lg:w-[400px] shrink-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 lg:p-6 shadow-lg flex flex-col justify-between overflow-y-auto custom-scrollbar">
-        
-        <!-- Code Display Inputs -->
-        <div class="flex flex-col items-center justify-center gap-4 my-2">
-          <div class="flex gap-2">
-            @for (item of [].constructor(digitLength()); track $index) {
-              <div class="w-12 h-14 md:w-14 md:h-16 rounded-xl border-2 border-[var(--color-border-card)] bg-[var(--color-bg-main)] flex items-center justify-center text-2xl md:text-3xl font-black text-[var(--color-accent-from)] shadow-inner transition-all duration-200 relative"
-                   [class.border-emerald-500]="currentInput().length === $index"
-                   [class.shadow-[0_0_12px_rgba(16,185,129,0.2)]]="currentInput().length === $index"
-                   [class.animate-pulse]="myState()?.guesses?.length === 0 && currentInput().length === 0 && $index === 0">
-                {{ currentInput()[$index] || '•' }}
-                <div class="absolute bottom-1 left-0 right-0 text-center text-[10px] md:text-xs text-[var(--color-text-muted)] opacity-50 pointer-events-none font-bold">
-                  {{ i18n.t('codebreaker.helper_pos')().replace('{n}', ($index + 1).toString()) }}
-                </div>
-                
-                <!-- Arrow pointing to the first input slot from the left -->
-                @if (myState()?.guesses?.length === 0 && currentInput().length === 0 && $index === 0) {
-                  <div class="absolute -left-10 top-1/2 -translate-y-1/2 text-emerald-400 animate-pulse pointer-events-none drop-shadow-[0_2px_4px_rgba(16,185,129,0.4)]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7-7 7M5 12h15" />
-                    </svg>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-          <div class="flex items-center gap-2 sm:gap-3">
-            <span class="text-xs font-bold tracking-wider transition-all duration-500"
-                  [ngClass]="myState()?.guesses?.length === 0 && currentInput().length === 0 ? 'text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]' : 'text-[var(--color-text-muted)]'">
-              {{ i18n.t('codebreaker.input_hint_pre')() }}<strong class="text-[var(--color-text-main)] text-sm mx-1">{{ digitLength() }}</strong>{{ i18n.t('codebreaker.input_hint_post')() }}
-            </span>
-            @if (currentRoomMode() === GameMode.Single) {
-              <app-hint-button layout="compact" (hintApplied)="applyHint()"></app-hint-button>
-            }
-          </div>
-        </div>
-
-        <!-- Numeric Soft Keyboard -->
-        <div class="grid grid-cols-4 gap-2.5 max-w-sm mx-auto w-full my-4">
-          @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
-            <button (click)="pressKey(num)" 
-                    [disabled]="currentInput().includes(num)"
-                    class="py-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-base md:text-lg font-black transition-all active:scale-95 shadow-sm disabled:opacity-30 disabled:pointer-events-none touch-manipulation">
-              {{ num }}
-            </button>
-          }
-          <!-- Control buttons -->
-          <button (click)="deleteLast()" 
-                  class="py-3 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 flex items-center justify-center transition-all active:scale-95 shadow-sm touch-manipulation" title="Delete">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
-            </svg>
-          </button>
-          <button (click)="submitGuess()" 
-                  [disabled]="currentInput().length !== digitLength()"
-                  class="py-3 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] text-xs md:text-sm font-black transition-all active:scale-95 shadow-md disabled:opacity-50 disabled:pointer-events-none touch-manipulation">
-            {{ i18n.t('codebreaker.keyboard.submit')() }}
-          </button>
-        </div>
-
-        <!-- Helpers Number Scratchpad -->
-        <div class="bg-[var(--color-bg-main)] rounded-xl p-3 border border-dashed border-[var(--color-border-card)] mx-auto w-full max-w-sm mt-4 select-none">
-          <div class="flex items-center justify-between mb-3 border-b border-[var(--color-border-card)] pb-2">
-            <div class="flex flex-col">
-              <span class="text-xs font-bold text-[var(--color-text-main)] flex items-center gap-1.5">
-                📝 {{ i18n.t('codebreaker.helper_board')() }}
-              </span>
-              <span class="text-[10px] text-[var(--color-text-muted)] opacity-80">{{ i18n.t('codebreaker.helper_desc')() }}</span>
-            </div>
-          </div>
-          
-          <div class="flex flex-col gap-2 w-full">
-            <!-- Global row -->
-            <div class="flex items-center justify-between w-full">
-               <span class="text-[10px] text-[var(--color-text-muted)] w-8 text-center shrink-0 font-bold">{{ i18n.t('codebreaker.helper_global')() }}</span>
-               @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
-                 <div (click)="cycleHelperMark('global-' + num)"
-                      class="cursor-pointer w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs sm:text-sm font-mono font-bold transition-all shadow-[0_1px_2px_rgba(0,0,0,0.1)] touch-manipulation"
-                      [ngClass]="{
-                        'bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)]': (helperMarks()['global-' + num] || 'none') === 'none',
-                        'bg-red-500/10 text-red-500 line-through opacity-60 border border-transparent': helperMarks()['global-' + num] === 'cross',
-                        'bg-emerald-500 text-white shadow-md border border-transparent': helperMarks()['global-' + num] === 'check'
-                      }">
-                   {{ num }}
-                 </div>
-               }
-            </div>
-            
-            <!-- Position rows -->
-            @for (pos of [].constructor(digitLength()); track $index; let outerIdx = $index) {
-              <div class="flex items-center justify-between w-full">
-                 <span class="text-[10px] text-[var(--color-text-muted)] w-8 text-center shrink-0 opacity-70">{{ i18n.t('codebreaker.helper_pos')().replace('{n}', (outerIdx + 1).toString()) }}</span>
-                 @for (num of ['1','2','3','4','5','6','7','8','9','0']; track num) {
-                   <div (click)="cycleHelperMark('pos' + outerIdx + '-' + num)"
-                        class="cursor-pointer w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-[10px] sm:text-xs font-mono font-bold transition-all touch-manipulation"
-                        [ngClass]="{
-                          'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]/50 opacity-80': (helperMarks()['pos' + outerIdx + '-' + num] || 'none') === 'none',
-                          'bg-red-500/10 text-red-500 line-through opacity-60 border border-transparent': helperMarks()['pos' + outerIdx + '-' + num] === 'cross',
-                          'bg-emerald-500 text-white shadow-sm border border-transparent': helperMarks()['pos' + outerIdx + '-' + num] === 'check'
-                        }">
-                     {{ num }}
-                   </div>
-                 }
-              </div>
-            }
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Right Panel: Opponent Progress (PK mode only) -->
-      @if (currentRoomMode() !== GameMode.Single) {
-        <div class="flex-grow lg:flex-1 min-h-[200px] lg:min-h-0 bg-[var(--color-bg-card)] rounded-2xl border-2 border-[var(--color-border-card)] p-4 shadow-lg flex flex-col overflow-hidden">
-          <h3 class="font-bold text-sm md:text-base border-b border-[var(--color-border-card)] pb-2 mb-3 flex items-center justify-between text-[var(--color-text-main)]">
-            <span class="flex items-center gap-1.5">
-              <span>{{ i18n.t('codebreaker.opponent_history')() }}</span>
-              @if (opponentState()) {
-                <span class="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full font-bold">
-                  {{ opponentState()?.id === store.hostId() ? '👑' : '👤' }} {{ opponentState()?.id }}
-                </span>
-                @if (store.currentRoomTarget() > 1) {
-                  <span class="text-xs font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">🏆 {{ (store.pkWins()[opponentState()!.id] || 0) + '/' + store.currentRoomTarget() }}</span>
-                }
-              }
-            </span>
-            @if (opponentState()) {
-              <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ opponentState()!.guesses.length }} {{ i18n.t('codebreaker.guess')() }}</span>
-            }
-          </h3>
-
-          <div class="flex-grow overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-            @if (opponentState() && opponentState()!.guesses.length > 0) {
-              <div class="mb-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex flex-col gap-1.5 font-mono text-xs text-indigo-300">
-                <div class="flex justify-between items-center">
-                  <span>{{ i18n.t('codebreaker.opponent_attempts')().replace('{count}', opponentState()!.guesses.length.toString()) }}</span>
-                  @if (opponentState()?.finished) {
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">🎉 已破译</span>
-                  } @else {
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">⚡ 正在推理</span>
-                  }
-                </div>
-                <div>{{ i18n.t('codebreaker.opponent_best')().replace('{best}', getOpponentBestResult()) }}</div>
-              </div>
-
-              @for (rec of opponentState()!.guesses; track $index) {
-                <div class="flex items-center justify-between p-2 bg-[var(--color-bg-main)]/50 rounded-xl border border-[var(--color-border-card)]/50 font-mono text-xs opacity-60">
-                  <span>#{{ $index + 1 }}</span>
-                  <span class="font-black tracking-widest pl-2">****</span>
-                  <div class="flex gap-1">
-                    <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80">{{ rec.a }}A</span>
-                    <span class="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400/80">{{ rec.b }}B</span>
-                  </div>
-                </div>
-              }
-            } @else {
-              <div class="h-full flex flex-col items-center justify-center text-center p-6 text-[var(--color-text-muted)] text-sm">
-                👤 <span>对方还没有进行尝试</span>
-              </div>
-            }
-          </div>
-        </div>
+    <!-- RIGHT: Right Column / Multiplayer Sidebar -->
+    <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">
+      @if (settingsService.settings().multiplayer_enabled === 'true') {
+        <app-game-lobby-panel
+          #lobbyPanel
+          class="flex-grow flex"
+          [currentGameId]="'codebreaker'"
+          [currentRoomId]="roomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+        </app-game-lobby-panel>
       }
+    </div>
+  </div>
 
-    </main>
-    }
+  <!-- BOTTOM: Mobile SEO Section -->
+  <div class="lg:hidden w-full max-w-[800px] mt-4 pb-8 mx-auto px-4">
+    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-6 shadow-sm">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
+           [innerHTML]="i18n.t('game.codebreaker.seo_desc')()">
+      </div>
+    </div>
   </div>
 
   <!-- Hint Overlay -->
@@ -330,65 +397,19 @@
     </div>
   }
 
-  <!-- Modals & Overlays -->
-  <app-game-rules-modal [gameId]="'codebreaker'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
-
-
-
-  <!-- Starting Overlay -->
-  @if (status() === GameStatus.Starting) {
-    <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-  }
-
-  <!-- Results Overlay -->
-  @if (status() === GameStatus.Finished && showOverlay()) {
-    <app-game-result-overlay
-      currentGameId="codebreaker"
-      [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"
-      [title]="winnerText"
-      [subtitle]="winDescription"
-      [xpResult]="store.lastStatResult()?.xp_result"
-      [isNewRecord]="store.lastStatResult()?.isNewRecord"
-      [showRestart]="true"
-      [showLeave]="true"
-      (restart)="onRestart()"
-      (leave)="returnToLobby()"
-          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-          (changeRoomGame)="store.changeRoomGame($event)">
-    </app-game-result-overlay>
-  }
-
-  <!-- Sidebar Overlay Backdrop -->
+  <!-- Mobile Sidebar Overlay Backdrop -->
   @if (isMobileSidebarOpen()) {
     <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
-  }
-
-  <!-- Right Sidebar (Lobby Panel) -->
-  @if (settingsService.settings().multiplayer_enabled === 'true') {
-<div class="flex-shrink-0 transition-transform duration-300"
-       [ngClass]="{
-         'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
-         'translate-x-0': isMobileSidebarOpen(),
-         'translate-x-full': !isMobileSidebarOpen(),
-         'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0 lg:border-l lg:border-[var(--color-border-card)]': true
-       }">
-    <div class="flex justify-between items-center mb-4 lg:hidden">
-      <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
+    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col transition-transform duration-300">
+       <div class="flex justify-between items-center mb-4 lg:hidden" >
+         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
+       </div>
+       <app-game-lobby-panel
+          [currentGameId]="'codebreaker'"
+          [currentRoomId]="roomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+       </app-game-lobby-panel>
     </div>
-    <app-game-lobby-panel
-      #lobbyPanel
-      class="flex-grow flex"
-      [currentGameId]="'codebreaker'"
-      [currentRoomId]="roomId()"
-      (joinRoom)="handleJoinRoom($event)"
-      (createRoom)="handleCreateRoom($event)">
-    </app-game-lobby-panel>
-  </div>
-    }
-
-  <app-tutorial-overlay
-    [steps]="tutorialSteps"
-    [visible]="showTutorial()"
-    (done)="onTutorialDone()">
-  </app-tutorial-overlay>
+  }
 </div>

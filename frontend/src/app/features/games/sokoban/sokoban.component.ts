@@ -42,61 +42,87 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     TutorialOverlayComponent,
   ],
   template: `
-<div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-y-auto lg:overflow-hidden select-none overscroll-none">
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
-      @if (showLobby()) {
-        <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0" (openLobby)="navigateToPkArena()" (levelSelect)="onLevelSelect($event)"></app-sokoban-lobby>
-      } @else {
-      <div class="w-full h-full flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-3 lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
-           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-        <app-game-header
+<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+
+  <!-- Rules Modal -->
+  <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  <!-- Tutorial Modal -->
+  @if (showTutorial()) {
+    <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
+  }
+
+  <!-- Top Full-Width Game Header (Shared for Lobby & Game) -->
+  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
+    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
+      <app-game-header
         [title]="i18n.t('lobby.sokoban')()"
-        [subtitle]="getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === GameMode.Single ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : '')"
+        [subtitle]="showLobby() ? i18n.t('lobby.select_level')() : (getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === GameMode.Single ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : ''))"
         iconGradientClass="from-amber-400 to-orange-500"
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-orange-500/20"
-        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-0"
-        (back)="showLobby.set(true)"
+        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+        (back)="onHeaderBack()"
         (rules)="showRules.set(true)"
       >
-        <div game-icon>📦</div>
+        <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">📦</div>
 
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-            @if (store.currentRoomMode() === GameMode.Single) {
+            @if (store.currentRoomMode() === GameMode.Single && !showLobby()) {
               <button (click)="showLobby.set(true)" 
-                      class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
-                <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.levels_lobby')() }}</span>
-              </button>
-            }
-            @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="navigateToPkArena()" class="p-1.5 lg:p-2 rounded-full text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-black/10 transition-colors active:scale-95 flex items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
-            </button>
-}
-          </div>
-        </ng-container>
+                        class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
+                  <svg class="w-3 h-3 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ i18n.t('game.levels_lobby')() }}</span>
+                </button>
+              }
+              @if (settingsService.settings().multiplayer_enabled === 'true') {
+                <button (click)="navigateToPkArena()" class="p-1.5 lg:p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shadow-sm flex items-center gap-1 active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
+                </button>
+              }
+            </div>
+          </ng-container>
       </app-game-header>
 
-      <!-- Progress Bar -->
-      <div class="h-1.5 bg-[var(--color-border-card)] relative group overflow-hidden border border-[var(--color-border-card)] border-t-0 shadow-md mb-2 lg:mb-3 -mt-0 -mx-3 lg:-mx-5 z-10 rounded-b-xl">
-        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
-          [style.width.%]="store.myProgress()">
+      @if (!showLobby()) {
+        <!-- Progress Bar -->
+        <div class="h-1.5 bg-[var(--color-border-card)] relative group overflow-hidden z-10 border-t border-[var(--color-border-card)]">
+          <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
+            [style.width.%]="store.myProgress()">
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute -top-6 whitespace-nowrap shadow-md z-20">
+              {{ store.myCorrectCount() }} / {{ store.totalTargets() }}
+            </span>
+          </div>
         </div>
-        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span class="text-[10px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] backdrop-blur-sm px-2 rounded-full absolute -top-6 whitespace-nowrap shadow-md z-20">
-            {{ store.myCorrectCount() }} / {{ store.totalTargets() }}
-          </span>
-        </div>
-      </div>
+      }
+    </div>
+  </div>
 
-      <div class="flex-grow flex flex-col relative min-h-0 w-full rounded-b-2xl lg:rounded-b-3xl overflow-hidden">
+  <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
+    
+    <!-- LEFT: SEO Description (Desktop only) -->
+    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
+           [innerHTML]="i18n.t('game.sokoban.seo_desc')()">
+      </div>
+    </div>
+
+    <!-- CENTER: Game Arena -->
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center">
+      @if (showLobby()) {
+        <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-[600px]" (openLobby)="navigateToPkArena()" (levelSelect)="onLevelSelect($event)"></app-sokoban-lobby>
+      } @else {
+        <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
+             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+          <div class="flex-grow flex flex-col relative min-h-0 bg-[var(--color-bg-base)] w-full">
 
 
 
@@ -236,28 +262,34 @@ import { TutorialService } from '../../../core/services/tutorial.service';
           </app-game-result-overlay>
         }
 
-      </div>
-      </div>
+        </div>
+        </div>
       }
+      
+      <!-- BOTTOM: SEO Description (Mobile/Tablet only) -->
+      <div class="block lg:hidden w-full mx-auto px-2 py-6 flex-none z-0">
+        <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
+             [innerHTML]="i18n.t('game.sokoban.seo_desc')()">
+        </div>
+      </div>
     </div>
 
     <!-- Mobile Sidebar Overlay Backdrop -->
     @if (isMobileSidebarOpen()) {
-      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40" 
+      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" 
            [class.lg:hidden]="!(store.status() === GameStatus.Playing && store.currentRoomMode() !== GameMode.Single)"
            (click)="isMobileSidebarOpen.set(false)"></div>
     }
 
     <!-- Right Sidebar (Lobby Panel) -->
     @if (settingsService.settings().multiplayer_enabled === 'true') {
-      <div class="flex-shrink-0 transition-transform duration-300"
+      <div class="flex-shrink-0 transition-transform duration-300 self-stretch flex flex-col justify-center"
            [ngClass]="{
-             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
+             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4': true,
              'translate-x-0': isMobileSidebarOpen(),
              'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:flex': true}">
-        <div class="flex justify-between items-center mb-4 lg:hidden"
-             >
+             'lg:relative lg:inset-auto lg:w-[320px] xl:w-[400px] lg:shadow-none lg:p-0 lg:z-20 lg:translate-x-0 lg:bg-transparent lg:flex': true}">
+        <div class="flex justify-between items-center mb-4 lg:hidden">
           <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
           <button (click)="isMobileSidebarOpen.set(false)" class="p-2 bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -274,10 +306,11 @@ import { TutorialService } from '../../../core/services/tutorial.service';
           (createRoom)="handleCreateRoom($event)">
         </app-game-lobby-panel>
       </div>
+    } @else {
+      <!-- Empty Right Column for balance if Multiplayer disabled -->
+      <div class="hidden lg:block w-[320px] xl:w-[400px] flex-shrink-0"></div>
     }
   </div>
-
-  <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
   @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
     <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
@@ -301,6 +334,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     </div>
   }
   <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
+</div>
   `
 })
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
@@ -413,6 +447,14 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       }
     } else {
       this.store.joinRoom('', GameMode.Single, GameDifficulty.Easy, this.playerId);
+    }
+  }
+
+  onHeaderBack() {
+    if (this.showLobby()) {
+      this.router.navigate(['/lobby']);
+    } else {
+      this.showLobby.set(true);
     }
   }
 

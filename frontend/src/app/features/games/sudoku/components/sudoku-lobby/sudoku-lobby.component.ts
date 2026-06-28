@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
-import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
+
 import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -8,7 +8,7 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { SudokuStore } from '../../store/sudoku.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
-import { GameRulesModalComponent } from '../../../../../shared/components/game-rules-modal/game-rules-modal.component';
+
 import { environment } from '../../../../../../environments/environment';
 
 interface LevelResponse {
@@ -25,7 +25,7 @@ interface LevelResponse {
 @Component({
   selector: 'app-sudoku-lobby',
   standalone: true,
-  imports: [CommonModule, GameRulesModalComponent, GameHeaderComponent],
+  imports: [CommonModule],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   templateUrl: './sudoku-lobby.component.html',
   styleUrl: './sudoku-lobby.component.css'})
@@ -41,7 +41,6 @@ export class SudokuLobbyComponent implements OnInit {
   authStore = inject(AuthStore);
   
   playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
-  showRules = signal(false);
 
   @Output() openLobby = new EventEmitter<void>();
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}>();
@@ -95,9 +94,5 @@ export class SudokuLobbyComponent implements OnInit {
         timeSpent: res.progress?.time_spent
       });
     });
-  }
-
-  goBack() {
-    this.router.navigate(['/lobby']);
   }
 }

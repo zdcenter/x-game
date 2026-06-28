@@ -26,7 +26,7 @@ interface LevelResponse {
 @Component({
   selector: 'app-sokoban-lobby',
   standalone: true,
-  imports: [CommonModule, GameRulesModalComponent, GameHeaderComponent],
+  imports: [CommonModule],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   templateUrl: './sokoban-lobby.component.html',
   styleUrl: './sokoban-lobby.component.css'

@@ -26,6 +26,7 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
+import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 
@@ -46,6 +47,7 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameHeaderComponent,
     PlayerBadgeComponent,
     TutorialOverlayComponent,
+    GameRulesModalComponent,
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,6 +73,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   view = this.store.view;
   showOverlay = signal(false);
   showTutorial = signal(false);
+  showRules = signal(false);
   tutorialSteps = this.tutorialService.getStepsForGame('sudoku');
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -195,6 +198,27 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   goBackToLobby() {
     this.store.pauseAndSave();
     this.store.view.set('lobby');
+  }
+
+  getSubtitle(): string {
+    const v = this.view();
+    if (v === 'lobby') {
+      return this.i18n.t('lobby.select_level')();
+    } else if (v === 'play' && this.store.currentRoomMode() === GameMode.Single) {
+      return this.i18n.t('game.single_label')() + ' - ' + this.store.currentPuzzleId();
+    } else {
+      return this.store.currentRoomMode() === GameMode.Steal ? this.i18n.t('game.sudoku_same_pk_steal_label')() : this.i18n.t('game.sudoku_same_pk_speed_label')();
+    }
+  }
+
+  onHeaderBack(): void {
+    if (this.view() === 'lobby') {
+      this.router.navigate(['/']);
+    } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
+      this.goBackToLobby();
+    } else {
+      this.store.leaveRoom();
+    }
   }
 
   startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}) {

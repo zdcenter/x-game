@@ -58,6 +58,15 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     return key ? this.i18n.t(key)() : mode;
   }
 
+  getSubtitle(): string {
+    return this.getModeName();
+  }
+
+  override navigateToPkArena() {
+    this.store.leaveRoom();
+    this.router.navigate(['/pk'], { queryParams: { game: 'drop2048' } });
+  }
+
   override get playerId(): string {
     return this.store.playerId();
   }

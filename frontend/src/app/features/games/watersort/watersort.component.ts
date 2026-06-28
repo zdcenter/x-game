@@ -3,6 +3,7 @@ import { storageGet, storageSet } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { setupRoomLifecycle } from '../../../core/services/room-lifecycle';
 import { WatersortStore } from './store/watersort.store';
@@ -31,255 +32,9 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
     CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
     GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
-    HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent
+    HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, FormsModule
   ],
-  template: `
-<div class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] p-1 lg:p-4 gap-2 lg:gap-6 transition-colors duration-300 bg-[var(--color-bg-base)] text-[var(--color-text-main)] overflow-hidden select-none overscroll-none">
-    
-    <!-- LEFT: Main Game Area -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0">
-      <div class="w-full h-full flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-3 lg:p-5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
-           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-        
-        <!-- Header -->
-        <app-game-header
-          [title]="i18n.t('app.title.watersort')()"
-          [subtitle]="currentRoomMode() === 'same_pk_speed' ? i18n.t('game.speed_mode')() : i18n.t('game.mode_single_player')()"
-          iconGradientClass="from-blue-500 to-cyan-500"
-          titleGradientClass="from-blue-400 to-cyan-400"
-          shadowClass="shadow-cyan-500/20"
-          headerBgClass="bg-gradient-to-r from-blue-900/20 to-cyan-900/20 -mx-3 lg:-mx-5 -mt-3 lg:-mt-5 px-3 lg:px-5 pb-2 mb-2 lg:mb-3"
-          (back)="goBack()"
-          (rules)="showRules.set(true)">
-          
-          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🧪</div>
-
-          <ng-container header-right>
-            <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-              @if (currentRoomMode() === GameMode.Single) {
-                <!-- Difficulty Button -->
-                <div class="flex flex-col items-center relative">
-                  <span class="text-[8px] lg:text-[10px] font-bold opacity-70 mb-0.5 lg:mb-1 uppercase tracking-widest">{{ i18n.t('game.difficulty')() }}</span>
-                  <button (click)="isDifficultyModalOpen.set(!isDifficultyModalOpen())"
-                    class="px-2 lg:px-4 py-1 lg:py-2 rounded-lg lg:rounded-xl border border-[var(--color-border-card)] text-[10px] lg:text-sm font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-accent-to)] hover:text-[var(--color-bg-main)] transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
-                    <span class="truncate max-w-[60px] sm:max-w-none">{{ getDifficultyText(currentRoomMode() === GameMode.Single ? _store.currentDifficulty() : currentDifficulty()) }}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4 shrink-0 transition-transform" [class.rotate-180]="isDifficultyModalOpen()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  <!-- Dropdown Menu -->
-                  @if (isDifficultyModalOpen()) {
-                    <div class="absolute top-full right-0 mt-2 w-48 bg-[var(--color-bg-main)] rounded-xl shadow-2xl border border-[var(--color-border-card)] overflow-hidden z-50">
-                      @for (diff of predefinedDifficulties; track diff.id) {
-                        <button (click)="changeSingleDifficulty(diff.id); isDifficultyModalOpen.set(false)"
-                          class="w-full text-left px-4 py-3 hover:bg-[var(--color-bg-card)] transition-colors border-b border-[var(--color-border-card)] last:border-0 flex flex-col"
-                          [class.text-[var(--color-accent-to)]]="_store.currentDifficulty() === diff.id"
-                          [class.font-bold]="_store.currentDifficulty() === diff.id">
-                          <span class="text-sm">{{ i18n.t($any(diff.labelKey))() }}</span>
-                          <span class="text-[10px] opacity-60 font-mono mt-0.5" [class.text-[var(--color-text-main)]]="_store.currentDifficulty() !== diff.id">{{ diff.desc }}</span>
-                        </button>
-                      }
-                      
-                      <!-- Blind Mode Toggle -->
-                      <div class="px-4 py-3 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" [checked]="isBlindMode()" (change)="toggleBlindMode($event)" class="w-4 h-4 rounded border-[var(--color-border-card)] text-[var(--color-accent-to)] focus:ring-[var(--color-accent-to)] bg-transparent">
-                          <span class="text-xs font-bold text-[var(--color-text-main)]">开启盲猜模式</span>
-                        </label>
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
-
-              @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="navigateToPkArena()" class="p-1.5 lg:p-2 rounded-full text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95 flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
-              </button>
-}
-            </div>
-          </ng-container>
-        </app-game-header>
-
-        <!-- Board Area -->
-        <div class="flex-1 flex flex-col relative min-h-0 overflow-hidden mt-2 w-full">
-          @if (currentRoomMode() === GameMode.Single || status !== GameStatus.Waiting) {
-
-            <!-- Mobile floating HUD (PK only) -->
-            @if (currentRoomMode() !== GameMode.Single) {
-              <app-game-player-mini-hud
-                class="lg:hidden"
-                [myPlayer]="{ playerName: playerId, isHost: playerId === _store.hostId(), stats: [{ icon: '🔄', value: myMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }"
-                [opponents]="opponentId() ? [{ playerName: opponentId()!, isHost: opponentId() === _store.hostId(), stats: [{ icon: '🔄', value: opponentMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }] : []">
-              </app-game-player-mini-hud>
-            }
-
-            <!-- Players / Opponents (Top) -->
-            <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0"
-                 [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
-                
-                <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="playerId === _store.hostId()"
-                  [isMe]="true"
-                  [score]="0"
-                  [stats]="[
-                    { icon: '🔄', value: myMoves(), label: i18n.t('game.moves')() }
-                  ]"
-                  [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
-
-                @if (currentRoomMode() !== GameMode.Single && opponentId()) {
-                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                    [playerName]="opponentId()!"
-                    [isHost]="opponentId() === _store.hostId()"
-                    [isMe]="false"
-                    [score]="0"
-                    [stats]="[
-                      { icon: '🔄', value: opponentMoves(), label: i18n.t('game.moves')() }
-                    ]"
-                    [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
-                }
-              </div>
-            </div>
-
-            <!-- Playing area wrapper to resolve absolute layout heights -->
-            <div class="flex-grow flex-1 relative w-full min-h-0 flex items-center justify-center p-2 lg:p-4">
-              
-              <!-- Opponent Tubes (Mini) -->
-              @if (currentRoomMode() !== GameMode.Single && opponentId()) {
-                <div class="absolute top-2 left-1/2 -translate-x-1/2 scale-[0.35] sm:scale-50 opacity-60 pointer-events-none origin-top transition-all">
-                  <div class="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-lg">
-                     @for (tube of opponentTubes(); track $index) {
-                       <app-tube [colors]="tube.colors" [capacity]="4"></app-tube>
-                     }
-                  </div>
-                </div>
-              }
-
-              <!-- My Board -->
-              <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto relative" [class.mt-32]="currentRoomMode() !== GameMode.Single">
-                @for (tube of myTubes(); track $index) {
-                  <app-tube #tubeElements
-                    class="transform z-10 transition-all duration-300 ease-in-out"
-                    [class.is-receiving]="pouringState?.step === 'pouring' && pouringState?.to === $index"
-                    [class.hover:scale-105]="pouringState === null"
-                    [style.transform]="getTubeTransform($index)"
-                    [style.z-index]="getTubeZIndex($index)"
-                    [colors]="tube.colors"
-                    [capacity]="4"
-                    [selected]="selectedTubeIndex === $index"
-                    [isBlindMode]="isBlindMode()"
-                    [completed]="isTubeCompleted(tube.colors)"
-                    (tubeClick)="onTubeClick($index)"
-                  ></app-tube>
-                }
-              </div>
-
-              <!-- Starting Countdown Overlay -->
-              @if (status === GameStatus.Starting) {
-                <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-              }
-
-
-
-
-
-              <!-- Hint Floating Button -->
-              @if (status === GameStatus.Playing && currentRoomMode() === GameMode.Single) {
-                <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-3 items-end">
-                  <app-hint-button layout="compact" class="block shadow-lg hover:scale-105 active:scale-95 transition-all bg-[var(--color-bg-main)] rounded-lg" (hintApplied)="applyHint()"></app-hint-button>
-                </div>
-              }
-
-            </div>
-          }
-          
-          <!-- Game Over Overlay -->
-          @if (status === GameStatus.Finished && showOverlay()) {
-            <app-game-result-overlay
-              currentGameId="watersort"
-              [status]="didIWin() ? 'win' : 'lose'"
-              [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-              [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
-              [xpResult]="_store.lastStatResult()?.xp_result"
-              [isNewRecord]="_store.lastStatResult()?.isNewRecord"
-              [showLeave]="currentRoomMode() === GameMode.Single || !isHost()"
-              [showRestart]="currentRoomMode() === GameMode.Single || isHost()"
-              [showDismiss]="currentRoomMode() !== GameMode.Single && isHost()"
-              (leave)="returnToLobby()"
-              (restart)="playAgain()"
-              (dismiss)="dismissRoom()"
-          [enableChangeRoomGame]="_store.currentRoomMode() !== GameMode.Single && _store.hostId() === _store.playerId()"
-          (changeRoomGame)="_store.changeRoomGame($event)">
-            </app-game-result-overlay>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- Sidebar Overlay Backdrop -->
-    @if (isMobileSidebarOpen()) {
-      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
-    }
-
-    <!-- Right Sidebar (Lobby Panel) -->
-    @if (settingsService.settings().multiplayer_enabled === 'true') {
-      <div class="flex-shrink-0 transition-transform duration-300"
-           [ngClass]="{
-             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
-             'translate-x-0': isMobileSidebarOpen(),
-             'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
-        
-        <div class="flex justify-between items-center mb-4 lg:hidden" >
-          <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
-        </div>
-
-        <!-- Right Sidebar (Lobby Panel) -->
-        <app-game-lobby-panel
-          #lobbyPanel
-          class="flex-grow flex"
-          [currentGameId]="'watersort'"
-          [currentRoomId]="currentRoomId()"
-          (joinRoom)="handleJoinRoom($event)"
-          (createRoom)="handleCreateRoom($event)">
-        </app-game-lobby-panel>
-      </div>
-    }
-
-  </div>
-
-  <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
-
-  @if (status === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
-      <app-game-waiting-room class="w-full h-full flex"
-        [gameId]="'watersort'"
-        [mode]="currentRoomMode()"
-        [roomId]="currentRoomId()"
-        [difficulty]="_store.currentDifficulty() || 'easy'"
-        [players]="playersList()"
-        [hostId]="_store.hostId()"
-        [currentUserId]="playerId"
-        (leave)="returnToLobby()"
-        (start)="_store.startGame()"
-        (changeSettings)="openChangeSettings()"
-        [readyPlayers]="_store.readyPlayers()"
-        (kick)="_store.kickPlayer($event)"
-        (ready)="_store.ready()"
-        (cancelReady)="_store.cancelReady()"
-        [target]="_store.currentRoomTarget()">
-      </app-game-waiting-room>
-    </div>
-  }
-  <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
-  `,
+  templateUrl: './watersort.component.html',
   styles: [`
     .is-receiving {
       animation: pour-vibrate 0.1s linear infinite;
@@ -750,5 +505,14 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
   dismissRoom() {
     this._store.dismissRoom();
+  }
+
+  getSubtitle(): string {
+    return this.currentRoomMode() === 'same_pk_speed' ? this.i18n.t('game.speed_mode')() : this.i18n.t('game.mode_single_player')();
+  }
+
+  override navigateToPkArena() {
+    this._store.leaveRoom();
+    this.router.navigate(['/pk'], { queryParams: { game: 'watersort' } });
   }
 }

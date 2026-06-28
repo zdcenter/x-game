@@ -1,5 +1,4 @@
-<div class="h-[calc(100dvh-64px)] w-full flex flex-col relative text-[var(--color-text-main)] overflow-hidden">
-  
+<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)] overflow-hidden">
   <svg width="0" height="0" style="position: absolute; pointer-events: none;" aria-hidden="true">
     <defs>
       <linearGradient id="pieceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -40,58 +39,72 @@
     </defs>
   </svg>
 
-  <div class="flex-grow flex flex-col lg:flex-row h-full overflow-hidden p-1 lg:p-4 gap-2 lg:gap-6">
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-[600px] lg:min-h-0">
-      <div class="w-full h-full flex flex-col overflow-hidden backdrop-blur-xl border rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
-           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-        
-        <!-- Header -->
-        <app-game-header
-          [title]="t('hexa.title')() || 'Hexa Puzzle'"
-          [subtitle]="currentRoomMode() === 'diff_pk_score' ? t('hexa.mode.diff_pk_score')() : t('hexa.mode.single')()"
-          iconGradientClass="from-amber-500 to-orange-500"
-          titleGradientClass="from-amber-400 to-orange-400"
-          shadowClass="shadow-orange-500/20"
-          headerBgClass="bg-gradient-to-r from-amber-900/20 to-orange-900/20 -mx-4 lg:-mx-6 -mt-4 lg:-mt-6 px-4 lg:px-6 mb-2 lg:mb-3 pb-1"
-          (back)="goBack()"
-          (rules)="showRules.set(true)">
-          
-          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🔶</div>
+  <!-- Rules Modal -->
+  <app-game-rules-modal [gameId]="'hexa'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
-          <ng-container header-right>
-            <div class="flex items-center gap-1 sm:gap-2">
-              @if (currentRoomMode() === GameMode.Single) {
-                <button (click)="store.startGame()" [title]="t('game.play_again')() || 'Restart'" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              }
+  <!-- Top Full-Width Game Header -->
+  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
+    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
+      <app-game-header
+        [title]="t('hexa.title')() || 'Hexa Puzzle'"
+        [subtitle]="getSubtitle()"
+        iconGradientClass="from-amber-500 to-orange-500"
+        titleGradientClass="from-amber-400 to-orange-400"
+        shadowClass="shadow-orange-500/20"
+        headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+        (back)="goBack()"
+        (rules)="showRules.set(true)"
+      >
+        <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🔶</div>
 
-              @if (currentRoomMode() !== GameMode.Single) {
-                <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-[10px] lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span class="hidden sm:inline">{{ t('game.leave')() || 'Leave' }}</span>
-                </button>
-              }
-              @if (settingsService.settings().multiplayer_enabled === 'true') {
-<button (click)="navigateToPkArena()" class="p-1.5 lg:p-2 rounded-full text-[var(--color-accent-to)] hover:text-[var(--color-text-main)] hover:bg-black/10 dark:hover:bg-white/10 transition-colors active:scale-95 flex items-center gap-1">
+        <ng-container header-right>
+          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
+            @if (currentRoomMode() === GameMode.Single) {
+              <button (click)="store.startGame()" [title]="t('game.play_again')() || 'Restart'" class="p-1.5 lg:p-2 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            }
+
+            @if (currentRoomMode() !== GameMode.Single) {
+              <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="hidden sm:inline">{{ t('game.leave')() || 'Leave' }}</span>
+              </button>
+            }
+            @if (settingsService.settings().multiplayer_enabled === 'true') {
+              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK</span>
+                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK Arena</span>
               </button>
-}
-            </div>
-          </ng-container>
-        </app-game-header>
+            }
+          </div>
+        </ng-container>
+      </app-game-header>
+    </div>
+  </div>
 
-        <!-- Main Content Area -->
-        <div class="flex-grow flex flex-col relative min-h-0 overflow-hidden bg-[var(--color-bg-base)] rounded-b-2xl lg:rounded-b-3xl">
-          
-          @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
+  <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
+    
+    <!-- LEFT: SEO Description (Desktop only) -->
+    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
+           [innerHTML]="i18n.t('game.hexa.seo_desc')()">
+      </div>
+    </div>
+
+    <!-- CENTER: Game Arena -->
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center z-10">
+      <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
+           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        
+        @if (store.status() === GameStatus.Waiting && currentRoomMode() !== GameMode.Single) {
+          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
             <app-game-waiting-room
               [gameId]="'hexa'"
               [mode]="currentRoomMode()"
@@ -103,209 +116,216 @@
               (leave)="returnToLobby()"
               (start)="store.startGame()"
               (changeSettings)="openChangeSettings()"
-        [readyPlayers]="store.readyPlayers() || {}"
-        (kick)="store.kickPlayer($event)"
-        (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()"
-        [target]="store.currentRoomTarget()"
-      >
+              [readyPlayers]="store.readyPlayers() || {}"
+              (kick)="store.kickPlayer($event)"
+              (ready)="store.ready()"
+              (cancelReady)="store.cancelReady()"
+              [target]="store.currentRoomTarget()"
+            >
             </app-game-waiting-room>
-          } @else {
+          </div>
+        } @else {
+          
+          <!-- Mobile floating HUD (PK only) -->
+          @if (currentRoomMode() !== GameMode.Single) {
+            <app-game-player-mini-hud
+              class="lg:hidden"
+              [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
+              [opponents]="store.otherPlayers().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
+            </app-game-player-mini-hud>
+          }
+
+          <!-- Players / Opponents (Top) -->
+          <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0"
+               [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
+            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
+              
+              <!-- Local Player (You) -->
+              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                [playerName]="playerId"
+                [isHost]="playerId === store.hostId()"
+                [isMe]="true"
+                [score]="store.score()"
+                [stats]="[
+                  { icon: '🔄', value: store.combo() + 'x', label: t('hexa.combo')() || 'COMBO', colorClass: store.combo() > 1 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : '' }
+                ]"
+                [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+
+              @if (currentRoomMode() !== GameMode.Single) {
+                <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                  <ng-template #opponentsList>
+                    @for (opp of store.otherPlayers(); track opp.id) {
+                      <app-player-badge
+                        class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0"
+                        layout="card"
+                        [playerName]="opp.id"
+                        [isHost]="opp.id === store.hostId()"
+                        [isMe]="false"
+                        [score]="opp.score"
+                        [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
+                      ></app-player-badge>
+                    }
+                  </ng-template>
+                </app-player-list-container>
+              }
+            </div>
+          </div>
+
+          <!-- The Grid Area -->
+          <div class="w-full flex-grow flex flex-col items-center justify-start py-4 shrink-0 min-h-0 overflow-y-auto" #boardArea>
             
-            <!-- Mobile floating HUD (PK only) -->
-            @if (currentRoomMode() !== GameMode.Single) {
-              <app-game-player-mini-hud
-                class="lg:hidden"
-                [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
-                [opponents]="store.otherPlayers().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
-              </app-game-player-mini-hud>
-            }
+            <!-- Outer: danger glow only (no shake) -->
+            <div class="relative flex items-center justify-center shrink-0 w-full"
+                 [class.hexa-danger-1]="store.fillPct() > 0.78 && store.fillPct() <= 0.90 && !store.gameOver()"
+                 [class.hexa-danger-2]="store.fillPct() > 0.90 && !store.gameOver()"
+                 style="height: min(80vmin, 500px);">
+              <!-- Inner: shake only (separate from danger animation) -->
+              <div class="absolute inset-0 flex items-center justify-center" [class.hexa-shake]="isShaking()">
+                <div class="w-full h-full relative flex items-center justify-center">
+                  <app-hexa-board
+                    class="block w-[90%] h-[90%]"
+                    [cells]="store.cells()"
+                    [previewPiece]="draggedPiece"
+                    [previewOrigin]="previewOrigin"
+                    [clearingCells]="store.clearingCells()">
+                  </app-hexa-board>
+                </div>
+              </div>
 
-            <!-- Players / Opponents (Top) -->
-            <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0"
-                 [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
-                
-                <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="playerId === store.hostId()"
-                  [isMe]="true"
-                  [score]="store.score()"
-                  [stats]="[
-                    { icon: '🔄', value: store.combo() + 'x', label: t('hexa.combo')() || 'COMBO', colorClass: store.combo() > 1 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : '' }
-                  ]"
-                  [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+              <!-- Score Float-up Texts -->
+              <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+                @for (item of floatItems(); track item.id) {
+                  <div class="absolute font-black hexa-score-float drop-shadow-lg whitespace-nowrap"
+                       [class.text-2xl]="item.tier === 1"
+                       [class.text-3xl]="item.tier === 2"
+                       [class.text-cyan-400]="item.tier === 1"
+                       [class.text-orange-400]="item.tier === 2"
+                       [style.left]="item.xPct + '%'"
+                       style="top: 55%; transform: translateX(-50%); text-shadow: 0 2px 10px rgba(0,0,0,0.9);">
+                    {{ item.text }}
+                  </div>
+                }
+              </div>
 
-                @if (currentRoomMode() !== GameMode.Single) {
-                  <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                    <ng-template #opponentsList>
-                      @for (opp of store.otherPlayers(); track opp.id) {
-                        <app-player-badge
-                          class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0"
-                          layout="card"
-                          [playerName]="opp.id"
-                          [isHost]="opp.id === store.hostId()"
-                          [isMe]="false"
-                          [score]="opp.score"
-                          [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
-                        ></app-player-badge>
-                      }
-                    </ng-template>
-                  </app-player-list-container>
+              <!-- Spark Particles -->
+              <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden flex items-center justify-center">
+                @for (p of particles(); track p.id) {
+                  <div class="absolute rounded-full hexa-spark mix-blend-screen"
+                       [style.background-color]="p.color"
+                       [style.width.px]="p.size"
+                       [style.height.px]="p.size"
+                       [style.--tx]="p.tx + 'px'"
+                       [style.--ty]="p.ty + 'px'"
+                       style="box-shadow: 0 0 6px currentColor;">
+                  </div>
                 }
               </div>
             </div>
+          </div>
 
-            <!-- The Grid Area -->
-            <div class="w-full flex flex-col items-center justify-start py-4 shrink-0" #boardArea>
-              
-              <!-- Outer: danger glow only (no shake) -->
-              <div class="relative flex items-center justify-center shrink-0"
-                   [class.hexa-danger-1]="store.fillPct() > 0.78 && store.fillPct() <= 0.90 && !store.gameOver()"
-                   [class.hexa-danger-2]="store.fillPct() > 0.90 && !store.gameOver()"
-                   style="width: min(80vmin, 500px); height: min(80vmin, 500px);">
-                <!-- Inner: shake only (separate from danger animation) -->
-                <div class="absolute inset-0 flex items-center justify-center" [class.hexa-shake]="isShaking()">
-                  <div class="w-full h-full relative flex items-center justify-center">
-                    <app-hexa-board
-                      class="block w-[90%] h-[90%]"
-                      [cells]="store.cells()"
-                      [previewPiece]="draggedPiece"
-                      [previewOrigin]="previewOrigin"
-                      [clearingCells]="store.clearingCells()">
-                    </app-hexa-board>
-                  </div>
-                </div>
-
-<!-- Score Float-up Texts -->
-                <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-                  @for (item of floatItems(); track item.id) {
-                    <div class="absolute font-black hexa-score-float drop-shadow-lg whitespace-nowrap"
-                         [class.text-2xl]="item.tier === 1"
-                         [class.text-3xl]="item.tier === 2"
-                         [class.text-cyan-400]="item.tier === 1"
-                         [class.text-orange-400]="item.tier === 2"
-                         [style.left]="item.xPct + '%'"
-                         style="top: 55%; transform: translateX(-50%); text-shadow: 0 2px 10px rgba(0,0,0,0.9);">
-                      {{ item.text }}
-                    </div>
-                  }
-                </div>
-
-                <!-- Spark Particles -->
-                <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden flex items-center justify-center">
-                  @for (p of particles(); track p.id) {
-                    <div class="absolute rounded-full hexa-spark mix-blend-screen"
-                         [style.background-color]="p.color"
-                         [style.width.px]="p.size"
-                         [style.height.px]="p.size"
-                         [style.--tx]="p.tx + 'px'"
-                         [style.--ty]="p.ty + 'px'"
-                         style="box-shadow: 0 0 6px currentColor;">
-                    </div>
-                  }
-                </div>
+          <!-- Available Pieces Palette -->
+          <div class="w-full max-w-[500px] mx-auto flex justify-between gap-2 lg:gap-4 h-20 lg:h-28 px-2 lg:px-4 shrink-0 pb-2">
+            @for (piece of store.availablePieces(); track $index; let i = $index) {
+              <div class="flex-1 relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+                   #pieceEl
+                   (mousedown)="piece && onDragStart($event, piece, i, pieceEl)"
+                   (touchstart)="piece && onDragStart($event, piece, i, pieceEl)">
+                @if (piece) {
+                  <svg [attr.viewBox]="getPieceSvgViewBox(piece)" class="w-[80%] h-[80%] lg:w-3/4 lg:h-3/4 pointer-events-none"
+                       [class.opacity-0]="isDragging && draggedPieceIndex === i">
+                    <g filter="url(#shadow3d)">
+                      <polygon *ngFor="let p of piece.shape"
+                        [attr.points]="getPieceHexPoints(p.q, p.r)"
+                        [attr.fill]="piece.color || 'url(#pieceGrad)'"
+                        stroke="var(--color-bg-main)"
+                        stroke-width="1.5"
+                        stroke-linejoin="round">
+                      </polygon>
+                    </g>
+                  </svg>
+                }
               </div>
-            </div>
+            }
+          </div>
 
-            <!-- Available Pieces Palette -->
-            <div class="w-full max-w-[500px] mx-auto flex justify-between gap-2 lg:gap-4 h-20 lg:h-28 px-2 lg:px-4 shrink-0">
-              @for (piece of store.availablePieces(); track $index; let i = $index) {
-                <div class="flex-1 relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
-                     #pieceEl
-                     (mousedown)="piece && onDragStart($event, piece, i, pieceEl)"
-                     (touchstart)="piece && onDragStart($event, piece, i, pieceEl)">
-                  @if (piece) {
-                    <svg [attr.viewBox]="getPieceSvgViewBox(piece)" class="w-[80%] h-[80%] lg:w-3/4 lg:h-3/4 pointer-events-none"
-                         [class.opacity-0]="isDragging && draggedPieceIndex === i">
-                      <g filter="url(#shadow3d)">
-                        <polygon *ngFor="let p of piece.shape"
-                          [attr.points]="getPieceHexPoints(p.q, p.r)"
-                          [attr.fill]="piece.color || 'url(#pieceGrad)'"
-                          stroke="var(--color-bg-main)"
-                          stroke-width="1.5"
-                          stroke-linejoin="round">
-                        </polygon>
-                      </g>
-                    </svg>
-                  }
-                </div>
-              }
-            </div>
+        }
 
-          }
+        <!-- Overlays -->
+        @if (store.status() === GameStatus.Starting) {
+          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+        }
 
-          <!-- Overlays -->
-          @if (store.status() === GameStatus.Starting) {
-            <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-          }
+        @if (currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
+          <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl">
+            <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ t('game.start_match')() || 'START' }}
+            </button>
+          </div>
+        }
 
-          @if (currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
-            <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl">
-              <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {{ t('game.start_match')() || 'START' }}
-              </button>
-            </div>
-          }
-
-          @if ((store.status() === GameStatus.Finished || store.gameOver()) && showOverlay()) {
-            <app-game-result-overlay
-              currentGameId="hexa"
-              [status]="store.status() === GameStatus.Finished ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"
-              [title]="currentRoomMode() === GameMode.Single ? t('game.you_lose')() : (store.status() === GameStatus.Finished ? (store.winners().includes(playerId) ? t('game.you_win')() : t('game.you_lose')()) : t('game.waiting_for_others')())"
-              [stats]="currentRoomMode() === GameMode.Single ? [{label: t('hexa.score')() || 'SCORE', value: store.score()}, {label: t('hexa.best')() || 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: t('hexa.score')() || 'SCORE', value: store.score()}]"
-              [xpResult]="store.lastStatResult()?.xp_result"
-              [isNewRecord]="store.lastStatResult()?.isNewRecord"
-              [showRestart]="currentRoomMode() === GameMode.Single || (store.status() === GameStatus.Finished && store.hostId() === playerId)"
-              [showDismiss]="currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Finished && store.hostId() === playerId"
-              (restart)="store.restartGame()"
-              (dismiss)="dismissRoom()"
-              (leave)="goBack()"
-              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-              (changeRoomGame)="store.changeRoomGame($event)">
-            </app-game-result-overlay>
-          }
-        </div>
+        @if ((store.status() === GameStatus.Finished || store.gameOver()) && showOverlay()) {
+          <app-game-result-overlay
+            currentGameId="hexa"
+            [status]="store.status() === GameStatus.Finished ? (store.winners().includes(playerId) ? 'win' : 'lose') : 'lose'"
+            [title]="currentRoomMode() === GameMode.Single ? t('game.you_lose')() : (store.status() === GameStatus.Finished ? (store.winners().includes(playerId) ? t('game.you_win')() : t('game.you_lose')()) : t('game.waiting_for_others')())"
+            [stats]="currentRoomMode() === GameMode.Single ? [{label: t('hexa.score')() || 'SCORE', value: store.score()}, {label: t('hexa.best')() || 'BEST', value: store.score() > store.bestScore() ? store.score() : store.bestScore()}] : [{label: t('hexa.score')() || 'SCORE', value: store.score()}]"
+            [xpResult]="store.lastStatResult()?.xp_result"
+            [isNewRecord]="store.lastStatResult()?.isNewRecord"
+            [showRestart]="currentRoomMode() === GameMode.Single || (store.status() === GameStatus.Finished && store.hostId() === playerId)"
+            [showDismiss]="currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Finished && store.hostId() === playerId"
+            (restart)="store.restartGame()"
+            (dismiss)="dismissRoom()"
+            (leave)="goBack()"
+            [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+            (changeRoomGame)="store.changeRoomGame($event)">
+          </app-game-result-overlay>
+        }
       </div>
     </div>
 
-    <!-- Sidebar Overlay Backdrop -->
-    @if (isMobileSidebarOpen()) {
-      <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
-    }
-
+    <!-- RIGHT: Right Column / Multiplayer Sidebar -->
+    <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">
       @if (settingsService.settings().multiplayer_enabled === 'true') {
-<div class="flex-shrink-0 transition-transform duration-300"
-           [ngClass]="{
-             'fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col': true,
-             'translate-x-0': isMobileSidebarOpen(),
-             'translate-x-full': !isMobileSidebarOpen(),
-             'lg:relative lg:inset-auto lg:w-80 lg:shadow-none lg:p-0 lg:z-auto lg:translate-x-0': true}">
-      
-      <div class="flex justify-between items-center mb-4 lg:hidden" >
-        <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ t('game.room_info')() || 'Room Info' }}</h3>
-      </div>
-
-      <!-- Right Sidebar (Lobby Panel) -->
-      <app-game-lobby-panel
-        #lobbyPanel
-        class="flex-grow flex"
-        [currentGameId]="'hexa'"
-        [currentRoomId]="currentRoomId()"
-        (joinRoom)="handleJoinRoom($event)"
-        (createRoom)="handleCreateRoom($event)"
->
-      </app-game-lobby-panel>
+        <app-game-lobby-panel
+          #lobbyPanel
+          class="flex-grow flex"
+          [currentGameId]="'hexa'"
+          [currentRoomId]="currentRoomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+        </app-game-lobby-panel>
+      }
     </div>
-    }
-
-
   </div>
+
+  <!-- BOTTOM: Mobile SEO Section -->
+  <div class="lg:hidden w-full max-w-[800px] mt-4 pb-8 mx-auto px-4">
+    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-6 shadow-sm">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
+           [innerHTML]="i18n.t('game.hexa.seo_desc')()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar Overlay Backdrop -->
+  @if (isMobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col transition-transform duration-300">
+       <div class="flex justify-between items-center mb-4 lg:hidden" >
+         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ t('game.room_info')() || 'Room Info' }}</h3>
+       </div>
+       <app-game-lobby-panel
+          [currentGameId]="'hexa'"
+          [currentRoomId]="currentRoomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+       </app-game-lobby-panel>
+    </div>
+  }
 
   <!-- Dragging Overlay (Absolutely positioned) -->
   @if (isDragging && draggedPiece) {
@@ -327,6 +347,4 @@
       </svg>
     </div>
   }
-
-  <app-game-rules-modal [gameId]="'hexa'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 </div>

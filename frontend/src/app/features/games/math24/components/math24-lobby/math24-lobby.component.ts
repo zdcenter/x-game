@@ -3,7 +3,7 @@ import { Component, EventEmitter, Output, inject, signal, OnInit, computed, View
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
-import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
+
 import { Math24Store } from '../../store/math24.store';
 import { environment } from '../../../../../../environments/environment';
 
@@ -21,7 +21,7 @@ interface LevelResponse {
 @Component({
   selector: 'app-math24-lobby',
   standalone: true,
-  imports: [CommonModule, GameHeaderComponent],
+  imports: [CommonModule],
   templateUrl: './math24-lobby.component.html'
 })
 export class Math24LobbyComponent implements OnInit {
@@ -33,7 +33,6 @@ export class Math24LobbyComponent implements OnInit {
 
   @Output() levelSelect = new EventEmitter<{ id: string, puzzle: string, difficulty: string, levelIndex: number }>();
   @Output() openLobby = new EventEmitter<void>();
-  @Output() back = new EventEmitter<void>();
 
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_math24_easy' },

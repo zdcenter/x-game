@@ -1,6 +1,7 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
@@ -38,6 +39,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   override store = inject(TetrisStore);
   private authStore = inject(AuthStore);
   public timerService = inject(GameTimerService);
+  private router = inject(Router);
   private toastService = inject(ToastService);
   i18n = inject(I18nService);
   private gameRegistry = inject(GameRegistryService);
@@ -290,6 +292,15 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       this.roomLifecycle.clearReconnectInfo();
     }
     this.navigateToLobby();
+  }
+
+  getSubtitle(): string {
+    return this.currentRoomMode() === 'diff_pk_attack' ? this.i18n.t('tetris.mode.diff_pk_attack')() : this.i18n.t('tetris.mode.single')();
+  }
+
+  override navigateToPkArena() {
+    this.store.leaveRoom();
+    this.router.navigate(['/pk'], { queryParams: { game: 'tetris' } });
   }
 
   dismissRoom() {

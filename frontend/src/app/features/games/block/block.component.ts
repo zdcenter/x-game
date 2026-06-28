@@ -1,5 +1,6 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect, untracked } from '@angular/core';
+import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { BlockStore } from './store/block.store';
@@ -18,6 +19,8 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { TutorialService } from '../../../core/services/tutorial.service';
 
 @Component({
   selector: 'app-block',
@@ -69,8 +72,10 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   private authStore = inject(AuthStore);
   private crossGameJoin = inject(CrossGameJoinService);
   gameRegistry = inject(GameRegistryService);
-  i18n = inject(I18nService);
+  public i18n = inject(I18nService);
+  private router = inject(Router);
   private audioService = inject(AudioService);
+  private tutorialService = inject(TutorialService);
 
   @HostBinding('class') override get hostClass() { return 'block h-full w-full'; }
 
@@ -83,6 +88,9 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   showRules = signal(false);
   showOverlay = signal(false);
   isShaking = signal(false);
+  
+  showTutorial = signal(false);
+  tutorialSteps = this.tutorialService.getStepsForGame('block');
 
   floatItems = signal<{ id: number; text: string; tier: 1 | 2 | 3; xPct: number }[]>([]);
   particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
@@ -166,6 +174,20 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
         this.store.joinRoom('local', GameMode.Single, GameDifficulty.Medium, this.playerId);
       }
     }
+    
+    if (!this.tutorialService.hasSeen('block') && this.tutorialSteps.length) {
+      setTimeout(() => this.showTutorial.set(true), 500);
+    }
+  }
+
+  onTutorialDone(): void {
+    this.tutorialService.markSeen('block');
+    this.showTutorial.set(false);
+  }
+
+  override navigateToPkArena() {
+    this.store.leaveRoom();
+    this.router.navigate(['/pk'], { queryParams: { game: 'block' } });
   }
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {

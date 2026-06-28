@@ -241,6 +241,21 @@ export class GomokuComponent implements OnInit, OnDestroy {
     this.router.navigate(['/pk-arena']);
   }
 
+  getSubtitle(): string {
+    if (this.currentRoomMode() === GameMode.Single) {
+      let diffStr = '';
+      const diff = this.currentDifficulty();
+      if (diff) {
+        if (diff === GameDifficulty.Easy) diffStr = this.i18n.t('gomoku.diff.easy')();
+        else if (diff === GameDifficulty.Hard) diffStr = this.i18n.t('gomoku.diff.hard')();
+        else diffStr = this.i18n.t('gomoku.diff.medium')();
+      }
+      return this.i18n.t('gomoku.mode.single')() + (diffStr ? ' - ' + diffStr : '');
+    } else {
+      return this.i18n.t('gomoku.mode.same_pk_classic')();
+    }
+  }
+
   onSurrender() {
     this.store.surrender();
   }

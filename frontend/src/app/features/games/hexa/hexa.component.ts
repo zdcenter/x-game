@@ -1,6 +1,7 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -50,6 +51,8 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   GameMode = GameMode;
   override store = inject(HexaStore);
   private authStore = inject(AuthStore);
+  public timerService = inject(GameTimerService);
+  private router = inject(Router);
   private toastService = inject(ToastService);
   private crossGameJoin = inject(CrossGameJoinService);
   override gameTimer = inject(GameTimerService);
@@ -335,6 +338,15 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       this.roomLifecycle.clearReconnectInfo();
     }
     this.navigateToLobby();
+  }
+
+  getSubtitle(): string {
+    return this.currentRoomMode() === 'diff_pk_score' ? this.t('hexa.mode.diff_pk_score')() : this.t('hexa.mode.single')();
+  }
+
+  override navigateToPkArena() {
+    this.store.leaveRoom();
+    this.router.navigate(['/pk'], { queryParams: { game: 'hexa' } });
   }
 
   override openChangeSettings() {

@@ -1,0 +1,251 @@
+<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+  <!-- Rules Modal -->
+  <app-game-rules-modal [gameId]="'watersort'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
+
+  <!-- Top Full-Width Game Header -->
+  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
+    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
+      <app-game-header
+        [title]="i18n.t('app.title.watersort')()"
+        [subtitle]="getSubtitle()"
+        iconGradientClass="from-blue-500 to-cyan-500"
+        titleGradientClass="from-blue-400 to-cyan-400"
+        shadowClass="shadow-cyan-500/20"
+        headerBgClass="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+        (back)="goBack()"
+        (rules)="showRules.set(true)"
+      >
+        <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🧪</div>
+
+        <ng-container header-center>
+          @if (currentRoomMode() === GameMode.Single) {
+            <div class="relative ml-2 hidden sm:block">
+              <select [ngModel]="_store.currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
+                      class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-cyan-500">
+                @for (diff of predefinedDifficulties; track diff.id) {
+                  <option [value]="diff.id">{{ i18n.t($any(diff.labelKey))() }}</option>
+                }
+              </select>
+              <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+            
+            <!-- Blind Mode Toggle -->
+            <label class="flex items-center gap-1.5 cursor-pointer ml-3">
+              <input type="checkbox" [checked]="isBlindMode()" (change)="toggleBlindMode($event)" class="w-3.5 h-3.5 rounded border-[var(--color-border-card)] text-cyan-500 focus:ring-cyan-500 bg-transparent">
+              <span class="text-[10px] font-bold text-[var(--color-text-main)] tracking-wider">BLIND</span>
+            </label>
+          }
+        </ng-container>
+
+        <ng-container header-right>
+          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
+            @if (currentRoomMode() !== GameMode.Single) {
+              <button (click)="returnToLobby()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
+              </button>
+            }
+            @if (settingsService.settings().multiplayer_enabled === 'true') {
+              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-xs lg:text-sm font-bold transition-all shadow-sm flex items-center gap-1 active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span class="text-[10px] font-black uppercase tracking-wider hidden sm:inline">PK Arena</span>
+              </button>
+            }
+          </div>
+        </ng-container>
+      </app-game-header>
+    </div>
+  </div>
+
+  <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
+    
+    <!-- LEFT: SEO Description (Desktop only) -->
+    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
+           [innerHTML]="i18n.t('game.watersort.seo_desc')()">
+      </div>
+    </div>
+
+    <!-- CENTER: Game Arena -->
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center z-10">
+      <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
+           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        
+        @if (currentRoomMode() !== GameMode.Single && status === GameStatus.Waiting) {
+          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
+            <app-game-waiting-room
+              [gameId]="'watersort'"
+              [mode]="currentRoomMode()"
+              [roomId]="currentRoomId()"
+              [difficulty]="_store.currentDifficulty() || 'easy'"
+              [players]="playersList()"
+              [hostId]="_store.hostId()"
+              [currentUserId]="playerId"
+              (leave)="returnToLobby()"
+              (start)="_store.startGame()"
+              (changeSettings)="openChangeSettings()"
+              [readyPlayers]="_store.readyPlayers()"
+              (kick)="_store.kickPlayer($event)"
+              (ready)="_store.ready()"
+              (cancelReady)="_store.cancelReady()"
+              [target]="_store.currentRoomTarget()">
+            </app-game-waiting-room>
+          </div>
+        } @else {
+          
+          <!-- Mobile floating HUD (PK only) -->
+          @if (currentRoomMode() !== GameMode.Single) {
+            <app-game-player-mini-hud
+              class="lg:hidden"
+              [myPlayer]="{ playerName: playerId, isHost: playerId === _store.hostId(), stats: [{ icon: '🔄', value: myMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }"
+              [opponents]="opponentId() ? [{ playerName: opponentId()!, isHost: opponentId() === _store.hostId(), stats: [{ icon: '🔄', value: opponentMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }] : []">
+            </app-game-player-mini-hud>
+          }
+
+          <!-- Players / Opponents (Top) -->
+          <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0"
+               [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
+            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
+              
+              <!-- Local Player (You) -->
+              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                [playerName]="playerId"
+                [isHost]="playerId === _store.hostId()"
+                [isMe]="true"
+                [score]="0"
+                [stats]="[
+                  { icon: '🔄', value: myMoves(), label: i18n.t('game.moves')() }
+                ]"
+                [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
+
+              @if (currentRoomMode() !== GameMode.Single && opponentId()) {
+                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                  [playerName]="opponentId()!"
+                  [isHost]="opponentId() === _store.hostId()"
+                  [isMe]="false"
+                  [score]="0"
+                  [stats]="[
+                    { icon: '🔄', value: opponentMoves(), label: i18n.t('game.moves')() }
+                  ]"
+                  [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
+              }
+            </div>
+          </div>
+
+          <!-- Playing area wrapper to resolve absolute layout heights -->
+          <div class="flex-grow flex-1 relative w-full min-h-0 flex items-center justify-center p-2 lg:p-4 overflow-y-auto">
+            
+            <!-- Opponent Tubes (Mini) -->
+            @if (currentRoomMode() !== GameMode.Single && opponentId()) {
+              <div class="absolute top-2 left-1/2 -translate-x-1/2 scale-[0.35] sm:scale-50 opacity-60 pointer-events-none origin-top transition-all">
+                <div class="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-lg">
+                   @for (tube of opponentTubes(); track $index) {
+                     <app-tube [colors]="tube.colors" [capacity]="4"></app-tube>
+                   }
+                </div>
+              </div>
+            }
+
+            <!-- My Board -->
+            <div class="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8 lg:gap-12 w-full max-w-4xl mt-auto mb-auto relative" [class.mt-32]="currentRoomMode() !== GameMode.Single">
+              @for (tube of myTubes(); track $index) {
+                <app-tube #tubeElements
+                  class="transform z-10 transition-all duration-300 ease-in-out"
+                  [class.is-receiving]="pouringState?.step === 'pouring' && pouringState?.to === $index"
+                  [class.hover:scale-105]="pouringState === null"
+                  [style.transform]="getTubeTransform($index)"
+                  [style.z-index]="getTubeZIndex($index)"
+                  [colors]="tube.colors"
+                  [capacity]="4"
+                  [selected]="selectedTubeIndex === $index"
+                  [isBlindMode]="isBlindMode()"
+                  [completed]="isTubeCompleted(tube.colors)"
+                  (tubeClick)="onTubeClick($index)"
+                ></app-tube>
+              }
+            </div>
+
+            <!-- Starting Countdown Overlay -->
+            @if (status === GameStatus.Starting) {
+              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+            }
+
+            <!-- Hint Floating Button -->
+            @if (status === GameStatus.Playing && currentRoomMode() === GameMode.Single) {
+              <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-3 items-end">
+                <app-hint-button layout="compact" class="block shadow-lg hover:scale-105 active:scale-95 transition-all bg-[var(--color-bg-main)] rounded-lg" (hintApplied)="applyHint()"></app-hint-button>
+              </div>
+            }
+
+          </div>
+        }
+        
+        <!-- Game Over Overlay -->
+        @if (status === GameStatus.Finished && showOverlay()) {
+          <app-game-result-overlay
+            currentGameId="watersort"
+            [status]="didIWin() ? 'win' : 'lose'"
+            [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
+            [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
+            [xpResult]="_store.lastStatResult()?.xp_result"
+            [isNewRecord]="_store.lastStatResult()?.isNewRecord"
+            [showLeave]="currentRoomMode() === GameMode.Single || !isHost()"
+            [showRestart]="currentRoomMode() === GameMode.Single || isHost()"
+            [showDismiss]="currentRoomMode() !== GameMode.Single && isHost()"
+            (leave)="returnToLobby()"
+            (restart)="playAgain()"
+            (dismiss)="dismissRoom()"
+            [enableChangeRoomGame]="_store.currentRoomMode() !== GameMode.Single && _store.hostId() === _store.playerId()"
+            (changeRoomGame)="_store.changeRoomGame($event)">
+          </app-game-result-overlay>
+        }
+      </div>
+    </div>
+
+    <!-- RIGHT: Right Column / Multiplayer Sidebar -->
+    <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">
+      @if (settingsService.settings().multiplayer_enabled === 'true') {
+        <app-game-lobby-panel
+          #lobbyPanel
+          class="flex-grow flex"
+          [currentGameId]="'watersort'"
+          [currentRoomId]="currentRoomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+        </app-game-lobby-panel>
+      }
+    </div>
+  </div>
+
+  <!-- BOTTOM: Mobile SEO Section -->
+  <div class="lg:hidden w-full max-w-[800px] mt-4 pb-8 mx-auto px-4">
+    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-6 shadow-sm">
+      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
+           [innerHTML]="i18n.t('game.watersort.seo_desc')()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Sidebar Overlay Backdrop -->
+  @if (isMobileSidebarOpen()) {
+    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
+    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col transition-transform duration-300">
+       <div class="flex justify-between items-center mb-4 lg:hidden" >
+         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
+       </div>
+       <app-game-lobby-panel
+          [currentGameId]="'watersort'"
+          [currentRoomId]="currentRoomId()"
+          (joinRoom)="handleJoinRoom($event)"
+          (createRoom)="handleCreateRoom($event)">
+       </app-game-lobby-panel>
+    </div>
+  }
+</div>
+<app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
