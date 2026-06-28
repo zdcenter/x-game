@@ -12,6 +12,7 @@ import (
 	_ "github.com/x-game/backend/internal/engine/lightsout"
 	_ "github.com/x-game/backend/internal/engine/math24"
 	_ "github.com/x-game/backend/internal/engine/minesweeper"
+	_ "github.com/x-game/backend/internal/engine/nonogram"
 	_ "github.com/x-game/backend/internal/engine/sliding"
 	_ "github.com/x-game/backend/internal/engine/sokoban"
 	_ "github.com/x-game/backend/internal/engine/sudoku"

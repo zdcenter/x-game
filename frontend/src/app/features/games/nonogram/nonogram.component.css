@@ -1,0 +1,63 @@
+.prevent-select {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.nonogram-board {
+  display: grid;
+  /* Top-left | Col Hints
+     Row Hints| Main Grid */
+  grid-template-columns: auto calc(var(--grid-width) * var(--cell-size) * 1px);
+  grid-template-rows: auto calc(var(--grid-height) * var(--cell-size) * 1px);
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 2px solid #94a3b8; /* slate-400 */
+}
+
+:host-context(.dark) .nonogram-board {
+  background-color: #0f172a; /* slate-900 */
+  border-color: #475569; /* slate-600 */
+}
+
+.top-left {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.col-hints {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-width), 1fr);
+}
+
+.col-hint-item {
+  font-size: calc(var(--cell-size) * 0.4px);
+  line-height: 1.2;
+}
+
+.row-hints {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: repeat(var(--grid-height), 1fr);
+}
+
+.row-hint-item {
+  font-size: calc(var(--cell-size) * 0.5px);
+}
+
+.cells-grid {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-width), 1fr);
+  grid-template-rows: repeat(var(--grid-height), 1fr);
+}
+
+.cell {
+  border-width: 1px;
+  border-style: solid;
+}

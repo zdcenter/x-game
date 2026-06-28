@@ -226,6 +226,14 @@ func Seed() {
 			Config:   `{"icon":"📦","multiRound":true,"modes":[{"id":"single","labelKey":"game.mode_single_player","descKey":"game.single_player_desc","icon":"👤"},{"id":"speed","labelKey":"game.same_pk_speed_label","descKey":"game.same_pk_speed_desc","icon":"🏎️"}],"difficulties":[{"id":"easy","labelKey":"game.diff_easy","descKey":"game.diff_sokoban_beginner","desc":"Beginner"},{"id":"medium","labelKey":"game.diff_medium","descKey":"game.diff_sokoban_intermediate","desc":"Intermediate"},{"id":"hard","labelKey":"game.diff_hard","descKey":"game.diff_sokoban_advanced","desc":"Advanced"},{"id":"expert","labelKey":"game.diff_expert","descKey":"game.diff_sokoban_professional","desc":"Professional"}]}`,
 			IsActive: true,
 		},
+		{
+			ID:       "nonogram",
+			Name:     `{"en": "Nonogram", "zh": "数织 / 像素拼图"}`,
+			Overview: `{"en": "Logic puzzle to reveal a hidden picture.", "zh": "根据数字提示填色，解开隐藏的像素画。"}`,
+			Rules:    `{"en": "# Nonogram Rules\n\nFill the grid according to the numbers at the side of the grid to reveal a hidden picture.\n\n## 🎮 Controls\n- **Fill**: Click to fill a cell.\n- **Cross**: Right-click or use the toggle button to mark an empty cell.", "zh": "# 数织玩法规则\n\n根据网格左侧和上方的数字提示，推理并涂黑正确的方格，最终拼出一幅隐藏的像素画。\n\n## 🎮 操作说明\n- **涂色 (Fill)**：左键点击（或直接点击）涂黑方块。\n- **标记 (Cross)**：右键点击（或切换到底部的打叉模式）标记你认为绝对是空的方块。"}`,
+			Config:   `{"icon":"🎨","multiRound":true,"modes":[{"id":"single","labelKey":"game.single_label","descKey":"game.single_desc","icon":"👤"},{"id":"speed","labelKey":"game.same_pk_speed_label","descKey":"game.same_pk_speed_desc","icon":"🏎️"},{"id":"steal","labelKey":"game.same_pk_steal_score","descKey":"game.same_pk_steal_desc","icon":"⚡"}],"difficulties":[{"id":"easy","labelKey":"game.diff_easy","descKey":"game.diff_nonogram_5x5","desc":"5x5"},{"id":"medium","labelKey":"game.diff_medium","descKey":"game.diff_nonogram_10x10","desc":"10x10"},{"id":"hard","labelKey":"game.diff_hard","descKey":"game.diff_nonogram_15x15","desc":"15x15"}]}`,
+			IsActive: true,
+		},
 	}
 
 	for _, game := range games {

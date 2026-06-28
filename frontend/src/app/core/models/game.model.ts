@@ -16,7 +16,8 @@ export const GameId = {
   LightsOut: 'lightsout',
   WaterSort: 'watersort',
   Sokoban: 'sokoban',
-  Idiom: 'idiom'
+  Idiom: 'idiom',
+  Nonogram: 'nonogram'
 } as const;
 
 export type GameIdType = typeof GameId[keyof typeof GameId];
