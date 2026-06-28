@@ -190,6 +190,7 @@ func main() {
 	admin.Patch("/blog/posts/:id/toggle", rest.AdminToggleBlogPost)
 	admin.Get("/blog/distributions", rest.GetBlogDistributions)
 	admin.Post("/blog/posts/:id/distribute", rest.RecordBlogDistribution)
+	admin.Post("/blog/posts/:id/publish/devto", rest.PublishToDevTo)
 
 	// Content promotion system
 	content := admin.Group("/content")
@@ -216,6 +217,7 @@ func main() {
 	admin.Post("/blog/posts/covers/batch", rest.AdminGenerateBlogCoversBatch)
 	admin.Post("/blog/posts/:id/cover", rest.AdminGenerateBlogCover)
 	admin.Patch("/blog/posts/:id/cover", rest.AdminSetBlogCoverImage)
+	admin.Post("/content/articles/:id/publish/devto", rest.PublishArticleToDevTo)
 	admin.Post("/content/articles/covers/batch", rest.AdminGenerateArticleCoversBatch)
 	admin.Post("/content/articles/:id/cover", rest.AdminGenerateArticleCover)
 	admin.Patch("/content/articles/:id/cover", rest.AdminSetArticleCoverImage)

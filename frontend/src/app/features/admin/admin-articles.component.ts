@@ -236,6 +236,26 @@ async function copyToClipboard(text: string): Promise<void> {
                             [loading]="distribLoading()"
                             (copy)="copyArticle($event.platformId, $event.lang, $event.url)">
                           </app-platform-distrib-panel>
+                          <!-- Dev.to one-click publish -->
+                          @if (!distribLoading()) {
+                            <div class="mt-3 pt-3 border-t border-cyan-500/10 flex items-center gap-3 flex-wrap">
+                              @if (getDevToPublishedUrl(art.id); as pubUrl) {
+                                <a [href]="pubUrl" target="_blank" rel="noopener"
+                                   class="text-xs text-emerald-500 hover:text-emerald-400 transition-colors truncate max-w-xs">
+                                  ✓ 已发布 → {{ pubUrl }}
+                                </a>
+                              }
+                              <button
+                                (click)="publishDevTo(art.id, 'en'); $event.stopPropagation()"
+                                [disabled]="publishingId() === art.id"
+                                class="px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                                       bg-[#3b49df]/10 border-[#3b49df]/30 text-[#8b98ff]
+                                       hover:bg-[#3b49df]/20 hover:border-[#3b49df]/60 whitespace-nowrap"
+                              >
+                                @if (publishingId() === art.id) { ⏳ 发布中... } @else { 🚀 发布到 Dev.to (EN) }
+                              </button>
+                            </div>
+                          }
                           @if (!distribLoading() && distributions().length > 0) {
                             <div class="mt-2 pt-2 border-t border-cyan-500/10 flex flex-wrap gap-1.5">
                               @for (d of distributions(); track d.id) {
@@ -660,6 +680,7 @@ export class AdminArticlesComponent implements OnInit {
 
   // Distribute
   distribOpenId  = signal<number | null>(null);
+  publishingId   = signal<number | null>(null);
   distribArt     = signal<ContentArticleFull | null>(null);
   distribLoading = signal(false);
   distribKey     = signal('');
@@ -1231,6 +1252,26 @@ An elimination technique for medium-difficulty puzzles...`,
     } catch {
       this.toast.show('复制失败', 'error');
     }
+  }
+
+  getDevToPublishedUrl(articleId: number): string | null {
+    return this.distributions().find(d => d.article_id === articleId && d.platform === 'devto' && d.lang === 'en')?.published_url || null;
+  }
+
+  publishDevTo(articleId: number, lang: 'en' | 'zh') {
+    this.publishingId.set(articleId);
+    this.svc.publishToDevTo(articleId, lang).subscribe({
+      next: (res: { ok: boolean; url: string }) => {
+        this.publishingId.set(null);
+        this.toast.show(`发布成功! ${res.url}`, 'success');
+        this.svc.getDistributions(articleId).subscribe((dists: ContentDistributionRecord[]) => this.distributions.set(dists));
+      },
+      error: (err: { error?: { error?: string } }) => {
+        this.publishingId.set(null);
+        const msg = err?.error?.error || '发布失败，请检查 Dev.to API Key（Admin → Settings）';
+        this.toast.show(msg, 'error');
+      },
+    });
   }
 
   async copyArticle(platformId: PlatformId, lang: 'en' | 'zh', url: string) {

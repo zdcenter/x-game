@@ -10,6 +10,7 @@ export interface DistributionRecord {
   lang: string;
   last_copied_at: string;
   copy_count: number;
+  published_url?: string;
   title_en?: string;
   title_zh?: string;
   slug?: string;
@@ -28,6 +29,13 @@ export class DistributeService {
     return this.http.post<{ ok: boolean; copy_count: number }>(
       `${this.base}/admin/blog/posts/${postId}/distribute`,
       { platform, lang }
+    );
+  }
+
+  publishToDevTo(postId: number, lang: 'en' | 'zh'): Observable<{ ok: boolean; url: string }> {
+    return this.http.post<{ ok: boolean; url: string }>(
+      `${this.base}/admin/blog/posts/${postId}/publish/devto?lang=${lang}`,
+      {}
     );
   }
 }

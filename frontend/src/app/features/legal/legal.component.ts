@@ -87,10 +87,10 @@ export class LegalComponent {
   contentHtml = signal<SafeHtml>('');
 
   constructor() {
-    effect(async () => {
+    effect(() => {
       const raw = this.content();
       if (raw) {
-         const html = await marked.parse(raw);
+         const html = marked.parse(raw) as string;
          const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, html) || '';
          this.contentHtml.set(safeHtml);
       }

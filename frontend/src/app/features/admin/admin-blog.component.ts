@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { BlogService, BlogPostMeta, AdminBlogPostInput } from '../../core/services/blog.service';
 import { DistributeService } from '../../core/services/distribute.service';
 import { PlatformFormatterService, PlatformId } from '../../core/services/platform-formatter.service';
@@ -137,6 +138,10 @@ async function copyToClipboard(text: string): Promise<void> {
                     <button (click)="showPrompt(post); $event.stopPropagation()" title="AI 封面提示词"
                       class="p-1.5 text-amber-400 hover:bg-amber-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                       ✨
+                    </button>
+                    <button (click)="goDistribute(post); $event.stopPropagation()" title="内容分发"
+                      class="p-1.5 text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                      📡
                     </button>
                     <button (click)="deletePost(post); $event.stopPropagation()"
                       class="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Delete">
@@ -402,6 +407,7 @@ export class AdminBlogComponent implements OnInit {
   private blogService   = inject(BlogService);
   private distributeService = inject(DistributeService);
   private formatter     = inject(PlatformFormatterService);
+  private router        = inject(Router);
   private imageSvc      = inject(ImageService);
   private toast         = inject(ToastService);
   i18n = inject(I18nService);
@@ -570,6 +576,10 @@ export class AdminBlogComponent implements OnInit {
         this.toast.show(this.i18n.t('admin.blog.toggle_success')(), 'success');
       },
     });
+  }
+
+  goDistribute(post: BlogPostMeta) {
+    this.router.navigate(['/admin/distribute'], { queryParams: { postId: post.dbId } });
   }
 
   deletePost(post: BlogPostMeta) {

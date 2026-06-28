@@ -24,24 +24,54 @@ import { PLATFORM_DEFS, PlatformId } from '../../core/services/platform-formatte
             <span class="text-xl leading-none">{{ p.icon }}</span>
             <span class="text-sm font-bold text-[var(--color-text-muted)]">{{ p.name }}</span>
             @if (hasLang(p.langs, 'zh')) {
-              <button (click)="emit(p.id, 'zh', p.url); $event.stopPropagation()"
-                [disabled]="distribKey() === p.id + '_zh'"
-                class="px-2.5 py-1 text-sm rounded-lg font-bold border transition-colors disabled:opacity-40"
-                [class]="distribKey() === p.id + '_zh'
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                  : 'border-[var(--color-border-card)] hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:text-cyan-400'">
-                {{ distribKey() === p.id + '_zh' ? '✓' : 'ZH' }}
-              </button>
+              <div class="flex rounded-lg overflow-hidden border transition-colors"
+                   [class]="distribKey() === p.id + '_zh'
+                     ? 'border-emerald-500/40'
+                     : 'border-[var(--color-border-card)] hover:border-cyan-500/40'">
+                <button (click)="emit(p.id, 'zh', ''); $event.stopPropagation()"
+                  [disabled]="distribKey() === p.id + '_zh'"
+                  title="只复制，不跳转"
+                  class="px-2.5 py-1 text-sm font-bold transition-colors disabled:opacity-40"
+                  [class]="distribKey() === p.id + '_zh'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'hover:bg-cyan-500/20 hover:text-cyan-400'">
+                  {{ distribKey() === p.id + '_zh' ? '✓' : 'ZH' }}
+                </button>
+                <button (click)="emit(p.id, 'zh', p.url); $event.stopPropagation()"
+                  [disabled]="distribKey() === p.id + '_zh'"
+                  title="复制并打开平台"
+                  class="px-1.5 py-1 text-xs border-l transition-colors disabled:opacity-40"
+                  [class]="distribKey() === p.id + '_zh'
+                    ? 'border-emerald-500/40 text-emerald-400/50'
+                    : 'border-[var(--color-border-card)] hover:bg-cyan-500/20 hover:text-cyan-400 text-[var(--color-text-muted)]'">
+                  ↗
+                </button>
+              </div>
             }
             @if (hasLang(p.langs, 'en')) {
-              <button (click)="emit(p.id, 'en', p.url); $event.stopPropagation()"
-                [disabled]="distribKey() === p.id + '_en'"
-                class="px-2.5 py-1 text-sm rounded-lg font-bold border transition-colors disabled:opacity-40"
-                [class]="distribKey() === p.id + '_en'
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                  : 'border-[var(--color-border-card)] hover:bg-cyan-500/20 hover:border-cyan-500/40 hover:text-cyan-400'">
-                {{ distribKey() === p.id + '_en' ? '✓' : 'EN' }}
-              </button>
+              <div class="flex rounded-lg overflow-hidden border transition-colors"
+                   [class]="distribKey() === p.id + '_en'
+                     ? 'border-emerald-500/40'
+                     : 'border-[var(--color-border-card)] hover:border-cyan-500/40'">
+                <button (click)="emit(p.id, 'en', ''); $event.stopPropagation()"
+                  [disabled]="distribKey() === p.id + '_en'"
+                  title="只复制，不跳转"
+                  class="px-2.5 py-1 text-sm font-bold transition-colors disabled:opacity-40"
+                  [class]="distribKey() === p.id + '_en'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'hover:bg-cyan-500/20 hover:text-cyan-400'">
+                  {{ distribKey() === p.id + '_en' ? '✓' : 'EN' }}
+                </button>
+                <button (click)="emit(p.id, 'en', p.url); $event.stopPropagation()"
+                  [disabled]="distribKey() === p.id + '_en'"
+                  title="复制并打开平台"
+                  class="px-1.5 py-1 text-xs border-l transition-colors disabled:opacity-40"
+                  [class]="distribKey() === p.id + '_en'
+                    ? 'border-emerald-500/40 text-emerald-400/50'
+                    : 'border-[var(--color-border-card)] hover:bg-cyan-500/20 hover:text-cyan-400 text-[var(--color-text-muted)]'">
+                  ↗
+                </button>
+              </div>
             }
           </div>
         }

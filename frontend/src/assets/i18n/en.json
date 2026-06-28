@@ -97,6 +97,7 @@
   "lobby.gomoku.desc": "Classic five-in-a-row board game. Challenge AI or play online.",
   "lobby.sliding": "Sliding Puzzle",
   "lobby.sliding.desc": "Classic number sliding puzzle. Unscramble to win.",
+  "game.sliding.seo_desc": "<h2>About Sliding Puzzle</h2><p>Sliding Puzzle is a classic brain teaser where the goal is to rearrange a scrambled set of numbered tiles in order by sliding them into the empty space. This game not only tests your spatial logic but also trains your hand-eye coordination and reaction speed.</p><h3>How to Play</h3><p>Click on any tile adjacent to the empty space to slide it into that space. Use this single empty spot to maneuver the tiles until all numbers are neatly ordered from left to right, top to bottom.</p><h3>Game Features</h3><ul><li>Multiple grid sizes (4x4, 5x5, 6x6) to suit different skill levels.</li><li>Real-time multiplayer PK mode to race against players worldwide.</li><li>Detailed statistics to track your best time and minimum moves.</li></ul><p>Start your challenge now and see if you can break the world record for the fastest solve!</p>",
   "lobby.tetris": "Tetris Battle",
   "lobby.tetris.desc": "Classic block puzzle with real-time PvP attacks!",
   "lobby.codebreaker": "Codebreaker (1A2B)",

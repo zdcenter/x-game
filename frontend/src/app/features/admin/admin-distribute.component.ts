@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
 import { DistributeService, DistributionRecord } from '../../core/services/distribute.service';
 import { PlatformFormatterService, PLATFORM_DEFS, PlatformId } from '../../core/services/platform-formatter.service';
@@ -97,16 +98,9 @@ import { I18nService } from '../../core/i18n/i18n.service';
                 @for (p of platforms; track p.id) {
                   <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl overflow-hidden">
                     <!-- Card header -->
-                    <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-card)]">
-                      <div class="flex items-center gap-2">
-                        <span class="text-xl">{{ p.icon }}</span>
-                        <span class="font-bold text-sm">{{ p.name }}</span>
-                      </div>
-                      <a [href]="p.url" target="_blank" rel="noopener"
-                         class="text-xs opacity-40 hover:opacity-100 transition-opacity px-2 py-1 rounded hover:bg-[var(--color-bg-main)]"
-                         [title]="i18n.t('admin.distribute.open_platform')()">
-                        ↗
-                      </a>
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border-card)]">
+                      <span class="text-xl">{{ p.icon }}</span>
+                      <span class="font-bold text-sm">{{ p.name }}</span>
                     </div>
 
                     <!-- Card body -->
@@ -128,20 +122,50 @@ import { I18nService } from '../../core/i18n/i18n.service';
                               <span class="text-xs opacity-30">{{ i18n.t('admin.distribute.never')() }}</span>
                             }
                           </div>
-                          <!-- Copy button -->
-                          <button
-                            (click)="copy(p.id, lang)"
-                            [disabled]="loadingFull() || isCopying(p.id, lang)"
-                            class="w-full py-2 text-xs font-bold rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed
-                                   bg-[var(--color-bg-main)] border-[var(--color-border-card)]
-                                   hover:bg-purple-500/20 hover:border-purple-500/50 hover:text-purple-400"
-                          >
-                            @if (isCopying(p.id, lang)) {
-                              ⏳ {{ i18n.t('admin.distribute.copying')() }}
-                            } @else {
-                              📋 {{ lang === 'zh' ? i18n.t('admin.distribute.copy_zh')() : i18n.t('admin.distribute.copy_en')() }}
+                          <!-- Split button: copy-only | copy+open -->
+                          <div class="flex rounded-lg overflow-hidden border border-[var(--color-border-card)] hover:border-purple-500/50 transition-colors">
+                            <button
+                              (click)="copy(p.id, lang, false)"
+                              [disabled]="loadingFull() || isCopying(p.id, lang)"
+                              title="只复制，不跳转"
+                              class="flex-1 py-2 text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                                     bg-[var(--color-bg-main)] hover:bg-purple-500/20 hover:text-purple-400"
+                            >
+                              @if (isCopying(p.id, lang)) {
+                                ⏳
+                              } @else {
+                                📋 {{ lang === 'zh' ? i18n.t('admin.distribute.copy_zh')() : i18n.t('admin.distribute.copy_en')() }}
+                              }
+                            </button>
+                            <button
+                              (click)="copy(p.id, lang, true)"
+                              [disabled]="loadingFull() || isCopying(p.id, lang)"
+                              title="复制并打开平台"
+                              class="px-3 py-2 text-xs border-l border-[var(--color-border-card)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                                     bg-[var(--color-bg-main)] hover:bg-purple-500/20 hover:text-purple-400 text-[var(--color-text-muted)]"
+                            >
+                              ↗
+                            </button>
+                          </div>
+                          <!-- Dev.to: API one-click publish button -->
+                          @if (p.id === 'devto') {
+                            @if (getDevToPublishedUrl(); as pubUrl) {
+                              <a [href]="pubUrl" target="_blank" rel="noopener"
+                                 class="block w-full py-1.5 text-xs text-center text-emerald-500 hover:text-emerald-400 transition-colors truncate">
+                                ✓ 已发布 → {{ pubUrl }}
+                              </a>
                             }
-                          </button>
+                            <button
+                              (click)="publishDevTo()"
+                              [disabled]="loadingFull() || isPublishing()"
+                              class="w-full py-2 text-xs font-bold rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                                     bg-[#3b49df]/10 border-[#3b49df]/30 text-[#8b98ff]
+                                     hover:bg-[#3b49df]/20 hover:border-[#3b49df]/60"
+                            >
+                              @if (isPublishing()) { ⏳ 发布中... } @else { 🚀 一键发布到 Dev.to }
+                            </button>
+                          }
+
                         </div>
                       }
                     </div>
@@ -160,6 +184,7 @@ export class AdminDistributeComponent implements OnInit {
   private blogService = inject(BlogService);
   private distributeService = inject(DistributeService);
   private formatter = inject(PlatformFormatterService);
+  private route = inject(ActivatedRoute);
 
   readonly platforms = PLATFORM_DEFS;
 
@@ -170,6 +195,7 @@ export class AdminDistributeComponent implements OnInit {
   loading = signal(false);
   loadingFull = signal(false);
   copyingKey = signal<string | null>(null);
+  isPublishing = signal(false);
   toast = signal<string | null>(null);
   toastError = signal(false);
   searchQuery = signal('');
@@ -189,7 +215,16 @@ export class AdminDistributeComponent implements OnInit {
   private load() {
     this.loading.set(true);
     this.blogService.adminListAll().subscribe({
-      next: posts => { this.posts.set(posts); this.loading.set(false); },
+      next: posts => {
+        this.posts.set(posts);
+        this.loading.set(false);
+        // Auto-select post from query param (e.g. navigated from blog admin)
+        const postId = this.route.snapshot.queryParamMap.get('postId');
+        if (postId) {
+          const match = posts.find(p => String(p.dbId) === postId);
+          if (match) this.selectPost(match);
+        }
+      },
       error: () => this.loading.set(false),
     });
     this.distributeService.getDistributions().subscribe({
@@ -215,7 +250,7 @@ export class AdminDistributeComponent implements OnInit {
     return this.copyingKey() === `${platform}_${lang}`;
   }
 
-  async copy(platform: PlatformId, lang: 'en' | 'zh') {
+  async copy(platform: PlatformId, lang: 'en' | 'zh', openUrl = false) {
     const post = this.selectedPostFull();
     if (!post) return;
 
@@ -226,9 +261,13 @@ export class AdminDistributeComponent implements OnInit {
       const text = await this.formatter.formatForPlatform(platform, post, lang);
       await navigator.clipboard.writeText(text);
 
+      if (openUrl) {
+        const url = this.platforms.find(p => p.id === platform)?.url;
+        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      }
+
       this.distributeService.record(post.dbId!, platform, lang).subscribe({
         next: () => {
-          // Refresh distributions
           this.distributeService.getDistributions().subscribe(dists => this.distributions.set(dists));
         }
       });
@@ -239,6 +278,30 @@ export class AdminDistributeComponent implements OnInit {
     } finally {
       this.copyingKey.set(null);
     }
+  }
+
+  getDevToPublishedUrl(): string | null {
+    const post = this.selectedPost();
+    if (!post?.dbId) return null;
+    return this.getDistStatus(post.dbId, 'devto', 'en')?.published_url || null;
+  }
+
+  publishDevTo() {
+    const post = this.selectedPost();
+    if (!post?.dbId) return;
+    this.isPublishing.set(true);
+    this.distributeService.publishToDevTo(post.dbId, 'en').subscribe({
+      next: (res) => {
+        this.isPublishing.set(false);
+        this.showToast(`发布成功! ${res.url}`, false);
+        this.distributeService.getDistributions().subscribe(dists => this.distributions.set(dists));
+      },
+      error: (err) => {
+        this.isPublishing.set(false);
+        const msg = err?.error?.error || '发布失败，请检查 Dev.to API Key';
+        this.showToast(msg, true);
+      },
+    });
   }
 
   formatDate(iso: string): string {

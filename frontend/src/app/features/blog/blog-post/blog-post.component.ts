@@ -167,7 +167,7 @@ export class BlogPostComponent implements OnInit {
 
       if (!meta || !raw) return;
 
-      untracked(async () => {
+      untracked(() => {
         // SEO tags
         this.titleService.setTitle(`${meta.title} - Puzzle PK Blog`);
         this.metaService.updateTag({ name: 'description', content: meta.description });
@@ -197,7 +197,7 @@ export class BlogPostComponent implements OnInit {
 
         // Render markdown (content already available in meta.content from API)
         const markdownStr = meta.content ?? '';
-        const rawHtml = await marked.parse(markdownStr);
+        const rawHtml = marked.parse(markdownStr) as string;
         const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, rawHtml) || '';
         this.contentHtml.set(safeHtml);
         this.loading.set(false);

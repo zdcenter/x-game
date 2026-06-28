@@ -72,6 +72,7 @@ export interface ContentDistributionRecord {
   lang: string;
   last_copied_at: string;
   copy_count: number;
+  published_url?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -119,6 +120,13 @@ export class ContentService {
     return this.http.post<{ ok: boolean; copy_count: number }>(
       `${this.base}/admin/content/articles/${articleId}/distribute`,
       { platform, lang }
+    );
+  }
+
+  publishToDevTo(articleId: number, lang: 'en' | 'zh'): Observable<{ ok: boolean; url: string }> {
+    return this.http.post<{ ok: boolean; url: string }>(
+      `${this.base}/admin/content/articles/${articleId}/publish/devto?lang=${lang}`,
+      {}
     );
   }
 }

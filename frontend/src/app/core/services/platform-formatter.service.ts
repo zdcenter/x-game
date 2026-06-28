@@ -11,7 +11,6 @@ export interface FormattablePost {
 
 export const PLATFORM_DEFS = [
   // 中文平台
-  { id: 'wechat',        name: '微信公众号',    icon: '💚',  langs: ['zh'] as const,        url: 'https://mp.weixin.qq.com/cgi-bin/home',                   hint: '适合有粉丝基础的深度内容，打开率高、转化率强，内容留存久' },
   { id: 'zhihu',         name: '知乎',          icon: '💬',  langs: ['zh'] as const,        url: 'https://zhuanlan.zhihu.com/write',                        hint: '复制的是 Markdown 源码，粘贴到 mdnice.com 渲染后，再全选复制富文本粘贴到知乎编辑器，格式完美保留' },
   { id: 'juejin',        name: '掘金',          icon: '💎',  langs: ['zh'] as const,        url: 'https://juejin.cn/editor/drafts/new?v=2',                 hint: '中文开发者最集中的平台，技术文章曝光快，有推荐算法加持' },
   { id: 'segmentfault',  name: '思否',          icon: '🧩',  langs: ['zh'] as const,        url: 'https://segmentfault.com/write',                          hint: '中文技术问答 + 文章社区，技术深度内容收录持久，适合教程类' },
@@ -179,7 +178,6 @@ export class PlatformFormatterService {
       case 'x':         return this.formatX(l.title, l.description, l.tags, url, lang);
       case 'zhihu':     return this.formatZhihu(post.zh.title, post.zh.description, post.zh.content ?? '', url);
       case 'bilibili':  return this.formatBilibili(post.zh.title, post.zh.description, post.zh.content ?? '', url);
-      case 'wechat':    return this.formatWeChat(post.zh.title, post.zh.description, post.zh.content ?? '', url, post.coverImage);
       case 'blogger':      return this.formatBlogger(l.title, l.description, l.content ?? '', url, post.coverImage);
       case 'reddit':       return this.formatReddit(l.title, l.description, l.content ?? '', l.tags, url);
       case 'juejin':       return this.formatJuejin(post.zh.title, post.zh.description, post.zh.content ?? '', url);
@@ -234,28 +232,6 @@ export class PlatformFormatterService {
   ${footer}
 
 </div>`.trim();
-  }
-
-  private async formatWeChat(title: string, desc: string, content: string, url: string, coverImage?: string): Promise<string> {
-    const bodyHtml = await marked.parse(content, { renderer: this.buildStyledRenderer('wechat') });
-    const footer   = url
-      ? `<p style="font-size:12px;color:#999;text-align:center;margin-top:32px;">本文首发于 <a href="${url}" style="color:#07c160;text-decoration:none;">Puzzle PK 益智游戏平台</a></p>`
-      : '';
-    const coverHtml = coverImage
-      ? `<img src="${coverImage}" alt="${title}" style="width:100%;max-height:400px;object-fit:cover;border-radius:8px;margin:0 0 20px;display:block;" />\n`
-      : '';
-    return `<!-- 微信公众号文章 -->
-<section style="max-width:680px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB',sans-serif;">
-
-  ${coverHtml}<h1 style="font-size:24px;font-weight:800;color:#1a1a1a;margin:0 0 12px;line-height:1.4;">${title}</h1>
-  <p style="font-size:15px;color:#666;margin:0 0 24px;padding-bottom:20px;border-bottom:2px solid #07c160;line-height:1.7;">${desc}</p>
-
-  ${bodyHtml}
-
-  <hr style="border:none;border-top:1px solid #ddd;margin:32px 0;">
-  ${footer}
-
-</section>`.trim();
   }
 
   private async formatBlogger(title: string, desc: string, content: string, url: string, coverImage?: string): Promise<string> {

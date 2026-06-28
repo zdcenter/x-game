@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { User } from '../auth/auth.store';
 import { AuthStore } from '../auth/auth.store';
@@ -44,6 +45,12 @@ export class AdminService {
   // System Settings
   getSettings(): Observable<any> {
     return this.http.get(`${this.baseUrl}/settings`);
+  }
+
+  getSettingsMap(): Observable<Record<string, string>> {
+    return this.http.get<{ settings: { key: string; value: string }[] }>(`${this.baseUrl}/settings`).pipe(
+      map(res => Object.fromEntries((res.settings ?? []).map(s => [s.key, s.value])))
+    );
   }
 
   updateSettings(settings: Record<string, string>): Observable<any> {

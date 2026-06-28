@@ -9,6 +9,7 @@ type ContentDistribution struct {
 	Lang         string    `gorm:"uniqueIndex:idx_content_dist;type:varchar(5);not null"  json:"lang"`
 	LastCopiedAt time.Time `json:"last_copied_at"`
 	CopyCount    int       `gorm:"default:0" json:"copy_count"`
+	PublishedURL string    `gorm:"type:varchar(500)" json:"published_url"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
