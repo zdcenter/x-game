@@ -42,7 +42,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     TutorialOverlayComponent,
   ],
   template: `
-<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+<div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
 
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
@@ -106,7 +106,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     </div>
   </div>
 
-  <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
+  <div class="flex-grow min-h-0 w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-stretch max-w-[1600px] mx-auto transition-colors duration-300">
     
     <!-- LEFT: SEO Description (Desktop only) -->
     <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
@@ -116,7 +116,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     </div>
 
     <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center">
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center lg:self-stretch">
       @if (showLobby()) {
         <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-[600px]" (openLobby)="navigateToPkArena()" (levelSelect)="onLevelSelect($event)"></app-sokoban-lobby>
       } @else {
