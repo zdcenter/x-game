@@ -126,7 +126,7 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
       </header>
 
       <!-- Main Content Area -->
-      <main class="flex-1 flex flex-col overflow-y-auto custom-scrollbar relative min-h-0">
+      <main class="flex-1 block overflow-y-auto custom-scrollbar relative min-h-0">
         <router-outlet></router-outlet>
         <app-share-modal></app-share-modal>
       </main>
