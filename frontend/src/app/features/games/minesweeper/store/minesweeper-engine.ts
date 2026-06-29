@@ -42,6 +42,32 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     );
   }
 
+  initTutorialBoard() {
+    this.width = 5;
+    this.height = 5;
+    this.mines = 2;
+    this.status = GameStatus.Playing;
+    this.revealedCnt = 0;
+    this.startAt = Date.now();
+    this.isMinesPlaced = true; // Pre-placed
+
+    this.cells = Array.from({ length: this.height }, (_, y) =>
+      Array.from({ length: this.width }, (_, x) => ({
+        x,
+        y,
+        state: CellState.Hidden,
+        neighbors: 0,
+        isMine: false
+      }))
+    );
+
+    // Hardcode mines at (1,1) and (3,2)
+    (this.cells[1][1] as any).isMine = true;
+    (this.cells[2][3] as any).isMine = true;
+
+    this.calculateNeighbors();
+  }
+
   getState() {
     return this;
   }

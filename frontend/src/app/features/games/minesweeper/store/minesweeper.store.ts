@@ -201,6 +201,17 @@ export class MinesweeperStore extends BaseGameStore {
     this.tick.set(this.tick() + 1);
   }
 
+  startTutorialGame() {
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set('tutorial');
+    this.ws.disconnect(GameId.Minesweeper);
+    
+    const engine = new LocalMinesweeperEngine();
+    engine.initTutorialBoard();
+    this.localEngine.set(engine);
+    this.tick.set(this.tick() + 1);
+  }
+
   protected override onSinglePlayerRestart() {
     this.startGame();
   }

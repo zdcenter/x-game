@@ -7,6 +7,9 @@ import { GameService, GameDoc, getLocalizedField } from '../../core/services/gam
 import { marked } from 'marked';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { getOrigin } from '../../core/utils/browser.util';
+import { GameRegistryService } from '../../core/services/game-registry.service';
+import { GameStepPlayerComponent } from './components/game-step-player/game-step-player.component';
+import { ALL_DEMO_CONFIGS } from './data/demo-configs';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
@@ -19,7 +22,7 @@ interface TocItem {
 @Component({
   selector: 'app-docs',
   standalone: true,
-  imports: [CommonModule, RouterLink, FooterComponent],
+  imports: [CommonModule, RouterLink, FooterComponent, GameStepPlayerComponent],
   template: `
     <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
       
@@ -84,6 +87,10 @@ interface TocItem {
                 </p>
               </div>
 
+              @if (hasDemoConfig(currentGameId())) {
+                <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
+              }
+
               <div class="prose prose-invert prose-lg max-w-none
                           [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:scroll-mt-20
                           [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:scroll-mt-20
@@ -140,6 +147,7 @@ export class DocsComponent {
   private gameService = inject(GameService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private gameRegistry = inject(GameRegistryService);
   private sanitizer = inject(DomSanitizer);
   private titleService = inject(Title);
   private metaService = inject(Meta);
@@ -217,30 +225,40 @@ export class DocsComponent {
   }
 
   getGameTitle(id: string): string {
-    const titleKey = `app.title.${id}`;
-    let title = this.i18n.t(titleKey)();
-    if (title === titleKey) {
-      const lobbyKey = `lobby.${id}`;
-      title = this.i18n.t(lobbyKey)();
-      if (title === lobbyKey) {
-        // Fallback to capitalizing the id if no translation exists
-        title = id.charAt(0).toUpperCase() + id.slice(1);
-      }
+    const config = this.gameRegistry.getConfig(id);
+    if (config && config.titleKey) {
+      return this.i18n.t(config.titleKey)();
+    }
+    
+    // Fallback
+    const fallbackKey = `lobby.${id}`;
+    let title = this.i18n.t(fallbackKey)();
+    if (title === fallbackKey) {
+      title = id.charAt(0).toUpperCase() + id.slice(1);
     }
     return title;
   }
 
   getGameDesc(id: string): string {
-    const descKey = `app.title.${id}.desc`;
+    const descKey = `lobby.${id}.desc`;
     let desc = this.i18n.t(descKey)();
     if (desc === descKey) {
-      const lobbyDescKey = `lobby.${id}.desc`;
-      desc = this.i18n.t(lobbyDescKey)();
-      if (desc === lobbyDescKey) {
+      // Some games like drop2048 might use app.title.drop2048.desc
+      const altKey = `app.title.${id}.desc`;
+      desc = this.i18n.t(altKey)();
+      if (desc === altKey) {
         desc = '';
       }
     }
     return desc;
+  }
+
+  hasDemoConfig(id: string): boolean {
+    return !!ALL_DEMO_CONFIGS[id];
+  }
+
+  getDemoConfig(id: string) {
+    return ALL_DEMO_CONFIGS[id];
   }
 
   private setLinkTag(rel: string, href: string, hreflang?: string): void {

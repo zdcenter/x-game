@@ -25,6 +25,7 @@
     "@angular/service-worker": "^21.2.14",
     "@angular/ssr": "^21.2.15",
     "@jsverse/transloco": "^8.4.0",
+    "driver.js": "^1.6.0",
     "express": "^5.1.0",
     "marked": "^18.0.4",
     "qrcode": "^1.5.4",

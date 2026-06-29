@@ -18,7 +18,8 @@
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">💣</div>
 
         <ng-container header-center>
-          @if (currentRoomMode() === GameMode.Single) {
+          <div class="flex items-center gap-2">
+            @if (currentRoomMode() === GameMode.Single) {
             <div class="relative ml-2 hidden sm:block">
               <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
                       class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-orange-500">
@@ -30,7 +31,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </div>
-          }
+            }
+          </div>
         </ng-container>
 
         <ng-container header-right>
@@ -208,7 +210,7 @@
                     @for (row of store.board(); track $index) {
                     <div class="flex gap-1">
                       @for (cell of row; track cell.x + '-' + cell.y) {
-                        <app-cell [cell]="cell" (reveal)="handleCellReveal(cell)" (flag)="handleCellFlag(cell)"></app-cell>
+                        <app-cell [cell]="cell" (reveal)="handleCellReveal(cell)" (flag)="handleCellFlag(cell)" [id]="'ms-cell-' + cell.x + '-' + cell.y"></app-cell>
                       }
                     </div>
                     }
