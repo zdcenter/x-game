@@ -25,7 +25,7 @@
       </span>
     </div>
     
-    <div #scrollContainer class="flex-grow px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+    <div #scrollContainer class="flex-grow px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 min-h-0">
       <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 shrink-0">
         @for (level of paginatedLevels(); track level.id; let i = $index) {
           <button 
