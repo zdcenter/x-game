@@ -1,5 +1,5 @@
-<div class="flex-grow flex flex-col p-2 lg:p-4 gap-4 lg:gap-6 w-full h-full overflow-hidden min-w-0">
-  <div class="flex-grow flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0 min-h-0">
+<div class="flex-1 flex flex-col p-2 lg:p-4 gap-4 lg:gap-6 w-full h-full overflow-hidden min-w-0">
+  <div class="flex-1 flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0 min-h-0">
 
 
     <!-- Header Tabs -->
@@ -25,7 +25,7 @@
       </span>
     </div>
     
-    <div #scrollContainer class="flex-grow px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 min-h-0">
+    <div #scrollContainer class="flex-1 px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 min-h-0">
       <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4 shrink-0">
         @for (level of paginatedLevels(); track level.id; let i = $index) {
           <button 

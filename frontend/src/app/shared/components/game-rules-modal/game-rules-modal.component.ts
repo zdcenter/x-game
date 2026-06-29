@@ -47,7 +47,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
           </div>
           
           <!-- Content -->
-          <div class="p-5 overflow-y-auto prose prose-invert prose-sm max-w-none
+          <div class="flex-1 min-h-0 p-5 overflow-y-auto prose prose-invert prose-sm max-w-none
                       [&_h1]:text-xl [&_h1]:font-bold [&_h1]:text-[var(--color-text-primary)] [&_h1]:mb-3
                       [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mb-2 [&_h2]:mt-4
                       [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mb-2
