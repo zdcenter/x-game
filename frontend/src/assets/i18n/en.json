@@ -272,6 +272,8 @@
   "game.invite": "Invite",
   "game.no_online_players": "No other players online",
   "game.create_pk": "CREATE PK ROOM",
+  "game.create_room": "Create Room",
+  "game.collapse_panel": "Collapse Panel",
   "game.pk_arena": "PK Arena",
   "game.quick_match": "Quick Match",
   "game.active_rooms_count": "rooms",

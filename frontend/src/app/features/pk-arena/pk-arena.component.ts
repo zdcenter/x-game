@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthStore } from '../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
 import { WebSocketService } from '../../core/services/websocket.service';
@@ -14,7 +14,7 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
       <div class="flex-grow flex flex-col min-h-0 overflow-hidden rounded-2xl lg:rounded-3xl backdrop-blur-xl border shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <app-game-pk-lobby
-          gameId=""
+          [gameId]="initialGameId()"
           currentRoomId=""
           (createRoom)="handleCreate($event)"
           (joinRoom)="handleJoin($event)"
@@ -26,11 +26,15 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
 })
 export class PkArenaComponent implements OnInit, OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private auth = inject(AuthStore);
   private cross = inject(CrossGameJoinService);
   private wsService = inject(WebSocketService);
 
+  initialGameId = signal('');
+
   ngOnInit() {
+    this.initialGameId.set(this.route.snapshot.queryParams['game'] || '');
     const player = this.auth.currentUser()?.username || this.auth.guestId;
     this.wsService.connectLobby(player, player);
   }

@@ -344,10 +344,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     return this.currentRoomMode() === 'diff_pk_score' ? this.t('hexa.mode.diff_pk_score')() : this.t('hexa.mode.single')();
   }
 
-  override navigateToPkArena() {
-    this.store.leaveRoom();
-    this.router.navigate(['/pk'], { queryParams: { game: 'hexa' } });
-  }
+
 
   override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {

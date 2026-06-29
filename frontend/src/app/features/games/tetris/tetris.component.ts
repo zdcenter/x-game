@@ -298,10 +298,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return this.currentRoomMode() === 'diff_pk_attack' ? this.i18n.t('tetris.mode.diff_pk_attack')() : this.i18n.t('tetris.mode.single')();
   }
 
-  override navigateToPkArena() {
-    this.store.leaveRoom();
-    this.router.navigate(['/pk'], { queryParams: { game: 'tetris' } });
-  }
+
 
   dismissRoom() {
     this.toastService.confirm({

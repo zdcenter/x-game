@@ -79,10 +79,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     return this.getModeName() + ' - ' + this.getDifficultyName();
   }
 
-  override navigateToPkArena() {
-    this.store.leaveRoom();
-    this.router.navigate(['/pk'], { queryParams: { game: 'lightsout' } });
-  }
+
 
   private roomLifecycle!: RoomLifecycleHandle;
 

@@ -257,10 +257,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     return this.currentRoomMode() === GameMode.Steal ? this.i18n.t('game.same_pk_steal_label')() : (this.currentRoomMode() === GameMode.Speed ? this.i18n.t('game.same_pk_speed_label')() : this.i18n.t('game.single_label')());
   }
 
-  override navigateToPkArena() {
-    this.store.leaveRoom();
-    this.router.navigate(['/pk'], { queryParams: { game: 'minesweeper' } });
-  }
+
 
   handleCellReveal(cell: any) { this.store.revealCell(cell.x, cell.y); }
   handleCellFlag(cell: any) { this.store.toggleFlag(cell.x, cell.y); }

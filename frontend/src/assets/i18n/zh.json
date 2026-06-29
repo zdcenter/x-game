@@ -274,6 +274,8 @@
   "game.invite": "邀请",
   "game.no_online_players": "暂无其他在线玩家",
   "game.create_pk": "创建PK房间",
+  "game.create_room": "创建房间",
+  "game.collapse_panel": "收起面板",
   "game.pk_arena": "PK 竞技场",
   "game.quick_match": "快速匹配",
   "game.active_rooms_count": "个房间",

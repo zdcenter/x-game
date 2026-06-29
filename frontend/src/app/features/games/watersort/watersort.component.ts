@@ -511,8 +511,5 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     return this.currentRoomMode() === 'same_pk_speed' ? this.i18n.t('game.speed_mode')() : this.i18n.t('game.mode_single_player')();
   }
 
-  override navigateToPkArena() {
-    this._store.leaveRoom();
-    this.router.navigate(['/pk'], { queryParams: { game: 'watersort' } });
-  }
+
 }

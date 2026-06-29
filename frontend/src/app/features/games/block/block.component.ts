@@ -185,10 +185,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     this.showTutorial.set(false);
   }
 
-  override navigateToPkArena() {
-    this.store.leaveRoom();
-    this.router.navigate(['/pk'], { queryParams: { game: 'block' } });
-  }
+
 
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);

@@ -86,7 +86,14 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   navigateToPkArena() {
-    this._baseRouter.navigate(['/pk-arena']);
+    this.store.leaveRoom();
+    let gameId = '';
+    const urlPath = this._baseRouter.url.split('?')[0];
+    const segments = urlPath.split('/');
+    const gamesIdx = segments.indexOf('games');
+    if (gamesIdx >= 0) gameId = segments[gamesIdx + 1];
+    
+    this._baseRouter.navigate(['/pk-arena'], { queryParams: gameId ? { game: gameId } : {} });
   }
 
   handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {

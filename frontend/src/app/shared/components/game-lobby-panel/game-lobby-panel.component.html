@@ -99,7 +99,7 @@
 
       <!-- PK Arena CTA -->
       <div class="shrink-0">
-        <button (click)="router.navigate(['/pk-arena'])"
+        <button (click)="router.navigate(['/pk-arena'], { queryParams: { game: currentGameId } })"
                 class="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] flex justify-center items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow">
           ⚔️ {{ t('game.pk_arena') }}
         </button>

@@ -155,6 +155,10 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     const startGame = this.gameId || lastGame || '';
     if (startGame) {
       this.selectCreateGame(startGame);
+      if (this.gameId) {
+        // If it came explicitly from Input (URL), open the form on mobile
+        this.formOpen.set(true);
+      }
     } else {
       this.createGameId.set('');
     }
