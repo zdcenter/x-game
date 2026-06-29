@@ -30,7 +30,7 @@ const PAGE_SIZE = 8;
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
-export class LobbyComponent implements OnInit, OnDestroy, AfterViewInit {
+export class LobbyComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   gameService = inject(GameService);
   private wsService = inject(WebSocketService);
@@ -42,28 +42,21 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewInit {
   announcementService = inject(AnnouncementService);
   shareService = inject(ShareService);
   adService = inject(AdService);
-
-  @ViewChild('scrollSentinel') scrollSentinel!: ElementRef<HTMLElement>;
-  private scrollObserver?: IntersectionObserver;
-
-  // Pre-populated from static config (first PAGE_SIZE) so SSG prerender emits <img> tags in HTML.
+  // Statically populate all games from frontend SSOT to prevent SSR sorting flicker.
   games = signal<BackendGameConfig[]>(
-    GAME_DEFINITIONS.slice(0, PAGE_SIZE).map(def => ({
+    GAME_DEFINITIONS.map(def => ({
       id: def.id, name: def.id, overview: '', rules: '', config: '',
       isActive: true, visitCount: 0, createdAt: '', updatedAt: '',
     }))
   );
-  isLoadingGames = signal(false);
-  hasMoreGames = signal(true);
-  private currentPage = 1;
-
+  
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
 
   ngOnInit() {
-    // Load first page
-    this.loadGames(1);
+    // Load dynamic game stats (visitCounts) and merge without reordering
+    this.loadGamesStats();
 
     // Fetch active announcements
     this.announcementService.getActiveAnnouncements().subscribe(anns => {
@@ -74,38 +67,28 @@ export class LobbyComponent implements OnInit, OnDestroy, AfterViewInit {
     this.wsService.connectLobby(player, player);
   }
 
-  ngAfterViewInit() {
-    if (!isBrowser()) return;
-    this.scrollObserver = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && this.hasMoreGames() && !this.isLoadingGames()) {
-        this.loadGames(this.currentPage + 1);
-      }
-    }, { threshold: 0.1 });
-    if (this.scrollSentinel?.nativeElement) {
-      this.scrollObserver.observe(this.scrollSentinel.nativeElement);
-    }
-  }
-
-  private loadGames(page: number) {
-    if (this.isLoadingGames()) return;
-    this.isLoadingGames.set(true);
-    this.gameService.getGames(page, PAGE_SIZE).subscribe({
+  private loadGamesStats() {
+    // Use getAllGames to fetch the active list and stats, then merge them by ID.
+    // We ignore the backend sort order to maintain the frontend static order.
+    this.gameService.getAllGames().subscribe({
       next: res => {
-        if (page === 1) {
-          this.games.set(res.games);
-        } else {
-          this.games.update(prev => [...prev, ...res.games]);
-        }
-        this.currentPage = res.page;
-        this.hasMoreGames.set(res.hasMore);
-        this.isLoadingGames.set(false);
+        this.games.update(currentGames => {
+          return currentGames.map(cg => {
+            const backendData = res.find(bg => bg.id === cg.id);
+            if (backendData) {
+              return { ...cg, visitCount: backendData.visitCount, isActive: backendData.isActive };
+            }
+            return cg;
+          });
+        });
       },
-      error: () => this.isLoadingGames.set(false),
+      error: err => {
+        console.error('Failed to load game stats:', err);
+      }
     });
   }
 
   ngOnDestroy() {
-    this.scrollObserver?.disconnect();
     this.wsService.disconnectLobby();
   }
 

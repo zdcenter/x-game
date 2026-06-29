@@ -32,6 +32,8 @@
 /zh/games/math24
 /en/games/minesweeper
 /zh/games/minesweeper
+/en/games/nonogram
+/zh/games/nonogram
 /en/games/sliding
 /zh/games/sliding
 /en/games/sokoban
@@ -60,6 +62,8 @@
 /zh/docs/math24
 /en/docs/minesweeper
 /zh/docs/minesweeper
+/en/docs/nonogram
+/zh/docs/nonogram
 /en/docs/sliding
 /zh/docs/sliding
 /en/docs/sokoban

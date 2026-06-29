@@ -6,15 +6,20 @@ import { environment } from '../../../environments/environment';
 
 export interface GameConfig {
   id: string;
-  name: string;
-  overview: string;
-  rules: string;
   config: string;
   isActive: boolean;
-  sortOrder?: number;
   visitCount?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GameDoc {
+  id: string;
+  name: string;
+  overview: string;
+  rules: string;
+  isActive: boolean;
+  sortOrder?: number;
 }
 
 export interface GamesPage {
@@ -48,8 +53,8 @@ export class GameService {
    * Allowed by ssrNoopInterceptor (/assets/ path passes through during SSG).
    * Run `node scripts/export-games-docs.js` after editing game rules in admin.
    */
-  getAllGamesDocs(): Observable<GameConfig[]> {
-    return this.http.get<GameConfig[]>('/assets/games-docs.json');
+  getAllGamesDocs(): Observable<GameDoc[]> {
+    return this.http.get<GameDoc[]>('/assets/games-docs.json');
   }
 
   visitGame(id: string): Observable<any> {

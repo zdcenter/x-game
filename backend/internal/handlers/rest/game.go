@@ -31,7 +31,7 @@ func GetGames(c fiber.Ctx) error {
 
 	var games []domain.GameConfig
 	if err := db.DB.Where("is_active = ?", true).
-		Order("sort_order ASC, visit_count DESC").
+		Order("visit_count DESC").
 		Limit(limit).Offset(offset).
 		Find(&games).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
@@ -49,7 +49,7 @@ func GetGames(c fiber.Ctx) error {
 func GetAdminGames(c fiber.Ctx) error {
 	var games []domain.GameConfig
 	// Admin gets all games, sorted
-	if err := db.DB.Order("sort_order ASC, visit_count DESC").Find(&games).Error; err != nil {
+	if err := db.DB.Order("visit_count DESC").Find(&games).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
 	}
 	return c.JSON(games)
@@ -64,11 +64,8 @@ func UpdateGame(c fiber.Ctx) error {
 	}
 
 	type UpdateRequest struct {
-		Overview  *string `json:"overview"`
-		Rules     *string `json:"rules"`
 		Config    *string `json:"config"`
 		IsActive  *bool   `json:"isActive"`
-		SortOrder *int    `json:"sortOrder"`
 	}
 
 	var req UpdateRequest
@@ -77,20 +74,11 @@ func UpdateGame(c fiber.Ctx) error {
 	}
 
 	updates := map[string]interface{}{}
-	if req.Overview != nil {
-		updates["overview"] = *req.Overview
-	}
-	if req.Rules != nil {
-		updates["rules"] = *req.Rules
-	}
 	if req.Config != nil {
 		updates["config"] = *req.Config
 	}
 	if req.IsActive != nil {
 		updates["is_active"] = *req.IsActive
-	}
-	if req.SortOrder != nil {
-		updates["sort_order"] = *req.SortOrder
 	}
 
 	if err := db.DB.Model(&game).Updates(updates).Error; err != nil {

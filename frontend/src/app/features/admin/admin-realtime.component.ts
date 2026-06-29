@@ -136,7 +136,7 @@ interface ActiveRoom {
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           @for (g of games(); track g.id) {
             <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-4 shadow-sm flex flex-col items-center justify-center">
-              <span class="text-sm font-bold uppercase mb-2 text-[var(--color-accent-from)]">{{ getLocalized(g.name) }}</span>
+              <span class="text-sm font-bold uppercase mb-2 text-[var(--color-accent-from)]">{{ g.id }}</span>
               <div class="text-3xl font-mono font-bold">{{ g.visitCount || 0 }}</div>
               <span class="text-xs opacity-50 mt-1 uppercase tracking-widest">{{ i18n.t('admin.realtime.col.visits')() }}</span>
             </div>

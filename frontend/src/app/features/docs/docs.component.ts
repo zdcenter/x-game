@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { GameService, GameConfig, getLocalizedField } from '../../core/services/game.service';
+import { GameService, GameDoc, getLocalizedField } from '../../core/services/game.service';
 import { marked } from 'marked';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { getOrigin } from '../../core/utils/browser.util';
@@ -147,7 +147,7 @@ export class DocsComponent {
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
-  games = signal<GameConfig[]>([]);
+  games = signal<GameDoc[]>([]);
   currentGameId = signal<string>('');
   isMobileMenuOpen = signal(false);
 

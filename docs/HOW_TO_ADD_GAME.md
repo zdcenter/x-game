@@ -708,30 +708,38 @@ this.http.post<{ isNewRecord: boolean }>(`${env.apiUrl}/mypuzzle/puzzle/${id}/fi
 
 2. **SEO 文案**（如果需要）：在 i18n 文件中添加 `seo.<gameId>.title`、`seo.<gameId>.desc`、`seo.<gameId>.keywords` 词条，路由会自动读取。
 
-3. **🗄️ 数据库种子 — 所有游戏都要加**
-
-   > `game-definitions.ts` 和 `gm_game_configs` 存的是**不同内容**，不可互相替代：
-   > - **前端 TS**：路由/懒加载/模式能力标志（编译期固化）
-   > - **后端 DB**：游戏名文字、规则 Markdown、引擎 config 参数、isActive 开关、visitCount（运行时可变）
-   >
-   > 🚨 漏掉 DB 条目：管理后台看不到该游戏；`visitCount` 统计失效；引擎无法读取 `config` 参数。
+3. **🗄️ 数据库种子**
+   
+   > 经过 SSOT（Single Source of Truth）架构重构后，前端掌握绝对的展现控制权。
+   > 数据库表 `gm_game_configs` 现在仅用作唯一 ID 索引和统计 `visitCount`。
 
    在 `backend/pkg/db/postgres.go` 的 `Seed()` 函数中添加：
 
    ```go
-   {
-     ID:       "mygame",
-     Name:     `{"en": "My Game", "zh": "我的游戏"}`,
-     Overview: `{"en": "Short description.", "zh": "简短介绍。"}`,
-     Rules:    `{"en": "# Rules\n\n...", "zh": "# 规则\n\n..."}`,
-     Config:   `{}`,   // 若引擎需要额外参数，在此填写 JSON
-     IsActive: true,
-   },
+   { ID: "mygame", IsActive: true },
    ```
 
-   后端启动时 `Seed()` 会自动 upsert（只更新字段，不重置 visitCount）。
+   后端启动时 `Seed()` 会自动 upsert 记录以保证统计模块正常工作。
 
-4. **数据库种子（解谜游戏追加）**：准备题目数据，添加到种子脚本或通过管理后台导入。
+4. **📝 游戏说明文档与多语言**
+
+   游戏大厅显示的“简介 (Overview)”以及点开后的“玩法规则 (Rules)”已经全部脱离数据库，成为纯静态的前端资源文件。
+   
+   打开 `frontend/public/assets/games-docs.json`，在 JSON 数组末尾添加你的游戏内容：
+
+   ```json
+   {
+     "id": "mygame",
+     "name": "{\"en\": \"My Game\", \"zh\": \"我的游戏\"}",
+     "overview": "{\"en\": \"Short description.\", \"zh\": \"简短介绍。\"}",
+     "rules": "{\"en\": \"# Rules\\n\\n...\", \"zh\": \"# 规则\\n\\n...\"}",
+     "isActive": true,
+     "sortOrder": 999
+   }
+   ```
+   > 🚨 此处的 `sortOrder` 已废弃，大厅实际展现顺序完全由 `game-definitions.ts` 决定。
+
+5. **数据库种子（解谜游戏追加）**：准备题目数据，添加到种子脚本或通过管理后台导入。
 
 5. **编译验证**：
    ```bash

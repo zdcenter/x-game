@@ -59,7 +59,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
   currentRoomMode = signal<string>(GameMode.Single);
   currentRoomId = signal<string>('');
-  currentDifficulty = signal<string>('intermediate');
+  currentDifficulty = signal<string>('medium');
   frozenRemaining = signal(0);
   
   get predefinedDifficulties() {
@@ -190,7 +190,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
     } else {
-      const savedDiff = storageGet('minesweeper_single_diff') || 'intermediate';
+      const savedDiff = storageGet('minesweeper_single_diff') || 'medium';
       this.changeSingleDifficulty(savedDiff);
     }
   }
@@ -230,7 +230,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentRoomId.set('');
     this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
-    setTimeout(() => this.changeSingleDifficulty('intermediate'), 100);
+    setTimeout(() => this.changeSingleDifficulty('medium'), 100);
   }
 
   dismissRoom() {
@@ -288,13 +288,11 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       width = parseInt(parts[1], 10); height = parseInt(parts[2], 10); mines = parseInt(parts[3], 10);
     } else {
       switch (diff) {
-        case 'beginner': width = 9; height = 9; mines = 10; break;
-        case 'intermediate': width = 16; height = 16; mines = 40; break;
-        case 'advanced': width = 30; height = 16; mines = 99; break;
-        case 'hard_mode': width = 30; height = 18; mines = 130; break;
-        case 'professional': width = 30; height = 20; mines = 160; break;
-        case 'master': width = 30; height = 22; mines = 190; break;
-        case 'expert': width = 30; height = 24; mines = 230; break;
+        case 'easy': width = 9; height = 9; mines = 10; break;
+        case 'medium': width = 16; height = 16; mines = 40; break;
+        case 'hard': width = 30; height = 16; mines = 99; break;
+        case 'expert': width = 30; height = 20; mines = 160; break;
+        case 'master': width = 30; height = 24; mines = 230; break;
       }
     }
     this.store.startLocalGame(width, height, mines, diff);

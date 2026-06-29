@@ -1,8 +1,9 @@
 import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { I18nService } from '../../../core/i18n/i18n.service';
-import { GameService, getLocalizedField } from '../../../core/services/game.service';
+import { getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
@@ -77,7 +78,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 })
 export class GameRulesModalComponent implements OnChanges {
   i18n = inject(I18nService);
-  private gameService = inject(GameService);
+  private http = inject(HttpClient);
   private sanitizer = inject(DomSanitizer);
 
   @Input({ required: true }) gameId!: string;
@@ -107,14 +108,20 @@ export class GameRulesModalComponent implements OnChanges {
   }
 
   private loadRules() {
-    this.gameService.getAllGames().subscribe(games => {
-      const game = games.find(g => g.id === this.gameId);
-      if (game) {
-        this.rawGameRules.set(game.rules);
-      } else {
+    this.http.get<any[]>('/assets/games-docs.json').subscribe({
+      next: (docs) => {
+        const doc = docs.find(d => d.id === this.gameId);
+        if (doc && doc.rules) {
+          this.rawGameRules.set(doc.rules);
+        } else {
+          this.rawGameRules.set('NOT_FOUND');
+        }
+        this.loaded = true;
+      },
+      error: () => {
         this.rawGameRules.set('NOT_FOUND');
+        this.loaded = true;
       }
-      this.loaded = true;
     });
   }
 
