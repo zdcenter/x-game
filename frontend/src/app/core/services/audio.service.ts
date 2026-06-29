@@ -22,6 +22,8 @@ export class AudioService {
   
   private audioCtx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private bgmAudio: HTMLAudioElement | null = null;
+  private currentBgmUrl: string | null = null;
 
   constructor() {
     const saved = storageGet('xgame_muted');
@@ -39,6 +41,37 @@ export class AudioService {
     this.volume = newMuted ? 0 : 0.6;
     if (this.masterGain) {
       this.masterGain.gain.value = this.volume;
+    }
+
+    if (this.bgmAudio) {
+      if (newMuted) {
+        this.bgmAudio.pause();
+      } else if (this.currentBgmUrl) {
+        this.bgmAudio.volume = this.volume;
+        this.bgmAudio.play().catch(e => console.warn('BGM auto-play blocked', e));
+      }
+    }
+  }
+
+  playBgm(url: string) {
+    this.currentBgmUrl = url;
+    if (!this.bgmAudio) {
+      this.bgmAudio = new Audio();
+      this.bgmAudio.loop = true;
+    }
+    this.bgmAudio.src = url;
+    this.bgmAudio.volume = this.volume;
+    
+    if (!this.isMuted()) {
+      this.bgmAudio.play().catch(e => console.warn('BGM play blocked (require user interaction):', e));
+    }
+  }
+
+  stopBgm() {
+    this.currentBgmUrl = null;
+    if (this.bgmAudio) {
+      this.bgmAudio.pause();
+      this.bgmAudio.currentTime = 0;
     }
   }
 

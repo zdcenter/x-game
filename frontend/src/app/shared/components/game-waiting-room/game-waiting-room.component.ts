@@ -1,10 +1,11 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, signal, input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { ShareService } from '../../../core/services/share.service';
 import { getHref } from '../../../core/utils/browser.util';
+import { AudioService } from '../../../core/services/audio.service';
 
 @Component({
   selector: 'app-game-waiting-room',
@@ -15,10 +16,11 @@ import { getHref } from '../../../core/utils/browser.util';
   },
   templateUrl: './game-waiting-room.component.html',
 })
-export class GameWaitingRoomComponent {
+export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   GameMode = GameMode;
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
+  audioService = inject(AudioService);
 
   @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;
@@ -95,5 +97,13 @@ export class GameWaitingRoomComponent {
       text: text,
       url: url.toString()
     });
+  }
+
+  ngOnInit() {
+    this.audioService.playBgm('/assets/music/waiter_pk.mp3');
+  }
+
+  ngOnDestroy() {
+    this.audioService.stopBgm();
   }
 }
