@@ -1,7 +1,7 @@
     <div class="flex flex-col lg:flex-row min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)]">
       
       <!-- LEFT: Main Games Content -->
-      <div class="flex-grow flex flex-col items-center p-4 lg:p-8 relative">
+      <div class="flex-1 min-w-0 flex flex-col items-center p-4 lg:p-8 relative">
         
         <!-- Global Announcement Marquee: always in DOM to prevent CLS; invisible when empty -->
         <div class="w-full max-w-[1600px] mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden transition-all"
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Games Grid -->
-        <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+        <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
         @for (game of games(); track game.id; let i = $index) {
           <!-- Dynamic Game Card -->
           <a [routerLink]="['/games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"

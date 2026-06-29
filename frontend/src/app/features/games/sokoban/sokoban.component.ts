@@ -109,7 +109,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
   <div class="flex-grow w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-start max-w-[1600px] mx-auto transition-colors duration-300">
     
     <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden lg:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
+    <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
       <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
            [innerHTML]="i18n.t('game.sokoban.seo_desc')()">
       </div>

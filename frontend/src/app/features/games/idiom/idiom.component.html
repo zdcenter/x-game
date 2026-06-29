@@ -2,7 +2,7 @@
 <div class="h-full w-full flex flex-col md:flex-row relative bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300">
 
   <!-- 左侧 SEO 描述 (响应式隐藏) -->
-  <div class="hidden lg:flex w-[300px] xl:w-[350px] shrink-0 p-6 flex-col border-r border-[var(--color-border-card)] overflow-y-auto bg-[var(--color-bg-sub)]">
+  <div class="hidden xl:flex w-[300px] xl:w-[350px] shrink-0 p-6 flex-col border-r border-[var(--color-border-card)] overflow-y-auto bg-[var(--color-bg-sub)]">
     <h2 class="text-2xl font-black mb-4 text-[var(--color-text-main)]">{{ i18n.t('lobby.idiom')() }}</h2>
     <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
          [innerHTML]="i18n.t('game.idiom.seo_desc')()">
@@ -945,7 +945,7 @@
 
   <!-- ===== 右侧：竞技大厅面板（PC 专属，跨所有视图持久显示） ===== -->
   @if (settingsService.settings().multiplayer_enabled === 'true') {
-    <div class="hidden lg:flex w-[320px] xl:w-[400px] shrink-0 border-l border-[var(--color-border-card)] bg-[var(--color-bg-sub)] flex-col">
+    <div class="hidden xl:flex w-[320px] xl:w-[400px] shrink-0 border-l border-[var(--color-border-card)] bg-[var(--color-bg-sub)] flex-col">
       <app-game-lobby-panel class="flex-1 flex" [currentGameId]="'idiom'" (joinRoom)="handleLobbyJoinRoom($event)"></app-game-lobby-panel>
     </div>
   }
