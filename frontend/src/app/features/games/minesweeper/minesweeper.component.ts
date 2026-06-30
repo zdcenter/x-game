@@ -276,9 +276,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   changeSingleDifficulty(diff: string) {
-    this.currentDifficulty.set(diff);
-    storageSet('minesweeper_single_diff', diff);
-    this.currentRoomMode.set(GameMode.Single);
     let width = 16, height = 16, mines = 40;
     if (diff.startsWith('custom_')) {
       const parts = diff.split('_');
@@ -290,8 +287,16 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         case 'hard': width = 30; height = 16; mines = 99; break;
         case 'expert': width = 30; height = 20; mines = 160; break;
         case 'master': width = 30; height = 24; mines = 230; break;
+        default: 
+          diff = 'medium'; 
+          width = 16; height = 16; mines = 40; 
+          break;
       }
     }
+    
+    this.currentDifficulty.set(diff);
+    storageSet('minesweeper_single_diff', diff);
+    this.currentRoomMode.set(GameMode.Single);
     this.store.startLocalGame(width, height, mines, diff);
 
     if (!this.tutorialService.hasSeen(GameId.Minesweeper) && this.tutorialSteps.length) {

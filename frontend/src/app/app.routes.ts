@@ -1,7 +1,16 @@
-import { Routes } from '@angular/router';
+import { Routes, Router } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { GAME_DEFINITIONS } from './core/config/game-definitions';
 import { langResolver } from './core/i18n/lang.resolver';
+import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID, inject } from '@angular/core';
+
+const browserRedirectGuard = () => {
+  if (isPlatformBrowser(inject(PLATFORM_ID))) {
+    return inject(Router).parseUrl('/zh/lobby');
+  }
+  return true; // Stay on route during SSR to prevent meta refresh HTML generation
+};
 
 // Shared children used by both the 'en' and 'zh' literal routes.
 // Using literal paths ('en'/'zh') instead of ':lang' prevents
@@ -117,8 +126,8 @@ const langChildren: Routes = [
 ];
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/zh/lobby', pathMatch: 'full' },
+  { path: '', canActivate: [browserRedirectGuard], children: [], pathMatch: 'full' },
   { path: 'zh', resolve: { lang: langResolver }, children: langChildren },
   { path: 'en', resolve: { lang: langResolver }, children: langChildren },
-  { path: '**', redirectTo: '/zh/lobby' }
+  { path: '**', canActivate: [browserRedirectGuard], children: [] }
 ];

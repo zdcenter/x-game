@@ -11,7 +11,7 @@ export class TutorialService {
   }
 
   hasSeen(gameId: string): boolean {
-    return !!storageGet(`seen_tutorial_${gameId}`);
+    return true; // Disabled globally as game instructions are already clear
   }
 
   markSeen(gameId: string): void {
