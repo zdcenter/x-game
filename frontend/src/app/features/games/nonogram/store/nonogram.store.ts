@@ -17,12 +17,19 @@ export interface LocalNonogramState {
   endAt?: number;
 }
 
+export interface NonogramHistoryEntry {
+  x: number;
+  y: number;
+  prevState: CellState;
+}
+
 @Injectable()
 export class NonogramStore extends BaseGameStore {
   readonly gameId = GameId.Nonogram;
   private audio = inject(AudioService);
 
   private localState = signal<LocalNonogramState | null>(null);
+  readonly history = signal<NonogramHistoryEntry[]>([]);
   
   // Single mode compatibility
   override readonly singlePlayerList = computed(() => []);
@@ -281,12 +288,20 @@ export class NonogramStore extends BaseGameStore {
       nextState = current === 2 ? 0 : 2;
     }
     
+    if (nextState !== current) {
+      this.history.update(h => [...h, { x, y, prevState: current }]);
+    }
+    
     newGrid[y][x] = nextState;
     this.audio.playPuzzle('move');
     
     this.localState.set({ ...state, grid: newGrid });
     
     // Check win condition
+    this.checkProgressAndWin(newGrid, state);
+  }
+
+  private checkProgressAndWin(newGrid: CellState[][], state: LocalNonogramState) {
     if (this.currentRoomMode() === GameMode.Single) {
       if (NonogramEngine.checkWin(newGrid, state.answerGrid)) {
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
@@ -312,6 +327,88 @@ export class NonogramStore extends BaseGameStore {
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
       }
     }
+  }
+
+  undo() {
+    if (this.status() !== GameStatus.Playing) return;
+    if (this.currentRoomMode() === GameMode.Steal) return;
+    
+    const state = this.localState();
+    const hist = this.history();
+    if (!state || hist.length === 0) return;
+
+    const lastMove = hist[hist.length - 1];
+    const newGrid = state.grid.map(row => [...row]);
+    newGrid[lastMove.y][lastMove.x] = lastMove.prevState;
+    
+    this.history.set(hist.slice(0, -1));
+    this.localState.set({ ...state, grid: newGrid });
+    this.audio.playPuzzle('move');
+    
+    this.checkProgressAndWin(newGrid, state);
+  }
+
+  clearBoard() {
+    if (this.status() !== GameStatus.Playing) return;
+    if (this.currentRoomMode() === GameMode.Steal) return;
+    
+    const state = this.localState();
+    if (!state) return;
+
+    const newGrid = Array(state.height).fill(0).map(() => Array(state.width).fill(0));
+    this.history.set([]);
+    this.localState.set({ ...state, grid: newGrid });
+    this.audio.playPuzzle('move');
+
+    this.checkProgressAndWin(newGrid, state);
+  }
+
+  useHint() {
+    if (this.status() !== GameStatus.Playing) return;
+    if (this.currentRoomMode() !== GameMode.Single) return; // Only allow hints in single player
+    
+    const state = this.localState();
+    if (!state || !state.answerGrid || state.answerGrid.length === 0) return;
+
+    // Find an empty or incorrectly filled cell
+    const candidates: {x: number, y: number}[] = [];
+    for (let y = 0; y < state.height; y++) {
+      for (let x = 0; x < state.width; x++) {
+        const correct = state.answerGrid[y][x];
+        const current = state.grid[y][x];
+        // If it should be filled (1) but isn't
+        if (correct === 1 && current !== 1) candidates.push({x, y});
+        // If it should be empty/crossed (0) but is filled (1)
+        if (correct === 0 && current === 1) candidates.push({x, y});
+      }
+    }
+
+    if (candidates.length === 0) return; // Already perfect, shouldn't happen unless won
+
+    // Pick 3 random cells to fix/reveal if grid is large, else 1
+    const numToFix = state.width > 5 ? Math.min(3, candidates.length) : 1;
+    
+    // Shuffle candidates
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    const newGrid = state.grid.map(row => [...row]);
+    
+    for (let i = 0; i < numToFix; i++) {
+      const cell = candidates[i];
+      const correct = state.answerGrid[cell.y][cell.x];
+      // Save to history before modifying so player can undo hint? 
+      // Usually hints aren't undoable, or they are. Let's make it undoable.
+      this.history.update(h => [...h, { x: cell.x, y: cell.y, prevState: state.grid[cell.y][cell.x] }]);
+      
+      newGrid[cell.y][cell.x] = correct === 1 ? 1 : 2; // Fill or Cross
+    }
+
+    this.localState.set({ ...state, grid: newGrid });
+    this.audio.playPuzzle('success');
+    this.checkProgressAndWin(newGrid, state);
   }
 
   playAgain() {
@@ -355,5 +452,6 @@ export class NonogramStore extends BaseGameStore {
       status: GameStatus.Playing,
       startAt: Date.now()
     });
+    this.history.set([]);
   }
 }

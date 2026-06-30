@@ -18,11 +18,13 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameId } from '../../../core/models/game.model';
 import { FormsModule } from '@angular/forms';
+import { AdService } from '../../../core/services/ad.service';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, HintButtonComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -33,6 +35,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   private windowSize = inject(WindowSizeService);
   private i18n = inject(I18nService);
   private authStore = inject(AuthStore);
+  private adService = inject(AdService);
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
@@ -216,6 +219,12 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     } else {
       this.store.handleCellClick(x, y, false);
     }
+  }
+
+  useHint() {
+    this.adService.showRewardedAd(() => {
+      this.store.useHint();
+    });
   }
 
   onContextMenu(event: Event) {
