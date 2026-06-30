@@ -15,6 +15,7 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <app-game-pk-lobby
           [gameId]="initialGameId()"
+          [isArena]="true"
           currentRoomId=""
           (createRoom)="handleCreate($event)"
           (joinRoom)="handleJoin($event)"

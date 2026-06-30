@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal, effect } from '@angular/core';
+import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { AudioService } from '../../../../core/services/audio.service';
@@ -48,12 +48,12 @@ export class NonogramStore extends BaseGameStore {
 
   readonly rowHints = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localState()?.rowHints || [];
-    return (this.rawState() as any)?.rowHints || [];
+    return (this.rawState() as any)?.row_hints || [];
   });
 
   readonly colHints = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localState()?.colHints || [];
-    return (this.rawState() as any)?.colHints || [];
+    return (this.rawState() as any)?.col_hints || [];
   });
 
   // Current board grid
@@ -117,6 +117,17 @@ export class NonogramStore extends BaseGameStore {
       }
     });
 
+    // Sync localState status with rawState status for PK modes
+    effect(() => {
+      const raw = this.rawState() as any;
+      if (this.currentRoomMode() !== GameMode.Single && raw && raw.status) {
+        const state = untracked(() => this.localState());
+        if (state && state.status !== raw.status && raw.status !== GameStatus.Playing) {
+          this.localState.set({ ...state, status: raw.status });
+        }
+      }
+    });
+
     // Speed mode sync: when rawState updates and mode is speed, we must sync the answers if we are starting
     effect(() => {
       const raw = this.rawState() as any;
@@ -142,6 +153,67 @@ export class NonogramStore extends BaseGameStore {
           status: GameStatus.Playing,
           startAt: Date.now()
         });
+      }
+    });
+
+    // Steal mode sync: sync the backend board to local grid
+    effect(() => {
+      const raw = this.rawState() as any;
+      if (this.currentRoomMode() === GameMode.Steal && raw && raw.status === GameStatus.Playing) {
+        const w = raw.width || 5;
+        const h = raw.height || 5;
+        const serverBoard = raw.board;
+        
+        if (this.localState()?.status !== GameStatus.Playing) {
+          const grid: CellState[][] = Array(h).fill(0).map(() => Array(w).fill(0));
+          if (serverBoard) {
+            for (let y = 0; y < h; y++) {
+              for (let x = 0; x < w; x++) {
+                grid[y][x] = serverBoard[y][x] as CellState;
+              }
+            }
+          }
+          this.localState.set({
+            width: w,
+            height: h,
+            grid,
+            answerGrid: [],
+            rowHints: raw.row_hints,
+            colHints: raw.col_hints,
+            status: GameStatus.Playing,
+            startAt: Date.now()
+          });
+        } else if (serverBoard) {
+          const state = this.localState();
+          if (state) {
+            const newGrid = state.grid.map(row => [...row]);
+            let changed = false;
+            for (let y = 0; y < h; y++) {
+              for (let x = 0; x < w; x++) {
+                if (newGrid[y][x] !== serverBoard[y][x] && serverBoard[y][x] !== 0) {
+                  newGrid[y][x] = serverBoard[y][x] as CellState;
+                  changed = true;
+                }
+              }
+            }
+            if (changed) {
+              this.localState.set({ ...state, grid: newGrid });
+            }
+          }
+        }
+      }
+    });
+
+    // Save state to local storage
+    effect(() => {
+      const state = this.localState();
+      const mode = this.currentRoomMode();
+      const diff = this.currentDifficulty();
+      
+      if (mode === GameMode.Single && state && state.status !== GameStatus.Finished) {
+        localStorage.setItem('nonogram_saved_game', JSON.stringify({ state, difficulty: diff }));
+      } else if (state?.status === GameStatus.Finished) {
+        localStorage.removeItem('nonogram_saved_game');
       }
     });
   }
@@ -177,12 +249,12 @@ export class NonogramStore extends BaseGameStore {
     this.drawMode.set(mode);
   }
 
-  handleCellClick(x: number, y: number, isRightClick: boolean = false) {
+  handleCellClick(x: number, y: number, isRightClick: boolean = false, forceMode?: 'fill' | 'cross') {
     if (this.status() !== GameStatus.Playing) return;
 
     if (this.currentRoomMode() === GameMode.Steal) {
       // Steal mode: we don't handle cross locally, it's just visual, but fill is sent to server
-      const mode = isRightClick ? 'cross' : this.drawMode();
+      const mode = forceMode ? forceMode : (isRightClick ? 'cross' : this.drawMode());
       if (mode === 'cross') {
          // Local visual only for steal mode? Better not complicate, steal mode usually no cross needed or we can support it.
          // Let's just send Move for Fill
@@ -200,7 +272,7 @@ export class NonogramStore extends BaseGameStore {
     const newGrid = state.grid.map(row => [...row]);
     const current = newGrid[y][x];
     
-    let targetMode = isRightClick ? 'cross' : this.drawMode();
+    let targetMode = forceMode ? forceMode : (isRightClick ? 'cross' : this.drawMode());
     let nextState: CellState = 0;
     
     if (targetMode === 'fill') {
@@ -233,7 +305,7 @@ export class NonogramStore extends BaseGameStore {
            if (newGrid[yy][xx] === 1) filledCount++;
         }
       }
-      progress = (filledCount / this.totalFilled()) * 100;
+      progress = this.totalFilled() > 0 ? (filledCount / this.totalFilled()) * 100 : 0;
       
       this.ws.send({ action: 'progress', progress, finished: isWin });
       if (isWin) {
@@ -244,14 +316,28 @@ export class NonogramStore extends BaseGameStore {
 
   playAgain() {
     if (this.currentRoomMode() === GameMode.Single) {
-      this.initSinglePlayer(this.currentDifficulty() as string);
+      this.initSinglePlayer(this.currentDifficulty() as string, true);
       this.startGame();
     } else {
       super.restartGame();
     }
   }
 
-  private initSinglePlayer(difficulty: string) {
+  private initSinglePlayer(difficulty: string, forceNew = false) {
+    if (!forceNew) {
+      const saved = localStorage.getItem('nonogram_saved_game');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.state && parsed.state.status === GameStatus.Playing) {
+            this.currentDifficulty.set(parsed.difficulty || difficulty);
+            this.localState.set(parsed.state);
+            return;
+          }
+        } catch(e) {}
+      }
+    }
+
     let w = 5, h = 5;
     if (difficulty === GameDifficulty.Medium) { w = 10; h = 10; }
     else if (difficulty === GameDifficulty.Hard) { w = 15; h = 15; }

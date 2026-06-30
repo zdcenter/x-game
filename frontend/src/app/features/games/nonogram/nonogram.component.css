@@ -10,15 +10,6 @@
      Row Hints| Main Grid */
   grid-template-columns: auto calc(var(--grid-width) * var(--cell-size));
   grid-template-rows: auto calc(var(--grid-height) * var(--cell-size));
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 2px solid #94a3b8; /* slate-400 */
-}
-
-:host-context(.dark) .nonogram-board {
-  background-color: #0f172a; /* slate-900 */
-  border-color: #475569; /* slate-600 */
 }
 
 .top-left {

@@ -59,6 +59,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   // ── Inputs ────────────────────────────────────────────────────────────────
   @Input() gameId       : string = '';
   @Input() currentRoomId: string = '';
+  @Input() isArena      : boolean = false;
 
   // ── Outputs ───────────────────────────────────────────────────────────────
   @Output() createRoom  = new EventEmitter<PkCreateRoomEvent>();
@@ -246,7 +247,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   private doJoin(roomId: string, game: string, mode: string, difficulty: string, host: string, password?: string) {
-    if (game && game !== this.gameId) {
+    if (this.isArena || (game && game !== this.gameId)) {
       this.cross.setPendingJoin({ game, roomId, mode, difficulty, host, password });
       this.router.navigate(['/games/' + game]);
     } else {

@@ -83,34 +83,81 @@
               [target]="store.currentRoomTarget()">
             </app-game-waiting-room>
           } @else {
+            <!-- Mobile floating HUD (PK only) -->
+            @if (store.currentRoomMode() !== GameMode.Single) {
+              <app-game-player-mini-hud
+                class="lg:hidden"
+                [myPlayer]="myPlayerHUD()"
+                [opponents]="opponentsHUD()">
+              </app-game-player-mini-hud>
+            }
+
+            <!-- Players / Opponents (Top) -->
+            <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 w-full"
+                 [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
+                
+                <!-- Local Player (You) -->
+                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                  [playerName]="playerId"
+                  [isHost]="playerId === store.hostId()"
+                  [isMe]="true"
+                  [score]="store.currentRoomMode() === GameMode.Steal ? myScore() : undefined"
+                  [stats]="[
+                    (store.currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                    (store.currentRoomMode() === GameMode.Speed ? { label: 'PROG', value: myPlayerHUD().stats[0].value } : $any(null))
+                  ]"
+                  [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+
+                @if (store.currentRoomMode() !== GameMode.Single) {
+                  <app-player-list-container
+                    [opponentsCount]="opponentsHUD().length"
+                    class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                    <ng-template #opponentsList>
+                        @for (opp of opponentsHUD(); track opp.playerName) {
+                            <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                              [playerName]="opp.playerName"
+                              [isHost]="opp.isHost"
+                              [isMe]="false"
+                              [score]="store.currentRoomMode() === GameMode.Steal ? opp.stats[0].value : undefined"
+                              [stats]="[
+                                (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.playerName] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                                (store.currentRoomMode() === GameMode.Speed ? { label: 'PROG', value: opp.stats[0].value } : $any(null))
+                              ]"
+                              [status]="opp.status === 'finished' ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+                        }
+                    </ng-template>
+                  </app-player-list-container>
+                }
+              </div>
+            </div>
+
             <!-- Main Board -->
-            <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-4 min-h-[500px]"
+            <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-4 min-h-[400px]"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
-              <div class="nonogram-board prevent-select"
+              <div class="nonogram-board prevent-select bg-slate-50 rounded-md shadow-md border-2 border-slate-400"
                    (contextmenu)="onContextMenu($event)"
                    [style.--cell-size.px]="cellSize()"
                    [style.--grid-width]="store.width()"
                    [style.--grid-height]="store.height()">
                 
-                <div class="top-left border-r-2 border-b-2 border-slate-400 dark:border-slate-600"></div>
+                <div class="top-left border-r-2 border-b-2 border-slate-400"></div>
 
-                <div class="col-hints border-b-2 border-slate-400 dark:border-slate-600 flex">
+                <div class="col-hints border-b-2 border-slate-400 flex">
                   <div *ngFor="let col of store.colHints(); let x = index" 
-                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-slate-700 dark:text-slate-300 font-bold"
+                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-slate-700 font-bold"
                        [class.border-r-2]="(x + 1) % 5 === 0 && x !== store.width() - 1"
-                       [class.border-slate-400]="(x + 1) % 5 === 0"
-                       [class.dark:border-slate-600]="(x + 1) % 5 === 0">
+                       [class.border-slate-400]="(x + 1) % 5 === 0">
                     <div *ngFor="let hint of col">{{ hint }}</div>
                   </div>
                 </div>
 
-                <div class="row-hints border-r-2 border-slate-400 dark:border-slate-600 flex flex-col">
+                <div class="row-hints border-r-2 border-slate-400 flex flex-col">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
-                       class="row-hint-item flex justify-end items-center pr-2 text-slate-700 dark:text-slate-300 font-bold"
+                       class="row-hint-item flex justify-end items-center pr-2 text-slate-700 font-bold"
                        [class.border-b-2]="(y + 1) % 5 === 0 && y !== store.height() - 1"
-                       [class.border-slate-400]="(y + 1) % 5 === 0"
-                       [class.dark:border-slate-600]="(y + 1) % 5 === 0">
+                       [class.border-slate-400]="(y + 1) % 5 === 0">
                     <div *ngFor="let hint of row; let last = last" [class.mr-1]="!last">{{ hint }}</div>
                   </div>
                 </div>
@@ -118,47 +165,52 @@
                 <div class="cells-grid">
                   <ng-container *ngFor="let row of store.grid(); let y = index">
                     <div *ngFor="let cell of row; let x = index" 
-                         class="cell border-slate-300 dark:border-slate-700 cursor-pointer flex items-center justify-center transition-colors"
+                         class="cell border-slate-300 cursor-pointer flex items-center justify-center transition-colors"
                          [class.border-b-2]="(y + 1) % 5 === 0 && y !== store.height() - 1"
                          [class.border-r-2]="(x + 1) % 5 === 0 && x !== store.width() - 1"
                          [class.border-slate-400]="((x + 1) % 5 === 0 || (y + 1) % 5 === 0)"
-                         [class.dark:border-slate-600]="((x + 1) % 5 === 0 || (y + 1) % 5 === 0)"
-                         [class.bg-slate-800]="cell === 1"
-                         [class.dark:bg-slate-100]="cell === 1"
-                         [class.hover:bg-slate-200]="cell === 0"
-                         [class.dark:hover:bg-slate-800]="cell === 0"
-                         (mousedown)="handleCellClick(x, y, $event)">
+                         [class.bg-slate-700]="cell === 1"
+                         [class.shadow-inner]="cell === 1"
+                         [class.hover:bg-slate-100]="cell === 0"
+                         (mousedown)="handleCellClick(x, y, $event)"
+                         (touchstart)="handleTouchStart(x, y, $event)"
+                         (touchmove)="handleTouchMove()"
+                         (touchend)="handleTouchEnd(x, y, $event)"
+                         (touchcancel)="handleTouchCancel()">
                       
-                      <div *ngIf="cell === 2" class="text-slate-400 font-bold" [style.font-size.px]="cellSize() * 0.7">✕</div>
+                      <div *ngIf="cell === 2" class="text-rose-500 font-bold" [style.font-size.px]="cellSize() * 0.7">✕</div>
                     </div>
                   </ng-container>
                 </div>
               </div>
               
               <!-- Mobile Draw Mode Toggle -->
-              <div class="mt-6 flex bg-slate-200 dark:bg-slate-800 rounded-lg p-1" *ngIf="store.status() !== GameStatus.Waiting">
-                <button class="px-6 py-2 rounded-md font-bold transition-all flex items-center gap-2"
-                        [class.bg-white]="store.drawMode() === 'fill'"
-                        [class.dark:bg-slate-600]="store.drawMode() === 'fill'"
-                        [class.shadow]="store.drawMode() === 'fill'"
-                        [class.text-slate-800]="store.drawMode() === 'fill'"
-                        [class.dark:text-white]="store.drawMode() === 'fill'"
+              <div class="mt-6 flex bg-slate-200 rounded-lg p-1 border border-slate-300 shadow-inner" *ngIf="store.status() !== GameStatus.Waiting">
+                <button class="flex-1 px-4 py-2.5 rounded-md font-bold transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+                        [class.bg-slate-700]="store.drawMode() === 'fill'"
+                        [class.text-white]="store.drawMode() === 'fill'"
+                        [class.shadow-md]="store.drawMode() === 'fill'"
+                        [class.scale-[1.02]]="store.drawMode() === 'fill'"
                         [class.text-slate-500]="store.drawMode() !== 'fill'"
                         (click)="store.setDrawMode('fill')">
                   ✏️ {{ t('tutorial.nonogram.fill')() }}
                 </button>
-                <button class="px-6 py-2 rounded-md font-bold transition-all flex items-center gap-2"
-                        [class.bg-white]="store.drawMode() === 'cross'"
-                        [class.dark:bg-slate-600]="store.drawMode() === 'cross'"
-                        [class.shadow]="store.drawMode() === 'cross'"
-                        [class.text-slate-800]="store.drawMode() === 'cross'"
-                        [class.dark:text-white]="store.drawMode() === 'cross'"
+                <button class="flex-1 px-4 py-2.5 rounded-md font-bold transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+                        [class.bg-rose-500]="store.drawMode() === 'cross'"
+                        [class.text-white]="store.drawMode() === 'cross'"
+                        [class.shadow-md]="store.drawMode() === 'cross'"
+                        [class.scale-[1.02]]="store.drawMode() === 'cross'"
                         [class.text-slate-500]="store.drawMode() !== 'cross'"
                         (click)="store.setDrawMode('cross')">
                   ❌ {{ t('tutorial.nonogram.cross')() }}
                 </button>
               </div>
             </div>
+          }
+
+          <!-- Starting Overlay -->
+          @if (store.status() === GameStatus.Starting) {
+            <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()" class="absolute inset-0 z-50"></app-game-starting-overlay>
           }
 
           @if (store.status() === GameStatus.Finished && showOverlay()) {

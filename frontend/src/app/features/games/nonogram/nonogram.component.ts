@@ -1,4 +1,4 @@
-import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, signal, effect } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
@@ -7,6 +7,10 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -18,7 +22,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -62,9 +66,9 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   getPlayerScores() {
     if (this.store.currentRoomMode() === GameMode.Single) {
-      return [{ id: this.playerId, score: 0 }];
+      return [{ id: this.playerId, score: 0, progress: 0 }];
     }
-    return this.store.playersList().map(id => ({ id, score: 0 }));
+    return this.store.playersList().map((p: any) => ({ id: p.id, score: p.score || 0, progress: p.progress || 0 }));
   }
 
   changeSingleDifficulty(diff: string) {
@@ -79,6 +83,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       gameId: GameId.Nonogram,
       getCurrentMode: () => this.store.currentRoomMode(),
       onLeaveRoom: () => this.returnToLobby(),
+    });
+
+    effect(() => {
+      const status = this.store.status();
+      if (status === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
+      }
     });
 
     // Show result overlay with a delay after game finishes
@@ -155,9 +166,51 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
      return Math.max(28, Math.min(sizeW, sizeH, 120));
   });
 
+  private touchTimer: any;
+  private touchMoved = false;
+
+  handleTouchStart(x: number, y: number, event: TouchEvent) {
+    this.touchMoved = false;
+    // Long press -> opposite of current drawMode
+    const oppositeMode = this.store.drawMode() === 'fill' ? 'cross' : 'fill';
+    this.touchTimer = setTimeout(() => {
+      if (!this.touchMoved) {
+        this.store.handleCellClick(x, y, false, oppositeMode);
+        if (navigator.vibrate) navigator.vibrate(50);
+        this.touchTimer = null;
+      }
+    }, 400);
+  }
+
+  handleTouchMove() {
+    this.touchMoved = true;
+    if (this.touchTimer) {
+      clearTimeout(this.touchTimer);
+      this.touchTimer = null;
+    }
+  }
+
+  handleTouchEnd(x: number, y: number, event: TouchEvent) {
+    if (this.touchTimer && !this.touchMoved) {
+      clearTimeout(this.touchTimer);
+      this.touchTimer = null;
+      // Short press -> use current drawMode
+      this.store.handleCellClick(x, y, false, this.store.drawMode());
+    }
+    if (!this.touchMoved && event.cancelable) {
+      event.preventDefault();
+    }
+  }
+
+  handleTouchCancel() {
+    if (this.touchTimer) {
+      clearTimeout(this.touchTimer);
+      this.touchTimer = null;
+    }
+  }
+
   handleCellClick(x: number, y: number, event: MouseEvent) {
     if (event.button === 2) {
-      // Right click
       event.preventDefault();
       this.store.handleCellClick(x, y, true);
     } else {
@@ -169,11 +222,62 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     event.preventDefault(); // Prevent native right-click menu
   }
 
+  isDefeat = computed(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return false;
+    
+    const playersList = this.getPlayerScores();
+    const me = playersList.find(p => p.id === this.playerId);
+    if (!me) return true;
+
+    if (this.store.currentRoomMode() === GameMode.Speed) {
+      return me.progress < 100;
+    }
+    
+    if (this.store.currentRoomMode() === GameMode.Steal) {
+      const myScore = me.score || 0;
+      const otherScores = playersList.filter(p => p.id !== this.playerId).map(p => p.score || 0);
+      const maxOtherScore = otherScores.length > 0 ? Math.max(...otherScores) : 0;
+      return myScore < maxOtherScore;
+    }
+    return false;
+  });
+
+  myProgress = computed(() => {
+    return this.getPlayerScores().find(p => p.id === this.playerId)?.progress || 0;
+  });
+
+  myScore = computed(() => {
+    return this.getPlayerScores().find(p => p.id === this.playerId)?.score || 0;
+  });
+
+  myPlayerHUD = computed(() => {
+    const prog = Math.round(this.myProgress());
+    return {
+      playerName: this.playerId,
+      isHost: this.playerId === this.store.hostId(),
+      stats: this.store.currentRoomMode() === GameMode.Speed 
+        ? [{ icon: '📊', value: prog + '%' }] 
+        : [{ icon: '⭐', value: this.myScore() }],
+      status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
+    };
+  });
+
+  opponentsHUD = computed(() => {
+    return this.getPlayerScores()
+      .filter(p => p.id !== this.playerId)
+      .map(opp => ({
+        playerName: opp.id,
+        isHost: opp.id === this.store.hostId(),
+        stats: this.store.currentRoomMode() === GameMode.Speed 
+          ? [{ icon: '📊', value: Math.round(opp.progress || 0) + '%' }] 
+          : [{ icon: '⭐', value: opp.score || 0 }],
+        status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
+      }));
+  });
+
   getGameResult(): 'win' | 'lose' {
     if (this.store.currentRoomMode() === GameMode.Single) return 'win';
-    const raw = this.wsService.gameState();
-    if (!raw || !raw.winners) return 'lose';
-    return raw.winners.includes(this.playerId) ? 'win' : 'lose';
+    return this.isDefeat() ? 'lose' : 'win';
   }
 
   handleRestart() {
