@@ -222,9 +222,10 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }
 
     this.ws.send({
-      type: MessageType.Room,
-      action: C2SAction.ChangeGame,
-      payload: { game: targetGameId, mode: targetMode, difficulty: targetDiff }
+      type: C2SAction.ChangeGame,
+      game: targetGameId,
+      mode: targetMode,
+      difficulty: targetDiff
     });
   }
 
