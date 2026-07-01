@@ -144,7 +144,7 @@
                 
                 <div class="top-left border-r-2 border-b-2 border-slate-400"></div>
 
-                <div class="col-hints border-b-2 border-slate-400 flex">
+                <div class="col-hints border-b-2 border-slate-400">
                   <div *ngFor="let col of store.colHints(); let x = index" 
                        class="col-hint-item flex flex-col justify-end items-center pb-1 text-slate-700 font-bold"
                        [class.border-r-2]="(x + 1) % 5 === 0 && x !== store.width() - 1"
@@ -153,7 +153,7 @@
                   </div>
                 </div>
 
-                <div class="row-hints border-r-2 border-slate-400 flex flex-col">
+                <div class="row-hints border-r-2 border-slate-400">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
                        class="row-hint-item flex justify-end items-center pr-2 text-slate-700 font-bold"
                        [class.border-b-2]="(y + 1) % 5 === 0 && y !== store.height() - 1"
