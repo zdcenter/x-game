@@ -37,24 +37,6 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
           <!-- Right: Controls -->
           <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
-            <!-- Install App: Android (native prompt) or iOS (guide modal) -->
-            @if (!pwa.isStandalone()) {
-              @if (pwa.canInstall()) {
-                <button (click)="pwa.install()"
-                        class="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10">
-                  <span class="text-base leading-none">💻</span>
-                  <span class="hidden sm:inline">{{ i18n.t('nav.installApp')() }}</span>
-                  <span class="sm:hidden">{{ i18n.t('nav.install')() }}</span>
-                </button>
-              } @else if (pwa.isIos()) {
-                <button (click)="pwa.openIosGuide()"
-                        class="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/10">
-                  <span class="text-base leading-none">📲</span>
-                  <span class="hidden sm:inline">{{ i18n.t('nav.installApp')() }}</span>
-                  <span class="sm:hidden">{{ i18n.t('nav.install')() }}</span>
-                </button>
-              }
-            }
 
             <!-- Theme Toggle -->
             <button (click)="theme.cycleTheme()"
