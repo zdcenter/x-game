@@ -131,6 +131,45 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
         <app-share-modal></app-share-modal>
       </main>
 
+      <!-- Global PWA Install Floating Prompt (Trip.com style) -->
+      @if ((pwa.canInstall() || pwa.isIos()) && !pwa.isStandalone() && !pwa.isPromptDismissed()) {
+        <div class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-96 z-[100] transition-all duration-500 ease-out transform translate-y-0 opacity-100 shadow-2xl rounded-xl"
+             style="background-color: var(--color-bg-card); border: 1px solid var(--color-border-card)">
+          <div class="p-4 flex items-center gap-4">
+            
+            <!-- Icon -->
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                 style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              <span class="text-xl">📱</span>
+            </div>
+
+            <!-- Text -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold truncate" style="color: var(--color-text-main)">
+                {{ i18n.currentLang() === 'zh' ? '添加至桌面以快速访问' : 'Add to Home Screen' }}
+              </p>
+              <p class="text-xs mt-0.5 truncate" style="color: var(--color-text-secondary)">
+                {{ i18n.currentLang() === 'zh' ? '享受原生级流畅体验' : 'Enjoy native app experience' }}
+              </p>
+            </div>
+
+            <!-- Install Button -->
+            <button (click)="pwa.canInstall() ? pwa.install() : pwa.openIosGuide()"
+                    class="px-4 py-2 text-sm font-bold text-white rounded-lg shrink-0 transition-transform hover:scale-105 shadow-md"
+                    style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to));">
+              {{ i18n.currentLang() === 'zh' ? '安装' : 'Install' }}
+            </button>
+
+            <!-- Close Button -->
+            <button (click)="pwa.dismissPrompt()" class="p-1 -mr-2 text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+
       <!-- iOS Install Guide — bottom sheet on mobile, centered modal on sm+ -->
       @if (pwa.showIosGuide()) {
         <div class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
