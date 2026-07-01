@@ -129,13 +129,17 @@ func Seed() {
 		DB.Model(&domain.GameConfig{}).Where("id = ?", game.ID).Count(&count)
 		if count == 0 {
 			// Does not exist, create it
-			DB.Create(&game)
+			if err := DB.Create(&game).Error; err != nil {
+				log.Printf("Failed to create game %s: %v", game.ID, err)
+			}
 		} else {
 			// Exists, update the configuration fields while leaving dynamic stats like VisitCount intact.
-			DB.Model(&domain.GameConfig{}).Where("id = ?", game.ID).Updates(map[string]interface{}{
+			if err := DB.Model(&domain.GameConfig{}).Where("id = ?", game.ID).Updates(map[string]interface{}{
 				"config":    game.Config,
 				"is_active": game.IsActive,
-			})
+			}).Error; err != nil {
+				log.Printf("Failed to update game %s: %v", game.ID, err)
+			}
 		}
 	}
 
