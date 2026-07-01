@@ -56,6 +56,15 @@ func Register(mode string, factory EngineFactory) {
 	registry[mode] = factory
 }
 
+// GetAllRegisteredGames returns a list of all game modes currently registered
+func GetAllRegisteredGames() []string {
+	var games []string
+	for k := range registry {
+		games = append(games, k)
+	}
+	return games
+}
+
 // CreateEngine instantiates a new game engine based on the mode using the registry
 func CreateEngine(mode string) (GameEngine, error) {
 	if factory, exists := registry[mode]; exists {

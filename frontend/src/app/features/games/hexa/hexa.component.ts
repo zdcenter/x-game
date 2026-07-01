@@ -230,20 +230,21 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       const size = 10;
       const radius = 4;
       const boardVbW = size * Math.sqrt(3) * (radius * 2 + 1) + 10;
-      const scaleX = this.svgRect.width / boardVbW;
+      const boardVbH = size * (radius * 3 + 2) + 10;
+      const scale = Math.min(this.svgRect.width / boardVbW, this.svgRect.height / boardVbH);
       
       const box = this.getPieceSvgViewBoxData(piece);
       this.dragSize = {
-        w: box.vbW * scaleX,
-        h: box.vbH * scaleX
+        w: box.vbW * scale,
+        h: box.vbH * scale
       };
       
       const vbCenterX = box.vbX + box.vbW / 2;
       const vbCenterY = box.vbY + box.vbH / 2;
       
       this.rootOffset = {
-        x: (0 - vbCenterX) * scaleX,
-        y: (0 - vbCenterY) * scaleX
+        x: (0 - vbCenterX) * scale,
+        y: (0 - vbCenterY) * scale
       };
     }
 

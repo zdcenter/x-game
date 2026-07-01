@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/internal/engine"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -113,24 +114,15 @@ func MigrateModesAndDifficulties(db *gorm.DB) {
 }
 
 func Seed() {
-	games := []domain.GameConfig{
-		{ID: "minesweeper", Config: "{}", IsActive: true},
-		{ID: "sudoku", Config: "{}", IsActive: true},
-		{ID: "sliding", Config: "{}", IsActive: true},
-		{ID: "hexa", Config: "{}", IsActive: true},
-		{ID: "tetris", Config: "{}", IsActive: true},
-		{ID: "gomoku", Config: "{}", IsActive: true},
-		{ID: "codebreaker", Config: "{}", IsActive: true},
-		{ID: "math24", Config: "{}", IsActive: true},
-		{ID: "drop2048", Config: "{}", IsActive: true},
-		{ID: "block", Config: "{}", IsActive: true},
-		{ID: "lightsout", Config: "{}", IsActive: true},
-		{ID: "watersort", Config: "{}", IsActive: true},
-		{ID: "idiom", Config: "{}", IsActive: true},
-		{ID: "sokoban", Config: "{}", IsActive: true},
-		{ID: "nonogram", Config: "{}", IsActive: true},
+	var games []domain.GameConfig
+	registeredEngines := engine.GetAllRegisteredGames()
+	for _, engineID := range registeredEngines {
+		games = append(games, domain.GameConfig{
+			ID:       engineID,
+			Config:   "{}",
+			IsActive: true,
+		})
 	}
-
 
 	for _, game := range games {
 		var count int64

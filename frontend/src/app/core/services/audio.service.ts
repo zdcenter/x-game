@@ -24,12 +24,44 @@ export class AudioService {
   private masterGain: GainNode | null = null;
   private bgmAudio: HTMLAudioElement | null = null;
   private currentBgmUrl: string | null = null;
+  private hasUnlockedAudio = false;
 
   constructor() {
     const saved = storageGet('xgame_muted');
     if (saved === 'true') {
       this.isMuted.set(true);
       this.volume = 0;
+    }
+    
+    // Automatically try to unlock audio on first interaction
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        if (this.hasUnlockedAudio) return;
+        this.initWebAudioSync();
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume().then(() => {
+            // Play a silent buffer to unlock audio on iOS
+            const buffer = this.audioCtx!.createBuffer(1, 1, 22050);
+            const source = this.audioCtx!.createBufferSource();
+            source.buffer = buffer;
+            source.connect(this.audioCtx!.destination);
+            source.start(0);
+
+            if (this.audioCtx!.state === 'running') {
+              this.hasUnlockedAudio = true;
+              window.removeEventListener('pointerdown', unlock);
+              window.removeEventListener('touchstart', unlock);
+              window.removeEventListener('keydown', unlock);
+              window.removeEventListener('click', unlock);
+            }
+          }).catch(e => console.warn('Audio resume blocked:', e));
+        }
+      };
+      
+      window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+      window.addEventListener('touchstart', unlock, { once: true, passive: true });
+      window.addEventListener('keydown', unlock, { once: true, passive: true });
+      window.addEventListener('click', unlock, { once: true, passive: true });
     }
   }
 
@@ -79,7 +111,7 @@ export class AudioService {
     await this.initWebAudio();
   }
   
-  private async initWebAudio(): Promise<void> {
+  private initWebAudioSync(): void {
     if (!this.audioCtx) {
       this.audioCtx = createAudioContext();
       if (!this.audioCtx) return;
@@ -87,8 +119,19 @@ export class AudioService {
       this.masterGain.gain.value = this.volume;
       this.masterGain.connect(this.audioCtx.destination);
     }
-    if (this.audioCtx.state === 'suspended') {
-      await this.audioCtx.resume();
+  }
+
+  private async initWebAudio(): Promise<void> {
+    this.initWebAudioSync();
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      try {
+        await this.audioCtx.resume();
+        if ((this.audioCtx.state as string) === 'running') {
+          this.hasUnlockedAudio = true;
+        }
+      } catch (e) {
+        // user gesture might be required
+      }
     }
   }
 

@@ -65,12 +65,16 @@ export class HexaBoardComponent {
     const viewBoxX = -w/2 - offset;
     const viewBoxY = -h/2 - offset;
 
-    const scaleX = viewBoxWidth / svgRect.width;
-    const scaleY = viewBoxHeight / svgRect.height;
+    const scale = Math.min(svgRect.width / viewBoxWidth, svgRect.height / viewBoxHeight);
+    const actualWidth = viewBoxWidth * scale;
+    const actualHeight = viewBoxHeight * scale;
     
+    const offsetX = (svgRect.width - actualWidth) / 2;
+    const offsetY = (svgRect.height - actualHeight) / 2;
+
     // SVG Coordinate
-    const svgX = (px - svgRect.left) * scaleX + viewBoxX;
-    const svgY = (py - svgRect.top) * scaleY + viewBoxY;
+    const svgX = (px - svgRect.left - offsetX) / scale + viewBoxX;
+    const svgY = (py - svgRect.top - offsetY) / scale + viewBoxY;
 
     // 2. Map SVG coordinate to Hex fractional coordinate
     const q = (Math.sqrt(3)/3 * svgX - 1/3 * svgY) / this.size;
