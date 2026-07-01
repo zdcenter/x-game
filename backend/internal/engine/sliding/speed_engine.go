@@ -22,6 +22,7 @@ type SpeedEngine struct {
 }
 
 func init() {
+	engine.RegisterGame("sliding")
 	engine.Register("sliding_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 

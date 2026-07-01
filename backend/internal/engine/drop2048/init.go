@@ -3,5 +3,6 @@ package drop2048
 import "github.com/x-game/backend/internal/engine"
 
 func init() {
+	engine.RegisterGame("drop2048")
 	engine.Register("drop2048_score", func() engine.GameEngine { return &PKScoreEngine{} })
 }

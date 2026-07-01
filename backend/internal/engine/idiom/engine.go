@@ -37,6 +37,7 @@ type IdiomPKEngine struct {
 }
 
 func init() {
+	engine.RegisterGame("idiom")
 	engine.Register("idiom_speed", func() engine.GameEngine {
 		return &IdiomPKEngine{}
 	})

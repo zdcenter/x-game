@@ -9,6 +9,7 @@ import (
 )
 
 func init() {
+	engine.RegisterGame("gomoku")
 	engine.Register("gomoku_battle", NewClassicEngine)
 }
 

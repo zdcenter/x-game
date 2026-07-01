@@ -29,6 +29,7 @@ type StealEngine struct {
 }
 
 func init() {
+	engine.RegisterGame("sudoku")
 	engine.Register("sudoku_steal", func() engine.GameEngine { return &StealEngine{} })
 }
 

@@ -32,6 +32,7 @@ type NonogramEngine struct {
 }
 
 func init() {
+	engine.RegisterGame("nonogram")
 	// Register engine for different modes
 	engine.Register("nonogram_speed", func() engine.GameEngine { return newEngine("speed") })
 	engine.Register("nonogram_steal", func() engine.GameEngine { return newEngine("steal") })

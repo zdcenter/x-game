@@ -23,6 +23,7 @@ type MinesweeperEngine struct {
 }
 
 func init() {
+	engine.RegisterGame("minesweeper")
 	engine.Register("minesweeper_single", func() engine.GameEngine { return &MinesweeperEngine{} })
 	engine.Register("minesweeper_steal", func() engine.GameEngine { return &MinesweeperEngine{} })
 }

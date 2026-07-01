@@ -50,17 +50,23 @@ type GameEngine interface {
 type EngineFactory func() GameEngine
 
 var registry = make(map[string]EngineFactory)
+var gameRegistry = make(map[string]bool)
+
+// RegisterGame explicitly registers a base game ID
+func RegisterGame(gameID string) {
+	gameRegistry[gameID] = true
+}
 
 // Register adds an engine factory to the global registry for a specific game mode
 func Register(mode string, factory EngineFactory) {
 	registry[mode] = factory
 }
 
-// GetAllRegisteredGames returns a list of all game modes currently registered
+// GetAllRegisteredGames returns a list of all unique base game IDs currently registered
 func GetAllRegisteredGames() []string {
 	var games []string
-	for k := range registry {
-		games = append(games, k)
+	for game := range gameRegistry {
+		games = append(games, game)
 	}
 	return games
 }

@@ -210,6 +210,7 @@ func (e *PKScoreEngine) CheckGameOver() (bool, []string) {
 }
 
 func init() {
+	engine.RegisterGame("hexa")
 	// 异盘积分模式：不使用全局统一的 Seed，前端各自随机生成碎片
 	engine.Register("hexa_score", func() engine.GameEngine {
 		e := &PKScoreEngine{}

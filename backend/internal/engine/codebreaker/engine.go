@@ -35,6 +35,7 @@ type CodebreakerEngine struct {
 }
 
 func init() {
+	engine.RegisterGame("codebreaker")
 	engine.Register("codebreaker_single", func() engine.GameEngine { return &CodebreakerEngine{} })
 	engine.Register("codebreaker_speed", func() engine.GameEngine { return &CodebreakerEngine{} })
 }

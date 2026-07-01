@@ -38,6 +38,7 @@ type SokobanEngine struct {
 
 
 func init() {
+	engine.RegisterGame("sokoban")
 	engine.Register("sokoban_speed", func() engine.GameEngine {
 		return &SokobanEngine{
 			Players: make(map[string]*PlayerState),
