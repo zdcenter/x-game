@@ -172,7 +172,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   returnToLobby() {
     this.store.leaveRoom();
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   getSubtitle(): string {

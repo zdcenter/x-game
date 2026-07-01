@@ -70,7 +70,6 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   GameMode = GameMode;
   override store = inject(BlockStore);
   private authStore = inject(AuthStore);
-  private crossGameJoin = inject(CrossGameJoinService);
   gameRegistry = inject(GameRegistryService);
   public i18n = inject(I18nService);
   private router = inject(Router);

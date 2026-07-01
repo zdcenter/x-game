@@ -9,6 +9,8 @@ import { CrossGameJoinService } from '../../../core/services/cross-game-join.ser
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
+import { AdService } from '../../../core/services/ad.service';
+import { AdsenseComponent } from '../adsense/adsense.component';
 
 export interface GameMode {
   id: string;
@@ -28,7 +30,7 @@ export interface GameDifficulty {
 @Component({
   selector: 'app-game-lobby-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdsenseComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-lobby-panel.component.html',
 })
@@ -41,6 +43,7 @@ export class GameLobbyPanelComponent implements OnInit {
   wsService = inject(WebSocketService);
   authStore = inject(AuthStore);
   router = inject(Router);
+  adService = inject(AdService);
 
   private route = inject(ActivatedRoute);
   private crossGameJoin = inject(CrossGameJoinService);

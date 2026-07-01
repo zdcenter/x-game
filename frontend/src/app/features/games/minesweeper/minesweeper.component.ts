@@ -250,7 +250,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     if (this.currentRoomId()) {
       this.wsService.send({ type: this.store.hostId() === this.playerId ? C2SAction.DismissRoom : C2SAction.LeaveRoom });
     }
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   getSubtitle(): string {

@@ -249,7 +249,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private doJoin(roomId: string, game: string, mode: string, difficulty: string, host: string, password?: string) {
     if (this.isArena || (game && game !== this.gameId)) {
       this.cross.setPendingJoin({ game, roomId, mode, difficulty, host, password });
-      this.router.navigate(['/games/' + game]);
+      const lang = this.router.url.split('/')[1] || 'zh';
+      this.router.navigate([`/${lang}/games/${game}`]);
     } else {
       this.wsService.setPendingAction('join');
       this.joinRoom.emit({ roomId, mode, difficulty, host, password });

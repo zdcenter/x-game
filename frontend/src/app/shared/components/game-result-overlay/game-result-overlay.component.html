@@ -150,6 +150,20 @@
         </button>
       }
     </div>
+
+    <!-- ══════════════════════════════════
+         RESULT OVERLAY AD BANNER
+    ══════════════════════════════════ -->
+    @if (adService.getBannerSlotId('result_bottom')) {
+      <div class="w-full mt-6 relative z-10 flex justify-center shrink-0">
+        <app-adsense
+          [adSlot]="adService.getBannerSlotId('result_bottom')!"
+          adFormat="horizontal"
+          [fullWidthResponsive]="true"
+          class="w-full max-w-[336px] min-h-[50px] bg-[var(--color-bg-card)] rounded-xl overflow-hidden shadow-inner border border-[var(--color-border-card)] flex justify-center items-center">
+        </app-adsense>
+      </div>
+    }
   </div>
 
   <!-- Smart Recommendations -->

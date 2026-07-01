@@ -51,7 +51,8 @@ export class PkArenaComponent implements OnInit, OnDestroy {
       difficulty: e.difficulty, host: playerId, action: 'create',
       password: e.password, target: e.target
     });
-    this.router.navigate([`/games/${e.gameId}`]);
+    const lang = this.router.url.split('/')[1] || 'zh';
+    this.router.navigate([`/${lang}/games/${e.gameId}`]);
   }
 
   handleJoin(_e: PkJoinRoomEvent) {

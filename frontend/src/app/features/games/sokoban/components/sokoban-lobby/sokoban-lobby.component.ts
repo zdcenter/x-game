@@ -92,6 +92,7 @@ export class SokobanLobbyComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/lobby']);
+    const lang = this.router.url.split('/')[1] || 'zh';
+    this.router.navigate(['/', lang, 'lobby']);
   }
 }

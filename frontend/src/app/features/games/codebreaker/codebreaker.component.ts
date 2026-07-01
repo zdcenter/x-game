@@ -23,6 +23,8 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
 
+import { BaseGameComponent } from '../../../core/utils/base-game.component';
+
 @Component({
   selector: 'app-codebreaker',
   standalone: true,
@@ -41,28 +43,22 @@ import { TutorialService } from '../../../core/services/tutorial.service';
   templateUrl: './codebreaker.component.html',
   styleUrls: ['./codebreaker.component.css']
 })
-export class CodebreakerComponent implements OnInit, OnDestroy {
+export class CodebreakerComponent extends BaseGameComponent implements OnInit, OnDestroy {
   GameMode = GameMode;
   GameStatus = GameStatus;
   GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   route = inject(ActivatedRoute);
-  router = inject(Router);
   authStore = inject(AuthStore);
-  ws = inject(WebSocketService);
-  store = inject(CodebreakerStore);
-  gameTimer = inject(GameTimerService);
-  gameService = inject(GameService);
+  override store = inject(CodebreakerStore);
   toastService = inject(ToastService);
   audio = inject(AudioService);
-  settingsService = inject(SettingsService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
 
   private tutorialService = inject(TutorialService);
   showRules = signal(false);
-  isMobileSidebarOpen = signal(false);
   showOverlay = signal(false);
   showTutorial = signal(false);
   tutorialSteps = this.tutorialService.getStepsForGame(GameId.Codebreaker);
@@ -100,7 +96,12 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     return this.players().map(p => ({ id: p.id }));
   }
 
+  override get playerId(): string {
+    return this.myPlayerId();
+  }
+
   constructor() {
+    super();
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'codebreaker',
       getCurrentMode: () => this.currentRoomMode(),
@@ -143,17 +144,13 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit() {
-    this.gameService.visitGame('codebreaker').subscribe({
-      error: err => console.error('Failed to update visit count', err)
-    });
-
+  override ngOnInit() {
+    super.ngOnInit(); // handles visitGame and connectLobby
     const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
-    this.ws.connectLobby(playerId, playerId);
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.ws.setPendingPassword(joinInfo.password);
+      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
     } else {
       this.route.queryParams.subscribe(params => {
@@ -217,30 +214,18 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     this.showTutorial.set(false);
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     this.store.leaveRoom();
   }
 
   returnToLobby() {
     this.roomLifecycle.clearReconnectInfo();
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
-  openChangeSettings() {
-    if (this.lobbyPanel && this.roomId()) {
-      this.isMobileSidebarOpen.set(true);
-      this.lobbyPanel.openUpdateRoomModal({
-        id: this.roomId(),
-        game: 'codebreaker',
-        mode: this.currentRoomMode(),
-        difficulty: this.currentDifficulty(),
-        host: this.store.hostId()
-      });
-    }
-  }
-
-  handleCreateRoom(config: any) {
-    if (config.password) this.ws.setPendingPassword(config.password);
+  override handleCreateRoom(config: any) {
+    if (config.password) this.wsService.setPendingPassword(config.password);
     const roomId = config.name || `codebreaker-${Date.now()}`;
     const host = this.myPlayerId();
     const diff = config.difficulty || 'medium';
@@ -248,8 +233,8 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     this.isMobileSidebarOpen.set(false);
   }
 
-  handleJoinRoom(room: any) {
-    if (room.password) this.ws.setPendingPassword(room.password);
+  override handleJoinRoom(room: any) {
+    if (room.password) this.wsService.setPendingPassword(room.password);
     const diff = room.difficulty || 'medium';
     this.joinRoom(room.roomId, room.mode, diff, room.host);
     this.isMobileSidebarOpen.set(false);
@@ -261,10 +246,6 @@ export class CodebreakerComponent implements OnInit, OnDestroy {
     this.currentDifficulty.set(diff);
     this.store.joinRoom(this.roomId(), this.currentRoomMode(), diff, this.store.hostId());
     this.currentInput.set('');
-  }
-
-  navigateToPkArena() {
-    this.router.navigate(['/pk-arena']);
   }
 
   getSubtitle(): string {

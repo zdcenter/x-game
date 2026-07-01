@@ -343,7 +343,6 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   GameDifficulty = GameDifficulty;
   override store = inject(SokobanStore);
   private authStore = inject(AuthStore);
-  private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -426,17 +425,6 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       return;
     }
 
-    const pendingCross = this.crossGameJoin.consumePendingJoin('sokoban');
-    if (pendingCross) {
-      if (pendingCross.password) this.wsService.setPendingPassword(pendingCross.password);
-      this.store.joinRoom(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host, pendingCross.target ?? 1);
-      if (pendingCross.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(pendingCross.roomId, pendingCross.mode, pendingCross.difficulty, pendingCross.host);
-        this.showLobby.set(false);
-      }
-      return;
-    }
-
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
@@ -452,7 +440,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   onHeaderBack() {
     if (this.showLobby()) {
-      this.router.navigate(['/lobby']);
+      this.navigateToLobby();
     } else {
       this.showLobby.set(true);
     }
@@ -555,7 +543,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   onLeaveClick() {
     this.store.leaveRoom();
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   override ngOnDestroy() {

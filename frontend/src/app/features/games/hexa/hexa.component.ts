@@ -54,7 +54,6 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   public timerService = inject(GameTimerService);
   private router = inject(Router);
   private toastService = inject(ToastService);
-  private crossGameJoin = inject(CrossGameJoinService);
   override gameTimer = inject(GameTimerService);
   readonly i18n = inject(I18nService);
   private audioService = inject(AudioService);

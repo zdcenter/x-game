@@ -325,6 +325,20 @@
     </div>
   }
 
+  <!-- ══════════════════════════════════
+       SIDEBAR AD BANNER
+  ══════════════════════════════════ -->
+  @if (adService.getBannerSlotId('sidebar_bottom')) {
+    <div class="shrink-0 p-3 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+      <app-adsense
+        [adSlot]="adService.getBannerSlotId('sidebar_bottom')!"
+        adFormat="auto"
+        [fullWidthResponsive]="true"
+        class="w-full min-h-[50px] max-h-[150px] rounded-xl overflow-hidden flex justify-center items-center">
+      </app-adsense>
+    </div>
+  }
+
 </div>
 
 

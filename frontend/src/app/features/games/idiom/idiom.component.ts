@@ -23,7 +23,7 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { WebSocketService } from '../../../core/services/websocket.service';
+import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
 type IdiomView = 'lobby' | 'fill' | 'wordle';
 
@@ -95,19 +95,15 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
   `],
   templateUrl: './idiom.component.html',
 })
-export class IdiomComponent implements OnInit, OnDestroy {
+export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
-  private router = inject(Router);
   private route = inject(ActivatedRoute);
   private svc = inject(IdiomService);
   private tutorialService = inject(TutorialService);
   private audio = inject(AudioService);
   private xpService = inject(XpService);
-  settingsService = inject(SettingsService);
   pkStore = inject(IdiomPKStore);
-  gameTimer = inject(GameTimerService);
-  private wsService = inject(WebSocketService);
   GameStatus = GameStatus;
   GameMode = GameMode;
 
@@ -123,7 +119,11 @@ export class IdiomComponent implements OnInit, OnDestroy {
   pkFillSelected = signal<string[]>([]);
   pkActiveBlank = signal(-1);
 
+  override get store() { return this.pkStore; }
+  override get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
+
   constructor() {
+    super();
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'idiom',
       getCurrentMode: () => this.pkRoomMode(),
@@ -249,18 +249,14 @@ export class IdiomComponent implements OnInit, OnDestroy {
     return Array.from({ length: target }, (_, i) => ({ idx: i, filled: i < wins }));
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     this.pkStore.leaveRoom();
-    this.wsService.disconnectLobby();
   }
 
   handleLobbyJoinRoom(room: any) {
     if (room.password) this.wsService.setPendingPassword(room.password);
     this.joinPkRoom(room.roomId, room.mode, room.difficulty || '', room.host);
-  }
-
-  navigateToPkArena() {
-    this.router.navigate(['/pk-arena']);
   }
 
   tutorialSteps = this.tutorialService.getStepsForGame('idiom');
@@ -390,9 +386,8 @@ export class IdiomComponent implements OnInit, OnDestroy {
     return map;
   });
 
-  ngOnInit() {
-    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
-    this.wsService.connectLobby(playerId, playerId);
+  override ngOnInit() {
+    super.ngOnInit();
     this.loadWordleState();
     if (this.authStore.isAuthenticated()) {
       this.svc.getStats().subscribe(s => this.idiomStats.set(s));
@@ -421,7 +416,7 @@ export class IdiomComponent implements OnInit, OnDestroy {
   }
 
   returnToLobby() {
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   backToLobby() {

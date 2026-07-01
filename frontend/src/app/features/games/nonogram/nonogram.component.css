@@ -6,10 +6,6 @@
 
 .nonogram-board {
   display: grid;
-  /* Top-left | Col Hints
-     Row Hints| Main Grid */
-  grid-template-columns: auto calc(var(--grid-width) * var(--cell-size));
-  grid-template-rows: auto calc(var(--grid-height) * var(--cell-size));
 }
 
 .top-left {
@@ -21,7 +17,6 @@
   grid-column: 2;
   grid-row: 1;
   display: grid;
-  grid-template-columns: repeat(var(--grid-width), var(--cell-size));
 }
 
 .col-hint-item {
@@ -33,7 +28,6 @@
   grid-column: 1;
   grid-row: 2;
   display: grid;
-  grid-template-rows: repeat(var(--grid-height), var(--cell-size));
 }
 
 .row-hint-item {
@@ -44,8 +38,6 @@
   grid-column: 2;
   grid-row: 2;
   display: grid;
-  grid-template-columns: repeat(var(--grid-width), var(--cell-size));
-  grid-template-rows: repeat(var(--grid-height), var(--cell-size));
 }
 
 .cell {

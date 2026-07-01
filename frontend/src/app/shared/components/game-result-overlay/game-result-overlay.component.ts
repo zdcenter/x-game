@@ -11,11 +11,12 @@ import { XPResult } from '../../../core/services/game-stats.service';
 import { ShareService } from '../../../core/services/share.service';
 import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
+import { AdsenseComponent } from '../adsense/adsense.component';
 
 @Component({
   selector: 'app-game-result-overlay',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdsenseComponent],
   templateUrl: './game-result-overlay.component.html',
 })
 export class GameResultOverlayComponent implements OnInit, OnDestroy {
@@ -23,7 +24,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   audio = inject(AudioService);
   private router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
-  private adService = inject(AdService);
+  adService = inject(AdService);
   private shareService = inject(ShareService);
   private streakService = inject(StreakService);
   authStore = inject(AuthStore);
@@ -184,7 +185,8 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
       if (this.enableChangeRoomGame) {
         this.changeRoomGame.emit(gameId);
       } else {
-        this.router.navigate(['/games', gameId]);
+        const lang = this.router.url.split('/')[1] || 'zh';
+        this.router.navigate(['/', lang, 'games', gameId]);
       }
     });
   }

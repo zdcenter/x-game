@@ -164,9 +164,10 @@ export class WebSocketService {
         });
         
         console.log('Room changed game:', msg.game);
-        const targetUrl = '/games/' + msg.game;
+        const lang = this.router.url.split('/')[1] || 'zh';
+        const targetUrl = `/${lang}/games/${msg.game}`;
         if (this.router.url === targetUrl) {
-          this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
             this.router.navigate([targetUrl]);
           });
         } else {

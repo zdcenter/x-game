@@ -213,11 +213,12 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
 
   onHeaderBack(): void {
     if (this.view() === 'lobby') {
-      this.router.navigate(['/']);
+      this.navigateToLobby();
     } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
       this.goBackToLobby();
     } else {
       this.store.leaveRoom();
+      this.navigateToLobby();
     }
   }
 

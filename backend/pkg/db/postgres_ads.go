@@ -7,13 +7,6 @@ import (
 )
 
 func SeedAds() {
-	var count int64
-	DB.Model(&domain.AdPlacement{}).Count(&count)
-
-	if count > 0 {
-		return // Already seeded
-	}
-
 	log.Println("Seeding default Ad Placements and Networks...")
 
 	placements := []domain.AdPlacement{
@@ -47,11 +40,44 @@ func SeedAds() {
 				{Provider: "google_admob", SlotID: "ca-app-pub-3940256099942544/1033173712", Priority: 1, IsEnabled: true, LimitPerUser: -1},
 			},
 		},
+		{
+			ID:              "lobby_bottom",
+			Name:            "大厅底部横幅",
+			Desc:            "游戏大厅界面底部的横幅广告",
+			IsEnabled:       true,
+			DailyTotalLimit: -1,
+			Networks: []domain.AdNetwork{
+				{Provider: "google_adsense", SlotID: "ca-pub-8428944074138941", Priority: 1, IsEnabled: true, LimitPerUser: -1},
+			},
+		},
+		{
+			ID:              "sidebar_bottom",
+			Name:            "游戏侧边栏广告",
+			Desc:            "游戏界面右侧大厅面板底部的横幅广告",
+			IsEnabled:       true,
+			DailyTotalLimit: -1,
+			Networks: []domain.AdNetwork{
+				{Provider: "google_adsense", SlotID: "ca-pub-8428944074138941", Priority: 1, IsEnabled: true, LimitPerUser: -1},
+			},
+		},
+		{
+			ID:              "result_bottom",
+			Name:            "结算界面广告",
+			Desc:            "游戏结束结算面板中的横幅广告",
+			IsEnabled:       true,
+			DailyTotalLimit: -1,
+			Networks: []domain.AdNetwork{
+				{Provider: "google_adsense", SlotID: "ca-pub-8428944074138941", Priority: 1, IsEnabled: true, LimitPerUser: -1},
+			},
+		},
 	}
 
 	for _, p := range placements {
-		if err := DB.Create(&p).Error; err != nil {
-			log.Printf("Failed to seed ad placement %s: %v", p.ID, err)
+		var existing domain.AdPlacement
+		if err := DB.Where("id = ?", p.ID).First(&existing).Error; err != nil {
+			if err := DB.Create(&p).Error; err != nil {
+				log.Printf("Failed to seed ad placement %s: %v", p.ID, err)
+			}
 		}
 	}
 

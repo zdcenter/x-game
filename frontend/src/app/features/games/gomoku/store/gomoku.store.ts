@@ -157,6 +157,13 @@ export class GomokuStore extends BaseGameStore {
     }
   }
 
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target);
+    if (mode === GameMode.Single) {
+      this.startGame();
+    }
+  }
+
   surrender() {
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();

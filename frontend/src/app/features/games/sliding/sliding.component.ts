@@ -44,7 +44,6 @@ export class SlidingComponent extends BaseGameComponent {
   private router = inject(Router);
   readonly i18n = inject(I18nService);
   private toastService = inject(ToastService);
-  private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
 
   showRules = signal<boolean>(false);
@@ -178,7 +177,7 @@ export class SlidingComponent extends BaseGameComponent {
         this.store.leaveRoom();
       }
     }
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   returnToLobby() {

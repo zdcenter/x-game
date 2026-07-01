@@ -8,6 +8,7 @@ import { SettingsService } from '../services/settings.service';
 import { isBrowser } from './browser.util';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { CrossGameJoinService } from '../services/cross-game-join.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -24,6 +25,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public settingsService = inject(SettingsService);
   private _baseRoute = inject(ActivatedRoute);
   protected _baseRouter = inject(Router);
+  protected crossGameJoin = inject(CrossGameJoinService);
 
   isMobileSidebarOpen = signal<boolean>(false);
 
@@ -56,6 +58,31 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
     // Deep link check for PK invites (browser-only: uses setTimeout + router navigate)
     if (isBrowser()) {
+      if (gameId) {
+        const pendingCross = this.crossGameJoin.consumePendingJoin(gameId);
+        if (pendingCross) {
+          setTimeout(() => {
+            if (pendingCross.action === 'create') {
+              this.handleCreateRoom({
+                name: pendingCross.roomId,
+                mode: pendingCross.mode,
+                difficulty: pendingCross.difficulty,
+                password: pendingCross.password,
+                target: pendingCross.target
+              });
+            } else {
+              this.handleJoinRoom({
+                roomId: pendingCross.roomId,
+                mode: pendingCross.mode,
+                difficulty: pendingCross.difficulty,
+                host: pendingCross.host,
+                password: pendingCross.password
+              });
+            }
+          }, 100);
+        }
+      }
+
       const q = this._baseRoute.snapshot.queryParams;
       if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== GameMode.Single) {
         setTimeout(() => {
@@ -119,7 +146,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected navigateToLobby(): void {
     // Preserve lang prefix: URL is /zh/... or /en/...
     const lang = this._baseRouter.url.split('/')[1] || 'zh';
-    this._baseRouter.navigate([lang, 'lobby']);
+    this._baseRouter.navigate(['/', lang, 'lobby']);
   }
 
   openChangeSettings() {

@@ -46,7 +46,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   override store = inject(LightsoutStore);
   private gameRegistry = inject(GameRegistryService);
   private authStore = inject(AuthStore);
-  private crossGameJoin = inject(CrossGameJoinService);
   i18n = inject(I18nService);
   private router = inject(Router);
 
@@ -169,7 +168,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     if (this.store.currentRoomMode() !== GameMode.Single) {
       this.store.leaveRoom();
     }
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   isConnected() {

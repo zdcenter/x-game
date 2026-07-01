@@ -471,7 +471,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     if (this.currentRoomMode() !== GameMode.Single) {
       this._store.leaveRoom();
     }
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
   override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}): void {

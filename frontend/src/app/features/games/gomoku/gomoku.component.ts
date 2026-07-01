@@ -17,6 +17,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameService } from '../../../core/services/game.service';
 import { AudioService } from '../../../core/services/audio.service';
+import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
 @Component({
   selector: 'app-gomoku',
@@ -26,25 +27,21 @@ import { AudioService } from '../../../core/services/audio.service';
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']
 })
-export class GomokuComponent implements OnInit, OnDestroy {
+export class GomokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
   GameMode = GameMode;
   GameStatus = GameStatus;
   GameDifficulty = GameDifficulty;
   i18n = inject(I18nService);
   route = inject(ActivatedRoute);
-  router = inject(Router);
   authStore = inject(AuthStore);
-  ws = inject(WebSocketService);
-  store = inject(GomokuStore);
-  gameTimer = inject(GameTimerService);
-  gameService = inject(GameService);
-  settingsService = inject(SettingsService);
+  override store = inject(GomokuStore);
   audio = inject(AudioService);
   
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
 
   constructor() {
+    super();
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'gomoku',
       getCurrentMode: () => this.currentRoomMode(),
@@ -74,7 +71,6 @@ export class GomokuComponent implements OnInit, OnDestroy {
   }
 
   showRules = signal(false);
-  isMobileSidebarOpen = signal(false);
   showResultOverlay = signal(false);
 
   // Computed state
@@ -96,17 +92,16 @@ export class GomokuComponent implements OnInit, OnDestroy {
     return this.store.playersList();
   }
 
-  ngOnInit() {
-    this.gameService.visitGame('gomoku').subscribe({
-      error: err => console.error('Failed to update visit count', err)
-    });
+  override get playerId(): string {
+    return this.myPlayerId();
+  }
 
-    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
-    this.ws.connectLobby(playerId, playerId);
+  override ngOnInit() {
+    super.ngOnInit();
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.ws.setPendingPassword(joinInfo.password);
+      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
     } else {
       this.route.queryParams.subscribe(params => {
@@ -144,7 +139,8 @@ export class GomokuComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     this.store.leaveRoom();
   }
 
@@ -205,24 +201,11 @@ export class GomokuComponent implements OnInit, OnDestroy {
     this.roomId.set('');
     this.store.leaveRoom();
     this.roomLifecycle.clearReconnectInfo();
-    this.router.navigate(['/lobby']);
+    this.navigateToLobby();
   }
 
-  openChangeSettings() {
-    if (this.lobbyPanel && this.roomId()) {
-      this.isMobileSidebarOpen.set(true);
-      this.lobbyPanel.openUpdateRoomModal({
-        id: this.roomId(),
-        game: 'gomoku',
-        mode: this.currentRoomMode(),
-        difficulty: this.currentDifficulty(),
-        host: this.hostId()
-      });
-    }
-  }
-
-  handleCreateRoom(config: any) {
-    if (config.password) this.ws.setPendingPassword(config.password);
+  override handleCreateRoom(config: any) {
+    if (config.password) this.wsService.setPendingPassword(config.password);
     const roomId = config.name || `gomoku-${Date.now()}`;
     const host = this.myPlayerId();
     const diff = config.difficulty || 'medium';
@@ -230,15 +213,11 @@ export class GomokuComponent implements OnInit, OnDestroy {
     this.isMobileSidebarOpen.set(false);
   }
 
-  handleJoinRoom(room: any) {
-    if (room.password) this.ws.setPendingPassword(room.password);
+  override handleJoinRoom(room: any) {
+    if (room.password) this.wsService.setPendingPassword(room.password);
     const diff = room.difficulty || 'medium';
     this.joinRoom(room.roomId, room.mode, diff, room.host);
     this.isMobileSidebarOpen.set(false);
-  }
-
-  navigateToPkArena() {
-    this.router.navigate(['/pk-arena']);
   }
 
   getSubtitle(): string {

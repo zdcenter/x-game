@@ -46,7 +46,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   roomLifecycle!: RoomLifecycleHandle;
   private router = inject(Router);
   i18n = inject(I18nService);
-  private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
@@ -122,12 +121,8 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     super.ngOnInit();
     
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
-    const pendingCrossJoin = this.crossGameJoin.consumePendingJoin('drop2048');
 
-    if (pendingCrossJoin) {
-      if (pendingCrossJoin.password) this.wsService.setPendingPassword(pendingCrossJoin.password);
-      this.joinRoom(pendingCrossJoin.roomId, pendingCrossJoin.mode, pendingCrossJoin.difficulty, pendingCrossJoin.host);
-    } else if (joinInfo) {
+    if (joinInfo) {
       if (joinInfo.mode !== GameMode.Single) {
         if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
         this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
@@ -176,7 +171,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   onLeaveClick() {
     if (this.store.currentRoomMode() === GameMode.Single) {
       this.store.leaveRoom();
-      this.router.navigate(['/lobby']);
+      this.navigateToLobby();
     } else {
       if (this.store.hostId() === this.playerId) {
         this.store.dismissRoom();
@@ -184,7 +179,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
         this.store.leaveRoom();
       }
       this.roomLifecycle.clearReconnectInfo();
-      this.router.navigate(['/lobby']);
+      this.navigateToLobby();
     }
   }
 
