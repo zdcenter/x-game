@@ -12,7 +12,7 @@
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-amber-500/20"
         headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="onLeaveClick()"
+        (back)="goBack()"
         (rules)="showRules.set(true)"
       >
         <div game-icon class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex items-center justify-center">
@@ -103,7 +103,7 @@
               [currentUserId]="playerId"
               [readyPlayers]="store.readyPlayers()"
               (start)="store.startGame()"
-              (leave)="onLeaveClick()"
+              (leave)="goBack()"
               (changeSettings)="openChangeSettings()"
               (ready)="store.ready()"
               (cancelReady)="store.cancelReady()"
@@ -293,7 +293,7 @@
             [showRestart]="true"
             [showLeave]="store.currentRoomMode() !== GameMode.Single"
             (restart)="store.restartGame()"
-            (leave)="onLeaveClick()"
+            (leave)="goBack()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
             (changeRoomGame)="store.changeRoomGame($event)"
           ></app-game-result-overlay>

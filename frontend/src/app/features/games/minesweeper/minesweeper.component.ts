@@ -172,7 +172,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.roomLifecycle = setupRoomLifecycle({
       gameId: GameId.Minesweeper,
       getCurrentMode: () => this.currentRoomMode(),
-      onLeaveRoom: () => this.returnToLobby(),
+      onLeaveRoom: () => {
+        this.currentRoomId.set('');
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+        setTimeout(() => this.changeSingleDifficulty('medium'), 100);
+      },
     });
   }
 
@@ -226,32 +231,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
 
-  returnToLobby() {
-    this.currentRoomId.set('');
-    this.store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-    setTimeout(() => this.changeSingleDifficulty('medium'), 100);
-  }
 
-  dismissRoom() {
-    this.toastService.confirm({
-      title: this.i18n.t('game.dismiss_title')(),
-      message: this.i18n.t('game.dismiss_msg')(),
-      confirmText: this.i18n.t('game.dismiss_confirm')(),
-      cancelText: this.i18n.t('game.cancel')(),
-      onConfirm: () => {
-        this.store.dismissRoom();
-        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
-      }
-    });
-  }
-
-  goBack() {
-    if (this.currentRoomId()) {
-      this.wsService.send({ type: this.store.hostId() === this.playerId ? C2SAction.DismissRoom : C2SAction.LeaveRoom });
-    }
-    this.navigateToLobby();
-  }
 
   getSubtitle(): string {
     return this.currentRoomMode() === GameMode.Steal ? this.i18n.t('game.same_pk_steal_label')() : (this.currentRoomMode() === GameMode.Speed ? this.i18n.t('game.same_pk_speed_label')() : this.i18n.t('game.single_label')());

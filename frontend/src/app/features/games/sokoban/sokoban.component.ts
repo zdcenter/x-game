@@ -1,5 +1,7 @@
+import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, computed } from '@angular/core';
+import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
+import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -27,7 +29,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 @Component({
   selector: 'app-sokoban',
   standalone: true,
-  imports: [
+  imports: [GameSpectatingOverlayComponent, 
     CommonModule,
     GameHeaderComponent,
     PlayerBadgeComponent,
@@ -62,7 +64,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
         titleGradientClass="from-amber-300 to-orange-400"
         shadowClass="shadow-orange-500/20"
         headerBgClass="bg-gradient-to-r from-amber-900/30 to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="onHeaderBack()"
+        (back)="goBack()"
         (rules)="showRules.set(true)"
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">📦</div>
@@ -169,11 +171,10 @@ import { TutorialService } from '../../../core/services/tutorial.service';
           </div>
 
           @if (store.status() === GameStatus.Playing && store.isDead()) {
-            <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <h2 class="text-4xl md:text-6xl font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                {{ i18n.t('game.spectating')() }}
-              </h2>
-            </div>
+            <app-game-spectating-overlay
+              [players]="spectatingPlayers()"
+              [currentUserId]="playerId"
+            ></app-game-spectating-overlay>
           }
         </div>
 
@@ -181,7 +182,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
         <div class="flex-none flex flex-row items-center justify-center w-full gap-2 py-2 px-2 z-20">
            <!-- Back to Lobby -->
            <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                   (click)="onLeaveClick()">
+                   (click)="goBack()">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
              </svg>
@@ -255,7 +256,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
             [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
             (nextLevel)="handleNextLevel()"
             (restart)="handleRestart()"
-            (leave)="onLeaveClick()"
+            (leave)="goBack()"
             (dismiss)="handleDismissRoom()"
           [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
           (changeRoomGame)="store.changeRoomGame($event)">
@@ -324,7 +325,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
         [currentUserId]="playerId"
         [readyPlayers]="store.readyPlayers()"
         (start)="store.startGame()"
-        (leave)="onLeaveClick()"
+        (leave)="goBack()"
         (changeSettings)="openChangeSettings()"
         (ready)="store.ready()"
         (cancelReady)="store.cancelReady()"
@@ -338,6 +339,8 @@ import { TutorialService } from '../../../core/services/tutorial.service';
   `
 })
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => []);
+  adService = inject(AdService);
   GameMode = GameMode;
   GameStatus = GameStatus;
   GameDifficulty = GameDifficulty;
@@ -438,11 +441,15 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     }
   }
 
-  onHeaderBack() {
+  override goBack() {
     if (this.showLobby()) {
-      this.navigateToLobby();
+      super.goBack();
     } else {
-      this.showLobby.set(true);
+      if (this.store.currentRoomMode() === GameMode.Single) {
+        this.showLobby.set(true);
+      } else {
+        super.goBack();
+      }
     }
   }
 
@@ -541,10 +548,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     this.toastService.show(msg, result.success ? 'success' : 'info');
   }
 
-  onLeaveClick() {
-    this.store.leaveRoom();
-    this.navigateToLobby();
-  }
+
 
   override ngOnDestroy() {
     super.ngOnDestroy();

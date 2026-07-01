@@ -101,7 +101,10 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'hexa',
       getCurrentMode: () => this.currentRoomMode(),
-      onLeaveRoom: () => this.goBack(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
     });
 
     // Start single player by default if we land directly on page
@@ -327,18 +330,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     return this.store.roomId();
   }
 
-  returnToLobby(): void {
-    this.store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-  }
 
-  goBack(): void {
-    if (this.currentRoomId() && this.currentRoomId() !== 'local') {
-      this.store.leaveRoom();
-      this.roomLifecycle.clearReconnectInfo();
-    }
-    this.navigateToLobby();
-  }
 
   getSubtitle(): string {
     return this.currentRoomMode() === 'diff_pk_score' ? this.t('hexa.mode.diff_pk_score')() : this.t('hexa.mode.single')();
@@ -383,18 +375,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     return { vbX, vbY, vbW, vbH };
   }
 
-  dismissRoom() {
-    this.toastService.confirm({
-      title: this.i18n.t('game.dismiss_title')(),
-      message: this.i18n.t('game.dismiss_msg')(),
-      confirmText: this.i18n.t('game.dismiss_confirm')(),
-      cancelText: this.i18n.t('game.cancel')(),
-      onConfirm: () => {
-        this.store.dismissRoom();
-        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
-      }
-    });
-  }
+
 
   getPieceSvgViewBox(piece: HexPiece): string {
     const d = this.getPieceSvgViewBoxData(piece);

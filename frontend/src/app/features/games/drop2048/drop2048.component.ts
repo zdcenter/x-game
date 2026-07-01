@@ -1,3 +1,5 @@
+import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
+import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -23,7 +25,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 @Component({
   selector: 'app-drop2048',
   standalone: true,
-  imports: [
+  imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
     GameLobbyPanelComponent, 
     GameHeaderComponent,
@@ -36,10 +38,25 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     PlayerListContainerComponent,
     GamePlayerMiniHudComponent,
   ],
-  providers: [Drop2048Store],
+  providers: [Drop2048Store,
+    ],
   templateUrl: './drop2048.component.html'
 })
 export class Drop2048Component extends BaseGameComponent implements OnInit, OnDestroy {
+  spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
+    const opps = this.store.opponents().map(opp => ({
+      id: opp.id,
+      score: opp.score || 0,
+      status: opp.finished ? 'finished' : 'playing'
+    }));
+    const me = {
+      id: this.playerId,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
+    };
+    return [me, ...opps];
+  });
+  adService = inject(AdService);
   GameStatus = GameStatus;
   GameMode = GameMode;
   override store = inject(Drop2048Store);
@@ -168,20 +185,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     this.view.set('room');
   }
 
-  onLeaveClick() {
-    if (this.store.currentRoomMode() === GameMode.Single) {
-      this.store.leaveRoom();
-      this.navigateToLobby();
-    } else {
-      if (this.store.hostId() === this.playerId) {
-        this.store.dismissRoom();
-      } else {
-        this.store.leaveRoom();
-      }
-      this.roomLifecycle.clearReconnectInfo();
-      this.navigateToLobby();
-    }
-  }
+
 
   override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {

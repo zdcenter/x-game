@@ -376,5 +376,26 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { icon: '👆', title: 'tutorial.nonogram.fill',     description: 'tutorial.nonogram.fill_desc' },
       { icon: '❌', title: 'tutorial.nonogram.cross',    description: 'tutorial.nonogram.cross_desc' },
     ]
+  },
+  {
+    id: GameId.Classic2048,
+    route: '/games/classic2048',
+    titleKey: 'lobby.classic2048',
+    iconEmoji: '🔢',
+    loadComponent: () => import('../../features/games/classic2048/classic2048.component').then(m => m.Classic2048Component),
+    modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to reach 2048 wins!' }
+    ],
+    difficulties: [
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_classic2048_4x4', desc: '4x4 Grid' }
+    ],
+    recommendations: ['drop2048', 'hexa'],
+    tutorial: [
+      { icon: '🔢', title: 'tutorial.classic2048.goal',     description: 'tutorial.classic2048.goal_desc' },
+      { icon: '👆', title: 'tutorial.classic2048.slide',    description: 'tutorial.classic2048.slide_desc' },
+      { icon: '🔀', title: 'tutorial.classic2048.merge',    description: 'tutorial.classic2048.merge_desc' },
+      { icon: '🚫', title: 'tutorial.classic2048.end',      description: 'tutorial.classic2048.end_desc' },
+    ]
   }
 ];

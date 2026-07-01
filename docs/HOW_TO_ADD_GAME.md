@@ -713,13 +713,14 @@ this.http.post<{ isNewRecord: boolean }>(`${env.apiUrl}/mypuzzle/puzzle/${id}/fi
    > 经过 SSOT（Single Source of Truth）架构重构后，前端掌握绝对的展现控制权。
    > 数据库表 `gm_game_configs` 现在仅用作唯一 ID 索引和统计 `visitCount`。
 
-   在 `backend/pkg/db/postgres.go` 的 `Seed()` 函数中添加：
+   现在**不需要手动修改 postgres.go**。你只需要运行项目根目录下的自动更新脚本：
 
-   ```go
-   { ID: "mygame", IsActive: true },
+   ```bash
+   python3 backend/update_games.py
+   cd backend && go generate ./cmd/api/...
    ```
 
-   后端启动时 `Seed()` 会自动 upsert 记录以保证统计模块正常工作。
+   脚本会自动扫描 `internal/engine/` 下的所有引擎并在其 `init()` 中注入 `engine.RegisterGame`。后端启动时 `Seed()` 会通过 `engine.GetAllRegisteredGames()` 自动获取并 upsert 数据库记录，保证统计模块正常工作。
 
 4. **📝 游戏说明文档与多语言**
 

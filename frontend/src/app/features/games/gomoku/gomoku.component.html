@@ -16,7 +16,7 @@
         titleGradientClass="from-emerald-400 to-teal-500"
         shadowClass="shadow-emerald-500/20"
         headerBgClass="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="returnToLobby()"
+        (back)="goBack()"
         (rules)="showRules.set(true)"
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">⚫⚪</div>
@@ -78,7 +78,7 @@
               [hostId]="hostId()"
               [currentUserId]="myPlayerId()"
               (start)="store.startGame()"
-              (leave)="returnToLobby()"
+              (leave)="goBack()"
               (changeSettings)="openChangeSettings()"
               [readyPlayers]="store.readyPlayers()"
               (kick)="store.kickPlayer($event)"
@@ -187,7 +187,7 @@
             [showLeave]="currentRoomMode() !== GameMode.Single"
             [stats]="[]"
             (restart)="onRestart()"
-            (leave)="returnToLobby()"
+            (leave)="goBack()"
                 [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
                 (changeRoomGame)="store.changeRoomGame($event)">
           </app-game-result-overlay>

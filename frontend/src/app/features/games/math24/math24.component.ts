@@ -170,10 +170,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.store.leaveRoom();
   }
 
-  returnToLobby() {
-    this.store.leaveRoom();
-    this.navigateToLobby();
-  }
+  
 
   getSubtitle(): string {
     const v = this.view();
@@ -186,13 +183,13 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
-  onHeaderBack(): void {
+  override goBack(): void {
     if (this.view() === 'lobby') {
-      this.router.navigate(['/']);
+      super.goBack();
     } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
       this.view.set('lobby');
     } else {
-      this.returnToLobby();
+      super.goBack();
     }
   }
 

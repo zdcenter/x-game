@@ -460,19 +460,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this._store.restartGame();
   }
 
-  returnToLobby() {
-    this._store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-    const uniqueLocalRoom = 'local_' + this.myId;
-    this._store.joinRoom(uniqueLocalRoom, GameMode.Single, GameDifficulty.Easy, this.myId);
-  }
 
-  goBack() {
-    if (this.currentRoomMode() !== GameMode.Single) {
-      this._store.leaveRoom();
-    }
-    this.navigateToLobby();
-  }
 
   override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}): void {
     super.handleCreateRoom(config);
@@ -503,9 +491,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this.navigateToPkArena();
   }
 
-  dismissRoom() {
-    this._store.dismissRoom();
-  }
+
 
   getSubtitle(): string {
     return this.currentRoomMode() === 'same_pk_speed' ? this.i18n.t('game.speed_mode')() : this.i18n.t('game.mode_single_player')();

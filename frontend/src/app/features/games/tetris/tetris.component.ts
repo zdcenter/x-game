@@ -1,3 +1,5 @@
+import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
+import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
@@ -25,12 +27,27 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent,
+    ],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
+    const opps = this.store.opponents().map(opp => ({
+      id: opp.id,
+      score: opp.score || 0,
+      status: opp.finished ? 'finished' : 'playing'
+    }));
+    const me = {
+      id: this.playerId,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
+    };
+    return [me, ...opps];
+  });
+  adService = inject(AdService);
   GameDifficulty = GameDifficulty;
   GameStatus = GameStatus;
   GameMode = GameMode;
@@ -156,11 +173,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     this.isMobileSidebarOpen.set(false);
   }
 
-  returnToLobby() {
-    this.store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-    this.store.joinRoom('local', GameMode.Single, 'normal', '');
-  }
+  
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
@@ -279,20 +292,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return 'var(--color-bg-card)';
   }
 
-  goBack(): void {
-    if (this.currentRoomId()) {
-      if (this.store.hostId() === this.playerId) {
-        this.dismissRoom();
-      } else {
-        this.store.leaveRoom();
-        this.roomLifecycle.clearReconnectInfo();
-      }
-    } else {
-      this.store.leaveRoom();
-      this.roomLifecycle.clearReconnectInfo();
-    }
-    this.navigateToLobby();
-  }
+
 
   getSubtitle(): string {
     return this.currentRoomMode() === 'diff_pk_attack' ? this.i18n.t('tetris.mode.diff_pk_attack')() : this.i18n.t('tetris.mode.single')();
@@ -300,18 +300,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
 
 
-  dismissRoom() {
-    this.toastService.confirm({
-      title: this.i18n.t('game.dismiss_title')(),
-      message: this.i18n.t('game.dismiss_msg')(),
-      confirmText: this.i18n.t('game.dismiss_confirm')(),
-      cancelText: this.i18n.t('game.cancel')(),
-      onConfirm: () => {
-        this.store.dismissRoom();
-        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
-      }
-    });
-  }
+
 
   override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {

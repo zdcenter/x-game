@@ -17,7 +17,8 @@ export const GameId = {
   WaterSort: 'watersort',
   Sokoban: 'sokoban',
   Idiom: 'idiom',
-  Nonogram: 'nonogram'
+  Nonogram: 'nonogram',
+  Classic2048: 'classic2048'
 } as const;
 
 export type GameIdType = typeof GameId[keyof typeof GameId];

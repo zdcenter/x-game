@@ -1,0 +1,81 @@
+<!-- Full-screen backdrop -->
+<div class="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-lg rounded-xl transition-all duration-700">
+  
+  <!-- Premium Glass Card -->
+  <div class="relative bg-slate-900/60 dark:bg-black/60 backdrop-blur-2xl border border-white/10 p-6 sm:p-8 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.1)] flex flex-col items-center gap-6 animate-[pop_0.5s_cubic-bezier(0.34,1.56,0.64,1)] w-11/12 max-w-sm max-h-[90%] overflow-y-auto custom-scrollbar">
+    
+    <!-- Ambient Glows inside card -->
+    <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+    
+    <!-- Icon -->
+    <div class="relative flex items-center justify-center mt-2">
+      <div class="absolute inset-0 bg-indigo-500/30 blur-2xl rounded-full animate-pulse"></div>
+      <div class="w-16 h-16 bg-gradient-to-br from-indigo-500/40 to-purple-500/40 border border-white/20 rounded-2xl flex items-center justify-center shadow-lg backdrop-blur-md transform -rotate-3 hover:rotate-0 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Titles -->
+    <div class="flex flex-col items-center gap-1.5 z-10">
+      <h2 class="text-2xl sm:text-3xl font-black bg-gradient-to-br from-white via-blue-100 to-indigo-300 bg-clip-text text-transparent tracking-widest uppercase drop-shadow-sm text-center">
+        {{ i18n.t('game.spectating')() || 'Spectating...' }}
+      </h2>
+      <p class="text-sm font-medium text-indigo-200/70 tracking-wide text-center">
+        {{ i18n.t('game.wait_others')() || 'Please wait for other players to finish.' }}
+      </p>
+    </div>
+    
+    <!-- SCORE LIST -->
+    @if (players && players.length > 0) {
+      <div class="w-full bg-black/40 rounded-3xl p-4 border border-white/10 shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)] z-10 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        
+        <div class="flex items-center gap-2 mb-4 px-2">
+          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+          <div class="font-bold text-[11px] text-white/50 uppercase tracking-[0.2em]">
+            {{ i18n.t('game.live_scores')() || 'Live Scores' }}
+          </div>
+        </div>
+        
+        <div class="flex flex-col gap-2.5">
+          @for (player of players; track player.id) {
+            <div class="flex justify-between items-center bg-white/[0.03] hover:bg-white/[0.08] transition-colors p-3.5 rounded-2xl border border-white/5 relative overflow-hidden group"
+                 [class.!border-indigo-500/50]="player.id === currentUserId"
+                 [class.!bg-indigo-500/10]="player.id === currentUserId">
+              
+              @if (player.id === currentUserId) {
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
+              }
+              
+              <div class="flex items-center gap-3">
+                <span class="font-bold text-white/90 text-sm sm:text-base tracking-wide">{{ player.id }}</span>
+                @if (player.status === GameStatus.Finished || player.status === 'finished') {
+                  <span class="text-[9px] sm:text-[10px] font-black bg-white/5 text-white/40 px-2.5 py-1 rounded-lg border border-white/10 uppercase tracking-wider">{{ i18n.t('game.finished')() || 'Finished' }}</span>
+                } @else {
+                  <span class="text-[9px] sm:text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-500/20 uppercase tracking-wider">{{ i18n.t('game.playing')() || 'Playing' }}</span>
+                }
+              </div>
+              
+              <div class="font-black text-xl sm:text-2xl tabular-nums tracking-tight drop-shadow-md" 
+                   [ngClass]="player.id === currentUserId ? 'text-indigo-300' : 'text-white'">
+                {{ player.score ?? 0 }}
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    
+    <!-- AD BANNER -->
+    @if (adService.getBannerSlotId('result_bottom')) {
+      <div class="w-full mt-2 bg-black/30 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-1 border border-white/5 relative z-10">
+        <span class="text-[8px] text-white/20 uppercase tracking-widest mb-1.5 font-bold pt-1">Sponsored</span>
+        <app-adsense [adSlot]="adService.getBannerSlotId('result_bottom')!" [adFormat]="'auto'" [fullWidthResponsive]="true" class="w-full min-h-[50px] flex items-center justify-center"></app-adsense>
+      </div>
+    }
+  </div>
+</div>

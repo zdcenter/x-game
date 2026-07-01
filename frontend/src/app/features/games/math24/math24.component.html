@@ -17,7 +17,7 @@
         titleGradientClass="from-blue-400 to-indigo-500"
         shadowClass="shadow-blue-500/20"
         headerBgClass="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="onHeaderBack()"
+        (back)="goBack()"
         (rules)="showRules.set(true)"
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🃏</div>
@@ -68,7 +68,7 @@
             [readyPlayers]="store.readyPlayers()"
             [target]="store.currentRoomTarget()"
             (start)="store.startGame()"
-            (leave)="returnToLobby()"
+            (leave)="goBack()"
             (changeSettings)="openChangeSettings()"
             (kick)="store.kickPlayer($event)"
             (ready)="store.ready()"

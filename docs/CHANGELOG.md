@@ -543,6 +543,10 @@ Admin 面板新增「数据库管理」模块，支持全量或按表备份、�
 
 ## [Unreleased]
 ### Added
+- **Classic 2048**: Added the classic 4x4 sliding 2048 game with single-player and speed PK modes.
+- **Game Seed Workflow**: Replaced manual DB seed step with automatic `backend/update_games.py` script generation.
+
+### Added
 - **Multiplayer Kill Switch**: Added a global `multiplayer_enabled` toggle in Admin settings. When disabled, all room creation, matchmaking, and PK UI elements are hidden globally, gracefully falling back to offline single-player modes to save server resources during maintenance.
 - **Sokoban PK Mode**: Implemented real-time Sokoban PK battles. Includes side-by-side opponent boards, ghost overlays, and real-time cursor/movement syncing.
 - **Dynamic Avatar Generation**: Removed static SVG avatars. Added dynamic DiceBear avatar generation (identicon/bottts/avataaars) using a custom `DiceBearService` connected to Cloudflare Workers for caching. 100% solvable puzzles without needing a static puzzle bank. Built with stunning glassmorphic UI, fluid CSS pouring animations, and fully integrated with the Party Room (综合包厢) system.

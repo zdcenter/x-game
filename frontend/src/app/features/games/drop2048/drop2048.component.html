@@ -12,7 +12,7 @@
         titleGradientClass="from-blue-400 to-indigo-500"
         shadowClass="shadow-blue-500/20"
         headerBgClass="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="onLeaveClick()"
+        (back)="goBack()"
         (rules)="showRules.set(true)"
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🟦</div>
@@ -20,7 +20,7 @@
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
             @if (store.currentRoomMode() !== GameMode.Single) {
-              <button (click)="onLeaveClick()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
+              <button (click)="goBack()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -67,7 +67,7 @@
               [currentUserId]="playerId"
               [readyPlayers]="store.readyPlayers()"
               (start)="store.startGame()"
-              (leave)="onLeaveClick()"
+              (leave)="goBack()"
               (changeSettings)="openChangeSettings()"
               (ready)="store.ready()"
               (cancelReady)="store.cancelReady()"
@@ -129,9 +129,10 @@
                 <div class="relative w-[320px] h-[444px] md:w-[384px] md:h-[533px] lg:w-[400px] lg:h-[555px] shrink-0">
                   <!-- Local Player Spectating overlay if dead in PK -->
                   @if (store.currentRoomMode() !== GameMode.Single && store.isDead() && store.status() === GameStatus.Playing) {
-                    <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg">
-                      <div class="text-3xl font-black text-white drop-shadow-lg">{{ i18n.t('game.spectating')() }}</div>
-                    </div>
+                    <app-game-spectating-overlay
+                      [players]="spectatingPlayers()"
+                      [currentUserId]="playerId"
+                    ></app-game-spectating-overlay>
                   }
 
                   <!-- Single Player Start Overlay -->
@@ -177,7 +178,7 @@
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
             (restart)="store.restartGame()"
-            (leave)="onLeaveClick()"
+            (leave)="goBack()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
             (changeRoomGame)="store.changeRoomGame($event)"
           >

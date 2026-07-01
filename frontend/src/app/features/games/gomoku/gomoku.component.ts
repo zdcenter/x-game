@@ -45,7 +45,12 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'gomoku',
       getCurrentMode: () => this.currentRoomMode(),
-      onLeaveRoom: () => this.returnToLobby(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        if (this.roomLifecycle) {
+          this.roomLifecycle.clearReconnectInfo();
+        }
+      },
     });
 
     effect(() => {
@@ -197,12 +202,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     );
   }
 
-  returnToLobby() {
-    this.roomId.set('');
-    this.store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-    this.navigateToLobby();
-  }
+  
 
   override handleCreateRoom(config: any) {
     if (config.password) this.wsService.setPendingPassword(config.password);

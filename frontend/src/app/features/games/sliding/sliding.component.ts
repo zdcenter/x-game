@@ -110,8 +110,11 @@ export class SlidingComponent extends BaseGameComponent {
 
     this.roomLifecycle = setupRoomLifecycle({
       gameId: GameId.Sliding,
-      getCurrentMode: () => this.currentRoomMode(),
-      onLeaveRoom: () => this.returnToLobby(),
+      getCurrentMode: () => this.store.currentRoomMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        this.roomLifecycle.clearReconnectInfo();
+      },
     });
 
     effect(() => {
@@ -167,37 +170,6 @@ export class SlidingComponent extends BaseGameComponent {
   override ngOnDestroy() {
     this.store.leaveRoom();
     if (this.timerInterval) clearInterval(this.timerInterval);
-  }
-
-  goBack() {
-    if (this.roomId()) {
-      if (this.store.hostId() === this.playerId) {
-        this.dismissRoom();
-      } else {
-        this.store.leaveRoom();
-      }
-    }
-    this.navigateToLobby();
-  }
-
-  returnToLobby() {
-    this.roomId.set('');
-    this.store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-    setTimeout(() => this.changeSingleDifficulty(GameDifficulty.Medium), 100);
-  }
-
-  dismissRoom() {
-    this.toastService.confirm({
-      title: this.i18n.t('game.dismiss_title')(),
-      message: this.i18n.t('game.dismiss_msg')(),
-      confirmText: this.i18n.t('game.dismiss_confirm')(),
-      cancelText: this.i18n.t('game.cancel')(),
-      onConfirm: () => {
-        this.store.dismissRoom();
-        this.toastService.show(this.i18n.t('game.dismiss_success')(), 'success');
-      }
-    });
   }
 
   override openChangeSettings() {

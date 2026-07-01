@@ -163,13 +163,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     this.store.changeDifficulty(select.value);
   }
 
-  onLeaveClick() {
-    this.gameTimer.stopCountdown();
-    if (this.store.currentRoomMode() !== GameMode.Single) {
-      this.store.leaveRoom();
-    }
-    this.navigateToLobby();
-  }
+
 
   isConnected() {
     return this.wsService.isConnected();

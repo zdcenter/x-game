@@ -1,3 +1,5 @@
+import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
+import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect, untracked } from '@angular/core';
 import { Router } from '@angular/router';
@@ -25,7 +27,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 @Component({
   selector: 'app-block',
   standalone: true,
-  imports: [
+  imports: [GameSpectatingOverlayComponent, 
     CommonModule,
     GameLobbyPanelComponent,
     GameHeaderComponent,
@@ -35,7 +37,8 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     GameRulesModalComponent,
     PlayerBadgeComponent,
     GamePlayerMiniHudComponent
-  ],
+  ,
+    ],
   templateUrl: './block.component.html',
   styles: [`
     @keyframes block-shake {
@@ -65,6 +68,20 @@ import { TutorialService } from '../../../core/services/tutorial.service';
   `]
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
+    const opps = this.store.opponents().map(opp => ({
+      id: opp.id,
+      score: opp.score || 0,
+      status: opp.finished ? 'finished' : 'playing'
+    }));
+    const me = {
+      id: this.playerId,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
+    };
+    return [me, ...opps];
+  });
+  adService = inject(AdService);
   GameDifficulty = GameDifficulty;
   GameStatus = GameStatus;
   GameMode = GameMode;
@@ -217,16 +234,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     return key ? this.i18n.t(key as string)() : mode;
   }
 
-  returnToLobby(): void {
-    this.store.leaveRoom();
-  }
 
-  goBack(): void {
-    if (this.currentRoomId() && this.currentRoomId() !== 'local') {
-      this.store.leaveRoom();
-    }
-    this.navigateToLobby();
-  }
 
   getDifficultyName() {
     const diff = this.store.currentDifficulty();

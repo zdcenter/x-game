@@ -56,16 +56,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     return this.i18n.t.bind(this.i18n);
   }
 
-  goBack() {
-    if (this.store.roomId()) {
-      if (this.store.hostId() === this.playerId) {
-        this.handleDismissRoom();
-      } else {
-        this.store.leaveRoom();
-      }
-    }
-    this.navigateToLobby();
-  }
+
 
   getPlayerScores() {
     if (this.store.currentRoomMode() === GameMode.Single) {
@@ -85,7 +76,12 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.roomLifecycle = setupRoomLifecycle({
       gameId: GameId.Nonogram,
       getCurrentMode: () => this.store.currentRoomMode(),
-      onLeaveRoom: () => this.returnToLobby(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        if (this.roomLifecycle) {
+          this.roomLifecycle.clearReconnectInfo();
+        }
+      },
     });
 
     effect(() => {
@@ -123,10 +119,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.store.leaveRoom();
   }
 
-  returnToLobby() {
-    this.store.leaveRoom();
-    this.roomLifecycle.clearReconnectInfo();
-  }
+  
 
   // Calculate board layout dynamically to fit in screen
   // A typical cell is 20-30px. Max hints could be half the width.
@@ -293,8 +286,5 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.store.playAgain();
   }
 
-  onLeaveClick() {
-    this.store.leaveRoom();
-    this.navigateToLobby();
-  }
+
 }

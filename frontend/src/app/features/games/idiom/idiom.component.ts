@@ -415,9 +415,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  returnToLobby() {
-    this.navigateToLobby();
-  }
+  
 
   backToLobby() {
     this.view.set('lobby');

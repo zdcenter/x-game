@@ -9,6 +9,8 @@ import { isBrowser } from './browser.util';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CrossGameJoinService } from '../services/cross-game-join.service';
+import { ToastService } from '../services/toast.service';
+import { I18nService } from '../i18n/i18n.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -26,6 +28,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   private _baseRoute = inject(ActivatedRoute);
   protected _baseRouter = inject(Router);
   protected crossGameJoin = inject(CrossGameJoinService);
+  protected baseToastService = inject(ToastService);
+  protected i18nBase = inject(I18nService);
 
   isMobileSidebarOpen = signal<boolean>(false);
 
@@ -141,6 +145,32 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   handleDismissRoom() {
     this.wsService.send({ type: 'dismiss_room' });
     this.store.leaveRoom();
+  }
+
+  goBack() {
+    if (this.store.roomId()) {
+      if (this.store.hostId() === this.playerId) {
+        this.dismissRoom();
+        return;
+      } else {
+        this.store.leaveRoom();
+      }
+    }
+    this.navigateToLobby();
+  }
+
+  dismissRoom() {
+    this.baseToastService.confirm({
+      title: this.i18nBase.t('game.dismiss_title')(),
+      message: this.i18nBase.t('game.dismiss_msg')(),
+      confirmText: this.i18nBase.t('game.dismiss_confirm')(),
+      cancelText: this.i18nBase.t('game.cancel')(),
+      onConfirm: () => {
+        this.store.dismissRoom();
+        this.baseToastService.show(this.i18nBase.t('game.dismiss_success')(), 'success');
+        this.navigateToLobby();
+      }
+    });
   }
 
   protected navigateToLobby(): void {

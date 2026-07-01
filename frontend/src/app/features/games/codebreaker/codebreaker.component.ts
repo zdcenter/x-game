@@ -105,7 +105,12 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     this.roomLifecycle = setupRoomLifecycle({
       gameId: 'codebreaker',
       getCurrentMode: () => this.currentRoomMode(),
-      onLeaveRoom: () => this.returnToLobby(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        if (this.roomLifecycle) {
+          this.roomLifecycle.clearReconnectInfo();
+        }
+      },
     });
 
     effect((onCleanup) => {
@@ -219,10 +224,7 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     this.store.leaveRoom();
   }
 
-  returnToLobby() {
-    this.roomLifecycle.clearReconnectInfo();
-    this.navigateToLobby();
-  }
+  
 
   override handleCreateRoom(config: any) {
     if (config.password) this.wsService.setPendingPassword(config.password);
