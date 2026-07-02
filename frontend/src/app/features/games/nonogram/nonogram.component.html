@@ -133,12 +133,13 @@
             </div>
 
             <!-- Main Board -->
-            <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-4 min-h-[400px]"
+            <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto flex flex-col p-4 min-h-[400px]"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
-              <div class="nonogram-board prevent-select bg-slate-50 rounded-md shadow-md border-2 border-slate-400"
-                   (contextmenu)="onContextMenu($event)"
-                   [style.--cell-size.px]="cellSize()"
+              <div class="m-auto flex flex-col items-center">
+                <div class="nonogram-board prevent-select bg-slate-50 rounded-md shadow-md border-2 border-slate-400"
+                     (contextmenu)="onContextMenu($event)"
+                     [style.--cell-size.px]="cellSize()"
                    [style.--grid-width]="store.width()"
                    [style.--grid-height]="store.height()"
                    [style.grid-template-columns]="'auto ' + (store.width() * cellSize()) + 'px'"
@@ -245,6 +246,7 @@
                 </button>
               </div>
             </div>
+            </div>
           }
 
           <!-- Starting Overlay -->
@@ -254,6 +256,7 @@
 
           @if (store.status() === GameStatus.Finished && showOverlay()) {
             <app-game-result-overlay
+              class="absolute inset-0 z-50"
               currentGameId="nonogram"
               [status]="getGameResult()"
               [title]="getGameResult() === 'win' ? t('game.you_win')() : t('game.you_lose')()"
