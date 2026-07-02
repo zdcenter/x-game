@@ -2,18 +2,19 @@ package main
 
 import (
 	"fmt"
-	
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
+	"log"
 )
 
 func main() {
-	db.InitPostgres() // Will connect to localhost DB, run migrations and seed!
-
+	db.InitDB()
 	var games []domain.GameConfig
-	db.DB.Find(&games)
+	if err := db.DB.Find(&games).Error; err != nil {
+		log.Fatal(err)
+	}
 	fmt.Printf("Total games in DB: %d\n", len(games))
 	for _, g := range games {
-		fmt.Printf("ID: %s, Active: %t\n", g.ID, g.IsActive)
+		fmt.Println(g.ID)
 	}
 }

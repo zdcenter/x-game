@@ -1,0 +1,121 @@
+/* Base Board */
+.c2048-board {
+  background-color: var(--c2048-board-bg);
+  border-radius: 0.75rem;
+  border: var(--c2048-board-border-width, 0) solid var(--c2048-board-border, transparent);
+  box-shadow: var(--c2048-board-shadow, none);
+}
+
+/* Empty Cell */
+.c2048-empty-cell {
+  background: var(--c2048-empty-bg);
+  border-radius: 0.5rem;
+  box-shadow: var(--c2048-empty-shadow, none);
+}
+
+.c2048-tile-wrapper {
+  perspective: 500px;
+}
+
+/* Tile Base (Shadow Layer) */
+.c2048-tile-base {
+  background-color: var(--c2048-tile-shadow-color, transparent);
+  border-radius: 0.5rem;
+  box-shadow: var(--c2048-tile-drop-shadow, 0 0 0 transparent), var(--c2048-tile-glow, 0 0 0 transparent);
+  transform: var(--c2048-tile-base-transform, none);
+}
+
+/* Tile Top Layer */
+.c2048-tile-top {
+  background: var(--c2048-tile-grad);
+  border: var(--c2048-tile-inner-border, none);
+  border-radius: 0.5rem;
+  transform: var(--c2048-tile-top-transform, none);
+  transition: transform 0.1s;
+}
+
+.c2048-tile-top:active {
+  transform: var(--c2048-tile-top-active-transform, none);
+}
+
+/* ----------------------------------------------------- */
+/* LIGHT MODE VARIABLES (Classic Flat Style)           */
+/* ----------------------------------------------------- */
+:host {
+  --c2048-board-bg: #bbada0;
+  --c2048-empty-bg: #cdc1b4;
+  
+  /* Reset 3D properties to none/flat */
+  --c2048-board-border-width: 0;
+  --c2048-board-shadow: none;
+  --c2048-empty-shadow: none;
+  
+  --c2048-tile-shadow-color: transparent;
+  --c2048-tile-drop-shadow: none;
+  --c2048-tile-base-transform: none;
+  
+  --c2048-tile-inner-border: none;
+  --c2048-tile-top-transform: none;
+  --c2048-tile-top-active-transform: scale(0.95);
+  
+  /* Default Tile */
+  --c2048-tile-grad: #eee4da;
+  --c2048-text-color: #776e65;
+}
+
+/* Light Mode Specific Colors (Classic) */
+.tile-2 { --c2048-tile-grad: #eee4da; }
+.tile-4 { --c2048-tile-grad: #ede0c8; }
+.tile-8 { --c2048-tile-grad: #f2b179; --c2048-text-color: #f9f6f2; }
+.tile-16 { --c2048-tile-grad: #f59563; --c2048-text-color: #f9f6f2; }
+.tile-32 { --c2048-tile-grad: #f67c5f; --c2048-text-color: #f9f6f2; }
+.tile-64 { --c2048-tile-grad: #f65e3b; --c2048-text-color: #f9f6f2; }
+.tile-128 { --c2048-tile-grad: #edcf72; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 15px rgba(237, 207, 114, 0.4); }
+.tile-256 { --c2048-tile-grad: #edcc61; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 20px rgba(237, 204, 97, 0.5); }
+.tile-512 { --c2048-tile-grad: #edc850; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 25px rgba(237, 200, 80, 0.6); }
+.tile-1024 { --c2048-tile-grad: #edc53f; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 30px rgba(237, 197, 63, 0.7); }
+.tile-2048 { --c2048-tile-grad: #edc22e; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 40px rgba(237, 194, 46, 0.8); }
+
+/* ----------------------------------------------------- */
+/* DARK MODE VARIABLES (Premium 3D Cool Colors)          */
+/* ----------------------------------------------------- */
+:host-context(.theme-dark) {
+  --c2048-board-bg: #0f172a;
+  
+  /* Enable 3D properties */
+  --c2048-board-border-width: 4px;
+  --c2048-board-border: #1e293b;
+  --c2048-board-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --c2048-empty-bg: linear-gradient(180deg, #334155, #1e293b);
+  --c2048-empty-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  
+  --c2048-tile-drop-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --c2048-tile-base-transform: translateY(2px);
+  
+  --c2048-tile-inner-border: 1px solid rgba(255, 255, 255, 0.15);
+  --c2048-tile-top-transform: translateY(-4px);
+  --c2048-tile-top-active-transform: translateY(-2px);
+  
+  /* Default Tile */
+  --c2048-tile-grad: linear-gradient(180deg, #334155, #1e293b);
+  --c2048-tile-shadow-color: #0f172a;
+  --c2048-text-color: #f8fafc;
+}
+
+/* Dark Mode Specific Colors */
+:host-context(.theme-dark) .tile-2 { --c2048-tile-grad: linear-gradient(180deg, #475569, #334155); --c2048-text-color: #f8fafc; --c2048-tile-shadow-color: #1e293b; }
+:host-context(.theme-dark) .tile-4 { --c2048-tile-grad: linear-gradient(180deg, #334155, #1e293b); --c2048-text-color: #f8fafc; --c2048-tile-shadow-color: #0f172a; }
+:host-context(.theme-dark) .tile-8 { --c2048-tile-grad: linear-gradient(180deg, #f97316, #c2410c); --c2048-text-color: #fff; --c2048-tile-shadow-color: #7c2d12; }
+:host-context(.theme-dark) .tile-16 { --c2048-tile-grad: linear-gradient(180deg, #ea580c, #9a3412); --c2048-text-color: #fff; --c2048-tile-shadow-color: #7c2d12; }
+:host-context(.theme-dark) .tile-32 { --c2048-tile-grad: linear-gradient(180deg, #ef4444, #b91c1c); --c2048-text-color: #fff; --c2048-tile-shadow-color: #7f1d1d; }
+:host-context(.theme-dark) .tile-64 { --c2048-tile-grad: linear-gradient(180deg, #e11d48, #9f1239); --c2048-text-color: #fff; --c2048-tile-shadow-color: #881337; }
+:host-context(.theme-dark) .tile-128 { --c2048-tile-grad: linear-gradient(180deg, #eab308, #a16207); --c2048-text-color: #fff; --c2048-tile-shadow-color: #713f12; --c2048-tile-glow: 0 0 0 transparent; }
+:host-context(.theme-dark) .tile-256 { --c2048-tile-grad: linear-gradient(180deg, #ca8a04, #854d0e); --c2048-text-color: #fff; --c2048-tile-shadow-color: #713f12; --c2048-tile-glow: 0 0 0 transparent; }
+:host-context(.theme-dark) .tile-512 { --c2048-tile-grad: linear-gradient(180deg, #8b5cf6, #5b21b6); --c2048-text-color: #fff; --c2048-tile-shadow-color: #4c1d95; --c2048-tile-glow: 0 0 0 transparent; }
+:host-context(.theme-dark) .tile-1024 { --c2048-tile-grad: linear-gradient(180deg, #a855f7, #7e22ce); --c2048-text-color: #fff; --c2048-tile-shadow-color: #581c87; --c2048-tile-glow: 0 0 0 transparent; }
+:host-context(.theme-dark) .tile-2048 { --c2048-tile-grad: linear-gradient(180deg, #fbbf24, #d97706); --c2048-text-color: #fff; --c2048-tile-shadow-color: #92400e; --c2048-tile-glow: 0 0 40px rgba(217, 119, 6, 0.6); }
+
+/* Override font size logic since we are keeping dynamic font sizes in TS but colors in CSS */
+.c2048-tile-text {
+  color: var(--c2048-text-color);
+}

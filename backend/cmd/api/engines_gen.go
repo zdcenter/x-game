@@ -6,6 +6,7 @@ import (
 	_ "github.com/x-game/backend/internal/engine/block"
 	_ "github.com/x-game/backend/internal/engine/classic2048"
 	_ "github.com/x-game/backend/internal/engine/codebreaker"
+	_ "github.com/x-game/backend/internal/engine/connect"
 	_ "github.com/x-game/backend/internal/engine/drop2048"
 	_ "github.com/x-game/backend/internal/engine/gomoku"
 	_ "github.com/x-game/backend/internal/engine/hexa"

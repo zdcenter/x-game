@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <rect width="500" height="500" rx="80" fill="#f4f4f4" />
+  <g fill="#d1d5db">
+    <rect x="32.5" y="32.5" width="35" height="35" rx="5" />
+    <rect x="132.5" y="32.5" width="35" height="35" rx="5" />
+    <rect x="232.5" y="32.5" width="35" height="35" rx="5" />
+    <rect x="332.5" y="32.5" width="35" height="35" rx="5" />
+    <rect x="432.5" y="32.5" width="35" height="35" rx="5" />
+    <rect x="32.5" y="132.5" width="35" height="35" rx="5" />
+    <rect x="132.5" y="132.5" width="35" height="35" rx="5" />
+    <rect x="232.5" y="132.5" width="35" height="35" rx="5" />
+    <rect x="332.5" y="132.5" width="35" height="35" rx="5" />
+    <rect x="432.5" y="132.5" width="35" height="35" rx="5" />
+    <rect x="32.5" y="232.5" width="35" height="35" rx="5" />
+    <rect x="132.5" y="232.5" width="35" height="35" rx="5" />
+    <rect x="232.5" y="232.5" width="35" height="35" rx="5" />
+    <rect x="332.5" y="232.5" width="35" height="35" rx="5" />
+    <rect x="432.5" y="232.5" width="35" height="35" rx="5" />
+    <rect x="32.5" y="332.5" width="35" height="35" rx="5" />
+    <rect x="132.5" y="332.5" width="35" height="35" rx="5" />
+    <rect x="232.5" y="332.5" width="35" height="35" rx="5" />
+    <rect x="332.5" y="332.5" width="35" height="35" rx="5" />
+    <rect x="432.5" y="332.5" width="35" height="35" rx="5" />
+    <rect x="32.5" y="432.5" width="35" height="35" rx="5" />
+    <rect x="132.5" y="432.5" width="35" height="35" rx="5" />
+    <rect x="232.5" y="432.5" width="35" height="35" rx="5" />
+    <rect x="332.5" y="432.5" width="35" height="35" rx="5" />
+    <rect x="432.5" y="432.5" width="35" height="35" rx="5" />
+  </g>
+  <polyline points="450,50 350,50 350,150 350,250 450,250 450,350 450,450" fill="none" stroke="#b52025" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="50,50 50,150 50,250 50,350" fill="none" stroke="#fed000" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="250,50 250,450" fill="none" stroke="#0000ff" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="150,250 150,350 150,450 50,450" fill="none" stroke="#258f25" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="150,150 150,50" fill="none" stroke="#ff8c00" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="450" cy="50" r="42.5" fill="#b52025" />
+  <text x="450" y="50" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+  <circle cx="450" cy="450" r="42.5" fill="#b52025" />
+  <text x="450" y="450" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">1</text>
+  <circle cx="50" cy="50" r="42.5" fill="#fed000" />
+  <text x="50" y="50" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+  <circle cx="50" cy="350" r="42.5" fill="#fed000" />
+  <text x="50" y="350" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">2</text>
+  <circle cx="250" cy="50" r="42.5" fill="#0000ff" />
+  <text x="250" y="50" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+  <circle cx="250" cy="450" r="42.5" fill="#0000ff" />
+  <text x="250" y="450" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">3</text>
+  <circle cx="150" cy="250" r="42.5" fill="#258f25" />
+  <text x="150" y="250" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+  <circle cx="50" cy="450" r="42.5" fill="#258f25" />
+  <text x="50" y="450" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">4</text>
+  <circle cx="150" cy="150" r="42.5" fill="#ff8c00" />
+  <text x="150" y="150" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+  <circle cx="150" cy="50" r="42.5" fill="#ff8c00" />
+  <text x="150" y="50" fill="white" font-size="48" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="central">5</text>
+</svg>

@@ -16,8 +16,12 @@
 /zh/legal/about
 /en/games/block
 /zh/games/block
+/en/games/classic2048
+/zh/games/classic2048
 /en/games/codebreaker
 /zh/games/codebreaker
+/en/games/connect
+/zh/games/connect
 /en/games/drop2048
 /zh/games/drop2048
 /en/games/gomoku
@@ -46,8 +50,12 @@
 /zh/games/watersort
 /en/docs/block
 /zh/docs/block
+/en/docs/classic2048
+/zh/docs/classic2048
 /en/docs/codebreaker
 /zh/docs/codebreaker
+/en/docs/connect
+/zh/docs/connect
 /en/docs/drop2048
 /zh/docs/drop2048
 /en/docs/gomoku

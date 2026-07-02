@@ -395,7 +395,32 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { icon: '🔢', title: 'tutorial.classic2048.goal',     description: 'tutorial.classic2048.goal_desc' },
       { icon: '👆', title: 'tutorial.classic2048.slide',    description: 'tutorial.classic2048.slide_desc' },
       { icon: '🔀', title: 'tutorial.classic2048.merge',    description: 'tutorial.classic2048.merge_desc' },
-      { icon: '🚫', title: 'tutorial.classic2048.end',      description: 'tutorial.classic2048.end_desc' },
+      { icon: '🚫', title: 'tutorial.classic2048.end',      description: 'tutorial.classic2048.end_desc' }
+    ]
+  },
+  {
+    id: GameId.Connect,
+    route: '/games/connect',
+    titleKey: 'lobby.connect',
+    iconEmoji: '🔗',
+    loadComponent: () => import('../../features/games/connect/connect.component').then(m => m.ConnectComponent),
+    modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_connect_easy', desc: '5x5 to 6x6' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_connect_medium', desc: '7x7 to 8x8' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_connect_hard', desc: '9x9 to 10x10' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_connect_expert', desc: '11x11 to 12x12' }
+    ],
+    recommendations: ['sliding', 'sokoban'],
+    multiRound: true,
+    tutorial: [
+      { icon: '🔗', title: 'tutorial.connect.goal',     description: 'tutorial.connect.goal_desc' },
+      { icon: '👆', title: 'tutorial.connect.draw',     description: 'tutorial.connect.draw_desc' },
+      { icon: '🚫', title: 'tutorial.connect.cross',    description: 'tutorial.connect.cross_desc' },
+      { icon: '🌟', title: 'tutorial.connect.fill',     description: 'tutorial.connect.fill_desc' },
     ]
   }
 ];

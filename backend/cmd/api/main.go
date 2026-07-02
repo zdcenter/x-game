@@ -120,6 +120,10 @@ func main() {
 	sokoban.Use(middleware.OptionalProtected())
 	rest.RegisterPuzzleRoutes(sokoban, "sokoban", rest.NewSokobanRepo())
 
+	connect := v1.Group("/connect")
+	connect.Use(middleware.OptionalProtected())
+	rest.RegisterPuzzleRoutes(connect, "connect", rest.NewConnectRepo())
+
 	// Idiom game routes
 	idiom := v1.Group("/idiom")
 	idiom.Use(middleware.OptionalProtected())

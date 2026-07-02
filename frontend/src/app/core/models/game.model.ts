@@ -18,7 +18,8 @@ export const GameId = {
   Sokoban: 'sokoban',
   Idiom: 'idiom',
   Nonogram: 'nonogram',
-  Classic2048: 'classic2048'
+  Classic2048: 'classic2048',
+  Connect: 'connect'
 } as const;
 
 export type GameIdType = typeof GameId[keyof typeof GameId];
