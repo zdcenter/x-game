@@ -12,18 +12,35 @@
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
-        <div class="p-6 flex flex-col gap-4">
+        <div class="p-6 flex flex-col gap-6">
+          <!-- Width Slider -->
           <div>
-            <label class="block text-sm font-bold text-[var(--color-text-secondary)] mb-1">{{ i18n.t('minesweeper.width')() }}</label>
-            <input type="number" [ngModel]="customW()" (ngModelChange)="customW.set($event)" min="9" max="50" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg px-3 py-2 text-[var(--color-text-main)] focus:outline-none focus:border-orange-500 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-sm font-bold text-[var(--color-text-secondary)]">{{ i18n.t('minesweeper.width')() }}</label>
+              <span class="font-bold text-[var(--color-text-main)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded-md border border-[var(--color-border-card)]">{{ customW() }}</span>
+            </div>
+            <input type="range" [ngModel]="customW()" (ngModelChange)="customW.set($event)" min="9" max="50" step="1"
+                   class="w-full h-2 bg-[var(--color-border-card)] rounded-lg appearance-none cursor-pointer accent-orange-500">
           </div>
+          
+          <!-- Height Slider -->
           <div>
-            <label class="block text-sm font-bold text-[var(--color-text-secondary)] mb-1">{{ i18n.t('minesweeper.height')() }}</label>
-            <input type="number" [ngModel]="customH()" (ngModelChange)="customH.set($event)" min="9" max="50" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg px-3 py-2 text-[var(--color-text-main)] focus:outline-none focus:border-orange-500 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-sm font-bold text-[var(--color-text-secondary)]">{{ i18n.t('minesweeper.height')() }}</label>
+              <span class="font-bold text-[var(--color-text-main)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded-md border border-[var(--color-border-card)]">{{ customH() }}</span>
+            </div>
+            <input type="range" [ngModel]="customH()" (ngModelChange)="customH.set($event)" min="9" max="50" step="1"
+                   class="w-full h-2 bg-[var(--color-border-card)] rounded-lg appearance-none cursor-pointer accent-orange-500">
           </div>
+          
+          <!-- Mines Slider -->
           <div>
-            <label class="block text-sm font-bold text-[var(--color-text-secondary)] mb-1">{{ i18n.t('minesweeper.mines')() }}</label>
-            <input type="number" [ngModel]="customM()" (ngModelChange)="customM.set($event)" min="10" class="w-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg px-3 py-2 text-[var(--color-text-main)] focus:outline-none focus:border-orange-500 transition-colors">
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-sm font-bold text-[var(--color-text-secondary)]">{{ i18n.t('minesweeper.mines')() }}</label>
+              <span class="font-bold text-[var(--color-text-main)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded-md border border-[var(--color-border-card)]">{{ customM() }}</span>
+            </div>
+            <input type="range" [ngModel]="customM()" (ngModelChange)="customM.set($event)" min="10" [max]="Math.floor(customW() * customH() * 0.8)" step="1"
+                   class="w-full h-2 bg-[var(--color-border-card)] rounded-lg appearance-none cursor-pointer accent-orange-500">
           </div>
         </div>
         <div class="px-6 py-4 bg-[var(--color-bg-sub)] border-t border-[var(--color-border-card)] flex justify-end gap-3">
