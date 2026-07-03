@@ -9,6 +9,7 @@ import (
 	_ "github.com/x-game/backend/internal/engine/connect"
 	_ "github.com/x-game/backend/internal/engine/drop2048"
 	_ "github.com/x-game/backend/internal/engine/gomoku"
+	_ "github.com/x-game/backend/internal/engine/hashi"
 	_ "github.com/x-game/backend/internal/engine/hexa"
 	_ "github.com/x-game/backend/internal/engine/idiom"
 	_ "github.com/x-game/backend/internal/engine/lightsout"

@@ -12,7 +12,6 @@ import { GameHeaderComponent } from '../../../shared/components/game-header/game
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { ToastService } from '../../../core/services/toast.service';
-import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -25,6 +24,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-sokoban',
@@ -34,7 +34,6 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     GameHeaderComponent,
     PlayerBadgeComponent,
     GameResultOverlayComponent,
-    HintButtonComponent,
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     GameLobbyPanelComponent,
@@ -42,6 +41,7 @@ import { TutorialService } from '../../../core/services/tutorial.service';
     SokobanLobbyComponent,
     GameRulesModalComponent,
     TutorialOverlayComponent,
+    GameToolbarComponent,
   ],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
@@ -179,65 +179,25 @@ import { TutorialService } from '../../../core/services/tutorial.service';
         </div>
 
         <!-- Action Buttons Bar: flex-none，固定在卡片底部，始终可见 -->
-        <div class="flex-none flex flex-row items-center justify-center w-full gap-2 py-2 px-2 z-20">
-           <!-- Back to Lobby -->
-           <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                   (click)="goBack()">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-             </svg>
-             <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
-           </button>
-
-           @if (store.currentRoomMode() === GameMode.Single) {
-             <!-- Prev Level -->
-             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                     (click)="store.prevLevel()"
-                     [disabled]="store.currentLevelNum() <= 1"
-                     [class.opacity-50]="store.currentLevelNum() <= 1">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-               </svg>
-               <span class="truncate w-full text-center">{{ i18n.t('game.prev_level')() }}</span>
-             </button>
-           }
-
-           <!-- Undo -->
-           <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-sky-600/80 hover:bg-sky-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-sky-500/50"
-                   (click)="store.undo()">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-             </svg>
-             <span class="truncate w-full text-center">{{ i18n.t('game.undo')() }}</span>
-           </button>
-
-           <!-- Restart (Retry) -->
-           <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-red-500/50"
-                   (click)="handleRestart()">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-             </svg>
-             <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
-           </button>
-
-           @if (store.currentRoomMode() === GameMode.Single) {
-             <!-- Hint -->
-             <div class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center">
-               <app-hint-button layout="sokoban" (hintApplied)="applyHint()" class="w-full h-full"></app-hint-button>
-             </div>
-
-             <!-- Next Level -->
-             <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
-                     (click)="store.nextLevel()"
-                     [disabled]="!store.hasNextLevel()"
-                     [class.opacity-50]="!store.hasNextLevel()">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-               </svg>
-               <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
-             </button>
-           }
-        </div>
+           <app-game-toolbar
+             [layoutStyle]="'compact'"
+             [showBack]="true"
+             [showPrev]="store.currentRoomMode() === GameMode.Single"
+             [showUndo]="true"
+             [showRestart]="true"
+             [showHint]="store.currentRoomMode() === GameMode.Single"
+             [showNext]="store.currentRoomMode() === GameMode.Single"
+             [disablePrev]="store.currentLevelNum() <= 1"
+             [disableNext]="!store.hasNextLevel()"
+             hintLayout="sokoban"
+             (back)="goBack()"
+             (prevLevel)="store.prevLevel()"
+             (undo)="store.undo()"
+             (restart)="handleRestart()"
+             (hintApplied)="applyHint()"
+             (nextLevel)="store.nextLevel()"
+             class="w-full"
+           ></app-game-toolbar>
       }
         @if (store.status() === GameStatus.Finished && showOverlay()) {
           <app-game-result-overlay

@@ -422,5 +422,25 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { icon: '🚫', title: 'tutorial.connect.cross',    description: 'tutorial.connect.cross_desc' },
       { icon: '🌟', title: 'tutorial.connect.fill',     description: 'tutorial.connect.fill_desc' },
     ]
+  },
+  {
+    id: GameId.Hashi,
+    route: '/games/hashi',
+    titleKey: 'lobby.hashi',
+    iconEmoji: '🌉',
+    loadComponent: () => import('../../features/games/hashi/hashi.component').then(m => m.HashiComponent),
+    modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_hashi_easy', desc: '7x7' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hashi_medium', desc: '10x10' }
+    ],
+    recommendations: ['sudoku', 'nonogram'],
+    tutorial: [
+      { icon: '🌉', title: 'tutorial.hashi.goal',     description: 'tutorial.hashi.goal_desc' },
+      { icon: '👆', title: 'tutorial.hashi.bridge',   description: 'tutorial.hashi.bridge_desc' },
+      { icon: '🚫', title: 'tutorial.hashi.cross',    description: 'tutorial.hashi.cross_desc' }
+    ]
   }
 ];

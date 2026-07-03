@@ -124,6 +124,10 @@ func main() {
 	connect.Use(middleware.OptionalProtected())
 	rest.RegisterPuzzleRoutes(connect, "connect", rest.NewConnectRepo())
 
+	hashi := v1.Group("/hashi")
+	hashi.Use(middleware.OptionalProtected())
+	rest.RegisterPuzzleRoutes(hashi, "hashi", rest.NewHashiRepo())
+
 	// Idiom game routes
 	idiom := v1.Group("/idiom")
 	idiom.Use(middleware.OptionalProtected())

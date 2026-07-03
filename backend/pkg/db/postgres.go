@@ -72,6 +72,9 @@ func InitPostgres() {
 		// Connect game
 		&domain.ConnectPuzzle{},
 		&domain.UserConnectProgress{},
+		// Hashi game
+		&domain.HashiPuzzle{},
+		&domain.UserHashiProgress{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
@@ -90,6 +93,7 @@ func InitPostgres() {
 	SeedBlog()
 	SeedIdioms()
 	SeedConnect()
+	SeedHashi()
 
 	log.Println("Database connected and migrated successfully")
 }

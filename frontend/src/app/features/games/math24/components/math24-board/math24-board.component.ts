@@ -5,35 +5,20 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../../core/services/ad.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { Math24Solver } from '../../utils/math24-solver';
-import { HintButtonComponent } from '../../../../../shared/components/hint-button/hint-button.component';
+import { GameToolbarComponent } from '../../../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-math24-board',
   standalone: true,
-  imports: [CommonModule, HintButtonComponent],
+  imports: [CommonModule, GameToolbarComponent],
   template: `
     <div class="flex flex-col items-center justify-center w-full max-w-[min(90vw,400px,calc(100vh-320px))] mx-auto h-full gap-2 sm:gap-3 py-1 sm:py-2">
       
-      <!-- Top controls above board -->
-      <div class="flex justify-between items-end w-full px-2 mb-2">
-        <!-- Prev Level -->
-        <button class="text-[var(--color-text-muted)] hover:text-blue-400 font-bold transition-colors px-2 py-1"
-                (click)="store.loadPrevLevel()"
-                [disabled]="store.localLevelIndex() <= 0"
-                [ngClass]="{'opacity-30 cursor-not-allowed': store.localLevelIndex() <= 0}">
-          <span class="mr-1">«</span> {{ i18n.t('game.prev_level')() }}
-        </button>
-        
-        <!-- Level Badge -->
-        <div class="px-5 py-1.5 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-sm sm:text-base font-black text-blue-400 -translate-y-2">
+      <!-- Level Badge -->
+      <div class="flex justify-center w-full px-2 mb-2">
+        <div class="px-5 py-1.5 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-sm sm:text-base font-black text-blue-400">
           {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
         </div>
-
-        <!-- Next Level -->
-        <button class="text-[var(--color-text-muted)] hover:text-blue-400 font-bold transition-colors px-2 py-1"
-                (click)="store.loadNextLevel()">
-          {{ i18n.t('game.next_level')() }} <span class="ml-1">»</span>
-        </button>
       </div>
 
       <!-- 3x3 Grid Board -->
@@ -110,22 +95,23 @@ import { HintButtonComponent } from '../../../../../shared/components/hint-butto
       </div>
 
       <!-- Controls -->
-      <div class="flex justify-between w-full px-2 mt-4">
-        <!-- Hint Ad Button -->
-        <app-hint-button layout="math24" (hintApplied)="applyHint()"></app-hint-button>
-        
-        <div class="flex gap-2 sm:gap-4">
-          <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
-                  (click)="undo()"
-                  [disabled]="store.currentBoardHistory().length <= 1"
-                  [ngClass]="{'opacity-50 cursor-not-allowed': store.currentBoardHistory().length <= 1}">
-            <span>↩️</span> {{ i18n.t('game.undo')() }}
-          </button>
-          <button class="px-4 sm:px-6 py-2 sm:py-3 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-xl font-bold transition-colors flex items-center gap-1 sm:gap-2 shadow-sm text-sm sm:text-base"
-                  (click)="reset()">
-            <span>🔄</span> {{ i18n.t('game.reset')() }}
-          </button>
-        </div>
+      <div class="w-full mt-4">
+        <app-game-toolbar
+          [layoutStyle]="'default'"
+          [showPrev]="true"
+          [showNext]="true"
+          [showRestart]="true"
+          [showUndo]="true"
+          [showHint]="true"
+          [disablePrev]="store.localLevelIndex() <= 0"
+          [disableUndo]="store.currentBoardHistory().length <= 1"
+          hintLayout="math24"
+          (prevLevel)="store.loadPrevLevel()"
+          (nextLevel)="store.loadNextLevel()"
+          (undo)="undo()"
+          (restart)="reset()"
+          (hintApplied)="applyHint()"
+        ></app-game-toolbar>
       </div>
 
       <!-- Templates -->

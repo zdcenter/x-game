@@ -10,7 +10,7 @@ import { ConnectEngine, Position } from '../connect-engine';
     'class': 'block w-full'
   },
   template: `
-    <div class="relative w-full aspect-square max-w-full select-none rounded-xl bg-[#f4f4f4] p-2 sm:p-4"
+    <div class="relative w-full aspect-square max-w-full select-none rounded-2xl bg-[var(--color-bg-card)] border-2 border-b-[8px] border-r-[4px] border-[var(--color-border-card)] shadow-[0_8px_20px_var(--color-cell-shadow)] p-2 sm:p-4"
          (mousedown)="onPointerDown($event)"
          (touchstart)="onPointerDown($event)"
          (mousemove)="onPointerMove($event)"
@@ -28,23 +28,26 @@ import { ConnectEngine, Position } from '../connect-engine';
            [style.gridTemplateRows]="'repeat(' + engine.height + ', minmax(0, 1fr))'">
         <ng-container *ngFor="let r of rows">
           <div *ngFor="let c of cols" 
-               class="relative flex items-center justify-center transition-colors">
+               class="relative flex items-center justify-center transition-colors border border-[var(--color-border-card)] border-opacity-30">
             
             <!-- Block (Wall) -->
-            <div *ngIf="engine.isBlock(r, c)" class="w-[90%] h-[90%] bg-slate-700 rounded-sm z-20 shadow-inner flex items-center justify-center">
-              <!-- subtle texture or cross for block -->
+            <div *ngIf="engine.isBlock(r, c)" class="w-[90%] h-[90%] bg-slate-700 rounded-lg z-20 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center">
             </div>
 
             <!-- Grey Square (Dot) for empty spots -->
-            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[35%] h-[35%] bg-gray-300 rounded-sm z-0"></div>
+            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[20%] h-[20%] bg-[var(--color-border-card)] opacity-40 rounded-sm z-0"></div>
 
             <!-- Endpoint Dot -->
             <div *ngIf="engine.isEndpoint(r, c)" 
-                 class="w-[85%] h-[85%] rounded-full z-10 flex items-center justify-center transition-transform relative shadow-sm"
+                 class="w-[85%] h-[85%] rounded-full z-10 flex items-center justify-center transition-transform relative shadow-[inset_0_-4px_6px_rgba(0,0,0,0.3),_0_4px_8px_rgba(0,0,0,0.2)]"
                  [class.scale-110]="activeColor === engine.grid[r][c]"
                  [style.backgroundColor]="getColorHex(engine.getColorAt(r, c)!)">
-              <span class="text-white font-bold pointer-events-none drop-shadow-md"
-                    [ngClass]="engine.height >= 12 ? 'text-[10px] sm:text-xs md:text-sm lg:text-base' : (engine.height >= 10 ? 'text-xs sm:text-sm md:text-base lg:text-lg' : (engine.height >= 7 ? 'text-sm sm:text-base md:text-lg lg:text-2xl' : 'text-base sm:text-xl md:text-2xl lg:text-4xl'))">
+              
+              <!-- Subtle top highlight for 3D effect -->
+              <div class="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent pointer-events-none"></div>
+
+              <span class="text-white font-black pointer-events-none drop-shadow-md z-20"
+                    [ngClass]="engine.height >= 12 ? 'text-[10px] sm:text-xs md:text-sm lg:text-base' : (engine.height >= 10 ? 'text-xs sm:text-sm md:text-base lg:text-lg' : (engine.height >= 7 ? 'text-sm sm:text-base md:text-lg lg:text-2xl' : 'text-base sm:text-xl md:text-2xl lg:text-3xl'))">
                 {{ engine.getColorAt(r, c) }}
               </span>
             </div>
@@ -59,6 +62,20 @@ import { ConnectEngine, Position } from '../connect-engine';
            preserveAspectRatio="none">
 
         <ng-container *ngFor="let color of activeColors">
+          
+          <!-- Shadow Pipe (3D effect) -->
+          <polyline 
+            *ngIf="getPointsForColor(color)"
+            [attr.points]="getPointsForColor(color)"
+            fill="none"
+            stroke="rgba(0,0,0,0.2)"
+            stroke-width="48"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="transition-opacity duration-150 translate-y-[3px]"
+            [class.opacity-40]="activeColor !== null && activeColor !== color"
+          />
+
           <!-- Main Pipe -->
           <polyline 
             *ngIf="getPointsForColor(color)"
@@ -69,6 +86,19 @@ import { ConnectEngine, Position } from '../connect-engine';
             stroke-linecap="round"
             stroke-linejoin="round"
             class="transition-opacity duration-150"
+            [class.opacity-40]="activeColor !== null && activeColor !== color"
+          />
+          
+          <!-- Highlight Pipe (Inner glow) -->
+          <polyline 
+            *ngIf="getPointsForColor(color)"
+            [attr.points]="getPointsForColor(color)"
+            fill="none"
+            stroke="rgba(255,255,255,0.25)"
+            stroke-width="15"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="transition-opacity duration-150 -translate-y-[6px]"
             [class.opacity-40]="activeColor !== null && activeColor !== color"
           />
         </ng-container>

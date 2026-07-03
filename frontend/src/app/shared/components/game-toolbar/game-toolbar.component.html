@@ -1,0 +1,120 @@
+@if (layoutStyle === 'compact') {
+  <div class="flex-none flex flex-row items-center justify-center w-full gap-2 z-20">
+    <!-- Back -->
+    @if (showBack) {
+      <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+              (click)="back.emit()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
+      </button>
+    }
+    <!-- Prev Level -->
+    @if (showPrev) {
+      <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+              (click)="prevLevel.emit()"
+              [disabled]="disablePrev"
+              [class.opacity-50]="disablePrev">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span class="truncate w-full text-center">{{ i18n.t('game.prev_level')() }}</span>
+      </button>
+    }
+
+    <!-- Undo -->
+    @if (showUndo) {
+      <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-sky-600/80 hover:bg-sky-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-sky-500/50"
+              (click)="undo.emit()"
+              [disabled]="disableUndo"
+              [class.opacity-50]="disableUndo">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+        </svg>
+        <span class="truncate w-full text-center">{{ i18n.t('game.undo')() }}</span>
+      </button>
+    }
+
+    <!-- Restart -->
+    @if (showRestart) {
+      <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-red-600/80 hover:bg-red-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-red-500/50"
+              (click)="restart.emit()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
+      </button>
+    }
+
+    <!-- Hint -->
+    @if (showHint) {
+      <div class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center">
+        <app-hint-button [layout]="hintLayout" (hintApplied)="hintApplied.emit()" class="w-full h-full"></app-hint-button>
+      </div>
+    }
+
+    <!-- Next Level -->
+    @if (showNext) {
+      <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-slate-700/80 hover:bg-slate-600 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-slate-600/50"
+              (click)="nextLevel.emit()"
+              [disabled]="disableNext"
+              [class.opacity-50]="disableNext">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
+      </button>
+    }
+  </div>
+} @else {
+  <!-- Default Layout (e.g. Hashi style) -->
+  <div class="flex gap-3 sm:gap-4 items-center justify-center w-full px-4">
+    @if (showPrev) {
+      <button (click)="prevLevel.emit()" 
+              [disabled]="disablePrev"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title="{{ i18n.t('game.prev_level')() }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+    }
+
+    @if (showUndo) {
+      <button (click)="undo.emit()" 
+              [disabled]="disableUndo"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title="{{ i18n.t('game.undo')() }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+        </svg>
+      </button>
+    }
+    
+    @if (showRestart) {
+      <button (click)="restart.emit()" 
+              class="px-6 py-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-medium rounded-xl transition-all shadow-md active:scale-95 flex gap-2 items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        {{ i18n.t('game.retry')() }}
+      </button>
+    }
+    
+    @if (showHint) {
+      <app-hint-button [layout]="hintLayout" (hintApplied)="hintApplied.emit()"></app-hint-button>
+    }
+
+    @if (showNext) {
+      <button (click)="nextLevel.emit()" 
+              [disabled]="disableNext"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title="{{ i18n.t('game.next_level')() }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    }
+  </div>
+}
