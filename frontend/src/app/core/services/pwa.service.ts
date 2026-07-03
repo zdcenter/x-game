@@ -19,7 +19,7 @@ export class PwaService {
     const dismissedTime = localStorage.getItem('pwa_prompt_dismissed');
     if (dismissedTime) {
       const days = (Date.now() - parseInt(dismissedTime, 10)) / (1000 * 60 * 60 * 24);
-      if (days < 7) {
+      if (days < 1) {
         this.isPromptDismissed.set(true);
       }
     }
