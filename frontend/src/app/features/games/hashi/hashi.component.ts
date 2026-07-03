@@ -22,6 +22,7 @@ import { environment } from '../../../../environments/environment';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 
 @Component({
   selector: 'app-hashi',
@@ -37,6 +38,7 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
     GameWaitingRoomComponent,
     PlayerBadgeComponent,
     GameStartingOverlayComponent,
+    GamePkModeBadgeComponent,
   ],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'

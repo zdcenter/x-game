@@ -12,6 +12,29 @@
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🌉</div>
 
+        <ng-container header-center>
+          <div class="flex items-center justify-center w-full z-10 shrink-0 mx-1 sm:mx-4">
+            @if (store.currentRoomMode() === GameMode.Single && view() === 'play') {
+            <div class="relative w-28 sm:w-36 lg:w-40">
+              <select [ngModel]="store.currentDifficulty()" (ngModelChange)="onDifficultyChange($event)"
+                      class="w-full appearance-none pl-3 pr-8 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-sub)] border-2 border-[var(--color-border-card)] shadow-sm hover:shadow-md hover:border-blue-400/50 transition-all text-[var(--color-text-main)] text-xs sm:text-sm font-bold cursor-pointer outline-none focus:border-blue-500">
+                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="easy">{{ i18n.t('game.diff_hashi_easy')() }}</option>
+                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="medium">{{ i18n.t('game.diff_hashi_medium')() }}</option>
+                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="hard">{{ i18n.t('game.diff_hashi_hard')() }}</option>
+                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="expert">{{ i18n.t('game.diff_hashi_expert')() }}</option>
+              </select>
+              <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <svg class="h-4 w-4 text-[var(--color-text-muted)] drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            } @else if (view() === 'play' && store.currentRoomMode() !== GameMode.Single) {
+              <app-game-pk-mode-badge [gameId]="'hashi'" [mode]="store.currentRoomMode()" [difficulty]="store.currentDifficulty()"></app-game-pk-mode-badge>
+            }
+          </div>
+        </ng-container>
+
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
             @if (view() === 'play' && settingsService.settings().multiplayer_enabled === 'true') {
@@ -106,18 +129,8 @@
             
             @if (store.currentRoomMode() === GameMode.Single) {
               <div class="mb-4 flex flex-wrap gap-4 text-slate-700 dark:text-slate-300 items-center w-full justify-between max-w-[95vw] md:max-w-[85vw] lg:max-w-[85vh]">
-                <!-- Left side: Difficulty Selector and Level -->
+                <!-- Left side: Level -->
                 <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1.5 px-3">
-                  <select 
-                    class="bg-transparent font-bold text-sm lg:text-base outline-none cursor-pointer text-blue-600 dark:text-blue-400"
-                    [value]="store.currentDifficulty()" 
-                    (change)="onDifficultyChange($event)">
-                    <option value="easy">{{ i18n.t('game.diff_hashi_easy')() }}</option>
-                    <option value="medium">{{ i18n.t('game.diff_hashi_medium')() }}</option>
-                    <option value="hard">{{ i18n.t('game.diff_hashi_hard')() }}</option>
-                    <option value="expert">{{ i18n.t('game.diff_hashi_expert')() }}</option>
-                  </select>
-                  <div class="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
                   <span class="font-bold text-sm lg:text-base text-slate-600 dark:text-slate-400 whitespace-nowrap">
                     {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
                   </span>
