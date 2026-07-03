@@ -2,9 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AudioService } from '../../../core/services/audio.service';
-import { ShareService } from '../../../core/services/share.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
-import { getOrigin } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-header',
@@ -27,7 +25,7 @@ export class GameHeaderComponent implements OnInit {
   @Output() titleClick = new EventEmitter<void>();
 
   audioService = inject(AudioService);
-  shareService = inject(ShareService);
+
   i18n = inject(I18nService);
   router = inject(Router);
 
@@ -40,16 +38,5 @@ export class GameHeaderComponent implements OnInit {
     }
   }
 
-  shareGame() {
-    if (!this.gameId) return;
-    const url = `${getOrigin()}/games/${this.gameId}`;
-    const descKey = `lobby.${this.gameId}.desc`;
-    const desc = this.i18n.t(descKey)() || '';
-    
-    this.shareService.share({
-      title: `${this.title} - Puzzle PK`,
-      text: `${this.i18n.t('share.game_invite')() || 'Play this awesome game with me!'} ${this.title}\n${desc}`,
-      url: url
-    });
-  }
+
 }

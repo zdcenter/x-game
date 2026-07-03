@@ -66,6 +66,17 @@
         <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
       </button>
     }
+
+    <!-- Share -->
+    @if (showShare) {
+      <button class="flex-1 min-w-[50px] max-w-[80px] flex flex-col items-center justify-center px-1 py-2 rounded-xl font-bold text-white shadow-lg transition-all bg-emerald-600/80 hover:bg-emerald-500 backdrop-blur-sm active:scale-95 text-[10px] sm:text-xs border border-emerald-500/50"
+              (click)="shareGame()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+        <span class="truncate w-full text-center">{{ i18n.t('idiom.share')() }}</span>
+      </button>
+    }
   </div>
 } @else {
   <!-- Default Layout (e.g. Hashi style) -->
@@ -113,6 +124,16 @@
               title="{{ i18n.t('game.next_level')() }}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    }
+
+    @if (showShare) {
+      <button (click)="shareGame()" 
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group"
+              title="{{ i18n.t('idiom.share')() }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
         </svg>
       </button>
     }
