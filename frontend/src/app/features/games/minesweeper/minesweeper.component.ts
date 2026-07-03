@@ -62,6 +62,11 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   currentDifficulty = signal<string>('medium');
   frozenRemaining = signal(0);
   
+  showCustomDialog = signal(false);
+  customW = signal(16);
+  customH = signal(16);
+  customM = signal(40);
+  
   get predefinedDifficulties() {
     return this.gameRegistry.getConfig('minesweeper')?.difficulties || [];
   }
@@ -102,13 +107,14 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       const mode = this.currentRoomMode();
 
       // Elapsed timer logic
-      if (status === GameStatus.Playing && mode !== GameMode.Single) {
+      if (status === GameStatus.Playing) {
         if (!this.elapsedInterval) {
           this.elapsedInterval = setInterval(() => {
             const startAt = this.store.startAt();
             if (startAt > 0) {
               const diffMs = Date.now() - startAt;
               const totalSec = Math.max(0, Math.floor(diffMs / 1000));
+              this.elapsedSeconds.set(totalSec);
               const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
               const s = (totalSec % 60).toString().padStart(2, '0');
               this.elapsedTime.set(`${m}:${s}`);
@@ -122,6 +128,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         }
         if (status === GameStatus.Waiting || status === GameStatus.Starting) {
           this.elapsedTime.set('00:00');
+          this.elapsedSeconds.set(0);
         }
       }
     });
@@ -184,6 +191,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   isFrozen = computed(() => this.frozenRemaining() > 0);
 
   elapsedTime = signal<string>('00:00');
+  elapsedSeconds = signal<number>(0);
   private elapsedInterval: any;
   
   showOverlay = signal(false);
@@ -255,7 +263,48 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
+  isCustomDifficulty(): boolean {
+    return this.currentDifficulty().startsWith('custom_');
+  }
+
+  customWidth(): string {
+    return this.isCustomDifficulty() ? this.currentDifficulty().split('_')[1] : '';
+  }
+
+  customHeight(): string {
+    return this.isCustomDifficulty() ? this.currentDifficulty().split('_')[2] : '';
+  }
+
+  customMines(): string {
+    return this.isCustomDifficulty() ? this.currentDifficulty().split('_')[3] : '';
+  }
+
+  openCustomDialog() {
+    this.showCustomDialog.set(true);
+  }
+
+  confirmCustomGame() {
+    let w = this.customW();
+    let h = this.customH();
+    let m = this.customM();
+    
+    // Validate bounds
+    w = Math.max(9, Math.min(50, w));
+    h = Math.max(9, Math.min(50, h));
+    const maxMines = Math.floor(w * h * 0.8);
+    m = Math.max(10, Math.min(maxMines, m));
+    
+    this.showCustomDialog.set(false);
+    const diffId = `custom_${w}_${h}_${m}`;
+    this.changeSingleDifficulty(diffId);
+  }
+
   changeSingleDifficulty(diff: string) {
+    if (diff === 'custom') {
+      this.openCustomDialog();
+      return;
+    }
+    
     let width = 16, height = 16, mines = 40;
     if (diff.startsWith('custom_')) {
       const parts = diff.split('_');
