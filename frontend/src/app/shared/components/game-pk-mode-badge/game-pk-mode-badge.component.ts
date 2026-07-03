@@ -8,7 +8,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
   standalone: true,
   imports: [CommonModule],
   template: `
-    @if (mode() !== 'single') {
+    @if (modeSignal() !== 'single') {
       <div class="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-inner text-xs sm:text-sm text-[var(--color-text-main)] font-bold">
         <span class="text-[var(--color-accent-from)]">{{ modeLabel() }}</span>
         <span class="text-[var(--color-text-muted)]">|</span>
@@ -25,16 +25,14 @@ export class GamePkModeBadgeComponent {
   registry = inject(GameRegistryService);
 
   @Input({ required: true }) gameId!: string;
-  @Input({ required: true }) set mode(val: string | unknown) { this._mode.set(val as string); }
-  @Input({ required: true }) set difficulty(val: string | unknown) { this._diff.set(val as string); }
+  @Input({ required: true }) set mode(val: string | unknown) { this.modeSignal.set(val as string); }
+  @Input({ required: true }) set difficulty(val: string | unknown) { this.diffSignal.set(val as string); }
 
-  private _mode = signal<string>('');
-  private _diff = signal<string>('');
-  
-  mode = this._mode;
+  modeSignal = signal<string>('');
+  diffSignal = signal<string>('');
 
   modeLabel = computed(() => {
-    const m = this._mode();
+    const m = this.modeSignal();
     if (m === 'single' || !m) return '';
     const conf = this.registry.getConfig(this.gameId);
     const modeObj = conf?.modes.find(x => x.id === m);
@@ -42,7 +40,7 @@ export class GamePkModeBadgeComponent {
   });
 
   diffLabel = computed(() => {
-    const d = this._diff();
+    const d = this.diffSignal();
     if (!d) return '';
     const conf = this.registry.getConfig(this.gameId);
     const diffObj = conf?.difficulties.find(x => x.id === d);
@@ -50,7 +48,7 @@ export class GamePkModeBadgeComponent {
   });
 
   diffDesc = computed(() => {
-    const d = this._diff();
+    const d = this.diffSignal();
     if (!d) return '';
     const conf = this.registry.getConfig(this.gameId);
     const diffObj = conf?.difficulties.find(x => x.id === d);
