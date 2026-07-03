@@ -193,8 +193,13 @@ export class GameLobbyPanelComponent implements OnInit {
 
   getDifficultyLabel(diffId: string, gameId?: string): string {
     if (gameId) {
-      const labelKey = this.gameRegistry.getDifficultyLabel(gameId, diffId);
-      if (labelKey) return this.t(labelKey);
+      const cfg = this.gameRegistry.getConfig(gameId);
+      const diff = cfg?.difficulties.find(d => d.id === diffId);
+      if (diff) {
+        const label = diff.labelKey ? this.t(diff.labelKey) : diff.id;
+        const desc = diff.descKey ? this.t(diff.descKey) : diff.desc;
+        return desc ? `${label} (${desc})` : label;
+      }
     }
     if (diffId === GameDifficulty.Easy) return this.t('game.diff_easy');
     if (diffId === GameDifficulty.Medium) return this.t('game.diff_medium');

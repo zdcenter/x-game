@@ -475,6 +475,11 @@
                 [class.border-[var(--color-border-card)]]="roomDifficulty() !== diff.id"
                 [class.text-[var(--color-text-main)]]="roomDifficulty() !== diff.id">
                 <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
+                @if (diff.descKey || diff.desc) {
+                  <span class="text-[9px] font-normal opacity-70 leading-tight text-center px-1">
+                    {{ diff.descKey ? t(diff.descKey) : diff.desc }}
+                  </span>
+                }
               </button>
             }
           </div>

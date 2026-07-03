@@ -306,8 +306,13 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   diffLabel(diffId: string, gameId?: string): string {
     if (gameId) {
-      const k = this.reg.getDifficultyLabel(gameId, diffId);
-      if (k) return this.t(k);
+      const cfg = this.reg.getConfig(gameId);
+      const diff = cfg?.difficulties.find(d => d.id === diffId);
+      if (diff) {
+        const label = diff.labelKey ? this.t(diff.labelKey) : diff.id;
+        const desc = diff.descKey ? this.t(diff.descKey) : diff.desc;
+        return desc ? `${label} (${desc})` : label;
+      }
     }
     if (diffId === GameDifficulty.Easy)   return this.t('game.diff_easy');
     if (diffId === GameDifficulty.Medium) return this.t('game.diff_medium');
