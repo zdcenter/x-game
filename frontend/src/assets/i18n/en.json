@@ -949,6 +949,8 @@
   "game.same_pk_steal": "Steal",
   "game.same_pk_speed": "Speed",
   "game.opponent": "Opponent",
+  "game.watch_ad_revive": "Watch Ad to Revive",
+  "game.revived": "Revived successfully! Continue game",
   "game.frozen": "FROZEN",
   "game.frozen_msg": "You stepped on a mine! Wait 3s...",
   "game.difficulty_label": "Difficulty",

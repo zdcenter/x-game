@@ -229,7 +229,15 @@ export class MinesweeperStore extends BaseGameStore {
     }
   }
 
-
+  reviveGame() {
+    const engine = this.localEngine();
+    if (this.currentRoomMode() === GameMode.Single && engine && engine.status === GameStatus.Finished) {
+      if (engine.revive()) {
+        this.tick.set(this.tick() + 1);
+        this.toast.show(this.i18n.t('game.revived')(), 'success');
+      }
+    }
+  }
 
   dispatch(action: any) {
     if (this.currentRoomMode() === GameMode.Single) {

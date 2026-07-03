@@ -956,6 +956,8 @@
   "game.same_pk_steal": "抢雷",
   "game.same_pk_speed": "竞速",
   "game.opponent": "对手",
+  "game.watch_ad_revive": "看广告复活",
+  "game.revived": "复活成功！继续游戏",
   "game.frozen": "冻结",
   "game.frozen_msg": "你踩到雷了！等待3秒...",
   "game.difficulty_label": "难度",

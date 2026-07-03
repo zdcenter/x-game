@@ -45,6 +45,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() showDismiss = false;
   @Input() showLeave = false;
   @Input() enableChangeRoomGame = false;
+  @Input() showRevive = false;
 
   /** Optional: pass result from submitSingleStat() response to show XP & new-record badge */
   @Input() xpResult?: XPResult | null;
@@ -55,6 +56,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Output() dismiss = new EventEmitter<void>();
   @Output() leave = new EventEmitter<void>();
   @Output() changeRoomGame = new EventEmitter<string>();
+  @Output() revive = new EventEmitter<void>();
 
   private audioPlayed = false;
   recommendedGames: GameConfig[] = [];
@@ -110,6 +112,10 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   handleNextLevel() {
     this.adService.tryShowInterstitial(() => this.nextLevel.emit());
+  }
+
+  handleRevive() {
+    this.adService.showRewardedAd(() => this.revive.emit());
   }
 
   handleDismiss() {

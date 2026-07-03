@@ -22,6 +22,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
   revealedCnt: number = 0;
   startAt: number = 0;
   isMinesPlaced: boolean = false;
+  lastFailedCell: {x: number, y: number} | null = null;
 
   initGame(config: { width: number, height: number, mines: number }) {
     this.width = config.width;
@@ -31,6 +32,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     this.revealedCnt = 0;
     this.startAt = Date.now();
     this.isMinesPlaced = false;
+    this.lastFailedCell = null;
     this.cells = Array.from({ length: this.height }, (_, y) =>
       Array.from({ length: this.width }, (_, x) => ({
         x,
@@ -99,6 +101,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     }
 
     if (cell.isMine) {
+      this.lastFailedCell = { x, y };
       cell.state = CellState.Exploded;
       this.status = GameStatus.Finished;
       this.revealAllMines();
@@ -288,5 +291,36 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     }
 
     return { success: false, message: 'game.no_hint_available' };
+  }
+
+  revive(): boolean {
+    if (this.status !== GameStatus.Finished || !this.lastFailedCell) {
+      return false;
+    }
+
+    // Restore playing state
+    this.status = GameStatus.Playing;
+
+    // Convert the exploded cell to flagged
+    const failedCell = this.cells[this.lastFailedCell.y][this.lastFailedCell.x] as any;
+    failedCell.state = CellState.Flagged;
+    
+    // Reset all other cells that were revealed during game over
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (x === this.lastFailedCell.x && y === this.lastFailedCell.y) continue;
+        
+        const cell = this.cells[y][x] as any;
+        if (cell.isMine && cell.state === CellState.Revealed) {
+          cell.state = CellState.Hidden;
+        } else if (!cell.isMine && cell.state === CellState.Exploded) {
+          cell.state = CellState.Flagged;
+        }
+      }
+    }
+    
+    this.lastFailedCell = null;
+    this.checkWinCondition();
+    return true;
   }
 }

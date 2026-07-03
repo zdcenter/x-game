@@ -326,9 +326,12 @@
             [xpResult]="store.lastStatResult()?.xp_result"
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="currentRoomMode() === GameMode.Single || store.host() === playerId"
+            [showRevive]="currentRoomMode() === GameMode.Single"
             [showDismiss]="currentRoomMode() !== GameMode.Single && store.host() === playerId"
             [showLeave]="currentRoomMode() === GameMode.Single || store.host() !== playerId" (leave)="goBack()"
-            (restart)="currentRoomMode() === GameMode.Single ? changeSingleDifficulty(currentDifficulty()) : store.restartGame()" (dismiss)="dismissRoom()"
+            (restart)="currentRoomMode() === GameMode.Single ? changeSingleDifficulty(currentDifficulty()) : store.restartGame()" 
+            (revive)="store.reviveGame()"
+            (dismiss)="dismissRoom()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
             (changeRoomGame)="store.changeRoomGame($event)">
           </app-game-result-overlay>

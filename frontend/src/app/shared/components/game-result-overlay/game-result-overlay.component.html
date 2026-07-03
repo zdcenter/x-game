@@ -111,10 +111,22 @@
     }
 
     <!-- Actions -->
-    <div class="w-full flex flex-col sm:flex-row gap-3 relative z-10">
-      <button (click)="handleLeave()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
-        {{ t('game.return_lobby') || 'Return to Lobby' }}
-      </button>
+    <div class="w-full flex flex-col gap-3 relative z-10">
+      
+      @if (showRevive && status === GameResult.Lose) {
+        <button (click)="handleRevive()"
+          class="w-full py-3.5 rounded-xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+          </svg>
+          {{ t('game.watch_ad_revive') || 'Watch Ad to Revive' }}
+        </button>
+      }
+
+      <div class="w-full flex flex-col sm:flex-row gap-3">
+        <button (click)="handleLeave()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)] transition-colors">
+          {{ t('game.return_lobby') || 'Return to Lobby' }}
+        </button>
       @if (showRestart) {
         <button (click)="handleRestart()"
           [ngClass]="{
@@ -131,6 +143,7 @@
           {{ i18n.t('game.next_level')() }}
         </button>
       }
+      </div>
     </div>
 
     <!-- Share + Dismiss row -->
