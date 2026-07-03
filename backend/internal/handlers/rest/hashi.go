@@ -18,7 +18,27 @@ func (r *HashiRepo) GetLevels(difficulty string, userID *uint) (any, error) {
 	if err := db.DB.Where("difficulty = ?", difficulty).Find(&puzzles).Error; err != nil {
 		return nil, err
 	}
-	return puzzles, nil
+
+	progressMap := make(map[string]domain.UserHashiProgress)
+	if userID != nil {
+		var rows []domain.UserHashiProgress
+		if err := db.DB.Where("user_id = ?", *userID).Find(&rows).Error; err == nil {
+			for _, p := range rows {
+				progressMap[p.PuzzleID] = p
+			}
+		}
+	}
+
+	type item struct {
+		ID         string                   `json:"id"`
+		Difficulty string                   `json:"difficulty"`
+		Progress   domain.UserHashiProgress `json:"progress"`
+	}
+	out := make([]item, len(puzzles))
+	for i, p := range puzzles {
+		out[i] = item{ID: p.ID, Difficulty: p.Difficulty, Progress: progressMap[p.ID]}
+	}
+	return out, nil
 }
 
 // GetPuzzle returns the details of a single puzzle and the user's progress for it

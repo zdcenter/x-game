@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <!-- Background Tray Shadow -->
+    <filter id="board-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="15" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="island-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <pattern id="gridPattern" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="translate(70, 70)">
+      <!-- We don't need pattern for grid lines, we will draw them explicitly -->
+    </pattern>
+    <linearGradient id="island-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <linearGradient id="highlight-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#db2777" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Tray -->
+  <g filter="url(#board-shadow)">
+    <rect x="20" y="20" width="460" height="460" rx="30" fill="#ffffff" stroke="#e2e8f0" stroke-width="5" />
+  </g>
+  <!-- Grid Lines -->
+  <g stroke="#cbd5e1" stroke-width="2">
+    <line x1="70" y1="70" x2="70" y2="430" />
+    <line x1="70" y1="70" x2="430" y2="70" />
+    <line x1="130" y1="70" x2="130" y2="430" />
+    <line x1="70" y1="130" x2="430" y2="130" />
+    <line x1="190" y1="70" x2="190" y2="430" />
+    <line x1="70" y1="190" x2="430" y2="190" />
+    <line x1="250" y1="70" x2="250" y2="430" />
+    <line x1="70" y1="250" x2="430" y2="250" />
+    <line x1="310" y1="70" x2="310" y2="430" />
+    <line x1="70" y1="310" x2="430" y2="310" />
+    <line x1="370" y1="70" x2="370" y2="430" />
+    <line x1="70" y1="370" x2="430" y2="370" />
+    <line x1="430" y1="70" x2="430" y2="430" />
+    <line x1="70" y1="430" x2="430" y2="430" />
+  </g>
+  <!-- Bridges -->
+  <g stroke="#64748b" stroke-linecap="round">
+    <line x1="70" y1="65" x2="190" y2="65" stroke-width="6" />
+    <line x1="70" y1="75" x2="190" y2="75" stroke-width="6" />
+    <line x1="190" y1="70" x2="310" y2="70" stroke-width="6" />
+    <line x1="70" y1="70" x2="70" y2="190" stroke-width="6" />
+    <line x1="65" y1="190" x2="65" y2="310" stroke-width="6" />
+    <line x1="75" y1="190" x2="75" y2="310" stroke-width="6" />
+    <line x1="190" y1="70" x2="190" y2="190" stroke-width="6" />
+    <line x1="190" y1="185" x2="310" y2="185" stroke-width="6" />
+    <line x1="190" y1="195" x2="310" y2="195" stroke-width="6" />
+    <line x1="305" y1="70" x2="305" y2="190" stroke-width="6" />
+    <line x1="315" y1="70" x2="315" y2="190" stroke-width="6" />
+    <line x1="70" y1="310" x2="190" y2="310" stroke-width="6" />
+    <line x1="190" y1="190" x2="190" y2="310" stroke-width="6" />
+    <line x1="310" y1="190" x2="430" y2="190" stroke-width="6" />
+    <line x1="425" y1="190" x2="425" y2="430" stroke-width="6" />
+    <line x1="435" y1="190" x2="435" y2="430" stroke-width="6" />
+    <line x1="190" y1="305" x2="310" y2="305" stroke-width="6" />
+    <line x1="190" y1="315" x2="310" y2="315" stroke-width="6" />
+    <line x1="310" y1="310" x2="310" y2="430" stroke-width="6" />
+    <line x1="310" y1="430" x2="430" y2="430" stroke-width="6" />
+  </g>
+  <!-- Islands -->
+  <g filter="url(#island-shadow)">
+    <circle cx="70" cy="70" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="70" y="78" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">3</text>
+    <circle cx="190" cy="70" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="190" y="78" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">4</text>
+    <circle cx="310" cy="70" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="310" y="78" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">3</text>
+    <circle cx="70" cy="190" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="70" y="198" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">3</text>
+    <circle cx="190" cy="190" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="190" y="198" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">4</text>
+    <circle cx="310" cy="190" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="310" y="198" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">5</text>
+    <circle cx="430" cy="190" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="430" y="198" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">3</text>
+    <circle cx="70" cy="310" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="70" y="318" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">3</text>
+    <circle cx="190" cy="310" r="22" fill="url(#highlight-grad)" stroke="rgba(255,255,255,0.4)" stroke-width="3" />
+    <text x="190" y="318" font-family="sans-serif" font-weight="900" font-size="24" fill="#ffffff" text-anchor="middle">4</text>
+    <circle cx="310" cy="310" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="310" y="318" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">3</text>
+    <circle cx="310" cy="430" r="22" fill="url(#island-grad)" stroke="#334155" stroke-width="3" />
+    <text x="310" y="438" font-family="sans-serif" font-weight="900" font-size="24" fill="#0f172a" text-anchor="middle">2</text>
+    <circle cx="430" cy="430" r="22" fill="url(#highlight-grad)" stroke="rgba(255,255,255,0.4)" stroke-width="3" />
+    <text x="430" y="438" font-family="sans-serif" font-weight="900" font-size="24" fill="#ffffff" text-anchor="middle">3</text>
+  </g>
+</svg>

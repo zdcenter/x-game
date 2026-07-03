@@ -1,6 +1,8 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
+import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { HashiStore } from './store/hashi.store';
@@ -17,17 +19,24 @@ import { boardSizePx } from '../../../core/utils/board-size.util';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { environment } from '../../../../environments/environment';
+import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
+import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 
 @Component({
   selector: 'app-hashi',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     GameHeaderComponent,
     GameResultOverlayComponent,
     GameLobbyPanelComponent,
     GameToolbarComponent,
     HashiLobbyComponent,
+    GameWaitingRoomComponent,
+    PlayerBadgeComponent,
+    GameStartingOverlayComponent,
   ],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'
@@ -45,11 +54,9 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
 
   view = signal<'lobby' | 'play'>('lobby');
   
-  // Calculate board size
-  boardSizePx = boardSizePx(this.windowSize, { mobile: 320, tablet: 400, pc: 500 });
-  
   // Interaction state
   selectedIsland = signal<{r: number, c: number} | null>(null);
+  touchStartIsland = signal<{r: number, c: number} | null>(null);
 
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -67,15 +74,30 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     });
 
     effect(() => {
-      if (this.store.localStatus() === GameStatus.Waiting) {
+      if (this.store.localStatus() === GameStatus.Waiting && this.store.currentRoomMode() === GameMode.Single) {
         untracked(() => this.view.set('lobby'));
+      }
+    });
+
+    effect(() => {
+      const st = this.store.localStatus();
+      if (st === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
+      } else {
+        untracked(() => this.gameTimer.stopCountdown());
       }
     });
   }
 
   override ngOnInit() {
     super.ngOnInit();
-    // Only Single Player Mode supported for now
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    if (pending) {
+      if (pending.password) this.wsService.setPendingPassword(pending.password);
+      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
+    } else {
+      this.store.joinRoom('', GameMode.Single);
+    }
   }
 
   override ngOnDestroy() {
@@ -89,12 +111,74 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     this.selectedIsland.set(null);
   }
 
+  async onDifficultyChange(event: Event) {
+    const diff = (event.target as HTMLSelectElement).value;
+    if (diff === this.store.currentDifficulty()) return;
+    
+    try {
+      const levelsRes = await lastValueFrom(this.http.get<any>(`${environment.apiUrl}/hashi/levels/${diff}`));
+      const firstLevel = levelsRes[0];
+      if (firstLevel) {
+        const puzzleRes = await lastValueFrom(this.http.get<any>(`${environment.apiUrl}/hashi/puzzle/${firstLevel.id}`));
+        this.store.startSinglePlayer(firstLevel.id, puzzleRes.puzzle.content, diff, 0);
+        this.selectedIsland.set(null);
+      }
+    } catch (e) {
+      console.error('Failed to switch difficulty', e);
+    }
+  }
+
   override goBack(): void {
-    if (this.view() === 'lobby') {
+    if (this.view() === 'lobby' && this.store.currentRoomMode() === GameMode.Single) {
       super.goBack();
     } else {
       this.store.leaveRoom();
+      this.view.set('lobby');
     }
+  }
+
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId: string, target: number = 1) {
+    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
+    this.view.set('play');
+  }
+
+  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
+    if (this.store.roomId() === event.roomId) return;
+    if (event.password) this.wsService.setPendingPassword(event.password);
+    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+  }
+
+  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
+    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+  }
+
+  getElapsedMs(startAt: number): number {
+    return this.store.timeSpent() * 1000;
+  }
+
+  formatTime(ms: number): string {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+    const s = (totalSec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  getOverlayTitle(): string {
+    if (this.store.currentRoomMode() === GameMode.Single) return this.i18n.t('game.you_win')();
+    const won = this.store.winners().includes(this.playerId);
+    if (!this.store.isSeriesOver()) {
+      return won ? this.i18n.t('game.round_won')() : this.i18n.t('game.round_lost')();
+    }
+    return won ? this.i18n.t('game.you_win')() : this.i18n.t('game.you_lose')();
+  }
+
+  getOverlaySubtitle(): string {
+    if (this.store.currentRoomMode() !== GameMode.Single && !this.store.isSeriesOver()) {
+      return this.store.pkScoreLabel();
+    }
+    return `${this.i18n.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(0))}`;
   }
 
   // Handle island click for drawing bridges
@@ -113,6 +197,46 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
         this.store.toggleBridge(current.r, current.c, r, c);
         this.selectedIsland.set(null); // Keep or deselect based on UX preference
       }
+    }
+  }
+
+  onTouchStart(event: TouchEvent, r: number, c: number) {
+    if (this.store.localStatus() !== GameStatus.Playing) return;
+    this.touchStartIsland.set({r, c});
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    const start = this.touchStartIsland();
+    this.touchStartIsland.set(null);
+    if (!start) return;
+
+    if (this.store.localStatus() !== GameStatus.Playing) return;
+    
+    if (event.changedTouches.length === 0) return;
+    const touch = event.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    if (target && target instanceof Element) {
+       let current: Element | null = target;
+       let endR: number | null = null;
+       let endC: number | null = null;
+
+       while (current && current.tagName.toLowerCase() !== 'svg') {
+         if (current.hasAttribute('data-r') && current.hasAttribute('data-c')) {
+           endR = parseInt(current.getAttribute('data-r')!, 10);
+           endC = parseInt(current.getAttribute('data-c')!, 10);
+           break;
+         }
+         current = current.parentElement;
+       }
+
+       if (endR !== null && endC !== null) {
+          if (endR !== start.r || endC !== start.c) {
+             // Swiped to a different island!
+             this.store.toggleBridge(start.r, start.c, endR, endC);
+             event.preventDefault();
+          }
+       }
     }
   }
 

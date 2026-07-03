@@ -643,7 +643,7 @@
                   class="px-4 py-2 rounded-xl border border-[var(--color-border-card)] text-sm font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] transition-colors flex items-center gap-1">
                   ⌫ {{ i18n.t('game.clear')() }}
                 </button>
-                @if (answerState() === 'idle') {
+                @if (answerState() === 'idle' && store.currentRoomMode() === GameMode.Single) {
                   <app-hint-button layout="compact" (hintApplied)="applyFillHint()"></app-hint-button>
                 }
                 @if (answerState() === 'checking') {

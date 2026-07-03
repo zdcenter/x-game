@@ -38,8 +38,8 @@
     </div>
 
     <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center lg:self-stretch">
-      @if (view() === 'lobby') {
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-full lg:max-w-[1200px] w-full self-center lg:self-stretch px-2 md:px-0">
+      @if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
         <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-[600px]"
           (levelSelect)="startLevel($event)">
         </app-hashi-lobby>
@@ -47,34 +47,109 @@
         <!-- PLAY VIEW -->
         <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-          <div class="flex-1 flex flex-col items-center justify-center p-4 min-h-0 overflow-hidden relative">
-            
-            <div class="mb-4 flex gap-4 text-slate-700 dark:text-slate-300">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">⏱️</span>
-                <span class="font-mono text-xl">{{ store.timeSpent() * 1000 | date:'mm:ss' }}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xl">🏆</span>
-                <span class="font-bold text-xl">{{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}</span>
+          
+          @if (store.localStatus() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
+            <app-game-waiting-room class="w-full h-full flex"
+              [gameId]="'hashi'"
+              [mode]="store.currentRoomMode()"
+              [difficulty]="store.currentDifficulty()"
+              [roomId]="store.roomId()"
+              [hostId]="store.hostId()"
+              [players]="store.playersList()"
+              [currentUserId]="playerId"
+              [readyPlayers]="store.readyPlayers()"
+              [target]="store.currentRoomTarget()"
+              (leave)="goBack()"
+              (start)="store.startGame()"
+              (ready)="store.ready()"
+              (cancelReady)="store.cancelReady()"
+              (kick)="store.kickPlayer($event)">
+            </app-game-waiting-room>
+          } @else {
+          
+          <!-- Players / Opponents (Top) -->
+          @if (store.currentRoomMode() !== GameMode.Single && store.localStatus() !== GameStatus.Waiting) {
+            <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0 hidden lg:block">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
+                <!-- Local Player (You) -->
+                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                  [playerName]="playerId"
+                  [isHost]="playerId === store.hostId()"
+                  [isMe]="true"
+                  [stats]="[
+                    { icon: '🌉', value: store.bridges().length + ' / ' + (store.islands().length > 0 ? store.islands().length * 2 : 100) }
+                  ]"
+                  [status]="store.winners().includes(playerId) ? GameStatus.Finished : GameStatus.Playing">
+                </app-player-badge>
+
+                <!-- Opponents -->
+                <div class="flex-1 min-w-0 flex justify-end lg:justify-start gap-2 lg:gap-4">
+                  @for (p of store.playersList(); track p.id) {
+                    @if (p.id !== playerId) {
+                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                        [playerName]="p.id"
+                        [isHost]="p.id === store.hostId()"
+                        [isMe]="false"
+                        [stats]="[
+                          { icon: '🌉', value: (store.opponentProgress()[p.id] || 0) + ' / ' + (store.islands().length > 0 ? store.islands().length * 2 : 100) }
+                        ]"
+                        [status]="store.winners().includes(p.id) ? GameStatus.Finished : GameStatus.Playing">
+                      </app-player-badge>
+                    }
+                  }
+                </div>
               </div>
             </div>
+          }
 
-            <div class="relative bg-white dark:bg-[#0b1120] rounded-2xl shadow-sm border-2 border-slate-100 dark:border-slate-800 select-none overflow-hidden p-2"
-                 [style.width]="boardSizePx()" 
-                 [style.height]="boardSizePx()">
-                 
-              <svg class="w-full h-full relative z-10" 
-                   [attr.viewBox]="'-0.5 -0.5 ' + store.engine.width + ' ' + store.engine.height"
-                   preserveAspectRatio="xMidYMid meet">
+          <div class="flex-1 flex flex-col items-center justify-center p-2 md:p-4 min-h-0 overflow-hidden relative">
+            
+            @if (store.currentRoomMode() === GameMode.Single) {
+              <div class="mb-4 flex flex-wrap gap-4 text-slate-700 dark:text-slate-300 items-center w-full justify-between max-w-[95vw] md:max-w-[85vw] lg:max-w-[85vh]">
+                <!-- Left side: Difficulty Selector and Level -->
+                <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1.5 px-3">
+                  <select 
+                    class="bg-transparent font-bold text-sm lg:text-base outline-none cursor-pointer text-blue-600 dark:text-blue-400"
+                    [value]="store.currentDifficulty()" 
+                    (change)="onDifficultyChange($event)">
+                    <option value="easy">{{ i18n.t('game.diff_hashi_easy')() }}</option>
+                    <option value="medium">{{ i18n.t('game.diff_hashi_medium')() }}</option>
+                    <option value="hard">{{ i18n.t('game.diff_hashi_hard')() }}</option>
+                    <option value="expert">{{ i18n.t('game.diff_hashi_expert')() }}</option>
+                  </select>
+                  <div class="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
+                  <span class="font-bold text-sm lg:text-base text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
+                  </span>
+                </div>
+
+                <!-- Right side: Timer -->
+                <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-1.5 ml-auto">
+                  <span class="text-base">⏱️</span>
+                  <span class="font-mono font-bold text-base">{{ store.timeSpent() * 1000 | date:'mm:ss' }}</span>
+                </div>
+              </div>
+            }
+
+            @if (store.localStatus() === GameStatus.Starting) {
+              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+            }
+
+            <div class="relative bg-white dark:bg-[#0b1120] rounded-2xl shadow-sm border-2 border-slate-100 dark:border-slate-800 select-none overflow-hidden p-2 md:p-4 w-full max-w-[95vw] md:max-w-[85vw] lg:max-h-[75vh] lg:max-w-[75vh] aspect-square flex items-center justify-center">
+              
+              @if (store.localStatus() !== GameStatus.Starting) {
+              <svg class="w-full h-full relative z-10 touch-none" 
+                   [attr.viewBox]="'-0.7 -0.7 ' + (store.engine.width + 0.4) + ' ' + (store.engine.height + 0.4)"
+                   preserveAspectRatio="xMidYMid meet"
+                   (touchend)="onTouchEnd($event)">
                 
-                <!-- Grid Lines -->
-                <g stroke="currentColor" class="text-slate-100 dark:text-slate-800/50" stroke-width="0.04">
-                  @for (i of getRange(store.engine.width + 1); track i) {
-                    <line [attr.x1]="i - 0.5" [attr.y1]="-0.5" [attr.x2]="i - 0.5" [attr.y2]="store.engine.height - 0.5" />
+                <!-- Grid Lines (Intersections) -->
+                <g stroke="currentColor" class="text-slate-200 dark:text-slate-800" stroke-width="0.06">
+                  @for (i of getRange(store.engine.width); track i) {
+                    <line [attr.x1]="i" [attr.y1]="0" [attr.x2]="i" [attr.y2]="store.engine.height - 1" />
                   }
-                  @for (j of getRange(store.engine.height + 1); track j) {
-                    <line [attr.x1]="-0.5" [attr.y1]="j - 0.5" [attr.x2]="store.engine.width - 0.5" [attr.y2]="j - 0.5" />
+                  @for (j of getRange(store.engine.height); track j) {
+                    <line [attr.x1]="0" [attr.y1]="j" [attr.x2]="store.engine.width - 1" [attr.y2]="j" />
                   }
                 </g>
                 
@@ -89,46 +164,46 @@
                         [attr.y2]="bridge.r2" 
                         stroke="currentColor" 
                         class="text-slate-800 dark:text-slate-300"
-                        stroke-width="0.12" 
+                        stroke-width="0.08" 
                         stroke-linecap="round" />
                     } @else if (bridge.count === 2) {
                       @if (bridge.isHorizontal) {
                         <line 
                           [attr.x1]="bridge.c1" 
-                          [attr.y1]="bridge.r1 - 0.12" 
+                          [attr.y1]="bridge.r1 - 0.08" 
                           [attr.x2]="bridge.c2" 
-                          [attr.y2]="bridge.r2 - 0.12" 
+                          [attr.y2]="bridge.r2 - 0.08" 
                           stroke="currentColor" 
                           class="text-slate-800 dark:text-slate-300"
-                          stroke-width="0.12" 
+                          stroke-width="0.08" 
                           stroke-linecap="round" />
                         <line 
                           [attr.x1]="bridge.c1" 
-                          [attr.y1]="bridge.r1 + 0.12" 
+                          [attr.y1]="bridge.r1 + 0.08" 
                           [attr.x2]="bridge.c2" 
-                          [attr.y2]="bridge.r2 + 0.12" 
+                          [attr.y2]="bridge.r2 + 0.08" 
                           stroke="currentColor" 
                           class="text-slate-800 dark:text-slate-300"
-                          stroke-width="0.12" 
+                          stroke-width="0.08" 
                           stroke-linecap="round" />
                       } @else {
                         <line 
-                          [attr.x1]="bridge.c1 - 0.12" 
+                          [attr.x1]="bridge.c1 - 0.08" 
                           [attr.y1]="bridge.r1" 
-                          [attr.x2]="bridge.c2 - 0.12" 
+                          [attr.x2]="bridge.c2 - 0.08" 
                           [attr.y2]="bridge.r2" 
                           stroke="currentColor" 
                           class="text-slate-800 dark:text-slate-300"
-                          stroke-width="0.12" 
+                          stroke-width="0.08" 
                           stroke-linecap="round" />
                         <line 
-                          [attr.x1]="bridge.c1 + 0.12" 
+                          [attr.x1]="bridge.c1 + 0.08" 
                           [attr.y1]="bridge.r1" 
-                          [attr.x2]="bridge.c2 + 0.12" 
+                          [attr.x2]="bridge.c2 + 0.08" 
                           [attr.y2]="bridge.r2" 
                           stroke="currentColor" 
                           class="text-slate-800 dark:text-slate-300"
-                          stroke-width="0.12" 
+                          stroke-width="0.08" 
                           stroke-linecap="round" />
                       }
                     }
@@ -145,7 +220,7 @@
                       [attr.y2]="pb.r2" 
                       stroke="transparent" 
                       class="cursor-pointer hover:stroke-slate-200/50 dark:hover:stroke-slate-700/50 transition-colors duration-200"
-                      stroke-width="0.3" 
+                      stroke-width="0.95" 
                       stroke-linecap="round"
                       (click)="store.toggleBridge(pb.r1, pb.c1, pb.r2, pb.c2)"
                     />
@@ -154,15 +229,20 @@
 
                 <!-- Islands -->
                 @for (island of store.islands(); track island.r + '-' + island.c) {
-                  <g class="cursor-pointer transition-all duration-200" 
-                     (click)="onIslandClick(island.r, island.c)"
-                     >
+                  <g 
+                    (click)="onIslandClick(island.r, island.c)"
+                    (touchstart)="onTouchStart($event, island.r, island.c)"
+                    [attr.data-r]="island.r"
+                    [attr.data-c]="island.c"
+                    [style.transform-origin]="island.c + 'px ' + island.r + 'px'"
+                    class="cursor-pointer transition-transform duration-200"
+                    [class.scale-110]="selectedIsland()?.r === island.r && selectedIsland()?.c === island.c">
                      
                     @if (selectedIsland()?.r === island.r && selectedIsland()?.c === island.c) {
                       <circle 
                         [attr.cx]="island.c" 
                         [attr.cy]="island.r" 
-                        r="0.48" 
+                        r="0.52" 
                         fill="currentColor" 
                         class="text-slate-200 dark:text-slate-800 animate-pulse" />
                     }
@@ -170,32 +250,30 @@
                     <circle 
                       [attr.cx]="island.c" 
                       [attr.cy]="island.r" 
-                      r="0.38" 
+                      r="0.45" 
                       class="fill-white dark:fill-slate-900 transition-colors duration-300"
                       [attr.stroke]="island.currentBridges > island.value ? '#ef4444' : (selectedIsland()?.r === island.r && selectedIsland()?.c === island.c ? '#3b82f6' : 'currentColor')"
                       [class.text-slate-900]="island.currentBridges < island.value"
                       [class.dark:text-slate-100]="island.currentBridges < island.value"
                       [class.text-slate-400]="island.currentBridges === island.value"
                       [class.dark:text-slate-500]="island.currentBridges === island.value"
-                      stroke-width="0.08"
-                      />
-                      
+                      stroke-width="0.04"
+                    />
+                    
                     <text 
                       [attr.x]="island.c" 
-                      [attr.y]="island.r" 
-                      class="transition-colors duration-300 pointer-events-none"
+                      [attr.y]="island.r + 0.04" 
+                      text-anchor="middle" 
+                      dominant-baseline="middle"
+                      class="font-black select-none pointer-events-none transition-colors duration-300"
                       [class.fill-slate-900]="island.currentBridges < island.value"
-                      [class.dark:fill-white]="island.currentBridges < island.value"
+                      [class.dark:fill-slate-100]="island.currentBridges < island.value"
                       [class.fill-slate-400]="island.currentBridges === island.value"
                       [class.dark:fill-slate-500]="island.currentBridges === island.value"
                       [class.fill-red-500]="island.currentBridges > island.value"
-                      font-size="0.45" 
-                      font-family="sans-serif"
-                      font-weight="bold"
-                      text-anchor="middle" 
-                      alignment-baseline="central"
-                      dy=".05"
-                      >{{ island.value }}</text>
+                      [attr.font-size]="0.62">
+                      {{ island.value }}
+                    </text>
                       
                     @if (island.currentBridges === island.value) {
                       <line 
@@ -211,39 +289,51 @@
                   </g>
                 }
               </svg>
+              }
             </div>
-
-            <app-game-toolbar
-              [layoutStyle]="'default'"
-              [showPrev]="true"
-              [showNext]="true"
-              [showRestart]="true"
-              [showHint]="true"
-              [showUndo]="false"
-              [disablePrev]="store.localLevelIndex() <= 0"
-              [disableNext]="false"
-              hintLayout="math24"
-              (prevLevel)="playPreviousLevel()"
-              (nextLevel)="playNextLevel()"
-              (restart)="store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex())"
-              (hintApplied)="store.applyHint()"
-            ></app-game-toolbar>
-
-            @if (store.localStatus() === GameStatus.Finished) {
-              <app-game-result-overlay
-                [status]="'win'"
-                [title]="i18n.t('game.win')()"
-                [showRestart]="false"
-                [showLeave]="true"
-                [showNextLevel]="true"
-                (leave)="goBack()"
-                (nextLevel)="playNextLevel()"
-              />
-            }
           </div>
-        </div>
-      }
-    </div>
+
+          <app-game-toolbar
+            [layoutStyle]="'default'"
+            [showPrev]="true"
+            [showNext]="true"
+            [showRestart]="true"
+            [showHint]="store.currentRoomMode() === GameMode.Single"
+            [showUndo]="false"
+            [disablePrev]="store.localLevelIndex() <= 0"
+            [disableNext]="false"
+            hintLayout="math24"
+            (prevLevel)="playPreviousLevel()"
+            (nextLevel)="playNextLevel()"
+            (restart)="store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex())"
+            (hintApplied)="store.applyHint()"
+          ></app-game-toolbar>
+
+          @if (store.localStatus() === GameStatus.Finished) {
+            <app-game-result-overlay
+              currentGameId="hashi"
+              [status]="store.currentRoomMode() === GameMode.Single ? 'win' : (store.winners().includes(playerId) ? 'win' : 'lose')"
+              [title]="getOverlayTitle()"
+              [subtitle]="getOverlaySubtitle()"
+              [xpResult]="store.lastStatResult()?.xp_result"
+              [isNewRecord]="store.lastStatResult()?.isNewRecord"
+              [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
+              [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
+              [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
+              [showNextLevel]="store.currentRoomMode() === GameMode.Single"
+              (leave)="goBack()"
+              (nextLevel)="playNextLevel()"
+              (restart)="store.currentRoomMode() === GameMode.Single ? store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex()) : store.restartGame()"
+              (dismiss)="dismissRoom()"
+              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+              (changeRoomGame)="store.changeRoomGame($event)"
+            ></app-game-result-overlay>
+          }
+          
+          } <!-- closes @else (line 68) -->
+        </div> <!-- closes PLAY VIEW div (line 48) -->
+      } <!-- closes @else (line 46) -->
+    </div> <!-- closes Game Arena div (line 41) -->
 
     <!-- RIGHT: Right Column / Multiplayer Sidebar -->
     <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">

@@ -39,14 +39,48 @@ export class HashiStore extends BaseGameStore {
   override readonly singlePlayerWinners = computed(() => []);
   override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
+  readonly opponentProgress = computed<Record<string, number>>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return {};
+    const st = this.rawState() as any;
+    if (!st || !st.players) return {};
+    const res: Record<string, number> = {};
+    for (const id in st.players) {
+      if (id !== this.playerId()) {
+        res[id] = st.players[id].progress;
+      }
+    }
+    return res;
+  });
+
   constructor() {
     super();
 
-    // 如果后续加入多人模式，这里会监听 this.rawState()
     effect(() => {
       const st = this.rawState() as any;
       if (this.currentRoomMode() === GameMode.Single || !st) return;
-      // Handle multiplayer sync here
+      
+      const newStatus = st.status;
+      if (newStatus === GameStatus.Playing && this.localStatus() !== GameStatus.Playing) {
+        // Initialize from server puzzle
+        if (st.puzzle && st.puzzle !== this.currentPuzzleContent()) {
+          this.currentPuzzleContent.set(st.puzzle);
+          const parsed = JSON.parse(st.puzzle);
+          this.engine.initGame(parsed.grid || parsed.islands || parsed);
+          this.syncEngineToState();
+        }
+        this.localStatus.set(GameStatus.Playing);
+        this.isFinishing = false;
+        this.timeSpent.set(0);
+        this.startTimer();
+      } else if (newStatus === GameStatus.Waiting) {
+        this.localStatus.set(GameStatus.Waiting);
+        this.stopTimer();
+      } else if (newStatus === GameStatus.Starting) {
+        this.localStatus.set(GameStatus.Starting);
+      } else if (newStatus === GameStatus.Finished) {
+        this.localStatus.set(GameStatus.Finished);
+        this.stopTimer();
+      }
     });
   }
 
@@ -94,18 +128,18 @@ export class HashiStore extends BaseGameStore {
         this.localStatus.set(GameStatus.Finished);
         this.isFinishing = false;
         
-        // 提交到后端
-        this.http.post<{ isNewRecord: boolean }>(`${environment.apiUrl}/hashi/puzzle/${this.currentPuzzleId()}/finish`, {
-          time_spent: this.timeSpent(),
-          stars: 3,
-          mode: GameMode.Single,
-          difficulty: this.currentDifficulty()
-        }).subscribe(res => {
-          if (res.isNewRecord) {
-            // TODO: emit new record event if needed
-          }
-        });
-      }, 800); // 800ms delay to show the final line drawing
+        // 提交到后端 (单机模式)
+        if (this.currentRoomMode() === GameMode.Single) {
+          this.http.post<{ isNewRecord: boolean }>(`${environment.apiUrl}/hashi/puzzle/${this.currentPuzzleId()}/finish`, {
+            time_spent: this.timeSpent(),
+            stars: 3,
+            difficulty: this.currentDifficulty()
+          }).subscribe();
+        } else {
+          // PK 模式直接告诉服务器我完成了
+          this.submitPKFinish();
+        }
+      }, 500); 
     }
   }
 
@@ -132,11 +166,27 @@ export class HashiStore extends BaseGameStore {
   }
 
   private syncEngineToState() {
-    // We clone the arrays to trigger change detection
     this.boardGrid.set([...this.engine.grid]);
-    this.islands.set([...this.engine.islands]);
     this.bridges.set([...this.engine.bridges]);
     this.potentialBridges.set([...this.engine.potentialBridges]);
+    this.islands.set([...this.engine.islands]);
+    
+    // Broadcast progress in PK mode
+    if (this.currentRoomMode() !== GameMode.Single && this.localStatus() === GameStatus.Playing) {
+      this.ws.send({ action: 'progress', progress: this.bridges().length });
+    }
+  }
+
+  // Submit to PK backend
+  submitPKFinish() {
+    this.ws.send({ action: 'finish', board: 'verified' });
+  }
+
+  override extractPKStatPayload() {
+    return {
+      score: this.bridges().length,
+      time: this.timeSpent()
+    };
   }
 
   override leaveRoom() {

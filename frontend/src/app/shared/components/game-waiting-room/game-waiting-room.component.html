@@ -159,33 +159,33 @@
         @if (currentUserId === hostId) {
           <div class="flex gap-2 mb-2">
             <button (click)="leave.emit()"
-                    class="px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold text-sm transition-all active:scale-95">
+                    class="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold text-sm transition-all active:scale-95">
               {{ i18n.t('game.leave')() }}
             </button>
             <button (click)="changeSettings.emit()"
-                    class="px-4 py-2.5 rounded-xl border border-blue-500/40 text-blue-400 hover:bg-blue-500/10 font-bold text-sm transition-all active:scale-95">
+                    class="flex-1 px-4 py-2.5 rounded-xl border border-blue-500/40 text-blue-400 hover:bg-blue-500/10 font-bold text-sm transition-all active:scale-95 whitespace-nowrap">
               ⚙️ {{ i18n.t('game.change_settings')() || 'Settings' }}
             </button>
-            <button (click)="start.emit()"
-                    [disabled]="!allGuestsReady"
-                    class="flex-1 py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-0.5"
-                    [class.bg-gradient-to-r]="allGuestsReady"
-                    [class.from-[var(--color-accent-from)]]="allGuestsReady"
-                    [class.to-[var(--color-accent-to)]]="allGuestsReady"
-                    [class.text-[var(--color-bg-main)]]="allGuestsReady"
-                    [class.shadow-lg]="allGuestsReady"
-                    [class.hover:brightness-110]="allGuestsReady"
-                    [class.bg-[var(--color-bg-main)]]="!allGuestsReady"
-                    [class.border]="!allGuestsReady"
-                    [class.border-[var(--color-border-card)]]="!allGuestsReady"
-                    [class.text-[var(--color-text-muted)]]="!allGuestsReady"
-                    [class.cursor-not-allowed]="!allGuestsReady">
-              <span>{{ i18n.t('game.start_match')() }}</span>
-              @if (!allGuestsReady) {
-                <span class="text-[9px] font-normal normal-case opacity-70">{{ i18n.t('game.waiting_for_players_ready')() || '等待玩家准备...' }}</span>
-              }
-            </button>
           </div>
+          <button (click)="start.emit()"
+                  [disabled]="!allGuestsReady"
+                  class="w-full py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-0.5"
+                  [class.bg-gradient-to-r]="allGuestsReady"
+                  [class.from-[var(--color-accent-from)]]="allGuestsReady"
+                  [class.to-[var(--color-accent-to)]]="allGuestsReady"
+                  [class.text-[var(--color-bg-main)]]="allGuestsReady"
+                  [class.shadow-lg]="allGuestsReady"
+                  [class.hover:brightness-110]="allGuestsReady"
+                  [class.bg-[var(--color-bg-main)]]="!allGuestsReady"
+                  [class.border]="!allGuestsReady"
+                  [class.border-[var(--color-border-card)]]="!allGuestsReady"
+                  [class.text-[var(--color-text-muted)]]="!allGuestsReady"
+                  [class.cursor-not-allowed]="!allGuestsReady">
+            <span>{{ i18n.t('game.start_match')() }}</span>
+            @if (!allGuestsReady) {
+              <span class="text-[9px] font-normal normal-case opacity-70">{{ i18n.t('game.waiting_for_players_ready')() || '等待玩家准备...' }}</span>
+            }
+          </button>
         } @else {
           <!-- Guest action row -->
           <div class="flex gap-2">

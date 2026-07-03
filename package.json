@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "bridges-generator": "^1.0.4",
+    "dotenv": "^17.4.2",
     "glob": "^13.0.6",
+    "pg": "^8.22.0",
     "sudoku-gen": "^1.0.2"
   }
 }

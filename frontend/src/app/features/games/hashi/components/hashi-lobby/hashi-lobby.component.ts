@@ -107,8 +107,10 @@ export class HashiLobbyComponent implements OnInit {
   @Output() levelSelect = new EventEmitter<{ id: string, puzzle: string, difficulty: string, levelIndex: number }>();
 
   difficulties = [
-    { id: 'easy', labelKey: 'game.diff_easy' },
-    { id: 'medium', labelKey: 'game.diff_medium' }
+    { id: 'easy', labelKey: 'game.diff_hashi_easy' },
+    { id: 'medium', labelKey: 'game.diff_hashi_medium' },
+    { id: 'hard', labelKey: 'game.diff_hashi_hard' },
+    { id: 'expert', labelKey: 'game.diff_hashi_expert' }
   ];
 
   activeTab = signal<string>('easy');

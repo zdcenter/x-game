@@ -430,11 +430,15 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     iconEmoji: '🌉',
     loadComponent: () => import('../../features/games/hashi/hashi.component').then(m => m.HashiComponent),
     modes: [
-      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' }
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: GameMode.Speed, labelKey: 'game.speed_label', descKey: 'game.speed_desc', icon: '⚡', desc: 'Speed PK' }
     ],
+    multiRound: true,
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_hashi_easy', desc: '7x7' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hashi_medium', desc: '10x10' }
+      { id: 'easy', labelKey: 'game.diff_hashi_easy', descKey: 'game.diff_hashi_easy', desc: '7x7' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_hashi_medium', descKey: 'game.diff_hashi_medium', desc: '10x10' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hashi_hard', descKey: 'game.diff_hashi_hard', desc: '15x15' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_hashi_expert', descKey: 'game.diff_hashi_expert', desc: '20x20' }
     ],
     recommendations: ['sudoku', 'nonogram'],
     tutorial: [
