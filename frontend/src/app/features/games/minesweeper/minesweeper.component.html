@@ -77,12 +77,12 @@
               <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
                       class="appearance-none min-w-[90px] pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-orange-500">
                 @for (diff of predefinedDifficulties; track diff.id) {
-                  <option [value]="diff.id">{{ i18n.t($any(diff.labelKey))() }} - {{ i18n.t($any(diff.descKey))() }}</option>
+                  <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" [value]="diff.id">{{ i18n.t($any(diff.labelKey))() }} - {{ i18n.t($any(diff.descKey))() }}</option>
                 }
                 @if (isCustomDifficulty()) {
-                  <option [value]="currentDifficulty()">{{ i18n.t('game.diff_custom')() }} ({{ customWidth() }}x{{ customHeight() }}, {{ customMines() }}💣)</option>
+                  <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" [value]="currentDifficulty()">{{ i18n.t('game.diff_custom')() }} ({{ customWidth() }}x{{ customHeight() }}, {{ customMines() }}💣)</option>
                 }
-                <option value="custom">{{ i18n.t('game.diff_custom')() }}...</option>
+                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="custom">{{ i18n.t('game.diff_custom')() }}...</option>
               </select>
               <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
