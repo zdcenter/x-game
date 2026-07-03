@@ -4,9 +4,18 @@
       <div class="font-mono text-3xl md:text-4xl font-black text-teal-400 font-digital tracking-widest bg-black/60 border-2 border-teal-500/30 px-6 py-2 rounded-xl shadow-[0_0_20px_rgba(45,212,191,0.3)]">
         {{ frozenRemaining() > 0 ? frozenRemaining() : 0 }}
       </div>
-      <p class="text-red-300 font-bold text-sm md:text-base mt-4 drop-shadow-md">
+      <p class="text-red-300 font-bold text-sm md:text-base mt-4 drop-shadow-md mb-4">
         {{ i18n.t(messageKey)() }}
       </p>
+
+      @if (adService.getBannerSlotId('frozen_penalty')) {
+        <app-adsense 
+          [adSlot]="adService.getBannerSlotId('frozen_penalty')!" 
+          [adFormat]="'rectangle'" 
+          [fullWidthResponsive]="false"
+          class="block mx-auto rounded-lg overflow-hidden bg-black/20 w-[300px] h-[250px]">
+        </app-adsense>
+      }
     </div>
   </div>
 }

@@ -70,6 +70,16 @@ func SeedAds() {
 				{Provider: "google_adsense", SlotID: "ca-pub-8428944074138941", Priority: 1, IsEnabled: true, LimitPerUser: -1},
 			},
 		},
+		{
+			ID:              "frozen_penalty",
+			Name:            "PK冻结惩罚广告",
+			Desc:            "玩家在PK模式中踩雷被冻结时展示的内置横幅广告",
+			IsEnabled:       true,
+			DailyTotalLimit: -1,
+			Networks: []domain.AdNetwork{
+				{Provider: "google_adsense", SlotID: "ca-pub-8428944074138941", Priority: 1, IsEnabled: true, LimitPerUser: -1},
+			},
+		},
 	}
 
 	for _, p := range placements {

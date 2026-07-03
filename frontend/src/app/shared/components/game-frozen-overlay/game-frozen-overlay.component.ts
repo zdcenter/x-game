@@ -2,11 +2,13 @@ import { Component, Input, OnInit, OnDestroy, signal, effect, inject } from '@an
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
+import { AdService } from '../../../core/services/ad.service';
+import { AdsenseComponent } from '../adsense/adsense.component';
 
 @Component({
   selector: 'app-game-frozen-overlay',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdsenseComponent],
   templateUrl: './game-frozen-overlay.component.html'
 })
 export class GameFrozenOverlayComponent implements OnInit, OnDestroy {
@@ -24,6 +26,7 @@ export class GameFrozenOverlayComponent implements OnInit, OnDestroy {
   
   i18n = inject(I18nService);
   gameTimer = inject(GameTimerService);
+  adService = inject(AdService);
 
   constructor() {
     effect(() => {
