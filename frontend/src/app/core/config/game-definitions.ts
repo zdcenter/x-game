@@ -63,10 +63,10 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameMode.Steal, labelKey: 'game.same_pk_steal_number', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_sudoku_easy', desc: 'Beginner' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_sudoku_medium', desc: 'Intermediate' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_sudoku_hard', desc: 'Advanced' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_sudoku_expert', desc: 'Professional' }
+      { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc', desc: 'Beginner' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium_desc', desc: 'Intermediate' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard_desc', desc: 'Advanced' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert_desc', desc: 'Professional' }
     ],
     recommendations: ['minesweeper', 'math24'],
     tutorial: [
