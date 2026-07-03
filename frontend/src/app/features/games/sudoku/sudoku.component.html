@@ -27,9 +27,9 @@
             @if (store.currentRoomMode() === GameMode.Single && view() === 'play') {
             <div class="relative w-32 sm:w-40 lg:w-48">
               <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
-                      class="w-full appearance-none pl-3 pr-8 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-sub)] border-2 border-[var(--color-border-card)] shadow-sm hover:shadow-md hover:border-blue-400/50 transition-all text-[var(--color-text-main)] text-xs sm:text-sm font-bold cursor-pointer outline-none focus:border-blue-500 text-center">
+                      class="w-full appearance-none pl-3 pr-8 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-sub)] border-2 border-[var(--color-border-card)] shadow-sm hover:shadow-md hover:border-blue-400/50 transition-all text-[var(--color-text-main)] text-xs sm:text-sm font-bold cursor-pointer outline-none focus:border-blue-500">
                 @for (diff of sudokuDifficulties; track diff.id) {
-                  <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" [value]="diff.id">
+                  <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-left" [value]="diff.id">
                     {{ i18n.t($any(diff.labelKey))() }} - {{ i18n.t($any(diff.descKey))() }}
                   </option>
                 }
