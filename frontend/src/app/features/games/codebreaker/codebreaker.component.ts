@@ -164,7 +164,7 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
           return;
         }
         const mode = params['mode'] || GameMode.Single;
-        const diff = params['difficulty'] || 'medium';
+        const diff = params['difficulty'] || storageGet('codebreaker_single_diff') || 'easy';
         const roomId = params['room'] || `codebreaker-${Date.now()}`;
         const host = params['host'] || roomId;
         
@@ -245,6 +245,7 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
   changeDifficulty(event: Event) {
     const diff = (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
+    storageSet('codebreaker_single_diff', diff);
     this.currentDifficulty.set(diff);
     this.store.joinRoom(this.roomId(), this.currentRoomMode(), diff, this.store.hostId());
     this.currentInput.set('');

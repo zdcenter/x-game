@@ -158,7 +158,7 @@ export class SlidingComponent extends BaseGameComponent {
       this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       return;
     } else {
-      this.store.joinRoom('', GameMode.Single);
+      this.store.joinRoom('', GameMode.Single, 'easy');
     }
 
 

@@ -3,6 +3,7 @@ import { Component, EventEmitter, Output, inject, signal, OnInit, computed } fro
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
+import { storageGet, storageSet } from '../../../../../core/utils/browser.util';
 import { environment } from '../../../../../../environments/environment';
 
 interface LevelResponse {
@@ -113,15 +114,16 @@ export class HashiLobbyComponent implements OnInit {
     { id: 'expert', labelKey: 'game.diff_hashi_expert' }
   ];
 
-  activeTab = signal<string>('easy');
+  activeTab = signal<string>(storageGet('hashi_single_diff') || 'easy');
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels('easy');
+    this.loadLevels(this.activeTab());
   }
 
   selectDifficulty(diff: string) {
+    storageSet('hashi_single_diff', diff);
     this.activeTab.set(diff);
     this.loadLevels(diff);
   }

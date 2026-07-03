@@ -203,7 +203,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
     } else {
-      const savedDiff = storageGet('minesweeper_single_diff') || 'medium';
+      const savedDiff = storageGet('minesweeper_single_diff') || 'easy';
       this.changeSingleDifficulty(savedDiff);
     }
   }
