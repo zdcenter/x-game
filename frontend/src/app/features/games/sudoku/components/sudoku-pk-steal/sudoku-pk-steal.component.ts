@@ -13,11 +13,12 @@ import { PlayerBadgeComponent } from '../../../../../shared/components/player-ba
 
 import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
 import { GamePlayerMiniHudComponent } from '../../../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameFrozenOverlayComponent } from '../../../../../shared/components/game-frozen-overlay/game-frozen-overlay.component';
 
 @Component({
   selector: 'app-sudoku-pk-steal',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent],
   templateUrl: './sudoku-pk-steal.component.html',
   styleUrl: './sudoku-pk-steal.component.css'})
 export class SudokuPkStealComponent {

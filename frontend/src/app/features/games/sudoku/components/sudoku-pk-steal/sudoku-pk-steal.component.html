@@ -51,17 +51,11 @@
       </div>
 
       <!-- Top Progress Bars -->
-      @if (isFrozenSignal()) {
-        <div class="absolute inset-0 z-50 flex items-center justify-center bg-blue-900/40 backdrop-blur-sm rounded-xl">
-          <div class="text-center animate-bounce">
-            <div class="text-6xl mb-4">❄️</div>
-            <h2 class="text-3xl font-black text-blue-200 drop-shadow-md tracking-widest uppercase">Frozen</h2>
-            <div class="mt-4 text-2xl font-black text-white font-mono tracking-widest bg-black/50 px-6 py-2 rounded-full inline-block">
-              {{ frozenCountdownDisplay() }}s
-            </div>
-          </div>
-        </div>
-      }
+      <app-game-frozen-overlay 
+        [cooldownUntil]="store.players()[store.playerId()]?.freezeUntil || 0"
+        messageKey="game.frozen_msg"
+        containerClass="absolute inset-0 z-50 flex items-center justify-center bg-blue-900/40 backdrop-blur-sm rounded-xl">
+      </app-game-frozen-overlay>
 
       <!-- Mobile floating HUD -->
       <app-game-player-mini-hud

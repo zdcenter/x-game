@@ -272,16 +272,10 @@
             }
 
             <!-- Frozen Overlay (PK Steal Penalty) -->
-            @if (isFrozen()) {
-              <div
-                class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-red-500/20 backdrop-blur-sm rounded-2xl pointer-events-none">
-                <div
-                  class="font-mono text-lg md:text-xl font-bold text-[var(--color-accent-to)] font-digital tracking-widest bg-[var(--color-bg-card)] border border-[var(--color-border-card)] px-3 py-1 rounded-md shadow-inner">
-                  {{ gameTimer.formatTime(frozenRemaining()) }}
-                </div>
-                <p class="text-red-300 font-bold text-sm mt-2">{{ i18n.t('game.frozen_msg')() }}</p>
-              </div>
-            }
+            <app-game-frozen-overlay 
+              [cooldownUntil]="store.cooldowns()[playerId] || 0"
+              messageKey="game.frozen_msg">
+            </app-game-frozen-overlay>
 
             <div #boardContainer
               class="p-4 shadow-inner flex-1 min-h-0 overflow-y-auto overflow-x-auto flex justify-center items-center custom-scrollbar">
