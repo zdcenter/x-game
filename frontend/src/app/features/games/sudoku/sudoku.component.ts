@@ -22,7 +22,7 @@ import { AudioService } from '../../../core/services/audio.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
+import { FormsModule } from '@angular/forms';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
@@ -35,6 +35,7 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
   standalone: true,
   imports: [
     CommonModule, 
+    FormsModule,
     SudokuLobbyComponent, 
     SudokuBoardComponent, 
     SudokuNumpadComponent,
@@ -45,7 +46,6 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameResultOverlayComponent,
     GameLobbyPanelComponent,
     GameHeaderComponent,
-    PlayerBadgeComponent,
     TutorialOverlayComponent,
     GameRulesModalComponent,
   ],
