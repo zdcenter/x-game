@@ -73,7 +73,7 @@
         <ng-container header-center>
           <div class="flex items-center gap-2">
             @if (currentRoomMode() === GameMode.Single) {
-            <div class="relative ml-2 hidden sm:block">
+            <div class="relative ml-2">
               <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
                       class="appearance-none min-w-[90px] pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-orange-500">
                 @for (diff of predefinedDifficulties; track diff.id) {

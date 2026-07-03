@@ -45,7 +45,7 @@
             <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg animate-pulse border border-red-500/30 font-bold whitespace-nowrap hidden sm:inline-block">Offline</span>
           }
           @if (store.currentRoomMode() === GameMode.Single) {
-            <div class="relative ml-2 hidden sm:block">
+            <div class="relative ml-2">
               <select [value]="store.currentDifficulty()" (change)="changeDifficulty($event)"
                       class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-amber-500">
                 <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>

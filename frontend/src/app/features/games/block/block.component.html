@@ -19,7 +19,7 @@
 
         <ng-container header-center>
           @if (store.currentRoomMode() === GameMode.Single) {
-            <select class="ml-2 bg-transparent text-[var(--color-text-main)] text-sm font-bold focus:outline-none cursor-pointer hover:text-blue-400 transition-colors hidden sm:block"
+            <select class="ml-2 bg-transparent text-[var(--color-text-main)] text-sm font-bold focus:outline-none cursor-pointer hover:text-blue-400 transition-colors"
                     [value]="store.currentDifficulty()"
                     (change)="changeSingleDifficulty($event)">
               <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>

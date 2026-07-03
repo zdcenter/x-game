@@ -1,7 +1,7 @@
   <div class="relative p-2 sm:p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border-b border-[var(--color-border-card)] shadow-md rounded-t-2xl lg:rounded-t-3xl"
          [ngClass]="headerBgClass">
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+      <div class="flex items-center justify-between w-full relative">
+        <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 z-10">
           <button (click)="back.emit()" class="p-1.5 sm:p-2 bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] rounded-full transition-colors text-[var(--color-text-main)] hover:text-white shadow-md z-10 shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -47,8 +47,12 @@
           </div>
         </div>
         
-        <div class="flex items-center gap-1 sm:gap-2 z-10 shrink-0 ml-2">
+        <!-- Center block -->
+        <div class="flex items-center justify-center z-10 shrink-0 mx-1 sm:mx-4">
           <ng-content select="[header-center]"></ng-content>
+        </div>
+        
+        <div class="flex items-center justify-end gap-1 sm:gap-2 z-10 flex-1 min-w-0">
           <ng-content select="[header-right]"></ng-content>
         </div>
       </div>
