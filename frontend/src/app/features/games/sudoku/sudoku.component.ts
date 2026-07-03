@@ -256,13 +256,13 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   getDiffName(): string {
-    const diffId = this.store.difficulty();
+    const diffId = this.store.currentDifficulty();
     const diff = sudokuDifficulties.find(d => d.id === diffId);
-    return diff ? this.i18n.t(diff.labelKey as any)() : diffId;
+    return diff ? this.i18n.t(diff.labelKey as any)() : diffId as string;
   }
 
   getDiffDesc(): string {
-    const diffId = this.store.difficulty();
+    const diffId = this.store.currentDifficulty();
     const diff = sudokuDifficulties.find(d => d.id === diffId);
     return diff?.descKey ? this.i18n.t(diff.descKey as any)() : '';
   }

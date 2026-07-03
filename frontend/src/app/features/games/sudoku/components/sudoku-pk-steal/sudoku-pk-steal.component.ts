@@ -18,7 +18,7 @@ import { GameFrozenOverlayComponent } from '../../../../../shared/components/gam
 @Component({
   selector: 'app-sudoku-pk-steal',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent],
   templateUrl: './sudoku-pk-steal.component.html',
   styleUrl: './sudoku-pk-steal.component.css'})
 export class SudokuPkStealComponent {

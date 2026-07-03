@@ -17,7 +17,7 @@ import { GamePlayerMiniHudComponent } from '../../../../../shared/components/gam
 @Component({
   selector: 'app-sudoku-pk-speed',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
   templateUrl: './sudoku-pk-speed.component.html',
   styleUrl: './sudoku-pk-speed.component.css'})
 export class SudokuPkSpeedComponent {
