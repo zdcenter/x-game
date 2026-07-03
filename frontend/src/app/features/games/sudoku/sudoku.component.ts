@@ -24,6 +24,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { FormsModule } from '@angular/forms';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
+import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
@@ -48,6 +49,7 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameHeaderComponent,
     TutorialOverlayComponent,
     GameRulesModalComponent,
+    GamePkModeBadgeComponent,
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -246,25 +248,6 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     } else {
       return this.store.currentRoomMode() === GameMode.Steal ? this.i18n.t('game.sudoku_same_pk_steal_label')() : this.i18n.t('game.sudoku_same_pk_speed_label')();
     }
-  }
-
-  getModeName(): string {
-    const mode = this.store.currentRoomMode();
-    if (mode === GameMode.Steal) return this.i18n.t('game.sudoku_same_pk_steal_label')();
-    if (mode === GameMode.Speed) return this.i18n.t('game.sudoku_same_pk_speed_label')();
-    return mode;
-  }
-
-  getDiffName(): string {
-    const diffId = this.store.currentDifficulty();
-    const diff = sudokuDifficulties.find(d => d.id === diffId);
-    return diff ? this.i18n.t(diff.labelKey as any)() : diffId as string;
-  }
-
-  getDiffDesc(): string {
-    const diffId = this.store.currentDifficulty();
-    const diff = sudokuDifficulties.find(d => d.id === diffId);
-    return diff?.descKey ? this.i18n.t(diff.descKey as any)() : '';
   }
 
   override goBack(): void {

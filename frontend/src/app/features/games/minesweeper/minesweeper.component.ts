@@ -18,6 +18,7 @@ import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameFrozenOverlayComponent } from '../../../shared/components/game-frozen-overlay/game-frozen-overlay.component';
+import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
