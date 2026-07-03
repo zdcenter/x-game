@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SudokuStore } from './store/sudoku.store';
-import { SudokuLobbyComponent } from './components/sudoku-lobby/sudoku-lobby.component';
+import { SudokuLobbyComponent, sudokuDifficulties } from './components/sudoku-lobby/sudoku-lobby.component';
 import { SudokuBoardComponent } from './components/sudoku-board/sudoku-board.component';
 import { SudokuNumpadComponent } from './components/sudoku-numpad/sudoku-numpad.component';
 import { SudokuToolsComponent } from './components/sudoku-tools/sudoku-tools.component';
@@ -69,6 +69,8 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   private route = inject(ActivatedRoute);
   private pendingDailyChallengeId = signal<string | null>(null);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
+
+  sudokuDifficulties = sudokuDifficulties;
 
   view = this.store.view;
   showOverlay = signal(false);
@@ -164,6 +166,41 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     return stats;
   }
 
+  currentDifficulty() {
+    // Determine from store if available, or fallback to storage
+    const rState = this.store.rawState() as any;
+    if (rState && rState.difficulty) {
+      return rState.difficulty;
+    }
+    return localStorage.getItem('sudoku_single_diff') || GameDifficulty.Easy;
+  }
+
+  changeSingleDifficulty(diff: string) {
+    localStorage.setItem('sudoku_single_diff', diff);
+    // Find next unsolved level for this diff
+    this.http.get<any[]>(`${environment.apiUrl}/sudoku/levels/${diff}`).subscribe({
+      next: (levels) => {
+        // Find first unsolved or just take the first one
+        let nextLevel = levels.find(l => l.progress?.status !== 'completed');
+        if (!nextLevel && levels.length > 0) {
+          nextLevel = levels[0];
+        }
+        if (nextLevel) {
+          this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${nextLevel.id}`).subscribe(res => {
+            if (res?.puzzle) {
+              this.startLevel({
+                id: res.puzzle.id,
+                puzzle: res.puzzle.puzzle,
+                solution: res.puzzle.solution,
+                savedState: res.progress?.current_state,
+                timeSpent: res.progress?.time_spent || 0
+              });
+            }
+          });
+        }
+      }
+    });
+  }
 
   override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
     if (this.store.roomId() === event.roomId) return;

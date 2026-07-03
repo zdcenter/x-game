@@ -22,6 +22,26 @@
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🔢</div>
 
+        <ng-container header-center>
+          <div class="flex items-center justify-center w-full z-10 shrink-0 mx-1 sm:mx-4">
+            @if (store.currentRoomMode() === GameMode.Single && view() === 'play') {
+            <div class="relative w-32 sm:w-40 lg:w-48">
+              <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
+                      class="w-full appearance-none pl-3 pr-8 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-sub)] border-2 border-[var(--color-border-card)] shadow-sm hover:shadow-md hover:border-blue-400/50 transition-all text-[var(--color-text-main)] text-xs sm:text-sm font-bold cursor-pointer outline-none focus:border-blue-500 text-center">
+                @for (diff of sudokuDifficulties; track diff.id) {
+                  <option [value]="diff.id">{{ i18n.t($any(diff.labelKey))() }} - {{ i18n.t($any(diff.descKey))() }}</option>
+                }
+              </select>
+              <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <svg class="h-4 w-4 text-[var(--color-text-muted)] drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            }
+          </div>
+        </ng-container>
+
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
             @if (view() === 'play' && settingsService.settings().multiplayer_enabled === 'true') {
@@ -91,21 +111,6 @@
           } @else {
             <!-- Single Player -->
             <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-hidden relative">
-              <!-- Local Player (You) -->
-              <div class="flex-none py-1 border-b border-[var(--color-border-card)] shrink-0 w-full mb-2">
-                <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2 justify-center">
-                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                    [playerName]="store.playerId()"
-                    [isHost]="true"
-                    [isMe]="true"
-                    [stats]="[
-                      { icon: '⏱️', value: store.isFinished() ? gameTimer.formatTime(store.timeSpent()) : gameTimer.formatTime(store.timeSpent()), colorClass: !store.isFinished() ? 'text-pink-400' : '' },
-                      (store.bestTime() > 0 ? { icon: '👑', value: gameTimer.formatTime(store.bestTime()), label: 'BEST' } : $any(null))
-                    ]"
-                    [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-                </div>
-              </div>
-
               <div class="flex-grow flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-start md:justify-center md:content-start items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto">
                 <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-280px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === GameMode.Single">
                   <app-sudoku-board class="w-full"></app-sudoku-board>

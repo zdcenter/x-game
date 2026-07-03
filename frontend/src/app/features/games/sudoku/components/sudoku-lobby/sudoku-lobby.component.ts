@@ -23,6 +23,13 @@ interface LevelResponse {
   };
 }
 
+export const sudokuDifficulties = [
+  { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc' },
+  { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium_desc' },
+  { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard_desc' },
+  { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert_desc' }
+];
+
 @Component({
   selector: 'app-sudoku-lobby',
   standalone: true,
@@ -51,12 +58,7 @@ export class SudokuLobbyComponent implements OnInit {
     { id: GameMode.Speed, labelKey: 'game.sudoku_same_pk_speed_label', icon: '⏱️', descKey: 'game.sudoku_same_pk_speed_desc' }
   ];
 
-  difficulties = [
-    { id: 'easy', labelKey: 'game.diff_sudoku_easy', desc: 'A gentle start' },
-    { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', desc: 'A fair challenge' },
-    { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', desc: 'For experienced players' },
-    { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', desc: 'True test of skill' }
-  ];
+  difficulties = sudokuDifficulties;
 
   activeTab = signal<string>(storageGet('sudoku_single_diff') || GameDifficulty.Easy);
   levels = signal<LevelResponse[]>([]);
