@@ -34,7 +34,7 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GamePkModeBadgeComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
