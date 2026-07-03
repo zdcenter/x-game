@@ -248,6 +248,25 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
+  getModeName(): string {
+    const mode = this.store.currentRoomMode();
+    if (mode === GameMode.Steal) return this.i18n.t('game.sudoku_same_pk_steal_label')();
+    if (mode === GameMode.Speed) return this.i18n.t('game.sudoku_same_pk_speed_label')();
+    return mode;
+  }
+
+  getDiffName(): string {
+    const diffId = this.store.difficulty();
+    const diff = sudokuDifficulties.find(d => d.id === diffId);
+    return diff ? this.i18n.t(diff.labelKey as any)() : diffId;
+  }
+
+  getDiffDesc(): string {
+    const diffId = this.store.difficulty();
+    const diff = sudokuDifficulties.find(d => d.id === diffId);
+    return diff?.descKey ? this.i18n.t(diff.descKey as any)() : '';
+  }
+
   override goBack(): void {
     if (this.view() === 'lobby') {
       super.goBack();

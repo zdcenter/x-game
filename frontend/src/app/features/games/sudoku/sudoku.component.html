@@ -40,6 +40,15 @@
                 </svg>
               </div>
             </div>
+            } @else if (view() === 'play' && store.currentRoomMode() !== GameMode.Single) {
+              <div class="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-inner text-xs sm:text-sm text-[var(--color-text-main)] font-bold">
+                <span class="text-[var(--color-accent-from)]">{{ getModeName() }}</span>
+                <span class="text-[var(--color-text-muted)]">|</span>
+                <span>{{ getDiffName() }}</span>
+                @if (getDiffDesc()) {
+                  <span class="text-[var(--color-text-muted)] font-normal text-xs ml-1 hidden lg:inline-block opacity-80"> - {{ getDiffDesc() }}</span>
+                }
+              </div>
             }
           </div>
         </ng-container>
