@@ -159,6 +159,46 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     this.navigateToLobby();
   }
 
+  handleTitleClick() {
+    if (this.store.currentRoomMode() !== GameMode.Single) {
+      return; // Do not allow arbitrary restart during PK
+    }
+
+    // For games with a level lobby (e.g. Hashi, Sudoku, Nonogram)
+    if ('view' in this && typeof (this as any).view === 'function') {
+      const v = (this as any).view();
+      if (v === 'play') {
+        this.goBack();
+      }
+      return;
+    }
+
+    // For single-session games without a lobby (e.g. Sliding, Minesweeper, 2048)
+    if (this.store.status() === GameStatus.Waiting || this.store.status() === GameStatus.Finished) {
+      this.doRestart();
+    } else {
+      this.baseToastService.confirm({
+        title: this.i18nBase.t('game.restart')() || 'Restart',
+        message: this.i18nBase.t('game.confirm_restart')() || 'Are you sure you want to restart?',
+        confirmText: this.i18nBase.t('game.restart')() || 'Restart',
+        cancelText: this.i18nBase.t('game.cancel')() || 'Cancel',
+        onConfirm: () => {
+          this.doRestart();
+        }
+      });
+    }
+  }
+
+  private doRestart() {
+    if (typeof (this.store as any).restartGame === 'function') {
+      (this.store as any).restartGame();
+    } else if (typeof (this.store as any).playAgain === 'function') {
+      (this.store as any).playAgain();
+    } else if (typeof (this.store as any).startGame === 'function') {
+      (this.store as any).startGame();
+    }
+  }
+
   dismissRoom() {
     this.baseToastService.confirm({
       title: this.i18nBase.t('game.dismiss_title')(),

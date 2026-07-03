@@ -29,6 +29,10 @@ export class SudokuPkSpeedComponent {
   gameRegistry = inject(GameRegistryService);
 
   @Output() openLobby = new EventEmitter<void>();
+
+  handleTitleClick() {
+    // PK mode sub-components do not handle arbitrary restart
+  }
   showOverlay = signal(false);
 
   getModeName() {

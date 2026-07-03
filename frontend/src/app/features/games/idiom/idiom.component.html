@@ -20,7 +20,7 @@
     <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden select-none">
       <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
 
-        <app-game-header class="sticky top-0 z-40"
+        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
           [title]="i18n.t('lobby.idiom')()"
           subtitle="极速填空 PK"
           iconGradientClass="from-purple-500 to-violet-600"
@@ -195,7 +195,7 @@
     <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
       <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
 
-        <app-game-header class="sticky top-0 z-40"
+        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
           [title]="i18n.t('lobby.idiom')()"
           [subtitle]="i18n.t('idiom.subtitle')()"
           iconGradientClass="from-purple-500 to-violet-600"
@@ -416,7 +416,7 @@
     <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden select-none">
       <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
 
-        <app-game-header class="sticky top-0 z-40"
+        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
           [title]="i18n.t('lobby.idiom')()"
           [subtitle]="fillDifficulty() ? diffLabel(fillDifficulty()!) : i18n.t('idiom.mode_fill')()"
           iconGradientClass="from-purple-500 to-violet-600"
@@ -727,7 +727,7 @@
     <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden select-none">
       <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
 
-        <app-game-header class="sticky top-0 z-40"
+        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
           [title]="i18n.t('lobby.idiom')()"
           [subtitle]="i18n.t('idiom.mode_wordle')()"
           iconGradientClass="from-green-500 to-emerald-600"

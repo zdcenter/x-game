@@ -20,7 +20,7 @@
 
       <!-- Top Navigation Bar -->
       <div class="flex flex-col shrink-0 -mx-2 md:-mx-6 -mt-2 md:-mt-6 mb-2 md:mb-0">
-        <app-game-header
+        <app-game-header (titleClick)="handleTitleClick()"
           [title]="'Sudoku'"
           [subtitle]="getModeName() + (getDiffName() ? ' - ' + getDiffName() : '')"
           iconGradientClass="from-blue-500 to-emerald-500"

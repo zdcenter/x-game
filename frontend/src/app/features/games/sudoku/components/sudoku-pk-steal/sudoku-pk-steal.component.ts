@@ -30,6 +30,10 @@ export class SudokuPkStealComponent {
 
   @Output() openLobby = new EventEmitter<void>();
 
+  handleTitleClick() {
+    // PK mode sub-components do not handle arbitrary restart
+  }
+
   getModeName() {
     const mode = this.store.currentRoomMode();
     const key = this.gameRegistry.getModeLabel('sudoku', mode);

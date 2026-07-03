@@ -24,6 +24,7 @@ export class GameHeaderComponent implements OnInit {
   
   @Output() back = new EventEmitter<void>();
   @Output() rules = new EventEmitter<void>();
+  @Output() titleClick = new EventEmitter<void>();
 
   audioService = inject(AudioService);
   shareService = inject(ShareService);
