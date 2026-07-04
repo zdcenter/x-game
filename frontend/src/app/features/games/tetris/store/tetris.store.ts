@@ -5,6 +5,7 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { getEmptyGrid, Piece, Tetromino } from '../models/tetris.model';
 import { TetrisEngine, TetrisActionType, TetrisState } from './tetris-engine';
 import { C2SAction } from '../../../../core/models/websocket.model';
+import { storageGet, storageSet } from '../../../../core/utils/browser.util';
 
 export interface TetrisOpponent {
   id: string;
@@ -111,6 +112,20 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       this.localStatus.set(GameStatus.Waiting);
       this.engine.stop();
       this.resetLocalState();
+      
+      const savedBest = parseInt(storageGet('tetris_best_score') || '0', 10);
+      this.bestScore.set(savedBest);
+      
+      if (this.auth.isAuthenticated()) {
+        this.getStats().subscribe(stats => {
+          const stat = stats.find(s => s.Mode === GameMode.Single);
+          if (stat) {
+             const maxBest = Math.max(stat.BestScore, savedBest);
+             this.bestScore.set(maxBest);
+             storageSet('tetris_best_score', maxBest.toString());
+          }
+        });
+      }
     }
   }
 
@@ -124,13 +139,8 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       this.localStatus.set(GameStatus.Playing);
       this.resetLocalState();
       
-      // Load best score
-      if (this.auth.isAuthenticated()) {
-        this.getStats().subscribe(stats => {
-          const stat = stats.find(s => s.Mode === GameMode.Single);
-          if (stat) this.bestScore.set(stat.BestScore);
-        });
-      }
+      // bestScore is already loaded in joinRoom
+
 
       this.engine.initGame({
         onSound: (s) => this.audio.playTetris(s),
@@ -222,6 +232,12 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.level.set(state.level);
     this.isDead.set(state.isDead);
     this.ghostY.set(state.ghostY);
+    
+    if (this.currentRoomMode() === GameMode.Single && state.score > this.bestScore()) {
+      this.bestScore.set(state.score);
+      storageSet('tetris_best_score', state.score.toString());
+    }
+    
     if (state.isDead && this.localStatus() !== GameStatus.Finished) {
       this.onGameOver();
     }

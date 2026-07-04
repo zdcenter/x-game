@@ -257,9 +257,9 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
       let diffStr = '';
       const diff = this.currentDifficulty();
       if (diff) {
-        if (diff === GameDifficulty.Easy) diffStr = this.i18n.t('game.diff_easy')();
-        else if (diff === GameDifficulty.Hard) diffStr = this.i18n.t('game.diff_hard')();
-        else diffStr = this.i18n.t('game.diff_medium')();
+        if (diff === GameDifficulty.Easy) diffStr = this.i18n.t('game.diff_codebreaker_easy')();
+        else if (diff === GameDifficulty.Hard) diffStr = this.i18n.t('game.diff_codebreaker_hard')();
+        else diffStr = this.i18n.t('game.diff_codebreaker_medium')();
       }
       return this.i18n.t('gomoku.mode.single')() + (diffStr ? ' - ' + diffStr : '');
     } else {

@@ -23,6 +23,7 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { FormsModule } from '@angular/forms';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 
@@ -40,9 +41,9 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameResultOverlayComponent,
     Math24LobbyComponent,
     GameStartingOverlayComponent,
-    PlayerBadgeComponent,
     GameRulesModalComponent,
     TutorialOverlayComponent,
+    FormsModule
   ],
   templateUrl: './math24.component.html'
 })
@@ -252,6 +253,24 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     } else {
       this.store.restartGame();
     }
+  }
+
+  getDifficultyText(diff: string): string {
+    switch(diff) {
+      case GameDifficulty.Easy: return this.i18n.t('game.diff_math24_easy')();
+      case GameDifficulty.Medium: return this.i18n.t('game.diff_math24_medium')();
+      case GameDifficulty.Hard: return this.i18n.t('game.diff_math24_hard')();
+      case GameDifficulty.Expert: return this.i18n.t('game.diff_math24_expert')();
+      default: return diff;
+    }
+  }
+
+  onDifficultyChange(event: any) {
+    const diff = event?.target?.value || event;
+    if (this.store.currentDifficulty() === diff) return;
+    this.store.currentDifficulty.set(diff);
+    this.store.localLevelIndex.set(-1);
+    this.store.loadNextLevel();
   }
 
   startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {

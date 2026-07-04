@@ -60,6 +60,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   private toastService = inject(ToastService);
   i18n = inject(I18nService);
   private gameRegistry = inject(GameRegistryService);
+  Math = Math;
 
   readonly COLS = TETRIS_COLS;
   readonly ROWS = TETRIS_ROWS;
@@ -265,32 +266,53 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return TETROMINO_SHAPES[type] || [];
   }
 
-  // Used for rendering ghost piece and current piece
-  getCellColor(x: number, y: number): string {
+  // Used for rendering the board with classic 3D bevel and ghost piece
+  viewGrid = computed(() => {
     const grid = this.store.grid();
-    if (grid[y] && grid[y][x] !== 0) {
-      return this.getPieceColor(grid[y][x]);
-    }
-
     const current = this.store.currentPiece();
-    if (current &&
-        x >= current.x && x < current.x + current.shape[0].length &&
-        y >= current.y && y < current.y + current.shape.length &&
-        current.shape[y - current.y][x - current.x] !== 0) {
-      return this.getPieceColor(current.type);
-    }
-
-    // Ghost piece preview
     const ghostY = this.store.ghostY();
-    if (ghostY !== -1 && current && ghostY !== current.y &&
-        x >= current.x && x < current.x + current.shape[0].length &&
-        y >= ghostY && y < ghostY + current.shape.length &&
-        current.shape[y - ghostY]?.[x - current.x] !== 0) {
-      return this.getPieceColor(current.type) + '40';
+    const colors = this.COLORS;
+    
+    const result: { bg: string, border: string, shadow: string, isGhost: boolean, isFilled: boolean }[][] = [];
+    for (let y = 0; y < this.ROWS; y++) {
+      const row = [];
+      for (let x = 0; x < this.COLS; x++) {
+        let bg = 'transparent';
+        let border = 'none';
+        let shadow = 'none';
+        let isGhost = false;
+        let isFilled = false;
+        
+        if (grid[y] && grid[y][x] !== 0) {
+          bg = colors[grid[y][x] as Tetromino];
+          isFilled = true;
+        } else if (current &&
+            x >= current.x && x < current.x + current.shape[0].length &&
+            y >= current.y && y < current.y + current.shape.length &&
+            current.shape[y - current.y][x - current.x] !== 0) {
+          bg = colors[current.type];
+          isFilled = true;
+        } else if (ghostY !== -1 && current && ghostY !== current.y &&
+            x >= current.x && x < current.x + current.shape[0].length &&
+            y >= ghostY && y < ghostY + current.shape.length &&
+            current.shape[y - ghostY]?.[x - current.x] !== 0) {
+          isGhost = true;
+          bg = colors[current.type] + '20'; // Very faint fill
+          border = `2px solid ${colors[current.type]}80`; // Colored border
+          shadow = `inset 0 0 8px ${colors[current.type]}40`; // Inner glow
+        }
+        
+        if (isFilled) {
+          // Classic 3D Bevel effect
+          shadow = `inset 0 3px 0 rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.3), inset 3px 0 0 rgba(255,255,255,0.2), inset -3px 0 0 rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.5)`;
+        }
+        
+        row.push({ bg, border, shadow, isGhost, isFilled });
+      }
+      result.push(row);
     }
-
-    return 'var(--color-bg-card)';
-  }
+    return result;
+  });
 
 
 

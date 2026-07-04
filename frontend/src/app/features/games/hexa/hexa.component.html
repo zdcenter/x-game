@@ -135,23 +135,56 @@
             </app-game-player-mini-hud>
           }
 
-          <!-- Players / Opponents (Top) -->
-          <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0"
-               [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
+          <!-- Single Player Classic Header -->
+          @if (currentRoomMode() === GameMode.Single) {
+            <div class="flex-none flex items-center justify-between px-4 sm:px-8 py-3 bg-[var(--color-bg-sub)] border-b border-[var(--color-border-card)] shrink-0 w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
               
-              <!-- Local Player (You) -->
-              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                [playerName]="playerId"
-                [isHost]="playerId === store.hostId()"
-                [isMe]="true"
-                [score]="store.score()"
-                [stats]="[
-                  { icon: '🔄', value: store.combo() + 'x', label: t('hexa.combo')() || 'COMBO', colorClass: store.combo() > 1 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : '' }
-                ]"
-                [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+              <!-- Score -->
+              <div class="flex items-center gap-1 sm:gap-2">
+                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Score">⭐</span>
+                <div class="bg-rose-50 dark:bg-[#050505] border-2 border-rose-200 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-24 justify-center transition-colors duration-300">
+                  <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+                    {{ store.score() | number:'1.0-0' }}
+                  </span>
+                </div>
+              </div>
 
-              @if (currentRoomMode() !== GameMode.Single) {
+              <!-- Combo / Center Area -->
+              <div class="flex flex-col items-center justify-center min-w-24">
+                <span class="text-sm sm:text-base font-black drop-shadow-md whitespace-nowrap transition-colors"
+                      [class.text-emerald-500]="store.combo() > 1"
+                      [class.animate-pulse]="store.combo() > 1"
+                      [class.text-[var(--color-text-muted)]]="store.combo() <= 1">
+                  {{ store.combo() }}x COMBO
+                </span>
+              </div>
+
+              <!-- Best Score -->
+              <div class="flex items-center gap-1 sm:gap-2">
+                <div class="bg-slate-100 dark:bg-[#050505] border-2 border-slate-300 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-24 justify-center transition-colors duration-300">
+                  <span class="font-digital text-slate-700 dark:text-amber-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(245,158,11,0.8)] transition-colors duration-300">
+                    {{ Math.max(store.score(), store.bestScore()) | number:'1.0-0' }}
+                  </span>
+                </div>
+                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Best Score">👑</span>
+              </div>
+            </div>
+          } @else {
+            <!-- Players / Opponents (Top) PK Mode -->
+            <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0 hidden lg:block w-full">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
+                
+                <!-- Local Player (You) -->
+                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                  [playerName]="playerId"
+                  [isHost]="playerId === store.hostId()"
+                  [isMe]="true"
+                  [score]="store.score()"
+                  [stats]="[
+                    { icon: '🔄', value: store.combo() + 'x', label: t('hexa.combo')() || 'COMBO', colorClass: store.combo() > 1 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : '' }
+                  ]"
+                  [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+
                 <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
                   <ng-template #opponentsList>
                     @for (opp of store.otherPlayers(); track opp.id) {
@@ -167,9 +200,9 @@
                     }
                   </ng-template>
                 </app-player-list-container>
-              }
+              </div>
             </div>
-          </div>
+          }
 
           <!-- The Grid Area -->
           <div class="w-full flex-grow flex flex-col items-center justify-start py-4 shrink-0 min-h-0 overflow-y-auto" #boardArea>

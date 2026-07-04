@@ -116,10 +116,18 @@ export class HexaStore extends BaseGameStore {
     super.joinRoom(roomId, mode, difficulty, hostId, target);
     if (mode === GameMode.Single) {
       this.startSinglePlayer();
+      
+      const savedBest = parseInt(storageGet('hexa_best_score') || '0', 10);
+      this.bestScore.set(savedBest);
+      
       if (this.auth.isAuthenticated()) {
         this.getStats().subscribe(stats => {
           const stat = stats.find(s => s.Mode === GameMode.Single);
-          if (stat) this.bestScore.set(stat.BestScore);
+          if (stat) {
+             const maxBest = Math.max(stat.BestScore, savedBest);
+             this.bestScore.set(maxBest);
+             storageSet('hexa_best_score', maxBest.toString());
+          }
         });
       }
     } else {
@@ -203,6 +211,10 @@ export class HexaStore extends BaseGameStore {
         finished: this.gameOver()
       });
     } else {
+      if (this.score() > this.bestScore()) {
+        this.bestScore.set(this.score());
+        storageSet('hexa_best_score', this.score().toString());
+      }
       this.saveSinglePlayer();
     }
   }

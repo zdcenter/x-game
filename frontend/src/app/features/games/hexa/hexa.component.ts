@@ -64,6 +64,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   isShaking = signal(false);
   floatItems = signal<{ id: number; text: string; tier: 1 | 2; xPct: number }[]>([]);
   particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
+  Math = Math;
   get t() {
     return this.i18n.t.bind(this.i18n);
   }

@@ -75,6 +75,15 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       </button>
     }
 
+    @if (layout === 'toolbar-compact') {
+      <button class="w-full h-full flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)] disabled:opacity-50 disabled:cursor-not-allowed"
+              [disabled]="isAdLoading()"
+              (click)="onClick()">
+        <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 sm:h-6 sm:w-6 mb-1 text-orange-500', textClass: 'text-xl sm:text-xl drop-shadow-md' }"></ng-container>
+        <span class="truncate w-full text-center">{{ i18n.t('game.hint_ad')() }}</span>
+      </button>
+    }
+
     <ng-template #iconTpl let-sizeClass="sizeClass" let-textClass="textClass">
       @if (isAdLoading()) {
         <svg class="animate-spin text-orange-500 {{ sizeClass || 'h-4 w-4 lg:h-5 lg:w-5' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -88,7 +97,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   `
 })
 export class HintButtonComponent {
-  @Input() layout: 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'compact' | 'sokoban' = 'math24';
+  @Input() layout: 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'compact' | 'sokoban' | 'toolbar-compact' = 'math24';
   @Output() hintApplied = new EventEmitter<void>();
 
   protected i18n = inject(I18nService);
