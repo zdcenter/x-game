@@ -1,6 +1,6 @@
 import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { storageGet, storageSet } from '../../../../core/utils/browser.util';
+
 
 export enum SlidingActionType {
   Move = 'move'
@@ -20,8 +20,6 @@ export class LocalSlidingEngine implements ILocalEngine<any, SlidingAction> {
   endAt: number = 0;
   moves: number = 0;
 
-  static readonly STORAGE_KEY = 'x_game_sliding_single_state';
-
   constructor(difficulty: string = GameDifficulty.Medium) {
     this.size = this.parseDifficulty(difficulty);
     this.cells = Array.from({ length: this.size * this.size }, (_, i) => i + 1);
@@ -29,47 +27,6 @@ export class LocalSlidingEngine implements ILocalEngine<any, SlidingAction> {
     this.emptyIdx = this.size * this.size - 1;
     this.shuffle(this.size * this.size * 100);
     this.startAt = Date.now();
-  }
-
-  saveToStorage(difficulty: string) {
-    try {
-      const data = {
-        difficulty,
-        size: this.size,
-        cells: this.cells,
-        emptyIdx: this.emptyIdx,
-        status: this.status,
-        startAt: this.startAt,
-        endAt: this.endAt,
-        moves: this.moves
-      };
-      storageSet(LocalSlidingEngine.STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Failed to save sliding engine state', e);
-    }
-  }
-
-  static loadFromStorage(): { engine: LocalSlidingEngine, difficulty: string } | null {
-    try {
-      const dataStr = storageGet(LocalSlidingEngine.STORAGE_KEY);
-      if (dataStr) {
-        const data = JSON.parse(dataStr);
-        if (data && data.size && data.cells) {
-          const engine = new LocalSlidingEngine(data.difficulty || GameDifficulty.Medium);
-          engine.size = data.size;
-          engine.cells = data.cells;
-          engine.emptyIdx = data.emptyIdx;
-          engine.status = data.status;
-          engine.startAt = data.startAt;
-          engine.endAt = data.endAt || 0;
-          engine.moves = data.moves || 0;
-          return { engine, difficulty: data.difficulty || GameDifficulty.Medium };
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load sliding engine state', e);
-    }
-    return null;
   }
 
 

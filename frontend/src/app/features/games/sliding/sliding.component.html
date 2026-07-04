@@ -4,10 +4,7 @@
   <app-game-rules-modal [gameId]="'sliding'" [isOpen]="showRules()"
     (closed)="showRules.set(false)"></app-game-rules-modal>
 
-  <!-- Tutorial Modal -->
-  @if (showTutorial()) {
-    <app-sliding-tutorial (closed)="showTutorial.set(false)"></app-sliding-tutorial>
-  }
+
 
   <!-- Top Full-Width Game Header -->
   <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
@@ -34,7 +31,7 @@
                 <select [ngModel]="store.currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
                   class="appearance-none bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-md lg:rounded-lg pl-1 pr-5 py-0.5 lg:pl-3 lg:pr-7 lg:py-1.5 text-xs lg:text-sm font-bold cursor-pointer outline-none focus:ring-2 focus:ring-pink-500 transition-all shadow-inner text-[var(--color-text-main)]">
                   @for (diff of difficulties; track diff.id) {
-                  <option [value]="diff.id">{{ t(diff.labelKey)() }}</option>
+                  <option [value]="diff.id">{{ getDifficultyDesc(diff.id) }}</option>
                   }
                 </select>
                 <svg class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,10 +114,37 @@
             </app-game-player-mini-hud>
           }
 
+          <!-- Single Player Classic Header -->
+          @if (currentRoomMode() === GameMode.Single) {
+            <div class="flex-none flex items-center justify-between px-4 sm:px-8 py-3 bg-[var(--color-bg-sub)] border-b border-[var(--color-border-card)] shrink-0 w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+              
+              <!-- Moves -->
+              <div class="flex items-center gap-1 sm:gap-2">
+                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Moves">🔄</span>
+                <div class="bg-rose-50 dark:bg-[#050505] border-2 border-rose-200 dark:border-[var(--color-border-card)] rounded flex items-center px-1 sm:px-2 py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-20 justify-center transition-colors duration-300">
+                  <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+                    {{ store.myBoard()?.moves || 0 | number:'3.0-0' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Smiley Button / Center Area (Optional, keeping it empty for balance or we can add a restart button) -->
+              <div></div>
+
+              <!-- Timer -->
+              <div class="flex items-center gap-1 sm:gap-2">
+                <div class="bg-slate-100 dark:bg-[#050505] border-2 border-slate-300 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-20 sm:min-w-24 justify-center transition-colors duration-300">
+                  <span class="font-digital text-slate-700 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+                    {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
+                  </span>
+                </div>
+                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Elapsed Time">⏱️</span>
+              </div>
+            </div>
+          } @else {
           <!-- Players / Opponents (Top) -->
-          <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0"
-               [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
+          <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0 hidden lg:block">
+            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
               
               <!-- Local Player (You) -->
               <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
@@ -128,33 +152,32 @@
                 [isHost]="playerId === store.hostId()"
                 [isMe]="true"
                 [stats]="[
-                  (currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                  { icon: '⏱️', value: formatTime(getElapsedMs(currentRoomMode() === GameMode.Single ? (store.myBoard()?.startAt || 0) : store.globalStartAt())), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
+                  (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                  { icon: '⏱️', value: formatTime(getElapsedMs(store.globalStartAt())), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
                   { icon: '🔄', value: store.myBoard()?.moves || 0 }
                 ]"
                 [status]="store.myBoard()?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
               </app-player-badge>
 
-              @if (currentRoomMode() !== GameMode.Single) {
-                <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                  <ng-template #opponentsList>
-                    @for (opp of store.otherPlayers(); track opp.id) {
-                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                        [playerName]="opp.id"
-                        [isHost]="opp.id === store.hostId()"
-                        [isMe]="false"
-                        [stats]="[
-                          (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                          { icon: '🔄', value: opp.board?.moves || 0 }
-                        ]"
-                        [status]="opp.board?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
-                      </app-player-badge>
-                    }
-                  </ng-template>
-                </app-player-list-container>
-              }
+              <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                <ng-template #opponentsList>
+                  @for (opp of store.otherPlayers(); track opp.id) {
+                    <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                      [playerName]="opp.id"
+                      [isHost]="opp.id === store.hostId()"
+                      [isMe]="false"
+                      [stats]="[
+                        (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                        { icon: '🔄', value: opp.board?.moves || 0 }
+                      ]"
+                      [status]="opp.board?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
+                    </app-player-badge>
+                  }
+                </ng-template>
+              </app-player-list-container>
             </div>
           </div>
+          }
 
           <!-- The Grid Area -->
           <div class="relative flex-grow flex items-center justify-center w-full py-2 px-2">
@@ -194,12 +217,7 @@
           <!-- Single Player Actions -->
           @if (currentRoomMode() === GameMode.Single) {
             <div class="flex-none flex justify-center items-center gap-4 py-2 sm:py-4 w-full relative z-10">
-              <button (click)="showTutorial.set(true)" class="flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-lg active:scale-95 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 hover:border-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                </svg>
-                通关教程
-              </button>
+
               <app-game-toolbar
                 [layoutStyle]="'compact'"
                 [showPrev]="false"

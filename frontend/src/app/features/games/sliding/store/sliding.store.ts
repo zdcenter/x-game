@@ -105,15 +105,8 @@ export class SlidingStore extends BaseGameStore {
     super.joinRoom(roomId, mode, difficulty, hostId, target);
 
     if (mode === GameMode.Single) {
-      const saved = LocalSlidingEngine.loadFromStorage();
-      if (saved) {
-        this.currentDifficulty.set(saved.difficulty);
-        this.localEngine.set(saved.engine);
-      } else {
-        const engine = new LocalSlidingEngine(difficulty);
-        this.localEngine.set(engine);
-        engine.saveToStorage(difficulty);
-      }
+      const engine = new LocalSlidingEngine(difficulty);
+      this.localEngine.set(engine);
       
       // Load best time
       if (this.auth.isAuthenticated()) {
@@ -131,7 +124,6 @@ export class SlidingStore extends BaseGameStore {
       if (le) {
         le.status = GameStatus.Playing;
         le.startAt = Date.now();
-        le.saveToStorage(this.currentDifficulty() as string);
         this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty() as string), le));
       }
     } else {
@@ -148,7 +140,6 @@ export class SlidingStore extends BaseGameStore {
         le.handleAction(action);
         this.tick.set(this.tick() + 1);
         this.audio.playPuzzle('move');
-        le.saveToStorage(this.currentDifficulty() as string);
         
         // Submit stat if finished
         if (le.status === GameStatus.Finished && this.auth.isAuthenticated()) {
@@ -175,7 +166,6 @@ export class SlidingStore extends BaseGameStore {
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = new LocalSlidingEngine(this.currentDifficulty() as string);
       this.localEngine.set(engine);
-      engine.saveToStorage(this.currentDifficulty() as string);
       this.startGame();
     } else {
       super.restartGame();

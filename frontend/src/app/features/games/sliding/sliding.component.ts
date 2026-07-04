@@ -23,13 +23,12 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import { SlidingTutorialComponent } from './components/sliding-tutorial/sliding-tutorial.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, SlidingTutorialComponent, GamePlayerMiniHudComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -49,7 +48,6 @@ export class SlidingComponent extends BaseGameComponent {
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
   showOverlay = signal<boolean>(false);
-  showTutorial = signal<boolean>(false);
   hintTarget = signal<number | null>(null);
   Math = Math;
 
@@ -295,7 +293,15 @@ export class SlidingComponent extends BaseGameComponent {
   getDifficultyDesc(id: string): string {
     const config = this.gameRegistry.getConfig('sliding');
     const diff = config?.difficulties.find(d => d.id === id);
-    return diff ? this.t(diff.labelKey)() : id;
+    if (!diff) return id;
+    const label = this.t(diff.labelKey)();
+    
+    // Append grid size for better clarity based on difficulty ID
+    if (id === 'easy') return `${label} (4x4)`;
+    if (id === 'medium') return `${label} (5x5)`;
+    if (id === 'hard') return `${label} (6x6)`;
+    
+    return label;
   }
 
   getElapsedMs(startAt: number): number {

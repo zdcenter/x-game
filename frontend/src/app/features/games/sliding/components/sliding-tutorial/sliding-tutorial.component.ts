@@ -1,4 +1,4 @@
-import { Component, computed, signal, effect, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, computed, signal, effect, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface TutorialStep {
@@ -16,6 +16,7 @@ interface TutorialStep {
   templateUrl: './sliding-tutorial.component.html'
 })
 export class SlidingTutorialComponent implements OnDestroy {
+  @Input() inline = false;
   @Output() closed = new EventEmitter<void>();
 
   readonly steps: TutorialStep[] = [

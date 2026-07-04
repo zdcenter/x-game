@@ -10,6 +10,7 @@ import { getOrigin } from '../../core/utils/browser.util';
 import { GameRegistryService } from '../../core/services/game-registry.service';
 import { GameStepPlayerComponent } from './components/game-step-player/game-step-player.component';
 import { ALL_DEMO_CONFIGS } from './data/demo-configs';
+import { SlidingTutorialComponent } from '../games/sliding/components/sliding-tutorial/sliding-tutorial.component';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
@@ -22,7 +23,7 @@ interface TocItem {
 @Component({
   selector: 'app-docs',
   standalone: true,
-  imports: [CommonModule, RouterLink, FooterComponent, GameStepPlayerComponent],
+  imports: [CommonModule, RouterLink, FooterComponent, GameStepPlayerComponent, SlidingTutorialComponent],
   template: `
     <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
       
@@ -89,6 +90,16 @@ interface TocItem {
 
               @if (hasDemoConfig(currentGameId())) {
                 <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
+              }
+
+              <!-- Advanced Interactive Tutorial for Sliding Puzzle -->
+              @if (currentGameId() === 'sliding') {
+                <div class="mt-12 mb-8">
+                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">进阶攻略演示：快速复原秘籍</h2>
+                  <div class="relative w-full max-w-md mx-auto">
+                    <app-sliding-tutorial [inline]="true"></app-sliding-tutorial>
+                  </div>
+                </div>
               }
 
               <div class="prose prose-invert prose-lg max-w-none

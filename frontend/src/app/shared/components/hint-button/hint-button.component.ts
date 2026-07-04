@@ -23,10 +23,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       <button 
         (click)="onClick()"
         [disabled]="isAdLoading()"
-        class="flex-1 flex flex-col items-center justify-center p-1.5 md:p-3 bg-orange-500/10 rounded-xl border border-orange-500/30 hover:bg-orange-500/20 transition-colors active:scale-95 text-orange-500 shadow-sm relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed">
+        class="w-full h-full flex flex-col items-center justify-center p-1.5 sm:p-2 bg-orange-500/10 rounded-xl border border-orange-500/30 hover:bg-orange-500/20 transition-colors active:scale-95 text-orange-500 shadow-sm relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed">
         <div class="absolute inset-0 bg-gradient-to-t from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 md:h-7 md:w-7 mb-0.5 md:mb-1', textClass: 'text-xl md:text-2xl mb-0.5 md:mb-1 drop-shadow-md' }"></ng-container>
-        <span class="text-[10px] md:text-xs font-black tracking-widest">{{ i18n.t('game.hint_ad')() }}</span>
+        <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 sm:h-6 sm:w-6 mb-1', textClass: 'text-xl sm:text-2xl mb-1 drop-shadow-md' }"></ng-container>
+        <span class="text-[10px] sm:text-xs font-bold leading-tight">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 
