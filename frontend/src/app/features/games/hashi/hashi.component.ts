@@ -11,7 +11,6 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { HashiLobbyComponent } from './components/hashi-lobby/hashi-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';

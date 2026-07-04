@@ -19,12 +19,12 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameId } from '../../../core/models/game.model';
 import { FormsModule } from '@angular/forms';
 import { AdService } from '../../../core/services/ad.service';
-import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, HintButtonComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, GameToolbarComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -33,7 +33,7 @@ import { HintButtonComponent } from '../../../shared/components/hint-button/hint
 export class NonogramComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(NonogramStore);
   private windowSize = inject(WindowSizeService);
-  private i18n = inject(I18nService);
+  public i18n = inject(I18nService);
   private authStore = inject(AuthStore);
   private adService = inject(AdService);
 

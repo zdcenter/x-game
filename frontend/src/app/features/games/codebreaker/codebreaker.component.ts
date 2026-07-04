@@ -18,10 +18,11 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameService } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
-import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { SettingsService } from '../../../core/services/settings.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
@@ -36,7 +37,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
     GameLobbyPanelComponent,
     GameStartingOverlayComponent,
     GameHeaderComponent,
-    HintButtonComponent,
+    GameToolbarComponent,
     TutorialOverlayComponent
   ],
   providers: [CodebreakerStore],

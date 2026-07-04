@@ -7,7 +7,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
-import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import {
   CharResult, DailyGuessResponse, DailyStateResponse,
   FillResponse, FillSubmitResponse, GuessRecord, HistoryRecord, IdiomService, IdiomStats, SocialStats
@@ -36,7 +36,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
     GameHeaderComponent,
     GameRulesModalComponent,
     TutorialOverlayComponent,
-    HintButtonComponent,
+    GameToolbarComponent,
     GameLobbyPanelComponent,
     GameWaitingRoomComponent,
     GameResultOverlayComponent,

@@ -18,7 +18,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
-import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
@@ -32,7 +32,7 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
     CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
     GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
-    HintButtonComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, FormsModule
+    GameToolbarComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, FormsModule
   ],
   templateUrl: './watersort.component.html',
   styles: [`

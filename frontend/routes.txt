@@ -26,6 +26,8 @@
 /zh/games/drop2048
 /en/games/gomoku
 /zh/games/gomoku
+/en/games/hashi
+/zh/games/hashi
 /en/games/hexa
 /zh/games/hexa
 /en/games/idiom
@@ -60,6 +62,8 @@
 /zh/docs/drop2048
 /en/docs/gomoku
 /zh/docs/gomoku
+/en/docs/hashi
+/zh/docs/hashi
 /en/docs/hexa
 /zh/docs/hexa
 /en/docs/idiom

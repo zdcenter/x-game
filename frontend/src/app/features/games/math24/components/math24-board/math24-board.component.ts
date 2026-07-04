@@ -105,7 +105,7 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
           [showHint]="true"
           [disablePrev]="store.localLevelIndex() <= 0"
           [disableUndo]="store.currentBoardHistory().length <= 1"
-          hintLayout="math24"
+          hintLayout="sudoku"
           (prevLevel)="store.loadPrevLevel()"
           (nextLevel)="store.loadNextLevel()"
           (undo)="undo()"
