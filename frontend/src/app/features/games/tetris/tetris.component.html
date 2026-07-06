@@ -171,12 +171,12 @@
 
               <!-- CENTER: Main Board -->
               <div class="relative flex-shrink-0 touch-none" style="height: min(calc(100dvh - 260px), 720px); aspect-ratio: 1/2;">
-                <div class="w-full h-full bg-[var(--color-bg-card)] rounded-xl lg:rounded-2xl border-4 border-[var(--color-border-card)] shadow-2xl overflow-hidden p-[2px] lg:p-1 relative backdrop-blur-md"
+                <div class="w-full h-full bg-[var(--color-bg-card)] rounded-xl lg:rounded-2xl border-4 border-[var(--color-border-card)] shadow-2xl p-[2px] lg:p-1 relative backdrop-blur-md"
                      [class.tetris-shake]="isShaking()">
                   <div class="grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] lg:gap-[2px] w-full h-full relative z-10 bg-[var(--color-bg-main)]/50">
                     @for (row of viewGrid(); track $index; let r = $index) {
                       @for (cell of row; track $index; let c = $index) {
-                        <div class="w-full h-full rounded-[3px] lg:rounded-[4px] transition-all duration-75 box-border"
+                        <div class="w-full h-full rounded-[3px] lg:rounded-[4px] transition-all duration-75 box-border relative"
                              [class.shadow-sm]="cell.isFilled"
                              [style.backgroundColor]="cell.bg"
                              [style.border]="cell.border"
@@ -186,6 +186,21 @@
                       }
                     }
                   </div>
+
+                  <!-- Revive Shatter — block fragments flying outward -->
+                  @for (p of store.particles(); track p.id) {
+                    <div class="absolute z-[70] pointer-events-none shatter-anim"
+                         [style.background-color]="p.color"
+                         [style.width.px]="p.w"
+                         [style.height.px]="p.h"
+                         [style.left]="'calc(' + ((p.c + 0.5) / 10 * 100) + '% - ' + (p.w / 2) + 'px)'"
+                         [style.top]="'calc(' + ((p.r + 0.5) / 20 * 100) + '% - ' + (p.h / 2) + 'px)'"
+                         [style.--tx]="p.tx + 'px'"
+                         [style.--ty]="p.ty + 'px'"
+                         [style.--rot]="p.rot + 'deg'"
+                         style="box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), inset 0 -2px 0 rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.5); border-radius: 1px;">
+                    </div>
+                  }
 
                   <!-- Level Up Badge -->
                   @if (showLevelUp()) {
@@ -291,9 +306,11 @@
             [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
             [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
             [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
+            [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
             (leave)="goBack()"
             (restart)="store.restartGame()"
             (dismiss)="dismissRoom()"
+            (revive)="handleRevive()"
         [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
         (changeRoomGame)="store.changeRoomGame($event)">
           </app-game-result-overlay>

@@ -82,7 +82,7 @@
           
           <!-- Players / Opponents (Top) -->
           <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 w-full"
-               [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
+               [ngClass]="store.currentRoomMode() === GameMode.Single ? 'hidden' : ['hidden', 'lg:block']">
             <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
               <!-- Local Player -->
               <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
@@ -131,7 +131,8 @@
             }
 
               <!-- Game Board -->
-              <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-colors duration-300" [style.width]="boardSizePx()" [style.height]="boardSizePx()">
+              <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-colors duration-300" [style.width]="boardSizePx()" [style.height]="boardSizePx()"
+                   [class.animate-shake]="store.shakeTrigger() > 0">
                 <!-- Grid background -->
                 <div class="absolute inset-2 md:inset-3 grid gap-2" 
                      [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
@@ -161,24 +162,37 @@
                     }
                   }
                 </div>
+                
+                <!-- Revive Explosion Particles -->
+                @for (p of store.particles(); track p.id) {
+                  <div class="absolute z-[70] rounded-full pointer-events-none spark-anim"
+                       [style.background-color]="p.color"
+                       [style.width.px]="p.size"
+                       [style.height.px]="p.size"
+                       [style.left.%]="(p.c * (100 / (store.cells().length || 4)))"
+                       [style.top.%]="(p.r * (100 / (store.cells().length || 4)))"
+                       [style.margin-left]="'calc(' + p.size / -2 + 'px + ' + (100 / (store.cells().length || 4) / 2) + '%)'"
+                       [style.margin-top]="'calc(' + p.size / -2 + 'px + ' + (100 / (store.cells().length || 4) / 2) + '%)'"
+                       [style.--tx]="p.tx + 'px'"
+                       [style.--ty]="p.ty + 'px'"
+                       style="box-shadow: 0 0 10px currentColor, 0 0 24px currentColor, 0 0 48px currentColor;">
+                  </div>
+                }
               </div>
               
               @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="flex-none flex justify-center items-center gap-4 py-2 sm:py-4 w-full relative z-10">
-                  <button (click)="store.undo()" [disabled]="!store.localCanUndo()"
-                          class="flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-lg active:scale-95 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" />
-                    </svg>
-                    {{ i18n.t('game.undo')() || 'Undo' }}
-                  </button>
-                  <button (click)="store.restartGame()" 
-                          class="flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-bold text-sm sm:text-base transition-all duration-300 shadow-lg active:scale-95 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 hover:border-slate-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                    </svg>
-                    {{ i18n.t('game.restart')() }}
-                  </button>
+                <div class="w-[320px] md:w-[384px] lg:w-[400px] mt-4 mb-2 z-10 shrink-0">
+                  <app-game-toolbar
+                    [layoutStyle]="'compact'"
+                    [showRestart]="true"
+                    [showUndo]="true"
+                    [disableUndo]="!store.localCanUndo()"
+                    [showHint]="false"
+                    [showPrev]="false"
+                    [showNext]="false"
+                    (restart)="store.restartGame()"
+                    (undo)="store.undo()"
+                  ></app-game-toolbar>
                 </div>
               }
           </div>
@@ -200,14 +214,20 @@
           <app-game-result-overlay 
             currentGameId="classic2048"
             [title]="getOverlayTitle()"
-            [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
-            [showRestart]="store.hostId() === playerId"
-            [showLeave]="store.currentRoomMode() !== GameMode.Single"
+            [status]="store.currentRoomMode() === GameMode.Single ? 'lose' : (store.winners().includes(playerId) ? 'win' : 'lose')"
+            [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
+            [showLeave]="true"
+            [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
             (restart)="store.restartGame()"
             (leave)="goBack()"
+            (revive)="handleRevive()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
             (changeRoomGame)="store.changeRoomGame($event)"
-          />
+          >
+            <div class="text-xl mb-4 font-bold text-[var(--color-text-secondary)]">
+              SCORE: <span class="text-amber-400 text-3xl">{{ store.localScore() }}</span>
+            </div>
+          </app-game-result-overlay>
         }
       </div>
     </div>

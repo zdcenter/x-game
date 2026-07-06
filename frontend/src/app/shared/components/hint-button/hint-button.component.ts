@@ -76,11 +76,11 @@ import { I18nService } from '../../../core/i18n/i18n.service';
     }
 
     @if (layout === 'toolbar-compact') {
-      <button class="w-full h-full flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)] disabled:opacity-50 disabled:cursor-not-allowed"
+      <button class="w-full h-full flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)] disabled:opacity-50 disabled:cursor-not-allowed"
               [disabled]="isAdLoading()"
               (click)="onClick()">
         <ng-container *ngTemplateOutlet="iconTpl; context: { sizeClass: 'h-5 w-5 sm:h-6 sm:w-6 mb-1 text-orange-500', textClass: 'text-xl sm:text-xl drop-shadow-md' }"></ng-container>
-        <span class="truncate w-full text-center">{{ i18n.t('game.hint_ad')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('game.hint_ad')() }}</span>
       </button>
     }
 

@@ -20,6 +20,7 @@ import { GameId } from '../../../core/models/game.model';
 import { FormsModule } from '@angular/forms';
 import { AdService } from '../../../core/services/ad.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-nonogram',
@@ -36,6 +37,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   public i18n = inject(I18nService);
   private authStore = inject(AuthStore);
   private adService = inject(AdService);
+  private gameRegistry = inject(GameRegistryService);
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
@@ -44,6 +46,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   readonly GameDifficulty = GameDifficulty;
 
   private roomLifecycle: RoomLifecycleHandle;
+
+  predefinedDifficulties = this.gameRegistry.getConfig('nonogram')?.difficulties || [];
 
   showRules = signal<boolean>(false);
   showOverlay = signal<boolean>(false);
@@ -152,8 +156,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
        availW = vw - 40;
      }
 
-     // Height: header(~80px), draw toggle(~60px), padding(~40px)
-     const availH = vh - 180;
+     // Height: header(~80px), draw toggle(~70px)
+     const availH = vh - 150;
 
      const sizeW = Math.floor(availW / totalCols);
      const sizeH = Math.floor(availH / totalRows);

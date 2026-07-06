@@ -40,6 +40,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   level = signal<number>(1);
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
+  hasRevived = signal<boolean>(false);
   shakeTrigger = signal<number>(0);
   levelUpSignal = signal<number>(0);
 
@@ -224,6 +225,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.ghostRow.set(-1);
     this.comboCount.set(0);
     this.level.set(1);
+    this.hasRevived.set(false);
   }
 
   private syncState() {
@@ -260,6 +262,14 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     this.engine.handleAction({ type: Drop2048ActionType.Drop });
     this.updateSignals();
     if (this.engine.isDead) this.onGameOver();
+  }
+
+  reviveGame() {
+    this.hasRevived.set(true);
+    this.engine.revive();
+    this.localStatus.set(GameStatus.Playing);
+    this.isDead.set(false);
+    this.updateSignals();
   }
 
   moveActive(delta: number) {

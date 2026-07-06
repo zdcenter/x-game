@@ -248,9 +248,9 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', desc: 'Survival & Score', icon: '⚔️' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '8x8 Board' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '10x10 Board' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '12x12 Board' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_block_8x8', desc: '8x8 Board' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_block_10x10', desc: '10x10 Board' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_block_12x12', desc: '12x12 Board' }
     ],
     recommendations: ['tetris', 'hexa'],
     tutorial: [
@@ -271,11 +271,11 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: '4x4 Board' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: '5x5 Board' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: '6x6 Board' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_expert', desc: '7x7 Board' },
-      { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_master', desc: '8x8 Board' }
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_lightsout_4x4', desc: '4x4 Board' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_lightsout_5x5', desc: '5x5 Board' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_lightsout_6x6', desc: '6x6 Board' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_lightsout_7x7', desc: '7x7 Board' },
+      { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_lightsout_8x8', desc: '8x8 Board' }
     ],
     recommendations: ['minesweeper', 'sudoku'],
     multiRound: true,

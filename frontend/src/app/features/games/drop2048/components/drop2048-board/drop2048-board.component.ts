@@ -106,19 +106,6 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
           {{ combo.comboCount >= 1 ? 'COMBO ×' + (combo.comboCount + 1) + '!' : '+' + combo.scoreGained }}
         </div>
 
-        <!-- Merge Particles -->
-        <div *ngFor="let p of particles"
-             class="absolute z-50 rounded-full mix-blend-screen pointer-events-none spark-anim"
-             [style.background-color]="p.color"
-             [style.width.px]="p.size"
-             [style.height.px]="p.size"
-             [style.left.px]="colPx(p.x) + cellSize / 2 - p.size / 2"
-             [style.top.px]="rowPx(p.y) + cellSize / 2 - p.size / 2"
-             [style.--tx]="(math.random() * 160 - 80) + 'px'"
-             [style.--ty]="(math.random() * 160 - 80) + 'px'"
-             style="box-shadow: 0 0 8px currentColor, 0 0 18px currentColor;">
-        </div>
-
         <!-- Level Up Badge -->
         <div *ngIf="showLevelUp()"
              class="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none">
@@ -129,6 +116,19 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
         </div>
 
       </div><!-- /inner visual layer -->
+
+      <!-- Revive Explosion Particles (OUTSIDE overflow-hidden for full visibility) -->
+      <div *ngFor="let p of particles"
+           class="absolute z-[70] rounded-full pointer-events-none spark-anim"
+           [style.background-color]="p.color"
+           [style.width.px]="p.size"
+           [style.height.px]="p.size"
+           [style.left.px]="colPx(p.x) + cellSize / 2 - p.size / 2"
+           [style.top.px]="rowPx(p.y) + cellSize / 2 - p.size / 2"
+           [style.--tx]="p.tx + 'px'"
+           [style.--ty]="p.ty + 'px'"
+           style="box-shadow: 0 0 10px currentColor, 0 0 24px currentColor, 0 0 48px currentColor;">
+      </div>
 
       <!-- Click controls overlay: OUTSIDE the shaking inner div, always stable -->
       <div class="absolute inset-0 flex z-40">
@@ -174,12 +174,14 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
     }
     .landing-ring { animation: landing-ring 0.4s ease-out forwards; }
 
-    /* Spark particles */
+    /* Spark particles — revive explosion */
     .spark-anim {
-      animation: spark 0.65s cubic-bezier(0.1, 1, 0.3, 1) forwards;
+      animation: spark 1.2s cubic-bezier(0.05, 0.9, 0.2, 1) forwards;
+      filter: brightness(1.5);
     }
     @keyframes spark {
-      0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+      0%   { transform: translate(0, 0) scale(1.5); opacity: 1; }
+      30%  { opacity: 1; }
       100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
     }
 
@@ -227,7 +229,7 @@ export class Drop2048BoardComponent {
   @Input() board: DropBlock[] = [];
   @Input() activeBlock: { id: string, val: number, c: number, r: number } | null = null;
   @Input() combos: ComboText[] = [];
-  @Input() particles: { id: string, x: number, y: number, color: string, size: number }[] = [];
+  @Input() particles: { id: string, x: number, y: number, color: string, size: number, tx?: number, ty?: number }[] = [];
   @Input() ghostRow = -1;
 
   math = Math;

@@ -85,6 +85,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   GameDifficulty = GameDifficulty;
   GameStatus = GameStatus;
   GameMode = GameMode;
+  Math = Math;
   override store = inject(BlockStore);
   private authStore = inject(AuthStore);
   gameRegistry = inject(GameRegistryService);

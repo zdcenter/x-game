@@ -108,38 +108,50 @@
             </app-game-player-mini-hud>
           }
 
-          <!-- Players / Opponents (Top) -->
-          <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0"
-               [ngClass]="currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="currentRoomMode() === GameMode.Single">
-              
-              <!-- Local Player (You) -->
-              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                [playerName]="playerId"
-                [isHost]="playerId === _store.hostId()"
-                [isMe]="true"
-                [score]="0"
-                [stats]="[
-                  { icon: '🔄', value: myMoves(), label: i18n.t('game.moves')() }
-                ]"
-                [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
-
-              @if (currentRoomMode() !== GameMode.Single && opponentId()) {
+          <!-- Players Info Row -->
+          @if (currentRoomMode() === GameMode.Single) {
+            <!-- Classic Style for Single Player -->
+            <div class="flex-none py-1 mb-1 w-full shrink-0">
+              <div class="w-full flex justify-center items-center px-4">
+                <div class="flex flex-col items-center bg-black/20 rounded-xl px-8 py-1">
+                  <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-secondary)] font-bold">{{ i18n.t('game.moves')() || 'MOVES' }}</span>
+                  <span class="text-xl sm:text-2xl font-black text-blue-400 font-mono">{{ myMoves() }}</span>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <!-- PK Style -->
+            <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 hidden lg:block">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
+                
+                <!-- Local Player (You) -->
                 <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="opponentId()!"
-                  [isHost]="opponentId() === _store.hostId()"
-                  [isMe]="false"
+                  [playerName]="playerId"
+                  [isHost]="playerId === _store.hostId()"
+                  [isMe]="true"
                   [score]="0"
                   [stats]="[
-                    { icon: '🔄', value: opponentMoves(), label: i18n.t('game.moves')() }
+                    { icon: '🔄', value: myMoves(), label: i18n.t('game.moves')() }
                   ]"
                   [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
-              }
+
+                @if (opponentId()) {
+                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                    [playerName]="opponentId()!"
+                    [isHost]="opponentId() === _store.hostId()"
+                    [isMe]="false"
+                    [score]="0"
+                    [stats]="[
+                      { icon: '🔄', value: opponentMoves(), label: i18n.t('game.moves')() }
+                    ]"
+                    [status]="status === GameStatus.Finished ? GameStatus.Finished : 'playing'"></app-player-badge>
+                }
+              </div>
             </div>
-          </div>
+          }
 
           <!-- Playing area wrapper to resolve absolute layout heights -->
-          <div class="flex-grow flex-1 relative w-full min-h-0 flex items-center justify-center p-2 lg:p-4 overflow-y-auto">
+          <div class="flex-grow flex-1 relative w-full min-h-0 flex flex-col items-center justify-center p-2 lg:p-4 overflow-y-auto">
             
             <!-- Opponent Tubes (Mini) -->
             @if (currentRoomMode() !== GameMode.Single && opponentId()) {

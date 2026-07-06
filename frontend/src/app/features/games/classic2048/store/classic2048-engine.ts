@@ -6,6 +6,8 @@ export class Classic2048Engine {
   status: string = 'waiting';
   boardSize: number = 4;
   winTarget: number = 2048;
+  particles: any[] = [];
+  config: { onSound?: (s: string) => void, onReviveShake?: () => void } = {};
 
   initGame(options: any) {
     this.boardSize = 4;
@@ -17,7 +19,11 @@ export class Classic2048Engine {
     this.score = 0;
     this.moves = 0;
     this.history = [];
+    this.particles = [];
     this.status = 'playing';
+    
+    if (options?.onSound) this.config.onSound = options.onSound;
+    if (options?.onReviveShake) this.config.onReviveShake = options.onReviveShake;
     
     this.spawnTile();
     this.spawnTile();
@@ -149,5 +155,98 @@ export class Classic2048Engine {
       }
     }
     return true;
+  }
+
+  generateId(): string {
+    return Math.random().toString(36).substring(2, 11);
+  }
+
+  getColorForValue(val: number): string {
+    switch (val) {
+      case 2:    return '#eee4da';
+      case 4:    return '#ede0c8';
+      case 8:    return '#f2b179';
+      case 16:   return '#f59563';
+      case 32:   return '#f67c5f';
+      case 64:   return '#f65e3b';
+      case 128:  return '#edcf72';
+      case 256:  return '#edcc61';
+      case 512:  return '#edc850';
+      case 1024: return '#edc53f';
+      case 2048: return '#edc22e';
+      default:   return '#3c3a32';
+    }
+  }
+
+  revive() {
+    if (this.status !== 'finished') return;
+
+    // Collect all blocks
+    const blocks: {r: number, c: number, val: number}[] = [];
+    for (let r = 0; r < this.boardSize; r++) {
+      for (let c = 0; c < this.boardSize; c++) {
+        if (this.cells[r][c] > 0) {
+          blocks.push({r, c, val: this.cells[r][c]});
+        }
+      }
+    }
+
+    if (blocks.length === 0) return;
+
+    // Find unique values
+    const uniqueValues = Array.from(new Set(blocks.map(b => b.val))).sort((a, b) => a - b);
+    
+    // Destroy up to 40% of unique values
+    let cutoffIndex = Math.max(1, Math.floor(uniqueValues.length * 0.4));
+    let cutoffValue = Math.max(16, uniqueValues[cutoffIndex] || 16);
+
+    const blocksToDestroy = blocks.filter(b => b.val <= cutoffValue);
+    
+    // Sort randomly
+    blocksToDestroy.sort(() => Math.random() - 0.5);
+
+    this.status = 'playing';
+
+    let delay = 0;
+    const intervalTime = 80;
+
+    blocksToDestroy.forEach((block) => {
+      setTimeout(() => {
+        if (this.cells[block.r][block.c] !== block.val) return; // double check
+
+        // Spawn particles — 360° radial burst
+        const newParticles: any[] = [];
+        for (let i = 0; i < 20; i++) {
+          const angle = (Math.PI * 2 * i) / 20 + Math.random() * 0.5;
+          const speed = 40 + Math.random() * 120;
+          newParticles.push({
+            id: this.generateId(),
+            c: block.c,
+            r: block.r,
+            color: this.getColorForValue(block.val),
+            size: Math.round(6 + Math.random() * 16),
+            tx: Math.cos(angle) * speed,
+            ty: Math.sin(angle) * speed
+          });
+        }
+        this.particles = [...this.particles, ...newParticles];
+
+        // Remove block
+        this.cells[block.r][block.c] = 0;
+
+        // Effects
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        if (this.config?.onSound) this.config.onSound('drop');
+        if (this.config?.onReviveShake) this.config.onReviveShake();
+
+        // Clear particles after animation completes
+        setTimeout(() => {
+          const pIds = new Set(newParticles.map(p => p.id));
+          this.particles = this.particles.filter(x => !pIds.has(x.id));
+        }, 1200);
+
+      }, delay);
+      delay += intervalTime;
+    });
   }
 }

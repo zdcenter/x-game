@@ -17,6 +17,7 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
@@ -37,6 +38,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     GameRulesModalComponent,
     PlayerListContainerComponent,
     GamePlayerMiniHudComponent,
+    GameToolbarComponent,
   ],
   providers: [Drop2048Store,
     ],
@@ -207,5 +209,9 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     const winners = this.store.winners();
     if (winners.includes(this.playerId)) return 'game.you_win';
     return 'game.you_lose';
+  }
+
+  handleRevive() {
+    this.store.reviveGame();
   }
 }

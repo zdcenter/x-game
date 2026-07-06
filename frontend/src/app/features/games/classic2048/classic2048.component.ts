@@ -19,6 +19,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-classic2048',
@@ -32,6 +33,7 @@ import { ToastService } from '../../../core/services/toast.service';
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     GameRulesModalComponent,
+    GameToolbarComponent,
     ],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
@@ -57,6 +59,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   
   GameStatus = GameStatus;
   GameMode = GameMode;
+  math = Math;
 
   showRules = signal(false);
 
@@ -219,5 +222,9 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
         won: true
       }).subscribe();
     }
+  }
+
+  handleRevive() {
+    this.store.reviveGame();
   }
 }

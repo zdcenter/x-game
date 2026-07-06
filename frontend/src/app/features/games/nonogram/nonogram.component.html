@@ -24,9 +24,9 @@
               <div class="relative">
                 <select [ngModel]="store.currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
                   class="appearance-none bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-md lg:rounded-lg pl-1 pr-5 py-0.5 lg:pl-3 lg:pr-7 lg:py-1.5 text-xs lg:text-sm font-bold cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-inner text-[var(--color-text-main)]">
-                  <option value="easy">5x5</option>
-                  <option value="medium">10x10</option>
-                  <option value="hard">15x15</option>
+                  @for (diff of predefinedDifficulties; track diff.id) {
+                    <option [value]="diff.id">{{ t($any(diff.descKey))() }}</option>
+                  }
                 </select>
                 <svg class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -92,45 +92,47 @@
               </app-game-player-mini-hud>
             }
 
-            <!-- Players / Opponents (Top) -->
-            <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 w-full"
-                 [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
-                
-                <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="playerId === store.hostId()"
-                  [isMe]="true"
-                  [score]="store.currentRoomMode() === GameMode.Steal ? myScore() : undefined"
-                  [stats]="[
-                    (store.currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                    (store.currentRoomMode() === GameMode.Speed ? { label: 'PROG', value: myPlayerHUD().stats[0].value } : $any(null))
-                  ]"
-                  [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+            <!-- Players Info Row (Hidden in Single Player to maximize board height) -->
+            @if (store.currentRoomMode() !== GameMode.Single) {
+              <!-- PK Style -->
+              <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 w-full hidden lg:block">
+                <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
+                  
+                  <!-- Local Player (You) -->
+                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                    [playerName]="playerId"
+                    [isHost]="playerId === store.hostId()"
+                    [isMe]="true"
+                    [score]="store.currentRoomMode() === GameMode.Steal ? myScore() : undefined"
+                    [stats]="[
+                      (store.currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                      (store.currentRoomMode() === GameMode.Speed ? { label: 'PROG', value: myPlayerHUD().stats[0].value } : $any(null))
+                    ]"
+                    [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
 
-                @if (store.currentRoomMode() !== GameMode.Single) {
-                  <app-player-list-container
-                    [opponentsCount]="opponentsHUD().length"
-                    class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                    <ng-template #opponentsList>
-                        @for (opp of opponentsHUD(); track opp.playerName) {
-                            <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                              [playerName]="opp.playerName"
-                              [isHost]="opp.isHost"
-                              [isMe]="false"
-                              [score]="store.currentRoomMode() === GameMode.Steal ? opp.stats[0].value : undefined"
-                              [stats]="[
-                                (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.playerName] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                                (store.currentRoomMode() === GameMode.Speed ? { label: 'PROG', value: opp.stats[0].value } : $any(null))
-                              ]"
-                              [status]="opp.status === 'finished' ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-                        }
-                    </ng-template>
-                  </app-player-list-container>
-                }
+                  @if (store.currentRoomMode() !== GameMode.Single) {
+                    <app-player-list-container
+                      [opponentsCount]="opponentsHUD().length"
+                      class="flex-1 min-w-0 flex justify-end lg:justify-start">
+                      <ng-template #opponentsList>
+                          @for (opp of opponentsHUD(); track opp.playerName) {
+                              <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                                [playerName]="opp.playerName"
+                                [isHost]="opp.isHost"
+                                [isMe]="false"
+                                [score]="store.currentRoomMode() === GameMode.Steal ? opp.stats[0].value : undefined"
+                                [stats]="[
+                                  (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.playerName] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                                  (store.currentRoomMode() === GameMode.Speed ? { label: 'PROG', value: opp.stats[0].value } : $any(null))
+                                ]"
+                                [status]="opp.status === 'finished' ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
+                          }
+                      </ng-template>
+                    </app-player-list-container>
+                  }
+                </div>
               </div>
-            </div>
+            }
 
             <!-- Main Board -->
             <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto flex flex-col p-4 min-h-[400px]"

@@ -41,6 +41,8 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   shakeTrigger = signal<number>(0);
   levelUpSignal = signal<number>(0);
   comboTrigger = signal<number>(0);
+  hasRevived = signal<boolean>(false);
+  particles = signal<any[]>([]);
 
   readonly singlePlayerStatus = computed(() => this.localStatus());
 
@@ -143,10 +145,12 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
 
 
       this.engine.initGame({
+        mode: GameMode.Single,
         onSound: (s) => this.audio.playTetris(s),
         onHardDrop: () => this.shakeTrigger.update(n => n + 1),
         onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
         onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
+        onShake: () => { this.shakeTrigger.update(n => n + 1); this.updateSignals(); },
       });
       this.updateSignals();
     } else {
@@ -209,6 +213,8 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.holdPiece.set(null);
     this.canHold.set(true);
     this.isDead.set(false);
+    this.hasRevived.set(false);
+    this.particles.set([]);
   }
 
   private syncState() {
@@ -232,6 +238,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.level.set(state.level);
     this.isDead.set(state.isDead);
     this.ghostY.set(state.ghostY);
+    this.particles.set([...(state.particles || [])]);
     
     if (this.currentRoomMode() === GameMode.Single && state.score > this.bestScore()) {
       this.bestScore.set(state.score);
@@ -250,6 +257,15 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   softDrop() { this.engine.handleAction({ type: TetrisActionType.SoftDrop }); this.updateSignals(); }
   hardDrop() { this.engine.handleAction({ type: TetrisActionType.HardDrop }); this.updateSignals(); }
   hold() { this.engine.handleAction({ type: TetrisActionType.Hold }); this.updateSignals(); }
+
+  reviveGame() {
+    if (this.currentRoomMode() === GameMode.Single && !this.hasRevived() && this.isDead()) {
+      this.hasRevived.set(true);
+      this.engine.revive();
+      this.localStatus.set(GameStatus.Playing);
+      this.updateSignals();
+    }
+  }
 
   ngOnDestroy() {
     this.engine.stop();

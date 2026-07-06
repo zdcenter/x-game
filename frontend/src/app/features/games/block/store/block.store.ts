@@ -120,6 +120,8 @@ export class BlockStore extends BaseGameStore {
     });
   }
 
+  bestScore = signal<number>(0);
+
   override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = GameDifficulty.Medium, hostId: string = '', target: number = 1) {
     this.currentDifficulty.set(diff);
     super.joinRoom(roomId, mode, diff, hostId, target);
@@ -132,6 +134,15 @@ export class BlockStore extends BaseGameStore {
     if (mode === GameMode.Single) {
       this.localStatus.set(GameStatus.Waiting);
       this.loadSinglePlayerProgress();
+      
+      if (this.auth.isAuthenticated()) {
+        this.getStats().subscribe(res => {
+          if (res && res.length > 0) {
+            const maxBest = Math.max(...res.map(s => s.BestScore || 0));
+            this.bestScore.set(maxBest);
+          }
+        });
+      }
     }
   }
 
@@ -269,7 +280,11 @@ export class BlockStore extends BaseGameStore {
       });
     } else {
       storageRemove('block_save');
-      this.submitSingleStat({ score: this.localScore(), won: false }).subscribe();
+      this.submitSingleStat({ score: this.localScore(), won: false }).subscribe(res => {
+        if (res && res.isNewRecord) {
+          this.bestScore.set(this.localScore());
+        }
+      });
     }
   }
 

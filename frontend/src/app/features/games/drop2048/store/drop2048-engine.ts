@@ -55,6 +55,7 @@ export interface Drop2048EngineConfig {
   onSyncState?: () => void;
   onBigMerge?: (val: number) => void;
   onLevelUp?: (newLevel: number) => void;
+  onReviveShake?: () => void;
 }
 
 export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Action> {
@@ -438,5 +439,89 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       case 2048: return '#ffca28';
       default:   return '#fbbf24';
     }
+  }
+
+  revive() {
+    if (!this.isDead) return;
+
+    if (this.board.length === 0) return;
+    
+    // Find the threshold value to destroy
+    // Get unique sorted values on the board
+    const uniqueValues = Array.from(new Set(this.board.map(b => b.val))).sort((a, b) => a - b);
+    
+    // Calculate the cutoff index (bottom 30% of unique values, but minimum up to value 16)
+    let cutoffIndex = Math.max(1, Math.floor(uniqueValues.length * 0.3));
+    let cutoffValue = Math.max(16, uniqueValues[cutoffIndex] || 16);
+
+    const blocksToDestroy = this.board.filter(b => b.val <= cutoffValue);
+    
+    // Sort blocks randomly for a pop-corn effect
+    blocksToDestroy.sort(() => Math.random() - 0.5);
+
+    // Set playing state early so UI updates
+    this.isDead = false;
+    this.status = GameStatus.Playing;
+
+    let delay = 0;
+    const intervalTime = 80; // 80ms between each block explosion
+
+    blocksToDestroy.forEach((block) => {
+      setTimeout(() => {
+        // Check if it's still on board
+        const exists = this.board.find(b => b.id === block.id);
+        if (!exists) return;
+
+        // Spawn particles for this specific block — 360° radial burst
+        const newParticles: { id: string, x: number, y: number, color: string, size: number, tx: number, ty: number }[] = [];
+        for (let i = 0; i < 20; i++) {
+          const angle = (Math.PI * 2 * i) / 20 + Math.random() * 0.5;
+          const speed = 40 + Math.random() * 120;
+          newParticles.push({
+            id: this.generateId(),
+            x: block.c,
+            y: block.r,
+            color: this.getColorForValue(block.val),
+            size: Math.round(6 + Math.random() * 16),
+            tx: Math.cos(angle) * speed,
+            ty: Math.sin(angle) * speed,
+          });
+        }
+        this.particles = [...this.particles, ...newParticles];
+
+        // Remove from board
+        this.board = this.board.filter(b => b.id !== block.id);
+
+        // Sound, Vibration, Shake for each pop
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        if (this.config?.onSound) this.config.onSound('drop');
+        if (this.config?.onReviveShake) this.config.onReviveShake();
+
+        // Clear particles after animation completes
+        setTimeout(() => {
+          const pIds = new Set(newParticles.map(p => p.id));
+          this.particles = this.particles.filter(x => !pIds.has(x.id));
+        }, 1200);
+
+      }, delay);
+      delay += intervalTime;
+    });
+
+    // After all explosions + a short beat, apply gravity and merges
+    setTimeout(() => {
+      // Apply gravity
+      for (let c = 0; c < DROP2048_COLS; c++) {
+        let colBlocks = this.board.filter(b => b.c === c).sort((a, b) => b.r - a.r);
+        let bottomFree = DROP2048_ROWS - 1;
+        for (let b of colBlocks) {
+          if (b.r !== bottomFree) {
+            b.r = bottomFree;
+          }
+          bottomFree--;
+        }
+      }
+      
+      this.processMerges(0);
+    }, delay + 400); // 400ms after the last explosion
   }
 }

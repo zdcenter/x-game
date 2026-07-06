@@ -1,49 +1,49 @@
 @if (layoutStyle === 'compact') {
-  <div class="flex-none flex flex-row items-center justify-center w-full gap-2 z-20">
+  <div class="flex-none flex flex-row items-center justify-center w-full gap-1 sm:gap-2 z-20">
     <!-- Back -->
     @if (showBack) {
-      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
+      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
               (click)="back.emit()">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        <span class="truncate w-full text-center">{{ i18n.t('game.back')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('game.back')() }}</span>
       </button>
     }
     <!-- Prev Level -->
     @if (showPrev) {
-      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
+      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
               (click)="prevLevel.emit()"
               [disabled]="disablePrev"
               [class.opacity-50]="disablePrev">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
-        <span class="truncate w-full text-center">{{ i18n.t('game.prev_level')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('game.prev_level')() }}</span>
       </button>
     }
 
     <!-- Undo -->
     @if (showUndo) {
-      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
+      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
               (click)="undo.emit()"
               [disabled]="disableUndo"
               [class.opacity-50]="disableUndo">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
         </svg>
-        <span class="truncate w-full text-center">{{ i18n.t('game.undo')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('game.undo')() }}</span>
       </button>
     }
 
     <!-- Restart -->
     @if (showRestart) {
-      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
+      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
               (click)="restart.emit()">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <span class="truncate w-full text-center">{{ i18n.t('game.retry')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('game.retry')() }}</span>
       </button>
     }
 
@@ -56,25 +56,25 @@
 
     <!-- Next Level -->
     @if (showNext) {
-      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
+      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
               (click)="nextLevel.emit()"
               [disabled]="disableNext"
               [class.opacity-50]="disableNext">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="truncate w-full text-center">{{ i18n.t('game.next_level')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('game.next_level')() }}</span>
       </button>
     }
 
     <!-- Share -->
     @if (showShare) {
-      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
+      <button class="flex-1 min-w-[50px] max-w-[100px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)]"
               (click)="shareGame()">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 mb-1 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
         </svg>
-        <span class="truncate w-full text-center">{{ i18n.t('idiom.share')() }}</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('idiom.share')() }}</span>
       </button>
     }
   </div>

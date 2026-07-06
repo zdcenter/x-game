@@ -133,33 +133,49 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
       }
 
       @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
-        <div class="flex-none py-1 border-b border-[var(--color-border-card)] w-full relative z-10">
-          <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar"
-               [class.justify-center]="store.currentRoomMode() === GameMode.Single">
-
-            <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-              [playerName]="playerId"
-              [isHost]="store.hostId() === playerId"
-              [isMe]="true"
-              [stats]="[
-                { icon: '🦶', value: store.myMoves(), label: i18n.t('game.moves')() },
-                { icon: '⏱️', value: gameTimer.formatTime(store.timeSpent()), label: i18n.t('game.time')() }
-              ]"
-              [status]="store.myPlayerState()?.status || 'playing'"
-            ></app-player-badge>
-
-            @for (opp of store.opponents(); track opp.id) {
-              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                [playerName]="opp.id"
-                [isHost]="opp.isHost"
-                [stats]="[
-                  { icon: '🦶', value: opp.moves, label: i18n.t('game.moves')() }
-                ]"
-                [status]="opp.status"
-              ></app-player-badge>
-            }
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <!-- Classic Style for Single Player -->
+          <div class="flex-none py-1 mb-1 w-full shrink-0 relative z-10">
+            <div class="w-full flex justify-center items-center px-4 gap-4 sm:gap-6">
+              <div class="flex flex-col items-center bg-black/20 rounded-xl px-6 py-1 min-w-[100px]">
+                <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-secondary)] font-bold">{{ i18n.t('game.moves')() || 'MOVES' }}</span>
+                <span class="text-xl sm:text-2xl font-black text-amber-500 font-mono">{{ store.myMoves() }}</span>
+              </div>
+              <div class="flex flex-col items-center bg-black/20 rounded-xl px-6 py-1 min-w-[100px]">
+                <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-secondary)] font-bold">{{ i18n.t('game.time')() || 'TIME' }}</span>
+                <span class="text-xl sm:text-2xl font-black text-blue-400 font-mono">{{ gameTimer.formatTime(store.timeSpent()) }}</span>
+              </div>
+            </div>
           </div>
-        </div>
+        } @else {
+          <!-- PK Style -->
+          <div class="flex-none py-1 border-b border-[var(--color-border-card)] w-full relative z-10 hidden lg:block">
+            <div class="w-full max-w-[800px] mx-auto flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar">
+
+              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                [playerName]="playerId"
+                [isHost]="store.hostId() === playerId"
+                [isMe]="true"
+                [stats]="[
+                  { icon: '🦶', value: store.myMoves(), label: i18n.t('game.moves')() },
+                  { icon: '⏱️', value: gameTimer.formatTime(store.timeSpent()), label: i18n.t('game.time')() }
+                ]"
+                [status]="store.myPlayerState()?.status || 'playing'"
+              ></app-player-badge>
+
+              @for (opp of store.opponents(); track opp.id) {
+                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                  [playerName]="opp.id"
+                  [isHost]="opp.isHost"
+                  [stats]="[
+                    { icon: '🦶', value: opp.moves, label: i18n.t('game.moves')() }
+                  ]"
+                  [status]="opp.status"
+                ></app-player-badge>
+              }
+            </div>
+          </div>
+        }
 
         <!-- Board Area: flex-grow + overflow-hidden，不产生滚动条 -->
         <div class="relative flex-grow flex flex-col lg:flex-row items-center justify-center min-h-0 overflow-hidden w-full py-2 px-2 z-10 gap-8">

@@ -55,8 +55,8 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   showOverlay = signal(false);
   hintCell = signal<{r: number, c: number} | null>(null);
 
-  // chrome = nav + outer-padding + card-padding + header + player-badges + board-py
-  boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 260, tablet: 300, pc: 340 }, 600);
+  // chrome = nav + outer-padding + card-padding + header + player-badges + board-py + toolbar
+  boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 320, tablet: 350, pc: 380 }, 600);
 
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;

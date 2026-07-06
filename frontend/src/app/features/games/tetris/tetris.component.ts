@@ -346,6 +346,10 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return scores;
   }
   
+  handleRevive() {
+    this.store.reviveGame();
+  }
+  
   getOverlayStats() {
     const stats: { label: string, value: string | number }[] = [
       { label: this.i18n.t('tetris.score')() || 'SCORE', value: this.store.score() }

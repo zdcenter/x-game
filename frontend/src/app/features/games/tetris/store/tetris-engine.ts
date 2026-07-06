@@ -1,5 +1,5 @@
-import { GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { getEmptyGrid, Piece, rotateMatrix, Tetromino, TETROMINO_SHAPES, TETRIS_COLS, TETRIS_ROWS } from '../models/tetris.model';
+import { GameStatus, GameStatusType, GameMode } from '../../../../core/models/game.model';
+import { getEmptyGrid, Piece, rotateMatrix, Tetromino, TETROMINO_SHAPES, TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS } from '../models/tetris.model';
 import { PRNG } from '../../../../core/utils/prng';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
 
@@ -35,6 +35,7 @@ export interface TetrisState {
   isDead: boolean;
   ghostY: number;
   comboCount: number;
+  particles: any[];
 }
 
 export interface TetrisConfig {
@@ -46,6 +47,8 @@ export interface TetrisConfig {
   onHardDrop?: () => void;
   onLevelUp?: (level: number) => void;
   onCombo?: (count: number) => void;
+  onParticle?: (particle: any) => void;
+  onShake?: () => void;
 }
 
 export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
@@ -60,6 +63,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   status: GameStatusType = GameStatus.Waiting;
   isDead = false;
   comboCount = 0;
+  particles: any[] = [];
 
   private dropInterval: any;
   private localGarbageApplied = 0;
@@ -111,6 +115,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       isDead: this.isDead,
       ghostY: this.getGhostY(),
       comboCount: this.comboCount,
+      particles: this.particles,
     };
   }
 
@@ -389,5 +394,119 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       }
     }
     return false;
+  }
+
+  revive() {
+    if (!this.isDead || (this.config.mode && this.config.mode !== GameMode.Single && this.config.mode !== 'single')) return;
+
+    this.isDead = false;
+    this.status = GameStatus.Playing;
+    
+    // Select the bottom 12 rows
+    const rowsToClear = 12;
+    const startRow = TETRIS_ROWS - rowsToClear;
+
+    // Collect all non-empty blocks in the bottom 12 rows
+    const blocksToDestroy: {r: number, c: number, type: number}[] = [];
+    for (let r = startRow; r < TETRIS_ROWS; r++) {
+      for (let c = 0; c < TETRIS_COLS; c++) {
+        if (this.grid[r][c] !== 0) {
+          blocksToDestroy.push({r, c, type: this.grid[r][c]});
+        }
+      }
+    }
+
+    // Sort blocks randomly for a popcorn effect
+    blocksToDestroy.sort(() => Math.random() - 0.5);
+
+    // Sequential explosion — dramatic popcorn effect
+    const intervalTime = 80; // 80ms between each block pop (matching Drop2048)
+    blocksToDestroy.forEach((block, index) => {
+      setTimeout(() => {
+        // Destroy the block
+        this.grid[block.r][block.c] = 0;
+        
+        // Shatter into 8 rectangular debris fragments
+        const newParticles: any[] = [];
+        const blockColor = TETROMINO_COLORS[block.type as Tetromino] || '#fff';
+        for (let i = 0; i < 8; i++) {
+          const angle = (Math.PI * 2 * i) / 8 + (Math.random() - 0.5) * 0.8;
+          const speed = 15 + Math.random() * 40;
+          // Mix of larger shards and small chips
+          const isLarge = i < 3;
+          newParticles.push({
+            id: Math.random().toString(36).substring(2, 9),
+            r: block.r,
+            c: block.c,
+            color: blockColor,
+            w: isLarge ? 5 + Math.random() * 6 : 2 + Math.random() * 4,
+            h: isLarge ? 4 + Math.random() * 5 : 2 + Math.random() * 3,
+            tx: Math.cos(angle) * speed,
+            ty: Math.sin(angle) * speed + 8, // slight gravity pull downward
+            rot: Math.floor(Math.random() * 360 - 180),
+          });
+        }
+        this.particles = [...this.particles, ...newParticles];
+
+        // Vibrate for haptic feedback
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        if (this.config.onSound) this.config.onSound('clear');
+
+        // Sync to Angular signals
+        this.config.onShake?.();
+
+        // Clear particles after animation
+        setTimeout(() => {
+          const pIds = new Set(newParticles.map(pp => pp.id));
+          this.particles = this.particles.filter(x => !pIds.has(x.id));
+          this.config.onShake?.();
+        }, 700);
+
+        // If it's the last block, drop the remaining blocks and resume
+        if (index === blocksToDestroy.length - 1) {
+          setTimeout(() => {
+            // Apply gravity to the remaining blocks
+            this.applyGravity(startRow);
+            this.currentPiece = null;
+            this.spawnPiece();
+            this.startGameLoop();
+            this.config.onSyncState?.();
+          }, 600);
+        }
+      }, index * intervalTime);
+    });
+    
+    if (blocksToDestroy.length === 0) {
+      // If bottom is already empty (rare), just resume
+      this.currentPiece = null;
+      this.spawnPiece();
+      this.startGameLoop();
+    }
+  }
+
+  private applyGravity(clearedStartRow: number) {
+    const newGrid = getEmptyGrid();
+    let writeRow = TETRIS_ROWS - 1;
+    
+    // Copy all rows that were not in the destroyed section (from top to clearedStartRow - 1)
+    for (let r = clearedStartRow - 1; r >= 0; r--) {
+      // Check if row has any blocks
+      let hasBlocks = false;
+      for (let c = 0; c < TETRIS_COLS; c++) {
+        if (this.grid[r][c] !== 0) {
+          hasBlocks = true;
+          break;
+        }
+      }
+      
+      if (hasBlocks) {
+        for (let c = 0; c < TETRIS_COLS; c++) {
+          newGrid[writeRow][c] = this.grid[r][c];
+        }
+        writeRow--;
+      }
+    }
+    
+    this.grid = newGrid;
   }
 }

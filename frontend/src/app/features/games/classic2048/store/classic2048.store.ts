@@ -13,6 +13,9 @@ export class Classic2048Store extends BaseGameStore {
   localMoves = signal(0);
   localCanUndo = signal(false);
   localStatus = signal<GameStatusType>(GameStatus.Waiting);
+  hasRevived = signal(false);
+  particles = signal<any[]>([]);
+  shakeTrigger = signal(0);
 
   // For PK mode
   pkBoards = signal<Record<string, { cells: number[][], score: number, status: string }>>({});
@@ -53,7 +56,11 @@ export class Classic2048Store extends BaseGameStore {
   }
 
   protected override onSinglePlayerStart() {
-    this.engine.initGame({ difficulty: this.currentDifficulty() });
+    this.hasRevived.set(false);
+    this.engine.initGame({ 
+      difficulty: this.currentDifficulty(),
+      onReviveShake: () => this.shakeTrigger.update(n => n + 1)
+    });
     this.syncEngineState();
   }
 
@@ -85,12 +92,29 @@ export class Classic2048Store extends BaseGameStore {
     }
   }
 
+  reviveGame() {
+    this.hasRevived.set(true);
+    this.engine.revive();
+    this.localStatus.set(GameStatus.Playing);
+    
+    // Sync state frequently to show sequential explosion
+    const syncInterval = setInterval(() => {
+      this.syncEngineState();
+    }, 16);
+
+    setTimeout(() => {
+      clearInterval(syncInterval);
+      this.syncEngineState(); // final sync
+    }, 2500); // Wait enough time for all explosions to finish
+  }
+
   private syncEngineState() {
     this.cells.set([...this.engine.cells.map(r => [...r])]);
     this.localScore.set(this.engine.score);
     this.localMoves.set(this.engine.moves);
     this.localCanUndo.set(this.engine.history.length > 0);
     this.localStatus.set(this.engine.status as GameStatusType);
+    this.particles.set([...this.engine.particles]);
   }
 
 

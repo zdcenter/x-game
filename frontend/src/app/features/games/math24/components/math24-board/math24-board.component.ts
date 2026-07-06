@@ -97,15 +97,14 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
       <!-- Controls -->
       <div class="w-full mt-4">
         <app-game-toolbar
-          [layoutStyle]="'default'"
+          [layoutStyle]="'compact'"
           [showPrev]="true"
           [showNext]="true"
           [showRestart]="true"
-          [showUndo]="true"
+          [showUndo]="false"
           [showHint]="true"
           [disablePrev]="store.localLevelIndex() <= 0"
-          [disableUndo]="store.currentBoardHistory().length <= 1"
-          hintLayout="sudoku"
+          hintLayout="toolbar-compact"
           (prevLevel)="store.loadPrevLevel()"
           (nextLevel)="store.loadNextLevel()"
           (undo)="undo()"

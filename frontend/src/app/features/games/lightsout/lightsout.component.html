@@ -48,11 +48,11 @@
             <div class="relative ml-2">
               <select [value]="store.currentDifficulty()" (change)="changeDifficulty($event)"
                       class="appearance-none pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-amber-500">
-                <option value="easy">{{ i18n.t('game.diff_easy')() }}</option>
-                <option value="medium">{{ i18n.t('game.diff_medium')() }}</option>
-                <option value="hard">{{ i18n.t('game.diff_hard')() }}</option>
-                <option value="expert">{{ i18n.t('game.diff_expert')() }}</option>
-                <option value="master">{{ i18n.t('game.diff_master')() }}</option>
+                <option value="easy">{{ i18n.t('game.diff_lightsout_4x4')() }}</option>
+                <option value="medium">{{ i18n.t('game.diff_lightsout_5x5')() }}</option>
+                <option value="hard">{{ i18n.t('game.diff_lightsout_6x6')() }}</option>
+                <option value="expert">{{ i18n.t('game.diff_lightsout_7x7')() }}</option>
+                <option value="master">{{ i18n.t('game.diff_lightsout_8x8')() }}</option>
               </select>
               <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -130,35 +130,47 @@
             }
 
             <!-- Players Info Row -->
-            <div class="flex-none py-1 mb-1 w-full max-w-[800px] border-b border-[var(--color-border-card)] shrink-0"
-                 [ngClass]="store.currentRoomMode() !== GameMode.Single ? ['hidden', 'lg:block'] : []">
-              <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
-                <!-- Local Player -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="store.hostId() === playerId"
-                  [isMe]="true"
-                  [stats]="[
-                    (store.currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                    { icon: '🦶', value: store.moves() }
-                  ]"
-                  [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"
-                ></app-player-badge>
-
-                <!-- Opponents -->
-                @for (opp of store.opponents(); track opp.id) {
-                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                    [playerName]="opp.id"
-                    [isHost]="store.hostId() === opp.id"
-                    [stats]="[
-                      (store.currentRoomMode() !== GameMode.Single && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                      { icon: '💡', value: opp.remainingLights }
-                    ]"
-                    [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
-                  ></app-player-badge>
-                }
+            @if (store.currentRoomMode() === GameMode.Single) {
+              <!-- Classic Style for Single Player -->
+              <div class="flex-none py-1 mb-1 w-full max-w-[800px] shrink-0">
+                <div class="w-full flex justify-center items-center px-4">
+                  <div class="flex flex-col items-center bg-black/20 rounded-xl px-8 py-1">
+                    <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-secondary)] font-bold">{{ i18n.t('game.moves')() || 'MOVES' }}</span>
+                    <span class="text-xl sm:text-2xl font-black text-amber-500 font-mono">{{ store.moves() }}</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            } @else {
+              <!-- PK Style -->
+              <div class="flex-none py-1 mb-1 w-full max-w-[800px] border-b border-[var(--color-border-card)] shrink-0 hidden lg:block">
+                <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar">
+                  <!-- Local Player -->
+                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                    [playerName]="playerId"
+                    [isHost]="store.hostId() === playerId"
+                    [isMe]="true"
+                    [stats]="[
+                      (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                      { icon: '🦶', value: store.moves() }
+                    ]"
+                    [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"
+                  ></app-player-badge>
+
+                  <!-- Opponents -->
+                  @for (opp of store.opponents(); track opp.id) {
+                    <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
+                      [playerName]="opp.id"
+                      [isHost]="store.hostId() === opp.id"
+                      [stats]="[
+                        (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
+                        { icon: '💡', value: opp.remainingLights }
+                      ]"
+                      [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
+                    ></app-player-badge>
+                  }
+                </div>
+              </div>
+            }
 
             <!-- Board Area (Strict Aspect Square) -->
             <div class="relative flex-grow flex items-center justify-center min-h-0 w-full py-2 shrink-0 overflow-hidden">
