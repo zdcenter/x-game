@@ -13,14 +13,6 @@ export class LangUrlSerializer extends DefaultUrlSerializer {
     return super.parse(url);
   }
 
-  override serialize(tree: UrlTree): string {
-    const url = super.serialize(tree);
-    if (url.startsWith('/') && url !== '/' && !LANG_RE.test(url) && !url.startsWith('/assets/')) {
-      return '/' + this.getCurrentLang() + url;
-    }
-    return url;
-  }
-
   private getCurrentLang(): string {
     if (isBrowser()) {
       const m = window.location.pathname.match(LANG_RE);
