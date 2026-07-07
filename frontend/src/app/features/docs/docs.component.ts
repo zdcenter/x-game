@@ -187,8 +187,10 @@ export class DocsComponent {
       this.games.set(sorted);
       
       // If no gameId in route, redirect to the first game
-      if (!this.currentGameId() && sorted.length > 0) {
-        this.router.navigate(['/docs', sorted[0].id], { replaceUrl: true });
+      // Use snapshot to avoid SSR synchronous observable race conditions
+      const urlGameId = this.route.snapshot.paramMap.get('gameId');
+      if (!urlGameId && sorted.length > 0) {
+        this.router.navigate(['/', this.i18n.currentLang(), 'docs', sorted[0].id], { replaceUrl: true });
       }
     });
 
