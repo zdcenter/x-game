@@ -11,6 +11,7 @@ import { GameRegistryService } from '../../core/services/game-registry.service';
 import { GameStepPlayerComponent } from './components/game-step-player/game-step-player.component';
 import { ALL_DEMO_CONFIGS } from './data/demo-configs';
 import { SlidingTutorialComponent } from '../games/sliding/components/sliding-tutorial/sliding-tutorial.component';
+import { SokobanTutorialComponent } from '../games/sokoban/components/sokoban-tutorial/sokoban-tutorial.component';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
@@ -23,7 +24,7 @@ interface TocItem {
 @Component({
   selector: 'app-docs',
   standalone: true,
-  imports: [CommonModule, RouterLink, FooterComponent, GameStepPlayerComponent, SlidingTutorialComponent],
+  imports: [CommonModule, RouterLink, FooterComponent, GameStepPlayerComponent, SlidingTutorialComponent, SokobanTutorialComponent],
   template: `
     <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
       
@@ -88,10 +89,6 @@ interface TocItem {
                 </p>
               </div>
 
-              @if (hasDemoConfig(currentGameId())) {
-                <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
-              }
-
               <!-- Advanced Interactive Tutorial for Sliding Puzzle -->
               @if (currentGameId() === 'sliding') {
                 <div class="mt-12 mb-8">
@@ -99,6 +96,22 @@ interface TocItem {
                   <div class="relative w-full max-w-md mx-auto">
                     <app-sliding-tutorial [inline]="true"></app-sliding-tutorial>
                   </div>
+                </div>
+              }
+
+              <!-- Advanced Interactive Tutorial for Sokoban -->
+              @if (currentGameId() === 'sokoban') {
+                <div class="mt-12 mb-8">
+                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">推箱子真实演示</h2>
+                  <div class="relative w-full max-w-md mx-auto">
+                    <app-sokoban-tutorial [inline]="true"></app-sokoban-tutorial>
+                  </div>
+                </div>
+              } @else if (hasDemoConfig(currentGameId()) && currentGameId() !== 'sliding') {
+                <!-- Standard Game Step Player for other games -->
+                <div class="mt-12 mb-8">
+                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="visual-guide">图文教程</h2>
+                  <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
                 </div>
               }
 

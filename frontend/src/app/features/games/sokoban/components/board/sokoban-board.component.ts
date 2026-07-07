@@ -484,6 +484,16 @@ export class SokobanBoardComponent {
     }
   }
 
+  // Used by tutorial components to trigger visual animations on readonly boards
+  playTutorialAnimation(dir: 'up' | 'down' | 'left' | 'right', isPush: boolean) {
+    this.playerDir.set(dir);
+    this.playerAction.set(isPush ? 'push' : 'walk');
+    if (this.actionTimeout) clearTimeout(this.actionTimeout);
+    this.actionTimeout = setTimeout(() => {
+      this.playerAction.set('idle');
+    }, 300);
+  }
+
   store = inject(SokobanStore);
 
   rows = computed(() => this.activeBoard().length || 1);

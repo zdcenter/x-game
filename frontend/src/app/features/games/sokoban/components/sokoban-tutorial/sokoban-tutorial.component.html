@@ -1,0 +1,79 @@
+@if (!inline) {
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="close()"></div>
+  <ng-container *ngTemplateOutlet="tutorialContent"></ng-container>
+</div>
+} @else {
+  <ng-container *ngTemplateOutlet="tutorialContent"></ng-container>
+}
+
+<ng-template #tutorialContent>
+  <div class="relative bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden flex flex-col" [class.max-h-[90vh]]="!inline">
+    <!-- Header -->
+    @if (!inline) {
+    <div class="flex items-center justify-between p-4 border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
+      <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
+        📦 推箱子玩法演示
+      </h2>
+      <button (click)="close()" class="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    }
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center">
+      
+      <!-- Chapter Info -->
+      <div class="w-full text-center mb-4 min-h-[80px]">
+        <h3 class="text-lg font-bold text-[var(--color-text-main)] mb-2">{{ currentStep().title }}</h3>
+        <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ currentStep().desc }}</p>
+      </div>
+
+      <!-- Animation Board -->
+      <div class="w-full max-w-[320px] aspect-square rounded-xl shadow-inner relative mt-2 mb-6">
+        <app-sokoban-board [boardData]="boardData()" [readonly]="true"></app-sokoban-board>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-4 w-full justify-center">
+        <button (click)="prevStep()" class="p-3 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors shadow-lg active:scale-95">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <button (click)="togglePlay()" class="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-full hover:opacity-90 transition-opacity shadow-[0_0_15px_rgba(245,158,11,0.4)] active:scale-95 flex items-center gap-2" [disabled]="currentStep().sequence.length === 0" [class.opacity-50]="currentStep().sequence.length === 0">
+          @if (isPlaying()) {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            暂停
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            播放演示
+          }
+        </button>
+
+        <button (click)="nextStep()" class="p-3 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors shadow-lg active:scale-95">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Pagination Dots -->
+      <div class="flex gap-2 mt-6">
+        @for (s of steps; track i; let i = $index) {
+          <div class="w-2.5 h-2.5 rounded-full transition-colors" [class.bg-orange-500]="i === currentStepIdx()" [class.bg-[var(--color-border-card)]]="i !== currentStepIdx()"></div>
+        }
+      </div>
+
+    </div>
+  </div>
+</ng-template>

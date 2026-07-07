@@ -92,8 +92,10 @@ export class SeoService {
       this.setLinkTag('alternate', altUrl, altLang);
       this.setLinkTag('alternate', defaultUrl, 'x-default');
 
-      // ===== JSON-LD Structured Data (for game pages) =====
+      // ===== JSON-LD Structured Data (for game pages and tutorials) =====
       const gameMatch = routePath.match(/^\/games\/([a-zA-Z0-9_-]+)/);
+      const docsMatch = routePath.match(/^\/docs\/([a-zA-Z0-9_-]+)/);
+
       if (gameMatch) {
         this.setJsonLd({
           '@context': 'https://schema.org',
@@ -115,6 +117,40 @@ export class SeoService {
           },
           'image': fullImageUrl,
           'inLanguage': lang === 'zh' ? 'zh-CN' : 'en-US'
+        });
+      } else if (docsMatch) {
+        // Add HowTo schema for docs
+        const gameId = docsMatch[1];
+        
+        // Import ALL_DEMO_CONFIGS dynamically or statically?
+        // Let's use a simpler HowTo structure if we can't easily extract steps
+        // Wait, I can just require or import ALL_DEMO_CONFIGS at the top of the file.
+        // Actually, since I didn't add the import yet, I'll just build a generic Article or HowTo.
+        
+        this.setJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          'name': pageTitle,
+          'description': desc,
+          'image': fullImageUrl,
+          'inLanguage': lang === 'zh' ? 'zh-CN' : 'en-US',
+          'step': [
+            {
+              '@type': 'HowToStep',
+              'name': 'Understand the Goal',
+              'text': 'Read the rules and understand the primary objective of the puzzle.'
+            },
+            {
+              '@type': 'HowToStep',
+              'name': 'Learn the Mechanics',
+              'text': 'Interact with the tutorial board to learn how to move or place elements.'
+            },
+            {
+              '@type': 'HowToStep',
+              'name': 'Master Strategies',
+              'text': 'Avoid dead ends and learn advanced patterns to win quickly.'
+            }
+          ]
         });
       } else {
         this.setJsonLd({
