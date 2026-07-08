@@ -20,8 +20,6 @@ import { DailyChallengeService } from '../../../core/services/daily-challenge.se
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { FormsModule } from '@angular/forms';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
@@ -58,18 +56,14 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
-  private tutorialService = inject(TutorialService);
-  private dailyService = inject(DailyChallengeService);
+    private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private pendingDailyChallengeId = signal<string | null>(null);
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   startingCountdown = signal(3);
   showRules = signal(false);
-  showOverlay = signal(false);
-  showTutorial = signal(false);
-  tutorialSteps = this.tutorialService.getStepsForGame('math24');
-  private countdownInterval: any;
+  showOverlay = signal(false);  private countdownInterval: any;
 
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
@@ -274,17 +268,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
   startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {
     this.view.set('play');
-    this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);
-    if (!this.tutorialService.hasSeen('math24') && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 500);
-    }
-  }
-
-  onTutorialDone(): void {
-    this.tutorialService.markSeen('math24');
-    this.showTutorial.set(false);
-  }
-
+    this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);  }
   override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
     super.handleCreateRoom(event);
     if (event.mode !== GameMode.Single) {

@@ -26,8 +26,6 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { FormsModule } from '@angular/forms';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 
@@ -35,7 +33,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent,  GameResultOverlayComponent, GameWaitingRoomComponent,  DragDropModule,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent],
+  imports: [CommonModule, FormsModule, CellComponent,  GameResultOverlayComponent, GameWaitingRoomComponent,  DragDropModule,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -53,13 +51,9 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   toastService = inject(ToastService);
   router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
-  private tutorialService = inject(TutorialService);
-  private roomLifecycle!: RoomLifecycleHandle;
+    private roomLifecycle!: RoomLifecycleHandle;
 
-  showRules = signal(false);
-  showTutorial = signal(false);
-  tutorialSteps = this.tutorialService.getStepsForGame(GameId.Minesweeper);
-  get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
+  showRules = signal(false);  get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
   currentRoomMode = signal<string>(GameMode.Single);
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('medium');
@@ -329,18 +323,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentDifficulty.set(diff);
     storageSet('minesweeper_single_diff', diff);
     this.currentRoomMode.set(GameMode.Single);
-    this.store.startLocalGame(width, height, mines, diff);
-
-    if (!this.tutorialService.hasSeen(GameId.Minesweeper) && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 500);
-    }
-  }
-
-  onTutorialDone(): void {
-    this.tutorialService.markSeen(GameId.Minesweeper);
-    this.showTutorial.set(false);
-  }
-
+    this.store.startLocalGame(width, height, mines, diff);  }
   getDifficultyText(difficulty: string): string {
     const d = this.predefinedDifficulties.find((x: any) => x.id === difficulty);
     return d ? `${this.i18n.t(d.labelKey as any)()} (${d.desc})` : difficulty;

@@ -14,14 +14,12 @@ import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-p
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameSpectatingOverlayComponent } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AudioService } from '../../../core/services/audio.service';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -37,7 +35,6 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
     GameLobbyPanelComponent,
     GameHeaderComponent,
     PlayerBadgeComponent,
-    TutorialOverlayComponent,
     GameRulesModalComponent,
     GameSpectatingOverlayComponent,
     GameWaitingRoomComponent
@@ -51,8 +48,6 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
   <app-game-rules-modal [gameId]="'connect'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
   <!-- Tutorial Modal -->
-  <app-tutorial-overlay *ngIf="showTutorial()" [steps]="tutorialSteps" (done)="onTutorialDone()"></app-tutorial-overlay>
-
   <!-- Top Full-Width Game Header -->
   <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
     <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
@@ -269,14 +264,9 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
   private roomLifecycle!: RoomLifecycleHandle;
-  private tutorialService = inject(TutorialService);
-
+  
   view = this.store.view;
-  showOverlay = signal(false);
-  showTutorial = signal(false);
-  showRules = signal(false);
-  tutorialSteps = this.tutorialService.getStepsForGame('connect');
-
+  showOverlay = signal(false);  showRules = signal(false);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
   get playerId(): string {
@@ -418,17 +408,7 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
 
   startLevel(levelId: string) {
     this.view.set('play');
-    this.store.loadLevel(levelId);
-    if (!this.tutorialService.hasSeen('connect') && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 500);
-    }
-  }
-
-  onTutorialDone(): void {
-    this.tutorialService.markSeen('connect');
-    this.showTutorial.set(false);
-  }
-
+    this.store.loadLevel(levelId);  }
   onBoardChange() {
     this.store.checkSolution();
   }

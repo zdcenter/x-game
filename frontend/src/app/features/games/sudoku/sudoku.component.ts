@@ -22,9 +22,7 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { FormsModule } from '@angular/forms';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 
@@ -62,8 +60,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   authStore = inject(AuthStore);
   private roomLifecycle!: RoomLifecycleHandle;
   private gameRegistry = inject(GameRegistryService);
-  private tutorialService = inject(TutorialService);
-  private dailyService = inject(DailyChallengeService);
+    private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);
   private pendingDailyChallengeId = signal<string | null>(null);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
@@ -71,11 +68,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   sudokuDifficulties = sudokuDifficulties;
 
   view = this.store.view;
-  showOverlay = signal(false);
-  showTutorial = signal(false);
-  showRules = signal(false);
-  tutorialSteps = this.tutorialService.getStepsForGame('sudoku');
-  get playerId(): string {
+  showOverlay = signal(false);  showRules = signal(false);  get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
@@ -259,17 +252,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}) {
     this.view.set('play');
     this.store.currentPuzzleId.set(level.id);
-    this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);
-    if (!this.tutorialService.hasSeen('sudoku') && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 500);
-    }
-  }
-
-  onTutorialDone(): void {
-    this.tutorialService.markSeen('sudoku');
-    this.showTutorial.set(false);
-  }
-
+    this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);  }
   playNextLevel() {
     const currentId = this.store.currentPuzzleId();
     if (!currentId) return;

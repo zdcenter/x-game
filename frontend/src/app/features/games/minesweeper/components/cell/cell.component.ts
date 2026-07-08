@@ -19,12 +19,12 @@ export class CellComponent {
 
   get cellClass(): string {
     if (this.cell.state === CellState.Revealed) {
-      return 'bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner scale-95';
+      return 'ms-cell-revealed scale-95';
     }
     if (this.cell.state === CellState.Exploded) {
       return 'bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] scale-95';
     }
-    return 'bg-[var(--color-border-card)] border-[1.5px] border-t-[var(--color-cell-highlight)] border-l-[var(--color-cell-highlight)] border-b-[var(--color-cell-shadow)] border-r-[var(--color-cell-shadow)] shadow-md hover:brightness-110 active:scale-95 cursor-pointer';
+    return 'ms-cell-unrevealed hover:brightness-110 active:scale-95';
   }
 
   get neighborColor(): string {

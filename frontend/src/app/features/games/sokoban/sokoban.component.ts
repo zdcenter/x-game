@@ -22,8 +22,6 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
@@ -40,7 +38,6 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
     SokobanBoardComponent,
     SokobanLobbyComponent,
     GameRulesModalComponent,
-    TutorialOverlayComponent,
     GameToolbarComponent,
   ],
   template: `
@@ -50,9 +47,6 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
   <app-game-rules-modal [gameId]="'sokoban'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
 
   <!-- Tutorial Modal -->
-  @if (showTutorial()) {
-    <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
-  }
 
   <!-- Top Full-Width Game Header (Shared for Lobby & Game) -->
   <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
@@ -309,9 +303,7 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
         [target]="store.currentRoomTarget()"
       ></app-game-waiting-room>
     </div>
-  }
-  <app-tutorial-overlay [steps]="tutorialSteps" [visible]="showTutorial()" (done)="onTutorialDone()"></app-tutorial-overlay>
-</div>
+  }</div>
   `
 })
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
@@ -329,10 +321,6 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   i18n = inject(I18nService);
   toastService = inject(ToastService);
   private pendingDailyChallengeId = signal<string | null>(null);
-  private tutorialService = inject(TutorialService);
-  showTutorial = signal(false);
-  tutorialSteps = this.tutorialService.getStepsForGame(GameId.Sokoban);
-
   private roomLifecycle!: RoomLifecycleHandle;
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
@@ -397,11 +385,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     if (dailyChallengeId && puzzleId) {
       this.pendingDailyChallengeId.set(dailyChallengeId);
       this.store.joinRoomWithLevel(puzzleId, difficulty);
-      this.showLobby.set(false);
-      if (!this.tutorialService.hasSeen(GameId.Sokoban) && this.tutorialSteps.length) {
-        setTimeout(() => this.showTutorial.set(true), 800);
-      }
-      return;
+      this.showLobby.set(false);      return;
     }
 
     const pending = this.roomLifecycle.consumePendingOrReconnect();
@@ -447,17 +431,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   onLevelSelect(level: {id: string, puzzle: string, difficulty: string, levelNum: number}) {
     this.store.loadLevelFromLobby(level.difficulty, level.puzzle, level.id);
-    this.showLobby.set(false);
-    if (!this.tutorialService.hasSeen(GameId.Sokoban) && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 800);
-    }
-  }
-
-  onTutorialDone(): void {
-    this.tutorialService.markSeen(GameId.Sokoban);
-    this.showTutorial.set(false);
-  }
-
+    this.showLobby.set(false);  }
   changeDifficulty(event: Event) {
     const target = event.target as HTMLSelectElement;
     if (target) {

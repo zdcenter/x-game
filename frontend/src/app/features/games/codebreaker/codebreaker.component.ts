@@ -19,8 +19,6 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { SettingsService } from '../../../core/services/settings.service';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -56,12 +54,8 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
 
-  private tutorialService = inject(TutorialService);
-  showRules = signal(false);
+    showRules = signal(false);
   showOverlay = signal(false);
-  showTutorial = signal(false);
-  tutorialSteps = this.tutorialService.getStepsForGame(GameId.Codebreaker);
-
   // User input signals
   currentInput = signal<string>('');
 
@@ -208,16 +202,8 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     
     if (mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
-    } else if (!this.tutorialService.hasSeen(GameId.Codebreaker) && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 600);
     }
   }
-
-  onTutorialDone(): void {
-    this.tutorialService.markSeen(GameId.Codebreaker);
-    this.showTutorial.set(false);
-  }
-
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.store.leaveRoom();

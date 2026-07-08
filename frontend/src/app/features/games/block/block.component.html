@@ -245,4 +245,24 @@
         (changeRoomGame)="store.changeRoomGame($event)">
           </app-game-result-overlay>
         }
+
+  <!-- Dragged Piece Overlay -->
+  @if (isDragging && draggedShape) {
+    <div game-overlay class="fixed pointer-events-none z-[9999] transition-none will-change-transform"
+         [style.left.px]="dragPos.x - dragStartOffset.x"
+         [style.top.px]="dragPos.y - dragStartOffset.y">
+      <div class="flex flex-col drop-shadow-[0_25px_25px_rgba(0,0,0,0.5)] opacity-95" [style.gap.px]="dragCellGap">
+        @for (row of draggedShape.matrix; track rIndex; let rIndex = $index) {
+          <div class="flex" [style.gap.px]="dragCellGap">
+            @for (cell of row; track cIndex; let cIndex = $index) {
+              <div class="rounded-sm shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                   [style.width.px]="dragCellSize"
+                   [style.height.px]="dragCellSize"
+                   [ngClass]="cell === 1 ? 'block-piece' : 'opacity-0'"></div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
 </app-game-layout>

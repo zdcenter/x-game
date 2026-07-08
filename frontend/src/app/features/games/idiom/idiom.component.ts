@@ -2,11 +2,9 @@ import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
-import { TutorialService } from '../../../core/services/tutorial.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import {
   CharResult, DailyGuessResponse, DailyStateResponse,
@@ -34,7 +32,6 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
   imports: [CommonModule,
     GameHeaderComponent,
     GameRulesModalComponent,
-    TutorialOverlayComponent,
     GameToolbarComponent,
     GameLobbyPanelComponent,
     GameWaitingRoomComponent,
@@ -98,8 +95,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   authStore = inject(AuthStore);
   private route = inject(ActivatedRoute);
   private svc = inject(IdiomService);
-  private tutorialService = inject(TutorialService);
-  private audio = inject(AudioService);
+    private audio = inject(AudioService);
   private xpService = inject(XpService);
   pkStore = inject(IdiomPKStore);
   GameStatus = GameStatus;
@@ -256,14 +252,9 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     if (room.password) this.wsService.setPendingPassword(room.password);
     this.joinPkRoom(room.roomId, room.mode, room.difficulty || '', room.host);
   }
-
-  tutorialSteps = this.tutorialService.getStepsForGame('idiom');
-
   // ---- Navigation ----
   view = signal<IdiomView>('lobby');
   showRules = signal(false);
-  showTutorial = signal(false);
-
   // ---- Fill mode ----
   fillDifficulty = signal<'easy' | 'medium' | 'hard' | null>(null);
 
@@ -391,10 +382,6 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       this.svc.getStats().subscribe(s => this.idiomStats.set(s));
       this.svc.getHistory().subscribe(h => this.idiomHistory.set(h));
     }
-    if (!this.tutorialService.hasSeen('idiom') && this.tutorialSteps.length) {
-      setTimeout(() => this.showTutorial.set(true), 400);
-    }
-
     // PK room lifecycle: reconnect or join from query params
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
@@ -423,12 +410,6 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       this.svc.getHistory().subscribe(h => this.idiomHistory.set(h));
     }
   }
-
-  onTutorialDone() {
-    this.tutorialService.markSeen('idiom');
-    this.showTutorial.set(false);
-  }
-
   // ---- Fill mode ----
   enterFill() {
     this.fillDifficulty.set(null);

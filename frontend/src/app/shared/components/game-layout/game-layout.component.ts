@@ -145,6 +145,8 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
        </app-game-lobby-panel>
     </div>
   }
+  <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
+  <ng-content select="[game-overlay]"></ng-content>
 </div>
   `
 })
