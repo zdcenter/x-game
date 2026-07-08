@@ -15,7 +15,7 @@ import { CommonModule } from '@angular/common';
     </div>
 
     <!-- Desktop: Horizontal List -->
-    <div class="hidden lg:flex flex-1 gap-3 xl:gap-4 overflow-x-auto pb-2 custom-scrollbar px-2 max-w-full">
+    <div class="hidden lg:flex flex-1 items-center gap-3 xl:gap-4 overflow-x-auto scrollbar-hide px-2 max-w-full">
       <ng-container *ngTemplateOutlet="listTemplate"></ng-container>
     </div>
 

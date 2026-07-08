@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { storageGet, storageSet, storageRemove } from '../../../core/utils/browser.util';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,21 +24,20 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-codebreaker',
   standalone: true,
-  imports: [
-    CommonModule,
+  imports: [CommonModule,
     GameResultOverlayComponent,
-    GameRulesModalComponent,
+    
     GameWaitingRoomComponent,
-    GameLobbyPanelComponent,
+    
     GameStartingOverlayComponent,
-    GameHeaderComponent,
-    GameToolbarComponent,
-    TutorialOverlayComponent
-  ],
+    
+    GameToolbarComponent, GameLayoutComponent],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
   styleUrls: ['./codebreaker.component.css']

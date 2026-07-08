@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
-import { Directive, inject, signal, OnInit, OnDestroy, HostBinding } from '@angular/core';
+import { Directive, inject, signal, OnInit, OnDestroy, HostBinding, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
@@ -8,6 +8,7 @@ import { SettingsService } from '../services/settings.service';
 import { isBrowser } from './browser.util';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameLayoutComponent } from '../../shared/components/game-layout/game-layout.component';
 import { CrossGameJoinService } from '../services/cross-game-join.service';
 import { ToastService } from '../services/toast.service';
 import { I18nService } from '../i18n/i18n.service';
@@ -32,6 +33,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected i18nBase = inject(I18nService);
 
   isMobileSidebarOpen = signal<boolean>(false);
+  
+  @ViewChild(GameLayoutComponent) gameLayout?: GameLayoutComponent;
 
   @HostBinding('class') get hostClass() {
     return 'flex-1 flex flex-col w-full overflow-hidden min-h-0';
@@ -220,17 +223,28 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   openChangeSettings() {
-    const panel = (this as any).lobbyPanel as GameLobbyPanelComponent | undefined;
-    if (panel && this.store.roomId()) {
-      // 直接打开全屏覆盖层，不再强制展开手机侧边栏
+    if (this.gameLayout && this.store.roomId()) {
       const s = this.store as any;
-      panel.openUpdateRoomModal({
+      this.gameLayout.openUpdateRoomModal({
         id: this.store.roomId(),
         game: this.store.gameId,
         mode: this.store.currentRoomMode(),
         difficulty: s.currentDifficulty?.() ?? '',
         target: this.store.currentRoomTarget(),
       });
+    } else {
+      // Fallback for older layout if any
+      const panel = (this as any).lobbyPanel as GameLobbyPanelComponent | undefined;
+      if (panel && this.store.roomId()) {
+        const s = this.store as any;
+        panel.openUpdateRoomModal({
+          id: this.store.roomId(),
+          game: this.store.gameId,
+          mode: this.store.currentRoomMode(),
+          difficulty: s.currentDifficulty?.() ?? '',
+          target: this.store.currentRoomTarget(),
+        });
+      }
     }
   }
 }

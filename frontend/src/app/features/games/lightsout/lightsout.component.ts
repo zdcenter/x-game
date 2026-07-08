@@ -12,7 +12,6 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
@@ -20,22 +19,22 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-lightsout',
   standalone: true,
-  imports: [
-    CommonModule,
-    GameLobbyPanelComponent,
-    GameHeaderComponent,
+  imports: [CommonModule,
+    
+    
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     GameResultOverlayComponent,
-    GameRulesModalComponent,
+    
     GameToolbarComponent,
-    GamePlayerMiniHudComponent
-  ],
+    GamePlayerMiniHudComponent, GameLayoutComponent],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html'
 })

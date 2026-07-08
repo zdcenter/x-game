@@ -7,7 +7,6 @@ import { Math24Store } from './store/math24.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-steal.component';
 import { Math24PkSpeedComponent } from './components/math24-pk-speed/math24-pk-speed.component';
@@ -26,14 +25,15 @@ import { TutorialService } from '../../../core/services/tutorial.service';
 import { FormsModule } from '@angular/forms';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-math24',
   standalone: true,
-  imports: [
-    CommonModule,
-    GameLobbyPanelComponent,
-    GameHeaderComponent,
+  imports: [CommonModule,
+    
+    
     GameWaitingRoomComponent,
     Math24PkStealComponent,
     Math24PkSpeedComponent,
@@ -41,10 +41,9 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     GameResultOverlayComponent,
     Math24LobbyComponent,
     GameStartingOverlayComponent,
-    GameRulesModalComponent,
-    TutorialOverlayComponent,
-    FormsModule
-  ],
+    
+    
+    FormsModule, GameLayoutComponent],
   templateUrl: './math24.component.html'
 })
 export class Math24Component extends BaseGameComponent implements OnInit, OnDestroy {

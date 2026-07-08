@@ -15,7 +15,6 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
@@ -24,16 +23,16 @@ import { AudioService } from '../../../core/services/audio.service';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-watersort',
   standalone: true,
-  imports: [
-    CommonModule, TubeComponent, GameStartingOverlayComponent,
-    GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent,
-    GameResultOverlayComponent, GameHeaderComponent, PlayerBadgeComponent,
-    GameToolbarComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, FormsModule
-  ],
+  imports: [CommonModule, TubeComponent, GameStartingOverlayComponent,
+    GameWaitingRoomComponent,  
+    GameResultOverlayComponent,  PlayerBadgeComponent,
+    GameToolbarComponent,  GamePlayerMiniHudComponent, FormsModule, GameLayoutComponent],
   templateUrl: './watersort.component.html',
   styles: [`
     .is-receiving {

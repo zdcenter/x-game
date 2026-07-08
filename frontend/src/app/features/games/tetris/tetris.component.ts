@@ -1,7 +1,6 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -23,12 +22,13 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent,
-    ],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent,   GameResultOverlayComponent,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameLayoutComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]

@@ -18,7 +18,7 @@ export interface PlayerHudConfig {
   templateUrl: './game-player-mini-hud.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'absolute top-2 inset-x-2 z-20 flex justify-between items-start pointer-events-none'
+    class: 'relative w-full z-20 flex justify-between items-start pointer-events-none shrink-0 px-2 py-2 mb-1 border-b border-[var(--color-border-card)] bg-[var(--color-bg-sub)]/30 backdrop-blur-md'
   }
 })
 export class GamePlayerMiniHudComponent {

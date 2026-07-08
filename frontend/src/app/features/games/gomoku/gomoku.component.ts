@@ -1,5 +1,4 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -18,11 +17,13 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { GameService } from '../../../core/services/game.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameResultOverlayComponent, GameRulesModalComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameHeaderComponent, GameStartingOverlayComponent],
+  imports: [CommonModule, GameResultOverlayComponent,  GameWaitingRoomComponent,   GameStartingOverlayComponent, GameLayoutComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']

@@ -15,7 +15,6 @@ import { SudokuPkStealComponent } from './components/sudoku-pk-steal/sudoku-pk-s
 import { SudokuPkSpeedComponent } from './components/sudoku-pk-speed/sudoku-pk-speed.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { AudioService } from '../../../core/services/audio.service';
@@ -30,12 +29,13 @@ import { DailyChallengeService } from '../../../core/services/daily-challenge.se
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-sudoku',
   standalone: true,
-  imports: [
-    CommonModule, 
+  imports: [CommonModule, 
     FormsModule,
     SudokuLobbyComponent, 
     SudokuBoardComponent, 
@@ -45,12 +45,8 @@ import { PlayerListContainerComponent } from '../../../shared/components/player-
     SudokuPkStealComponent,
     SudokuPkSpeedComponent,
     GameResultOverlayComponent,
-    GameLobbyPanelComponent,
-    GameHeaderComponent,
-    TutorialOverlayComponent,
-    GameRulesModalComponent,
-    GamePkModeBadgeComponent,
-  ],
+    
+     GameLayoutComponent],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sudoku.component.html',

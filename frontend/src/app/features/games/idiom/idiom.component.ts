@@ -31,8 +31,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
   selector: 'app-idiom',
   standalone: true,
   providers: [IdiomPKStore],
-  imports: [
-    CommonModule,
+  imports: [CommonModule,
     GameHeaderComponent,
     GameRulesModalComponent,
     TutorialOverlayComponent,
@@ -40,8 +39,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
     GameLobbyPanelComponent,
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
-    GameStartingOverlayComponent,
-  ],
+    GameStartingOverlayComponent],
   styles: [`
     @keyframes char-pop {
       0%   { transform: scale(0.4) rotate(-8deg); opacity: 0.6; }

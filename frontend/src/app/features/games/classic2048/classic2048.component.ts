@@ -12,7 +12,6 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { GameStatsService } from '../../../core/services/game-stats.service';
 import { boardSizePx } from '../../../core/utils/board-size.util';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
@@ -21,20 +20,21 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 @Component({
   selector: 'app-classic2048',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
-    GameHeaderComponent,
-    GameLobbyPanelComponent,
+    
+    
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
-    GameRulesModalComponent,
-    GameToolbarComponent,
-    ],
+    
+    GameToolbarComponent, GameLayoutComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
   providers: [Classic2048Store]

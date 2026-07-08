@@ -8,7 +8,6 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { HashiStore } from './store/hashi.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
@@ -22,23 +21,22 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-hashi',
   standalone: true,
-  imports: [
-    CommonModule,
+  imports: [CommonModule,
     FormsModule,
-    GameHeaderComponent,
+    
     GameResultOverlayComponent,
-    GameLobbyPanelComponent,
+    
     GameToolbarComponent,
     HashiLobbyComponent,
     GameWaitingRoomComponent,
     PlayerBadgeComponent,
-    GameStartingOverlayComponent,
-    GamePkModeBadgeComponent,
-  ],
+    GameStartingOverlayComponent, GameLayoutComponent],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'
 })

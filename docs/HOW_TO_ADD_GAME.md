@@ -406,99 +406,71 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
 
 ### C. 统一的 UI 组件规范 (⚠️ 非常重要)
 
-为了保证全站游戏体验的高度一致性，在编写 `html` 模板时，**严禁自行手写**以下核心功能区块，必须统一使用封装好的共享组件（它们都已经处理好了多语言、暗黑模式、响应式适配等）：
-
-1. **顶部导航栏 (Game Header)**
-   - 统一使用 `<app-game-header>`，提供返回按钮、游戏标题、设置/音量控制等。
-2. **等候大厅 (Waiting Room)**
-   - 统一使用 `<app-game-waiting-room>`（全屏覆盖，在 `GameStatus.Waiting` 且非单机模式时显示）。
-3. **右侧竞技大厅 (Lobby Panel)**
-   - 统一使用 `<app-game-lobby-panel>`，展示当前游戏的所有可用房间。
-4. **结算面板 (Result Overlay)**
-   - 统一使用 `<app-game-result-overlay>`，处理胜负展示、XP获得、再来一局等逻辑。
-5. **观战面板 (Spectating Overlay)**
-   - 统一使用 `<app-game-spectating-overlay>`，在自己完赛但对手仍在比赛时（`GameStatus.Playing`）弹出，展示正在观战的玩家进度。
-6. **玩家对战信息与头像 (Player Badge & List)**
-   - 统一使用 `<app-player-list-container>` 和 `<app-player-badge>` 来展示 PK 时的双方比分、头像和在线状态。
-7. **游戏底部工具栏 (Toolbar/Actions)**
-   - 统一参考《数字华容道》(sliding) 的做法，采用无刺眼背景色的半透明/深灰色扁平风格（如 `bg-slate-800 text-white` 等），**不要**使用高饱和度或渐变的彩色大按钮。
-   - 提示按钮统一使用 `<app-hint-button>`。
+为了保证全站游戏体验的高度一致性，在编写 `html` 模板时，**严禁自行手写**顶部导航、等候大厅、侧边栏和 SEO 区块，必须统一使用 `<app-game-layout>` 共享外壳组件（它已经处理好了多语言、暗黑模式、响应式适配等）。
 
 **模板中的通用结构（关键规范）：**
 
 ```html
-<!-- 🚨 最外层 div 必须写死高度，不能用 h-full 或 flex-1 -->
-<!-- h-full 依赖父级 flex 高度，在倒计时等内容为空时会塌陷 -->
-<div class="h-[calc(100dvh-64px)] w-full flex flex-col lg:flex-row overflow-hidden bg-[var(--color-bg-main)]">
-
-  <!-- 左侧游戏区 -->
-  <div class="flex-grow flex flex-col relative min-w-0 overflow-hidden">
-    
-    <!-- 1. 顶部导航 -->
-    <app-game-header [title]="i18n.t('lobby.mygame')()" [showTutorial]="true" (tutorialClick)="..."></app-game-header>
-
-    <!-- 倒计时开局遮罩 -->
-    @if (store.status() === GameStatus.Starting) {
-      <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"/>
-    }
-
-    <!-- 结果面板 -->
-    @if (store.status() === GameStatus.Finished) {
-      <app-game-result-overlay [winners]="store.singlePlayerWinners()" .../>
-    }
-  </div>
-
-  <!-- 右侧等候室面板（多人） -->
-  <!--
-    ⚠️  多局系列赛（Multi-Round Series）说明：
-    如果游戏支持 "先赢 3/5/10 局" 的系列赛模式，请阅读下方 §F 章节。
-  -->
-  @if (settingsService.settings().multiplayer_enabled === 'true') {
-    <div class="flex-shrink-0 ...">
-      <app-game-lobby-panel
-        [currentGameId]="'mygame'"
-        [currentRoomId]="store.roomId()"
-        (joinRoom)="handleJoinRoom($event)"
-        (createRoom)="handleCreateRoom($event)"
-        (dismissRoom)="handleDismissRoom()"
-      />
+<app-game-layout
+  [gameId]="'mygame'"
+  [title]="i18n.t('mygame.title')()"
+  [subtitle]="getSubtitle()"
+  icon="🎮"
+  iconGradientClass="from-indigo-500 to-cyan-500"
+  titleGradientClass="from-indigo-400 to-cyan-400"
+  shadowClass="shadow-cyan-500/20"
+  [currentRoomMode]="store.currentRoomMode()"
+  [currentRoomId]="store.roomId()"
+  [status]="store.status()"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
+  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
+  (titleClick)="handleTitleClick()"
+  (back)="goBack()"
+  (playAgain)="store.startGame()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+>
+  @if (store.currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
+    <!-- PK 模式等候大厅，必须包在一层 div 中以支持滚动 -->
+    <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
+      <app-game-waiting-room
+        [gameId]="'mygame'" [mode]="store.currentRoomMode()" [roomId]="store.roomId()"
+        [difficulty]="store.currentDifficulty()" [players]="store.playersList()" [hostId]="store.hostId()" [currentUserId]="playerId"
+        [readyPlayers]="store.readyPlayers()" (leave)="goBack()" (start)="store.startGame()"
+        (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)" (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()">
+      </app-game-waiting-room>
+    </div>
+  } @else {
+    <!-- ============================================== -->
+    <!-- CENTER: Game Arena  这里开始写游戏的核心逻辑！ -->
+    <!-- ============================================== -->
+    <div class="flex-1 min-h-0 flex flex-col items-center justify-start p-2 lg:p-4">
+      <!-- 你的棋盘代码... -->
     </div>
   }
-</div>
 
-<!-- 等候室（覆盖全屏，游戏开始前显示） -->
-@if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
-  <div class="absolute inset-0 z-50">
-    <app-game-waiting-room
-      [gameId]="'mygame'"
-      [mode]="store.currentRoomMode()"
-      [roomId]="store.roomId()"
-      [difficulty]="store.currentDifficulty()"
-      [players]="store.playersList()"
-      [hostId]="store.hostId()"
-      [currentUserId]="playerId"
-      [readyPlayers]="store.readyPlayers()"
-      [target]="store.currentRoomTarget()"
-      (start)="store.startGame()"
-      (leave)="store.leaveRoom()"
-      (changeSettings)="openChangeSettings()"
-      (ready)="store.ready()"
-      (cancelReady)="store.cancelReady()"
-      (kick)="store.kickPlayer($event)"
-    />
-  </div>
-}
+  <!-- 结果面板与倒计时仍然放在内层，作为绝对定位层 -->
+  @if (store.status() === GameStatus.Starting) {
+    <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"/>
+  }
+
+  @if (store.status() === GameStatus.Playing && store.isDead()) {
+    <app-game-spectating-overlay ... />
+  }
+
+  @if (store.status() === GameStatus.Finished && showOverlay()) {
+    <app-game-result-overlay [winners]="store.singlePlayerWinners()" .../>
+  }
+</app-game-layout>
 ```
 
-**若需要 `GameLobbyPanelComponent` 的 ViewChild（用于 `openChangeSettings`），在子类中声明时加 `override`：**
-
-```typescript
-// 父类已声明 protected lobbyPanel?: GameLobbyPanelComponent
-// 子类覆盖时加 override，让 @ViewChild 生效
-@ViewChild(GameLobbyPanelComponent) override lobbyPanel!: GameLobbyPanelComponent;
-```
-
-> `openChangeSettings()` 已在 `BaseGameComponent` 实现，会自动读取 `store.gameId`、`store.hostId()` 等，新游戏无需重写。
+> `openChangeSettings()` 已在 `BaseGameComponent` 实现，只要继承自该父类，设置模态框就能在 `GameLayoutComponent` 内自动弹起，新游戏无需重写。
 
 ---
 

@@ -1,5 +1,4 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,16 +23,20 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameRulesModalComponent, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent,  GameResultOverlayComponent,   GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameLayoutComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
 })
 export class SlidingComponent extends BaseGameComponent {
+  getSubtitle() { return ""; }
+
   GameMode = GameMode;
   GameStatus = GameStatus;
   GameDifficulty = GameDifficulty;

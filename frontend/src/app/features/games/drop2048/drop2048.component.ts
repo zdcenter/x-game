@@ -8,7 +8,6 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Drop2048Store } from './store/drop2048.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
@@ -22,24 +21,25 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-drop2048',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
-    GameLobbyPanelComponent, 
-    GameHeaderComponent,
+     
+    
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     Drop2048BoardComponent,
-    GameRulesModalComponent,
+    
     PlayerListContainerComponent,
     GamePlayerMiniHudComponent,
-    GameToolbarComponent,
-  ],
+    GameToolbarComponent, GameLayoutComponent],
   providers: [Drop2048Store,
     ],
   templateUrl: './drop2048.component.html'

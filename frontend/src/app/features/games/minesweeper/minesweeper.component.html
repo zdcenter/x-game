@@ -1,145 +1,30 @@
-<div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
-  <!-- Rules Modal -->
-  <app-game-rules-modal [gameId]="'minesweeper'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
-
-  <!-- Custom Difficulty Modal -->
-  @if (showCustomDialog()) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
-        <div class="px-6 py-4 border-b border-[var(--color-border-card)] flex items-center justify-between bg-[var(--color-bg-sub)]">
-          <h3 class="text-xl font-black text-[var(--color-text-main)]">{{ i18n.t('minesweeper.custom_title')() }}</h3>
-          <button (click)="showCustomDialog.set(false)" class="p-1 rounded-full hover:bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-red-500 transition-colors">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-          </button>
-        </div>
-        <div class="p-6 flex flex-col gap-6">
-          <!-- Width Slider -->
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <label class="block text-sm font-bold text-[var(--color-text-secondary)]">{{ i18n.t('minesweeper.width')() }}</label>
-              <span class="font-bold text-[var(--color-text-main)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded-md border border-[var(--color-border-card)]">{{ customW() }}</span>
-            </div>
-            <input type="range" [ngModel]="customW()" (ngModelChange)="customW.set($event)" min="9" max="50" step="1"
-                   class="w-full h-2 bg-[var(--color-border-card)] rounded-lg appearance-none cursor-pointer accent-orange-500">
-          </div>
-          
-          <!-- Height Slider -->
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <label class="block text-sm font-bold text-[var(--color-text-secondary)]">{{ i18n.t('minesweeper.height')() }}</label>
-              <span class="font-bold text-[var(--color-text-main)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded-md border border-[var(--color-border-card)]">{{ customH() }}</span>
-            </div>
-            <input type="range" [ngModel]="customH()" (ngModelChange)="customH.set($event)" min="9" max="50" step="1"
-                   class="w-full h-2 bg-[var(--color-border-card)] rounded-lg appearance-none cursor-pointer accent-orange-500">
-          </div>
-          
-          <!-- Mines Slider -->
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <label class="block text-sm font-bold text-[var(--color-text-secondary)]">{{ i18n.t('minesweeper.mines')() }}</label>
-              <span class="font-bold text-[var(--color-text-main)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded-md border border-[var(--color-border-card)]">{{ customM() }}</span>
-            </div>
-            <input type="range" [ngModel]="customM()" (ngModelChange)="customM.set($event)" min="10" [max]="Math.floor(customW() * customH() * 0.8)" step="1"
-                   class="w-full h-2 bg-[var(--color-border-card)] rounded-lg appearance-none cursor-pointer accent-orange-500">
-          </div>
-        </div>
-        <div class="px-6 py-4 bg-[var(--color-bg-sub)] border-t border-[var(--color-border-card)] flex justify-end gap-3">
-          <button (click)="showCustomDialog.set(false)" class="px-4 py-2 rounded-xl font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] transition-colors border border-[var(--color-border-card)]">
-            {{ i18n.t('minesweeper.cancel')() }}
-          </button>
-          <button (click)="confirmCustomGame()" class="px-4 py-2 rounded-xl font-bold bg-orange-500 text-white hover:bg-orange-600 transition-colors shadow-md active:scale-95">
-            {{ i18n.t('minesweeper.confirm')() }}
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Top Full-Width Game Header -->
-  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
-    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
-      <app-game-header (titleClick)="handleTitleClick()"
-        [title]="i18n.t('app.title')()"
-        [subtitle]="getSubtitle()"
-        iconGradientClass="from-rose-500 to-orange-500"
-        titleGradientClass="from-rose-400 to-orange-400"
-        shadowClass="shadow-orange-500/20"
-        headerBgClass="dark:bg-gradient-to-r dark:from-rose-900/30 dark:to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="goBack()"
-        (rules)="showRules.set(true)"
-      >
-        <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">💣</div>
-
-        <ng-container header-center>
-          <div class="flex items-center gap-2">
-            @if (currentRoomMode() === GameMode.Single) {
-            <div class="relative ml-2">
-              <select [ngModel]="currentDifficulty()" (ngModelChange)="changeSingleDifficulty($event)"
-                      class="appearance-none min-w-[90px] pl-2 pr-6 py-1 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm hover:shadow-md transition-all text-[var(--color-text-main)] text-xs font-bold cursor-pointer outline-none focus:border-orange-500">
-                @for (diff of predefinedDifficulties; track diff.id) {
-                  <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" [value]="diff.id">{{ i18n.t($any(diff.labelKey))() }} - {{ i18n.t($any(diff.descKey))() }}</option>
-                }
-                @if (isCustomDifficulty()) {
-                  <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" [value]="currentDifficulty()">{{ i18n.t('game.diff_custom')() }} ({{ customWidth() }}x{{ customHeight() }}, {{ customMines() }}💣)</option>
-                }
-                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="custom">{{ i18n.t('game.diff_custom')() }}...</option>
-              </select>
-              <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </div>
-            } @else if (currentRoomMode() !== GameMode.Single) {
-              <app-game-pk-mode-badge [gameId]="'minesweeper'" [mode]="currentRoomMode()" [difficulty]="currentDifficulty()"></app-game-pk-mode-badge>
-            }
-          </div>
-        </ng-container>
-
-        <ng-container header-right>
-          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-            @if (currentRoomMode() !== GameMode.Single) {
-              <button (click)="goBack()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
-              </button>
-            }
-            @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
-              </button>
-            }
-          </div>
-        </ng-container>
-      </app-game-header>
-
-      <!-- Progress Bar -->
-      <div class="h-1.5 bg-[var(--color-border-card)] relative group overflow-hidden border border-[var(--color-border-card)] border-t-0 shadow-md">
-        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
-          [style.width.%]="store.myProgress()">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="flex-grow min-h-0 w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-stretch max-w-[1600px] mx-auto transition-colors duration-300">
-    
-    <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10 overflow-y-auto custom-scrollbar min-h-0 pr-2">
-      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
-           [innerHTML]="i18n.t('game.minesweeper.seo_desc')()">
-      </div>
-    </div>
-
-    <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center lg:self-stretch z-10">
-      <div class="w-full flex-grow min-h-0 flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
-           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-        
-        @if (currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
+<app-game-layout
+  [gameId]="'minesweeper'"
+  [title]="i18n.t('app.title')()"
+  [subtitle]="getSubtitle()"
+  icon="💣"
+  iconGradientClass="from-rose-500 to-orange-500"
+  titleGradientClass="from-rose-400 to-orange-400"
+  shadowClass="shadow-orange-500/20"
+  headerBgClass="dark:bg-gradient-to-r dark:from-rose-900/30 dark:to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+  [currentRoomMode]="store.currentRoomMode()"
+  [currentRoomId]="store.roomId()"
+  [status]="store.status()"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
+  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
+  (titleClick)="handleTitleClick()"
+  (back)="goBack()"
+  (playAgain)="store.startGame()"
+  (navigateToPk)="navigateToPkArena()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+>
+@if (currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
           <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
             <app-game-waiting-room
               class="w-full h-full flex"
@@ -342,44 +227,4 @@
 
         <!-- Tutorial Overlay -->
         <app-tutorial-overlay [visible]="showTutorial()" [steps]="tutorialSteps" (done)="onTutorialDone()" />
-      </div>
-    </div>
-
-    <!-- RIGHT: Right Column / Multiplayer Sidebar -->
-    <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">
-      @if (settingsService.settings().multiplayer_enabled === 'true') {
-        <app-game-lobby-panel
-          #lobbyPanel
-          class="flex-grow flex"
-          [currentGameId]="'minesweeper'" [currentRoomId]="currentRoomId()"
-          (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)"
-          (dismissRoom)="dismissRoom()">
-        </app-game-lobby-panel>
-      }
-    </div>
-  </div>
-
-  <!-- BOTTOM: Mobile SEO Section -->
-  <div class="lg:hidden w-full max-w-[800px] mt-4 pb-8 mx-auto px-4">
-    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-6 shadow-sm">
-      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
-           [innerHTML]="i18n.t('game.minesweeper.seo_desc')()">
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile Sidebar Overlay Backdrop -->
-  @if (isMobileSidebarOpen()) {
-    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="isMobileSidebarOpen.set(false)"></div>
-    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col transition-transform duration-300">
-       <div class="flex justify-between items-center mb-4 lg:hidden" >
-         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
-       </div>
-       <app-game-lobby-panel
-          [currentGameId]="'minesweeper'" [currentRoomId]="currentRoomId()"
-          (joinRoom)="handleJoinRoom($event)" (createRoom)="handleCreateRoom($event)"
-          (dismissRoom)="dismissRoom()">
-       </app-game-lobby-panel>
-    </div>
-  }
-</div>
+</app-game-layout>

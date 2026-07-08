@@ -1,5 +1,4 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -24,23 +23,24 @@ import { AudioService } from '../../../core/services/audio.service';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-hexa',
   standalone: true,
-  imports: [
-    CommonModule,
+  imports: [CommonModule,
     FormsModule,
     HexaBoardComponent,
     GameWaitingRoomComponent,
-    GameLobbyPanelComponent,
-    GameRulesModalComponent,
+    
+    
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    GameHeaderComponent,
+    
     PlayerBadgeComponent,
     PlayerListContainerComponent,
-    GamePlayerMiniHudComponent],
+    GamePlayerMiniHudComponent, GameLayoutComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'

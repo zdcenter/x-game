@@ -14,7 +14,6 @@ import { AudioService } from '../../../core/services/audio.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
 import { BlockShape } from './utils/shapes';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
@@ -23,22 +22,23 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-block',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
-    GameLobbyPanelComponent,
-    GameHeaderComponent,
+    
+    
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    GameRulesModalComponent,
+    
     PlayerBadgeComponent,
     GamePlayerMiniHudComponent
-  ,
-    ],
+  , GameLayoutComponent],
   templateUrl: './block.component.html',
   styles: [`
     @keyframes block-shake {

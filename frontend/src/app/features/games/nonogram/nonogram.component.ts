@@ -2,7 +2,6 @@ import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, OnInit
 import { CommonModule } from '@angular/common';
 import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
@@ -21,17 +20,21 @@ import { FormsModule } from '@angular/forms';
 import { AdService } from '../../../core/services/ad.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameWaitingRoomComponent, GameLobbyPanelComponent, GameRulesModalComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, GameToolbarComponent],
+  imports: [CommonModule, FormsModule,  GameWaitingRoomComponent,   GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NonogramComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  getSubtitle() { return ""; }
+
   override store = inject(NonogramStore);
   private windowSize = inject(WindowSizeService);
   public i18n = inject(I18nService);

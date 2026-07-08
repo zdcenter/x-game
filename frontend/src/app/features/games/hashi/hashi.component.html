@@ -1,68 +1,30 @@
-<div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
-  <!-- Top Full-Width Game Header -->
-  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
-    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
-      <app-game-header (titleClick)="handleTitleClick()"
-        [title]="i18n.t('lobby.hashi')()"
-        iconGradientClass="from-blue-500 to-emerald-500"
-        titleGradientClass="from-blue-400 to-emerald-400"
-        shadowClass="shadow-emerald-500/20"
-        headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-        (back)="goBack()"
-      >
-        <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🌉</div>
-
-        <ng-container header-center>
-          <div class="flex items-center justify-center w-full z-10 shrink-0 mx-1 sm:mx-4">
-            @if (store.currentRoomMode() === GameMode.Single && view() === 'play') {
-            <div class="relative w-28 sm:w-36 lg:w-40">
-              <select [ngModel]="store.currentDifficulty()" (ngModelChange)="onDifficultyChange($event)"
-                      class="w-full appearance-none pl-3 pr-8 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-sub)] border-2 border-[var(--color-border-card)] shadow-sm hover:shadow-md hover:border-blue-400/50 transition-all text-[var(--color-text-main)] text-xs sm:text-sm font-bold cursor-pointer outline-none focus:border-blue-500">
-                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="easy">{{ i18n.t('game.diff_hashi_easy')() }}</option>
-                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="medium">{{ i18n.t('game.diff_hashi_medium')() }}</option>
-                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="hard">{{ i18n.t('game.diff_hashi_hard')() }}</option>
-                <option class="bg-[var(--color-bg-card)] text-[var(--color-text-main)]" value="expert">{{ i18n.t('game.diff_hashi_expert')() }}</option>
-              </select>
-              <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                <svg class="h-4 w-4 text-[var(--color-text-muted)] drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-              </div>
-            </div>
-            } @else if (view() === 'play' && store.currentRoomMode() !== GameMode.Single) {
-              <app-game-pk-mode-badge [gameId]="'hashi'" [mode]="store.currentRoomMode()" [difficulty]="store.currentDifficulty()"></app-game-pk-mode-badge>
-            }
-          </div>
-        </ng-container>
-
-        <ng-container header-right>
-          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
-            @if (view() === 'play' && settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
-              </button>
-            }
-          </div>
-        </ng-container>
-      </app-game-header>
-    </div>
-  </div>
-
-  <div class="flex-grow min-h-0 w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-stretch max-w-[1600px] mx-auto transition-colors duration-300">
-    
-    <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 overflow-y-auto custom-scrollbar min-h-0 pr-2">
-      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
-           [innerHTML]="i18n.t('game.hashi.seo_desc')()">
-      </div>
-    </div>
-
-    <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-full lg:max-w-[1200px] w-full self-center lg:self-stretch px-2 md:px-0">
-      @if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
+<app-game-layout
+  [gameId]="'hashi'"
+  [title]="i18n.t('lobby.hashi')()"
+  [subtitle]="''"
+  icon="🌉"
+  iconGradientClass="from-blue-500 to-emerald-500"
+  titleGradientClass="from-blue-400 to-emerald-400"
+  shadowClass="shadow-emerald-500/20"
+  headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+  [currentRoomMode]="store.currentRoomMode()"
+  [currentRoomId]="store.roomId()"
+  [status]="store.status()"
+  [showRules]="false"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished "
+  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  
+  
+  (titleClick)="handleTitleClick()"
+  (back)="goBack()"
+  (playAgain)="store.startGame()"
+  (navigateToPk)="navigateToPkArena()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+>
+@if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
         <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-[600px]"
           (levelSelect)="startLevel($event)">
         </app-hashi-lobby>
@@ -346,27 +308,4 @@
           } <!-- closes @else (line 68) -->
         </div> <!-- closes PLAY VIEW div (line 48) -->
       } <!-- closes @else (line 46) -->
-    </div> <!-- closes Game Arena div (line 41) -->
-
-    <!-- RIGHT: Right Column / Multiplayer Sidebar -->
-    <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">
-      @if (settingsService.settings().multiplayer_enabled === 'true') {
-        <app-game-lobby-panel
-          #lobbyPanel
-          [currentGameId]="'hashi'"
-          [currentRoomId]="store.roomId()"
-          (joinRoom)="handleJoinRoom($event)"
-          (createRoom)="handleCreateRoom($event)"
-          (dismissRoom)="handleDismissRoom()">
-        </app-game-lobby-panel>
-      }
-    </div>
-  </div>
-
-  <!-- BOTTOM: Mobile SEO Section -->
-  <div class="lg:hidden w-full max-w-[800px] mt-4 pb-8 mx-auto px-4">
-    <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
-         [innerHTML]="i18n.t('game.hashi.seo_desc')()">
-    </div>
-  </div>
-</div>
+</app-game-layout>

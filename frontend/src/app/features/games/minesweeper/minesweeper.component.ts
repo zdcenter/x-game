@@ -1,6 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
 import { storageGet, storageSet } from '../../../core/utils/browser.util';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -30,11 +29,13 @@ import { FormsModule } from '@angular/forms';
 import { TutorialOverlayComponent } from '../../../shared/components/tutorial-overlay/tutorial-overlay.component';
 import { TutorialService } from '../../../core/services/tutorial.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameLobbyPanelComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameRulesModalComponent, DragDropModule, GameHeaderComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GamePkModeBadgeComponent],
+  imports: [CommonModule, FormsModule, CellComponent,  GameResultOverlayComponent, GameWaitingRoomComponent,  DragDropModule,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, TutorialOverlayComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',

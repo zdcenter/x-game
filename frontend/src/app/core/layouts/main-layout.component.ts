@@ -113,9 +113,41 @@ import { FooterComponent } from './footer/footer.component';
                 {{ i18n.t('nav.signin')() }}
               </a>
             }
+
+            <!-- Mobile Menu Toggle (lg-) -->
+            <button (click)="isMobileMenuOpen.set(!isMobileMenuOpen())"
+                    class="lg:hidden p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                @if (isMobileMenuOpen()) {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                } @else {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                }
+              </svg>
+            </button>
           </div>
         </div>
       </header>
+
+      <!-- Mobile/iPad Navigation Overlay (lg-) -->
+      @if (isMobileMenuOpen()) {
+        <div class="fixed inset-0 top-[3.5rem] sm:top-[4rem] z-40 bg-[var(--color-bg-main)] overflow-y-auto lg:hidden animate-fade-in-down border-b border-[var(--color-border-card)] pb-6 shadow-xl" (click)="isMobileMenuOpen.set(false)">
+          <nav class="px-4 pt-4 pb-6 space-y-2 max-w-2xl mx-auto">
+            <a routerLink="/leaderboard" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-2xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
+            </a>
+            <a routerLink="/daily" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-2xl">📅</span> {{ i18n.t('daily.title')() || 'Daily' }}
+            </a>
+            <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-2xl">📖</span> {{ i18n.currentLang() === 'zh' ? '攻略文档' : 'Docs' }}
+            </a>
+            <a [routerLink]="['/blog']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-2xl">📝</span> {{ i18n.currentLang() === 'zh' ? '开发博客' : 'Blog' }}
+            </a>
+          </nav>
+        </div>
+      }
 
       <!-- Main Content Area -->
       <main class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col">
@@ -235,6 +267,7 @@ export class MainLayoutComponent {
   pwa = inject(PwaService);
 
   isSettingsOpen = signal(false);
+  isMobileMenuOpen = signal(false);
 
   logout() {
     this.authStore.logout();
