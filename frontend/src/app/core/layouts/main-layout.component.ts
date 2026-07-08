@@ -119,7 +119,7 @@ import { FooterComponent } from './footer/footer.component';
 
       <!-- Main Content Area -->
       <main class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col">
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col pb-12 sm:pb-16">
           <router-outlet></router-outlet>
         </div>
         <app-footer class="mt-auto"></app-footer>
