@@ -70,8 +70,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   timeSeconds = 0;
   private timerInterval: any;
 
-  // Board sizes
-  boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 320, tablet: 400, pc: 450 });
+  // Board sizes removed, using CSS aspect-square instead
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 

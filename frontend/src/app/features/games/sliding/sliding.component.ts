@@ -1,4 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
+import { isBrowser } from '../../../core/utils/browser.util';
 import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -54,8 +55,7 @@ export class SlidingComponent extends BaseGameComponent {
   hintTarget = signal<number | null>(null);
   Math = Math;
 
-  // chrome = nav + root-padding + card-padding + header + progress + badges + board-py + actions
-  boardSizePx = boardSizePx(inject(WindowSizeService), { mobile: 302, tablet: 350, pc: 390 });
+  // boardSizePx is removed, handled by CSS flex/aspect-ratio now
 
   get difficulties() {
     return this.gameRegistry.getConfig('sliding')?.difficulties || [];
@@ -153,19 +153,20 @@ export class SlidingComponent extends BaseGameComponent {
 
   override ngOnInit() {
     super.ngOnInit(); // connects lobby WS
-    const pending = this.roomLifecycle.consumePendingOrReconnect();
-    if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      return;
-    } else {
-      this.store.joinRoom('', GameMode.Single, 'easy');
+    
+    if (isBrowser()) {
+      const pending = this.roomLifecycle.consumePendingOrReconnect();
+      if (pending) {
+        if (pending.password) this.wsService.setPendingPassword(pending.password);
+        this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
+      } else {
+        this.store.joinRoom('', GameMode.Single, 'easy');
+      }
+
+      this.timerInterval = setInterval(() => {
+        this.currentTime.set(Date.now());
+      }, 100);
     }
-
-
-    this.timerInterval = setInterval(() => {
-      this.currentTime.set(Date.now());
-    }, 100);
   }
 
   override ngOnDestroy() {

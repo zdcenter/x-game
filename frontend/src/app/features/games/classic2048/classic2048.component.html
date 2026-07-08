@@ -100,7 +100,7 @@
             }
 
               <!-- Game Board -->
-              <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-colors duration-300" [style.width]="boardSizePx()" [style.height]="boardSizePx()"
+              <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-colors duration-300 w-full max-w-[450px] aspect-square mx-auto"
                    [class.animate-shake]="store.shakeTrigger() > 0">
                 <!-- Grid background -->
                 <div class="absolute inset-2 md:inset-3 grid gap-2" 
