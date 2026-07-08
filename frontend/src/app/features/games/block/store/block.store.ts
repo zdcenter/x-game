@@ -233,7 +233,7 @@ export class BlockStore extends BaseGameStore {
         }
       });
       this.clearingCells.set(keys);
-      setTimeout(() => this.clearingCells.set([]), 460);
+      setTimeout(() => this.clearingCells.set([]), 750);
       this.lastScoreGain.set({
         score: gained,
         lines: this._pendingClearRows.length + this._pendingClearCols.length,

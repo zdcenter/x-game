@@ -2,17 +2,18 @@
     <div class="relative w-full h-full select-none" (contextmenu)="$event.preventDefault()">
       <svg [attr.viewBox]="viewBox" class="w-full h-full drop-shadow-lg overflow-visible">
         <!-- Grid Cells -->
-        <g *ngFor="let cell of cells">
+        <g *ngFor="let cell of cells; let i = index">
           <polygon
             [attr.points]="hexPoints(cell.q, cell.r)"
             [attr.fill]="cell.filled ? (cell.color || 'url(#pieceGrad)') : (isClearing(cell) ? clearingColor(cell) : 'var(--color-hexa-empty)')"
-            [attr.stroke]="(cell.filled || isClearing(cell)) ? 'rgba(255,255,255,0.2)' : 'var(--color-hexa-empty-stroke)'"
-            [attr.stroke-width]="(cell.filled || isClearing(cell)) ? '0.8' : '1.2'"
+            [attr.stroke]="isClearing(cell) ? 'rgba(255,255,255,0.9)' : ((cell.filled) ? 'rgba(255,255,255,0.2)' : 'var(--color-hexa-empty-stroke)')"
+            [attr.stroke-width]="isClearing(cell) ? '2' : ((cell.filled) ? '0.8' : '1.2')"
             stroke-linejoin="round"
             [class.hexa-cell-clearing]="isClearing(cell)"
             [class.transition-colors]="!isClearing(cell)"
             class="duration-200"
-            [attr.filter]="(cell.filled || isClearing(cell)) ? 'url(#shadow3dLight)' : null">
+            [attr.filter]="cell.filled ? 'url(#shadow3dLight)' : null"
+            [style.--clear-delay]="isClearing(cell) ? ((Math.abs(cell.q) + Math.abs(cell.r)) * 30) + 'ms' : '0ms'">
           </polygon>
         </g>
         

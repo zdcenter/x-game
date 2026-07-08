@@ -17,6 +17,7 @@ export class HexaBoardComponent {
   cellKey(cell: HexCell): string { return `${cell.q},${cell.r},${cell.s}`; }
   isClearing(cell: HexCell): boolean { return this.clearingCells.has(this.cellKey(cell)); }
   clearingColor(cell: HexCell): string { return this.clearingCells.get(this.cellKey(cell)) || 'url(#pieceGrad)'; }
+  Math = Math;
   
   // Hex sizing for SVG viewport
   readonly size = 10; // "Radius" of a single hex

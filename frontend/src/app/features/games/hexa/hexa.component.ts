@@ -141,19 +141,19 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1150);
 
       if (gain.combo >= 1) {
-        const colors = ['#fbbf24', '#f97316', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8', '#a3e635'];
-        const count = gain.combo >= 2 ? 14 : 9;
+        const colors = ['#fbbf24', '#fcd34d', '#f59e0b', '#f97316', '#fb923c', '#fde68a', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#ffffff'];
+        const count = gain.combo >= 2 ? 22 : 14;
         const sparks = Array.from({ length: count }, (_, i) => ({
           id: `${gain.ts}-${i}`,
           color: colors[i % colors.length],
-          size: 5 + Math.random() * 7,
-          tx: (Math.random() * 240 - 120),
-          ty: (Math.random() * 240 - 120),
+          size: 4 + Math.random() * 10,
+          tx: (Math.random() * 300 - 150),
+          ty: (Math.random() * 300 - 150),
         }));
         this.particles.update(p => [...p, ...sparks]);
         setTimeout(() => {
           this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`)));
-        }, 720);
+        }, 900);
 
       }
     });

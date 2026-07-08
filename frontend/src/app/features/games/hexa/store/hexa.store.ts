@@ -167,7 +167,7 @@ export class HexaStore extends BaseGameStore {
     this.updateSignals();
 
     if (clearingMap.size > 0) {
-      setTimeout(() => this.clearingCells.set(new Map()), 480);
+      setTimeout(() => this.clearingCells.set(new Map()), 750);
     }
 
     const newCombo = this.engine.combo;

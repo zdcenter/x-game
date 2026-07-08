@@ -10,6 +10,7 @@ import { GameStatsService, SubmitStatResponse, XPResult } from '../services/game
 import { XpService } from '../services/xp.service';
 import { AchievementService } from '../services/achievement.service';
 import { AudioService } from '../services/audio.service';
+import { LayoutService } from '../services/layout.service';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
@@ -19,6 +20,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly stats = inject(GameStatsService);
   protected readonly xpService = inject(XpService);
   protected readonly achievementService = inject(AchievementService);
+  protected readonly layoutService = inject(LayoutService);
 
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
@@ -71,6 +73,14 @@ export abstract class BaseGameStore implements GameStoreInterface {
     effect(() => {
       if (this.status() === GameStatus.Starting) {
         untracked(() => this.audioService.playCountdown());
+      }
+    });
+
+    // Automatically scroll to top when game starts playing or countdown begins
+    effect(() => {
+      const cur = this.status();
+      if (cur === GameStatus.Starting || cur === GameStatus.Playing) {
+        untracked(() => this.layoutService.scrollToTop());
       }
     });
   }

@@ -130,18 +130,45 @@
     background-color: var(--color-bg-card);
     border: 1px solid var(--color-border-card);
   }
+  /* ═══════════════════════════════════════════════════════
+     Block Clearing Animation — "Starburst Dissolve"
+     Phase 1 (0-25%):  White flash + scale up — the "pop" moment
+     Phase 2 (25-60%): Glow ring expands, color saturates
+     Phase 3 (60-100%): Dissolve into nothing with brightness surge
+     ═══════════════════════════════════════════════════════ */
   @keyframes block-clear-cell {
-    0%   { transform: scale(1);    opacity: 1;    filter: brightness(1); }
-    20%  { transform: scale(1.14); opacity: 1;    filter: brightness(2.8) saturate(1.5); }
-    60%  { transform: scale(0.85); opacity: 0.65; filter: brightness(1.3); }
-    100% { transform: scale(0.1);  opacity: 0;    filter: brightness(0.5); }
+    0% { 
+      transform: scale(1); 
+      opacity: 1; 
+      filter: brightness(1) saturate(1);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 0px rgba(255,255,255,0);
+    }
+    18% { 
+      transform: scale(1.25); 
+      opacity: 1; 
+      filter: brightness(2.2) saturate(1.8);
+      box-shadow: inset 0 0 12px rgba(255,255,255,0.9), 0 0 18px rgba(255,200,50,0.7);
+    }
+    40% { 
+      transform: scale(1.05); 
+      opacity: 0.95; 
+      filter: brightness(1.6) saturate(1.4);
+      box-shadow: inset 0 0 6px rgba(255,255,255,0.4), 0 0 12px rgba(255,200,50,0.3);
+    }
+    100% { 
+      transform: scale(0); 
+      opacity: 0; 
+      filter: brightness(3) saturate(0);
+      box-shadow: inset 0 0 0px rgba(255,255,255,0), 0 0 0px rgba(255,200,50,0);
+    }
   }
   .block-clearing {
-    background: linear-gradient(135deg, var(--color-hexa-piece-light), var(--color-hexa-piece-dark));
-    box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 0 12px var(--color-cell-shadow);
-    animation: block-clear-cell 0.45s ease-out forwards;
+    background: linear-gradient(135deg, #fff8e1, var(--color-hexa-piece-light), var(--color-hexa-piece-dark));
+    animation: block-clear-cell 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    animation-delay: var(--clear-delay, 0ms);
     position: relative;
-    z-index: 2;
+    z-index: 10;
+    border-radius: 4px;
   }
 
 

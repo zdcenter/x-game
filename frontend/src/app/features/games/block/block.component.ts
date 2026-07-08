@@ -57,11 +57,12 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
     }
     .block-score-float { animation: block-score-float 1.2s ease-out forwards; }
 
-    /* Spark particles */
-    .block-spark { animation: block-spark 0.72s cubic-bezier(0.1, 1, 0.3, 1) forwards; }
+    /* Spark particles — enhanced with glow trail */
+    .block-spark { animation: block-spark 0.85s cubic-bezier(0.1, 1, 0.3, 1) forwards; }
     @keyframes block-spark {
-      0%   { transform: translate(0, 0) scale(1); opacity: 1; }
-      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+      0%   { transform: translate(0, 0) scale(1.5); opacity: 1; filter: blur(0px); }
+      50%  { opacity: 0.8; filter: blur(0.5px); }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; filter: blur(2px); }
     }
   `]
 })
@@ -146,17 +147,17 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       this.floatItems.update(items => [...items, item]);
       setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1200);
 
-      const colors = ['#fbbf24', '#f97316', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8', '#a3e635', '#fb7185'];
-      const count = gain.lines >= 4 ? 18 : gain.lines >= 2 ? 13 : 9;
+      const colors = ['#fbbf24', '#fcd34d', '#f59e0b', '#f97316', '#fb923c', '#fde68a', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8', '#ffffff'];
+      const count = gain.lines >= 4 ? 28 : gain.lines >= 2 ? 20 : 14;
       const sparks = Array.from({ length: count }, (_, i) => ({
         id: `${gain.ts}-${i}`,
         color: colors[i % colors.length],
-        size: 5 + Math.random() * 8,
-        tx: Math.random() * 280 - 140,
-        ty: Math.random() * 280 - 140,
+        size: 4 + Math.random() * 10,
+        tx: Math.random() * 340 - 170,
+        ty: Math.random() * 340 - 170,
       }));
       this.particles.update(p => [...p, ...sparks]);
-      setTimeout(() => this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`))), 750);
+      setTimeout(() => this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`))), 900);
     });
 
     effect((onCleanup) => {

@@ -114,8 +114,8 @@
             </div>
           }
 
-          <!-- Board and Pieces Wrapper -->
-          <div class="w-full flex flex-col items-center justify-start py-2 lg:py-4 shrink-0">
+          <!-- Board Area (Scrollable if needed) -->
+          <div class="w-full flex-grow flex flex-col items-center justify-start py-2 lg:py-4 min-h-0 overflow-y-auto custom-scrollbar">
             <!-- 彻底抛弃 Flexbox 自动推算，使用物理级绝对尺寸 -->
             <div class="relative flex items-center justify-center shrink-0 mb-4"
                  [class.block-shake]="isShaking()"
@@ -161,7 +161,8 @@
                   @for (row of store.board(); track rIndex; let rIndex = $index) {
                     @for (cell of row; track cIndex; let cIndex = $index) {
                       <div class="w-full h-full aspect-square rounded-sm"
-                           [ngClass]="store.clearingSet().has(rIndex + '-' + cIndex) ? 'block-clearing' : (cell > 0 ? 'block-piece' : 'block-empty')">
+                           [ngClass]="store.clearingSet().has(rIndex + '-' + cIndex) ? 'block-clearing' : (cell > 0 ? 'block-piece' : 'block-empty')"
+                           [style.--clear-delay]="store.clearingSet().has(rIndex + '-' + cIndex) ? ((rIndex + cIndex) * 25) + 'ms' : '0ms'">
                       </div>
                     }
                   }
@@ -192,33 +193,33 @@
                 }
               </div>
             </div>
+          </div>
 
-            <!-- Hand Shapes -->
-            <div class="w-full flex justify-around items-end max-w-md mx-auto h-24 sm:h-32 lg:h-48 shrink-0 touch-none select-none relative z-10 px-2 pb-1 sm:pb-2 gap-2 sm:gap-4">
-              @for (shape of store.hand(); track $index; let idx = $index) {
-                <div class="flex-1 h-full flex items-center justify-center relative cursor-grab active:cursor-grabbing"
-                     (mousedown)="shape ? onDragStart($event, shape, idx) : null"
-                     (touchstart)="shape ? onDragStart($event, shape, idx) : null">
-                  @if (shape) {
-                    <div class="hover:scale-105 transition-transform pointer-events-none w-full flex items-center justify-center"
-                         [style.opacity]="isDragging && draggedIndex === idx ? '0.2' : '1'"
-                         [style.transformOrigin]="'center bottom'">
-                      
-                      <div class="flex flex-col gap-1">
-                        @for (row of shape.matrix; track rIndex; let rIndex = $index) {
-                          <div class="flex gap-1">
-                            @for (cell of row; track cIndex; let cIndex = $index) {
-                              <div class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm"
-                                   [ngClass]="cell === 1 ? 'block-piece' : 'opacity-0'"></div>
-                            }
-                          </div>
-                        }
-                      </div>
+          <!-- Hand Shapes (Always visible at bottom) -->
+          <div class="w-full flex justify-around items-end max-w-md mx-auto h-24 sm:h-32 lg:h-48 shrink-0 touch-none select-none relative z-10 px-2 pb-1 sm:pb-2 gap-2 sm:gap-4 border-t border-transparent lg:border-[var(--color-border-card)]">
+            @for (shape of store.hand(); track $index; let idx = $index) {
+              <div class="flex-1 h-full flex items-center justify-center relative cursor-grab active:cursor-grabbing"
+                   (mousedown)="shape ? onDragStart($event, shape, idx) : null"
+                   (touchstart)="shape ? onDragStart($event, shape, idx) : null">
+                @if (shape) {
+                  <div class="hover:scale-105 transition-transform pointer-events-none w-full flex items-center justify-center"
+                       [style.opacity]="isDragging && draggedIndex === idx ? '0.2' : '1'"
+                       [style.transformOrigin]="'center bottom'">
+                    
+                    <div class="flex flex-col gap-1">
+                      @for (row of shape.matrix; track rIndex; let rIndex = $index) {
+                        <div class="flex gap-1">
+                          @for (cell of row; track cIndex; let cIndex = $index) {
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm"
+                                 [ngClass]="cell === 1 ? 'block-piece' : 'opacity-0'"></div>
+                          }
+                        </div>
+                      }
                     </div>
-                  }
-                </div>
-              }
-            </div>
+                  </div>
+                }
+              </div>
+            }
           </div>
         }
         

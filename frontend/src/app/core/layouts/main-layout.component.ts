@@ -1,5 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, Router } from '@angular/router';
+import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
@@ -8,12 +10,15 @@ import { PwaService } from '../services/pwa.service';
 import { ShareModalComponent } from '../../shared/components/share-modal/share-modal.component';
 import { FooterComponent } from './footer/footer.component';
 
+import { LayoutService } from '../services/layout.service';
+
 @Component({
   selector: 'app-main-layout',
   standalone: true,
   imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
+
       
       <!-- Global Navbar -->
       <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
@@ -150,7 +155,7 @@ import { FooterComponent } from './footer/footer.component';
       }
 
       <!-- Main Content Area -->
-      <main class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col">
+      <main #mainScroll class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col" style="overflow-anchor: none;">
         <div class="flex-1 flex flex-col pb-12 sm:pb-16">
           <router-outlet></router-outlet>
         </div>
@@ -265,9 +270,46 @@ export class MainLayoutComponent {
   authStore = inject(AuthStore);
   router = inject(Router);
   pwa = inject(PwaService);
+  layout = inject(LayoutService);
 
   isSettingsOpen = signal(false);
   isMobileMenuOpen = signal(false);
+
+  @ViewChild('mainScroll') mainScroll?: ElementRef<HTMLElement>;
+
+  private resetScroll() {
+    if (typeof window === 'undefined') return;
+    
+    // Immediate reset
+    window.scrollTo(0, 0);
+    if (this.mainScroll?.nativeElement) {
+      this.mainScroll.nativeElement.scrollTop = 0;
+    }
+    // Delayed resets to catch post-render scroll jumps on mobile
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (this.mainScroll?.nativeElement) {
+        this.mainScroll.nativeElement.scrollTop = 0;
+      }
+    }, 10);
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (this.mainScroll?.nativeElement) {
+        this.mainScroll.nativeElement.scrollTop = 0;
+      }
+    }, 100);
+  }
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntilDestroyed()
+    ).subscribe(() => this.resetScroll());
+
+    this.layout.scrollToTop$.pipe(
+      takeUntilDestroyed()
+    ).subscribe(() => this.resetScroll());
+  }
 
   logout() {
     this.authStore.logout();
