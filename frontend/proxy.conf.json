@@ -1,12 +1,12 @@
 {
   "/api": {
-    "target": "http://192.168.1.149:3001",
+    "target": "http://127.0.0.1:3001",
     "secure": false,
     "ws": true,
     "changeOrigin": true
   },
   "/ws": {
-    "target": "ws://192.168.1.149:3001",
+    "target": "ws://127.0.0.1:3001",
     "secure": false,
     "ws": true,
     "changeOrigin": true

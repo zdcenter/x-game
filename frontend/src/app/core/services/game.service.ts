@@ -1,7 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, TransferState, makeStateKey } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface GameConfig {
@@ -30,11 +30,14 @@ export interface GamesPage {
   hasMore: boolean;
 }
 
+const GAMES_DOCS_KEY = makeStateKey<GameDoc[]>('games-docs');
+
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
   private http = inject(HttpClient);
+  private transferState = inject(TransferState);
   private readonly baseUrl = environment.apiUrl;
 
   getGames(page = 1, limit = 8): Observable<GamesPage> {
@@ -54,7 +57,13 @@ export class GameService {
    * Run `node scripts/export-games-docs.js` after editing game rules in admin.
    */
   getAllGamesDocs(): Observable<GameDoc[]> {
-    return this.http.get<GameDoc[]>('/assets/games-docs.json');
+    if (this.transferState.hasKey(GAMES_DOCS_KEY)) {
+      const docs = this.transferState.get(GAMES_DOCS_KEY, []);
+      return of(docs);
+    }
+    return this.http.get<GameDoc[]>('/assets/games-docs.json').pipe(
+      tap(docs => this.transferState.set(GAMES_DOCS_KEY, docs))
+    );
   }
 
   visitGame(id: string): Observable<any> {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -19,6 +19,7 @@ import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
+import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 const PAGE_SIZE = 8;
@@ -53,6 +54,17 @@ export class LobbyComponent implements OnInit, OnDestroy {
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
+  
+  private blogService = inject(BlogService);
+  rawBlogs = signal<BlogPostMeta[]>([]);
+  displayBlogs = computed(() => {
+    const lang = this.i18n.currentLang();
+    return this.rawBlogs().map(post => ({
+      id: post.id,
+      date: post.date,
+      meta: lang === 'zh' ? post.zh : post.en
+    }));
+  });
 
   ngOnInit() {
     // Load dynamic game stats (visitCounts) and merge without reordering
@@ -65,6 +77,15 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
     const player = this.authStore.currentUser()?.username || this.authStore.guestId;
     this.wsService.connectLobby(player, player);
+
+    // Fetch latest blogs for AdSense text density and UX
+    this.blogService.getBlogPosts().subscribe({
+      next: (data) => {
+        const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        this.rawBlogs.set(sorted.slice(0, 4));
+      },
+      error: (err) => console.error('Failed to load recent blogs', err)
+    });
   }
 
   private loadGamesStats() {

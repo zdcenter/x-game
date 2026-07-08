@@ -126,6 +126,17 @@ interface TocItem {
                           [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--color-accent-from)] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--color-text-muted)]"
                    [innerHTML]="parsedContent()">
               </div>
+              
+              <!-- CTA Button Section -->
+              <div class="mt-16 mb-8 pt-10 border-t border-[var(--color-border-card)] text-center">
+                <h3 class="text-2xl font-bold mb-6 text-[var(--color-text-primary)]">
+                  {{ i18n.t('blog.cta_title')() || '准备好挑战您的大脑了吗？' }}
+                </h3>
+                <a [routerLink]="['/', i18n.currentLang(), 'games', currentGameId()]" 
+                   class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95">
+                  {{ i18n.t('blog.cta_btn')() || '立即试玩免费益智游戏' }}
+                </a>
+              </div>
             } @else {
               <div class="flex items-center justify-center h-64 text-[var(--color-text-muted)]">
                 Loading documentation...

@@ -92,7 +92,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
   <div class="flex-grow min-h-0 w-full flex flex-col lg:flex-row p-2 lg:p-4 lg:px-6 gap-4 lg:gap-8 justify-center lg:items-stretch max-w-[1600px] mx-auto transition-colors duration-300">
     
     <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2">
+    <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 overflow-y-auto custom-scrollbar min-h-0 pr-2">
       <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left">
          <h2>关于数字连线 (Number Connect)</h2>
          <p>数字连线是一款经典的益智游戏。在网格中，将相同数字的端点用线条连接起来，并填满所有可用的空白格子。</p>
