@@ -241,8 +241,8 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     this.isMobileSidebarOpen.set(false);
   }
 
-  changeDifficulty(event: Event) {
-    const diff = (event.target as HTMLSelectElement).value;
+  changeDifficulty(event: Event | string) {
+    const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
     storageSet('codebreaker_single_diff', diff);
     this.currentDifficulty.set(diff);

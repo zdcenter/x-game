@@ -9,6 +9,7 @@ import { GameRegistryService } from '../services/game-registry.service';
 import { GameStatsService, SubmitStatResponse, XPResult } from '../services/game-stats.service';
 import { XpService } from '../services/xp.service';
 import { AchievementService } from '../services/achievement.service';
+import { AudioService } from '../services/audio.service';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
@@ -25,6 +26,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
   // PK stat auto-submit tracking (plain properties, not signals)
   private _pkPrevStatus = '';
   private _pkStatSubmitted = false;
+  
+  protected readonly audioService = inject(AudioService);
 
   constructor() {
     // Sync target from WS game state so currentRoomTarget is always up-to-date
@@ -62,6 +65,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
         this._pkStatSubmitted = false;
       }
       this._pkPrevStatus = cur as string;
+    });
+
+    // Play countdown audio when starting
+    effect(() => {
+      if (this.status() === GameStatus.Starting) {
+        untracked(() => this.audioService.playCountdown());
+      }
     });
   }
 

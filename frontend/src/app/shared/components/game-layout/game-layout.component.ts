@@ -1,17 +1,18 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
-import { ViewChild } from '@angular/core';
 import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
@@ -31,6 +32,28 @@ import { I18nService } from '../../../core/i18n/i18n.service';
         (rules)="rulesOpen.emit()"
       >
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">{{ icon }}</div>
+
+        <ng-container header-center>
+          <ng-content select="[header-center]"></ng-content>
+          @if (currentRoomMode === GameMode.Single && availableDifficulties.length > 0 && status !== GameStatus.Waiting) {
+            <div class="relative group mx-1 sm:mx-2 z-20">
+              <select class="appearance-none bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] px-2 sm:px-3 py-1 sm:py-1.5 pr-6 sm:pr-8 rounded-lg sm:rounded-xl outline-none hover:border-amber-500/50 focus:border-amber-500 transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-sm hover:shadow-md"
+                      [ngModel]="currentDifficulty" (ngModelChange)="onDifficultyChange($event)">
+                @for (diff of availableDifficulties; track diff.id) {
+                  <option [value]="diff.id">
+                    {{ i18n.t(diff.labelKey)() }}
+                    @if (diff.descKey || diff.desc) {
+                      ({{ diff.descKey ? i18n.t(diff.descKey)() : diff.desc }})
+                    }
+                  </option>
+                }
+              </select>
+              <div class="absolute inset-y-0 right-0 flex items-center px-1.5 sm:px-2 pointer-events-none text-[var(--color-text-muted)] group-hover:text-amber-500 transition-colors">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+          }
+        </ng-container>
 
         <ng-container header-right>
           <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
@@ -125,9 +148,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 </div>
   `
 })
-export class GameLayoutComponent {
+export class GameLayoutComponent implements OnInit {
   settingsService = inject(SettingsService);
   i18n = inject(I18nService);
+  gameRegistry = inject(GameRegistryService);
 
   @Input({ required: true }) gameId!: string;
   @Input() title: string = '';
@@ -150,6 +174,8 @@ export class GameLayoutComponent {
   @Input() showPlayAgainBtn: boolean = false;
   @Input() showLeaveBtn: boolean = false;
 
+  @Input() currentDifficulty: string = '';
+
   @Output() rulesClosed = new EventEmitter<void>();
   @Output() rulesOpen = new EventEmitter<void>();
   @Output() titleClick = new EventEmitter<void>();
@@ -159,9 +185,26 @@ export class GameLayoutComponent {
   @Output() joinRoom = new EventEmitter<any>();
   @Output() createRoom = new EventEmitter<any>();
   @Output() mobileSidebarClosed = new EventEmitter<void>();
+  @Output() difficultyChange = new EventEmitter<string>();
 
   GameMode = GameMode;
   GameStatus = GameStatus;
+
+  availableDifficulties: { id: string, labelKey: string, descKey?: string, desc?: string }[] = [];
+
+  ngOnInit() {
+    if (this.gameId) {
+      const config = this.gameRegistry.getConfig(this.gameId);
+      if (config && config.difficulties) {
+        this.availableDifficulties = config.difficulties;
+      }
+    }
+  }
+
+  onDifficultyChange(newDiff: string) {
+    this.currentDifficulty = newDiff;
+    this.difficultyChange.emit(newDiff);
+  }
 
   get computedSeoDescKey() {
     return this.seoDescKey || `game.${this.gameId}.seo_desc`;

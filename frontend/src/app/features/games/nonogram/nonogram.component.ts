@@ -136,8 +136,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
      const w = this.store.width();
      const h = this.store.height();
      const maxH = this.maxHintsCount();
-     // Hint area uses CSS 'auto' — estimate as ~40% of maxH cell-equivalents
-     const hintEq = Math.max(2, maxH * 0.4);
+     // Hint area uses CSS 'auto' — estimate as ~80% of maxH cell-equivalents to prevent overflow
+     const hintEq = Math.max(2.5, maxH * 0.8);
      const totalCols = w + hintEq;
      const totalRows = h + hintEq;
 
@@ -155,8 +155,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
        // lg: NO left panel, right(260) + gaps(48) + padding(32)
        availW = vw - 260 - 80;
      } else {
-       // mobile/tablet: full width minus card+page padding
-       availW = vw - 40;
+       // mobile/tablet: full width minus card+page padding (reduced to ensure no overflow)
+       availW = vw - 60;
      }
 
      // Height: header(~80px), draw toggle(~70px)

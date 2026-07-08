@@ -110,8 +110,8 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     this.selectedIsland.set(null);
   }
 
-  async onDifficultyChange(event: Event) {
-    const diff = (event.target as HTMLSelectElement).value;
+  async onDifficultyChange(event: Event | string) {
+    const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
     if (diff === this.store.currentDifficulty()) return;
     
     try {

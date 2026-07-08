@@ -256,9 +256,8 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  changeSingleDifficulty(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.store.joinRoom('local', GameMode.Single, select.value, this.playerId);
+  changeSingleDifficulty(diff: string) {
+    this.store.joinRoom('local', GameMode.Single, diff, this.playerId);
   }
 
   get isWin(): boolean {

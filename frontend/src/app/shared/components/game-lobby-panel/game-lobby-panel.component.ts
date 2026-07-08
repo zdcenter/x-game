@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { AdService } from '../../../core/services/ad.service';
 import { AdsenseComponent } from '../adsense/adsense.component';
+import { AudioService } from '../../../core/services/audio.service';
 
 export interface GameMode {
   id: string;
@@ -44,6 +45,7 @@ export class GameLobbyPanelComponent implements OnInit {
   authStore = inject(AuthStore);
   router = inject(Router);
   adService = inject(AdService);
+  audioService = inject(AudioService);
 
   private route = inject(ActivatedRoute);
   private crossGameJoin = inject(CrossGameJoinService);

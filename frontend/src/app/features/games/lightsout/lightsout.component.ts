@@ -156,10 +156,10 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     }
   }
 
-  changeDifficulty(event: Event) {
-    const select = event.target as HTMLSelectElement;
+  changeDifficulty(event: Event | string) {
+    const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
     this.gameTimer.stopCountdown();
-    this.store.changeDifficulty(select.value);
+    this.store.changeDifficulty(diff);
   }
 
 

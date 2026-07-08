@@ -78,81 +78,117 @@
         </div>
       </div>
 
-      <!-- ── Players List ── -->
-      <div class="flex-grow overflow-y-auto custom-scrollbar px-4 sm:px-6 pt-4 pb-3 min-h-[120px]">
-        <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
-          @for (player of sortedPlayers; track player.id) {
-            <div class="relative flex flex-col items-center p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 w-[calc(50%-6px)] sm:w-36"
-                 [class.border-emerald-500]="readyPlayers[player.id]"
-                 [class.bg-emerald-500/5]="readyPlayers[player.id]"
-                 [class.shadow-[0_0_20px_rgba(16,185,129,0.18)]]="readyPlayers[player.id]"
-                 [class.border-[var(--color-border-card)]]="!readyPlayers[player.id]"
-                 [class.bg-[var(--color-bg-main)]]="!readyPlayers[player.id]">
+      <!-- ── Duel Players List ── -->
+      <div class="flex-grow overflow-y-auto scrollbar-hide px-4 sm:px-6 pt-4 pb-3 min-h-[160px] flex flex-col justify-center">
+        <div class="relative flex items-stretch justify-between gap-2 max-w-md mx-auto w-full">
+          
+          <!-- VS Center Badge -->
+          <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 p-[2px] shadow-[0_0_30px_rgba(245,158,11,0.5)] animate-pulse">
+              <div class="w-full h-full bg-black rounded-full flex items-center justify-center">
+                <span class="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-amber-200 to-amber-500 text-lg sm:text-xl">VS</span>
+              </div>
+            </div>
+          </div>
 
-              <!-- Host badge -->
-              @if (player.id === hostId) {
-                <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap z-10">
-                  👑 {{ i18n.t('game.host')() }}
-                </span>
-              }
-
-              <!-- Kick button (host only, for guests) -->
-              @if (currentUserId === hostId && player.id !== hostId) {
-                <button (click)="kick.emit(player.id)"
-                        class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 flex items-center justify-center transition-colors text-[10px] font-bold">
-                  ✕
-                </button>
+          <!-- Player 1 (Host or Me) -->
+          @if (sortedPlayers.length > 0) {
+            <div class="relative flex-1 flex flex-col items-center p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 overflow-hidden"
+                 [class.border-emerald-500]="readyPlayers[sortedPlayers[0].id]"
+                 [class.bg-emerald-500/10]="readyPlayers[sortedPlayers[0].id]"
+                 [class.shadow-[0_0_30px_rgba(16,185,129,0.2)]]="readyPlayers[sortedPlayers[0].id]"
+                 [class.border-blue-500/30]="!readyPlayers[sortedPlayers[0].id]"
+                 [class.bg-blue-500/5]="!readyPlayers[sortedPlayers[0].id]">
+              
+              <!-- Host Crown -->
+              @if (sortedPlayers[0].id === hostId) {
+                <span class="absolute top-0 left-0 bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded-br-lg shadow-sm z-10">👑 {{ i18n.t('game.host')() }}</span>
               }
 
               <!-- Avatar -->
-              <div class="relative mt-1 mb-2 sm:mb-3">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white font-black text-xl sm:text-2xl shadow-lg transition-transform"
-                     [class.scale-105]="readyPlayers[player.id]"
-                     [style.background]="player.id === hostId
-                       ? 'linear-gradient(135deg, #f59e0b, #ef4444)'
-                       : 'linear-gradient(135deg, #6366f1, #8b5cf6)'">
-                  {{ player.id?.charAt(0)?.toUpperCase() }}
+              <div class="relative mt-2 sm:mt-0 mb-3">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white font-black text-2xl sm:text-3xl shadow-2xl transition-transform border-4 border-[var(--color-bg-main)]"
+                     [class.scale-110]="readyPlayers[sortedPlayers[0].id]"
+                     [style.background]="'linear-gradient(135deg, #3b82f6, #8b5cf6)'">
+                  {{ sortedPlayers[0].id?.charAt(0)?.toUpperCase() }}
                 </div>
-                <!-- Ready checkmark overlay -->
-                @if (readyPlayers[player.id]) {
-                  <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-xs font-black">
-                    ✓
-                  </div>
-                } @else if (player.id !== hostId) {
-                  <!-- Waiting pulse dot -->
-                  <div class="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-amber-500/20 rounded-full border-2 border-[var(--color-bg-card)] flex items-center justify-center">
-                    <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
-                  </div>
+                <!-- Ready overlay -->
+                @if (readyPlayers[sortedPlayers[0].id]) {
+                  <div class="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-main)] shadow-lg flex items-center justify-center text-white text-sm font-black animate-scale-in">✓</div>
                 }
               </div>
-
-              <!-- Player name -->
-              <span class="font-bold text-xs sm:text-sm text-[var(--color-text-main)] truncate w-full text-center">{{ player.id }}</span>
-
-              <!-- Status label -->
-              <span class="mt-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider"
-                    [class.text-emerald-400]="readyPlayers[player.id]"
-                    [class.text-amber-400]="!readyPlayers[player.id] && player.id !== hostId"
-                    [class.text-[var(--color-text-muted)]]="player.id === hostId">
-                @if (readyPlayers[player.id]) { {{ i18n.t('game.ready')() }} }
-                @else if (player.id === hostId) { {{ i18n.t('game.host')() }} }
-                @else { {{ i18n.t('game.waiting_challenger')() || '等待中...' }} }
+              <span class="font-black text-sm sm:text-base text-[var(--color-text-main)] truncate w-full text-center drop-shadow-md">{{ sortedPlayers[0].id }}</span>
+              <span class="mt-1 text-[10px] sm:text-xs font-black uppercase tracking-widest"
+                    [class.text-emerald-400]="readyPlayers[sortedPlayers[0].id]"
+                    [class.text-[var(--color-text-muted)]]="!readyPlayers[sortedPlayers[0].id]">
+                {{ readyPlayers[sortedPlayers[0].id] ? i18n.t('game.ready')() : i18n.t('game.host')() }}
               </span>
             </div>
           }
 
-          <!-- Empty slot placeholder (PK games with 1 player) -->
-          @if (mode !== GameMode.Single && sortedPlayers.length < 2) {
-            <div class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50 w-[calc(50%-6px)] sm:w-36 min-h-[140px] animate-pulse">
-              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--color-bg-card)] border-2 border-dashed border-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] text-2xl mb-2 shadow-inner">
-                ?
+          <!-- Player 2 (Challenger or Empty) -->
+          @if (sortedPlayers.length > 1) {
+            <div class="relative flex-1 flex flex-col items-center p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 overflow-hidden"
+                 [class.border-emerald-500]="readyPlayers[sortedPlayers[1].id]"
+                 [class.bg-emerald-500/10]="readyPlayers[sortedPlayers[1].id]"
+                 [class.shadow-[0_0_30px_rgba(16,185,129,0.2)]]="readyPlayers[sortedPlayers[1].id]"
+                 [class.border-rose-500/30]="!readyPlayers[sortedPlayers[1].id]"
+                 [class.bg-rose-500/5]="!readyPlayers[sortedPlayers[1].id]">
+              
+              <!-- Kick Button -->
+              @if (currentUserId === hostId && sortedPlayers[1].id !== hostId) {
+                <button (click)="kick.emit(sortedPlayers[1].id)" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors text-[10px] font-bold z-10">✕</button>
+              }
+
+              <!-- Avatar -->
+              <div class="relative mt-2 sm:mt-0 mb-3">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white font-black text-2xl sm:text-3xl shadow-2xl transition-transform border-4 border-[var(--color-bg-main)]"
+                     [class.scale-110]="readyPlayers[sortedPlayers[1].id]"
+                     [style.background]="'linear-gradient(135deg, #f43f5e, #f97316)'">
+                  {{ sortedPlayers[1].id?.charAt(0)?.toUpperCase() }}
+                </div>
+                <!-- Ready overlay -->
+                @if (readyPlayers[sortedPlayers[1].id]) {
+                  <div class="absolute -bottom-1 -left-1 w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-main)] shadow-lg flex items-center justify-center text-white text-sm font-black animate-scale-in">✓</div>
+                } @else {
+                  <div class="absolute -bottom-1 -left-1 w-7 h-7 bg-amber-500/20 rounded-full border-2 border-[var(--color-bg-main)] flex items-center justify-center"><div class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></div></div>
+                }
               </div>
-              <button (click)="copyInviteLink()" class="mt-1 text-[10px] font-black text-[var(--color-bg-main)] bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] px-3 py-1.5 rounded-lg shadow-md hover:brightness-110 active:scale-95 transition-all w-full text-center truncate">
+              <span class="font-black text-sm sm:text-base text-[var(--color-text-main)] truncate w-full text-center drop-shadow-md">{{ sortedPlayers[1].id }}</span>
+              <span class="mt-1 text-[10px] sm:text-xs font-black uppercase tracking-widest"
+                    [class.text-emerald-400]="readyPlayers[sortedPlayers[1].id]"
+                    [class.text-amber-400]="!readyPlayers[sortedPlayers[1].id]">
+                {{ readyPlayers[sortedPlayers[1].id] ? i18n.t('game.ready')() : (i18n.t('game.waiting_challenger')() || '等待中...') }}
+              </span>
+            </div>
+          } @else if (mode !== GameMode.Single) {
+            <!-- Empty Slot Placeholder -->
+            <div class="relative flex-1 flex flex-col items-center justify-center p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-2 border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50 opacity-80 min-h-[160px]">
+              <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--color-bg-card)] border-2 border-dashed border-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] text-3xl mb-3 shadow-inner">?</div>
+              <button (click)="copyInviteLink()" class="mt-2 text-[10px] sm:text-xs font-black text-[var(--color-bg-main)] bg-[var(--color-text-main)] px-4 py-2 rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all w-full text-center truncate uppercase tracking-wider">
                 {{ i18n.t('share.invite_pk')() }}
               </button>
             </div>
           }
         </div>
+
+        <!-- Extra Players (if > 2) -->
+        @if (sortedPlayers.length > 2) {
+          <div class="mt-4 flex flex-wrap justify-center gap-2">
+            @for (player of sortedPlayers.slice(2); track player.id) {
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border"
+                   [class.border-emerald-500]="readyPlayers[player.id]" [class.bg-emerald-500/10]="readyPlayers[player.id]"
+                   [class.border-[var(--color-border-card)]]="!readyPlayers[player.id]" [class.bg-[var(--color-bg-card)]]="!readyPlayers[player.id]">
+                <div class="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold">{{ player.id?.charAt(0)?.toUpperCase() }}</div>
+                <span class="text-xs font-bold truncate max-w-[80px]">{{ player.id }}</span>
+                @if (readyPlayers[player.id]) { <span class="text-emerald-400 text-[10px]">✓</span> }
+                @if (currentUserId === hostId) {
+                  <button (click)="kick.emit(player.id)" class="ml-1 w-4 h-4 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-[8px]">✕</button>
+                }
+              </div>
+            }
+          </div>
+        }
       </div>
 
       <!-- ── Actions Footer ── -->
@@ -160,16 +196,16 @@
         <!-- Host action row -->
         @if (currentUserId === hostId) {
           <div class="flex gap-2 mb-2">
-            <button (click)="leave.emit()"
+            <button (click)="leave.emit(); audioService.playClick()"
                     class="flex-1 px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold text-sm transition-all active:scale-95">
               {{ i18n.t('game.leave')() }}
             </button>
-            <button (click)="changeSettings.emit()"
+            <button (click)="changeSettings.emit(); audioService.playClick()"
                     class="flex-1 px-4 py-2.5 rounded-xl border border-blue-500/40 text-blue-400 hover:bg-blue-500/10 font-bold text-sm transition-all active:scale-95 whitespace-nowrap">
               ⚙️ {{ i18n.t('game.change_settings')() || 'Settings' }}
             </button>
           </div>
-          <button (click)="start.emit()"
+          <button (click)="start.emit(); audioService.playClick()"
                   [disabled]="!allGuestsReady"
                   class="w-full py-2.5 rounded-xl font-black text-sm uppercase tracking-wide transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-0.5"
                   [class.bg-gradient-to-r]="allGuestsReady"
@@ -191,7 +227,7 @@
         } @else {
           <!-- Guest action row -->
           <div class="flex gap-2">
-            <button (click)="leave.emit()"
+            <button (click)="leave.emit(); audioService.playClick()"
                     class="px-4 py-3 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] font-bold text-sm transition-all active:scale-95">
               {{ i18n.t('game.leave')() }}
             </button>
@@ -200,12 +236,12 @@
                 {{ i18n.t('game.spectating')() || '旁观中...' }}
               </button>
             } @else if (readyPlayers[currentUserId]) {
-              <button (click)="cancelReady.emit()"
+              <button (click)="cancelReady.emit(); audioService.playClick()"
                       class="flex-1 py-3 rounded-xl bg-amber-500 text-black font-black text-sm uppercase tracking-wide hover:bg-amber-400 shadow-lg transition-all active:scale-[0.98]">
                 {{ i18n.t('game.cancel_ready')() || '取消准备' }}
               </button>
             } @else {
-              <button (click)="ready.emit()"
+              <button (click)="ready.emit(); audioService.playClick()"
                       class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-sm uppercase tracking-wide hover:brightness-110 shadow-lg transition-all active:scale-[0.98] animate-pulse">
                 {{ i18n.t('game.ready')() || '准备' }}
               </button>

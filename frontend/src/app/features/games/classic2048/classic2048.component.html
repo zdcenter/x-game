@@ -12,6 +12,7 @@
   [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
+  [currentDifficulty]="store.currentDifficulty()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished "
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   (rulesClosed)="showRules.set(false)"

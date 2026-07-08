@@ -12,6 +12,7 @@ import { ShareService } from '../../../core/services/share.service';
 import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
 import { AdsenseComponent } from '../adsense/adsense.component';
+import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-game-result-overlay',
@@ -60,6 +61,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   private audioPlayed = false;
   recommendedGames: GameConfig[] = [];
+  animatedStats = signal<{ icon?: string, label?: string, value: string | number }[]>([]);
 
   ngOnInit() {
     this.playEffect();
@@ -67,7 +69,85 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     if (this.currentGameId) {
       const isWin = this.status === GameResult.Win;
       this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));
+      if (isWin) {
+        this.fireConfetti();
+      }
     }
+    this.animateStats();
+  }
+
+  private fireConfetti() {
+    // Fire confetti from left and right edges
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      // since particles fall down, start a bit higher than random
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  }
+
+  private animateStats() {
+    if (!this.stats || this.stats.length === 0) {
+      this.animatedStats.set([]);
+      return;
+    }
+    
+    // Initialize animated stats with 0 for numbers
+    const targetStats = [...this.stats];
+    const currentStats = targetStats.map(s => ({
+      ...s,
+      value: typeof s.value === 'number' ? 0 : s.value
+    }));
+    this.animatedStats.set([...currentStats]);
+
+    let startTimestamp: number | null = null;
+    const duration = 1500; // 1.5 seconds animation
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // Easing function (easeOutExpo)
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+
+      let hasChanges = false;
+      const newStats = currentStats.map((s, i) => {
+        const target = targetStats[i].value;
+        if (typeof target === 'number' && typeof s.value === 'number') {
+          const currentVal = Math.floor(target * easeProgress);
+          if (currentVal !== s.value) hasChanges = true;
+          return { ...s, value: currentVal };
+        }
+        return s;
+      });
+
+      if (hasChanges || progress === 1) {
+        // Ensure final values match exactly
+        if (progress === 1) {
+          this.animatedStats.set([...targetStats]);
+        } else {
+          this.animatedStats.set(newStats);
+        }
+      }
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    window.requestAnimationFrame(step);
   }
 
   private loadRecommendations() {

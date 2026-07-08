@@ -18,7 +18,7 @@
 
   <!-- ── Tab Bar ── -->
   <div class="shrink-0 flex border-b border-[var(--color-border-card)] px-1">
-    <button (click)="activeTab = 'rooms'"
+    <button (click)="activeTab = 'rooms'; audioService.playClick()"
             class="flex-1 py-3 text-xs font-black uppercase tracking-wider relative transition-colors flex items-center justify-center gap-1.5"
             [class.text-[var(--color-accent-from)]]="activeTab === 'rooms'"
             [class.text-[var(--color-text-muted)]]="activeTab !== 'rooms'">
@@ -34,7 +34,7 @@
         <span class="absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] rounded-full"></span>
       }
     </button>
-    <button (click)="activeTab = 'online'"
+    <button (click)="activeTab = 'online'; audioService.playClick()"
             class="flex-1 py-3 text-xs font-black uppercase tracking-wider relative transition-colors flex items-center justify-center gap-1.5"
             [class.text-[var(--color-accent-from)]]="activeTab === 'online'"
             [class.text-[var(--color-text-muted)]]="activeTab !== 'online'">

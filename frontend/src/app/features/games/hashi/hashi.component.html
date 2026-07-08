@@ -12,6 +12,8 @@
   [status]="store.status()"
   [showRules]="false"
   [showMobileSidebar]="isMobileSidebarOpen()"
+  [currentDifficulty]="store.currentDifficulty()"
+  (difficultyChange)="onDifficultyChange($event)"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished "
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   

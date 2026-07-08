@@ -190,8 +190,8 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     this.store.startGame();
   }
 
-  changeDifficulty(event: Event) {
-    const diff = (event.target as HTMLSelectElement).value;
+  changeDifficulty(event: Event | string) {
+    const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
     this.currentDifficulty.set(diff);
     // Re-init the store to apply new difficulty
