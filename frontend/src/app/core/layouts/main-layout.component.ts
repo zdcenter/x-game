@@ -6,11 +6,12 @@ import { ThemeService } from '../theme/theme.service';
 import { AuthStore } from '../auth/auth.store';
 import { PwaService } from '../services/pwa.service';
 import { ShareModalComponent } from '../../shared/components/share-modal/share-modal.component';
+import { FooterComponent } from './footer/footer.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent],
+  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
       
@@ -26,11 +27,17 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
                 Puzzle PK
               </span>
             </a>
-            <a routerLink="/leaderboard" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
-              🏆 {{ i18n.t('leaderboard.title')() }}
+            <a routerLink="/leaderboard" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              🏆 {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a routerLink="/daily" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
-              📅 {{ i18n.t('daily.title')() }}
+            <a routerLink="/daily" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📅 {{ i18n.t('daily.title')() || 'Daily' }}
+            </a>
+            <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📖 {{ i18n.currentLang() === 'zh' ? '攻略文档' : 'Docs' }}
+            </a>
+            <a [routerLink]="['/blog']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📝 {{ i18n.currentLang() === 'zh' ? '开发博客' : 'Blog' }}
             </a>
           </div>
 
@@ -111,8 +118,11 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
       </header>
 
       <!-- Main Content Area -->
-      <main class="flex-1 block overflow-y-auto custom-scrollbar relative min-h-0">
-        <router-outlet></router-outlet>
+      <main class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col">
+        <div class="flex-1 flex flex-col">
+          <router-outlet></router-outlet>
+        </div>
+        <app-footer class="mt-auto"></app-footer>
         <app-share-modal></app-share-modal>
       </main>
 

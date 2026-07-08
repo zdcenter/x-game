@@ -49,6 +49,10 @@ const langChildren: Routes = [
         loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent)
       },
       {
+        path: 'pages/:id',
+        loadComponent: () => import('./features/pages/static-page.component').then(m => m.StaticPageComponent)
+      },
+      {
         path: 'docs',
         loadComponent: () => import('./features/docs/docs.component').then(m => m.DocsComponent),
         data: { seo: { titleKey: 'seo.docs.title', descKey: 'seo.docs.desc', keywordsKey: 'seo.docs.keywords' } }

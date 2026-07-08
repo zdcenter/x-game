@@ -5,9 +5,9 @@ import { Observable, of } from 'rxjs';
 import enTranslations from '../../../assets/i18n/en.json';
 import zhTranslations from '../../../assets/i18n/zh.json';
 
-const INLINE_TRANSLATIONS: Record<string, Record<string, string>> = {
-  en: enTranslations as Record<string, string>,
-  zh: zhTranslations as Record<string, string>,
+const INLINE_TRANSLATIONS: Record<string, Translation> = {
+  en: enTranslations as Translation,
+  zh: zhTranslations as Translation,
 };
 
 @Injectable({ providedIn: 'root' })

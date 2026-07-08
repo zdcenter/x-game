@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AudioService } from '../../../core/services/audio.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {

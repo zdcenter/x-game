@@ -17,7 +17,6 @@ import { AdsenseComponent } from '../../shared/components/adsense/adsense.compon
 import { ShareService } from '../../core/services/share.service';
 import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
-import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
@@ -27,7 +26,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, FooterComponent, DailyChallengeBannerComponent],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, DailyChallengeBannerComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })

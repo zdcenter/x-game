@@ -5,14 +5,13 @@ import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { BlogService, BlogPostMeta } from '../../../core/services/blog.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { marked } from 'marked';
-import { FooterComponent } from '../../../shared/components/footer/footer.component';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
 @Component({
   selector: 'app-blog-post',
   standalone: true,
-  imports: [CommonModule, RouterModule, FooterComponent],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto">
@@ -73,7 +72,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
       </div>
 
       <div class="px-4 sm:px-8 max-w-4xl mx-auto w-full mt-16">
-        <app-footer></app-footer>
+        
       </div>
     </div>
   `,

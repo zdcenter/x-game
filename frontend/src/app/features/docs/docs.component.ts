@@ -5,7 +5,6 @@ import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameDoc, getLocalizedField } from '../../core/services/game.service';
 import { marked } from 'marked';
-import { FooterComponent } from '../../shared/components/footer/footer.component';
 import { getOrigin } from '../../core/utils/browser.util';
 import { GameRegistryService } from '../../core/services/game-registry.service';
 import { GameStepPlayerComponent } from './components/game-step-player/game-step-player.component';
@@ -24,7 +23,7 @@ interface TocItem {
 @Component({
   selector: 'app-docs',
   standalone: true,
-  imports: [CommonModule, RouterLink, FooterComponent, GameStepPlayerComponent, SlidingTutorialComponent, SokobanTutorialComponent],
+  imports: [CommonModule, RouterLink, GameStepPlayerComponent, SlidingTutorialComponent, SokobanTutorialComponent],
   template: `
     <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
       
@@ -134,7 +133,7 @@ interface TocItem {
                 </h3>
                 <a [routerLink]="['/', i18n.currentLang(), 'games', currentGameId()]" 
                    class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95">
-                  {{ i18n.t('blog.cta_btn')() || '立即试玩免费益智游戏' }}
+                  {{ i18n.t('blog.cta_btn')() || '立即畅玩益智游戏' }}
                 </a>
               </div>
             } @else {
@@ -170,7 +169,7 @@ interface TocItem {
         </div>
         
         <div class="px-4 sm:px-8 max-w-4xl mx-auto">
-          <app-footer></app-footer>
+          
         </div>
       </main>
 
