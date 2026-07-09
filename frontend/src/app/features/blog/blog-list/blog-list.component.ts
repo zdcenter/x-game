@@ -31,7 +31,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
                 }
               </div>
               <h2 class="text-2xl font-bold mb-3 group-hover:text-emerald-400 transition-colors">
-                <a [routerLink]="['/blog', post.id]">{{ post.meta.title }}</a>
+                <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]">{{ post.meta.title }}</a>
               </h2>
               <p class="text-[var(--color-text-secondary)] mb-6 line-clamp-3">
                 {{ post.meta.description }}

@@ -70,7 +70,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
                     <span>⏱️</span>
                     <span>{{ i18n.t('daily.next_in')() }}: <span class="font-mono font-black text-[var(--color-text-main)]">{{ countdown() }}</span></span>
                   </div>
-                  <a [routerLink]="['/games', ch.game_id]"
+                  <a [routerLink]="['/', i18n.currentLang(), 'games', ch.game_id]"
                      [queryParams]="{ dailyChallengeId: ch.id, difficulty: ch.difficulty }"
                      class="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-black text-white text-base
                             bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]

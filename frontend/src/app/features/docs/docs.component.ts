@@ -45,7 +45,7 @@ interface TocItem {
           </div>
           
           @for (game of games(); track game.id; let idx = $index) {
-            <a [routerLink]="['/docs', game.id]"
+            <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
                (click)="isMobileMenuOpen.set(false)"
                class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-3"
                [class.bg-[var(--color-bg-main)]]="currentGameId() === game.id"

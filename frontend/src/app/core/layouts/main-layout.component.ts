@@ -41,7 +41,7 @@ import { LayoutService } from '../services/layout.service';
             <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📖 {{ i18n.currentLang() === 'zh' ? '攻略文档' : 'Docs' }}
             </a>
-            <a [routerLink]="['/blog']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📝 {{ i18n.currentLang() === 'zh' ? '开发博客' : 'Blog' }}
             </a>
           </div>
@@ -147,7 +147,7 @@ import { LayoutService } from '../services/layout.service';
             <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">📖</span> {{ i18n.currentLang() === 'zh' ? '攻略文档' : 'Docs' }}
             </a>
-            <a [routerLink]="['/blog']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+            <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">📝</span> {{ i18n.currentLang() === 'zh' ? '开发博客' : 'Blog' }}
             </a>
           </nav>

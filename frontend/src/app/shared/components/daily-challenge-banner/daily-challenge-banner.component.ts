@@ -56,7 +56,7 @@ import { GAME_DEFINITIONS } from '../../../core/config/game-definitions';
 
           <!-- CTA -->
           @if (!data()!.is_completed) {
-            <a [routerLink]="['/games', ch.game_id]"
+            <a [routerLink]="['/', i18n.currentLang(), 'games', ch.game_id]"
                [queryParams]="{ dailyChallengeId: ch.id, difficulty: ch.difficulty, puzzleId: ch.puzzle_id }"
                class="flex-shrink-0 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]
                       text-white text-xs font-bold shadow hover:shadow-lg hover:scale-105 active:scale-95 transition-all whitespace-nowrap">

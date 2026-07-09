@@ -119,7 +119,7 @@ type Tab = 'overview' | 'achievements' | 'rankings' | 'history';
                       }
                     </div>
                   }
-                  <a [routerLink]="['/games', game.id]" class="mt-3 text-xs font-bold text-[var(--color-accent-to)] flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
+                  <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="mt-3 text-xs font-bold text-[var(--color-accent-to)] flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity">
                     {{ i18n.t('game.play_now')() }} →
                   </a>
                 </div>

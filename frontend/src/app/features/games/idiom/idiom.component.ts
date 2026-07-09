@@ -834,7 +834,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     const grid = guesses.map(g =>
       g.result.map(r => r.status === 'correct' ? '🟩' : r.status === 'present' ? '🟨' : '⬛').join('')
     ).join('\n');
-    const text = `成语猜词 ${date} ${this.wordleWon() ? guesses.length + '/6' : 'X/6'}\n${grid}\nhttps://puzzlepk.com/games/idiom`;
+    const text = `成语猜词 ${date} ${this.wordleWon() ? guesses.length + '/6' : 'X/6'}\n${grid}\nhttps://puzzlepk.com/${this.i18n.currentLang()}/games/idiom`;
     if (typeof navigator !== 'undefined') {
       navigator.share ? navigator.share({ text }) : navigator.clipboard?.writeText(text);
     }

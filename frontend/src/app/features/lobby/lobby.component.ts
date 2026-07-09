@@ -124,7 +124,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
       password: event.password,
       target: event.target
     });
-    this.router.navigate([`/games/${event.gameId}`]);
+    this.router.navigate([`/${this.i18n.currentLang()}/games/${event.gameId}`]);
   }
 
   getGameEmoji(id: string): string {
@@ -182,7 +182,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   shareGame(event: Event, gameId: string) {
     event.preventDefault();
     event.stopPropagation();
-    const url = `${getOrigin()}/games/${gameId}`;
+    const url = `${getOrigin()}/${this.i18n.currentLang()}/games/${gameId}`;
     const title = this.getGameTitle(gameId);
     const desc = this.getGameDesc(gameId);
     

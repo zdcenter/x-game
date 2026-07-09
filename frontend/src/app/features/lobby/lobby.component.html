@@ -74,7 +74,7 @@
               <h2 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
                 {{ i18n.t('lobby.latest_guides')() || 'Latest Guides & News' }}
               </h2>
-              <a [routerLink]="['/blog']" class="text-sm font-semibold text-[var(--color-accent-from)] hover:underline flex items-center gap-1">
+              <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="text-sm font-semibold text-[var(--color-accent-from)] hover:underline flex items-center gap-1">
                 {{ i18n.t('lobby.view_all_blogs')() || 'View All' }}
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
               </a>
@@ -82,7 +82,7 @@
             
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               @for (post of displayBlogs(); track post.id) {
-                <a [routerLink]="['/blog', post.id]" class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group flex flex-col h-full">
+                <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]" class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group flex flex-col h-full">
                   <div class="flex flex-wrap gap-2 mb-3">
                     @for (tag of (post.meta.tags || []).slice(0, 2); track tag) {
                       <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-500">
@@ -110,7 +110,7 @@
         <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
         @for (game of games(); track game.id; let i = $index) {
           <!-- Dynamic Game Card -->
-          <a [routerLink]="['/games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
+          <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
             <!-- Card Image Banner (Padding Hack for Aspect Ratio) -->
             <div class="w-full relative shrink-0 overflow-hidden bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)]"
