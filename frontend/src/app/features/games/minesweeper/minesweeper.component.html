@@ -49,9 +49,14 @@
             </app-game-player-mini-hud>
           }
 
+          <div
+            class="relative flex-grow flex flex-col items-center justify-center min-h-0 overflow-hidden w-full py-2 sm:py-4 gap-2"
+            [class.animate-gold-pulse]="store.status() === GameStatus.Finished && !isDefeat()"
+            [class.animate-red-pulse]="store.status() === GameStatus.Finished && isDefeat()">
+
           <!-- Single Player Classic Header -->
           @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex items-center justify-between px-4 sm:px-8 py-3 bg-[var(--color-bg-sub)] border-b border-[var(--color-border-card)] shrink-0 w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+            <div class="flex-none flex items-center justify-between px-4 py-3 bg-[var(--color-bg-sub)] rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-[600px] shadow-sm z-10 mx-auto">
               
               <!-- Mines Remaining -->
               <div class="flex items-center gap-1 sm:gap-2">
@@ -81,8 +86,8 @@
             </div>
           } @else {
             <!-- Players / Opponents (Top) PK Mode -->
-            <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 w-full hidden lg:block">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
+            <div class="flex-none py-1 shrink-0 w-full hidden lg:block">
+              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center justify-center px-2">
                 
                 <!-- Local Player (You) -->
                 <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
@@ -138,12 +143,6 @@
             </div>
           }
 
-          <!-- Game Board (Grid) Wrapper -->
-          <div
-            class="relative flex-grow flex flex-col min-h-0 overflow-hidden"
-            [class.animate-gold-pulse]="store.status() === GameStatus.Finished && !isDefeat()"
-            [class.animate-red-pulse]="store.status() === GameStatus.Finished && isDefeat()">
-
             @if (currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
               <div
                 class="absolute inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl">
@@ -167,7 +166,7 @@
             </app-game-frozen-overlay>
 
             <div #boardContainer
-              class="p-4 shadow-inner flex-1 min-h-0 overflow-y-auto overflow-x-auto flex justify-center items-center custom-scrollbar">
+              class="p-2 sm:p-4 shadow-inner min-h-0 overflow-auto flex shrink justify-center items-center custom-scrollbar rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
 
               <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
                 [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
@@ -189,18 +188,19 @@
             </div>
 
             <!-- Actions Toolbar -->
-            <app-game-toolbar
-              [layoutStyle]="'compact'"
-              [showPrev]="false"
-              [showNext]="false"
-              [showUndo]="false"
-              [showRestart]="currentRoomMode() === GameMode.Single"
-              [showHint]="currentRoomMode() === GameMode.Single"
-              hintLayout="sudoku"
-              (restart)="changeSingleDifficulty(currentDifficulty())"
-              (hintApplied)="store.applyHint()"
-              class="flex-none w-full relative z-10 border-t border-[var(--color-border-card)] shrink-0 py-2 sm:py-4"
-            ></app-game-toolbar>
+            <div class="flex-none w-full max-w-[600px] mx-auto relative z-10 shrink-0">
+              <app-game-toolbar
+                [layoutStyle]="'compact'"
+                [showPrev]="false"
+                [showNext]="false"
+                [showUndo]="false"
+                [showRestart]="currentRoomMode() === GameMode.Single"
+                [showHint]="currentRoomMode() === GameMode.Single"
+                hintLayout="sudoku"
+                (restart)="changeSingleDifficulty(currentDifficulty())"
+                (hintApplied)="store.applyHint()"
+              ></app-game-toolbar>
+            </div>
           </div>
         }
 

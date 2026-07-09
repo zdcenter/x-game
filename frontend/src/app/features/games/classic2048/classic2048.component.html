@@ -49,41 +49,7 @@
           </div>
         } @else {
           
-          <!-- Players / Opponents (Top) -->
-          <div class="flex-none py-1 mb-1 border-b border-[var(--color-border-card)] shrink-0 w-full"
-               [ngClass]="store.currentRoomMode() === GameMode.Single ? 'hidden' : ['hidden', 'lg:block']">
-            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2" [class.justify-center]="store.currentRoomMode() === GameMode.Single">
-              <!-- Local Player -->
-              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                [playerName]="playerId"
-                [isHost]="playerId === store.hostId()"
-                [isMe]="true"
-                [score]="store.localScore()"
-                [stats]="[
-                  { icon: '⏱️', value: timeDisplay },
-                  { icon: '🔄', value: store.localMoves() }
-                ]"
-                [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
-              </app-player-badge>
-
-              <!-- Opponents -->
-              @if (store.currentRoomMode() !== GameMode.Single) {
-                @for (player of store.playersList(); track player.id) {
-                  @if (player.id !== playerId) {
-                    <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                      [playerName]="player.id"
-                      [isHost]="player.id === store.hostId()"
-                      [isMe]="false"
-                      [score]="store.pkBoards()[player.id]?.score || 0"
-                      [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
-                    </app-player-badge>
-                  }
-                }
-              }
-            </div>
-          </div>
-
-          <div class="relative flex-grow flex flex-col items-center justify-center min-h-0 overflow-hidden touch-none p-4 pb-8">
+          <div class="relative flex-grow flex flex-col items-center justify-center min-h-0 overflow-y-auto touch-none p-4 pb-8 w-full gap-2">
             
             <!-- START BUTTON OVERLAY -->
             @if (store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
@@ -98,6 +64,39 @@
                 </button>
               </div>
             }
+
+              <!-- Players / Opponents (Top) -->
+              <div class="flex-none py-1 shrink-0 w-full">
+                <div class="w-full max-w-[450px] mx-auto flex gap-2 lg:gap-4 items-center justify-center">
+                  <!-- Local Player -->
+                  <app-player-badge class="flex-1 w-full shrink-0" layout="card"
+                    [playerName]="playerId"
+                    [isHost]="playerId === store.hostId()"
+                    [isMe]="true"
+                    [score]="store.localScore()"
+                    [stats]="[
+                      { icon: '⏱️', value: timeDisplay },
+                      { icon: '🔄', value: store.localMoves() }
+                    ]"
+                    [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
+                  </app-player-badge>
+
+                  <!-- Opponents -->
+                  @if (store.currentRoomMode() !== GameMode.Single) {
+                    @for (player of store.playersList(); track player.id) {
+                      @if (player.id !== playerId) {
+                        <app-player-badge class="flex-1 w-full shrink-0" layout="card"
+                          [playerName]="player.id"
+                          [isHost]="player.id === store.hostId()"
+                          [isMe]="false"
+                          [score]="store.pkBoards()[player.id]?.score || 0"
+                          [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
+                        </app-player-badge>
+                      }
+                    }
+                  }
+                </div>
+              </div>
 
               <!-- Game Board -->
               <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-colors duration-300 w-full max-w-[450px] aspect-square mx-auto"
@@ -150,7 +149,7 @@
               </div>
               
               @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="w-[320px] md:w-[384px] lg:w-[400px] mt-4 mb-2 z-10 shrink-0">
+                <div class="w-full max-w-[450px] z-10 shrink-0">
                   <app-game-toolbar
                     [layoutStyle]="'compact'"
                     [showRestart]="true"
