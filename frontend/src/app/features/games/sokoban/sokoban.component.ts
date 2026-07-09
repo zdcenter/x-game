@@ -172,7 +172,7 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
         }
 
         <!-- Board Area: flex-grow + overflow-hidden，不产生滚动条 -->
-        <div class="relative flex-grow flex flex-col lg:flex-row items-center justify-center min-h-0 overflow-hidden w-full py-2 px-2 z-10 gap-8">
+        <div class="relative flex-none flex flex-col lg:flex-row items-center justify-center min-h-0 overflow-hidden w-full py-2 px-2 z-10 gap-8">
           <div class="flex flex-col items-center justify-center shrink-0">
             <div class="relative flex items-center justify-center shrink-0"
                style="width: min(85vw, calc(100vh - 390px), 520px); height: min(85vw, calc(100vh - 390px), 520px);">
