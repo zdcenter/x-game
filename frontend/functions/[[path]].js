@@ -32,22 +32,21 @@ export async function onRequest(context) {
   // Serve prerendered page via explicit index.html path.
   // Avoids 301 trailing-slash redirects that env.ASSETS.fetch emits for bare directory paths,
   // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
-  const cleanPath = pathname.replace(/\/+$/, '');
-  const prerendered = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
-  if (prerendered.status === 404) {
+  let response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
+  if (response.status === 404) {
     // SPA fallback: Angular app shell handles client-side routing (blog, admin, unknown paths).
-    return env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
+    response = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
   }
 
   // Fix Link header: Cloudflare converts <link rel="modulepreload" href="chunk-X.js"> to HTTP
   // Link headers using the relative href as-is. Browsers resolve these relative to the request
   // URL (e.g. /zh/lobby/chunk-X.js) instead of <base href="/">, causing MIME type errors.
   // Solution: rewrite relative paths to absolute (prepend /).
-  const linkHeader = prerendered.headers.get('Link');
-  if (!linkHeader) return prerendered;
+  const linkHeader = response.headers.get('Link');
+  if (!linkHeader) return response;
 
   const fixedLink = linkHeader.replace(/<([^/h][^>]*)>/g, '</$1>');
-  const headers = new Headers(prerendered.headers);
+  const headers = new Headers(response.headers);
   headers.set('Link', fixedLink);
-  return new Response(prerendered.body, { status: prerendered.status, headers });
+  return new Response(response.body, { status: response.status, headers });
 }
