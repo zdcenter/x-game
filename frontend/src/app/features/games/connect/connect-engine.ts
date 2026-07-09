@@ -135,6 +135,15 @@ export class ConnectEngine {
   }
 
   isSolved(): boolean {
+    // 1. All cells must be filled (no 0s)
+    for (let r = 0; r < this.height; r++) {
+      for (let c = 0; c < this.width; c++) {
+        if (this.grid[r][c] === 0) {
+          return false;
+        }
+      }
+    }
+
     // 2. All colors must have a path that connects their two endpoints
     for (const ep of this.endpoints) {
       const path = this.paths.get(ep.color);
