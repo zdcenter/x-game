@@ -20,7 +20,7 @@ func SeedConnect() {
 		log.Fatalf("SeedConnect: failed to parse connect_seeds.json: %v", err)
 	}
 
-	if count != int64(len(seeds)) || true {
+	if count != int64(len(seeds)) {
 		log.Println("Re-seeding Connect puzzles...")
 		DB.Exec("DELETE FROM gm_connect_puzzles")
 		
