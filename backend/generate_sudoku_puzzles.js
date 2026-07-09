@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const difficulties = ['easy', 'medium', 'hard', 'expert'];
-const PUZZLES_PER_DIFF = 50;
+const PUZZLES_PER_DIFF = 200;
+const TOTAL_PUZZLES = difficulties.length * PUZZLES_PER_DIFF;
 
 let dbSeedGoCode = `package db
 
@@ -16,7 +17,10 @@ import (
 func SeedSudoku() {
 	var count int64
 	DB.Model(&domain.SudokuPuzzle{}).Count(&count)
-	if count == 0 {
+	if count != ${TOTAL_PUZZLES} {
+        log.Println("Re-seeding Sudoku puzzles since count mismatch...")
+        DB.Exec("TRUNCATE TABLE gm_sudoku_puzzles CASCADE")
+        
 		puzzles := []domain.SudokuPuzzle{
 `;
 
