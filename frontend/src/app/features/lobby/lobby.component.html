@@ -4,7 +4,7 @@
       <div class="flex-1 min-w-0 flex flex-col items-center p-4 lg:p-8 relative">
         
         <!-- Global Announcement Marquee: always in DOM to prevent CLS; invisible when empty -->
-        <div class="w-full max-w-[1600px] mb-2 bg-[var(--color-bg-card)] border border-blue-500/30 rounded-xl p-3 flex items-center shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative overflow-hidden transition-all"
+        <div class="w-full max-w-[1600px] mb-2 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-3 flex items-center shadow-sm z-10 relative overflow-hidden transition-all"
              [class.invisible]="activeAnnouncements().length === 0"
              [class.pointer-events-none]="activeAnnouncements().length === 0">
           <span class="mr-3 text-xl shrink-0 animate-pulse z-20 bg-[var(--color-bg-card)] pr-2">📣</span>
@@ -85,7 +85,7 @@
                 <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]" class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group flex flex-col h-full">
                   <div class="flex flex-wrap gap-2 mb-3">
                     @for (tag of (post.meta.tags || []).slice(0, 2); track tag) {
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-500">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400">
                         {{ tag }}
                       </span>
                     }
@@ -110,7 +110,7 @@
         <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
         @for (game of games(); track game.id; let i = $index) {
           <!-- Dynamic Game Card -->
-          <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer"
+          <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-2 hover:shadow-lg cursor-pointer"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
             <!-- Card Image Banner (Padding Hack for Aspect Ratio) -->
             <div class="w-full relative shrink-0 overflow-hidden bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)]"

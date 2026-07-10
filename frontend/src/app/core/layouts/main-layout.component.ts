@@ -96,7 +96,7 @@ import { LayoutService } from '../services/layout.service';
 
               <!-- Guest badge (md+) -->
               @if (authStore.currentUser()?.role === 'guest') {
-                <span class="hidden md:inline-flex px-2 py-1 text-xs font-bold rounded-lg bg-slate-500/20 text-slate-400 border border-slate-500/30 uppercase">
+                <span class="hidden md:inline-flex px-2 py-1 text-xs font-bold rounded-lg bg-[var(--color-bg-card)] text-[var(--color-text-muted)] border border-[var(--color-border-card)] uppercase">
                   {{ i18n.t('nav.guest')() }}
                 </span>
               }

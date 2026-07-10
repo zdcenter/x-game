@@ -7,8 +7,8 @@ export type Theme = 'dark' | 'light';
   providedIn: 'root'
 })
 export class ThemeService {
-  private readonly defaultTheme: Theme = (storageGet('theme') as Theme) || 'dark';
-  readonly currentTheme = signal<Theme>(this.defaultTheme === 'cyberpunk' as any ? 'dark' : this.defaultTheme);
+  private readonly defaultTheme: Theme = (storageGet('theme') as Theme) || 'light';
+  readonly currentTheme = signal<Theme>(this.defaultTheme === 'dark' || this.defaultTheme === 'light' ? this.defaultTheme : 'light');
 
   constructor() {
     // Automatically apply the theme class to the body element whenever the signal changes

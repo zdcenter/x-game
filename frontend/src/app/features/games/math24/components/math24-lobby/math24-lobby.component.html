@@ -3,7 +3,7 @@
 
 
     <!-- Header Tabs -->
-    <div class="flex border-b border-[var(--color-border-card)] bg-black/20">
+    <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
       @for (diff of difficulties; track diff.id) {
         <button 
           (click)="selectDifficulty(diff.id)"
@@ -32,8 +32,8 @@
             (click)="playLevel(level, (currentPage() - 1) * pageSize + i)"
             class="aspect-square flex items-center justify-center rounded-xl text-lg sm:text-xl font-bold transition-all duration-300 relative group overflow-hidden shadow-lg border"
             [ngClass]="{
-              'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30': level.progress?.status === GameStatus.Finished,
-              'bg-slate-800/80 text-slate-300 border-slate-700/50 hover:bg-slate-700 hover:text-white': level.progress?.status !== GameStatus.Finished
+              'bg-[var(--color-bg-card)] text-emerald-500 border-emerald-500/50 hover:bg-emerald-500/10': level.progress?.status === GameStatus.Finished,
+              'bg-[var(--color-bg-main)] text-[var(--color-text-main)] border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] hover:border-[var(--color-border-thick)] hover:text-[var(--color-accent-from)]': level.progress?.status !== GameStatus.Finished
             }">
             
             <span class="z-10 relative text-sm sm:text-base whitespace-nowrap">关卡 {{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
@@ -43,7 +43,7 @@
                 <span class="text-4xl">⭐</span>
               </div>
               <div class="absolute -top-1 -right-1">
-                <span class="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] text-sm sm:text-base">★</span>
+                <span class="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] text-sm sm:text-base">★</span>
               </div>
             }
           </button>
