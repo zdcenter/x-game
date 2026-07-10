@@ -141,6 +141,7 @@ import { SokobanStore } from '../../store/sokoban.store';
   `],
   template: `
     <div class="relative w-full h-full bg-sky-200 rounded-xl border-[4px] border-slate-700 shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center touch-none select-none"
+         [class.animate-shake]="store.isShaking()"
          style="-webkit-touch-callout: none;"
          (contextmenu)="$event.preventDefault()"
          (touchstart)="onTouchStart($event)"

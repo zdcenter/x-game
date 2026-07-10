@@ -52,6 +52,7 @@ export interface Drop2048EngineConfig {
   mode?: GameModeType | string;
   seed?: number;
   onSound?: (sound: 'move' | 'drop' | 'merge', comboCount?: number) => void;
+  onHaptic?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
   onSyncState?: () => void;
   onBigMerge?: (val: number) => void;
   onLevelUp?: (newLevel: number) => void;
@@ -292,7 +293,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     }, 400);
 
     if (this.config?.onSound) this.config.onSound('drop');
-    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10);
+    if (this.config?.onHaptic) this.config.onHaptic('light');
 
     this.lastComboCount = 0;
     setTimeout(() => this.processMerges(0), 150);
@@ -362,9 +363,9 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
       }
       this.lastComboCount = comboCount;
 
-      if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        if (comboCount > 1) navigator.vibrate([30, 50, 30]);
-        else navigator.vibrate(20);
+      if (this.config?.onHaptic) {
+        if (comboCount > 1) this.config.onHaptic('success');
+        else this.config.onHaptic('medium');
       }
 
       if (this.config?.onSound) this.config.onSound('merge', comboCount);
@@ -493,7 +494,7 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         this.board = this.board.filter(b => b.id !== block.id);
 
         // Sound, Vibration, Shake for each pop
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        if (this.config?.onHaptic) this.config.onHaptic('medium');
         if (this.config?.onSound) this.config.onSound('drop');
         if (this.config?.onReviveShake) this.config.onReviveShake();
 

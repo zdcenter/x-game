@@ -14,6 +14,7 @@ import { IdiomPKStore } from './store/idiom-pk.store';
 import { AudioService } from '../../../core/services/audio.service';
 import { XpService } from '../../../core/services/xp.service';
 import { SettingsService } from '../../../core/services/settings.service';
+import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
@@ -95,8 +96,9 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   authStore = inject(AuthStore);
   private route = inject(ActivatedRoute);
   private svc = inject(IdiomService);
-    private audio = inject(AudioService);
+  private audio = inject(AudioService);
   private xpService = inject(XpService);
+  private floatingText = inject(FloatingTextService);
   pkStore = inject(IdiomPKStore);
   GameStatus = GameStatus;
   GameMode = GameMode;
@@ -638,6 +640,22 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
             setTimeout(() => this.audio.playUI('victory'), 400);
           }
         }
+        
+        // Show combo text
+        if (res.consecutive_correct && res.consecutive_correct > 1) {
+          const x = window.innerWidth / 2;
+          const y = window.innerHeight / 2 - 100;
+          this.floatingText.show(`🔥 连对 ×${res.consecutive_correct}!`, x, y, { size: 'lg', color: '#fbbf24' });
+        } else if (res.is_mastered) {
+          const x = window.innerWidth / 2;
+          const y = window.innerHeight / 2 - 100;
+          this.floatingText.show(`👑 完全掌握!`, x, y, { size: 'lg', color: '#fbbf24' });
+        } else {
+          const x = window.innerWidth / 2;
+          const y = window.innerHeight / 2 - 100;
+          this.floatingText.show(`⭐ 正确!`, x, y, { size: 'md', color: '#10b981' });
+        }
+
         // Auto-advance after 2 s
         this.autoNextCountdown.set(2);
         this.autoNextTimer = setInterval(() => {

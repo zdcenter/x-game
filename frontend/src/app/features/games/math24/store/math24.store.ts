@@ -7,6 +7,7 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalMath24Engine, Math24ActionType } from './math24-engine';
 import { environment } from '../../../../../environments/environment';
+import { HapticService } from '../../../../core/services/haptic.service';
 
 export interface Math24Card {
   id: string;
@@ -24,11 +25,13 @@ export class Math24Store extends BaseGameStore {
   readonly gameId = GameId.Math24;
   private audio = inject(AudioService);
   private http = inject(HttpClient);
+  private haptic = inject(HapticService);
 
   private localEngine = signal<LocalMath24Engine | null>(null);
   private tick = signal(0);
   private timerInterval: any;
   
+  isShaking = signal(false);
   localLevelIndex = signal<number>(0);
   completedLevels = signal<Record<string, number[]>>({});
   currentPuzzleId = signal<string>('');
@@ -229,6 +232,8 @@ export class Math24Store extends BaseGameStore {
       });
     } else {
       this.audio.playMath24('error');
+      this.haptic.vibrateError();
+      this.triggerShake();
       this.ws.send({
         type: 'action',
         action: C2SAction.Solve,
@@ -265,6 +270,8 @@ export class Math24Store extends BaseGameStore {
       },
       onWrong: () => {
         this.audio.playMath24('error');
+        this.haptic.vibrateError();
+        this.triggerShake();
         this.tick.set(this.tick() + 1);
       },
       onFlip: () => {
@@ -342,5 +349,10 @@ export class Math24Store extends BaseGameStore {
   override leaveRoom() {
     super.leaveRoom();
     this.stopTimer();
+  }
+
+  triggerShake() {
+    this.isShaking.set(true);
+    setTimeout(() => this.isShaking.set(false), 400);
   }
 }

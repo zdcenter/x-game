@@ -7,7 +7,7 @@ export class Classic2048Engine {
   boardSize: number = 4;
   winTarget: number = 2048;
   particles: any[] = [];
-  config: { onSound?: (s: string) => void, onReviveShake?: () => void } = {};
+  config: { onSound?: (s: string) => void, onHaptic?: (type: 'light'|'medium'|'heavy'|'success'|'error') => void, onReviveShake?: () => void } = {};
 
   initGame(options: any) {
     this.boardSize = 4;
@@ -23,6 +23,7 @@ export class Classic2048Engine {
     this.status = 'playing';
     
     if (options?.onSound) this.config.onSound = options.onSound;
+    if (options?.onHaptic) this.config.onHaptic = options.onHaptic;
     if (options?.onReviveShake) this.config.onReviveShake = options.onReviveShake;
     
     this.spawnTile();
@@ -235,7 +236,7 @@ export class Classic2048Engine {
         this.cells[block.r][block.c] = 0;
 
         // Effects
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        if (this.config.onHaptic) this.config.onHaptic('medium');
         if (this.config?.onSound) this.config.onSound('drop');
         if (this.config?.onReviveShake) this.config.onReviveShake();
 

@@ -21,6 +21,7 @@ import { AdService } from '../../../core/services/ad.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { HapticService } from '../../../core/services/haptic.service';
 
 
 @Component({
@@ -41,6 +42,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   private authStore = inject(AuthStore);
   private adService = inject(AdService);
   private gameRegistry = inject(GameRegistryService);
+  private haptic = inject(HapticService);
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
@@ -179,7 +181,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.touchTimer = setTimeout(() => {
       if (!this.touchMoved) {
         this.store.handleCellClick(x, y, false, oppositeMode);
-        if (navigator.vibrate) navigator.vibrate(50);
+        this.haptic.vibrateMedium();
         this.touchTimer = null;
       }
     }, 400);

@@ -42,6 +42,7 @@ export interface TetrisConfig {
   seed?: number;
   mode?: string;
   onSound?: (sound: 'move' | 'rotate' | 'land' | 'clear') => void;
+  onHaptic?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
   onGarbageSent?: (lines: number) => void;
   onSyncState?: () => void;
   onHardDrop?: () => void;
@@ -449,7 +450,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
         this.particles = [...this.particles, ...newParticles];
 
         // Vibrate for haptic feedback
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        if (this.config.onHaptic) this.config.onHaptic('medium');
         if (this.config.onSound) this.config.onSound('clear');
 
         // Sync to Angular signals

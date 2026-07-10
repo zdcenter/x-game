@@ -1,7 +1,7 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -22,6 +22,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { FloatingTextService } from '../../../core/services/floating-text.service';
 
 
 @Component({
@@ -66,6 +67,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   private router = inject(Router);
   i18n = inject(I18nService);
   private gameRegistry = inject(GameRegistryService);
+  private floatingText = inject(FloatingTextService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
@@ -132,6 +134,24 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
         onCleanup(() => clearTimeout(timer));
       } else {
         this.showOverlay.set(false);
+      }
+    });
+
+    effect(() => {
+      const c = this.store.comboCount();
+      if (c > 0) {
+        let x = window.innerWidth / 2;
+        let y = window.innerHeight / 2;
+        
+        // try to get bounding rect of the game layout or board
+        const boardEl = document.querySelector('app-drop2048-board');
+        if (boardEl) {
+           const rect = boardEl.getBoundingClientRect();
+           x = rect.left + rect.width / 2;
+           y = rect.top + Math.max(0, rect.height / 2 - 50);
+        }
+
+        this.floatingText.show(`🔥 COMBO ×${c + 1}!`, x, y, { size: 'lg', color: '#fbbf24' });
       }
     });
   }

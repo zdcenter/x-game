@@ -22,7 +22,8 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
       </div>
 
       <!-- 3x3 Grid Board -->
-      <div class="grid grid-cols-3 grid-rows-3 gap-3 sm:gap-4 w-full aspect-square relative select-none">
+      <div class="grid grid-cols-3 grid-rows-3 gap-3 sm:gap-4 w-full aspect-square relative select-none"
+           [class.animate-shake]="store.isShaking()">
         
         <!-- Freeze Overlay -->
         @if (freezeRemaining() > 0) {

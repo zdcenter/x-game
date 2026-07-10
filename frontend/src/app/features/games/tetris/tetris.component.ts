@@ -13,6 +13,7 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
@@ -59,6 +60,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   private router = inject(Router);
   private toastService = inject(ToastService);
   i18n = inject(I18nService);
+  private floatingText = inject(FloatingTextService);
   private gameRegistry = inject(GameRegistryService);
   Math = Math;
 
@@ -76,8 +78,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   isShaking = signal(false);
   showLevelUp = signal(false);
   levelUpNum = signal(0);
-  showCombo = signal(false);
-  comboCount = signal(0);
 
   // Touch Handling properties
   private touchStartX = 0;
@@ -131,7 +131,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
     effect(() => {
       const c = this.store.comboTrigger();
-      if (c > 0) { this.comboCount.set(c); this.showCombo.set(true); setTimeout(() => this.showCombo.set(false), 1100); }
+      if (c > 0) {
+        if (this.boardArea) {
+          const rect = this.boardArea.nativeElement.getBoundingClientRect();
+          this.floatingText.show(`🔥 COMBO ×${c}!`, rect.left + rect.width / 2, rect.top + rect.height / 2, { size: 'lg', color: '#fbbf24' });
+        }
+      }
     });
   }
 

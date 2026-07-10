@@ -14,11 +14,21 @@ import { XpGainBadgeComponent } from './shared/components/xp-gain-badge/xp-gain-
 import { AchievementUnlockOverlayComponent } from './shared/components/achievement-unlock-overlay/achievement-unlock-overlay.component';
 import { EditRoomOverlayComponent } from './shared/components/edit-room-overlay/edit-room-overlay.component';
 import { EditRoomService } from './core/services/edit-room.service';
+import { FloatingTextOverlayComponent } from './shared/components/floating-text-overlay/floating-text-overlay.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, UiOverlayComponent, MaintenanceComponent, CookieConsentComponent, XpGainBadgeComponent, AchievementUnlockOverlayComponent, EditRoomOverlayComponent],
+  imports: [
+    RouterOutlet, 
+    UiOverlayComponent, 
+    MaintenanceComponent, 
+    CookieConsentComponent, 
+    XpGainBadgeComponent, 
+    AchievementUnlockOverlayComponent, 
+    EditRoomOverlayComponent,
+    FloatingTextOverlayComponent
+  ],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
       <app-maintenance></app-maintenance>
@@ -28,6 +38,7 @@ import { EditRoomService } from './core/services/edit-room.service';
       <app-cookie-consent></app-cookie-consent>
       <app-xp-gain-badge />
       <app-achievement-unlock-overlay />
+      <app-floating-text-overlay />
       <!-- 修改房间设置覆盖层：渲染在根级，脱离所有 transform 上下文 -->
       <app-edit-room-overlay
         [isOpen]="editRoomService.isOpen()"

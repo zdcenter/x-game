@@ -35,6 +35,18 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                   </svg>
                 </button>
+                <button (click)="hapticService.toggleVibration()" class="opacity-70 hover:opacity-100 transition-colors p-0.5 sm:p-1 rounded-full hover:bg-[var(--color-bg-card)] z-10 text-[var(--color-text-main)] shrink-0">
+                  <!-- Device Mobile Icon (Vibration On) -->
+                  <svg *ngIf="hapticService.isVibrationEnabled()" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h1M4 17h1M19 7h1M19 17h1" />
+                  </svg>
+                  <!-- Device Mobile Icon (Vibration Off) -->
+                  <svg *ngIf="!hapticService.isVibrationEnabled()" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                  </svg>
+                </button>
               </h1>
               <p class="text-[10px] sm:text-xs md:text-sm text-[var(--color-text-main)] opacity-70 font-medium sm:mt-1 truncate hidden sm:block" *ngIf="subtitle">
                 {{ subtitle }}

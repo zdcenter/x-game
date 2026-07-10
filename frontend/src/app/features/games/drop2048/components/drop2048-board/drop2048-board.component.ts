@@ -94,16 +94,12 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
           </div>
         </div>
 
-        <!-- Combo / Score Float Texts -->
+        <!-- Score Float Texts (No Combo) -->
         <div *ngFor="let combo of combos"
-             class="absolute z-30 font-black pointer-events-none float-up drop-shadow-lg"
-             [class.text-3xl]="combo.comboCount < 1"
-             [class.text-4xl]="combo.comboCount >= 1"
-             [class.text-yellow-300]="combo.comboCount < 1"
-             [class.text-orange-400]="combo.comboCount >= 1"
+             class="absolute z-30 font-black pointer-events-none float-up drop-shadow-lg text-3xl text-yellow-300"
              [style.left.px]="colPx(combo.c) + cellSize / 4"
              [style.top.px]="rowPx(combo.r) - cellSize / 2">
-          {{ combo.comboCount >= 1 ? 'COMBO ×' + (combo.comboCount + 1) + '!' : '+' + combo.scoreGained }}
+          +{{ combo.scoreGained }}
         </div>
 
         <!-- Level Up Badge -->

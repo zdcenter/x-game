@@ -23,12 +23,16 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
   levelStr: string = '';
   levelId: string = '';
   onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void;
+  onHaptic?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
+  onShake?: () => void;
 
-  constructor(levelId?: string, difficulty?: string, levelStr?: string, existingData?: any, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void) {
+  constructor(levelId?: string, difficulty?: string, levelStr?: string, existingData?: any, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void, onHaptic?: (type: 'light'|'medium'|'heavy'|'success'|'error')=>void, onShake?: ()=>void) {
     if (levelId) this.levelId = levelId;
     if (difficulty) this.difficulty = difficulty;
     if (levelStr) this.levelStr = levelStr;
     if (onSound) this.onSound = onSound;
+    if (onHaptic) this.onHaptic = onHaptic;
+    if (onShake) this.onShake = onShake;
     
     if (existingData && existingData.levelStr === this.levelStr) {
       this.board = existingData.board;
@@ -41,11 +45,13 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
     }
   }
 
-  initGame(config: { levelId: string, difficulty: string, levelStr: string, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void }) {
+  initGame(config: { levelId: string, difficulty: string, levelStr: string, onSound?: (sound: 'move' | 'push' | 'bump' | 'target') => void, onHaptic?: (type: 'light'|'medium'|'heavy'|'success'|'error')=>void, onShake?: ()=>void }) {
     this.levelId = config.levelId;
     this.difficulty = config.difficulty;
     this.levelStr = config.levelStr;
     this.onSound = config.onSound;
+    this.onHaptic = config.onHaptic;
+    this.onShake = config.onShake;
     this.initBoard();
   }
 
@@ -146,6 +152,8 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
 
     if (targetCell === '#') {
       if (this.onSound) this.onSound('bump');
+      if (this.onHaptic) this.onHaptic('error');
+      if (this.onShake) this.onShake();
       return;
     }
 
@@ -184,6 +192,8 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
         return;
       } else {
         if (this.onSound) this.onSound('bump');
+        if (this.onHaptic) this.onHaptic('error');
+        if (this.onShake) this.onShake();
       }
     }
   }

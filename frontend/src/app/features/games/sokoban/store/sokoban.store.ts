@@ -5,6 +5,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { LocalSokobanEngine, SokobanActionType } from './local-sokoban-engine';
 import { environment } from '../../../../../environments/environment';
 import { AudioService } from '../../../../core/services/audio.service';
+import { HapticService } from '../../../../core/services/haptic.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
@@ -31,8 +32,10 @@ export class SokobanStore extends BaseGameStore {
 
   private http = inject(HttpClient);
   private audio = inject(AudioService);
+  private haptic = inject(HapticService);
 
   isDead = signal(false);
+  isShaking = signal(false);
   timeSpent = signal<number>(0);
   private timer: any;
   
@@ -159,6 +162,8 @@ export class SokobanStore extends BaseGameStore {
       if (saved) {
         this.currentDifficulty.set(saved.difficulty);
         saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
+        saved.engine.onHaptic = (type) => (this.haptic as any)[`vibrate${type.charAt(0).toUpperCase() + type.slice(1)}`]();
+        saved.engine.onShake = () => this.triggerShake();
         this.localEngine.set(saved.engine);
         this.timeSpent.set(saved.engine.timeSpent || 0);
         this.fetchLevelsAndLoad(saved.difficulty, saved.engine.levelStr, true);
@@ -186,7 +191,9 @@ export class SokobanStore extends BaseGameStore {
       const newEngine = new LocalSokobanEngine();
       newEngine.initGame({
         levelId, difficulty, levelStr: puzzle,
-        onSound: (sound) => this.audio.playSokoban(sound)
+        onSound: (sound) => this.audio.playSokoban(sound),
+        onHaptic: (type) => (this.haptic as any)[`vibrate${type.charAt(0).toUpperCase() + type.slice(1)}`](),
+        onShake: () => this.triggerShake()
       });
       this.localEngine.set(newEngine);
       this.timeSpent.set(0);
@@ -296,6 +303,8 @@ export class SokobanStore extends BaseGameStore {
     if (saved && saved.engine) {
       this.currentLevelId.set(id);
       saved.engine.onSound = (sound) => this.audio.playSokoban(sound);
+      saved.engine.onHaptic = (type) => (this.haptic as any)[`vibrate${type.charAt(0).toUpperCase() + type.slice(1)}`]();
+      saved.engine.onShake = () => this.triggerShake();
       this.localEngine.set(saved.engine);
       this.timeSpent.set(saved.engine.timeSpent || 0);
       this.currentDifficulty.set(saved.difficulty);
@@ -309,7 +318,9 @@ export class SokobanStore extends BaseGameStore {
         levelId: res.puzzle.id,
         difficulty: this.currentDifficulty() as string,
         levelStr: res.puzzle.puzzle,
-        onSound: (sound) => this.audio.playSokoban(sound)
+        onSound: (sound) => this.audio.playSokoban(sound),
+        onHaptic: (type) => (this.haptic as any)[`vibrate${type.charAt(0).toUpperCase() + type.slice(1)}`](),
+        onShake: () => this.triggerShake()
       });
       this.localEngine.set(newEngine);
       this.timeSpent.set(0);
@@ -358,5 +369,10 @@ export class SokobanStore extends BaseGameStore {
       clearInterval(this.timer);
       this.timer = null;
     }
+  }
+
+  triggerShake() {
+    this.isShaking.set(true);
+    setTimeout(() => this.isShaking.set(false), 400);
   }
 }

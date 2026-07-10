@@ -70,17 +70,21 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
       const isWin = this.status === GameResult.Win;
       this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));
       if (isWin) {
-        this.fireConfetti();
+        if (this.isNewRecord) {
+          this.fireNewRecordConfetti();
+        } else {
+          this.fireConfetti();
+        }
       }
     }
     this.animateStats();
   }
 
   private fireConfetti() {
-    // Fire confetti from left and right edges
-    const duration = 3000;
+    // A quick, celebratory burst from the center bottom
+    const duration = 2000;
     const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+    const defaults = { startVelocity: 45, spread: 90, ticks: 100, zIndex: 10000, colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'] };
 
     const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -91,11 +95,42 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
         return clearInterval(interval);
       }
 
-      const particleCount = 50 * (timeLeft / duration);
-      // since particles fall down, start a bit higher than random
+      const particleCount = 40 * (timeLeft / duration);
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
       confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
     }, 250);
+  }
+
+  private fireNewRecordConfetti() {
+    // A massive, glorious golden explosion for new records
+    const duration = 4000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 60, spread: 120, ticks: 150, zIndex: 10000 };
+    const goldenColors = ['#FEE715', '#FFD700', '#FFA500', '#FF8C00', '#FFDF00'];
+
+    // Initial massive explosion
+    confetti({
+      particleCount: 150,
+      spread: 180,
+      origin: { y: 0.6 },
+      colors: goldenColors,
+      startVelocity: 80,
+      zIndex: 10000
+    });
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 60 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.1 }, colors: goldenColors });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.1 }, colors: goldenColors });
+    }, 200);
   }
 
   private animateStats() {
