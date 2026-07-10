@@ -84,7 +84,7 @@
     @if (showPrev) {
       <button (click)="prevLevel.emit()" 
               [disabled]="disablePrev"
-              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
               title="{{ i18n.t('game.prev_level')() }}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -95,7 +95,7 @@
     @if (showUndo) {
       <button (click)="undo.emit()" 
               [disabled]="disableUndo"
-              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
               title="{{ i18n.t('game.undo')() }}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:-rotate-45 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -120,7 +120,7 @@
     @if (showNext) {
       <button (click)="nextLevel.emit()" 
               [disabled]="disableNext"
-              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
               title="{{ i18n.t('game.next_level')() }}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -130,7 +130,7 @@
 
     @if (showShare) {
       <button (click)="shareGame()" 
-              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-slate-100 dark:hover:bg-slate-800 border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group"
+              class="flex items-center justify-center w-12 h-12 bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-full transition-all shadow-md active:scale-95 group"
               title="{{ i18n.t('idiom.share')() }}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />

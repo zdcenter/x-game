@@ -15,7 +15,7 @@
       <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
         📦 推箱子玩法演示
       </h2>
-      <button (click)="close()" class="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800 rounded-lg">
+      <button (click)="close()" class="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -39,7 +39,7 @@
 
       <!-- Controls -->
       <div class="flex items-center gap-4 w-full justify-center">
-        <button (click)="prevStep()" class="p-3 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors shadow-lg active:scale-95">
+        <button (click)="prevStep()" class="p-3 bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-full hover:bg-[var(--color-bg-main)] hover:border-[var(--color-border-thick)] transition-colors shadow-lg active:scale-95">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -60,7 +60,7 @@
           }
         </button>
 
-        <button (click)="nextStep()" class="p-3 bg-slate-800 text-white rounded-full hover:bg-slate-700 transition-colors shadow-lg active:scale-95">
+        <button (click)="nextStep()" class="p-3 bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] rounded-full hover:bg-[var(--color-bg-main)] hover:border-[var(--color-border-thick)] transition-colors shadow-lg active:scale-95">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>

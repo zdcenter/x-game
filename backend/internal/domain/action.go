@@ -41,6 +41,7 @@ const (
 	ActionToggle    C2SAction = "toggle"
 	ActionPour      C2SAction = "pour"
 	ActionSolve     C2SAction = "solve"
+	ActionEmoji     C2SAction = "emoji"
 
 	// ===== 系统级操作 =====
 	// 客户端应用层心跳保活包
@@ -62,6 +63,8 @@ const (
 	EventRoomGameChanged S2CEvent = "room_game_changed"
 	// 玩家被踢出房间通知
 	EventKicked          S2CEvent = "kicked"
+	// 表情/快捷语广播
+	EventEmoji           S2CEvent = "emoji"
 
 	// ===== 系统级事件 =====
 	// 服务器返回报错信息

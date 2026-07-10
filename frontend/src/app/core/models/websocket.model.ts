@@ -77,6 +77,8 @@ export enum C2SAction {
   Pour = 'pour',
   /** 特定游戏：解答 */
   Solve = 'solve',
+  /** 发送表情/嘲讽快捷语 */
+  Emoji = 'emoji',
 
   // ===== 系统级操作 =====
   /** 客户端应用层心跳保活包 */
@@ -98,6 +100,8 @@ export enum S2CEvent {
   GameChanged = 'room_game_changed',
   /** 玩家被踢出房间通知 */
   PlayerKicked = 'kicked',
+  /** 表情/快捷语广播 */
+  EmojiBroadcast = 'emoji',
 
   // ===== 系统级事件 =====
   /** 服务器返回报错信息 (例如非法移动、权限不足) */

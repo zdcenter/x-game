@@ -62,6 +62,9 @@ export class WebSocketService {
   // Triggered when the websocket disconnects unexpectedly
   readonly unexpectedDisconnectEvent = signal<number>(0);
 
+  // Triggered when an emoji is received
+  readonly emojiReceivedEvent = signal<{senderId: string, emoji: string} | null>(null);
+
   // Triggered when the room is dismissed
   readonly roomDismissedEvent = signal<number>(0);
   readonly kickedEvent = signal<number>(0);
@@ -173,6 +176,8 @@ export class WebSocketService {
         } else {
           this.router.navigate([targetUrl]);
         }
+      } else if (msg.type === 'game' && msg.event === S2CEvent.EmojiBroadcast) {
+        this.emojiReceivedEvent.set(msg.payload);
       }
     };
 
@@ -289,6 +294,10 @@ export class WebSocketService {
     } else {
       console.warn('WS not connected, cannot send action', action);
     }
+  }
+
+  sendEmoji(emoji: string) {
+    this.send({ type: 'game', action: 'emoji', payload: { emoji: emoji } });
   }
 
   sendLobby(action: any) {

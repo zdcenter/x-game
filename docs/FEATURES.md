@@ -13,6 +13,7 @@
 ### 前端技术栈 (Angular 21 + TailwindCSS v4)
 - **Zoneless 无区化渲染**：全盘采用 Angular 21 最新的 Signals 响应式特性，性能极致优化，告别 `zone.js` 的性能损耗。
 - **无缝切游 (Switch Room Game)**：多人房间结算页面支持房主一键切换游戏，带领全房间玩家瞬间转移至新游戏并保持原状，免除退回大厅重组房间的繁琐步骤。
+- **实时对战表情与嘲讽 (Emoji Broadcast)**：基于 WebSocket 的纯后端无状态广播机制。对局中点击头像即可发送表情或快捷嘲讽短语，对方屏幕瞬间弹出带物理引擎质感的 CSS 飘浮动画，零延迟且与底层单机/联机状态机完全解耦，大幅强化对局临场社交属性。
 - **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 14 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。多局系列赛通用信号（`pkWins` / `isSeriesOver` / `pkScoreLabel`）全部内置于基类，各游戏无需重复实现；系列赛重启时 `_pkStatSubmitted` 自动重置，确保每局战绩独立提交。
 - **统一游戏组件基类（BaseGameComponent）**：`openChangeSettings()`、`navigateToPkArena()`、`handleJoinRoom()` 等 8 个公共方法上移至基类，消除 11 款游戏的重复样板代码；`GameStoreInterface` 接口新增 `pkWins` / `isSeriesOver` / `pkScoreLabel` 三项约束，确保编译时类型安全。`lobbyPanel` 通过 `@ViewChild override` 模式让子类可选复写而不重复声明。
 - **标准化全局游戏布局 (app-game-layout)**：构建了高度封装的 `<app-game-layout>` 视图组件。它以组件投影 (`ng-content`) 和响应式设计接管了全系 15 款游戏的最外层视图层，彻底统一了“全屏游戏导航栏”、“自适应单双栏响应式”、“动态模式难度标题”、“底端 SEO 版块”和“移动端大厅侧边栏”等全套 UI 交互，实现了 HTML 层面的终极复用。

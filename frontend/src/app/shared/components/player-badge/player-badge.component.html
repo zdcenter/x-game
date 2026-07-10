@@ -25,7 +25,7 @@
            [ngClass]="{
              'bg-gradient-to-br from-blue-400 to-indigo-600 border-blue-300/80': isMe && status !== GameStatus.Finished,
              'bg-gradient-to-br from-emerald-400 to-teal-600 border-emerald-300/80': status === GameStatus.Finished,
-             'bg-slate-700 border-slate-500/50': !isMe && status !== GameStatus.Finished
+             'bg-[var(--color-bg-main)] border-[var(--color-border-thick)]': !isMe && status !== GameStatus.Finished
            }">
         {{ avatarChar }}
       </div>
@@ -53,14 +53,14 @@
       <!-- Stats Row (Bombs, Timer, etc.) -->
       <div class="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-hidden">
         <ng-container *ngIf="filteredStats.length > 0">
-          <div *ngFor="let stat of filteredStats" class="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded border border-white/5 leading-none truncate shadow-inner" [ngClass]="stat.colorClass || (isMe ? 'text-blue-100' : 'text-[var(--color-text-main)]')">
+          <div *ngFor="let stat of filteredStats" class="flex items-center gap-1 bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded border border-[var(--color-border-card)] leading-none truncate shadow-inner" [ngClass]="stat.colorClass || (isMe ? 'text-blue-100' : 'text-[var(--color-text-main)]')">
             <span *ngIf="stat.icon" class="text-[10px] md:text-xs opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
             <span class="text-[10px] md:text-xs font-mono font-bold tracking-tight truncate">{{ stat.value }}</span>
             <span *ngIf="stat.label && !stat.icon" class="text-[8px] font-bold opacity-60 uppercase">{{ stat.label }}</span>
           </div>
         </ng-container>
         <ng-container *ngIf="subText">
-          <span class="text-[9px] font-mono font-bold truncate max-w-[80px] bg-black/40 px-1.5 py-0.5 rounded border border-white/5 shadow-inner text-white/80">{{ subText }}</span>
+          <span class="text-[9px] font-mono font-bold truncate max-w-[80px] bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded border border-[var(--color-border-card)] shadow-inner text-[var(--color-text-main)]">{{ subText }}</span>
         </ng-container>
       </div>
     </div>
@@ -170,3 +170,19 @@
     </span>
   </div>
 </ng-container>
+
+<!-- Floating Emoji Animation Layer -->
+@for (item of (activeEmoji() ? [activeEmoji()] : []); track item?.id) {
+  <div class="absolute left-[30%] -top-4 -translate-x-1/2 z-[100] pointer-events-none animate-float-up-fade flex items-center justify-center">
+    <div [ngClass]="item!.emoji.length > 2 ? 'bg-[var(--color-bg-card)] px-3 py-1.5 rounded-2xl border-2 border-[var(--color-border-card)] shadow-xl text-sm md:text-base font-black tracking-wider text-[var(--color-text-main)] whitespace-nowrap drop-shadow-lg' : 'text-4xl md:text-5xl drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]'">
+      {{ item!.emoji }}
+    </div>
+  </div>
+}
+
+<!-- Emoji Picker Trigger (Only for current player) -->
+@if (isMe) {
+  <div class="absolute -top-2 -right-2 z-40">
+    <app-emoji-picker (selected)="onEmojiSelected($event)"></app-emoji-picker>
+  </div>
+}

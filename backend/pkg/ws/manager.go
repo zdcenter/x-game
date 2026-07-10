@@ -615,17 +615,34 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	var actionMsg struct {
 		Action string `json:"action"`
 	}
-	if err := json.Unmarshal(payload, &actionMsg); err == nil && actionMsg.Action == string(domain.ActionStartGame) {
-
-		if clientID != r.Host {
-			log.Printf("Non-host %s tried to start the game", clientID)
+	if err := json.Unmarshal(payload, &actionMsg); err == nil {
+		if actionMsg.Action == string(domain.ActionEmoji) {
+			var emojiMsg struct {
+				Payload struct {
+					Emoji string `json:"emoji"`
+				} `json:"payload"`
+			}
+			if err := json.Unmarshal(payload, &emojiMsg); err == nil {
+				broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "emoji": "%s"}}`,
+					"game", domain.EventEmoji, clientID, emojiMsg.Payload.Emoji))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, broadcastMsg)
+				}
+			}
 			return
 		}
-		if r.Mode != "single" {
-			for _, c := range r.Clients {
-				if c.ID != r.Host && !c.IsReady {
-					log.Printf("Cannot start game: player %s is not ready", c.ID)
-					return
+
+		if actionMsg.Action == string(domain.ActionStartGame) {
+			if clientID != r.Host {
+				log.Printf("Non-host %s tried to start the game", clientID)
+				return
+			}
+			if r.Mode != "single" {
+				for _, c := range r.Clients {
+					if c.ID != r.Host && !c.IsReady {
+						log.Printf("Cannot start game: player %s is not ready", c.ID)
+						return
+					}
 				}
 			}
 		}

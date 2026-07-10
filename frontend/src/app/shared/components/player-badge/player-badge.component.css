@@ -1,0 +1,25 @@
+@keyframes float-up-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.2);
+  }
+  30% {
+    transform: translateY(-5px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+}
+
+.animate-float-up-fade {
+  animation: float-up-fade 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
