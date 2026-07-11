@@ -26,16 +26,16 @@ import { LayoutService } from '../services/layout.service';
 
           <!-- Left: Logo + Nav links -->
           <div class="flex items-center gap-1 sm:gap-5 min-w-0">
-            <a routerLink="/lobby" class="flex items-center cursor-pointer group shrink-0">
+            <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="flex items-center cursor-pointer group shrink-0">
               <span class="text-xl sm:text-2xl lg:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
                     style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 Puzzle PK
               </span>
             </a>
-            <a routerLink="/leaderboard" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               🏆 {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a routerLink="/daily" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📅 {{ i18n.t('daily.title')() || 'Daily' }}
             </a>
             <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
@@ -71,7 +71,7 @@ import { LayoutService } from '../services/layout.service';
             @if (authStore.isAuthenticated()) {
 
               <!-- Avatar + username → profile link -->
-              <a routerLink="/profile"
+              <a [routerLink]="['/', i18n.currentLang(), 'profile']"
                  class="flex items-center gap-2 px-1.5 py-1 rounded-lg transition-colors hover:bg-[var(--color-bg-main)]"
                  [title]="authStore.currentUser()?.username">
                 <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
@@ -112,7 +112,7 @@ import { LayoutService } from '../services/layout.service';
               </button>
 
             } @else {
-              <a routerLink="/login"
+              <a [routerLink]="['/', i18n.currentLang(), 'login']"
                  class="px-3 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border"
                  style="background-color: var(--color-bg-main); border-color: var(--color-border-card); color: var(--color-text-main)">
                 {{ i18n.t('nav.signin')() }}
@@ -138,10 +138,10 @@ import { LayoutService } from '../services/layout.service';
       @if (isMobileMenuOpen()) {
         <div class="fixed inset-0 top-[3.5rem] sm:top-[4rem] z-40 bg-[var(--color-bg-main)] overflow-y-auto lg:hidden animate-fade-in-down border-b border-[var(--color-border-card)] pb-6 shadow-xl" (click)="isMobileMenuOpen.set(false)">
           <nav class="px-4 pt-4 pb-6 space-y-2 max-w-2xl mx-auto">
-            <a routerLink="/leaderboard" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a routerLink="/daily" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">📅</span> {{ i18n.t('daily.title')() || 'Daily' }}
             </a>
             <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">

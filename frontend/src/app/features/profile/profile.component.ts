@@ -87,7 +87,7 @@ type Tab = 'overview' | 'achievements' | 'rankings' | 'history';
             <div class="flex flex-col items-center gap-4 py-16 text-[var(--color-text-muted)]">
               <span class="text-5xl opacity-40">🎮</span>
               <p class="font-bold">{{ i18n.t('profile.no_stats')() }}</p>
-              <a routerLink="/lobby" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-sm">
+              <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-sm">
                 {{ i18n.t('lobby.title')() }}
               </a>
             </div>

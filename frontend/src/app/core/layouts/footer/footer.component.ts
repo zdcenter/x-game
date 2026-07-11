@@ -14,7 +14,7 @@ import { I18nService } from '../../i18n/i18n.service';
           
           <!-- Brand & Intro -->
           <div class="col-span-1 md:col-span-2 lg:col-span-2">
-            <a routerLink="/lobby" class="inline-block mb-4">
+            <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="inline-block mb-4">
               <span class="text-2xl font-black tracking-widest bg-clip-text text-transparent"
                     style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 Puzzle PK

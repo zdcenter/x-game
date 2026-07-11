@@ -20,7 +20,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 
         <div class="relative z-10">
           <!-- Back to Lobby Button -->
-          <a routerLink="/lobby" class="absolute -top-6 -left-6 sm:-top-4 sm:-left-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors flex items-center gap-1 text-sm font-medium z-20 p-2 rounded-lg hover:bg-[var(--color-bg-main)]">
+          <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="absolute -top-6 -left-6 sm:-top-4 sm:-left-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors flex items-center gap-1 text-sm font-medium z-20 p-2 rounded-lg hover:bg-[var(--color-bg-main)]">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -28,7 +28,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </a>
 
           <h2 class="text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 text-center cursor-pointer">
-            <a routerLink="/lobby" class="hover:opacity-80 transition-opacity">{{ i18n.t('auth.login.title')() }}</a>
+            <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="hover:opacity-80 transition-opacity">{{ i18n.t('auth.login.title')() }}</a>
           </h2>
           <p class="text-slate-400 text-center mb-8 font-medium tracking-wide">{{ i18n.t('auth.login.subtitle')() }}</p>
 
@@ -71,7 +71,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 
           <div class="mt-8 text-center text-slate-400 text-sm">
             {{ i18n.t('auth.login.no_account')() }}
-            <a routerLink="/register" class="text-indigo-400 font-bold hover:text-pink-400 transition-colors">{{ i18n.t('auth.login.create')() }}</a>
+            <a [routerLink]="['/', i18n.currentLang(), 'register']" class="text-indigo-400 font-bold hover:text-pink-400 transition-colors">{{ i18n.t('auth.login.create')() }}</a>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export class LoginComponent {
         this.isLoading.set(false);
         if (res.token && res.user) {
           this.authStore.setCredentials(res.token, res.user);
-          this.router.navigate(['/lobby']);
+          this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
         }
       },
       error: (err) => {
@@ -122,7 +122,7 @@ export class LoginComponent {
         this.isLoading.set(false);
         if (res.token && res.user) {
           this.authStore.setCredentials(res.token, res.user);
-          this.router.navigate(['/lobby']);
+          this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
         }
       },
       error: (err) => {

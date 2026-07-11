@@ -15,7 +15,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
   template: `
     <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 px-4 sm:px-6 lg:px-8">
       <div class="max-w-5xl mx-auto">
-        <a routerLink="/blog" class="inline-flex items-center text-sm font-medium text-blue-400 hover:text-blue-300 mb-8 transition-colors">
+        <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="inline-flex items-center text-sm font-medium text-blue-400 hover:text-blue-300 mb-8 transition-colors">
           <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
           {{ i18n.t('blog.back_to_blog')() }}
         </a>
@@ -63,7 +63,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
             
             <div class="mt-12 pt-8 border-t border-[var(--color-border-card)] text-center">
               <h3 class="text-xl font-bold mb-4">{{ i18n.t('blog.cta_title')() }}</h3>
-              <a routerLink="/lobby" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
+              <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
                 {{ i18n.t('blog.cta_btn')() }}
               </a>
             </div>
