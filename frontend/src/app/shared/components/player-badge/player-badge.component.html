@@ -2,10 +2,10 @@
 <ng-container *ngIf="layout === 'card'">
   <div class="relative flex items-center gap-3 pl-2.5 pr-4 py-2 rounded-2xl border transition-all duration-300 overflow-hidden shadow-lg min-w-[140px] md:min-w-[180px] h-[54px] md:h-[64px]"
        [ngClass]="{
-         'border-blue-400/50 bg-gradient-to-r from-blue-900/80 to-indigo-900/60 shadow-[0_0_20px_rgba(59,130,246,0.25)]': isMe,
+         'border-blue-500/30 bg-blue-500/5 dark:bg-blue-900/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]': isMe,
          'border-[var(--color-border-card)] bg-[var(--color-bg-card)]/60': !isMe,
          'opacity-60 grayscale': status === 'frozen' || status === 'spectating',
-         'border-emerald-500/50 bg-gradient-to-r from-emerald-900/80 to-teal-900/60 shadow-[0_0_20px_rgba(16,185,129,0.25)]': status === GameStatus.Finished
+         'border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-900/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]': status === GameStatus.Finished
        }"
        style="backdrop-filter: blur(12px);">
 
@@ -21,11 +21,11 @@
     <!-- Left: Avatar Section -->
     <div class="relative shrink-0 flex items-center justify-center z-10">
       <!-- Avatar Circle -->
-      <div class="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center font-black text-lg md:text-xl border-2 shadow-inner text-white transition-all shrink-0"
+      <div class="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center font-black text-lg md:text-xl border-2 shadow-inner transition-all shrink-0"
            [ngClass]="{
-             'bg-gradient-to-br from-blue-400 to-indigo-600 border-blue-300/80': isMe && status !== GameStatus.Finished,
-             'bg-gradient-to-br from-emerald-400 to-teal-600 border-emerald-300/80': status === GameStatus.Finished,
-             'bg-[var(--color-bg-main)] border-[var(--color-border-thick)]': !isMe && status !== GameStatus.Finished
+             'bg-blue-100 dark:bg-blue-900 border-blue-400/50 text-blue-600 dark:text-blue-300': isMe && status !== GameStatus.Finished,
+             'bg-emerald-100 dark:bg-emerald-900 border-emerald-400/50 text-emerald-600 dark:text-emerald-300': status === GameStatus.Finished,
+             'bg-[var(--color-bg-main)] border-[var(--color-border-thick)] text-[var(--color-text-main)]': !isMe && status !== GameStatus.Finished
            }">
         {{ avatarChar }}
       </div>
@@ -44,8 +44,10 @@
     <div class="flex flex-col justify-center min-w-0 z-10 flex-1">
       <!-- Name -->
       <span class="text-xs md:text-sm font-black truncate tracking-wide drop-shadow-sm mb-1"
-            [class.text-blue-300]="isMe"
-            [class.text-emerald-300]="!isMe && status === GameStatus.Finished"
+            [class.text-blue-600]="isMe && status !== GameStatus.Finished"
+            [class.dark:text-blue-300]="isMe && status !== GameStatus.Finished"
+            [class.text-emerald-600]="status === GameStatus.Finished"
+            [class.dark:text-emerald-300]="status === GameStatus.Finished"
             [class.text-[var(--color-text-main)]]="!isMe && status !== GameStatus.Finished">
         {{ isMe ? (i18n.t('game.you')() || 'You') : $any(playerName) }}
       </span>
@@ -53,7 +55,7 @@
       <!-- Stats Row (Bombs, Timer, etc.) -->
       <div class="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-hidden">
         <ng-container *ngIf="filteredStats.length > 0">
-          <div *ngFor="let stat of filteredStats" class="flex items-center gap-1 bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded border border-[var(--color-border-card)] leading-none truncate shadow-inner" [ngClass]="stat.colorClass || (isMe ? 'text-blue-100' : 'text-[var(--color-text-main)]')">
+          <div *ngFor="let stat of filteredStats" class="flex items-center gap-1 bg-[var(--color-bg-main)] px-1.5 py-0.5 rounded border border-[var(--color-border-card)] leading-none truncate shadow-inner" [ngClass]="stat.colorClass || (isMe ? 'text-blue-700 dark:text-blue-200' : 'text-[var(--color-text-main)]')">
             <span *ngIf="stat.icon" class="text-[10px] md:text-xs opacity-80 shrink-0" [title]="stat.label || ''">{{ stat.icon }}</span>
             <span class="text-[10px] md:text-xs font-mono font-bold tracking-tight truncate">{{ stat.value }}</span>
             <span *ngIf="stat.label && !stat.icon" class="text-[8px] font-bold opacity-60 uppercase">{{ stat.label }}</span>
@@ -69,8 +71,8 @@
     <div *ngIf="score !== undefined" class="flex items-center justify-end shrink-0 pl-2 z-10">
       <span class="text-xl md:text-2xl font-black italic tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate"
             [ngClass]="{
-              'text-amber-400': status !== GameStatus.Finished,
-              'text-emerald-400': status === GameStatus.Finished
+              'text-amber-500 dark:text-amber-400': status !== GameStatus.Finished,
+              'text-emerald-500 dark:text-emerald-400': status === GameStatus.Finished
             }">
         {{ score }}
       </span>

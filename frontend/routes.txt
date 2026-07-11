@@ -1,13 +1,5 @@
 /en/lobby
 /zh/lobby
-/en/login
-/zh/login
-/en/register
-/zh/register
-/en/profile
-/zh/profile
-/en/pk-arena
-/zh/pk-arena
 /en/leaderboard
 /zh/leaderboard
 /en/daily
