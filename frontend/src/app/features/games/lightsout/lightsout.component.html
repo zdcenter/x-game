@@ -120,7 +120,7 @@
                   @for (row of store.board(); track rIndex; let rIndex = $index) {
                     @for (cell of row; track cIndex; let cIndex = $index) {
                       <button 
-                        class="group w-full h-full rounded-md sm:rounded-xl relative overflow-hidden active:scale-[0.95] touch-manipulation focus:outline-none flex items-center justify-start bg-slate-800/80 border border-slate-700/50 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] transition-all duration-300 cursor-pointer"
+                        class="group w-full h-full rounded-md sm:rounded-xl relative overflow-hidden active:scale-[0.95] touch-manipulation focus:outline-none flex items-center justify-center bg-slate-800/80 border border-slate-700/50 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] transition-all duration-300 cursor-pointer"
                         [class.ring-4]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
                         [class.ring-orange-500]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
                         [class.animate-pulse]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
