@@ -632,6 +632,22 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			return
 		}
 
+		if actionMsg.Action == string(domain.ActionChat) {
+			var chatMsg struct {
+				Payload struct {
+					Text string `json:"text"`
+				} `json:"payload"`
+			}
+			if err := json.Unmarshal(payload, &chatMsg); err == nil {
+				broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "text": "%s"}}`,
+					"game", domain.EventChat, clientID, chatMsg.Payload.Text))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, broadcastMsg)
+				}
+			}
+			return
+		}
+
 		if actionMsg.Action == string(domain.ActionStartGame) {
 			if clientID != r.Host {
 				log.Printf("Non-host %s tried to start the game", clientID)

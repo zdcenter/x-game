@@ -64,6 +64,9 @@ export class WebSocketService {
 
   // Triggered when an emoji is received
   readonly emojiReceivedEvent = signal<{senderId: string, emoji: string} | null>(null);
+  
+  // Triggered when room chat is received
+  readonly roomChatReceivedEvent = signal<{senderId: string, text: string} | null>(null);
 
   // Triggered when the room is dismissed
   readonly roomDismissedEvent = signal<number>(0);
@@ -178,6 +181,8 @@ export class WebSocketService {
         }
       } else if (msg.type === 'game' && msg.event === S2CEvent.EmojiBroadcast) {
         this.emojiReceivedEvent.set(msg.payload);
+      } else if (msg.type === 'game' && msg.event === S2CEvent.ChatBroadcast) {
+        this.roomChatReceivedEvent.set(msg.payload);
       }
     };
 
@@ -298,6 +303,10 @@ export class WebSocketService {
 
   sendEmoji(emoji: string) {
     this.send({ type: 'game', action: 'emoji', payload: { emoji: emoji } });
+  }
+
+  sendRoomChat(text: string) {
+    this.send({ type: 'game', action: 'chat', payload: { text: text } });
   }
 
   sendLobby(action: any) {

@@ -1,4 +1,5 @@
-import { Injectable, inject, computed, Signal } from '@angular/core';
+import { Injectable, inject, computed, Signal, effect } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -9,6 +10,13 @@ export type Lang = 'en' | 'zh';
 export class I18nService {
   private transloco = inject(TranslocoService);
   private router = inject(Router);
+  private doc = inject(DOCUMENT);
+
+  constructor() {
+    effect(() => {
+      this.doc.documentElement.lang = this.currentLang();
+    });
+  }
 
   // Reactive lang signal — updates when TranslocoService lang changes
   readonly currentLang = toSignal(

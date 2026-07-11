@@ -42,7 +42,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_mine_30x24', desc: '30x24 (230)' }
     ],
     recommendations: ['sudoku', 'sliding'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '💣', title: 'tutorial.mine.goal',   description: 'tutorial.mine.goal_desc' },
       { icon: '👆', title: 'tutorial.mine.reveal',  description: 'tutorial.mine.reveal_desc' },
@@ -92,7 +92,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_slide_6x6', desc: '6x6 Grid' }
     ],
     recommendations: ['sudoku', 'hexa'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '🔲', title: 'tutorial.sliding.goal',     description: 'tutorial.sliding.goal_desc' },
       { icon: '👆', title: 'tutorial.sliding.move',     description: 'tutorial.sliding.move_desc' },
@@ -183,7 +183,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_codebreaker_hard', desc: '5-digit code' }
     ],
     recommendations: ['math24', 'sudoku'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '🔐', title: 'tutorial.codebreaker.goal',     description: 'tutorial.codebreaker.goal_desc' },
       { icon: '🟢', title: 'tutorial.codebreaker.feedback', description: 'tutorial.codebreaker.feedback_desc' },
@@ -278,7 +278,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_lightsout_8x8', desc: '8x8 Board' }
     ],
     recommendations: ['minesweeper', 'sudoku'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '💡', title: 'tutorial.lightsout.goal',   description: 'tutorial.lightsout.goal_desc' },
       { icon: '👆', title: 'tutorial.lightsout.toggle', description: 'tutorial.lightsout.toggle_desc' },
@@ -312,7 +312,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     id: GameId.Sokoban,
     route: '/games/sokoban',
     titleKey: 'app.title.sokoban',
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     iconEmoji: '📦',
     loadComponent: () => import('../../features/games/sokoban/sokoban.component').then(m => m.SokobanComponent),
     modes: [
@@ -344,7 +344,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     ],
     difficulties: [],
     recommendations: ['sudoku', 'math24', 'codebreaker'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '📖', title: 'tutorial.idiom.goal',     description: 'tutorial.idiom.goal_desc' },
       { icon: '✏️', title: 'tutorial.idiom.fill',     description: 'tutorial.idiom.fill_desc' },
@@ -369,7 +369,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_nonogram_15x15', desc: '15x15' }
     ],
     recommendations: ['minesweeper', 'sudoku'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '🎨', title: 'tutorial.nonogram.goal',     description: 'tutorial.nonogram.goal_desc' },
       { icon: '🔢', title: 'tutorial.nonogram.hints',    description: 'tutorial.nonogram.hints_desc' },
@@ -415,7 +415,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_connect_expert', desc: '11x11 to 12x12' }
     ],
     recommendations: ['sliding', 'sokoban'],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [
       { icon: '🔗', title: 'tutorial.connect.goal',     description: 'tutorial.connect.goal_desc' },
       { icon: '👆', title: 'tutorial.connect.draw',     description: 'tutorial.connect.draw_desc' },
@@ -433,7 +433,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
       { id: GameMode.Speed, labelKey: 'game.speed_label', descKey: 'game.speed_desc', icon: '⚡', desc: 'Speed PK' }
     ],
-    multiRound: true,
+    multiRound: true, coverImage: "og-minesweeper.png",
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_hashi_easy', descKey: 'game.diff_hashi_easy', desc: '7x7' },
       { id: GameDifficulty.Medium, labelKey: 'game.diff_hashi_medium', descKey: 'game.diff_hashi_medium', desc: '10x10' },

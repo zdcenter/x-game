@@ -73,7 +73,7 @@ interface TocItem {
           <span class="font-bold text-[var(--color-text-primary)] truncate">{{ currentGame() ? getGameTitle(currentGame()!.id) : 'Tutorials' }}</span>
         </div>
 
-        <div class="max-w-4xl mx-auto px-4 sm:px-8 py-8 lg:py-12 flex flex-col xl:flex-row gap-12">
+        <div class="max-w-5xl mx-auto px-4 sm:px-8 py-8 lg:py-12 flex flex-col xl:flex-row gap-12">
           
           <!-- Article Content -->
           <article class="flex-1 min-w-0">
@@ -168,7 +168,7 @@ interface TocItem {
 
         </div>
         
-        <div class="px-4 sm:px-8 max-w-4xl mx-auto">
+        <div class="px-4 sm:px-8 max-w-5xl mx-auto">
           
         </div>
       </main>

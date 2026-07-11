@@ -5,6 +5,7 @@ import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
+import { RoomChatComponent } from '../room-chat/room-chat.component';
 import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -12,7 +13,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, RoomChatComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
@@ -145,6 +146,9 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
        </app-game-lobby-panel>
     </div>
   }
+  
+  <app-room-chat></app-room-chat>
+  
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
   <ng-content select="[game-overlay]"></ng-content>
 </div>

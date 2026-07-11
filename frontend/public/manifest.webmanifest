@@ -6,7 +6,7 @@
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
-  "description": "欢迎来到 Puzzle PK！免费的在线多人在玩益智小游戏平台。支持扫雷、数独、推箱子、数字华容道、方块消除等经典游戏。单人训练脑力，双人联机对战！",
+  "description": "Play 13+ free logic puzzle & brain games online! 欢迎来到 Puzzle PK！免费的在线多人在玩益智小游戏平台。单人训练脑力，双人联机对战！",
   "screenshots": [
     {
       "src": "og-cover.png",
@@ -19,7 +19,24 @@
       "src": "og-cover.png",
       "sizes": "1200x630",
       "type": "image/png",
-      "label": "Puzzle PK - 经典逻辑益智小游戏大厅"
+      "form_factor": "narrow",
+      "label": "Puzzle PK - Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Challenge",
+      "short_name": "Daily",
+      "description": "Play today's daily puzzle challenge",
+      "url": "/daily",
+      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Leaderboard",
+      "short_name": "Ranks",
+      "description": "View global puzzle rankings",
+      "url": "/leaderboard",
+      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ],
   "icons": [

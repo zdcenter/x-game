@@ -14,7 +14,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl mx-auto">
+      <div class="max-w-5xl mx-auto">
         <a routerLink="/blog" class="inline-flex items-center text-sm font-medium text-blue-400 hover:text-blue-300 mb-8 transition-colors">
           <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
           {{ i18n.t('blog.back_to_blog')() }}
@@ -30,7 +30,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
             <p>{{ i18n.t('blog.not_found_desc')() }}</p>
           </div>
         } @else {
-          <article class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 sm:p-10 shadow-xl">
+          <article class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 sm:p-10 shadow-xl max-w-4xl mx-auto">
             <header class="mb-10 border-b border-[var(--color-border-card)] pb-8">
               <div class="flex flex-wrap gap-2 mb-4">
                 @for (tag of displayMeta()?.tags; track tag) {
@@ -71,7 +71,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
         }
       </div>
 
-      <div class="px-4 sm:px-8 max-w-4xl mx-auto w-full mt-16">
+      <div class="px-4 sm:px-8 max-w-5xl mx-auto w-full mt-16">
         
       </div>
     </div>

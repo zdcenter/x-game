@@ -12,7 +12,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] p-4 md:p-8">
-      <div class="max-w-3xl mx-auto flex flex-col gap-6">
+      <div class="max-w-5xl mx-auto flex flex-col gap-6">
 
         <!-- Header -->
         <div class="flex items-center gap-3 border-b border-[var(--color-border-card)] pb-5">

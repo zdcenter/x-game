@@ -85,11 +85,19 @@
               <div class="flex items-center gap-2 overflow-hidden">
                 <span class="text-xl animate-pulse shrink-0">📢</span>
                 <div class="text-xs font-bold text-[var(--color-text-main)] truncate">
-                  {{ t('game.broadcast_msg').replace('{player}', msg.senderName || msg.senderId).replace('{game}', getGameLabel(msg.room.game)).replace('{mode}', getModeLabel(msg.room.mode, msg.room.game)) }}
-                  <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host, msg.room.hasPassword)"
-                          class="text-amber-400 hover:text-amber-300 underline decoration-amber-400/50 font-black cursor-pointer ml-1 transition-colors">
-                    {{ t('game.broadcast_join') }}
-                  </button>
+                  @if (msg.payload?.text) {
+                    <span class="text-[var(--color-text-muted)] mr-1">{{ msg.senderName || msg.senderId }}:</span>
+                    <span>{{ msg.payload.text }}</span>
+                  } @else {
+                    {{ t('game.broadcast_msg').replace('{player}', msg.senderName || msg.senderId).replace('{game}', getGameLabel(msg.room?.game)).replace('{mode}', getModeLabel(msg.room?.mode, msg.room?.game)) }}
+                  }
+                  
+                  @if (msg.room) {
+                    <button (click)="onJoinRoom(msg.room.id, msg.room.game, msg.room.mode, msg.room.difficulty, msg.room.host, msg.room.hasPassword)"
+                            class="text-amber-400 hover:text-amber-300 underline decoration-amber-400/50 font-black cursor-pointer ml-1 transition-colors">
+                      {{ t('game.broadcast_join') }}
+                    </button>
+                  }
                 </div>
               </div>
             </div>
@@ -98,9 +106,9 @@
       }
 
       <!-- PK Arena CTA -->
-      <div class="shrink-0">
+      <div class="shrink-0 flex gap-2 relative">
         <button (click)="router.navigate(['/pk-arena'], { queryParams: { game: currentGameId } })"
-                class="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] flex justify-center items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow">
+                class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] flex justify-center items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow">
           ⚔️ {{ t('game.pk_arena') }}
         </button>
       </div>
@@ -324,6 +332,47 @@
 
     </div>
   }
+
+  <!-- ══════════════════════════════════
+       QUICK PHRASE FOOTER
+  ══════════════════════════════════ -->
+  <div class="shrink-0 p-3 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)] relative z-20">
+    <div class="flex gap-2">
+      <button (click)="isQuickPhraseDropdownOpen.set(!isQuickPhraseDropdownOpen()); audioService.playClick()"
+              class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          <line x1="9" y1="9" x2="15" y2="9"></line>
+          <line x1="9" y1="13" x2="13" y2="13"></line>
+        </svg>
+        大厅交流
+      </button>
+
+      <button (click)="myRooms()[0] ? sendHeroBroadcast(myRooms()[0]) : sendQuickPhrase('有没有高手来切磋一下？')"
+              class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-amber-500/10 border border-amber-500/30 text-amber-600 hover:bg-amber-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-sm">
+        <span class="text-base leading-none">📢</span> 
+        发英雄帖
+      </button>
+    </div>
+    @if (isQuickPhraseDropdownOpen()) {
+      <div class="absolute bottom-[calc(100%+8px)] left-3 right-3 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] z-50 p-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div class="flex items-center justify-between px-2 pt-1 mb-2 border-b border-[var(--color-border-card)] pb-2">
+           <h4 class="text-xs font-black text-[var(--color-text-muted)]">发送快捷约战喊话</h4>
+           <button (click)="isQuickPhraseDropdownOpen.set(false)" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">✕</button>
+        </div>
+        <div class="flex flex-col gap-1 max-h-[200px] overflow-y-auto custom-scrollbar">
+          @for (phrase of quickPhrases; track phrase) {
+            <button (click)="sendQuickPhrase(phrase)" 
+                    class="text-left px-3 py-2.5 rounded-xl text-sm hover:bg-[var(--color-bg-card)] hover:text-[var(--color-accent-from)] font-bold transition-colors">
+              {{ phrase }}
+            </button>
+          }
+        </div>
+      </div>
+      <!-- Backdrop for closing dropdown -->
+      <div class="fixed inset-0 z-40" (click)="isQuickPhraseDropdownOpen.set(false)"></div>
+    }
+  </div>
 
   <!-- ══════════════════════════════════
        SIDEBAR AD BANNER

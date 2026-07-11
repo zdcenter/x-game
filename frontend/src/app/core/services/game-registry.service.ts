@@ -23,6 +23,8 @@ export interface GameConfig {
   recommendations?: string[];
   /** Whether this game's engine supports multi-round PK series (Wins tracking). */
   multiRound?: boolean;
+  /** Custom open graph cover image (filename in assets or public folder) */
+  coverImage?: string;
 }
 
 @Injectable({ providedIn: 'root' })

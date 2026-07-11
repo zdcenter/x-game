@@ -78,6 +78,15 @@ export class GameLobbyPanelComponent implements OnInit {
   passwordPromptHost = signal('');
   passwordInput = signal('');
 
+  quickPhrases = [
+    '有人来切磋一下吗？',
+    '我建好房间了，速度进！',
+    '等一个高手。',
+    '菜鸟互啄，欢乐多！',
+    '谁敢来挑战我？'
+  ];
+  isQuickPhraseDropdownOpen = signal(false);
+
   gameRooms = computed(() =>
     this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single)
   );
@@ -176,6 +185,23 @@ export class GameLobbyPanelComponent implements OnInit {
       room: { id: room.id, game: room.game, mode: room.mode, difficulty: room.difficulty, host: room.host },
     });
     this.toastService.show(this.t('game.broadcast_success'), 'success');
+  }
+
+  sendQuickPhrase(phrase: string) {
+    let room = null;
+    const myFirstRoom = this.myRooms()[0];
+    if (myFirstRoom) {
+      room = { id: myFirstRoom.id, game: myFirstRoom.game, mode: myFirstRoom.mode, difficulty: myFirstRoom.difficulty, host: myFirstRoom.host };
+    }
+    
+    this.wsService.sendLobby({
+      type: 'broadcast',
+      payload: { text: phrase },
+      room: room
+    });
+    this.isQuickPhraseDropdownOpen.set(false);
+    this.toastService.show(this.t('game.broadcast_success') || 'Sent successfully', 'success');
+    this.audioService.playClick();
   }
 
   getModeLabel(modeId: string, gameId?: string): string {
