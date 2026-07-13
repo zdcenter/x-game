@@ -293,6 +293,7 @@
   "game.create_room": "创建房间",
   "game.collapse_panel": "收起面板",
   "game.pk_arena": "PK 竞技场",
+  "game.create_or_quick_match": "邀请好友 · 随机匹配",
   "game.quick_match": "快速匹配",
   "game.active_rooms_count": "个房间",
   "game.current_room": "当前房间",

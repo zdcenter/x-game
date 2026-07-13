@@ -288,6 +288,7 @@
   "game.create_room": "Create Room",
   "game.collapse_panel": "Collapse Panel",
   "game.pk_arena": "PK Arena",
+  "game.create_or_quick_match": "Invite Friends · Quick Match",
   "game.quick_match": "Quick Match",
   "game.active_rooms_count": "rooms",
   "game.current_room": "CURRENT ROOM",

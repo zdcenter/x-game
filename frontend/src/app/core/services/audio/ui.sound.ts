@@ -11,16 +11,52 @@ export function playUISound(audioCtx: AudioContext, out: AudioNode, name: 'click
     o.connect(g); g.connect(out);
     o.start(t); o.stop(t + 0.08);
   } else if (name === 'victory') {
-    [[523, 659, 784], [659, 784, 1047]].forEach((chord, i) => {
-      chord.forEach(freq => {
-        const o = createOsc(audioCtx, 'sine', freq);
-        const g = createGain(audioCtx, 0);
-        const dt = t + i * 0.18;
-        g.gain.setValueAtTime(0.15, dt);
-        g.gain.exponentialRampToValueAtTime(0.001, dt + 0.5);
-        o.connect(g); g.connect(out);
-        o.start(dt); o.stop(dt + 0.55);
-      });
+    // Satisfying ascending magical fanfare (C major arpeggio)
+    const notes = [
+      { f: 392, t: 0.0 },  // G4
+      { f: 523, t: 0.1 },  // C5
+      { f: 659, t: 0.2 },  // E5
+      { f: 784, t: 0.3 },  // G5
+      { f: 1046, t: 0.45 } // C6 (sustained)
+    ];
+
+    notes.forEach((note, i) => {
+      // Mix triangle and sine for a richer "bell/synth" tone
+      const o1 = createOsc(audioCtx, 'triangle', note.f);
+      const o2 = createOsc(audioCtx, 'sine', note.f * 1.005); // slight detune
+      const g = createGain(audioCtx, 0);
+      
+      const dt = t + note.t;
+      const isLast = i === notes.length - 1;
+      
+      g.gain.setValueAtTime(0, dt);
+      g.gain.linearRampToValueAtTime(0.12, dt + 0.02); // quick attack
+      
+      if (isLast) {
+        g.gain.exponentialRampToValueAtTime(0.001, dt + 1.5); // long decay for final note
+        o1.start(dt); o1.stop(dt + 1.55);
+        o2.start(dt); o2.stop(dt + 1.55);
+      } else {
+        g.gain.exponentialRampToValueAtTime(0.001, dt + 0.3); // short decay for arpeggio
+        o1.start(dt); o1.stop(dt + 0.35);
+        o2.start(dt); o2.stop(dt + 0.35);
+      }
+      
+      o1.connect(g);
+      o2.connect(g);
+      g.connect(out);
+    });
+
+    // Add a sparkly background chord on the final note to make it grand
+    [523, 659, 784, 1046].forEach(freq => {
+        const osc = createOsc(audioCtx, 'sine', freq);
+        const gain = createGain(audioCtx, 0);
+        const dt = t + 0.45;
+        gain.gain.setValueAtTime(0, dt);
+        gain.gain.linearRampToValueAtTime(0.05, dt + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, dt + 1.5);
+        osc.connect(gain); gain.connect(out);
+        osc.start(dt); osc.stop(dt + 1.55);
     });
   } else if (name === 'gameover') {
     [300, 240].forEach((freq, i) => {

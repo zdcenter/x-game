@@ -106,10 +106,30 @@
       }
 
       <!-- PK Arena CTA -->
-      <div class="shrink-0 flex gap-2 relative">
+      <div class="shrink-0 relative">
         <button (click)="router.navigate(['/pk-arena'], { queryParams: { game: currentGameId } })"
-                class="flex-1 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] flex justify-center items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow">
-          ⚔️ {{ t('game.pk_arena') }}
+                class="w-full relative overflow-hidden group rounded-xl p-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-md hover:shadow-lg active:scale-[0.98] transition-all text-left flex items-center justify-between">
+          <div class="flex items-center gap-3 relative z-10">
+            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm shrink-0 border border-white/20 shadow-inner">
+               <span class="text-xl">➕</span>
+            </div>
+            <div>
+              <div class="font-black text-sm tracking-wide flex items-center gap-1.5 drop-shadow-sm">
+                {{ t('game.create_room') || '创建对战房间' }}
+                <span class="text-[9px] bg-white/25 px-1.5 py-0.5 rounded border border-white/20 font-bold uppercase">{{ t('game.pk_arena') || 'PK' }}</span>
+              </div>
+              <div class="text-[10px] font-medium opacity-90 mt-0.5 drop-shadow-sm">
+                {{ t('game.create_or_quick_match') || '邀请好友 · 随机匹配' }}
+              </div>
+            </div>
+          </div>
+          <div class="relative z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 group-hover:text-white group-hover:bg-white/20 group-hover:translate-x-1 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <!-- Decorative background pattern -->
+          <div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white/10 to-transparent skew-x-12 translate-x-8 group-hover:translate-x-4 transition-transform duration-500"></div>
         </button>
       </div>
 
