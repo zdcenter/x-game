@@ -395,7 +395,7 @@ export class SudokuStore extends BaseGameStore {
   canUndo = () => this.history.length > 0;
 
   undo() {
-    if (this.currentRoomMode() !== GameMode.Single || this.isFinished()) return;
+    if (this.currentRoomMode() === GameMode.Steal || this.isFinished()) return;
     if (this.history.length === 0) return;
     this.audio.playSudoku('input');
     const last = this.history.pop()!;
@@ -407,7 +407,8 @@ export class SudokuStore extends BaseGameStore {
   private saveHistory() {
     const clone = this.board().map(row => row.map(c => ({ ...c, notes: new Set(c.notes) })));
     this.history.push(clone);
-    if (this.history.length > 20) this.history.shift();
+    // Allow essentially infinite undo by keeping up to 2000 steps (plenty for any Sudoku match)
+    if (this.history.length > 2000) this.history.shift();
   }
 
   
