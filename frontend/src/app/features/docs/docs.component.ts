@@ -276,8 +276,12 @@ export class DocsComponent {
   }
 
   getGameDesc(id: string): string {
+    const seoKey = `seo.${id}.desc`;
+    let desc = this.i18n.t(seoKey)();
+    if (desc !== seoKey) return desc;
+
     const descKey = `lobby.${id}.desc`;
-    let desc = this.i18n.t(descKey)();
+    desc = this.i18n.t(descKey)();
     if (desc === descKey) {
       // Some games like drop2048 might use app.title.drop2048.desc
       const altKey = `app.title.${id}.desc`;
