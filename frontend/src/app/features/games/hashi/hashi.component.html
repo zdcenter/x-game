@@ -11,6 +11,7 @@
   [currentRoomId]="store.roomId()"
   [status]="store.status()"
   [showRules]="false"
+  [hideLeftPanel]="hideLeftPanel()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="onDifficultyChange($event)"
@@ -112,7 +113,7 @@
               <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
             }
 
-            <div class="relative bg-white dark:bg-[#0b1120] rounded-2xl shadow-sm border-2 border-slate-100 dark:border-slate-800 select-none overflow-hidden p-2 md:p-4 w-full max-w-[95vw] md:max-w-[85vw] lg:max-h-[75vh] lg:max-w-[75vh] aspect-square flex items-center justify-center">
+            <div class="relative select-none overflow-hidden w-full max-w-[95vw] lg:max-w-none aspect-square flex items-center justify-center">
               
               @if (store.localStatus() !== GameStatus.Starting) {
               <svg class="w-full h-full relative z-10 touch-none" 
@@ -129,7 +130,7 @@
                     <line [attr.x1]="0" [attr.y1]="j" [attr.x2]="store.engine.width - 1" [attr.y2]="j" />
                   }
                 </g>
-                
+
                 <!-- Bridges -->
                 @for (bridge of store.bridges(); track bridge.r1 + '-' + bridge.c1 + '-' + bridge.r2 + '-' + bridge.c2) {
                   <g class="transition-all duration-300">

@@ -92,14 +92,17 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
   <div class="flex-grow min-h-0 w-full flex flex-col lg:flex-row p-1 sm:p-2 lg:p-4 lg:px-6 gap-2 sm:gap-4 lg:gap-8 justify-center lg:items-stretch max-w-[1600px] mx-auto transition-colors duration-300">
     
     <!-- LEFT: SEO Description (Desktop only) -->
-    <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10 overflow-y-auto custom-scrollbar min-h-0 pr-2">
-      <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
-           [innerHTML]="i18n.t(computedSeoDescKey)()">
+    @if (!hideLeftPanel) {
+      <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10 overflow-y-auto custom-scrollbar min-h-0 pr-2">
+        <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
+             [innerHTML]="i18n.t(computedSeoDescKey)()">
+        </div>
       </div>
-    </div>
+    }
 
     <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 max-w-[800px] w-full self-center lg:self-stretch z-10 animate-fade-in">
+    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 w-full self-center lg:self-stretch z-10 animate-fade-in"
+         [class.max-w-[800px]]="!hideLeftPanel" [class.max-w-[1200px]]="hideLeftPanel">
       <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <!-- Project custom content into center area -->
@@ -174,6 +177,7 @@ export class GameLayoutComponent implements OnInit {
   
   @Input() showRules: boolean = false;
   @Input() showMobileSidebar: boolean = false;
+  @Input() hideLeftPanel: boolean = false;
   
   @Input() seoDescKey?: string;
 

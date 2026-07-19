@@ -62,9 +62,9 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
             </div>
             
             <div class="mt-12 pt-8 border-t border-[var(--color-border-card)] text-center">
-              <h3 class="text-xl font-bold mb-4">{{ i18n.t('blog.cta_title')() }}</h3>
-              <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
-                {{ i18n.t('blog.cta_btn')() }}
+              <h3 class="text-xl font-bold mb-4">{{ rawMeta()?.relatedGameId ? i18n.t('blog.cta_title_game')() || i18n.t('blog.cta_title')() : i18n.t('blog.cta_title')() }}</h3>
+              <a [routerLink]="rawMeta()?.relatedGameId ? ['/', i18n.currentLang(), 'games', rawMeta()?.relatedGameId] : ['/', i18n.currentLang(), 'lobby']" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
+                {{ rawMeta()?.relatedGameId ? i18n.t('blog.cta_btn_game')() || i18n.t('blog.cta_btn')() : i18n.t('blog.cta_btn')() }}
               </a>
             </div>
           </article>

@@ -80,6 +80,10 @@ func (e *NonogramEngine) setupBoard() {
 		e.Width, e.Height = 10, 10
 	case "hard":
 		e.Width, e.Height = 15, 15
+	case "expert":
+		e.Width, e.Height = 20, 20
+	case "master":
+		e.Width, e.Height = 25, 25
 	}
 
 	gen := NewGenerator()

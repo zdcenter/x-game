@@ -12,6 +12,7 @@
   [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
+  [hideLeftPanel]="hideLeftPanel()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="changeSingleDifficulty($event)"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
@@ -95,8 +96,11 @@
             <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto flex flex-col p-4 min-h-[400px]"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
-              <div class="m-auto flex flex-col items-center">
-                <div class="nonogram-board prevent-select bg-slate-50 rounded-md shadow-md border-2 border-slate-400"
+              <div class="flex flex-col items-center"
+                   [class.m-auto]="!hideLeftPanel()"
+                   [class.mx-auto]="hideLeftPanel()"
+                   [class.mt-2]="hideLeftPanel()">
+                <div class="nonogram-board prevent-select bg-[var(--color-bg-base)] rounded-md shadow-md border-2 border-slate-400"
                      (contextmenu)="onContextMenu($event)"
                      [style.--cell-size.px]="cellSize()"
                    [style.--grid-width]="store.width()"

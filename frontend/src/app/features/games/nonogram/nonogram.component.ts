@@ -134,6 +134,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   // A typical cell is 20-30px. Max hints could be half the width.
   readonly maxHintsCount = computed(() => Math.ceil(this.store.width() / 2));
   
+  readonly hideLeftPanel = computed(() => this.store.width() > 15);
+
   readonly cellSize = computed(() => {
      const w = this.store.width();
      const h = this.store.height();
@@ -145,14 +147,15 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
      const vw = this.windowSize.size().w;
      const vh = this.windowSize.size().h;
+     const hideLeft = this.hideLeftPanel();
 
      let availW: number;
      if (vw >= 1536) {
        // 2xl: left(360) + right(360) + gaps(80) + padding(48)
-       availW = vw - 360 - 360 - 128;
+       availW = hideLeft ? vw - 360 - 100 : vw - 360 - 360 - 128;
      } else if (vw >= 1280) {
        // xl: left(280) + right(300) + gaps(80) + padding(48)
-       availW = vw - 280 - 300 - 128;
+       availW = hideLeft ? vw - 300 - 100 : vw - 280 - 300 - 128;
      } else if (vw >= 1024) {
        // lg: NO left panel, right(260) + gaps(48) + padding(32)
        availW = vw - 260 - 80;
@@ -165,10 +168,17 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
      const availH = vh - 150;
 
      const sizeW = Math.floor(availW / totalCols);
-     const sizeH = Math.floor(availH / totalRows);
+     
+     let finalSize = sizeW;
+     // For normal grids, constrain by height to fit everything in screen without scrolling.
+     // For large grids (focus mode), relax vertical constraint to maximize width and allow vertical scroll.
+     if (!hideLeft) {
+       const sizeH = Math.floor(availH / totalRows);
+       finalSize = Math.min(sizeW, sizeH);
+     }
 
-     // Use the smaller constraint, minimum 28px, maximum 120px
-     return Math.max(28, Math.min(sizeW, sizeH, 120));
+     // Use the constraint, minimum 20px, maximum 120px
+     return Math.max(20, Math.min(finalSize, 120));
   });
 
   private touchTimer: any;

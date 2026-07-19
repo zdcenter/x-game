@@ -24,6 +24,33 @@ export interface GameRouteDef extends GameConfig {
 
 export const GAME_DEFINITIONS: GameRouteDef[] = [
   {
+    id: GameId.Nonogram,
+    route: '/games/nonogram',
+    titleKey: 'lobby.nonogram',
+    iconEmoji: '🎨',
+    loadComponent: () => import('../../features/games/nonogram/nonogram.component').then(m => m.NonogramComponent),
+    modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' },
+      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_score', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
+    ],
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_nonogram_5x5', desc: '5x5' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_nonogram_10x10', desc: '10x10' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_nonogram_15x15', desc: '15x15' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_expert', descKey: 'game.diff_nonogram_20x20', desc: '20x20' },
+      { id: GameDifficulty.Master, labelKey: 'game.diff_master', descKey: 'game.diff_nonogram_25x25', desc: '25x25' }
+    ],
+    recommendations: ['minesweeper', 'sudoku'],
+    multiRound: true, coverImage: "og-minesweeper.png",
+    tutorial: [
+      { icon: '🎨', title: 'tutorial.nonogram.goal',     description: 'tutorial.nonogram.goal_desc' },
+      { icon: '🔢', title: 'tutorial.nonogram.hints',    description: 'tutorial.nonogram.hints_desc' },
+      { icon: '👆', title: 'tutorial.nonogram.fill',     description: 'tutorial.nonogram.fill_desc' },
+      { icon: '❌', title: 'tutorial.nonogram.cross',    description: 'tutorial.nonogram.cross_desc' },
+    ]
+  },
+  {
     id: GameId.Minesweeper,
     route: '/games/minesweeper',
     titleKey: 'lobby.minesweeper',
@@ -352,31 +379,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { icon: '📚', title: 'tutorial.idiom.story',    description: 'tutorial.idiom.story_desc' },
     ]
   },
-  {
-    id: GameId.Nonogram,
-    route: '/games/nonogram',
-    titleKey: 'lobby.nonogram',
-    iconEmoji: '🎨',
-    loadComponent: () => import('../../features/games/nonogram/nonogram.component').then(m => m.NonogramComponent),
-    modes: [
-      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' },
-      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_score', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
-    ],
-    difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_nonogram_5x5', desc: '5x5' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_nonogram_10x10', desc: '10x10' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_nonogram_15x15', desc: '15x15' }
-    ],
-    recommendations: ['minesweeper', 'sudoku'],
-    multiRound: true, coverImage: "og-minesweeper.png",
-    tutorial: [
-      { icon: '🎨', title: 'tutorial.nonogram.goal',     description: 'tutorial.nonogram.goal_desc' },
-      { icon: '🔢', title: 'tutorial.nonogram.hints',    description: 'tutorial.nonogram.hints_desc' },
-      { icon: '👆', title: 'tutorial.nonogram.fill',     description: 'tutorial.nonogram.fill_desc' },
-      { icon: '❌', title: 'tutorial.nonogram.cross',    description: 'tutorial.nonogram.cross_desc' },
-    ]
-  },
+
   {
     id: GameId.Classic2048,
     route: '/games/classic2048',

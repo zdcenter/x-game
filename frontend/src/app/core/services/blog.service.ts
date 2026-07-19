@@ -20,6 +20,7 @@ export interface BlogPostMeta {
   published?: boolean;
   sort_order?: number;
   cover_image?: string;
+  relatedGameId?: string;
   en: BlogLanguageMeta;
   zh: BlogLanguageMeta;
 }
@@ -46,6 +47,7 @@ function apiToMeta(p: BlogPostAPI): BlogPostMeta {
     published: p.published,
     sort_order: p.sort_order,
     cover_image: p.cover_image,
+    // Add relatedGameId extraction here if it ever comes from backend API, currently static from JSON
     en: {
       title: p.en.title,
       description: p.en.description,
@@ -73,11 +75,13 @@ export class BlogService {
   private base = environment.apiUrl;
 
   getBlogPosts(): Observable<BlogPostMeta[]> {
-    return this.http.get<BlogPostMeta[]>('/assets/blog/index.json');
+    const t = new Date().getTime();
+    return this.http.get<BlogPostMeta[]>(`/assets/blog/index.json?t=${t}`);
   }
 
   getBlogPost(slug: string): Observable<BlogPostMeta> {
-    return this.http.get<BlogPostMeta>(`/assets/blog/${slug}.json`);
+    const t = new Date().getTime();
+    return this.http.get<BlogPostMeta>(`/assets/blog/${slug}.json?t=${t}`);
   }
 
   // ---- Admin API ----

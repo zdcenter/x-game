@@ -1,5 +1,33 @@
 [
   {
+    "id": "nonogram-strategy",
+    "date": "2026-07-19",
+    "en": {
+      "title": "Nonogram Strategy: Step-by-Step Guide to Solving Puzzles",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "zh": {
+      "title": "数织 (Nonogram) 详细攻略：一步一步教你解题",
+      "description": "这是一篇从入门到进阶的数织（Nonogram/Picross）详细解题攻略，通过图文并茂的实例，一步步教你如何运用逻辑和技巧完成解谜。",
+      "keywords": "数织, nonogram, picross, 攻略, 解题思路, 逻辑解谜",
+      "readTime": "12 分钟阅读",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "数织",
+        "攻略",
+        "解密"
+      ]
+    }
+  },
+  {
     "id": "gomoku-strategy-guide",
     "date": "2026-06-16",
     "en": {
@@ -8,7 +36,11 @@
       "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
       "readTime": "9 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Gomoku", "Strategy", "Board Games"]
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
     },
     "zh": {
       "title": "五子棋策略指南：从随机落子到稳定制胜",
@@ -16,7 +48,11 @@
       "keywords": "五子棋, 策略指南, 棋盘游戏, 战术, 双三, 活四",
       "readTime": "9 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["五子棋", "策略", "棋盘游戏"]
+      "tags": [
+        "五子棋",
+        "策略",
+        "棋盘游戏"
+      ]
     }
   },
   {
@@ -28,7 +64,11 @@
       "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
       "readTime": "8 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Water Sort", "Strategy", "Puzzle"]
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
     },
     "zh": {
       "title": "水管排序攻略：从新手到高手的完整指南",
@@ -36,7 +76,11 @@
       "keywords": "水管排序, 颜色排序, 策略攻略, 逻辑游戏, 益智技巧",
       "readTime": "8 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["水管排序", "策略", "益智"]
+      "tags": [
+        "水管排序",
+        "策略",
+        "益智"
+      ]
     }
   },
   {
@@ -48,7 +92,11 @@
       "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
       "readTime": "8 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Tetris", "Strategy", "Multiplayer"]
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
     },
     "zh": {
       "title": "方块对战策略：如何在PK模式中占据主导",
@@ -56,7 +104,11 @@
       "keywords": "方块对战, 俄罗斯方块策略, PK模式, T-Spin, 叠块管理, 竞技方块",
       "readTime": "8 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["俄罗斯方块", "策略", "多人对战"]
+      "tags": [
+        "俄罗斯方块",
+        "策略",
+        "多人对战"
+      ]
     }
   },
   {
@@ -68,7 +120,11 @@
       "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
       "readTime": "8 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Sokoban", "Guide", "Strategy"]
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
     },
     "zh": {
       "title": "推箱子：从入门到精通的完整策略指南",
@@ -76,7 +132,11 @@
       "keywords": "推箱子, 益智游戏, 攻略, 技巧, 死锁",
       "readTime": "8 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["推箱子", "攻略", "技巧"]
+      "tags": [
+        "推箱子",
+        "攻略",
+        "技巧"
+      ]
     }
   },
   {
@@ -88,7 +148,11 @@
       "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
       "readTime": "7 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Minesweeper", "Logic", "Math"]
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
     },
     "zh": {
       "title": "扫雷背后的隐藏逻辑：完整策略指南",
@@ -96,7 +160,11 @@
       "keywords": "扫雷, 逻辑, 概率, 益智游戏, 策略",
       "readTime": "7 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["扫雷", "逻辑", "数学"]
+      "tags": [
+        "扫雷",
+        "逻辑",
+        "数学"
+      ]
     }
   },
   {
@@ -108,7 +176,11 @@
       "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
       "readTime": "8 min read",
       "author": "Puzzle PK Team",
-      "tags": ["1A2B", "Algorithms", "Codebreaker"]
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
     },
     "zh": {
       "title": "精通 1A2B（猜数字）：策略、算法与演绎推理的艺术",
@@ -116,7 +188,11 @@
       "keywords": "1A2B, 猜数字, 密码战, 算法, 策略, 信息论",
       "readTime": "8 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["1A2B", "算法", "密码战"]
+      "tags": [
+        "1A2B",
+        "算法",
+        "密码战"
+      ]
     }
   },
   {
@@ -128,7 +204,11 @@
       "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
       "readTime": "7 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Sudoku", "Brain Health", "Education"]
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
     },
     "zh": {
       "title": "为什么每天玩数独对大脑有益？科学解答",
@@ -136,7 +216,11 @@
       "keywords": "数独, 大脑训练, 记忆力, 认知健康, 减压, 逻辑",
       "readTime": "7 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["数独", "大脑健康", "教育"]
+      "tags": [
+        "数独",
+        "大脑健康",
+        "教育"
+      ]
     }
   },
   {
@@ -148,7 +232,11 @@
       "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
       "readTime": "5 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Education", "Math", "Parenting"]
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
     },
     "zh": {
       "title": "为什么24点是小学生最好的脑力训练游戏",
@@ -156,7 +244,11 @@
       "keywords": "24点游戏, 脑力训练, 儿童教育游戏, 小学数学, 口算能力",
       "readTime": "5分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["教育", "数学", "育儿"]
+      "tags": [
+        "教育",
+        "数学",
+        "育儿"
+      ]
     }
   },
   {
@@ -168,7 +260,11 @@
       "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
       "readTime": "6 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Logic", "Sudoku", "Beginners"]
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
     },
     "zh": {
       "title": "儿童数独入门：如何无痛引导孩子爱上逻辑推理",
@@ -176,7 +272,11 @@
       "keywords": "儿童数独, 逻辑谜题, 益智游戏, 儿童发展, 演绎推理",
       "readTime": "6 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["逻辑", "数独", "入门"]
+      "tags": [
+        "逻辑",
+        "数独",
+        "入门"
+      ]
     }
   },
   {
@@ -188,7 +288,11 @@
       "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
       "readTime": "7 min read",
       "author": "Puzzle PK Team",
-      "tags": ["Multiplayer", "Social Skills", "Education"]
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
     },
     "zh": {
       "title": "双人互动益智游戏：被家长忽视的隐藏教育红利",
@@ -196,7 +300,11 @@
       "keywords": "双人教育游戏, 合作解谜游戏, 竞技学习, 儿童游戏, 认知能力",
       "readTime": "7 分钟阅读",
       "author": "Puzzle PK 团队",
-      "tags": ["多人游戏", "社交技能", "教育"]
+      "tags": [
+        "多人游戏",
+        "社交技能",
+        "教育"
+      ]
     }
   }
 ]

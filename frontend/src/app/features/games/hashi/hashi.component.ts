@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -56,6 +56,11 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   // Interaction state
   selectedIsland = signal<{r: number, c: number} | null>(null);
   touchStartIsland = signal<{r: number, c: number} | null>(null);
+  
+  hideLeftPanel = computed(() => {
+    const grid = this.store.boardGrid();
+    return grid.length > 15 || (grid[0] && grid[0].length > 15);
+  });
 
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;

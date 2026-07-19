@@ -186,6 +186,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   isFrozen = computed(() => this.frozenRemaining() > 0);
+  
+  hideLeftPanel = computed(() => {
+    const board = this.store.board();
+    // Hide left panel if grid is larger than 16 columns (e.g. 30x16, 30x20, 30x24)
+    return board.length > 0 && board[0].length > 16;
+  });
 
   elapsedTime = signal<string>('00:00');
   elapsedSeconds = signal<number>(0);

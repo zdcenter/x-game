@@ -11,12 +11,21 @@
 .top-left {
   grid-column: 1;
   grid-row: 1;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  background: inherit;
 }
 
 .col-hints {
   grid-column: 2;
   grid-row: 1;
   display: grid;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: inherit;
 }
 
 .col-hint-item {
@@ -28,6 +37,10 @@
   grid-column: 1;
   grid-row: 2;
   display: grid;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: inherit;
 }
 
 .row-hint-item {
