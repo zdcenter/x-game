@@ -23,7 +23,7 @@ import { GameMode } from '../../core/models/game.model';
             <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
               {{ i18n.t('leaderboard.title')() }}
             </h1>
-            <p class="text-sm text-[var(--color-text-muted)]">{{ selectedGame()?.titleKey ? i18n.t(selectedGame()!.titleKey)() : '' }}</p>
+            <p class="text-sm text-[var(--color-text-muted)]">{{ selectedGameId() === 'global' ? i18n.t('leaderboard.global_desc')() : (selectedGame()?.titleKey ? i18n.t(selectedGame()!.titleKey)() : '') }}</p>
           </div>
         </div>
 
@@ -33,6 +33,9 @@ import { GameMode } from '../../core/models/game.model';
           <div class="flex-1 min-w-[160px]">
             <select class="w-full px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm"
                     (change)="onGameChange($event)">
+                <option value="global" [selected]="selectedGameId() === 'global'">
+                  🌍 {{ i18n.t('leaderboard.global')() }}
+                </option>
               @for (g of games; track g.id) {
                 <option [value]="g.id" [selected]="g.id === selectedGameId()">
                   {{ g.iconEmoji }} {{ i18n.t(g.titleKey)() || g.id }}
@@ -42,8 +45,9 @@ import { GameMode } from '../../core/models/game.model';
           </div>
 
           <!-- Mode selector -->
-          <select class="px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm"
-                  (change)="onModeChange($event)">
+          @if (selectedGameId() !== 'global') {
+            <select class="px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm"
+                    (change)="onModeChange($event)">
             @for (m of availableModes(); track m) {
               <option [value]="m" [selected]="m === selectedMode()">{{ m }}</option>
             }
@@ -74,6 +78,7 @@ import { GameMode } from '../../core/models/game.model';
               {{ i18n.t('leaderboard.weekly')() }}
             </button>
           </div>
+          }
         </div>
 
         <!-- My rank -->
@@ -103,8 +108,13 @@ import { GameMode } from '../../core/models/game.model';
             <div class="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] border-b border-[var(--color-border-card)]">
               <div class="col-span-1 text-center">#</div>
               <div class="col-span-5">{{ i18n.t('leaderboard.player')() }}</div>
-              <div class="col-span-3 text-right">{{ isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')() }}</div>
-              <div class="col-span-3 text-right">{{ i18n.t('leaderboard.plays')() }}</div>
+              @if (selectedGameId() === 'global') {
+                <div class="col-span-3 text-right">{{ i18n.t('leaderboard.level')() }}</div>
+                <div class="col-span-3 text-right">{{ i18n.t('leaderboard.xp')() }}</div>
+              } @else {
+                <div class="col-span-3 text-right">{{ isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')() }}</div>
+                <div class="col-span-3 text-right">{{ i18n.t('leaderboard.plays')() }}</div>
+              }
             </div>
 
             @for (entry of data()!.entries; track entry.user_id) {
@@ -128,18 +138,26 @@ import { GameMode } from '../../core/models/game.model';
                     }
                   </span>
                 </div>
-                <!-- Score/Time -->
-                <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-to)]">
-                  @if (isTimeType()) {
-                    {{ formatTime(entry.best_time) }}
-                  } @else {
-                    {{ entry.best_score | number }}
-                  }
-                </div>
-                <!-- Plays -->
-                <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
-                  {{ entry.play_count }}
-                </div>
+                <!-- Score/Time / Level/XP -->
+                @if (selectedGameId() === 'global') {
+                  <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-from)]">
+                    Lv.{{ entry.level }}
+                  </div>
+                  <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
+                    {{ entry.xp | number }} XP
+                  </div>
+                } @else {
+                  <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-to)]">
+                    @if (isTimeType()) {
+                      {{ formatTime(entry.best_time) }}
+                    } @else {
+                      {{ entry.best_score | number }}
+                    }
+                  </div>
+                  <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
+                    {{ entry.play_count }}
+                  </div>
+                }
               </div>
             }
           }
@@ -155,7 +173,7 @@ export class LeaderboardComponent implements OnInit {
 
   games = GAME_DEFINITIONS;
 
-  selectedGameId = signal<string>(GAME_DEFINITIONS[0]?.id ?? 'minesweeper');
+  selectedGameId = signal<string>('global');
   selectedMode = signal<string>('single');
   selectedDiff = signal<string>('medium');
   selectedPeriod = signal<string>('all');

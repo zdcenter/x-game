@@ -12,6 +12,8 @@ export interface LeaderboardEntry {
   play_count: number;
   win_count: number;
   is_current_user: boolean;
+  xp?: number;
+  level?: number;
 }
 
 export interface LeaderboardResponse {

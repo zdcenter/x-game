@@ -1,7 +1,7 @@
 .prevent-select {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .nonogram-board {
@@ -15,7 +15,7 @@
   top: 0;
   left: 0;
   z-index: 30;
-  background: inherit;
+  background: transparent;
 }
 
 .col-hints {
@@ -25,12 +25,22 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: inherit;
+  background: var(--color-bg-base);
+  border-top: 3px solid var(--color-text-main);
+  border-left: 3px solid var(--color-text-main);
+  border-right: 3px solid var(--color-text-main);
 }
 
 .col-hint-item {
   font-size: calc(var(--cell-size) * 0.4);
   line-height: 1.2;
+  border-right: 1px solid var(--color-border-thick);
+}
+.col-hint-item.thick-r {
+  border-right: 2px solid var(--color-text-main);
+}
+.col-hint-item.no-border-r {
+  border-right: none;
 }
 
 .row-hints {
@@ -40,20 +50,46 @@
   position: sticky;
   left: 0;
   z-index: 20;
-  background: inherit;
+  background: var(--color-bg-base);
+  border-top: 3px solid var(--color-text-main);
+  border-left: 3px solid var(--color-text-main);
+  border-bottom: 3px solid var(--color-text-main);
 }
 
 .row-hint-item {
   font-size: calc(var(--cell-size) * 0.5);
+  border-bottom: 1px solid var(--color-border-thick);
+}
+.row-hint-item.thick-b {
+  border-bottom: 2px solid var(--color-text-main);
+}
+.row-hint-item.no-border-b {
+  border-bottom: none;
 }
 
 .cells-grid {
   grid-column: 2;
   grid-row: 2;
   display: grid;
+  background: var(--color-bg-base);
+  border: 3px solid var(--color-text-main);
+  touch-action: none;
 }
 
 .cell {
-  border-width: 1px;
-  border-style: solid;
+  border-right: 1px solid var(--color-border-thick);
+  border-bottom: 1px solid var(--color-border-thick);
+  box-sizing: border-box;
+}
+.cell.thick-r {
+  border-right: 2px solid var(--color-text-main);
+}
+.cell.thick-b {
+  border-bottom: 2px solid var(--color-text-main);
+}
+.cell.no-border-r {
+  border-right: none;
+}
+.cell.no-border-b {
+  border-bottom: none;
 }

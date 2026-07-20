@@ -100,7 +100,7 @@
                    [class.m-auto]="!hideLeftPanel()"
                    [class.mx-auto]="hideLeftPanel()"
                    [class.mt-2]="hideLeftPanel()">
-                <div class="nonogram-board prevent-select bg-[var(--color-bg-base)] rounded-md shadow-md border-2 border-slate-400"
+                <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
                      [style.--cell-size.px]="cellSize()"
                    [style.--grid-width]="store.width()"
@@ -108,24 +108,24 @@
                    [style.grid-template-columns]="'auto ' + (store.width() * cellSize()) + 'px'"
                    [style.grid-template-rows]="'auto ' + (store.height() * cellSize()) + 'px'">
                 
-                <div class="top-left border-r-2 border-b-2 border-slate-400"></div>
+                <div class="top-left"></div>
 
-                <div class="col-hints border-b-2 border-slate-400"
+                <div class="col-hints"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let col of store.colHints(); let x = index" 
-                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-slate-900 font-bold"
-                       [class.border-r-2]="(x + 1) % 5 === 0 && x !== store.width() - 1"
-                       [class.border-slate-400]="(x + 1) % 5 === 0">
+                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-[var(--color-text-main)] font-bold"
+                       [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
+                       [class.no-border-r]="x === store.width() - 1">
                     <div *ngFor="let hint of col">{{ hint }}</div>
                   </div>
                 </div>
 
-                <div class="row-hints border-r-2 border-slate-400"
+                <div class="row-hints"
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
-                       class="row-hint-item flex justify-end items-center pr-2 text-slate-900 font-bold"
-                       [class.border-b-2]="(y + 1) % 5 === 0 && y !== store.height() - 1"
-                       [class.border-slate-400]="(y + 1) % 5 === 0">
+                       class="row-hint-item flex justify-end items-center pr-2 text-[var(--color-text-main)] font-bold"
+                       [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
+                       [class.no-border-b]="y === store.height() - 1">
                     <div *ngFor="let hint of row; let last = last" [class.mr-1]="!last">{{ hint }}</div>
                   </div>
                 </div>
@@ -135,18 +135,22 @@
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
                   <ng-container *ngFor="let row of store.grid(); let y = index">
                     <div *ngFor="let cell of row; let x = index" 
-                         class="cell border-slate-300 cursor-pointer flex items-center justify-center transition-colors"
-                         [class.border-b-2]="(y + 1) % 5 === 0 && y !== store.height() - 1"
-                         [class.border-r-2]="(x + 1) % 5 === 0 && x !== store.width() - 1"
-                         [class.border-slate-400]="((x + 1) % 5 === 0 || (y + 1) % 5 === 0)"
-                         [class.bg-slate-900]="cell === 1"
-                         [class.bg-white]="cell === 0"
-                         [class.hover:bg-slate-200]="cell === 0"
-                         (mousedown)="handleCellClick(x, y, $event)"
-                         (touchstart)="handleTouchStart(x, y, $event)"
-                         (touchmove)="handleTouchMove()"
-                         (touchend)="handleTouchEnd(x, y, $event)"
-                         (touchcancel)="handleTouchCancel()">
+                         class="cell cursor-pointer flex items-center justify-center transition-colors"
+                         [attr.data-x]="x"
+                         [attr.data-y]="y"
+                         [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
+                         [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
+                         [class.no-border-r]="x === store.width() - 1"
+                         [class.no-border-b]="y === store.height() - 1"
+                         [class.bg-[var(--color-text-main)]]="cell === 1"
+                         [class.bg-transparent]="cell === 0"
+                         [class.hover:bg-[var(--color-bg-main)]]="cell === 0"
+                         (mousedown)="handleMouseDown(x, y, $event)"
+                         (mouseenter)="handleMouseEnter(x, y)"
+                         (touchstart)="handleTouchStart2(x, y, $event)"
+                         (touchmove)="handleTouchMove2($event)"
+                         (touchend)="handleTouchEnd2()"
+                         (touchcancel)="handleTouchEnd2()">
                       
                       <div *ngIf="cell === 2" class="text-rose-500 font-bold" [style.font-size.px]="cellSize() * 0.7">✕</div>
                     </div>

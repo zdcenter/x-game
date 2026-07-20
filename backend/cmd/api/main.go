@@ -91,6 +91,7 @@ func main() {
 	// Leaderboard (optional auth to show my_rank)
 	leaderboard := v1.Group("/leaderboard")
 	leaderboard.Use(middleware.OptionalProtected())
+	leaderboard.Get("/global", rest.GetGlobalLeaderboard)
 	leaderboard.Get("/my-ranks", middleware.Protected(), rest.GetMyRanks)
 	leaderboard.Get("/:gameId", rest.GetLeaderboard)
 

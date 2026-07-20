@@ -1226,5 +1226,9 @@
     "message": "我们使用 Cookie 和类似技术来个性化内容、定制和衡量广告，并提供更好的体验。点击接受即表示您同意我们的 Cookie 政策。",
     "learnMore": "了解更多",
     "accept": "全部接受"
-  }
+  },
+  "leaderboard.global": "全站总榜 (Global)",
+  "leaderboard.global_desc": "全平台玩家总经验值排行",
+  "leaderboard.level": "等级",
+  "leaderboard.xp": "经验值"
 }

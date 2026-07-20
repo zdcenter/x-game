@@ -181,56 +181,62 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
      return Math.max(20, Math.min(finalSize, 120));
   });
 
-  private touchTimer: any;
-  private touchMoved = false;
+  private isDragging = false;
+  private dragTargetState: any = -1;
 
-  handleTouchStart(x: number, y: number, event: TouchEvent) {
-    this.touchMoved = false;
-    // Long press -> opposite of current drawMode
-    const oppositeMode = this.store.drawMode() === 'fill' ? 'cross' : 'fill';
-    this.touchTimer = setTimeout(() => {
-      if (!this.touchMoved) {
-        this.store.handleCellClick(x, y, false, oppositeMode);
-        this.haptic.vibrateMedium();
-        this.touchTimer = null;
+  handleMouseDown(x: number, y: number, event: MouseEvent) {
+    if (event.button === 2) event.preventDefault();
+    this.isDragging = true;
+    const isRightClick = event.button === 2;
+    this.dragTargetState = this.store.determineNextState(x, y, isRightClick);
+    this.store.setCell(x, y, this.dragTargetState);
+    
+    const mouseUpHandler = () => {
+      this.isDragging = false;
+      this.dragTargetState = -1;
+      document.removeEventListener('mouseup', mouseUpHandler);
+    };
+    document.addEventListener('mouseup', mouseUpHandler);
+  }
+
+  handleMouseEnter(x: number, y: number) {
+    if (this.isDragging && this.dragTargetState !== -1) {
+      this.store.setCell(x, y, this.dragTargetState);
+    }
+  }
+
+  handleTouchStart2(x: number, y: number, event: TouchEvent) {
+    if (event.touches.length > 1) return;
+    this.isDragging = true;
+    this.dragTargetState = this.store.determineNextState(x, y, false);
+    this.store.setCell(x, y, this.dragTargetState);
+  }
+
+  handleTouchMove2(event: TouchEvent) {
+    if (!this.isDragging || event.touches.length === 0) return;
+    event.preventDefault(); // Prevent scrolling while drawing
+
+    const touch = event.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
+    
+    if (element && element.classList.contains('cell')) {
+      const xStr = element.getAttribute('data-x');
+      const yStr = element.getAttribute('data-y');
+      if (xStr && yStr) {
+        const x = parseInt(xStr, 10);
+        const y = parseInt(yStr, 10);
+        this.store.setCell(x, y, this.dragTargetState);
       }
-    }, 400);
-  }
-
-  handleTouchMove() {
-    this.touchMoved = true;
-    if (this.touchTimer) {
-      clearTimeout(this.touchTimer);
-      this.touchTimer = null;
     }
   }
 
-  handleTouchEnd(x: number, y: number, event: TouchEvent) {
-    if (this.touchTimer && !this.touchMoved) {
-      clearTimeout(this.touchTimer);
-      this.touchTimer = null;
-      // Short press -> use current drawMode
-      this.store.handleCellClick(x, y, false, this.store.drawMode());
-    }
-    if (!this.touchMoved && event.cancelable) {
-      event.preventDefault();
-    }
-  }
-
-  handleTouchCancel() {
-    if (this.touchTimer) {
-      clearTimeout(this.touchTimer);
-      this.touchTimer = null;
-    }
+  handleTouchEnd2() {
+    this.isDragging = false;
+    this.dragTargetState = -1;
   }
 
   handleCellClick(x: number, y: number, event: MouseEvent) {
-    if (event.button === 2) {
-      event.preventDefault();
-      this.store.handleCellClick(x, y, true);
-    } else {
-      this.store.handleCellClick(x, y, false);
-    }
+    // Replaced by handleMouseDown
   }
 
   useHint() {

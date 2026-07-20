@@ -256,6 +256,41 @@ export class NonogramStore extends BaseGameStore {
     this.drawMode.set(mode);
   }
 
+  determineNextState(x: number, y: number, isRightClick: boolean = false, forceMode?: 'fill' | 'cross'): CellState {
+    const state = this.localState();
+    if (!state) return 0;
+    const current = state.grid[y][x];
+    const targetMode = forceMode ? forceMode : (isRightClick ? 'cross' : this.drawMode());
+    
+    if (targetMode === 'fill') {
+      return current === 1 ? 0 : 1;
+    } else {
+      return current === 2 ? 0 : 2;
+    }
+  }
+
+  setCell(x: number, y: number, nextState: CellState) {
+    if (this.status() !== GameStatus.Playing) return;
+
+    const state = this.localState();
+    if (!state) return;
+
+    const current = state.grid[y][x];
+    if (current === nextState) return; // No change needed
+
+    if (this.currentRoomMode() === GameMode.Steal) {
+       this.ws.send({ action: C2SAction.Move, x, y });
+       return;
+    }
+    
+    const newGrid = state.grid.map(row => [...row]);
+    this.history.update(h => [...h, { x, y, prevState: current }]);
+    newGrid[y][x] = nextState;
+    this.audio.playPuzzle('move');
+    this.localState.set({ ...state, grid: newGrid });
+    this.checkProgressAndWin(newGrid, state);
+  }
+
   handleCellClick(x: number, y: number, isRightClick: boolean = false, forceMode?: 'fill' | 'cross') {
     if (this.status() !== GameStatus.Playing) return;
 
