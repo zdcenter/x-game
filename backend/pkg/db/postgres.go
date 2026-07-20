@@ -81,8 +81,7 @@ func InitPostgres() {
 	}
 
 	MigrateModesAndDifficulties(DB)
-	DB.Exec("UPDATE gm_blog_posts SET published = true WHERE slug = 
-onogram-strategy\")
+	DB.Exec("UPDATE gm_blog_posts SET published = true WHERE slug = 'nonogram-strategy'")
 
 	// Seed default data
 	Seed()
