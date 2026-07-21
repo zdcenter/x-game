@@ -105,8 +105,8 @@
                      [style.--cell-size.px]="cellSize()"
                    [style.--grid-width]="store.width()"
                    [style.--grid-height]="store.height()"
-                   [style.grid-template-columns]="'auto ' + (store.width() * cellSize()) + 'px'"
-                   [style.grid-template-rows]="'auto ' + (store.height() * cellSize()) + 'px'">
+                   [style.grid-template-columns]="'max-content max-content'"
+                   [style.grid-template-rows]="'max-content max-content'">
                 
                 <div class="top-left"></div>
 

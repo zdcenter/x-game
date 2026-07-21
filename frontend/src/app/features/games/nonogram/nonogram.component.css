@@ -37,7 +37,7 @@
   border-right: 1px solid var(--color-border-thick);
 }
 .col-hint-item.thick-r {
-  border-right: 2px solid var(--color-text-main);
+  border-right: 2px solid var(--color-text-muted);
 }
 .col-hint-item.no-border-r {
   border-right: none;
@@ -61,7 +61,7 @@
   border-bottom: 1px solid var(--color-border-thick);
 }
 .row-hint-item.thick-b {
-  border-bottom: 2px solid var(--color-text-main);
+  border-bottom: 2px solid var(--color-text-muted);
 }
 .row-hint-item.no-border-b {
   border-bottom: none;
@@ -82,10 +82,10 @@
   box-sizing: border-box;
 }
 .cell.thick-r {
-  border-right: 2px solid var(--color-text-main);
+  border-right: 2px solid var(--color-text-muted);
 }
 .cell.thick-b {
-  border-bottom: 2px solid var(--color-text-main);
+  border-bottom: 2px solid var(--color-text-muted);
 }
 .cell.no-border-r {
   border-right: none;
