@@ -183,6 +183,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   private isDragging = false;
   private dragTargetState: any = -1;
+  private touchTimer: any;
+  private touchMoved = false;
+  private touchStartX = -1;
+  private touchStartY = -1;
 
   handleMouseDown(x: number, y: number, event: MouseEvent) {
     if (event.button === 2) event.preventDefault();
@@ -208,13 +212,36 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   handleTouchStart2(x: number, y: number, event: TouchEvent) {
     if (event.touches.length > 1) return;
     this.isDragging = true;
-    this.dragTargetState = this.store.determineNextState(x, y, false);
-    this.store.setCell(x, y, this.dragTargetState);
+    this.touchMoved = false;
+    this.touchStartX = x;
+    this.touchStartY = y;
+    this.dragTargetState = -1;
+
+    this.touchTimer = setTimeout(() => {
+      if (!this.touchMoved && this.isDragging) {
+        this.dragTargetState = this.store.determineNextState(x, y, true);
+        this.store.setCell(x, y, this.dragTargetState);
+        if (navigator.vibrate) navigator.vibrate(50);
+        this.touchTimer = null;
+      }
+    }, 400);
   }
 
   handleTouchMove2(event: TouchEvent) {
     if (!this.isDragging || event.touches.length === 0) return;
     event.preventDefault(); // Prevent scrolling while drawing
+
+    if (!this.touchMoved) {
+      this.touchMoved = true;
+      if (this.touchTimer) {
+        clearTimeout(this.touchTimer);
+        this.touchTimer = null;
+      }
+      if (this.dragTargetState === -1) {
+        this.dragTargetState = this.store.determineNextState(this.touchStartX, this.touchStartY, false);
+        this.store.setCell(this.touchStartX, this.touchStartY, this.dragTargetState);
+      }
+    }
 
     const touch = event.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
@@ -225,12 +252,24 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       if (xStr && yStr) {
         const x = parseInt(xStr, 10);
         const y = parseInt(yStr, 10);
-        this.store.setCell(x, y, this.dragTargetState);
+        if (this.dragTargetState !== -1) {
+          this.store.setCell(x, y, this.dragTargetState);
+        }
       }
     }
   }
 
   handleTouchEnd2() {
+    if (!this.isDragging) return;
+    
+    if (!this.touchMoved && this.touchTimer) {
+      clearTimeout(this.touchTimer);
+      this.touchTimer = null;
+      if (this.dragTargetState === -1) {
+        this.dragTargetState = this.store.determineNextState(this.touchStartX, this.touchStartY, false);
+        this.store.setCell(this.touchStartX, this.touchStartY, this.dragTargetState);
+      }
+    }
     this.isDragging = false;
     this.dragTargetState = -1;
   }

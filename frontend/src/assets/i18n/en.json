@@ -1159,7 +1159,7 @@
   "seo.nonogram.title": "Nonogram - Puzzle PK",
   "seo.nonogram.desc": "Play the classic Nonogram (Picross) puzzle game online for free! Use logic to reveal hidden pixel art. Enjoy solo mode or race friends in multiplayer PK.",
   "seo.nonogram.keywords": "nonogram, logic puzzle, online game, speed run",
-  "game.nonogram.seo_desc": "<h2>About Nonogram</h2><p>Nonogram is a classic logic puzzle game where you use number clues to reveal a hidden pixel art picture.</p><h3>How to Play</h3><p>The numbers on the edges indicate the lengths of consecutive filled cells in that row or column. Use cross-referencing to logically deduce which cells must be filled or left blank.</p><h3>Features</h3><ul><li>Multiple grid sizes (5x5, 10x10, 15x15) for all skill levels.</li><li>All puzzles are uniquely solvable by pure logic.</li><li>Compete with others online in Speed mode!</li></ul>",
+  "game.nonogram.seo_desc": "<h2>About Nonogram</h2><p>Nonogram is a classic logic puzzle game where you use number clues to reveal a hidden pixel art picture.</p><h3>How to Play</h3><p>The numbers on the edges indicate the lengths of consecutive filled cells in that row or column. Use cross-referencing to logically deduce which cells must be filled or left blank.</p><h3>Features</h3><ul><li>Multiple grid sizes (5x5, 10x10, 15x15, 20x20, 25x25) for all skill levels.</li><li>All puzzles are uniquely solvable by pure logic.</li><li>Compete with others online in Speed mode!</li></ul>",
   "lobby.classic2048": "Classic 2048",
   "lobby.classic2048.desc": "The classic 4x4 sliding puzzle!",
   "app.title.classic2048": "Classic 2048",
