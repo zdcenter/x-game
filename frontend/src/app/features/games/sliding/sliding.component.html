@@ -114,22 +114,24 @@
 
             <!-- Aspect Square Board -->
             <div
-              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-block-board)] rounded-xl lg:rounded-3xl p-2 lg:p-4 shadow-2xl border border-[var(--color-border-card)] flex-shrink-0 touch-none select-none w-full max-w-[400px] aspect-square"
-                (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-border-card)] rounded-xl lg:rounded-3xl p-1 sm:p-[6px] shadow-[inset_0_6px_15px_var(--color-tile-shadow),0_10px_30px_var(--color-tile-shadow)] border-2 border-[var(--color-border-thick)] flex-shrink-0 touch-none select-none w-full max-w-[min(100%,65vh,500px)] lg:max-w-[min(100%,70vh,600px)] aspect-square"
+                (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)"
+                style="container-type: inline-size;">
 
 
 
               <!-- Tiles -->
               <div class="w-full h-full relative">
                 @for (tile of tiles(); track tile.val) {
-                <div class="absolute p-1 transition-transform duration-200 ease-out top-0 left-0" [style.width]="(100 / tile.size) + '%'"
+                <div class="absolute p-[1.5px] sm:p-[3px] transition-transform duration-200 ease-out top-0 left-0" [style.width]="(100 / tile.size) + '%'"
                   [style.height]="(100 / tile.size) + '%'" [style.transform]="'translate(' + (tile.col * 100) + '%, ' + (tile.row * 100) + '%)'">
                   <button (click)="onTileClick(tile)" [disabled]="store.status() !== GameStatus.Playing"
-                    class="w-full h-full rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl md:text-4xl transition-all"
+                    class="w-full h-full rounded-lg sm:rounded-xl flex items-center justify-center font-black transition-all duration-150"
+                    [style.font-size]="'calc(100cqi / ' + tile.size + ' * 0.45)'"
                     [ngClass]="{
-                        'bg-[var(--color-tile-bg)] border-2 border-b-[6px] border-r-[4px] border-[var(--color-tile-border)] text-[var(--color-text-main)] shadow-[0_4px_10px_var(--color-tile-shadow)] active:translate-y-1 active:translate-x-[2px] active:border-b-2 active:border-r-2': hintTarget() !== tile.val,
-                        'bg-orange-500 border-2 border-b-[6px] border-r-[4px] border-orange-700 text-white shadow-[0_4px_20px_rgba(249,115,22,0.6)] animate-pulse ring-4 ring-orange-500 active:translate-y-1 active:translate-x-[2px] active:border-b-2 active:border-r-2': hintTarget() === tile.val,
-                        'hover:brightness-110 cursor-pointer': store.status() === GameStatus.Playing,
+                        'bg-gradient-to-br from-[var(--color-bg-card)] to-[var(--color-block-board)] border-solid border-t-2 border-l-2 border-[color:var(--color-border-card)] border-r-[2px] sm:border-r-[3px] border-r-[color:var(--color-border-thick)] border-b-[4px] sm:border-b-[6px] border-b-[color:var(--color-border-thick)] text-[var(--color-text-main)] shadow-[0_4px_10px_var(--color-cell-shadow)] active:translate-y-[2px] active:translate-x-[1px] active:border-b-[2px] active:border-r-[1px] active:shadow-sm': hintTarget() !== tile.val,
+                        'bg-orange-500 border-solid border-t-2 border-l-2 border-orange-400 border-r-[2px] sm:border-r-[3px] border-r-orange-600 border-b-[4px] sm:border-b-[6px] border-b-orange-700 text-white shadow-[0_4px_20px_rgba(249,115,22,0.6)] animate-pulse active:translate-y-[2px] active:translate-x-[1px] active:border-b-[2px] active:border-r-[1px] active:shadow-sm': hintTarget() === tile.val,
+                        'hover:brightness-105 cursor-pointer': store.status() === GameStatus.Playing,
                         'cursor-default opacity-90': store.status() !== GameStatus.Playing
                       }">
                     {{ tile.val }}

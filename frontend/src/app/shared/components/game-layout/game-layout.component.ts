@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, booleanAttribute } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
@@ -6,6 +6,7 @@ import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
 import { RoomChatComponent } from '../room-chat/room-chat.component';
+import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
 import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -13,7 +14,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, RoomChatComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, RoomChatComponent, DifficultySelectorComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
@@ -36,24 +37,6 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 
         <ng-container header-center>
           <ng-content select="[header-center]"></ng-content>
-          @if (currentRoomMode === GameMode.Single && availableDifficulties.length > 0 && status !== GameStatus.Waiting) {
-            <div class="relative group mx-1 sm:mx-2 z-20">
-              <select class="appearance-none bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] px-2 sm:px-3 py-1 sm:py-1.5 pr-6 sm:pr-8 rounded-lg sm:rounded-xl outline-none hover:border-amber-500/50 focus:border-amber-500 transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-sm hover:shadow-md"
-                      [ngModel]="currentDifficulty" (ngModelChange)="onDifficultyChange($event)">
-                @for (diff of availableDifficulties; track diff.id) {
-                  <option [value]="diff.id">
-                    {{ i18n.t(diff.labelKey)() }}
-                    @if (diff.descKey || diff.desc) {
-                      ({{ diff.descKey ? i18n.t(diff.descKey)() : diff.desc }})
-                    }
-                  </option>
-                }
-              </select>
-              <div class="absolute inset-y-0 right-0 flex items-center px-1.5 sm:px-2 pointer-events-none text-[var(--color-text-muted)] group-hover:text-amber-500 transition-colors">
-                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-              </div>
-            </div>
-          }
         </ng-container>
 
         <ng-container header-right>
@@ -103,6 +86,17 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     <!-- CENTER: Game Arena -->
     <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 w-full self-center lg:self-stretch z-10 animate-fade-in"
          [class.max-w-[800px]]="!hideLeftPanel" [class.max-w-[1200px]]="hideLeftPanel">
+      
+      @if (!hideDefaultDifficulty && currentRoomMode === GameMode.Single && availableDifficulties.length > 1 && status !== GameStatus.Waiting) {
+        <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1">
+          <app-difficulty-selector 
+            [availableDifficulties]="availableDifficulties"
+            [currentDifficulty]="currentDifficulty"
+            (difficultyChange)="onDifficultyChange($event)">
+          </app-difficulty-selector>
+        </div>
+      }
+
       <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <!-- Project custom content into center area -->
@@ -178,6 +172,7 @@ export class GameLayoutComponent implements OnInit {
   @Input() showRules: boolean = false;
   @Input() showMobileSidebar: boolean = false;
   @Input() hideLeftPanel: boolean = false;
+  @Input({ transform: booleanAttribute }) hideDefaultDifficulty: boolean = false;
   
   @Input() seoDescKey?: string;
 

@@ -21,6 +21,7 @@ import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mod
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
@@ -33,7 +34,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent,  GameResultOverlayComponent, GameWaitingRoomComponent,  DragDropModule,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent],
+  imports: [CommonModule, FormsModule, CellComponent,  GameResultOverlayComponent, GameWaitingRoomComponent,  DragDropModule,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent, DifficultySelectorComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
