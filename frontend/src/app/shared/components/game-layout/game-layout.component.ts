@@ -76,7 +76,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     
     <!-- LEFT: SEO Description (Desktop only) -->
     @if (!hideLeftPanel) {
-      <div class="hidden xl:flex w-[320px] xl:w-[400px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10 overflow-y-auto custom-scrollbar min-h-0 pr-2">
+      <div class="hidden xl:flex w-[260px] xl:w-[300px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10 overflow-y-auto custom-scrollbar min-h-0 pr-2">
         <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
              [innerHTML]="i18n.t(computedSeoDescKey)()">
         </div>
@@ -85,7 +85,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 
     <!-- CENTER: Game Arena -->
     <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 w-full self-center lg:self-stretch z-10 animate-fade-in"
-         [class.max-w-[800px]]="!hideLeftPanel" [class.max-w-[1200px]]="hideLeftPanel">
+         [class.max-w-[960px]]="!hideLeftPanel" [class.max-w-[1200px]]="hideLeftPanel">
       
       @if (!hideDefaultDifficulty && currentRoomMode === GameMode.Single && availableDifficulties.length > 1 && status !== GameStatus.Waiting) {
         <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1">
@@ -105,7 +105,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     </div>
 
     <!-- RIGHT: Right Column / Multiplayer Sidebar -->
-    <div class="w-[320px] xl:w-[400px] flex-shrink-0 hidden lg:flex flex-col gap-4">
+    <div class="w-[260px] xl:w-[300px] flex-shrink-0 hidden lg:flex flex-col gap-4">
       @if (settingsService.settings().multiplayer_enabled === 'true') {
         <app-game-lobby-panel
           #lobbyPanel

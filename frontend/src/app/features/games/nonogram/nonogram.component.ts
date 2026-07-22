@@ -21,14 +21,13 @@ import { AdService } from '../../../core/services/ad.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { HapticService } from '../../../core/services/haptic.service';
 
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule,  GameWaitingRoomComponent,   GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, DifficultySelectorComponent],
+  imports: [CommonModule, FormsModule,  GameWaitingRoomComponent,   GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
