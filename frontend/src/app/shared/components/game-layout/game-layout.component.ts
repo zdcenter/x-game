@@ -10,6 +10,7 @@ import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-s
 import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { AuthStore } from '../../../core/auth/auth.store';
 
 @Component({
   selector: 'app-game-layout',
@@ -87,13 +88,22 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
     <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 w-full self-center lg:self-stretch z-10 animate-fade-in"
          [class.max-w-[960px]]="!hideLeftPanel" [class.max-w-[1200px]]="hideLeftPanel">
       
-      @if (!hideDefaultDifficulty && currentRoomMode === GameMode.Single && availableDifficulties.length > 1 && status !== GameStatus.Waiting) {
-        <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1">
-          <app-difficulty-selector 
-            [availableDifficulties]="availableDifficulties"
-            [currentDifficulty]="currentDifficulty"
-            (difficultyChange)="onDifficultyChange($event)">
-          </app-difficulty-selector>
+      @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting) {
+        <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1 gap-2">
+          @if (settingsService.settings().multiplayer_enabled === 'true') {
+            <button (click)="quickCreatePkRoom()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
+              <span class="group-hover:scale-110 transition-transform">⚔️</span>
+              <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '1秒建PK房' }}</span>
+              <span class="sm:hidden">PK</span>
+            </button>
+          }
+          @if (!hideDefaultDifficulty && availableDifficulties.length > 1) {
+            <app-difficulty-selector 
+              [availableDifficulties]="availableDifficulties"
+              [currentDifficulty]="currentDifficulty"
+              (difficultyChange)="onDifficultyChange($event)">
+            </app-difficulty-selector>
+          }
         </div>
       }
 
@@ -155,6 +165,7 @@ export class GameLayoutComponent implements OnInit {
   settingsService = inject(SettingsService);
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
+  authStore = inject(AuthStore);
 
   @Input({ required: true }) gameId!: string;
   @Input() title: string = '';
@@ -221,5 +232,21 @@ export class GameLayoutComponent implements OnInit {
     if (this.lobbyPanel) {
       this.lobbyPanel.openUpdateRoomModal(data);
     }
+  }
+
+  quickCreatePkRoom() {
+    const config = this.gameRegistry.getConfig(this.gameId);
+    if (!config) return;
+    const pkMode = config.modes.find(m => m.id !== GameMode.Single);
+    if (!pkMode) return;
+    const username = this.authStore.currentUser()?.username || this.authStore.guestId;
+    const name = `${username}'s PK`;
+    this.createRoom.emit({
+      name,
+      gameId: this.gameId,
+      mode: pkMode.id,
+      difficulty: this.currentDifficulty,
+      target: 1
+    });
   }
 }

@@ -980,6 +980,7 @@
   "game.waiting_challenger": "Waiting for Challenger...",
   "game.waiting_host": "Waiting for Host...",
   "game.start_pk": "START PK",
+  "game.quick_pk": "Quick PK",
   "game.get_ready": "Get Ready!",
   "game.cleared_first": "You cleared the board first!",
   "game.defeat": "DEFEAT!",

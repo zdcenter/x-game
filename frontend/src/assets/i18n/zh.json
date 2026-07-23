@@ -353,6 +353,7 @@
   "game.dismiss_confirm": "确认解散",
   "game.dismiss_success": "房间已成功解散",
   "game.cancel": "取消",
+  "game.quick_pk": "1秒开战",
   "game.no_hint_available": "没有可用的提示了。",
   "game.confirm": "确认",
   "game.recommendations": "你可能也喜欢",
