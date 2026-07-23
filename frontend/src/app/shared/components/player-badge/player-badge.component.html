@@ -182,9 +182,3 @@
   </div>
 }
 
-<!-- Emoji Picker Trigger (Only for current player) -->
-@if (isMe) {
-  <div class="absolute -top-2 -right-2 z-40">
-    <app-emoji-picker (selected)="onEmojiSelected($event)"></app-emoji-picker>
-  </div>
-}

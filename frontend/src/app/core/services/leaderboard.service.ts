@@ -11,6 +11,7 @@ export interface LeaderboardEntry {
   best_score: number;
   play_count: number;
   win_count: number;
+  rating: number;
   is_current_user: boolean;
   xp?: number;
   level?: number;

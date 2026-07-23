@@ -71,6 +71,7 @@ func SubmitStat(c fiber.Ctx) error {
 			Mode:       req.Mode,
 			Difficulty: req.Difficulty,
 			PlayCount:  1,
+			Rating:     1000,
 		}
 		if req.Won {
 			stat.WinCount = 1
@@ -113,8 +114,20 @@ func SubmitStat(c fiber.Ctx) error {
 		db.DB.Save(&stat)
 	}
 
-	// Award XP
 	isPK := service.IsPKMode(req.Mode)
+	if isPK {
+		if req.Won {
+			stat.Rating += 25
+		} else {
+			stat.Rating -= 15
+			if stat.Rating < 0 {
+				stat.Rating = 0
+			}
+		}
+		db.DB.Save(&stat)
+	}
+
+	// Award XP
 	xpAmount := service.CalcEventXP(isPK, req.Won)
 	xpResult := service.AddXP(userID, xpAmount)
 

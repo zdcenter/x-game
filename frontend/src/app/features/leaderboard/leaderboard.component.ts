@@ -112,8 +112,12 @@ import { GameMode } from '../../core/models/game.model';
                 <div class="col-span-3 text-right">{{ i18n.t('leaderboard.level')() }}</div>
                 <div class="col-span-3 text-right">{{ i18n.t('leaderboard.xp')() }}</div>
               } @else {
-                <div class="col-span-3 text-right">{{ isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')() }}</div>
-                <div class="col-span-3 text-right">{{ i18n.t('leaderboard.plays')() }}</div>
+                <div class="col-span-3 text-right">
+                  {{ isPKMode() ? i18n.t('leaderboard.rating')() : (isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')()) }}
+                </div>
+                <div class="col-span-3 text-right">
+                  {{ isPKMode() ? i18n.t('leaderboard.win_rate')() : i18n.t('leaderboard.plays')() }}
+                </div>
               }
             </div>
 
@@ -148,14 +152,20 @@ import { GameMode } from '../../core/models/game.model';
                   </div>
                 } @else {
                   <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-to)]">
-                    @if (isTimeType()) {
+                    @if (isPKMode()) {
+                      {{ entry.rating | number }}
+                    } @else if (isTimeType()) {
                       {{ formatTime(entry.best_time) }}
                     } @else {
                       {{ entry.best_score | number }}
                     }
                   </div>
                   <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
-                    {{ entry.play_count }}
+                    @if (isPKMode()) {
+                      {{ getWinRate(entry) }}% ({{ entry.win_count }}/{{ entry.play_count }})
+                    } @else {
+                      {{ entry.play_count }}
+                    }
                   </div>
                 }
               </div>
@@ -200,6 +210,10 @@ export class LeaderboardComponent implements OnInit {
     return timeGames.includes(this.selectedGameId()) && this.selectedMode() === GameMode.Single;
   });
 
+  isPKMode = computed(() => {
+    return this.selectedMode() !== GameMode.Single;
+  });
+
   ngOnInit(): void {
     this.load();
   }
@@ -209,7 +223,7 @@ export class LeaderboardComponent implements OnInit {
     this.leaderboardService.getLeaderboard(this.selectedGameId(), {
       mode: this.selectedMode(),
       difficulty: this.selectedDiff(),
-      type: this.isTimeType() ? 'time' : 'score',
+      type: this.isPKMode() ? 'rating' : (this.isTimeType() ? 'time' : 'score'),
       period: this.selectedPeriod(),
     }).subscribe({
       next: r => { this.data.set(r); this.isLoading.set(false); },
@@ -254,5 +268,10 @@ export class LeaderboardComponent implements OnInit {
     const m = Math.floor(s / 60).toString().padStart(2, '0');
     const sec = (s % 60).toString().padStart(2, '0');
     return `${m}:${sec}`;
+  }
+
+  getWinRate(entry: LeaderboardEntry): string {
+    if (entry.play_count === 0) return '0.0';
+    return ((entry.win_count / entry.play_count) * 100).toFixed(1);
   }
 }

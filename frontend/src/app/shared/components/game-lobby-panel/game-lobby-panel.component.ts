@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -61,6 +61,8 @@ export class GameLobbyPanelComponent implements OnInit {
   @Output() createRoom = new EventEmitter<{ name: string; gameId: string; mode: string; difficulty: string; password?: string; target: number }>();
 
   activeTab: 'rooms' | 'online' = 'rooms';
+  isMatching = signal(false);
+  matchingGameId = signal<string | null>(null);
 
   playerId = computed(() => this.authStore.currentUser()?.username || this.authStore.guestId);
 
@@ -96,6 +98,15 @@ export class GameLobbyPanelComponent implements OnInit {
   otherOnlinePlayers = computed(() =>
     this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId())
   );
+
+  constructor() {
+    effect(() => {
+      if (this.wsService.matchSuccessEvent() > 0) {
+        this.isMatching.set(false);
+        this.matchingGameId.set(null);
+      }
+    });
+  }
 
   ngOnInit() {}
 
@@ -166,6 +177,45 @@ export class GameLobbyPanelComponent implements OnInit {
     }
   }
 
+  toggleQuickMatch() {
+    if (this.isMatching()) {
+      this.isMatching.set(false);
+      this.matchingGameId.set(null);
+      this.wsService.sendLobby({ type: 'cancel_match' });
+    } else {
+      if (!this.currentGameId) {
+        this.toastService.show(this.t('game.quick_match_no_game') || '先在下方选择一款游戏', 'info');
+        return;
+      }
+      
+      this.isMatching.set(true);
+      this.matchingGameId.set(this.currentGameId);
+      // Determine what to match for.
+      const config = this.gameRegistry.getConfig(this.currentGameId);
+      const pkMode = config?.modes.find(m => m.id !== GameMode.Single)?.id || GameMode.Score;
+      const difficulty = config?.difficulties[0]?.id || GameDifficulty.Medium;
+      
+      this.wsService.sendLobby({
+        type: 'match',
+        gameId: this.currentGameId,
+        mode: pkMode,
+        difficulty: difficulty,
+        target: 1
+      });
+      this.audioService.playClick();
+      
+      // Auto cancel after 60s
+      setTimeout(() => {
+        if (this.isMatching()) {
+          this.isMatching.set(false);
+          this.matchingGameId.set(null);
+          this.wsService.sendLobby({ type: 'cancel_match' });
+          this.toastService.show(this.t('game.match_timeout') || '匹配超时，请稍后再试', 'info');
+        }
+      }, 60000);
+    }
+  }
+
   onDismissRoom(roomId: string) {
     this.toastService.confirm({
       title: this.t('game.dismiss_title'),
@@ -212,6 +262,12 @@ export class GameLobbyPanelComponent implements OnInit {
     if (modeId.includes(GameMode.Steal)) return this.t('game.steal_mode');
     if (modeId.includes(GameMode.Speed)) return this.t('game.speed_mode');
     return modeId;
+  }
+
+  getMatchingGameTitle(): string {
+    const id = this.matchingGameId();
+    if (!id) return '';
+    return this.t(`lobby.${id}`) || id;
   }
 
   getGameLabel(gameId: string): string {

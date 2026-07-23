@@ -16,6 +16,7 @@ type LeaderboardEntry struct {
 	BestScore     int    `json:"best_score"`
 	PlayCount     int    `json:"play_count"`
 	WinCount      int    `json:"win_count"`
+	Rating        int    `json:"rating"`
 	IsCurrentUser bool   `json:"is_current_user"`
 }
 
@@ -40,7 +41,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 
 	// Build query
 	q := db.DB.Table("gm_user_game_stats AS s").
-		Select("s.user_id, u.username, s.best_time, s.best_score, s.play_count, s.win_count").
+		Select("s.user_id, u.username, s.best_time, s.best_score, s.play_count, s.win_count, s.rating").
 		Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
 		Where("s.game_id = ? AND s.mode = ? AND s.difficulty = ?", gameID, mode, difficulty)
 
@@ -50,6 +51,8 @@ func GetLeaderboard(c fiber.Ctx) error {
 
 	if rankType == "time" {
 		q = q.Where("s.best_time > 0").Order("s.best_time ASC")
+	} else if rankType == "rating" {
+		q = q.Order("s.rating DESC")
 	} else {
 		q = q.Where("s.best_score > 0").Order("s.best_score DESC")
 	}
@@ -61,6 +64,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 		BestScore int    `gorm:"column:best_score"`
 		PlayCount int    `gorm:"column:play_count"`
 		WinCount  int    `gorm:"column:win_count"`
+		Rating    int    `gorm:"column:rating"`
 	}
 
 	var rows []rawRow
@@ -77,6 +81,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 			BestScore:     r.BestScore,
 			PlayCount:     r.PlayCount,
 			WinCount:      r.WinCount,
+			Rating:        r.Rating,
 			IsCurrentUser: r.UserID == currentUserID,
 		}
 		if e.IsCurrentUser {
@@ -121,6 +126,8 @@ func getUserRank(gameID, mode, difficulty, rankType, period string, userID uint)
 		q = q.Where("s.best_time > 0 AND s.best_time < ?", stat.BestTime)
 	} else if rankType == "score" && stat.BestScore > 0 {
 		q = q.Where("s.best_score > ?", stat.BestScore)
+	} else if rankType == "rating" {
+		q = q.Where("s.rating > ?", stat.Rating)
 	} else {
 		return 0
 	}

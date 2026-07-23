@@ -33,7 +33,7 @@
         </app-hashi-lobby>
       } @else {
         <!-- PLAY VIEW -->
-        <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
+        <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto custom-scrollbar"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
           
           @if (store.localStatus() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {

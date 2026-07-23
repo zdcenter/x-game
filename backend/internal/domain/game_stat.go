@@ -15,6 +15,7 @@ type UserGameStat struct {
 	BestTime   int    `gorm:"default:0"`      // Fastest time in seconds (0 means not achieved)
 	PlayCount  int    `gorm:"default:0"`      // Total games played
 	WinCount   int    `gorm:"default:0"`      // Total games won (for applicable games)
+	Rating     int    `gorm:"default:1000"`   // Matchmaking rating (MMR)
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }

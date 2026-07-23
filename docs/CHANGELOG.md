@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-07-23] - 🏆 核心功能增强：小游戏 PK 模式段位积分系统 (Rating Leaderboard)
+
+### ✨ 新功能 (Features)
+- **PK 段位积分 (Rating) 引入**：为所有的 PK 对战模式新增了段位积分体系。新玩家初始积分为 1000 分，赢得一场比赛可获得 25 积分，输掉一场比赛扣除 15 积分（最低降至 0 分）。
+- **动态积分排行榜**：更新了全局大厅中的排行榜界面。当玩家在下拉框中选择任意 PK 模式时，排行榜将自动切换其视图，原先的“最佳成绩/用时”将会变为极具竞技感的 **“积分 (Rating)”** 与 **“胜率 (Win Rate)”** 列。
+- **全端翻译与国际化适配**：同步新增中英双语词条，对“积分 (Rating)”与“胜率 (Win Rate)”的展现进行了全面 UI 适配与字体渲染优化。
+
 ## [2026-07-19] - 🧩 数织 (Nonogram) 扩充高阶难度与极致小屏适配
 
 ### ✨ 新功能与适配优化 (Features & UI Enhancements)
@@ -703,3 +710,8 @@ Admin 面板新增「数据库管理」模块，支持全量或按表备份、�
 
 ### Added
 - **Hashi (Bridges)**: Added Multiplayer PK Speed mode (竞速模式). Players can now create rooms and compete to solve Hashi puzzles first.
+
+## [Unreleased]
+### Added
+- **社交系统**: 新增局内表情互动系统 (In-game Emotes)，支持在对局中发送气泡表情包。
+- **匹配系统**: 新增快速随机匹配系统 (Quick Matchmaking)，玩家可一键匹配进入随机房间。

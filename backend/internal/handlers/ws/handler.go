@@ -179,6 +179,7 @@ func Register(router fiber.Router) {
 		wsManager.Lobby.AddPlayer(player)
 
 		defer func() {
+			wsManager.GlobalMatchmaker.RemoveRequest(playerID)
 			wsManager.Lobby.RemovePlayer(player.ID)
 			c.Close()
 		}()
@@ -209,6 +210,26 @@ func Register(router fiber.Router) {
 						action["senderName"] = username
 						action["timestamp"] = time.Now().UnixMilli()
 						wsManager.Lobby.BroadcastMessage(action)
+					} else if action["type"] == "match" {
+						gameID, _ := action["gameId"].(string)
+						mode, _ := action["mode"].(string)
+						difficulty, _ := action["difficulty"].(string)
+						targetFloat, _ := action["target"].(float64)
+						target := int(targetFloat)
+						if target <= 0 { target = 1 }
+						
+						req := &wsManager.MatchRequest{
+							PlayerID:   playerID,
+							Username:   username,
+							GameID:     gameID,
+							Mode:       mode,
+							Difficulty: difficulty,
+							Target:     target,
+							Client:     player,
+						}
+						wsManager.GlobalMatchmaker.AddRequest(req)
+					} else if action["type"] == "cancel_match" {
+						wsManager.GlobalMatchmaker.RemoveRequest(playerID)
 					}
 				}
 			}

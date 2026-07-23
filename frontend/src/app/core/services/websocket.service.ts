@@ -61,6 +61,9 @@ export class WebSocketService {
 
   // Triggered when the websocket disconnects unexpectedly
   readonly unexpectedDisconnectEvent = signal<number>(0);
+  
+  // Triggered when matchmaking succeeds
+  readonly matchSuccessEvent = signal<number>(0);
 
   // Triggered when an emoji is received
   readonly emojiReceivedEvent = signal<{senderId: string, emoji: string} | null>(null);
@@ -261,6 +264,28 @@ export class WebSocketService {
         setTimeout(() => {
           this.broadcastMessages.update(msgs => msgs.filter(m => m !== msg));
         }, 15000);
+      } else if (msg.type === 'match_success') {
+        this.matchSuccessEvent.update(v => v + 1);
+        this.toastService.show(this.i18n.t('game.match_found')() || 'Match found!', 'success');
+        
+        this.crossGameJoin.setPendingJoin({
+          game: msg.game,
+          roomId: msg.roomId,
+          mode: msg.mode,
+          difficulty: msg.difficulty,
+          host: msg.host || ''
+        });
+        
+        const lang = this.router.url.split('/')[1] || 'zh';
+        const targetUrl = `/${lang}/games/${msg.game}`;
+        
+        if (this.router.url === targetUrl) {
+          this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
+            this.router.navigate([targetUrl]);
+          });
+        } else {
+          this.router.navigate([targetUrl]);
+        }
       } else if (msg.type === S2CEvent.Error) {
         console.warn('Lobby WS error:', msg.message);
         this.lobbyDisconnectIntentional = true;

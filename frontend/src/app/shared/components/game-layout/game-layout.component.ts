@@ -7,15 +7,17 @@ import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.co
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
 import { RoomChatComponent } from '../room-chat/room-chat.component';
 import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
+import { FloatingEmojiComponent } from '../floating-emoji/floating-emoji.component';
 import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { WebSocketService } from '../../../core/services/websocket.service';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, RoomChatComponent, DifficultySelectorComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, RoomChatComponent, DifficultySelectorComponent, FloatingEmojiComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
@@ -107,11 +109,22 @@ import { AuthStore } from '../../../core/auth/auth.store';
         </div>
       }
 
-      <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-hidden"
+      <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto custom-scrollbar"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <!-- Project custom content into center area -->
         <ng-content></ng-content>
       </div>
+
+      <!-- Emoji Panel -->
+      @if (currentRoomId) {
+        <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
+          @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
+            <button (click)="sendEmoji(em)" class="w-10 h-10 lg:w-12 lg:h-12 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-xl lg:text-2xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
+              {{ em }}
+            </button>
+          }
+        </div>
+      }
     </div>
 
     <!-- RIGHT: Right Column / Multiplayer Sidebar -->
@@ -155,6 +168,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
   }
   
   <app-room-chat></app-room-chat>
+  <app-floating-emoji></app-floating-emoji>
   
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
   <ng-content select="[game-overlay]"></ng-content>
@@ -166,6 +180,7 @@ export class GameLayoutComponent implements OnInit {
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
   authStore = inject(AuthStore);
+  wsService = inject(WebSocketService);
 
   @Input({ required: true }) gameId!: string;
   @Input() title: string = '';
@@ -248,5 +263,9 @@ export class GameLayoutComponent implements OnInit {
       difficulty: this.currentDifficulty,
       target: 1
     });
+  }
+
+  sendEmoji(emoji: string) {
+    this.wsService.sendEmoji(emoji);
   }
 }
