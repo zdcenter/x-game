@@ -88,6 +88,8 @@
 /zh/docs/watersort
 /en/blog/gomoku-strategy-guide
 /zh/blog/gomoku-strategy-guide
+/en/blog/nonogram-strategy
+/zh/blog/nonogram-strategy
 /en/blog/water-sort-puzzle-guide
 /zh/blog/water-sort-puzzle-guide
 /en/blog/tetris-battle-strategy

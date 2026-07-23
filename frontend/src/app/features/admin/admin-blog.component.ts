@@ -292,7 +292,7 @@ async function copyToClipboard(text: string): Promise<void> {
                 </div>
                 <div>
                   <label class="block text-xs opacity-50 mb-1">Author ZH</label>
-                  <input [(ngModel)]="form.author_zh" type="text" placeholder="Puzzle PK 团队" class="input-field w-full">
+                  <input [(ngModel)]="form.author_zh" type="text" placeholder="益智擂台团队" class="input-field w-full">
                 </div>
                 <div>
                   <label class="block text-xs opacity-50 mb-1">Tags ZH (comma-separated)</label>
@@ -712,7 +712,7 @@ export class AdminBlogComponent implements OnInit {
       slug: '', date: today, published: true, sort_order: 0, cover_image: '',
       title_en: '', desc_en: '', keywords_en: '', read_time_en: '5 min read', author_en: 'Puzzle PK Team',
       tags_en: [], content_en: '',
-      title_zh: '', desc_zh: '', keywords_zh: '', read_time_zh: '5 分钟阅读', author_zh: 'Puzzle PK 团队',
+      title_zh: '', desc_zh: '', keywords_zh: '', read_time_zh: '5 分钟阅读', author_zh: '益智擂台团队',
       tags_zh: [], content_zh: '',
     };
   }

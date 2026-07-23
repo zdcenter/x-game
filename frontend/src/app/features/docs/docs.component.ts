@@ -236,8 +236,8 @@ export class DocsComponent {
         const gameTitle = this.getGameTitle(game.id);
         const gameDesc = this.getGameDesc(game.id);
         const pageTitle = lang === 'zh'
-          ? `${gameTitle} 玩法教程 - Puzzle PK`
-          : `How to Play ${gameTitle} - Rules & Tutorial | Puzzle PK`;
+          ? `${gameTitle} 玩法教程 - ${this.i18n.t('app.title')()}`
+          : `How to Play ${gameTitle} - Rules & Tutorial | ${this.i18n.t('app.title')()}`;
         const desc = gameDesc || (lang === 'zh'
           ? `学习如何玩 ${gameTitle}，查看规则和攻略。`
           : `Learn how to play ${gameTitle}. Read the rules, strategies, and tutorials.`);

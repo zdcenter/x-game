@@ -953,7 +953,7 @@
   "tutorial.lightsout.logic_desc": "Every puzzle has an exact solution where each cell is clicked at most once. Extra clicks just undo your progress.",
   "tutorial.lightsout.hint": "Hint Button",
   "tutorial.lightsout.hint_desc": "Stuck? Tap 💡 to highlight the next recommended cell to click and get back on track.",
-  "app.title": "Minesweeper",
+  "app.title": "Puzzle PK",
   "minesweeper.status": "Status",
   "minesweeper.restart": "Restart Game",
   "minesweeper.easy": "Easy (9x9)",

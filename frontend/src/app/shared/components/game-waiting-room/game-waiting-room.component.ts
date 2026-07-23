@@ -93,7 +93,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     text = text.replace('[game]', gameName).replace('[room]', this.roomId);
     
     this.shareService.share({
-      title: `${gameName} - Puzzle PK`,
+      title: `${gameName} - ${this.i18n.t('app.title')()}`,
       text: text,
       url: url.toString()
     });

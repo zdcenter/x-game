@@ -168,10 +168,10 @@ export class BlogPostComponent implements OnInit {
 
       untracked(() => {
         // SEO tags
-        this.titleService.setTitle(`${meta.title} - Puzzle PK Blog`);
+        this.titleService.setTitle(`${meta.title} - ${this.i18n.t('app.title')()} Blog`);
         this.metaService.updateTag({ name: 'description', content: meta.description });
         this.metaService.updateTag({ name: 'keywords', content: meta.keywords });
-        this.metaService.updateTag({ property: 'og:title', content: `${meta.title} - Puzzle PK Blog` });
+        this.metaService.updateTag({ property: 'og:title', content: `${meta.title} - ${this.i18n.t('app.title')()} Blog` });
         this.metaService.updateTag({ property: 'og:description', content: meta.description });
 
         // BlogPosting JSON-LD
@@ -184,7 +184,7 @@ export class BlogPostComponent implements OnInit {
           headline: meta.title,
           description: meta.description,
           author: { '@type': 'Organization', name: meta.author || 'Puzzle PK Team' },
-          publisher: { '@type': 'Organization', name: 'Puzzle PK', logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` } },
+          publisher: { '@type': 'Organization', name: this.i18n.t('app.title')(), logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` } },
           datePublished: raw.date,
           dateModified: raw.date,
           url: `${origin}/${lang}/blog/${raw.id}`,

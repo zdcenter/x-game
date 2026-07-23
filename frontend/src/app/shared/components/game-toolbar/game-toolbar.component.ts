@@ -61,7 +61,7 @@ export class GameToolbarComponent {
     const title = config?.titleKey ? this.i18n.t(config.titleKey as any)() : this.gameId;
     
     this.shareService.share({
-      title: `${title} - Puzzle PK`,
+      title: `${title} - ${this.i18n.t('app.title')()}`,
       text: `${this.i18n.t('share.game_invite')() || 'Play this awesome game with me!'} ${title}\n${desc}`,
       url: url
     });

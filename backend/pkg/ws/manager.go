@@ -125,7 +125,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 	cleanDismissedRooms()
 
 	if _, dismissed := DismissedRooms[roomID]; dismissed {
-		return nil, fmt.Errorf(string(domain.ErrRoomDismissed))
+		delete(DismissedRooms, roomID)
 	}
 
 	if _, exists := Rooms[roomID]; exists {
@@ -210,6 +210,10 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 	r, err := JoinRoom(roomID)
 	if err == nil {
 		return r, nil
+	}
+	
+	if err.Error() == string(domain.ErrRoomDismissed) && hostId == "" {
+		return nil, err
 	}
 
 	// If room doesn't exist AND hostId matches (meaning the caller is the creator), create it

@@ -254,7 +254,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     if (statsStr) text += `\n${statsStr}`;
 
     this.shareService.share({
-      title: `Puzzle PK - ${gameName}`,
+      title: `${this.i18n.t('app.title')()} - ${gameName}`,
       text,
       url,
       gameName,
@@ -276,7 +276,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     const text = this.i18n.t('share.new_record_text')()
       .replace('[game]', gameName)
       .replace('[stat]', statStr);
-    this.shareService.share({ title: `Puzzle PK - ${gameName}`, text, url,
+    this.shareService.share({ title: `${this.i18n.t('app.title')()} - ${gameName}`, text, url,
       gameName, gameEmoji: config?.iconEmoji, isWin: true, stats: this.stats });
   }
 
@@ -284,7 +284,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     if (!this.xpResult) return;
     const url = `${getOrigin()}/lobby`;
     const text = this.i18n.t('share.level_up_text')().replace('[level]', String(this.xpResult.level));
-    this.shareService.share({ title: 'Puzzle PK', text, url });
+    this.shareService.share({ title: this.i18n.t('app.title')(), text, url });
   }
 
   shareStreak() {
@@ -297,7 +297,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     const text = this.i18n.t('share.streak_text')()
       .replace('[count]', String(this.streak()))
       .replace('[game]', gameName);
-    this.shareService.share({ title: `Puzzle PK - ${gameName}`, text, url,
+    this.shareService.share({ title: `${this.i18n.t('app.title')()} - ${gameName}`, text, url,
       gameName, gameEmoji: config?.iconEmoji, isWin: true });
   }
 

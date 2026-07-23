@@ -43,7 +43,10 @@ export class SeoService {
       if (seoData) {
         if (seoData.titleKey) {
           const resolved = this.i18n.t(seoData.titleKey)();
-          if (resolved && resolved !== seoData.titleKey) pageTitle = resolved;
+          if (resolved && resolved !== seoData.titleKey) {
+            const appName = this.i18n.t('app.title')();
+            pageTitle = resolved.includes(appName) ? resolved : `${resolved} - ${appName}`;
+          }
         }
         if (seoData.descKey) {
           const resolved = this.i18n.t(seoData.descKey)();
@@ -89,7 +92,7 @@ export class SeoService {
       this.meta.updateTag({ property: 'og:image', content: fullImageUrl });
       this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
       this.meta.updateTag({ property: 'og:type', content: 'website' });
-      this.meta.updateTag({ property: 'og:site_name', content: 'Puzzle PK' });
+      this.meta.updateTag({ property: 'og:site_name', content: lang === 'zh' ? '益智擂台' : 'Puzzle PK' });
       this.meta.updateTag({ property: 'og:locale', content: lang === 'zh' ? 'zh_CN' : 'en_US' });
 
       // Twitter Card
@@ -165,7 +168,7 @@ export class SeoService {
         this.setJsonLd({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          'name': 'Puzzle PK',
+          'name': lang === 'zh' ? '益智擂台' : 'Puzzle PK',
           'url': origin,
           'description': desc,
           'inLanguage': ['en', 'zh-CN'],

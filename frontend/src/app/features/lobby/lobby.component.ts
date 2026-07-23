@@ -187,7 +187,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
     const desc = this.getGameDesc(gameId);
     
     this.shareService.share({
-      title: `${title} - Puzzle PK`,
+      title: `${title} - ${this.i18n.t('app.title')()}`,
       text: `${this.i18n.t('share.game_invite')() || 'Play this awesome game with me!'} ${title}\n${desc}`,
       url: url
     });
