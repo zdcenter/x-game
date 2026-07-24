@@ -86,6 +86,10 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
 
   const clearReconnectInfo = () => {
     if (typeof sessionStorage !== 'undefined') {
+      const room = sessionStorage.getItem(`${prefix}_room`);
+      if (room) {
+        sessionStorage.removeItem(`room_password_${room}`);
+      }
       sessionStorage.removeItem(`${prefix}_room`);
       sessionStorage.removeItem(`${prefix}_mode`);
       sessionStorage.removeItem(`${prefix}_diff`);
@@ -162,14 +166,6 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
       }
 
       if (room && mode) {
-        // Validate the room still exists on the server (prevents stale reconnect after backend restart)
-        const roomStillExists = wsService.activeRooms().some((r: any) => r.id === room || r.roomId === room);
-        if (!roomStillExists) {
-          // Room no longer exists (backend restarted or room was dismissed) — clean up stale data
-          clearReconnectInfo();
-          return null;
-        }
-
         if (mode !== GameMode.Single) {
           wsService.setPendingAction('join');
         }

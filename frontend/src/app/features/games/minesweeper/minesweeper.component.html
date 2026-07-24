@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'minesweeper'"
   [title]="i18n.t('app.title')()"
   [subtitle]="getSubtitle()"

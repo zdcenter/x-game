@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'nonogram'"
   [title]="t('lobby.nonogram')() || 'Nonogram'"
   [subtitle]="getSubtitle()"

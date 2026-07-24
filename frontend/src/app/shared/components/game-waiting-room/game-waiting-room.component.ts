@@ -6,6 +6,8 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { ShareService } from '../../../core/services/share.service';
 import { getHref } from '../../../core/utils/browser.util';
 import { AudioService } from '../../../core/services/audio.service';
+import { FriendService } from '../../../core/services/friend.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-game-waiting-room',
@@ -21,6 +23,8 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
   audioService = inject(AudioService);
+  friendService = inject(FriendService);
+  toast = inject(ToastService);
 
   @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;
@@ -96,6 +100,30 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
       title: `${gameName} - ${this.i18n.t('app.title')()}`,
       text: text,
       url: url.toString()
+    });
+  }
+
+  openFriendList() {
+    this.friendService.togglePanel(true, {
+      gameId: this.gameId,
+      difficulty: this.difficulty,
+      mode: this.mode
+    });
+  }
+
+  isFriend(username: string): boolean {
+    if (username === this.currentUserId) return true;
+    return this.friendService.friends().some(f => f.username === username);
+  }
+
+  addFriend(username: string) {
+    if (this.currentUserId?.startsWith('guest_')) {
+      this.toast.show(this.i18n.t('game.cannot_add_guest')() || 'Cannot add guest players', 'error');
+      return;
+    }
+    this.friendService.sendRequestByUsername(username).subscribe({
+      next: () => this.toast.show(this.i18n.t('game.friend_request_sent')() || 'Friend request sent!', 'success'),
+      error: () => this.toast.show('Failed to send request', 'error')
     });
   }
 

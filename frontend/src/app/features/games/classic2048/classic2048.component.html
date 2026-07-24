@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'classic2048'"
   [title]="i18n.t('app.title.classic2048')()"
   [subtitle]="''"

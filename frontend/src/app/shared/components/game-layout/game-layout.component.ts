@@ -5,7 +5,6 @@ import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
-import { RoomChatComponent } from '../room-chat/room-chat.component';
 import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
 import { FloatingEmojiComponent } from '../floating-emoji/floating-emoji.component';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -13,11 +12,13 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
+import { FriendService } from '../../../core/services/friend.service';
+import { EditRoomService } from '../../../core/services/edit-room.service';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, RoomChatComponent, DifficultySelectorComponent, FloatingEmojiComponent],
+  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
@@ -98,6 +99,11 @@ import { WebSocketService } from '../../../core/services/websocket.service';
               <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '1秒建PK房' }}</span>
               <span class="sm:hidden">PK</span>
             </button>
+            <button (click)="openFriendList()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
+              <span class="group-hover:scale-110 transition-transform">👥</span>
+              <span class="hidden sm:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
+              <span class="sm:hidden">邀请</span>
+            </button>
           }
           @if (!hideDefaultDifficulty && availableDifficulties.length > 1) {
             <app-difficulty-selector 
@@ -105,6 +111,16 @@ import { WebSocketService } from '../../../core/services/websocket.service';
               [currentDifficulty]="currentDifficulty"
               (difficultyChange)="onDifficultyChange($event)">
             </app-difficulty-selector>
+          }
+        </div>
+      }
+      @if (currentRoomMode !== GameMode.Single && status !== GameStatus.Waiting) {
+        <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1 gap-2 animate-fade-in">
+          @if (isHost) {
+            <button (click)="openChangeSettingsGlobal()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
+              <span class="group-hover:rotate-90 transition-transform">⚙️</span>
+              <span>{{ i18n.t('game.change_settings')() || 'Settings' }}</span>
+            </button>
           }
         </div>
       }
@@ -167,7 +183,6 @@ import { WebSocketService } from '../../../core/services/websocket.service';
     </div>
   }
   
-  <app-room-chat></app-room-chat>
   <app-floating-emoji></app-floating-emoji>
   
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
@@ -181,6 +196,8 @@ export class GameLayoutComponent implements OnInit {
   gameRegistry = inject(GameRegistryService);
   authStore = inject(AuthStore);
   wsService = inject(WebSocketService);
+  friendService = inject(FriendService);
+  editRoomService = inject(EditRoomService);
 
   @Input({ required: true }) gameId!: string;
   @Input() title: string = '';
@@ -194,6 +211,7 @@ export class GameLayoutComponent implements OnInit {
   @Input() currentRoomMode: string = GameMode.Single;
   @Input() currentRoomId: string | null = null;
   @Input() status: string = GameStatus.Waiting;
+  @Input() isHost: boolean = false;
   
   @Input() showRules: boolean = false;
   @Input() showMobileSidebar: boolean = false;
@@ -262,6 +280,25 @@ export class GameLayoutComponent implements OnInit {
       mode: pkMode.id,
       difficulty: this.currentDifficulty,
       target: 1
+    });
+  }
+
+  openChangeSettingsGlobal() {
+    if (this.currentRoomId) {
+      this.editRoomService.open({
+        roomId: this.currentRoomId,
+        gameId: this.gameId,
+        mode: this.currentRoomMode,
+        difficulty: this.currentDifficulty
+      });
+    }
+  }
+
+  openFriendList() {
+    this.friendService.togglePanel(true, {
+      gameId: this.gameId,
+      difficulty: this.currentDifficulty,
+      mode: this.currentRoomMode
     });
   }
 

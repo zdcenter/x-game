@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'sudoku'"
   [title]="i18n.t('lobby.sudoku')()"
   [subtitle]="getSubtitle()"

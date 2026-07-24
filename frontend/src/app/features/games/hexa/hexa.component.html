@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'hexa'"
   [title]="t('hexa.title')() || 'Hexa Puzzle'"
   [subtitle]="getSubtitle()"

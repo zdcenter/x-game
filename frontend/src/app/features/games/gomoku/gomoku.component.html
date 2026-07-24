@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'gomoku'"
   [title]="i18n.t('game.gomoku')()"
   [subtitle]="getSubtitle()"

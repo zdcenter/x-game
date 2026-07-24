@@ -7,6 +7,7 @@ import { WebSocketService } from '../../../core/services/websocket.service';
 import { Router } from '@angular/router';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-friend-list',
@@ -21,8 +22,9 @@ export class FriendListComponent implements OnInit {
   i18n = inject(I18nService);
   ws = inject(WebSocketService);
   gameRegistry = inject(GameRegistryService);
+  toastService = inject(ToastService);
 
-  isOpen = signal(false);
+  isOpen = this.friendService.isPanelOpen;
   activeTab = signal<'friends' | 'requests'>('friends');
   selectedFriends = signal<Set<string>>(new Set());
 
@@ -37,10 +39,8 @@ export class FriendListComponent implements OnInit {
   }
 
   togglePanel() {
-    this.isOpen.set(!this.isOpen());
-    if (this.isOpen() && this.auth.currentUser()) {
-      this.friendService.loadFriends().subscribe();
-    } else {
+    this.friendService.togglePanel();
+    if (!this.isOpen()) {
       this.selectedFriends.set(new Set()); // clear selection when closed
     }
   }
@@ -71,7 +71,7 @@ export class FriendListComponent implements OnInit {
       selected.forEach(username => {
         this.friendService.sendInvite(username, myRoom.id);
       });
-      alert(this.i18n.t('game.invite_sent')() || 'Invite sent!');
+      this.toastService.show(this.i18n.t('game.invite_sent')() || 'Invite sent!', 'success');
       this.selectedFriends.set(new Set());
     } else {
       // Not in a room. Check if we are currently on a game page.
@@ -88,11 +88,13 @@ export class FriendListComponent implements OnInit {
 
         let targetMode = 'multi';
         let targetDiff = 'medium';
+        const context = this.friendService.panelContext();
         const config = this.gameRegistry.getConfig(gameId);
+
         if (config) {
           const mpMode = config.modes.find(m => m.id !== 'single');
-          targetMode = mpMode ? mpMode.id : config.modes[0].id;
-          targetDiff = config.difficulties.length > 0 ? config.difficulties[0].id : 'medium';
+          targetMode = context?.mode && context.mode !== 'single' ? context.mode : (mpMode ? mpMode.id : config.modes[0].id);
+          targetDiff = context?.difficulty ? context.difficulty : (config.difficulties.length > 0 ? config.difficulties[0].id : 'medium');
         }
 
         this.crossGameJoin.setPendingJoin({
@@ -112,10 +114,10 @@ export class FriendListComponent implements OnInit {
           this.router.navigate([targetUrl]);
         });
         
-        this.isOpen.set(false);
+        this.friendService.togglePanel(false);
         this.selectedFriends.set(new Set());
       } else {
-        alert(this.i18n.t('game.create_room_first')() || 'Create or join a room first!');
+        this.toastService.show(this.i18n.t('game.create_room_first')() || 'Create or join a room first!', 'error');
       }
     }
   }
@@ -129,9 +131,20 @@ export class FriendListComponent implements OnInit {
   }
 
   removeFriend(id: number) {
-    if (confirm(this.i18n.t('game.confirm_remove_friend')() || 'Remove this friend?')) {
-      this.friendService.rejectRequest(id).subscribe();
-    }
+    this.toastService.confirm({
+      title: this.i18n.t('game.remove_friend')() || 'Remove Friend',
+      message: this.i18n.t('game.confirm_remove_friend')() || 'Remove this friend?',
+      confirmText: this.i18n.t('game.remove_friend')() || 'Remove',
+      cancelText: this.i18n.t('game.cancel')() || 'Cancel',
+      confirmStyle: 'danger',
+      onConfirm: () => {
+        this.toastService.closeConfirm();
+        this.friendService.rejectRequest(id).subscribe();
+      },
+      onCancel: () => {
+        this.toastService.closeConfirm();
+      }
+    });
   }
 
   private router = inject(Router);

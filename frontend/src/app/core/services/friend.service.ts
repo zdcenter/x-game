@@ -45,8 +45,25 @@ export class FriendService {
   });
   readonly onlineFriendIds = signal<Set<number>>(new Set());
 
+  // Global state for friend panel visibility
+  readonly isPanelOpen = signal(false);
+  readonly panelContext = signal<{ gameId?: string, difficulty?: string, mode?: string } | null>(null);
+
   constructor() {
     this.setupWebSocketListeners();
+  }
+
+  togglePanel(forceState?: boolean, context?: { gameId?: string, difficulty?: string, mode?: string }) {
+    const newState = forceState !== undefined ? forceState : !this.isPanelOpen();
+    this.isPanelOpen.set(newState);
+    if (context) {
+      this.panelContext.set(context);
+    } else if (!newState) {
+      this.panelContext.set(null); // clear on close
+    }
+    if (newState) {
+      this.loadFriends().subscribe();
+    }
   }
 
   // Fetch all friends and requests

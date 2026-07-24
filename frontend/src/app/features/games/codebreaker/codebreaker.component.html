@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'codebreaker'"
   [title]="i18n.t('lobby.codebreaker')()"
   [subtitle]="getSubtitle()"

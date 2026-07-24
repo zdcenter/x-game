@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'tetris'"
   [title]="i18n.t('tetris.title')()"
   [subtitle]="getSubtitle()"

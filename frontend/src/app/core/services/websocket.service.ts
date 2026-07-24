@@ -89,6 +89,19 @@ export class WebSocketService {
       password = this._pendingPassword;
       this._pendingPassword = '';
     }
+
+    // Recover password from sessionStorage for reconnects
+    if (!password && typeof sessionStorage !== 'undefined') {
+      const savedPass = sessionStorage.getItem(`room_password_${roomId}`);
+      if (savedPass) {
+        password = savedPass;
+      }
+    }
+
+    // Save password for future reconnects
+    if (password && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(`room_password_${roomId}`, password);
+    }
     
     // Auto-consume pendingAction if no explicit action provided
     if (!action && this._pendingAction) {
@@ -179,7 +192,9 @@ export class WebSocketService {
         console.log('Room changed game:', msg.game);
         const lang = this.router.url.split('/')[1] || 'zh';
         const targetUrl = `/${lang}/games/${msg.game}`;
-        if (this.router.url === targetUrl) {
+        const currentUrlBase = this.router.url.split('?')[0].replace(/\/$/, '');
+
+        if (currentUrlBase === targetUrl) {
           this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
             this.router.navigate([targetUrl]);
           });

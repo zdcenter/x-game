@@ -8,6 +8,8 @@ import { GameDifficulty, GameMode, GameStatus, GameResult } from '../../../core/
 import { ConnectStore } from './connect.store';
 import { ConnectBoardComponent } from './components/connect-board.component';
 import { ConnectLobbyComponent } from './components/connect-lobby.component';
+import { EditRoomService } from '../../../core/services/edit-room.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -64,7 +66,13 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
         <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🔗</div>
 
         <ng-container header-right>
-          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
+          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4 animate-fade-in">
+            @if (store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Waiting && store.hostId() === store.playerId()) {
+              <button (click)="openChangeSettingsGlobal()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
+                <span class="group-hover:rotate-90 transition-transform">⚙️</span>
+                <span class="hidden sm:inline">{{ i18n.t('game.change_settings')() || 'Settings' }}</span>
+              </button>
+            }
             <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -263,6 +271,9 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   http = inject(HttpClient);
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
+  toastService = inject(ToastService);
+  editRoomService = inject(EditRoomService);
+  private pendingDailyChallengeId = signal<string | null>(null);
   private roomLifecycle!: RoomLifecycleHandle;
   
   view = this.store.view;
@@ -440,6 +451,17 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
         mode: this.store.currentRoomMode(),
         difficulty: '',
         host: this.store.hostId()
+      });
+    }
+  }
+
+  openChangeSettingsGlobal() {
+    if (this.store.roomId()) {
+      this.editRoomService.open({
+        roomId: this.store.roomId(),
+        gameId: 'connect',
+        mode: this.store.currentRoomMode(),
+        difficulty: this.store.currentDifficulty()
       });
     }
   }

@@ -15,6 +15,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { EditRoomService } from '../../../core/services/edit-room.service';
+import { FriendService } from '../../../core/services/friend.service';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -55,8 +56,25 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private toast   = inject(ToastService);
   private settings    = inject(SettingsService);
   private editRoomSvc = inject(EditRoomService);
+  friendService       = inject(FriendService);
 
-  // ── Inputs ────────────────────────────────────────────────────────────────
+  isFriend(username: string): boolean {
+    if (username === this.playerId()) return true;
+    return this.friendService.friends().some(f => f.username === username);
+  }
+
+  addFriend(username: string) {
+    if (this.playerId()?.startsWith('guest_')) {
+      this.toast.show(this.t('game.cannot_add_guest') || 'Cannot add guest players', 'error');
+      return;
+    }
+    this.friendService.sendRequestByUsername(username).subscribe({
+      next: () => this.toast.show(this.t('game.friend_request_sent') || 'Friend request sent!', 'success'),
+      error: () => this.toast.show('Failed to send request', 'error')
+    });
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
   @Input() gameId       : string = '';
   @Input() currentRoomId: string = '';
   @Input() isArena      : boolean = false;

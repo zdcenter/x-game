@@ -1,4 +1,4 @@
-<app-game-layout
+<app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'sliding'"
   [title]="t('sliding.title')() || 'Sliding Puzzle'"
   [subtitle]="getSubtitle()"
