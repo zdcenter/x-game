@@ -3,12 +3,12 @@ import { Component, Input, computed, inject, OnInit, OnDestroy, signal, effect }
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
-import { EmojiPickerComponent } from '../emoji-picker/emoji-picker.component';
+
 
 @Component({
   selector: 'app-player-badge',
   standalone: true,
-  imports: [CommonModule, EmojiPickerComponent],
+  imports: [CommonModule],
   templateUrl: './player-badge.component.html',
   styleUrls: ['./player-badge.component.css'],
   host: {

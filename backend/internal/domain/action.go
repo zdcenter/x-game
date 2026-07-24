@@ -44,6 +44,9 @@ const (
 	ActionEmoji     C2SAction = "emoji"
 	ActionChat      C2SAction = "chat"
 
+	// ===== 好友与社交 =====
+	ActionFriendInvite C2SAction = "friend_invite"
+
 	// ===== 系统级操作 =====
 	// 客户端应用层心跳保活包
 	ActionPing C2SAction = "ping"
@@ -70,6 +73,14 @@ const (
 	EventChat            S2CEvent = "chat"
 	// 玩家离开
 	EventPlayerLeft      S2CEvent = "player_left"
+
+	// ===== 社交事件 =====
+	// 好友状态变更
+	EventFriendStatus    S2CEvent = "friend_status"
+	// 收到好友的游戏邀请
+	EventFriendInvite    S2CEvent = "friend_invite"
+	// 收到好友请求
+	EventFriendRequest   S2CEvent = "friend_request"
 
 	// ===== 系统级事件 =====
 	// 服务器返回报错信息

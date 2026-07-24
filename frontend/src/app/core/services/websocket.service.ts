@@ -65,6 +65,10 @@ export class WebSocketService {
   // Triggered when matchmaking succeeds
   readonly matchSuccessEvent = signal<number>(0);
 
+  // Friend events
+  readonly friendStatusEvent = signal<any>(null);
+  readonly friendInviteEvent = signal<any>(null);
+
   // Triggered when an emoji is received
   readonly emojiReceivedEvent = signal<{senderId: string, emoji: string} | null>(null);
   
@@ -286,6 +290,10 @@ export class WebSocketService {
         } else {
           this.router.navigate([targetUrl]);
         }
+      } else if (msg.type === 'system' && msg.event === 'friend_status') {
+        this.friendStatusEvent.set(msg.payload);
+      } else if (msg.type === 'system' && msg.event === 'friend_invite') {
+        this.friendInviteEvent.set(msg.payload);
       } else if (msg.type === S2CEvent.Error) {
         console.warn('Lobby WS error:', msg.message);
         this.lobbyDisconnectIntentional = true;
@@ -339,6 +347,14 @@ export class WebSocketService {
       this.lobbySocket.send(JSON.stringify(action));
     } else {
       console.warn('Lobby WS not connected, cannot send action', action);
+    }
+  }
+
+  sendLobbyAction(actionType: string, payload?: any) {
+    if (this.lobbySocket && this.isLobbyConnected()) {
+      this.lobbySocket.send(JSON.stringify({ type: actionType, ...payload }));
+    } else {
+      console.warn('Cannot send lobby action, disconnected:', actionType);
     }
   }
 

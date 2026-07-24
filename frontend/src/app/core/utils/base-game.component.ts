@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
-import { Directive, inject, signal, OnInit, OnDestroy, HostBinding, ViewChild } from '@angular/core';
+import { Directive, inject, signal, effect, Injector, OnInit, OnDestroy, HostBinding, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
@@ -31,6 +31,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected crossGameJoin = inject(CrossGameJoinService);
   protected baseToastService = inject(ToastService);
   protected i18nBase = inject(I18nService);
+  private _injector = inject(Injector);
 
   isMobileSidebarOpen = signal<boolean>(false);
   
@@ -71,12 +72,26 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
           setTimeout(() => {
             if (pendingCross.action === 'create') {
               this.handleCreateRoom({
-                name: pendingCross.roomId,
+                name: pendingCross.roomId || '',
                 mode: pendingCross.mode,
                 difficulty: pendingCross.difficulty,
                 password: pendingCross.password,
                 target: pendingCross.target
               });
+
+              if (pendingCross.inviteUsernames && pendingCross.inviteUsernames.length > 0) {
+                const usernames = pendingCross.inviteUsernames;
+                const eff = effect(() => {
+                  const newRoomId = this.store.roomId();
+                  const rawState = this.wsService.gameState();
+                  if (newRoomId && this.wsService.isConnected() && rawState) {
+                    usernames.forEach(username => {
+                      this.wsService.sendLobbyAction('friend_invite', { targetId: username, roomId: newRoomId });
+                    });
+                    eff.destroy();
+                  }
+                }, { injector: this._injector, manualCleanup: true });
+              }
             } else {
               this.handleJoinRoom({
                 roomId: pendingCross.roomId,

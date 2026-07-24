@@ -56,7 +56,7 @@ func Register(router fiber.Router) {
 		}
 	}))
 
-	router.Get("/join/:roomId", websocket.New(func(c *websocket.Conn) {
+	router.Get("/join/:roomId?", websocket.New(func(c *websocket.Conn) {
 		var setting domain.SystemSetting
 		if err := db.DB.Where("key = ?", "multiplayer_enabled").First(&setting).Error; err == nil {
 			if setting.Value == "false" {
@@ -230,6 +230,43 @@ func Register(router fiber.Router) {
 						wsManager.GlobalMatchmaker.AddRequest(req)
 					} else if action["type"] == "cancel_match" {
 						wsManager.GlobalMatchmaker.RemoveRequest(playerID)
+					} else if action["type"] == string(domain.ActionFriendInvite) {
+						targetID, _ := action["targetId"].(string)
+						roomID, _ := action["roomId"].(string)
+						log.Printf("[INVITE] Received friend_invite from %s(%s) to %s, roomID=%s", playerID, username, targetID, roomID)
+						if targetID != "" && roomID != "" {
+							var roomInfo map[string]interface{}
+							safeRooms := wsManager.GetActiveRooms()
+							log.Printf("[INVITE] Active rooms count: %d", len(safeRooms))
+							for _, r := range safeRooms {
+								if r.ID == roomID {
+									// Also get the actual password from the full Room object if it exists
+									actualPassword := ""
+									if r.HasPassword {
+										actualPassword = wsManager.GetRoomPassword(roomID)
+									}
+
+									roomInfo = map[string]interface{}{
+										"id":          r.ID,
+										"game":        r.Game,
+										"host":        r.Host,
+										"players":     r.PlayerCount,
+										"mode":        r.Mode,
+										"difficulty":  r.Difficulty,
+										"status":      r.Status,
+										"hasPassword": r.HasPassword,
+										"password":    actualPassword,
+									}
+									break
+								}
+							}
+							if roomInfo != nil {
+								log.Printf("[INVITE] Room found! Sending invite to %s", targetID)
+								wsManager.Lobby.SendInviteToPlayer(playerID, username, targetID, roomInfo)
+							} else {
+								log.Printf("[INVITE] Room %s NOT FOUND in active rooms!", roomID)
+							}
+						}
 					}
 				}
 			}

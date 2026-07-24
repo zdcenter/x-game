@@ -341,8 +341,23 @@
                 {{ player.status === 'idle' ? t('game.player_idle') : t('game.player_playing') }}
               </div>
             </div>
+            <!-- Add Friend button -->
+            @if (!isFriend(player.username)) {
+              <button (click)="addFriend(player.username)"
+                      class="shrink-0 p-2 rounded-xl text-blue-500 hover:bg-blue-500/10 active:scale-95 transition-all"
+                      [title]="t('game.add_friend') || 'Add Friend'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+              </button>
+            }
+
             <!-- Invite button -->
             <button [disabled]="player.status !== 'idle'"
+                    (click)="invitePlayer(player.username)"
                     class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     [class.border-[var(--color-accent-from)]]="player.status === 'idle'"
                     [class.text-[var(--color-accent-from)]]="player.status === 'idle'"

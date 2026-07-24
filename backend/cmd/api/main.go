@@ -77,6 +77,14 @@ func main() {
 	// Match history (Protected)
 	v1.Get("/history", middleware.Protected(), rest.GetMatchHistory)
 
+	// Friends (Protected)
+	friends := v1.Group("/friends")
+	friends.Use(middleware.Protected())
+	friends.Get("/", rest.GetFriends)
+	friends.Post("/request", rest.SendFriendRequest)
+	friends.Post("/accept", rest.AcceptFriendRequest)
+	friends.Post("/reject", rest.RejectFriendRequest)
+
 	// Blog (public read)
 	blog := v1.Group("/blog")
 	blog.Get("/posts", rest.ListBlogPosts)

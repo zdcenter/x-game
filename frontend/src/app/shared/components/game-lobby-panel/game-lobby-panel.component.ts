@@ -12,6 +12,7 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
 import { AdService } from '../../../core/services/ad.service';
 import { AdsenseComponent } from '../adsense/adsense.component';
 import { AudioService } from '../../../core/services/audio.service';
+import { FriendService } from '../../../core/services/friend.service';
 
 export interface GameMode {
   id: string;
@@ -48,10 +49,11 @@ export class GameLobbyPanelComponent implements OnInit {
   audioService = inject(AudioService);
 
   private route = inject(ActivatedRoute);
-  private crossGameJoin = inject(CrossGameJoinService);
   private gameRegistry = inject(GameRegistryService);
   private toastService = inject(ToastService);
   private editRoomService = inject(EditRoomService);
+  private friendService = inject(FriendService);
+  private crossGameJoin = inject(CrossGameJoinService);
 
   @Input() currentGameId: string = '';
   @Input() currentRoomId: string = '';
@@ -140,6 +142,78 @@ export class GameLobbyPanelComponent implements OnInit {
     const val = input.value.replace(/[^0-9]/g, '').slice(0, 4);
     input.value = val;
     this.passwordInput.set(val);
+  }
+
+  isFriend(username: string): boolean {
+    return this.friendService.friends().some(f => f.username === username);
+  }
+
+  addFriend(username: string) {
+    if (username.startsWith('Guest_')) {
+      this.toastService.show(this.t('game.cannot_add_guest') || 'Cannot add guest players', 'error');
+      return;
+    }
+    this.friendService.sendRequestByUsername(username).subscribe({
+      next: () => this.toastService.show(this.t('game.friend_request_sent') || 'Friend request sent!', 'success'),
+      error: (err) => {
+        const msg = err.error?.error || 'Failed to send request';
+        this.toastService.show(msg, 'error');
+      }
+    });
+  }
+
+  invitePlayer(username: string) {
+    const myRooms = this.myRooms();
+    if (myRooms.length > 0) {
+      this.friendService.sendInvite(username, myRooms[0].id);
+      this.toastService.show(this.t('game.invite_sent') || 'Invite sent!', 'success');
+    } else if (this.currentRoomId) {
+      this.friendService.sendInvite(username, this.currentRoomId);
+      this.toastService.show(this.t('game.invite_sent') || 'Invite sent!', 'success');
+    } else {
+      // Not in a room. Check if we are currently on a game page.
+      const urlPath = this.router.url.split('?')[0];
+      const segments = urlPath.split('/');
+      const gamesIdx = segments.indexOf('games');
+      const gameId = gamesIdx >= 0 ? segments[gamesIdx + 1] : null;
+
+      if (gameId) {
+        // Automatically create a private room and invite the player
+        const randomPassword = Math.floor(1000 + Math.random() * 9000).toString();
+        const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const myId = this.authStore.currentUser()?.username || this.authStore.guestId;
+        const generatedRoomId = `${myId}-${suffix}`;
+
+        let targetMode = 'multi';
+        let targetDiff = 'medium';
+        const config = this.gameRegistry.getConfig(gameId);
+        if (config) {
+          const mpMode = config.modes.find(m => m.id !== 'single');
+          targetMode = mpMode ? mpMode.id : config.modes[0].id;
+          targetDiff = config.difficulties.length > 0 ? config.difficulties[0].id : 'medium';
+        }
+
+        this.crossGameJoin.setPendingJoin({
+          game: gameId,
+          roomId: generatedRoomId,
+          mode: targetMode,
+          difficulty: targetDiff,
+          host: '',
+          password: randomPassword,
+          action: 'create',
+          inviteUsernames: [username]
+        });
+        
+        // Force the game component to re-initialize and consume the pending join
+        const lang = segments[1] || 'zh';
+        const targetUrl = `/${lang}/games/${gameId}`;
+        this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
+          this.router.navigate([targetUrl]);
+        });
+      } else {
+        this.toastService.show(this.t('game.create_room_first') || 'Create or join a room first!', 'error');
+      }
+    }
   }
 
   onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean) {

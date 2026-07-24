@@ -1,0 +1,151 @@
+<!-- Floating Button -->
+<button 
+  *ngIf="auth.currentUser()"
+  (click)="togglePanel()"
+  class="fixed right-4 bottom-4 w-12 h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg flex items-center justify-center z-50 transition-transform active:scale-95"
+>
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+  </svg>
+  <!-- Notification dot -->
+  <span *ngIf="pendingRequests().length > 0" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white text-[9px] font-bold flex items-center justify-center">
+    {{ pendingRequests().length }}
+  </span>
+</button>
+
+<!-- Slide-out Panel -->
+<div 
+  *ngIf="isOpen()"
+  class="fixed right-4 bottom-20 w-80 max-h-[500px] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-slide-up"
+  style="backdrop-filter: blur(12px);"
+>
+  <!-- Header -->
+  <div class="px-4 py-3 border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50 flex items-center justify-between">
+    <h3 class="text-base font-bold text-[var(--color-text-main)]">{{ i18n.t('game.friends')() || 'Friends' }}</h3>
+    <button (click)="togglePanel()" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]/30">
+    <button 
+      (click)="activeTab.set('friends')"
+      class="flex-1 py-2 text-sm font-bold transition-colors"
+      [class.text-blue-500]="activeTab() === 'friends'"
+      [class.border-b-2]="activeTab() === 'friends'"
+      [class.border-blue-500]="activeTab() === 'friends'"
+      [class.text-[var(--color-text-muted)]]="activeTab() !== 'friends'"
+    >
+      {{ i18n.t('game.friend_list')() || 'List' }} ({{ acceptedFriends().length }})
+    </button>
+    <button 
+      (click)="activeTab.set('requests')"
+      class="flex-1 py-2 text-sm font-bold transition-colors relative"
+      [class.text-blue-500]="activeTab() === 'requests'"
+      [class.border-b-2]="activeTab() === 'requests'"
+      [class.border-blue-500]="activeTab() === 'requests'"
+      [class.text-[var(--color-text-muted)]]="activeTab() !== 'requests'"
+    >
+      {{ i18n.t('game.friend_requests')() || 'Requests' }}
+      <span *ngIf="pendingRequests().length > 0" class="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full">
+        {{ pendingRequests().length }}
+      </span>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-y-auto p-2 min-h-[300px]">
+    
+    <!-- Friend List -->
+    <ng-container *ngIf="activeTab() === 'friends'">
+      <div *ngIf="acceptedFriends().length === 0" class="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)] p-6 text-center">
+        <span class="text-3xl mb-2">👋</span>
+        <p class="text-sm">{{ i18n.t('game.no_friends')() || 'No friends yet. Add some after a game!' }}</p>
+      </div>
+
+      <div *ngFor="let friend of acceptedFriends()" class="flex items-center justify-between p-2 hover:bg-[var(--color-bg-main)]/50 rounded-xl group transition-colors">
+        <div class="flex items-center gap-3">
+          <!-- Checkbox for online friends -->
+          <div *ngIf="friend.is_online" 
+               (click)="toggleSelection(friend.username)"
+               class="w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-colors"
+               [ngClass]="selectedFriends().has(friend.username) ? 'bg-blue-500 border-blue-500' : 'border-[var(--color-border-card)] hover:border-blue-400'">
+            <svg *ngIf="selectedFriends().has(friend.username)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <!-- Avatar with online indicator -->
+          <div class="relative cursor-pointer" (click)="friend.is_online && toggleSelection(friend.username)">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center text-lg font-black text-blue-700 dark:text-blue-300">
+              {{ friend.avatar || friend.username.charAt(0).toUpperCase() }}
+            </div>
+            <span 
+              class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--color-bg-card)]"
+              [ngClass]="friend.is_online ? 'bg-emerald-500' : 'bg-gray-400'"
+            ></span>
+          </div>
+          <div class="cursor-pointer" (click)="friend.is_online && toggleSelection(friend.username)">
+            <div class="font-bold text-sm text-[var(--color-text-main)]">{{ friend.username }}</div>
+            <div class="text-xs" [ngClass]="friend.is_online ? 'text-emerald-500' : 'text-[var(--color-text-muted)]'">
+              {{ friend.is_online ? (i18n.t('game.status_online')() || 'Online') : (i18n.t('game.status_offline')() || 'Offline') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            (click)="removeFriend(friend.id)"
+            class="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"
+            [title]="i18n.t('game.remove_friend')() || 'Remove'"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Requests List -->
+    <ng-container *ngIf="activeTab() === 'requests'">
+      <div *ngIf="pendingRequests().length === 0" class="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)] p-6 text-center">
+        <span class="text-3xl mb-2">📬</span>
+        <p class="text-sm">{{ i18n.t('game.no_requests')() || 'No pending requests.' }}</p>
+      </div>
+
+      <div *ngFor="let req of pendingRequests()" class="flex items-center justify-between p-2 bg-[var(--color-bg-main)]/50 rounded-xl mb-2">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 rounded-full flex items-center justify-center text-lg font-black text-purple-700 dark:text-purple-300">
+            {{ req.avatar || req.username.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <div class="font-bold text-sm text-[var(--color-text-main)]">{{ req.username }}</div>
+            <div class="text-[10px] text-[var(--color-text-muted)]">{{ i18n.t('game.wants_to_be_friend')() || 'wants to be friends' }}</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-1">
+          <button (click)="acceptRequest(req.id)" class="px-2 py-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded shadow-sm">
+            {{ i18n.t('game.accept')() || 'Accept' }}
+          </button>
+          <button (click)="rejectRequest(req.id)" class="px-2 py-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-muted)] text-xs font-bold rounded shadow-sm">
+            {{ i18n.t('game.reject')() || 'Reject' }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- Invite Selected Button -->
+  <div *ngIf="activeTab() === 'friends' && selectedFriends().size > 0" 
+       class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-[var(--color-bg-card)] via-[var(--color-bg-card)] to-transparent border-t border-[var(--color-border-card)] animate-slide-up">
+    <button (click)="inviteSelected()" 
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      {{ i18n.t('game.invite_selected')() || 'Invite Selected' }} ({{ selectedFriends().size }})
+    </button>
+  </div>
+</div>

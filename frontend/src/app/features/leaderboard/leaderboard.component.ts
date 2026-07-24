@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { LeaderboardService, LeaderboardEntry, LeaderboardResponse } from '../../core/services/leaderboard.service';
+import { FriendService } from '../../core/services/friend.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 import { GameMode } from '../../core/models/game.model';
@@ -141,6 +142,11 @@ import { GameMode } from '../../core/models/game.model';
                       <span class="text-xs ml-1 opacity-60">({{ i18n.t('leaderboard.you')() }})</span>
                     }
                   </span>
+                  @if (!entry.is_current_user && authStore.isAuthenticated()) {
+                    <button (click)="addFriend(entry.user_id)" class="opacity-0 group-hover:opacity-100 p-1 text-blue-500 hover:bg-blue-500/10 rounded-full transition-all" [title]="i18n.t('game.add_friend')() || 'Add Friend'">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                    </button>
+                  }
                 </div>
                 <!-- Score/Time / Level/XP -->
                 @if (selectedGameId() === 'global') {
@@ -178,6 +184,7 @@ import { GameMode } from '../../core/models/game.model';
 })
 export class LeaderboardComponent implements OnInit {
   i18n = inject(I18nService);
+  private friendService = inject(FriendService);
   authStore = inject(AuthStore);
   private leaderboardService = inject(LeaderboardService);
 
@@ -273,5 +280,11 @@ export class LeaderboardComponent implements OnInit {
   getWinRate(entry: LeaderboardEntry): string {
     if (entry.play_count === 0) return '0.0';
     return ((entry.win_count / entry.play_count) * 100).toFixed(1);
+  }
+
+  addFriend(userId: number) {
+    this.friendService.sendRequest(userId).subscribe(() => {
+      alert(this.i18n.t('game.friend_request_sent')() || 'Friend request sent!');
+    });
   }
 }

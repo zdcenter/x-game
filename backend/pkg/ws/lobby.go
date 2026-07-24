@@ -2,11 +2,15 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
+	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/simulator"
 )
 
@@ -51,24 +55,120 @@ func (l *GlobalLobby) AddPlayer(player *LobbyPlayer) {
 
 	// Also broadcast to everyone so existing clients see the updated player list
 	l.BroadcastLobbyUpdate()
+	
+	// Notify friends
+	l.NotifyFriendsOfStatusChange(player.PlayerID, player.Status)
 }
 
 // RemovePlayer removes a player from the lobby and broadcasts the update
 func (l *GlobalLobby) RemovePlayer(playerID string) {
 	l.mu.Lock()
+	var actualPlayerID string
+	if p, ok := l.Players[playerID]; ok {
+		actualPlayerID = p.PlayerID
+	}
 	delete(l.Players, playerID)
 	l.mu.Unlock()
 	l.BroadcastLobbyUpdate()
+	
+	if actualPlayerID != "" {
+		l.NotifyFriendsOfStatusChange(actualPlayerID, "offline")
+	}
 }
 
 // UpdatePlayerStatus updates a player's status
 func (l *GlobalLobby) UpdatePlayerStatus(playerID string, status string) {
 	l.mu.Lock()
+	var actualPlayerID string
 	if p, exists := l.Players[playerID]; exists {
 		p.Status = status
+		actualPlayerID = p.PlayerID
 	}
 	l.mu.Unlock()
 	l.BroadcastLobbyUpdate()
+	
+	if actualPlayerID != "" {
+		l.NotifyFriendsOfStatusChange(actualPlayerID, status)
+	}
+}
+
+// NotifyFriendsOfStatusChange sends a targeted status update to online friends
+func (l *GlobalLobby) NotifyFriendsOfStatusChange(userID string, status string) {
+	// Guests and anonymous users have non-numeric IDs. Only query DB for valid numeric IDs.
+	if _, err := strconv.ParseUint(userID, 10, 64); err != nil {
+		return
+	}
+
+	var friendships []domain.Friendship
+	if err := db.DB.Preload("User").Preload("Friend").Where("(user_id = ? OR friend_id = ?) AND status = ?", userID, userID, domain.FriendshipAccepted).Find(&friendships).Error; err != nil {
+		log.Printf("Error fetching friends for status update: %v", err)
+		return
+	}
+
+	payload := map[string]interface{}{
+		"friend_id": userID,
+		"status":    status,
+	}
+	msgData, _ := json.Marshal(S2CMessage{
+		Type:    MessageTypeSystem,
+		Event:   domain.EventFriendStatus,
+		Payload: payload,
+	})
+
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	for _, f := range friendships {
+		var targetID string
+		// The target to notify is the OTHER person in the friendship
+		if fmt.Sprintf("%v", f.UserID) == userID {
+			targetID = fmt.Sprintf("%v", f.FriendID)
+		} else {
+			targetID = fmt.Sprintf("%v", f.UserID)
+		}
+
+		// Find if target is online. Since Lobby.Players key is connection ID, we have to search by PlayerID
+		for _, p := range l.Players {
+			if p.PlayerID == targetID {
+				p.WriteMessage(websocket.TextMessage, msgData)
+			}
+		}
+	}
+}
+
+// SendInviteToPlayer sends a game invitation to a specific player
+func (l *GlobalLobby) SendInviteToPlayer(senderID, senderName, targetID string, roomInfo map[string]interface{}) {
+	payload := map[string]interface{}{
+		"sender_id":   senderID,
+		"sender_name": senderName,
+		"room":        roomInfo,
+	}
+	msgData, _ := json.Marshal(S2CMessage{
+		Type:    MessageTypeSystem,
+		Event:   domain.EventFriendInvite,
+		Payload: payload,
+	})
+
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	found := false
+	for _, p := range l.Players {
+		if p.PlayerID == targetID || p.Username == targetID {
+			found = true
+			log.Printf("[INVITE] Sending invite WS message to player %s (PlayerID=%s, Username=%s)", p.ID, p.PlayerID, p.Username)
+			err := p.WriteMessage(websocket.TextMessage, msgData)
+			if err != nil {
+				log.Printf("[INVITE] Failed to send invite to %s: %v", p.Username, err)
+			}
+		}
+	}
+	if !found {
+		log.Printf("[INVITE] Target %s NOT found in lobby! Lobby has %d players", targetID, len(l.Players))
+		for _, p := range l.Players {
+			log.Printf("[INVITE]   - PlayerID=%s Username=%s", p.PlayerID, p.Username)
+		}
+	}
 }
 
 // buildLobbyPayload constructs the lobby_update JSON payload (no locks held)

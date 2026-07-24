@@ -116,6 +116,15 @@ func GetActiveRooms() []RoomSnapshot {
 	return snapshots
 }
 
+func GetRoomPassword(roomID string) string {
+	mu.Lock()
+	defer mu.Unlock()
+	if room, ok := Rooms[roomID]; ok {
+		return room.Password
+	}
+	return ""
+}
+
 // CreateRoom creates a new room. Returns error if the room already exists or was recently dismissed.
 func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, target int) (*Room, error) {
 	mu.Lock()

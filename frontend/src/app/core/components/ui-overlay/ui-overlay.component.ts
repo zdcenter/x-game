@@ -29,7 +29,16 @@ import { ToastService } from '../../services/toast.service';
               <button (click)="cancelConfirm(dialog)" class="flex-1 py-2.5 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
                 {{ dialog.cancelText || 'Cancel' }}
               </button>
-              <button (click)="acceptConfirm(dialog)" class="flex-1 py-2.5 rounded-xl font-bold bg-red-500 text-white hover:bg-red-400 transition-colors shadow-lg shadow-red-500/20">
+              <button (click)="acceptConfirm(dialog)" 
+                      class="flex-1 py-2.5 rounded-xl font-bold transition-colors shadow-lg"
+                      [class.bg-red-500]="dialog.confirmStyle !== 'primary'"
+                      [class.text-white]="dialog.confirmStyle !== 'primary'"
+                      [class.hover:bg-red-400]="dialog.confirmStyle !== 'primary'"
+                      [class.shadow-red-500/20]="dialog.confirmStyle !== 'primary'"
+                      [class.bg-blue-500]="dialog.confirmStyle === 'primary'"
+                      [class.text-white]="dialog.confirmStyle === 'primary'"
+                      [class.hover:bg-blue-400]="dialog.confirmStyle === 'primary'"
+                      [class.shadow-blue-500/20]="dialog.confirmStyle === 'primary'">
                 {{ dialog.confirmText || 'Confirm' }}
               </button>
             </div>

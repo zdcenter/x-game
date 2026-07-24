@@ -15,6 +15,7 @@ import { AchievementUnlockOverlayComponent } from './shared/components/achieveme
 import { EditRoomOverlayComponent } from './shared/components/edit-room-overlay/edit-room-overlay.component';
 import { EditRoomService } from './core/services/edit-room.service';
 import { FloatingTextOverlayComponent } from './shared/components/floating-text-overlay/floating-text-overlay.component';
+import { FriendListComponent } from './shared/components/friend-list/friend-list.component';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +28,8 @@ import { FloatingTextOverlayComponent } from './shared/components/floating-text-
     XpGainBadgeComponent, 
     AchievementUnlockOverlayComponent, 
     EditRoomOverlayComponent,
-    FloatingTextOverlayComponent
+    FloatingTextOverlayComponent,
+    FriendListComponent
   ],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
@@ -49,6 +51,7 @@ import { FloatingTextOverlayComponent } from './shared/components/floating-text-
         (apply)="editRoomService.apply($event)"
         (closed)="editRoomService.close()">
       </app-edit-room-overlay>
+      <app-friend-list></app-friend-list>
     }
   `
 })

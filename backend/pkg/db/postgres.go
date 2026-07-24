@@ -75,6 +75,8 @@ func InitPostgres() {
 		// Hashi game
 		&domain.HashiPuzzle{},
 		&domain.UserHashiProgress{},
+		// Social System
+		&domain.Friendship{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
