@@ -8,6 +8,7 @@ import { getHref } from '../../../core/utils/browser.util';
 import { AudioService } from '../../../core/services/audio.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { ToastService } from '../../../core/services/toast.service';
+import * as QRCode from 'qrcode';
 
 @Component({
   selector: 'app-game-waiting-room',
@@ -44,6 +45,8 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   @Output() cancelReady = new EventEmitter<void>();
 
   shareService = inject(ShareService);
+
+  qrCodeUrl = signal<string>('');
 
   get sortedPlayers() {
     if (!this.players) return [];
@@ -85,12 +88,17 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
 
   showCopiedToast = signal(false);
 
-  copyInviteLink() {
+  getInviteUrl(): string {
     const url = new URL(getHref());
     url.searchParams.set('joinRoom', this.roomId);
     url.searchParams.set('mode', this.mode);
     url.searchParams.set('diff', this.difficulty);
     url.searchParams.set('host', this.hostId);
+    return url.toString();
+  }
+
+  copyInviteLink() {
+    const url = this.getInviteUrl();
     
     const gameName = this.i18n.t('lobby.' + this.gameId)() || this.gameId;
     let text = this.i18n.t('share.room_invite')() || `I am waiting for you in [game]! Click the link to join my room [room] directly and let's play!`;
@@ -99,7 +107,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     this.shareService.share({
       title: `${gameName} - ${this.i18n.t('app.title')()}`,
       text: text,
-      url: url.toString()
+      url: url
     });
   }
 
@@ -129,6 +137,19 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.audioService.playBgm('/assets/music/waiter_pk.mp3');
+    
+    if (this.mode !== GameMode.Single) {
+      QRCode.toDataURL(this.getInviteUrl(), {
+        width: 300,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      }).then(url => {
+        this.qrCodeUrl.set(url);
+      }).catch(err => console.error('Failed to generate QR code', err));
+    }
   }
 
   ngOnDestroy() {

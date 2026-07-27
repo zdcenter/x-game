@@ -30,39 +30,44 @@
                 {{ difficulty }}
               </span>
             }
+            @if (mode !== GameMode.Single && target() > 0) {
+              <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-yellow-400/10 border border-yellow-400/20 shrink-0">
+                <span class="text-xs">🏆</span>
+                <span class="text-[10px] sm:text-xs font-bold text-yellow-400">×{{ target() }}</span>
+              </div>
+            }
           </div>
-        </div>
-
-        <!-- Room ID strip + PK rule -->
-        <div class="flex items-center gap-2">
-          <div class="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-            <span class="text-[10px] font-black text-[var(--color-text-muted)] uppercase tracking-wider shrink-0">ID</span>
-            <span class="font-mono text-xs text-[var(--color-text-main)] truncate flex-1">{{ roomId }}</span>
-          </div>
-          @if (mode !== GameMode.Single && target() > 0) {
-            <div class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400/10 border border-yellow-400/20 shrink-0">
-              <span class="text-sm">🏆</span>
-              <span class="text-[10px] sm:text-xs font-bold text-yellow-400">×{{ target() }}</span>
-            </div>
-          }
         </div>
       </div>
 
       <!-- ── Invite Card (PK only) ── -->
       @if (mode !== GameMode.Single) {
-        <div class="shrink-0 px-4 sm:px-6 pb-3">
-          <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-[var(--color-accent-from)]/10 to-[var(--color-accent-to)]/10 border border-[var(--color-accent-from)]/20">
-            <div class="flex-1 min-w-0">
-              <p class="text-[10px] font-black text-[var(--color-accent-from)] uppercase tracking-widest mb-0.5">{{ i18n.t('share.invite_pk')() }}</p>
-              <p class="text-xs text-[var(--color-text-muted)] truncate font-mono">{{ roomId }}</p>
+        <div class="shrink-0 px-4 sm:px-6 pb-3 mt-1 sm:mt-0">
+          <div class="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-4 rounded-2xl bg-gradient-to-r from-[var(--color-accent-from)]/10 to-[var(--color-accent-to)]/10 border border-[var(--color-accent-from)]/20 shadow-inner">
+            
+            <div class="flex-1 min-w-0 flex flex-col justify-center">
+              <p class="text-[10px] font-black text-[var(--color-accent-from)] uppercase tracking-widest mb-1">{{ i18n.t('share.invite_pk')() }}</p>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm sm:text-base text-[var(--color-text-main)] font-mono font-bold select-all">{{ roomId }}</span>
+              </div>
+              <button (click)="copyInviteLink()"
+                class="flex items-center justify-center w-full sm:w-auto px-4 py-2 gap-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xs transition-all active:scale-95 shadow-md hover:brightness-110">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span>{{ i18n.t('game.copy_invite_link')() || 'Invite' }}</span>
+              </button>
             </div>
-            <button (click)="copyInviteLink()"
-              class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-xs transition-all active:scale-95 shadow-md hover:brightness-110">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-              {{ i18n.t('game.copy_invite_link')() || 'Invite' }}
-            </button>
+            
+            @if (qrCodeUrl()) {
+              <div class="shrink-0 flex flex-col items-center justify-center border-l border-[var(--color-accent-from)]/20 pl-3 sm:pl-4 ml-1">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white p-1.5 rounded-xl shadow-sm mb-1.5">
+                  <img [src]="qrCodeUrl()" alt="QR Code" class="w-full h-full object-cover">
+                </div>
+                <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)]">{{ i18n.t('game.scan_to_join')() || '面对面扫码' }}</span>
+              </div>
+            }
+
           </div>
         </div>
       }
