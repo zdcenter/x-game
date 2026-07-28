@@ -3,7 +3,7 @@ const path = require('path');
 const https = require('https');
 
 const HOST = 'www.puzzlepk.com';
-const KEY = '6f09230536ce4ffeb50d267f89db51d0';
+const KEY = '04bb7ba35f7943c2ae91fa9a82bbdf95';
 const KEY_LOCATION = `https://${HOST}/${KEY}.txt`;
 
 // Read sitemap
