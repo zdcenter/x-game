@@ -30,15 +30,23 @@ const angularApp = new AngularNodeAppEngine();
  */
 app.use((req, res, next) => {
   const p = req.path;
+  
+  // Explicitly handle root path to prevent empty SSR rendering and provide correct 301 SEO redirect
+  if (p === '/') {
+    const acceptLang = req.headers['accept-language'] || '';
+    const isZh = acceptLang.toLowerCase().startsWith('zh');
+    res.redirect(301, isZh ? '/zh/lobby' : '/en/lobby');
+    return;
+  }
+
   if (
-    p !== '/' &&
     !p.startsWith('/en/') &&
     !p.startsWith('/zh/') &&
     !p.startsWith('/api/') &&
     !p.startsWith('/ws/') &&
     !/\.[a-z0-9]+$/i.test(p)
   ) {
-    res.redirect(302, '/zh' + p + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
+    res.redirect(301, '/zh' + p + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''));
     return;
   }
   next();
