@@ -60,11 +60,14 @@ const langChildren: Routes = [
       ...GAME_DEFINITIONS.map(def => ({
         path: `docs/${def.id}`,
         loadComponent: () => import('./features/docs/docs.component').then(m => m.DocsComponent),
-        data: { seo: {
-          titleKey:    `seo.${def.id}.title`,
-          descKey:     `seo.${def.id}.desc`,
-          keywordsKey: `seo.${def.id}.keywords`
-        }}
+        data: { 
+          gameId: def.id,
+          seo: {
+            titleKey:    `seo.${def.id}.title`,
+            descKey:     `seo.${def.id}.desc`,
+            keywordsKey: `seo.${def.id}.keywords`
+          }
+        }
       })),
       {
         path: 'legal/:type',

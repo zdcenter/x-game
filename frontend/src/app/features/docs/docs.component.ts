@@ -211,14 +211,14 @@ export class DocsComponent {
       
       // If no gameId in route, redirect to the first game
       // Use snapshot to avoid SSR synchronous observable race conditions
-      const urlGameId = this.route.snapshot.paramMap.get('gameId');
+      const urlGameId = this.route.snapshot.data['gameId'];
       if (!urlGameId && sorted.length > 0) {
         this.router.navigate(['/', this.i18n.currentLang(), 'docs', sorted[0].id], { replaceUrl: true });
       }
     });
 
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('gameId');
+    this.route.data.subscribe(data => {
+      const id = data['gameId'];
       if (id) {
         this.currentGameId.set(id);
       }
