@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-08-03] - 🐛 Bug Fixes & SEO Optimization
+
+### 🐛 修复 (Fixes)
+- **SEO 优化 (Meta Description)**：修复了 `lobby.component.html` (大厅) 页面中存在多个 `<h1>` 标签的问题，通过响应式 TailwindCSS 类合并了移动端与桌面端的标题，提升了搜索引擎抓取友好度。
+- **SEO 优化 (Page Titles)**：修复了 Hexa、Tetris、Connect 和 Leaderboard 页面标题 (`<title>`) 过短的问题，在多语言配置中更新了更加丰富和具有描述性的标题，满足 Bing Webmaster Tools 等搜索引擎对 50-60 字符最佳长度的推荐规范。
+
+
 ## [2026-07-10] - 🎨 视觉反馈与震动增强 (Juiciness Enhancement)
 
 ### ✨ 新功能与视觉增强 (Features & UI Enhancements)
