@@ -4,7 +4,7 @@
 
 ### 🐛 修复 (Fixes)
 - **SEO 优化 (Meta Description)**：修复了 `lobby.component.html` (大厅) 页面中存在多个 `<h1>` 标签的问题，通过响应式 TailwindCSS 类合并了移动端与桌面端的标题，提升了搜索引擎抓取友好度。
-- **SEO 优化 (Page Titles)**：修复了 Hexa、Tetris、Connect 和 Leaderboard 页面标题 (`<title>`) 过短的问题，在多语言配置中更新了更加丰富和具有描述性的标题，满足 Bing Webmaster Tools 等搜索引擎对 50-60 字符最佳长度的推荐规范。
+- **SEO 优化 (全局 TDK 扩充)**：编写检测脚本全面排查了中英文所有的页面标题和 Meta Descriptions。将 `login`、`register`、`admin`、`profile`、`daily` 等系统页面以及 `classic2048`、`math24`、`hashi`、`watersort` 等多款游戏页面的过短标题和描述进行了长尾词扩充，确保英文描述均 > 60 个字符，中文描述信息量大幅增强。经系统级排查，当前全站已**不存在任何重复的 Meta Description**。
 
 
 ## [2026-07-10] - 🎨 视觉反馈与震动增强 (Juiciness Enhancement)
