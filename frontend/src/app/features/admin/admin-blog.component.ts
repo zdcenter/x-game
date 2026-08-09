@@ -481,6 +481,12 @@ export class AdminBlogComponent implements OnInit {
           author_zh:    full.zh.author,
           tags_zh:      full.zh.tags ?? [],
           content_zh:   full.zh.content ?? '',
+          title_es:     full.es?.title || '', desc_es: full.es?.description || '', keywords_es: full.es?.keywords || '', read_time_es: full.es?.readTime || '', author_es: full.es?.author || '', tags_es: full.es?.tags ?? [], content_es: full.es?.content ?? '',
+          title_ja:     full.ja?.title || '', desc_ja: full.ja?.description || '', keywords_ja: full.ja?.keywords || '', read_time_ja: full.ja?.readTime || '', author_ja: full.ja?.author || '', tags_ja: full.ja?.tags ?? [], content_ja: full.ja?.content ?? '',
+          title_ko:     full.ko?.title || '', desc_ko: full.ko?.description || '', keywords_ko: full.ko?.keywords || '', read_time_ko: full.ko?.readTime || '', author_ko: full.ko?.author || '', tags_ko: full.ko?.tags ?? [], content_ko: full.ko?.content ?? '',
+          title_pt:     full.pt?.title || '', desc_pt: full.pt?.description || '', keywords_pt: full.pt?.keywords || '', read_time_pt: full.pt?.readTime || '', author_pt: full.pt?.author || '', tags_pt: full.pt?.tags ?? [], content_pt: full.pt?.content ?? '',
+          title_fr:     full.fr?.title || '', desc_fr: full.fr?.description || '', keywords_fr: full.fr?.keywords || '', read_time_fr: full.fr?.readTime || '', author_fr: full.fr?.author || '', tags_fr: full.fr?.tags ?? [], content_fr: full.fr?.content ?? '',
+          title_de:     full.de?.title || '', desc_de: full.de?.description || '', keywords_de: full.de?.keywords || '', read_time_de: full.de?.readTime || '', author_de: full.de?.author || '', tags_de: full.de?.tags ?? [], content_de: full.de?.content ?? '',
         };
         this.tagsENStr = (full.en.tags ?? []).join(', ');
         this.tagsZHStr = (full.zh.tags ?? []).join(', ');
@@ -714,6 +720,12 @@ export class AdminBlogComponent implements OnInit {
       tags_en: [], content_en: '',
       title_zh: '', desc_zh: '', keywords_zh: '', read_time_zh: '5 分钟阅读', author_zh: '益智擂台团队',
       tags_zh: [], content_zh: '',
+      title_es: '', desc_es: '', keywords_es: '', read_time_es: '', author_es: '', tags_es: [], content_es: '',
+      title_ja: '', desc_ja: '', keywords_ja: '', read_time_ja: '', author_ja: '', tags_ja: [], content_ja: '',
+      title_ko: '', desc_ko: '', keywords_ko: '', read_time_ko: '', author_ko: '', tags_ko: [], content_ko: '',
+      title_pt: '', desc_pt: '', keywords_pt: '', read_time_pt: '', author_pt: '', tags_pt: [], content_pt: '',
+      title_fr: '', desc_fr: '', keywords_fr: '', read_time_fr: '', author_fr: '', tags_fr: [], content_fr: '',
+      title_de: '', desc_de: '', keywords_de: '', read_time_de: '', author_de: '', tags_de: [], content_de: '',
     };
   }
 }

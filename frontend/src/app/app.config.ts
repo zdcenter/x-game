@@ -19,6 +19,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { getSearch, getHref, buildUrl } from './core/utils/browser.util';
 import { InlineTranslocoLoader } from './core/i18n/transloco-loader';
 import { LangUrlSerializer } from './core/i18n/lang-url-serializer';
+import { SUPPORTED_LANGS } from './core/i18n/i18n.service';
 
 class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
@@ -32,7 +33,8 @@ class GlobalErrorHandler implements ErrorHandler {
       if (!getSearch().includes('version_update=1')) {
         const newUrl = buildUrl(getHref(), { version_update: '1' });
         if (typeof window !== 'undefined') {
-          window.location.href = newUrl;
+          console.error('Preventing auto-reload loop. The error was:', error);
+          // window.location.href = newUrl;
         }
       }
       return;
@@ -69,7 +71,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideTransloco({
       config: {
-        availableLangs: ['en', 'zh'],
+        availableLangs: SUPPORTED_LANGS.map(l => l.code),
         defaultLang: 'zh',
         reRenderOnLangChange: true,
         prodMode: !isDevMode(),
@@ -81,7 +83,13 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: () => {
         const transloco = inject(TranslocoService);
-        return () => transloco.load('zh').toPromise().then(() => transloco.load('en').toPromise());
+        return () => {
+          let chain = Promise.resolve();
+          for (const lang of SUPPORTED_LANGS) {
+            chain = chain.then(() => transloco.load(lang.code).toPromise() as Promise<void>);
+          }
+          return chain;
+        };
       },
       multi: true,
     },

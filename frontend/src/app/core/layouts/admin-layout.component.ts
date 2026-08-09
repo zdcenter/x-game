@@ -1,8 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthStore } from '../auth/auth.store';
-import { I18nService } from '../i18n/i18n.service';
+import { I18nService, SUPPORTED_LANGS } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
 
 @Component({
@@ -146,16 +146,30 @@ import { ThemeService } from '../theme/theme.service';
               }
             </button>
 
-            <!-- Language Toggle -->
-            <button (click)="i18n.toggleLang()" 
-                    class="p-1.5 sm:p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
-                    title="Toggle Language">
-              @if (i18n.currentLang() === 'zh') {
-                <span class="text-xl leading-none block">🇬🇧</span>
-              } @else {
-                <span class="text-xl leading-none block">🇨🇳</span>
+            <!-- Language Dropdown -->
+            <div class="relative">
+              <button (click)="isLangMenuOpen.set(!isLangMenuOpen())"
+                      class="p-1.5 sm:p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
+                      title="Select Language">
+                <span class="text-xl leading-none block">{{ currentLangFlag() }}</span>
+              </button>
+              
+              @if (isLangMenuOpen()) {
+                <!-- Invisible backdrop -->
+                <div class="fixed inset-0 z-[90]" (click)="isLangMenuOpen.set(false)"></div>
+                
+                <div class="absolute right-0 mt-2 w-40 rounded-xl shadow-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] py-2 z-[100] animate-fade-in-down" (click)="isLangMenuOpen.set(false)">
+                  @for (lang of supportedLangs; track lang.code) {
+                    <button (click)="i18n.setLang(lang.code)" 
+                            class="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-border-card)] text-[var(--color-text-main)] flex items-center gap-3 transition-colors"
+                            [class.text-emerald-400]="i18n.currentLang() === lang.code">
+                      <span class="text-lg">{{ lang.flag }}</span>
+                      <span class="font-medium">{{ lang.name }}</span>
+                    </button>
+                  }
+                </div>
               }
-            </button>
+            </div>
           </div>
         </header>
 
@@ -175,6 +189,13 @@ export class AdminLayoutComponent {
   theme = inject(ThemeService);
 
   isSettingsOpen = signal(false);
+  isLangMenuOpen = signal(false);
+
+  supportedLangs = SUPPORTED_LANGS;
+  currentLangFlag = computed(() => {
+    const code = this.i18n.currentLang();
+    return this.supportedLangs.find(l => l.code === code)?.flag || '🌍';
+  });
 
   logout() {
     this.authStore.logout();

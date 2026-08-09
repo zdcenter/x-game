@@ -82,13 +82,13 @@ export class GameLobbyPanelComponent implements OnInit {
   passwordPromptHost = signal('');
   passwordInput = signal('');
 
-  quickPhrases = [
-    '有人来切磋一下吗？',
-    '我建好房间了，速度进！',
-    '等一个高手。',
-    '菜鸟互啄，欢乐多！',
-    '谁敢来挑战我？'
-  ];
+  quickPhrases = computed(() => [
+    this.t('game.quick_phrase_1') || '有人来切磋一下吗？',
+    this.t('game.quick_phrase_2') || '我建好房间了，速度进！',
+    this.t('game.quick_phrase_3') || '等一个高手。',
+    this.t('game.quick_phrase_4') || '菜鸟互啄，欢乐多！',
+    this.t('game.quick_phrase_5') || '谁敢来挑战我？'
+  ]);
   isQuickPhraseDropdownOpen = signal(false);
 
   gameRooms = computed(() =>

@@ -1,0 +1,16 @@
+{
+  "name": "translate_i18n",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vitalets/google-translate-api": "^9.2.1",
+    "bing-translate-api": "^4.2.1"
+  }
+}

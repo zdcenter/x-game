@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, SecurityContext, computed, effect, u
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
-import { BlogService, BlogPostMeta } from '../../../core/services/blog.service';
+import { BlogService, BlogPostMeta, BlogLanguageMeta } from '../../../core/services/blog.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { marked } from 'marked';
 
@@ -149,7 +149,8 @@ export class BlogPostComponent implements OnInit {
   displayMeta = computed(() => {
     const raw = this.rawMeta();
     if (!raw) return null;
-    return this.i18n.currentLang() === 'zh' ? raw.zh : raw.en;
+    const lang = this.i18n.currentLang() as keyof BlogPostMeta;
+    return raw[lang] as BlogLanguageMeta || raw.en;
   });
 
   contentHtml = signal<SafeHtml>('');

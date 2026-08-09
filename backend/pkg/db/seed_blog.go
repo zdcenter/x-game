@@ -28,6 +28,12 @@ type blogSeed struct {
 	Published bool         `json:"published"`
 	EN        blogSeedLang `json:"en"`
 	ZH        blogSeedLang `json:"zh"`
+	ES        blogSeedLang `json:"es"`
+	JA        blogSeedLang `json:"ja"`
+	KO        blogSeedLang `json:"ko"`
+	PT        blogSeedLang `json:"pt"`
+	FR        blogSeedLang `json:"fr"`
+	DE        blogSeedLang `json:"de"`
 }
 
 func SeedBlog() {
@@ -40,6 +46,12 @@ func SeedBlog() {
 	for _, s := range seeds {
 		tagsEN, _ := json.Marshal(s.EN.Tags)
 		tagsZH, _ := json.Marshal(s.ZH.Tags)
+		tagsES, _ := json.Marshal(s.ES.Tags)
+		tagsJA, _ := json.Marshal(s.JA.Tags)
+		tagsKO, _ := json.Marshal(s.KO.Tags)
+		tagsPT, _ := json.Marshal(s.PT.Tags)
+		tagsFR, _ := json.Marshal(s.FR.Tags)
+		tagsDE, _ := json.Marshal(s.DE.Tags)
 
 		post := domain.BlogPost{
 			Slug:       s.Slug,
@@ -60,6 +72,48 @@ func SeedBlog() {
 			AuthorZH:   s.ZH.Author,
 			TagsZH:     string(tagsZH),
 			ContentZH:  s.ZH.Content,
+			TitleES:    s.ES.Title,
+			DescES:     s.ES.Desc,
+			KeywordsES: s.ES.Keywords,
+			ReadTimeES: s.ES.ReadTime,
+			AuthorES:   s.ES.Author,
+			TagsES:     string(tagsES),
+			ContentES:  s.ES.Content,
+			TitleJA:    s.JA.Title,
+			DescJA:     s.JA.Desc,
+			KeywordsJA: s.JA.Keywords,
+			ReadTimeJA: s.JA.ReadTime,
+			AuthorJA:   s.JA.Author,
+			TagsJA:     string(tagsJA),
+			ContentJA:  s.JA.Content,
+			TitleKO:    s.KO.Title,
+			DescKO:     s.KO.Desc,
+			KeywordsKO: s.KO.Keywords,
+			ReadTimeKO: s.KO.ReadTime,
+			AuthorKO:   s.KO.Author,
+			TagsKO:     string(tagsKO),
+			ContentKO:  s.KO.Content,
+			TitlePT:    s.PT.Title,
+			DescPT:     s.PT.Desc,
+			KeywordsPT: s.PT.Keywords,
+			ReadTimePT: s.PT.ReadTime,
+			AuthorPT:   s.PT.Author,
+			TagsPT:     string(tagsPT),
+			ContentPT:  s.PT.Content,
+			TitleFR:    s.FR.Title,
+			DescFR:     s.FR.Desc,
+			KeywordsFR: s.FR.Keywords,
+			ReadTimeFR: s.FR.ReadTime,
+			AuthorFR:   s.FR.Author,
+			TagsFR:     string(tagsFR),
+			ContentFR:  s.FR.Content,
+			TitleDE:    s.DE.Title,
+			DescDE:     s.DE.Desc,
+			KeywordsDE: s.DE.Keywords,
+			ReadTimeDE: s.DE.ReadTime,
+			AuthorDE:   s.DE.Author,
+			TagsDE:     string(tagsDE),
+			ContentDE:  s.DE.Content,
 		}
 
 		// Upsert: insert only if slug doesn't exist; never overwrite existing edits

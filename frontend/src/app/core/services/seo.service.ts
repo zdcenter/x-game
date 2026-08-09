@@ -1,7 +1,7 @@
 import { Injectable, inject, effect, signal, DOCUMENT } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
-import { I18nService } from '../i18n/i18n.service';
+import { I18nService, SUPPORTED_LANGS } from '../i18n/i18n.service';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import { getOrigin, getHref, isBrowser } from '../utils/browser.util';
 import { GameRegistryService } from './game-registry.service';
@@ -61,11 +61,11 @@ export class SeoService {
       // --- Derive origin / URL (always absolute, even in SSR) ---
       const origin = getOrigin() || PROD_ORIGIN;
       const lang = this.i18n.currentLang();
-      // Strip the lang prefix that Transloco routing adds (e.g. /zh/games/foo → /games/foo)
-      const routePath = this.router.url.split('?')[0].replace(/^\/(en|zh)/, '') || '/';
+      // Strip the lang prefix that Transloco routing adds
+      const langPattern = SUPPORTED_LANGS.map(l => l.code).join('|');
+      const regex = new RegExp(`^\\/(${langPattern})`);
+      const routePath = this.router.url.split('?')[0].replace(regex, '') || '/';
       const canonicalUrl = `${origin}/${lang}${routePath}`;
-      const altLang = lang === 'en' ? 'zh' : 'en';
-      const altUrl = `${origin}/${altLang}${routePath}`;
       const defaultUrl = `${origin}/en${routePath}`;
 
       // ===== Match Routes for Dynamic Content =====
@@ -103,8 +103,13 @@ export class SeoService {
 
       // ===== Canonical + hreflang <link> tags =====
       this.setLinkTag('canonical', canonicalUrl);
-      this.setLinkTag('alternate', canonicalUrl, lang);
-      this.setLinkTag('alternate', altUrl, altLang);
+      
+      // Generate alternate tags for all supported languages
+      SUPPORTED_LANGS.forEach(supportedLang => {
+        const altUrl = `${origin}/${supportedLang.code}${routePath}`;
+        this.setLinkTag('alternate', altUrl, supportedLang.code);
+      });
+      
       this.setLinkTag('alternate', defaultUrl, 'x-default');
 
       // ===== JSON-LD Structured Data (for game pages and tutorials) =====
@@ -171,7 +176,7 @@ export class SeoService {
           'name': lang === 'zh' ? '益智擂台' : 'Puzzle PK',
           'url': origin,
           'description': desc,
-          'inLanguage': ['en', 'zh-CN'],
+          'inLanguage': SUPPORTED_LANGS.map(l => l.code),
           'potentialAction': {
             '@type': 'SearchAction',
             'target': `${origin}/lobby`,

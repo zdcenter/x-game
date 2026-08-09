@@ -91,7 +91,7 @@ interface TocItem {
               <!-- Advanced Interactive Tutorial for Sliding Puzzle -->
               @if (currentGameId() === 'sliding') {
                 <div class="mt-12 mb-8">
-                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">进阶攻略演示：快速复原秘籍</h2>
+                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sliding_advanced_tutorial')() || '进阶攻略演示：快速复原秘籍' }}</h2>
                   <div class="relative w-full max-w-md mx-auto">
                     <app-sliding-tutorial [inline]="true"></app-sliding-tutorial>
                   </div>
@@ -101,7 +101,7 @@ interface TocItem {
               <!-- Advanced Interactive Tutorial for Sokoban -->
               @if (currentGameId() === 'sokoban') {
                 <div class="mt-12 mb-8">
-                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">推箱子真实演示</h2>
+                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sokoban_advanced_tutorial')() || '推箱子真实演示' }}</h2>
                   <div class="relative w-full max-w-md mx-auto">
                     <app-sokoban-tutorial [inline]="true"></app-sokoban-tutorial>
                   </div>
@@ -109,7 +109,7 @@ interface TocItem {
               } @else if (hasDemoConfig(currentGameId()) && currentGameId() !== 'sliding') {
                 <!-- Standard Game Step Player for other games -->
                 <div class="mt-12 mb-8">
-                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="visual-guide">图文教程</h2>
+                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="visual-guide">{{ i18n.t('docs.visual_guide')() || '图文教程' }}</h2>
                   <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
                 </div>
               }
@@ -236,11 +236,11 @@ export class DocsComponent {
         const gameTitle = this.getGameTitle(game.id);
         const gameDesc = this.getGameDesc(game.id);
         const pageTitle = lang === 'zh'
-          ? `${gameTitle} 玩法教程 - ${this.i18n.t('app.title')()}`
-          : `How to Play ${gameTitle} - Rules & Tutorial | ${this.i18n.t('app.title')()}`;
+          ? `${gameTitle} 玩法教程与规则攻略 - ${this.i18n.t('app.title')()}`
+          : `How to Play ${gameTitle} - Rules & Advanced Tutorial | ${this.i18n.t('app.title')()}`;
         const desc = gameDesc || (lang === 'zh'
-          ? `学习如何玩 ${gameTitle}，查看规则和攻略。`
-          : `Learn how to play ${gameTitle}. Read the rules, strategies, and tutorials.`);
+          ? `全面学习如何游玩 ${gameTitle}，查看详细的规则说明、进阶高分策略与保姆级通关教程。`
+          : `Learn how to play ${gameTitle}. Read the comprehensive rules, advanced strategies, and step-by-step visual tutorials.`);
         const origin = getOrigin() || PROD_ORIGIN;
         const canonicalUrl = `${origin}/${lang}/docs/${game.id}`;
         const altLang = lang === 'en' ? 'zh' : 'en';
@@ -262,6 +262,14 @@ export class DocsComponent {
 
   getGameTitle(id: string): string {
     const config = this.gameRegistry.getConfig(id);
+    
+    // First try docs-specific title, then fall back to config
+    const docsTitleKey = `seo.docs.${id}.title`;
+    const docsTitle = this.i18n.t(docsTitleKey)();
+    if (docsTitle !== docsTitleKey) {
+      return docsTitle;
+    }
+    
     if (config && config.titleKey) {
       return this.i18n.t(config.titleKey)();
     }
@@ -276,21 +284,14 @@ export class DocsComponent {
   }
 
   getGameDesc(id: string): string {
-    const seoKey = `seo.${id}.desc`;
-    let desc = this.i18n.t(seoKey)();
-    if (desc !== seoKey) return desc;
+    // Try docs specific SEO key first
+    const docsSeoKey = `seo.docs.${id}.desc`;
+    let desc = this.i18n.t(docsSeoKey)();
+    if (desc !== docsSeoKey) return desc;
 
-    const descKey = `lobby.${id}.desc`;
-    desc = this.i18n.t(descKey)();
-    if (desc === descKey) {
-      // Some games like drop2048 might use app.title.drop2048.desc
-      const altKey = `app.title.${id}.desc`;
-      desc = this.i18n.t(altKey)();
-      if (desc === altKey) {
-        desc = '';
-      }
-    }
-    return desc;
+    // Return empty so the default docs description template is used
+    // This prevents identical meta descriptions between /games/X and /docs/X
+    return '';
   }
 
   hasDemoConfig(id: string): boolean {

@@ -65,12 +65,75 @@ async function main() {
         tags: detail.zh.tags ?? [],
         content: detail.zh.content ?? '',
       },
+      es: {
+        title: detail.es?.title || '',
+        description: detail.es?.description || '',
+        keywords: detail.es?.keywords || '',
+        readTime: detail.es?.readTime || '',
+        author: detail.es?.author || '',
+        tags: detail.es?.tags ?? [],
+        content: detail.es?.content ?? '',
+      },
+      ja: {
+        title: detail.ja?.title || '',
+        description: detail.ja?.description || '',
+        keywords: detail.ja?.keywords || '',
+        readTime: detail.ja?.readTime || '',
+        author: detail.ja?.author || '',
+        tags: detail.ja?.tags ?? [],
+        content: detail.ja?.content ?? '',
+      },
+      ko: {
+        title: detail.ko?.title || '',
+        description: detail.ko?.description || '',
+        keywords: detail.ko?.keywords || '',
+        readTime: detail.ko?.readTime || '',
+        author: detail.ko?.author || '',
+        tags: detail.ko?.tags ?? [],
+        content: detail.ko?.content ?? '',
+      },
+      pt: {
+        title: detail.pt?.title || '',
+        description: detail.pt?.description || '',
+        keywords: detail.pt?.keywords || '',
+        readTime: detail.pt?.readTime || '',
+        author: detail.pt?.author || '',
+        tags: detail.pt?.tags ?? [],
+        content: detail.pt?.content ?? '',
+      },
+      fr: {
+        title: detail.fr?.title || '',
+        description: detail.fr?.description || '',
+        keywords: detail.fr?.keywords || '',
+        readTime: detail.fr?.readTime || '',
+        author: detail.fr?.author || '',
+        tags: detail.fr?.tags ?? [],
+        content: detail.fr?.content ?? '',
+      },
+      de: {
+        title: detail.de?.title || '',
+        description: detail.de?.description || '',
+        keywords: detail.de?.keywords || '',
+        readTime: detail.de?.readTime || '',
+        author: detail.de?.author || '',
+        tags: detail.de?.tags ?? [],
+        content: detail.de?.content ?? '',
+      },
     };
     fs.writeFileSync(path.join(OUT_DIR, `${slug}.json`), JSON.stringify(postData, null, 2), 'utf-8');
 
     // Index entry (no content)
-    const { en: { content: _ec, ...enMeta }, zh: { content: _zc, ...zhMeta } } = postData;
-    index.push({ id: slug, date: postData.date, en: enMeta, zh: zhMeta });
+    const { 
+      en: { content: _ec, ...enMeta }, 
+      zh: { content: _zc, ...zhMeta },
+      es: { content: _sc, ...esMeta },
+      ja: { content: _jc, ...jaMeta },
+      ko: { content: _kc, ...koMeta },
+      pt: { content: _pc, ...ptMeta },
+      fr: { content: _fc, ...frMeta },
+      de: { content: _dc, ...deMeta }
+    } = postData;
+    index.push({ id: slug, date: postData.date, en: enMeta, zh: zhMeta, es: esMeta, ja: jaMeta, ko: koMeta, pt: ptMeta, fr: frMeta, de: deMeta });
   }
 
   fs.writeFileSync(path.join(OUT_DIR, 'index.json'), JSON.stringify(index, null, 2), 'utf-8');

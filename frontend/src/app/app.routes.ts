@@ -4,6 +4,7 @@ import { GAME_DEFINITIONS } from './core/config/game-definitions';
 import { langResolver } from './core/i18n/lang.resolver';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, inject } from '@angular/core';
+import { SUPPORTED_LANGS } from './core/i18n/i18n.service';
 
 const browserRedirectGuard = () => {
   if (isPlatformBrowser(inject(PLATFORM_ID))) {
@@ -63,9 +64,9 @@ const langChildren: Routes = [
         data: { 
           gameId: def.id,
           seo: {
-            titleKey:    `seo.${def.id}.title`,
-            descKey:     `seo.${def.id}.desc`,
-            keywordsKey: `seo.${def.id}.keywords`
+            titleKey:    `seo.docs.${def.id}.title`,
+            descKey:     `seo.docs.${def.id}.desc`,
+            keywordsKey: `seo.docs.${def.id}.keywords`
           }
         }
       })),
@@ -102,7 +103,7 @@ const langChildren: Routes = [
       {
         path: 'pk-arena',
         loadComponent: () => import('./features/pk-arena/pk-arena.component').then(m => m.PkArenaComponent),
-        data: { seo: { titleKey: 'seo.lobby.title', descKey: 'seo.lobby.desc', keywordsKey: 'seo.lobby.keywords' } }
+        data: { seo: { titleKey: 'seo.pk_arena.title', descKey: 'seo.pk_arena.desc', keywordsKey: 'seo.pk_arena.keywords' } }
       }
     ]
   },
@@ -139,7 +140,10 @@ const langChildren: Routes = [
 
 export const routes: Routes = [
   { path: '', canActivate: [browserRedirectGuard], children: [], pathMatch: 'full' },
-  { path: 'zh', resolve: { lang: langResolver }, children: langChildren },
-  { path: 'en', resolve: { lang: langResolver }, children: langChildren },
+  ...SUPPORTED_LANGS.map(lang => ({
+    path: lang.code,
+    resolve: { lang: langResolver },
+    children: langChildren
+  })),
   { path: '**', canActivate: [browserRedirectGuard], children: [] }
 ];
