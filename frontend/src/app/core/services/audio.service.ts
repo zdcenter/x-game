@@ -49,8 +49,8 @@ export class AudioService {
 
             if (this.audioCtx!.state === 'running') {
               this.hasUnlockedAudio = true;
-              window.removeEventListener('pointerdown', unlock);
-              window.removeEventListener('touchstart', unlock);
+              window.removeEventListener('pointerup', unlock);
+              window.removeEventListener('touchend', unlock);
               window.removeEventListener('keydown', unlock);
               window.removeEventListener('click', unlock);
             }
@@ -58,8 +58,8 @@ export class AudioService {
         }
       };
       
-      window.addEventListener('pointerdown', unlock, { once: true, passive: true });
-      window.addEventListener('touchstart', unlock, { once: true, passive: true });
+      window.addEventListener('pointerup', unlock, { once: true, passive: true });
+      window.addEventListener('touchend', unlock, { once: true, passive: true });
       window.addEventListener('keydown', unlock, { once: true, passive: true });
       window.addEventListener('click', unlock, { once: true, passive: true });
     }
