@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const domain = 'https://www.puzzlepk.com';
-const langs = ['en', 'zh'];
+const langs = ['en', 'zh', 'es', 'ja', 'ko', 'pt', 'fr', 'de'];
 const defaultLang = 'en';
 const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
