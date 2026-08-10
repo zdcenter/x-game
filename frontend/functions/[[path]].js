@@ -7,7 +7,25 @@ export async function onRequest(context) {
     // Static files (JS, CSS, images, etc.) — serve directly
     const lastSegment = pathname.split('/').pop();
     if (lastSegment && lastSegment.includes('.')) {
-      return env.ASSETS.fetch(request);
+      const response = await env.ASSETS.fetch(request);
+      
+      // Cloudflare Pages SPA fallback returns 200 text/html for missing assets.
+      // Intercept this to prevent MIME type errors and force the client to reload and fetch the latest build.
+      const isHtmlFallback = response.status === 200 && response.headers.get('content-type')?.includes('text/html');
+      
+      if (response.status === 404 || isHtmlFallback) {
+        if (pathname.endsWith('.js')) {
+          return new Response("window.location.reload(true);", {
+            headers: { 
+              "Content-Type": "application/javascript",
+              "Cache-Control": "no-cache, no-store, must-revalidate"
+            }
+          });
+        }
+        return new Response('Not Found', { status: 404 });
+      }
+      
+      return response;
     }
 
     // Root: detect browser language via Accept-Language header (server-side, bot-friendly)
