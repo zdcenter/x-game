@@ -643,6 +643,12 @@ Admin 面板新增「数据库管理」模块，支持全量或按表备份、�
 - **3D SVG Game Icons**: 全面移除了竞技大厅面板（房间列表、创建房间弹出框）以及游戏结算推荐面板（You might also like）中的原生 Emoji（如 💣, 🔢）。现已全部无缝升级为高清 3D 拟物化 SVG 图标（位于 `frontend/public/assets/games/icons/*.svg`），在所有设备与分辨率下带来顶级的视觉与高极感。
 
 ## [Unreleased]
+### Fixed
+- **SEO Optimization**: Fixed identical meta description issues reported by Bing. `docs` tutorial pages now have distinct, dynamic meta descriptions from `games` pages, and the `pk-arena` route now uses its own dedicated SEO keywords instead of inheriting from `lobby`.
+- **MIME Type Error (Cloudflare Pages)**: Resolved a strict MIME type checking error ("Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of text/html") caused by Cloudflare Early Hints preloading relative chunks. Added `baseHref: "/"` to `angular.json` to force absolute paths.
+- **Build Budgets**: Increased Angular initial bundle size budget in `angular.json` to fix `bundle initial exceeded maximum budget` build failures.
+- **I18n (Internationalization)**: Abstracted hardcoded Chinese texts in `game-lobby-panel` and `docs` components into translation JSON files across all 8 languages.
+
 ### Added
 - **Classic 2048**: Added the classic 4x4 sliding 2048 game with single-player and speed PK modes.
 - **Game Seed Workflow**: Replaced manual DB seed step with automatic `backend/update_games.py` script generation.
@@ -753,6 +759,12 @@ Admin 面板新增「数据库管理」模块，支持全量或按表备份、�
 - **Hashi (Bridges)**: Added Multiplayer PK Speed mode (竞速模式). Players can now create rooms and compete to solve Hashi puzzles first.
 
 ## [Unreleased]
+### Fixed
+- **SEO Optimization**: Fixed identical meta description issues reported by Bing. `docs` tutorial pages now have distinct, dynamic meta descriptions from `games` pages, and the `pk-arena` route now uses its own dedicated SEO keywords instead of inheriting from `lobby`.
+- **MIME Type Error (Cloudflare Pages)**: Resolved a strict MIME type checking error ("Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of text/html") caused by Cloudflare Early Hints preloading relative chunks. Added `baseHref: "/"` to `angular.json` to force absolute paths.
+- **Build Budgets**: Increased Angular initial bundle size budget in `angular.json` to fix `bundle initial exceeded maximum budget` build failures.
+- **I18n (Internationalization)**: Abstracted hardcoded Chinese texts in `game-lobby-panel` and `docs` components into translation JSON files across all 8 languages.
+
 ### Added
 - **社交系统**: 新增局内表情互动系统 (In-game Emotes)，支持在对局中发送气泡表情包。
 - **匹配系统**: 新增快速随机匹配系统 (Quick Matchmaking)，玩家可一键匹配进入随机房间。
