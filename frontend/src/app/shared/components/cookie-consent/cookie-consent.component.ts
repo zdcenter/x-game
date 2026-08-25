@@ -30,7 +30,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           <!-- Body -->
           <div class="text-sm leading-relaxed mb-5" style="color: var(--color-text-secondary)">
             {{ i18n.t('cookie.message')() || i18n.t('cookie.desc')() || 'We use cookies and similar technologies to personalize content, tailor and measure ads, and provide a better experience. By clicking accept, you agree to this, as outlined in our Cookie Policy.' }}
-            <a routerLink="/pages/privacy" class="underline hover:text-[var(--color-accent-from)] ml-1">
+            <a routerLink="/legal/privacy" class="underline hover:text-[var(--color-accent-from)] ml-1">
               {{ i18n.t('cookie.learnMore')() || 'Privacy Policy' }}
             </a>
           </div>

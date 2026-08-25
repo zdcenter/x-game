@@ -112,11 +112,14 @@
   - **房间直达裂变**：在联机房间内点击“分享”，会自动生成带有房间号、模式、房主ID参数的专属邀请链接。朋友点击即可瞬间拉起对应的游戏并直通对战房间。
   - **动态 SEO 与富文本预览 (Open Graph)**：集成了 `SeoService`，支持按当前游玩的游戏动态更新 `og:image` 与 `og:title/description`。在即时通讯软件发送链接时，会自动带出极其精美的游戏卡片预览，极大地提高转化率。
   - **OG 封面图**：`public/og-cover.png`（1200×630px）作为所有页面的默认分享图；博客文章页额外注入 BlogPosting JSON-LD 结构化数据，提升 Google 富文本搜索结果展示。
-  - **Sitemap 自动生成**：`scripts/generate-sitemap.js` 自动扫描 `features/games/` 目录与博客索引，生成含 `<lastmod>`、`hreflang`、`x-default` 的双语 sitemap（共 92 个 URL），同步输出 Angular SSG 用 `routes.txt`。
-  - **全站静态预渲染（93 条路由）**：`app.routes.server.ts` 所有路由统一 `RenderMode.Prerender`，包含博客文章、游戏页、文档页。Googlebot 访问任一 URL 均获得完整 HTML，无 JS 执行需求。
-  - **博客内容中心（静态 JSON 驱动）**：10 篇双语博客文章存储于 `public/assets/blog/{slug}.json`；`blog.service.ts` 读取静态文件（预渲染友好），Admin 面板写入 DB 后通过 `scripts/export-blog.js` 一键导出同步。文章均达到 900+ 英文词 / 1900+ 中文字，满足 AdSense 内容质量要求。
+  - **Sitemap 自动生成**：`scripts/generate-sitemap.js` 自动扫描 `features/games/` 目录与博客索引，生成含 `<lastmod>`、`hreflang`、`x-default` 的 8 语言 sitemap（当前 448 个 URL），同步输出 Angular SSG 用 `routes.txt`。
+  - **全站静态预渲染（448 条路由）**：`app.routes.server.ts` 所有路由统一 `RenderMode.Prerender`，包含博客文章、游戏页、文档页。Googlebot 访问任一 URL 均获得完整 HTML，无 JS 执行需求。
+  - **博客内容中心（静态 JSON 驱动）**：11 篇双语博客文章存储于 `public/assets/blog/{slug}.json`；`blog.service.ts` 读取静态文件（预渲染友好），Admin 面板写入 DB 后通过 `scripts/export-blog.js` 一键导出同步。文章均达到 900+ 英文词 / 1900+ 中文字，满足 AdSense 内容质量要求。
   - **robots.txt 精细配置**：允许全站爬取，Disallow `/admin/` 路径节省爬取配额；Cloudflare 托管层额外屏蔽 AI 训练爬虫（GPTBot、ClaudeBot 等）。
   - **AdSense 合规**：隐私政策含 Cookie/广告披露条款及用户退出链接；About 页含联系邮箱（contact@puzzlepk.com）。
+  - **统一法律页体系（/legal/\*）**：privacy / terms / about / **contact** 四类法律与联系页面全部预渲染且进入 sitemap。Contact 页（`legal.contact.*` 八语言 i18n）提供 support@puzzlepk.com 邮箱与 48 小时回复承诺，补齐 AdSense 审核所需的 E-E-A-T 联系信号。
+  - **页脚导航修复（AdSense 合规）**：页脚 About/Privacy/Terms/Contact 及 Cookie 弹窗链接从不可预渲染的 `/pages/*` 统一改为 `/legal/*`（此前 `/pages/*` 对爬虫返回空壳页面，属“低价值内容”拒审主因之一）；边缘函数对存量 `/pages/*` 返回 301 至 `/legal/*`，杜绝爬虫空页与重复内容。
+  - **/docs 攻略中心首页**：`/docs` 由空壳占位改为真实攻略中心（H1 + 八语言介绍 + 全游戏攻略卡片网格），移除自动跳转，成为可索引常驻页；`/daily` 每日挑战页新增八语言 SEO 介绍段落。
 - **结果页智能推荐 (Smart Game Recommendation)**：每局单机或联机游戏结束后，胜利/失败的 Overlay 面板底部会智能展示一排相关游戏的精美入口卡片。结合 `GameRegistryService` 动态匹配相关游戏，有效提高用户粘性和游戏间引流。
 
 ---
@@ -317,7 +320,7 @@
 
 ### 9.9 Cloudflare Pages 生产部署
 
-- **边缘函数**（`functions/[[path]].js`）：语言检测（Accept-Language）→ 根路径 301/302 跳转；显式加载预渲染 `index.html` 避免 Cloudflare 301 trailing-slash 重定向循环；修复 HTTP `Link` 头相对路径（Cloudflare 自动 Early Hints 生成，需改写为绝对路径防 MIME 错误）。
+- **边缘函数**（`functions/[[path]].js`）：语言检测（Accept-Language）→ 根路径 301/302 跳转；显式加载预渲染 `index.html` 避免 Cloudflare 301 trailing-slash 重定向循环；修复 HTTP `Link` 头相对路径（Cloudflare 自动 Early Hints 生成，需改写为绝对路径防 MIME 错误）；`/pages/*` 存量链接 301 重定向至 `/legal/*`。
 - **nginx 反代**（`deploy/nginx/puzzlepk.conf`）：仅代理 `api.puzzlepk.com:8443`，前端由 Cloudflare Pages 全权托管；CORS 头在 OPTIONS if 块内显式声明（含 `x-skip-logout` 自定义头）。
 - **缓存策略**（`public/_headers`）：HTML 页面 `no-store`，JS/CSS chunk 文件 `max-age=31536000 immutable`。
 

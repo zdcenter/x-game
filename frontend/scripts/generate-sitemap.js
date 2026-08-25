@@ -31,6 +31,7 @@ const staticPaths = [
   ['legal/privacy','monthly','0.3', today],
   ['legal/terms',  'monthly','0.3', today],
   ['legal/about',  'monthly','0.4', today],
+  ['legal/contact','monthly','0.4', today],
   ...games.map(g => [`games/${g}`, 'weekly', '0.9', today]),
   ...games.map(g => [`docs/${g}`,  'monthly','0.7', today]),
 ];

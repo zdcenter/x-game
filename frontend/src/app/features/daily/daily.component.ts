@@ -27,6 +27,11 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
           </div>
         </div>
 
+        <!-- SEO intro -->
+        <p class="text-[var(--color-text-secondary)] leading-relaxed border-b border-[var(--color-border-card)] pb-5">
+          {{ i18n.t('daily.seo_intro')() }}
+        </p>
+
         <!-- Today's Challenge Card -->
         @if (todayData()) {
           @if (todayData()!.challenge; as ch) {

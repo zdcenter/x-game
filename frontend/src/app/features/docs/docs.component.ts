@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, effect, ElementRef, ViewChild, DOCUMENT } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameDoc, getLocalizedField } from '../../core/services/game.service';
@@ -137,8 +137,25 @@ interface TocItem {
                 </a>
               </div>
             } @else {
-              <div class="flex items-center justify-center h-64 text-[var(--color-text-muted)]">
-                Loading documentation...
+              <!-- Docs index hub — real SEO content instead of an empty shell -->
+              <div class="mb-10 border-b border-[var(--color-border-card)] pb-8">
+                <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text mb-4"
+                    style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                  {{ i18n.t('docs.index_title')() || 'Game Guides & Tutorials' }}
+                </h1>
+                <p class="text-[var(--color-text-secondary)] text-lg leading-relaxed">
+                  {{ i18n.t('docs.index_intro')() || 'Master every puzzle on Puzzle PK with our complete game guides — rules, controls, advanced strategies and step-by-step visual tutorials.' }}
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                @for (game of games(); track game.id) {
+                  <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
+                     class="block p-5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-from)] transition-colors">
+                    <h2 class="text-lg font-bold text-[var(--color-text-primary)] mb-2">{{ getGameTitle(game.id) }}</h2>
+                    <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ getGameCardDesc(game.id) }}</p>
+                  </a>
+                }
               </div>
             }
           </article>
@@ -180,7 +197,6 @@ export class DocsComponent {
   i18n = inject(I18nService);
   private gameService = inject(GameService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
   private sanitizer = inject(DomSanitizer);
   private titleService = inject(Title);
@@ -208,13 +224,6 @@ export class DocsComponent {
       // Sort games by sortOrder
       const sorted = [...games].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       this.games.set(sorted);
-      
-      // If no gameId in route, redirect to the first game
-      // Use snapshot to avoid SSR synchronous observable race conditions
-      const urlGameId = this.route.snapshot.data['gameId'];
-      if (!urlGameId && sorted.length > 0) {
-        this.router.navigate(['/', this.i18n.currentLang(), 'docs', sorted[0].id], { replaceUrl: true });
-      }
     });
 
     this.route.data.subscribe(data => {
@@ -292,6 +301,18 @@ export class DocsComponent {
     // Return empty so the default docs description template is used
     // This prevents identical meta descriptions between /games/X and /docs/X
     return '';
+  }
+
+  /** Card description for the /docs index grid — falls back to the game page's
+   *  SEO description so every card has real text (docs-specific keys exist
+   *  only for a few games). Only used for display, not for meta tags. */
+  getGameCardDesc(id: string): string {
+    const docsKey = `seo.docs.${id}.desc`;
+    const docsDesc = this.i18n.t(docsKey)();
+    if (docsDesc !== docsKey) return docsDesc;
+    const gameKey = `seo.${id}.desc`;
+    const gameDesc = this.i18n.t(gameKey)();
+    return gameDesc !== gameKey ? gameDesc : '';
   }
 
   hasDemoConfig(id: string): boolean {

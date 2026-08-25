@@ -79,23 +79,23 @@ import { I18nService } from '../../i18n/i18n.service';
             </h3>
             <ul class="space-y-3 text-sm">
               <li>
-                <a [routerLink]="['/', i18n.currentLang(), 'pages', 'about']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
-                  {{ i18n.t('pages.title.about')() || 'About Us' }}
+                <a [routerLink]="['/', i18n.currentLang(), 'legal', 'about']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
+                  {{ i18n.t('legal.about.title')() || 'About Us' }}
                 </a>
               </li>
               <li>
-                <a [routerLink]="['/', i18n.currentLang(), 'pages', 'privacy']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
-                  {{ i18n.t('pages.title.privacy')() || 'Privacy Policy' }}
+                <a [routerLink]="['/', i18n.currentLang(), 'legal', 'privacy']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
+                  {{ i18n.t('legal.privacy.title')() || 'Privacy Policy' }}
                 </a>
               </li>
               <li>
-                <a [routerLink]="['/', i18n.currentLang(), 'pages', 'terms']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
-                  {{ i18n.t('pages.title.terms')() || 'Terms of Service' }}
+                <a [routerLink]="['/', i18n.currentLang(), 'legal', 'terms']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
+                  {{ i18n.t('legal.terms.title')() || 'Terms of Service' }}
                 </a>
               </li>
               <li>
-                <a [routerLink]="['/', i18n.currentLang(), 'pages', 'contact']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
-                  {{ i18n.t('pages.title.contact')() || 'Contact Us' }}
+                <a [routerLink]="['/', i18n.currentLang(), 'legal', 'contact']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
+                  {{ i18n.t('legal.contact.title')() || 'Contact Us' }}
                 </a>
               </li>
             </ul>

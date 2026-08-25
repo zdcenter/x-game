@@ -62,6 +62,14 @@
 /pt/legal/about
 /fr/legal/about
 /de/legal/about
+/en/legal/contact
+/zh/legal/contact
+/es/legal/contact
+/ja/legal/contact
+/ko/legal/contact
+/pt/legal/contact
+/fr/legal/contact
+/de/legal/contact
 /en/games/block
 /zh/games/block
 /es/games/block

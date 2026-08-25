@@ -34,27 +34,39 @@ export class SeoService {
     effect(() => {
       const seoData = this.currentSeoData();
 
+      // Legal pages: the Contact page gets its own dedicated title/desc/keywords
+      // instead of the generic "Legal & Privacy Policy" used by privacy/terms/about.
+      let effectiveSeo = seoData;
+      const legalMatch = this.router.url.match(/\/legal\/([a-zA-Z_-]+)/);
+      if (legalMatch && legalMatch[1] === 'contact') {
+        effectiveSeo = {
+          titleKey: 'seo.legal.contact.title',
+          descKey: 'seo.legal.contact.desc',
+          keywordsKey: 'seo.legal.contact.keywords',
+        };
+      }
+
       // Read default SEO translation strings (this registers language dependency)
       let pageTitle = this.i18n.t('seo.default.title')();
       let desc = this.i18n.t('seo.default.desc')();
       let keywords = this.i18n.t('seo.default.keywords')();
 
       // If route has specific SEO data, override the defaults
-      if (seoData) {
-        if (seoData.titleKey) {
-          const resolved = this.i18n.t(seoData.titleKey)();
-          if (resolved && resolved !== seoData.titleKey) {
+      if (effectiveSeo) {
+        if (effectiveSeo.titleKey) {
+          const resolved = this.i18n.t(effectiveSeo.titleKey)();
+          if (resolved && resolved !== effectiveSeo.titleKey) {
             const appName = this.i18n.t('app.title')();
             pageTitle = resolved.includes(appName) ? resolved : `${resolved} - ${appName}`;
           }
         }
-        if (seoData.descKey) {
-          const resolved = this.i18n.t(seoData.descKey)();
-          if (resolved && resolved !== seoData.descKey) desc = resolved;
+        if (effectiveSeo.descKey) {
+          const resolved = this.i18n.t(effectiveSeo.descKey)();
+          if (resolved && resolved !== effectiveSeo.descKey) desc = resolved;
         }
-        if (seoData.keywordsKey) {
-          const resolved = this.i18n.t(seoData.keywordsKey)();
-          if (resolved && resolved !== seoData.keywordsKey) keywords = resolved;
+        if (effectiveSeo.keywordsKey) {
+          const resolved = this.i18n.t(effectiveSeo.keywordsKey)();
+          if (resolved && resolved !== effectiveSeo.keywordsKey) keywords = resolved;
         }
       }
 
@@ -199,7 +211,10 @@ export class SeoService {
       filter(route => route.outlet === 'primary'),
       mergeMap(route => route.data)
     ).subscribe(data => {
-      this.currentSeoData.set(data['seo'] || null);
+      // Shallow-copy so the signal always emits a fresh reference on every
+      // navigation (same route config data object would otherwise be === and
+      // the SEO effect would skip re-running, e.g. legal/privacy → legal/contact).
+      this.currentSeoData.set(data['seo'] ? { ...data['seo'] } : null);
     });
 
     // GA4 Page View Tracking

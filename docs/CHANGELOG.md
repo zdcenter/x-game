@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-08] - 🌐 AdSense 合规修复：低价值内容拒审专项 (AdSense Compliance Fixes)
+
+### 🐛 修复 (Fixes)
+- **页脚法律链接死链修复（AdSense 拒审主因）**：页脚 About Us / Privacy Policy / Terms of Service / Contact Us 与 Cookie 弹窗内的隐私政策链接原指向 `/pages/*`（未预渲染，Googlebot 抓取到 0 文字的空壳页面并回退中文默认标题，属典型"低价值内容"信号），统一改为指向已预渲染的 `/legal/*` 路由；边缘函数对存量 `/pages/*` 请求 301 重定向至 `/legal/*`，杜绝爬虫空页与重复内容。
+
+### ✨ 新功能 (Features)
+- **可预渲染的 Contact 页（/legal/contact）**：八语言新增 `legal.contact.title/content`（含 support@puzzlepk.com 邮箱、Twitter 与 48 小时回复承诺）与 `seo.legal.contact.title/desc/keywords`（独立 TDK）。`SeoService` 对 `/legal/contact` 使用专属标题描述，不再复用 "Legal & Privacy Policy" 泛用标题；`generate-sitemap.js` 将 `legal/contact` 纳入 sitemap 与 Angular SSG 预渲染列表（448 个 URL），补齐 AdSense 审核所需的 E-E-A-T 联系信号。
+- **/docs 攻略中心首页补全**：`/docs` 原本仅渲染 "Loading documentation..." 空壳（对爬虫仅 5 个词，属低价值页面），现改为真实攻略中心页——H1 + 八语言介绍段落 + 全部游戏攻略卡片网格；移除"自动跳转到第一款游戏"的客户端重定向，使 `/docs` 成为可索引的常驻页面。
+- **/daily 每日挑战页补全 SEO 文案**：新增八语言 `daily.seo_intro` 介绍段落（每日挑战玩法、奖励与连胜机制），消除该页对爬虫仅 86 词的内容单薄问题。
+
 ## [2026-07-10] - 🎨 视觉反馈与震动增强 (Juiciness Enhancement)
 
 ### ✨ 新功能与视觉增强 (Features & UI Enhancements)

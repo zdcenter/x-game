@@ -48,6 +48,12 @@ export async function onRequest(context) {
       return Response.redirect(new URL('/zh/lobby', request.url).toString(), 302);
     }
 
+    // Legacy /pages/* links (old footer links) — consolidate on the canonical
+    // prerendered /legal/* URLs so crawlers never hit the empty SPA fallback.
+    if (pathname.includes('/pages/')) {
+      return Response.redirect(new URL(pathname.replace('/pages/', '/legal/'), request.url).toString(), 301);
+    }
+
     // Serve prerendered page via explicit index.html path.
     // Avoids 301 trailing-slash redirects that env.ASSETS.fetch emits for bare directory paths,
     // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
