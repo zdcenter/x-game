@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-08] - 📚 阶段二：内容深化与 E-E-A-T 补强 (Phase 2: Content Deepening & E-E-A-T)
+
+### ✨ 新功能 (Features)
+- **游戏页 SEO 文案补齐（connect/nonogram）**：`game.connect.seo_desc` 原为全站缺失（8 语言均为 0 字），新增约 450-650 词完整文案（玩法、规则、五种难度、制胜技巧、模式介绍）；`game.nonogram.seo_desc` 由 75 词扩至 500+ 词（Picross 规则、边缘重叠法/两端计数法等核心策略）。8 语言同步更新。
+- **About 页充实（8 语言）**：`legal.about.content` 由 258 词扩至约 450-550 词，新增"我们提供什么"（18 款游戏清单）、"每日挑战与排行榜"、"联系我们"（support@puzzlepk.com + 48 小时回复承诺）、"隐私与安全"等章节，强化 E-E-A-T 信号。
+- **博客作者简介区块（E-E-A-T）**：博客文章底部新增"Puzzle PK Team"作者卡片（八语言 `blog.author_bio` / `blog.author_more`），链接至 About 页，配合 JSON-LD Organization 作者标记提升可信度。
+
+### 📝 内容 (Content)
+- **博客多语言翻译补齐**：5 篇此前仅 en/zh 有真实翻译、其余 6 语言回退英文原文的博客文章（1a2b-bulls-cows、benefits-of-multiplayer-educational-games、sudoku-benefits、sudoku-for-kids-a-beginners-guide、why-math24-is-the-best-brain-training-game-for-kids）通过并行翻译流水线补齐 es/ja/ko/pt/fr/de 六语言，消除"多语言重复内容"对 AdSense 审核的负面影响；`minesweeper-logic` 的 pt/fr/de 同步补译。
+- **export-blog.js 空值保护**：`scripts/export-blog.js` 构建时会从生产 API 拉取博客内容并覆盖 public 静态文件，而生产库仅维护 en/zh——现增加 gap-fill 逻辑：DB 字段为空/缺失时保留本地已有翻译，非空 DB 值仍然优先，杜绝构建把已翻译的多语言内容冲掉。
+
 ## [2026-08] - 🌐 AdSense 合规修复：低价值内容拒审专项 (AdSense Compliance Fixes)
 
 ### 🐛 修复 (Fixes)

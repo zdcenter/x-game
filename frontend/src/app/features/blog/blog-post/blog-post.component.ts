@@ -60,6 +60,22 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
             <div class="prose prose-invert prose-emerald max-w-none" [innerHTML]="contentHtml()">
             </div>
+
+            <!-- Author / Team bio — E-E-A-T signal -->
+            <div class="mt-10 p-6 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-lg font-black shrink-0 text-white">
+                  PK
+                </div>
+                <div>
+                  <h3 class="font-bold text-[var(--color-text-main)] mb-1">{{ displayMeta()?.author }}</h3>
+                  <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ i18n.t('blog.author_bio')() }}</p>
+                  <a [routerLink]="['/', i18n.currentLang(), 'legal', 'about']" class="inline-block mt-3 text-sm font-semibold text-[var(--color-accent-from)] hover:underline">
+                    {{ i18n.t('blog.author_more')() }}
+                  </a>
+                </div>
+              </div>
+            </div>
             
             <div class="mt-12 pt-8 border-t border-[var(--color-border-card)] text-center">
               <h3 class="text-xl font-bold mb-4">{{ rawMeta()?.relatedGameId ? i18n.t('blog.cta_title_game')() || i18n.t('blog.cta_title')() : i18n.t('blog.cta_title')() }}</h3>

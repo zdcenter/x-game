@@ -43,83 +43,28 @@ async function main() {
     const detail = await get(`${API_BASE}/blog/posts/${slug}`);
 
     // Full post file (with content)
-    const postData = {
-      id: detail.id_slug,
-      date: detail.date,
-      published: detail.published,
-      en: {
-        title: detail.en.title,
-        description: detail.en.description,
-        keywords: detail.en.keywords,
-        readTime: detail.en.readTime,
-        author: detail.en.author,
-        tags: detail.en.tags ?? [],
-        content: detail.en.content ?? '',
-      },
-      zh: {
-        title: detail.zh.title,
-        description: detail.zh.description,
-        keywords: detail.zh.keywords,
-        readTime: detail.zh.readTime,
-        author: detail.zh.author,
-        tags: detail.zh.tags ?? [],
-        content: detail.zh.content ?? '',
-      },
-      es: {
-        title: detail.es?.title || '',
-        description: detail.es?.description || '',
-        keywords: detail.es?.keywords || '',
-        readTime: detail.es?.readTime || '',
-        author: detail.es?.author || '',
-        tags: detail.es?.tags ?? [],
-        content: detail.es?.content ?? '',
-      },
-      ja: {
-        title: detail.ja?.title || '',
-        description: detail.ja?.description || '',
-        keywords: detail.ja?.keywords || '',
-        readTime: detail.ja?.readTime || '',
-        author: detail.ja?.author || '',
-        tags: detail.ja?.tags ?? [],
-        content: detail.ja?.content ?? '',
-      },
-      ko: {
-        title: detail.ko?.title || '',
-        description: detail.ko?.description || '',
-        keywords: detail.ko?.keywords || '',
-        readTime: detail.ko?.readTime || '',
-        author: detail.ko?.author || '',
-        tags: detail.ko?.tags ?? [],
-        content: detail.ko?.content ?? '',
-      },
-      pt: {
-        title: detail.pt?.title || '',
-        description: detail.pt?.description || '',
-        keywords: detail.pt?.keywords || '',
-        readTime: detail.pt?.readTime || '',
-        author: detail.pt?.author || '',
-        tags: detail.pt?.tags ?? [],
-        content: detail.pt?.content ?? '',
-      },
-      fr: {
-        title: detail.fr?.title || '',
-        description: detail.fr?.description || '',
-        keywords: detail.fr?.keywords || '',
-        readTime: detail.fr?.readTime || '',
-        author: detail.fr?.author || '',
-        tags: detail.fr?.tags ?? [],
-        content: detail.fr?.content ?? '',
-      },
-      de: {
-        title: detail.de?.title || '',
-        description: detail.de?.description || '',
-        keywords: detail.de?.keywords || '',
-        readTime: detail.de?.readTime || '',
-        author: detail.de?.author || '',
-        tags: detail.de?.tags ?? [],
-        content: detail.de?.content ?? '',
-      },
-    };
+    // Gap-fill protection: the production DB is the source of truth, but the
+    // admin panel may not have content for every language yet. Never let an
+    // empty DB field wipe an existing local translation — keep the local value
+    // until the DB is properly filled (non-empty DB values always win).
+    const LOCAL_FIELDS = ['title', 'description', 'keywords', 'readTime', 'author', 'tags', 'content'];
+    const BLOG_LANGS = ['en', 'zh', 'es', 'ja', 'ko', 'pt', 'fr', 'de'];
+    let local = {};
+    const localPath = path.join(OUT_DIR, `${slug}.json`);
+    if (fs.existsSync(localPath)) {
+      try { local = JSON.parse(fs.readFileSync(localPath, 'utf-8')); } catch (e) { local = {}; }
+    }
+    const postData = { id: detail.id_slug, date: detail.date, published: detail.published };
+    for (const lang of BLOG_LANGS) {
+      const api = detail[lang] || {};
+      const loc = local[lang] || {};
+      const obj = {};
+      for (const f of LOCAL_FIELDS) {
+        const v = api[f];
+        obj[f] = (v !== undefined && v !== null && v !== '') ? v : (loc[f] ?? '');
+      }
+      postData[lang] = obj;
+    }
     fs.writeFileSync(path.join(OUT_DIR, `${slug}.json`), JSON.stringify(postData, null, 2), 'utf-8');
 
     // Index entry (no content)

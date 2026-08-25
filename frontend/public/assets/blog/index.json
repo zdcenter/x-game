@@ -1,105 +1,5 @@
 [
   {
-    "id": "nonogram-strategy",
-    "date": "2026-07-19",
-    "en": {
-      "title": "Nonogram Strategy: Step-by-Step Guide to Solving Puzzles",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    },
-    "zh": {
-      "title": "数织 (Nonogram) 详细攻略：一步一步教你解题",
-      "description": "这是一篇从入门到进阶的数织（Nonogram/Picross）详细解题攻略，通过图文并茂的实例，一步步教你如何运用逻辑和技巧完成解谜。",
-      "keywords": "数织, nonogram, picross, 攻略, 解题思路, 逻辑解谜",
-      "readTime": "12 分钟阅读",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "数织",
-        "攻略",
-        "解密"
-      ]
-    },
-    "es": {
-      "title": "Estrategia para Nonogramas: Guía Paso a Paso para Resolver Rompecabezas",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    },
-    "ja": {
-      "title": "ノノグラムの戦略：パズルを解くためのステップバイステップガイド",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    },
-    "ko": {
-      "title": "논그램 전략: 퍼즐 해결을 위한 단계별 가이드",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    },
-    "pt": {
-      "title": "Estratégia de Nonogram: Guia Passo a Passo para Resolver Quebra-Cabeças",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    },
-    "fr": {
-      "title": "Stratégie pour Nonogramme : Guide étape par étape pour résoudre des puzzles",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    },
-    "de": {
-      "title": "Nonogramm-Strategie: Schritt-für-Schritt-Anleitung zum Lösen von Rätseln",
-      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
-      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
-      "readTime": "12 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Nonogram",
-        "Strategy",
-        "Tutorial"
-      ]
-    }
-  },
-  {
     "id": "gomoku-strategy-guide",
     "date": "2026-06-16",
     "en": {
@@ -196,6 +96,106 @@
         "Gomoku",
         "Strategy",
         "Board Games"
+      ]
+    }
+  },
+  {
+    "id": "nonogram-strategy",
+    "date": "2026-07-19",
+    "en": {
+      "title": "Nonogram Strategy: Step-by-Step Guide to Solving Puzzles",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "zh": {
+      "title": "数织 (Nonogram) 详细攻略：一步一步教你解题",
+      "description": "这是一篇从入门到进阶的数织（Nonogram/Picross）详细解题攻略，通过图文并茂的实例，一步步教你如何运用逻辑和技巧完成解谜。",
+      "keywords": "数织, nonogram, picross, 攻略, 解题思路, 逻辑解谜",
+      "readTime": "12 分钟阅读",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "数织",
+        "攻略",
+        "解密"
+      ]
+    },
+    "es": {
+      "title": "Estrategia para Nonogramas: Guía Paso a Paso para Resolver Rompecabezas",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "ja": {
+      "title": "ノノグラムの戦略：パズルを解くためのステップバイステップガイド",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "ko": {
+      "title": "논그램 전략: 퍼즐 해결을 위한 단계별 가이드",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "pt": {
+      "title": "Estratégia de Nonogram: Guia Passo a Passo para Resolver Quebra-Cabeças",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "fr": {
+      "title": "Stratégie pour Nonogramme : Guide étape par étape pour résoudre des puzzles",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "de": {
+      "title": "Nonogramm-Strategie: Schritt-für-Schritt-Anleitung zum Lösen von Rätseln",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
       ]
     }
   },
@@ -564,10 +564,10 @@
     },
     "pt": {
       "title": "A Lógica Oculta do Campo Minado: Um Guia Completo de Estratégia",
-      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
-      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Campo Minado não é sobre adivinhar. Domine os padrões 1-1, 1-2 e 1-2-1, aprenda a estimar probabilidades e descubra técnicas de velocidade para o modo PK.",
+      "keywords": "Campo Minado, lógica, probabilidade, quebra-cabeça, estratégia, modo PK",
+      "readTime": "7 min de leitura",
+      "author": "Equipe Puzzle PK",
       "tags": [
         "Minesweeper",
         "Logic",
@@ -575,11 +575,11 @@
       ]
     },
     "fr": {
-      "title": "La logique cachée de Démineur : un guide stratégique complet",
-      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
-      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "title": "La logique cachée du Démineur : un guide stratégique complet",
+      "description": "Le Démineur n'est pas une question de hasard. Maîtrisez les motifs 1-1, 1-2 et 1-2-1, apprenez à estimer les probabilités et découvrez les techniques de vitesse pour le mode PK.",
+      "keywords": "Démineur, logique, probabilité, casse-tête, stratégie, mode PK",
+      "readTime": "7 min de lecture",
+      "author": "Équipe Puzzle PK",
       "tags": [
         "Minesweeper",
         "Logic",
@@ -588,9 +588,9 @@
     },
     "de": {
       "title": "Die verborgene Logik von Minesweeper: Ein vollständiger Strategie-Guide",
-      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
-      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
-      "readTime": "7 min read",
+      "description": "Bei Minesweeper geht es nicht um Raten. Meistere die 1-1-, 1-2- und 1-2-1-Muster, lerne, Wahrscheinlichkeiten einzuschätzen, und entdecke Geschwindigkeitstechniken für den PK-Modus.",
+      "keywords": "Minesweeper, Logik, Wahrscheinlichkeit, Puzzle, Strategie, PK-Modus",
+      "readTime": "7 Min. Lesezeit",
       "author": "Puzzle PK Team",
       "tags": [
         "Minesweeper",
@@ -627,11 +627,11 @@
       ]
     },
     "es": {
-      "title": "Dominando 1A2B (Bulls and Cows): Estrategia, Algoritmos y Deducción",
-      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
-      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
-      "readTime": "8 min read",
-      "author": "Puzzle PK Team",
+      "title": "Dominando el 1A2B (Bulls and Cows): Estrategia, Algoritmos y la Ciencia de la Deducción",
+      "description": "Una inmersión profunda en el enfoque basado en la teoría de la información para resolver de forma eficiente el clásico juego de descifrar códigos 1A2B: desde la identificación de dígitos hasta los algoritmos minimax.",
+      "keywords": "1A2B, Bulls and Cows, juego de adivinar números, algoritmo, estrategia, teoría de la información",
+      "readTime": "8 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
       "tags": [
         "1A2B",
         "Algorithms",
@@ -639,11 +639,11 @@
       ]
     },
     "ja": {
-      "title": "1A2B（ブルズアンドカウズ）の習得：戦略、アルゴリズム、推理",
-      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
-      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
-      "readTime": "8 min read",
-      "author": "Puzzle PK Team",
+      "title": "1A2B（ブルズアンドカウズ）を極める：戦略、アルゴリズム、そして推理の科学",
+      "description": "古典的なコードブレイクゲーム1A2Bを情報理論の視点から攻略する完全ガイド。数字の特定からミニマックスアルゴリズムまで、効率的に解く方法を深掘りします。",
+      "keywords": "1A2B, ブルズアンドカウズ, 数字当てゲーム, アルゴリズム, 攻略, 情報理論",
+      "readTime": "8 分で読めます",
+      "author": "Puzzle PK チーム",
       "tags": [
         "1A2B",
         "Algorithms",
@@ -651,11 +651,11 @@
       ]
     },
     "ko": {
-      "title": "1A2B(불스 앤 카우스) 마스터하기: 전략, 알고리즘, 추론",
-      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
-      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
-      "readTime": "8 min read",
-      "author": "Puzzle PK Team",
+      "title": "1A2B(불스 앤 카우스) 마스터하기: 전략, 알고리즘, 그리고 추론의 과학",
+      "description": "고전적인 코드 추측 게임 1A2B를 정보 이론적 접근으로 효율적으로 푸는 방법을 깊이 있게 다룹니다 — 숫자 식별부터 미니맥스 알고리즘까지.",
+      "keywords": "1A2B, 불스 앤 카우스, 숫자 추측 게임, 알고리즘, 전략, 정보 이론",
+      "readTime": "8분 소요",
+      "author": "Puzzle PK 팀",
       "tags": [
         "1A2B",
         "Algorithms",
@@ -663,11 +663,11 @@
       ]
     },
     "pt": {
-      "title": "Dominando 1A2B (Bulls and Cows): Estratégia, Algoritmos e Dedução",
-      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
-      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
-      "readTime": "8 min read",
-      "author": "Puzzle PK Team",
+      "title": "Dominando o 1A2B (Bulls and Cows): Estratégia, Algoritmos e a Ciência da Dedução",
+      "description": "Um mergulho profundo na abordagem baseada na teoria da informação para resolver com eficiência o clássico jogo de decifrar códigos 1A2B — da identificação de dígitos aos algoritmos minimax.",
+      "keywords": "1A2B, Bulls and Cows, jogo de adivinhar números, algoritmo, estratégia, teoria da informação",
+      "readTime": "8 minutos de leitura",
+      "author": "Equipe Puzzle PK",
       "tags": [
         "1A2B",
         "Algorithms",
@@ -675,11 +675,11 @@
       ]
     },
     "fr": {
-      "title": "Maîtriser 1A2B (Bulls and Cows) : Stratégie, Algorithmes et Déduction",
-      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
-      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
-      "readTime": "8 min read",
-      "author": "Puzzle PK Team",
+      "title": "Maîtriser le 1A2B (Bulls and Cows) : Stratégie, Algorithmes et la Science de la Déduction",
+      "description": "Une plongée approfondie dans l'approche fondée sur la théorie de l'information pour résoudre efficacement le jeu classique de décodage 1A2B — de l'identification des chiffres aux algorithmes minimax.",
+      "keywords": "1A2B, Bulls and Cows, jeu de déduction de nombres, algorithme, stratégie, théorie de l'information",
+      "readTime": "8 minutes de lecture",
+      "author": "Équipe Puzzle PK",
       "tags": [
         "1A2B",
         "Algorithms",
@@ -687,10 +687,10 @@
       ]
     },
     "de": {
-      "title": "Meisterung von 1A2B (Bullen und Kühe): Strategie, Algorithmen und Deduktion",
-      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
-      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
-      "readTime": "8 min read",
+      "title": "1A2B (Bullen und Kühe) meistern: Strategie, Algorithmen und die Wissenschaft der Deduktion",
+      "description": "Ein tiefer Einblick in den informationstheoretischen Ansatz, um das klassische Codeknacker-Spiel 1A2B effizient zu lösen — von der Ziffernidentifikation bis zu Minimax-Algorithmen.",
+      "keywords": "1A2B, Bulls and Cows, Zahlenratespiel, Algorithmus, Strategie, Informationstheorie",
+      "readTime": "8 Minuten Lesezeit",
       "author": "Puzzle PK Team",
       "tags": [
         "1A2B",
@@ -728,10 +728,10 @@
     },
     "es": {
       "title": "Por qué jugar Sudoku todos los días es bueno para tu cerebro",
-      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
-      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Descubre los beneficios científicos de jugar Sudoku a diario: desde fortalecer la memoria de trabajo y el razonamiento lógico hasta reducir el estrés y, posiblemente, retrasar el deterioro cognitivo.",
+      "keywords": "Sudoku, beneficios del Sudoku, entrenamiento cerebral, memoria, salud cognitiva, reducir el estrés, razonamiento lógico",
+      "readTime": "7 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
       "tags": [
         "Sudoku",
         "Brain Health",
@@ -740,10 +740,10 @@
     },
     "ja": {
       "title": "毎日数独をすることが脳に良い理由",
-      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
-      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "毎日数独をプレイすることの科学的な効果をご紹介。ワーキングメモリの強化や論理的思考力の向上から、ストレス軽減、認知機能低下の遅延まで、数独が脳に与える影響を詳しく解説します。",
+      "keywords": "数独, 数独の効果, 脳トレ, 記憶力, 認知機能, ストレス解消, 論理的思考",
+      "readTime": "7 分で読めます",
+      "author": "Puzzle PK チーム",
       "tags": [
         "Sudoku",
         "Brain Health",
@@ -752,10 +752,10 @@
     },
     "ko": {
       "title": "매일 스도쿠를 하는 것이 두뇌에 좋은 이유",
-      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
-      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "매일 스도쿠를 플레이할 때 얻는 과학적 이점을 알아보세요. 작업 기억력 강화와 논리적 사고력 향상부터 스트레스 감소와 인지 기능 저하 지연까지, 스도쿠가 두뇌에 미치는 영향을 자세히 소개합니다.",
+      "keywords": "스도쿠, 스도쿠 효과, 두뇌 훈련, 기억력, 인지 건강, 스트레스 해소, 논리적 사고",
+      "readTime": "7분 분량",
+      "author": "Puzzle PK 팀",
       "tags": [
         "Sudoku",
         "Brain Health",
@@ -764,10 +764,10 @@
     },
     "pt": {
       "title": "Por que Jogar Sudoku Todos os Dias é Bom para o Seu Cérebro",
-      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
-      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Descubra os benefícios científicos de jogar Sudoku diariamente — do fortalecimento da memória de trabalho e do raciocínio lógico à redução do estresse e ao possível retardo do declínio cognitivo.",
+      "keywords": "Sudoku, benefícios do Sudoku, treino cerebral, memória, saúde cognitiva, reduzir o estresse, raciocínio lógico",
+      "readTime": "7 minutos de leitura",
+      "author": "Equipe Puzzle PK",
       "tags": [
         "Sudoku",
         "Brain Health",
@@ -776,10 +776,10 @@
     },
     "fr": {
       "title": "Pourquoi jouer au Sudoku tous les jours est bon pour votre cerveau",
-      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
-      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Découvrez les bienfaits scientifiques du Sudoku quotidien — du renforcement de la mémoire de travail et du raisonnement logique à la réduction du stress et au ralentissement potentiel du déclin cognitif.",
+      "keywords": "Sudoku, bienfaits du Sudoku, entraînement cérébral, mémoire, santé cognitive, réduire le stress, logique",
+      "readTime": "7 minutes de lecture",
+      "author": "Équipe Puzzle PK",
       "tags": [
         "Sudoku",
         "Brain Health",
@@ -788,9 +788,9 @@
     },
     "de": {
       "title": "Warum das tägliche Sudoku-Spielen gut für Ihr Gehirn ist",
-      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
-      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
-      "readTime": "7 min read",
+      "description": "Entdecken Sie die wissenschaftlichen Vorteile des täglichen Sudoku-Spielens — von der Stärkung des Arbeitsgedächtnisses und des logischen Denkens bis hin zu weniger Stress und einem möglicherweise langsameren kognitiven Abbau.",
+      "keywords": "Sudoku, Sudoku Vorteile, Gehirntraining, Gedächtnis, kognitive Gesundheit, Stressabbau, logisches Denken",
+      "readTime": "7 Minuten Lesezeit",
       "author": "Puzzle PK Team",
       "tags": [
         "Sudoku",
@@ -828,10 +828,10 @@
     },
     "es": {
       "title": "Por qué Math 24 es el mejor juego de entrenamiento cerebral para estudiantes de primaria",
-      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
-      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
-      "readTime": "5 min read",
-      "author": "Puzzle PK Team",
+      "description": "Descubre cómo el clásico rompecabezas Math 24 puede mejorar de forma espectacular el cálculo mental, la lógica y la capacidad de resolver problemas de tu hijo, todo de una manera divertida y competitiva.",
+      "keywords": "math 24, entrenamiento cerebral, juegos educativos para niños, matemáticas de primaria, cálculo mental",
+      "readTime": "5 min de lectura",
+      "author": "Equipo de Puzzle PK",
       "tags": [
         "Education",
         "Math",
@@ -840,10 +840,10 @@
     },
     "ja": {
       "title": "なぜ『Math 24』は小学生に最適な脳トレゲームなのか",
-      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
-      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
-      "readTime": "5 min read",
-      "author": "Puzzle PK Team",
+      "description": "定番の数字パズル『Math 24』が、遊び感覚の対戦形式でお子さまの暗算力・論理的思考・問題解決力をぐんぐん伸ばしてくれる理由をご紹介します。小学生・中学生を持つ親御さんにこそ読んでほしい、楽しく続けられる脳トレゲームの選び方ガイドです。",
+      "keywords": "マス24, 24ゲーム, 脳トレ, 子ども向け知育ゲーム, 小学生の算数, 暗算",
+      "readTime": "5 分で読めます",
+      "author": "Puzzle PK チーム",
       "tags": [
         "Education",
         "Math",
@@ -851,11 +851,11 @@
       ]
     },
     "ko": {
-      "title": "왜 매스 24가 초등학생을 위한 최고의 두뇌 훈련 게임인지",
-      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
-      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
-      "readTime": "5 min read",
-      "author": "Puzzle PK Team",
+      "title": "매스 24, 초등학생을 위한 최고의 두뇌 훈련 게임",
+      "description": "고전 퍼즐 매스 24가 아이의 암산 실력과 논리력, 문제 해결 능력을 재미있고 경쟁적인 방식으로 눈에 띄게 향상시켜 주는 비결을 지금 확인해 보세요.",
+      "keywords": "매스 24, 두뇌 훈련, 어린이 교육 게임, 초등 수학, 암산",
+      "readTime": "5분 읽기",
+      "author": "Puzzle PK 팀",
       "tags": [
         "Education",
         "Math",
@@ -864,10 +864,10 @@
     },
     "pt": {
       "title": "Por que o Math 24 é o Melhor Jogo de Treinamento Cerebral para Estudantes do Ensino Fundamental",
-      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
-      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
-      "readTime": "5 min read",
-      "author": "Puzzle PK Team",
+      "description": "Descubra como o clássico puzzle Math 24 pode melhorar de forma drástica o cálculo mental, a lógica e a capacidade de resolução de problemas do seu filho — de uma forma divertida e competitiva.",
+      "keywords": "math 24, treinamento cerebral, jogos educativos para crianças, matemática do ensino fundamental, cálculo mental",
+      "readTime": "5 min de leitura",
+      "author": "Equipe Puzzle PK",
       "tags": [
         "Education",
         "Math",
@@ -876,10 +876,10 @@
     },
     "fr": {
       "title": "Pourquoi Math 24 est le meilleur jeu d'entraînement cérébral pour les élèves du primaire",
-      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
-      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
-      "readTime": "5 min read",
-      "author": "Puzzle PK Team",
+      "description": "Découvrez comment le célèbre casse-tête Math 24 peut améliorer de façon spectaculaire le calcul mental, la logique et les capacités de résolution de problèmes de votre enfant, de manière ludique et compétitive.",
+      "keywords": "math 24, entraînement cérébral, jeux éducatifs pour enfants, maths primaire, calcul mental",
+      "readTime": "5 min de lecture",
+      "author": "Équipe Puzzle PK",
       "tags": [
         "Education",
         "Math",
@@ -888,9 +888,9 @@
     },
     "de": {
       "title": "Warum Math 24 das beste Gehirntraining-Spiel für Grundschüler ist",
-      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
-      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
-      "readTime": "5 min read",
+      "description": "Entdecke, wie das klassische Math-24-Rätsel die Kopfrechen-, Logik- und Problemlösungsfähigkeiten deines Kindes auf spielerische und wettbewerbsorientierte Weise deutlich verbessern kann.",
+      "keywords": "math 24, Gehirntraining, Lernspiele für Kinder, Grundschulmathe, Kopfrechnen",
+      "readTime": "5 Min. Lesezeit",
       "author": "Puzzle PK Team",
       "tags": [
         "Education",
@@ -928,10 +928,10 @@
     },
     "es": {
       "title": "Sudoku para Niños: Cómo Introducir Rompecabezas Lógicos a Tus Hijos",
-      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
-      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
-      "readTime": "6 min read",
-      "author": "Puzzle PK Team",
+      "description": "Una guía paso a paso para padres que quieren introducir el Sudoku a sus hijos: por qué desarrolla el razonamiento deductivo, cómo empezar sin frustraciones y dónde encontrar los mejores rompecabezas gratuitos.",
+      "keywords": "sudoku para niños, rompecabezas de lógica, juegos de lógica para niños, desarrollo infantil, razonamiento deductivo",
+      "readTime": "6 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
       "tags": [
         "Logic",
         "Sudoku",
@@ -940,10 +940,10 @@
     },
     "ja": {
       "title": "子ども向け数独：子どもに論理パズルを紹介する方法",
-      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
-      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
-      "readTime": "6 min read",
-      "author": "Puzzle PK Team",
+      "description": "子どもに数独を紹介するためのステップバイステップガイド。演繹的推論が身につく理由、ストレスなく始める方法、そしておすすめの無料パズルが見つかる場所まで解説します。",
+      "keywords": "子ども向け数独, 数独 子ども, 論理パズル, 頭の体操, 子どもの発達, 演繹的推論",
+      "readTime": "6 分で読めます",
+      "author": "Puzzle PK チーム",
       "tags": [
         "Logic",
         "Sudoku",
@@ -952,10 +952,10 @@
     },
     "ko": {
       "title": "어린이를 위한 스도쿠: 아이들에게 논리 퍼즐을 소개하는 방법",
-      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
-      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
-      "readTime": "6 min read",
-      "author": "Puzzle PK Team",
+      "description": "아이에게 스도쿠를 소개하는 부모를 위한 단계별 가이드. 연역적 추리가 길러지는 이유, 좌절 없이 시작하는 방법, 최고의 무료 퍼즐을 찾을 수 있는 곳까지 알려드려요.",
+      "keywords": "어린이 스도쿠, 아이 스도쿠, 논리 퍼즐, 두뇌 게임, 아이 두뇌 발달, 연역적 추리",
+      "readTime": "6분 읽기",
+      "author": "Puzzle PK 팀",
       "tags": [
         "Logic",
         "Sudoku",
@@ -964,10 +964,10 @@
     },
     "pt": {
       "title": "Sudoku para Crianças: Como Introduzir Quebra-Cabeças Lógicos para Seus Filhos",
-      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
-      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
-      "readTime": "6 min read",
-      "author": "Puzzle PK Team",
+      "description": "Um guia passo a passo para pais que querem apresentar o Sudoku às crianças: por que ele desenvolve o raciocínio dedutivo, como começar sem frustração e onde encontrar os melhores quebra-cabeças gratuitos.",
+      "keywords": "sudoku para crianças, quebra-cabeças de lógica, jogos de raciocínio, desenvolvimento infantil, raciocínio dedutivo",
+      "readTime": "6 minutos de leitura",
+      "author": "Equipe Puzzle PK",
       "tags": [
         "Logic",
         "Sudoku",
@@ -976,10 +976,10 @@
     },
     "fr": {
       "title": "Sudoku pour enfants : comment initier vos enfants aux casse-têtes logiques",
-      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
-      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
-      "readTime": "6 min read",
-      "author": "Puzzle PK Team",
+      "description": "Un guide pas à pas pour les parents qui veulent initier leurs enfants au Sudoku : pourquoi il développe le raisonnement déductif, comment commencer sans frustration et où trouver les meilleures grilles gratuites.",
+      "keywords": "sudoku pour enfants, casse-têtes logiques, jeux de logique, développement de l'enfant, raisonnement déductif",
+      "readTime": "6 minutes de lecture",
+      "author": "Équipe Puzzle PK",
       "tags": [
         "Logic",
         "Sudoku",
@@ -988,9 +988,9 @@
     },
     "de": {
       "title": "Sudoku für Kinder: Wie man Logikrätsel den eigenen Kindern näherbringt",
-      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
-      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
-      "readTime": "6 min read",
+      "description": "Eine Schritt-für-Schritt-Anleitung für Eltern, die Kindern Sudoku näherbringen möchten — warum es deduktives Denken fördert, wie man ohne Frustration startet und wo man die besten kostenlosen Rätsel findet.",
+      "keywords": "Sudoku für Kinder, Logikrätsel, Denkspiele, kindliche Entwicklung, deduktives Denken",
+      "readTime": "6 Minuten Lesezeit",
       "author": "Puzzle PK Team",
       "tags": [
         "Logic",
@@ -1028,10 +1028,10 @@
     },
     "es": {
       "title": "Los beneficios ocultos de los juegos educativos multijugador para niños",
-      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
-      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Los juegos de puzzle cooperativos y competitivos desarrollan habilidades que ninguna app de un solo jugador puede ofrecer: desde la regulación emocional hasta la resolución colaborativa de problemas. Esta es la ciencia que hay detrás.",
+      "keywords": "juegos educativos multijugador, juegos de puzzle cooperativos, aprendizaje competitivo, juegos para niños, habilidades cognitivas",
+      "readTime": "7 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
       "tags": [
         "Multiplayer",
         "Social Skills",
@@ -1040,10 +1040,10 @@
     },
     "ja": {
       "title": "子供向けマルチプレイヤー教育ゲームの隠れた利点",
-      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
-      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "協力型・競争型のパズルゲームは、シングルプレイのアプリでは身につかないスキルを育みます——感情のコントロールから協力して問題を解く力まで。その科学的な根拠をご紹介します。",
+      "keywords": "マルチプレイ教育ゲーム, 協力型パズルゲーム, 競争型学習, 子供向けゲーム, 認知能力",
+      "readTime": "7 分で読めます",
+      "author": "Puzzle PK チーム",
       "tags": [
         "Multiplayer",
         "Social Skills",
@@ -1052,10 +1052,10 @@
     },
     "ko": {
       "title": "아이들을 위한 멀티플레이어 교육 게임의 숨은 이점",
-      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
-      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "협동 및 경쟁 퍼즐 게임은 싱글플레이어 앱으로는 기를 수 없는 능력——감정 조절부터 협력적 문제 해결까지——을 길러 줍니다. 그 과학적 근거를 소개합니다.",
+      "keywords": "멀티플레이어 교육 게임, 협동 퍼즐 게임, 경쟁 학습, 어린이 게임, 인지 능력",
+      "readTime": "7분 분량",
+      "author": "Puzzle PK 팀",
       "tags": [
         "Multiplayer",
         "Social Skills",
@@ -1064,10 +1064,10 @@
     },
     "pt": {
       "title": "Os Benefícios Ocultos dos Jogos Educativos Multijogador para Crianças",
-      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
-      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Jogos de puzzle cooperativos e competitivos desenvolvem habilidades que nenhum app de um jogador consegue — da regulação emocional à resolução colaborativa de problemas. Veja a ciência por trás disso.",
+      "keywords": "jogos educativos multijogador, jogos de puzzle cooperativos, aprendizagem competitiva, jogos para crianças, habilidades cognitivas",
+      "readTime": "7 minutos de leitura",
+      "author": "Equipe Puzzle PK",
       "tags": [
         "Multiplayer",
         "Social Skills",
@@ -1076,10 +1076,10 @@
     },
     "fr": {
       "title": "Les avantages cachés des jeux éducatifs multijoueurs pour les enfants",
-      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
-      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
-      "readTime": "7 min read",
-      "author": "Puzzle PK Team",
+      "description": "Les jeux de puzzle coopératifs et compétitifs développent des compétences qu'aucune appli solo ne peut offrir — de la régulation émotionnelle à la résolution collaborative de problèmes. Voici la science qui se cache derrière.",
+      "keywords": "jeux éducatifs multijoueurs, jeux de puzzle coopératifs, apprentissage compétitif, jeux pour enfants, compétences cognitives",
+      "readTime": "7 minutes de lecture",
+      "author": "Équipe Puzzle PK",
       "tags": [
         "Multiplayer",
         "Social Skills",
@@ -1088,9 +1088,9 @@
     },
     "de": {
       "title": "Die verborgenen Vorteile von Mehrspieler-Bildungsspielen für Kinder",
-      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
-      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
-      "readTime": "7 min read",
+      "description": "Kooperative und kompetitive Puzzlespiele fördern Fähigkeiten, die keine Singleplayer-App bieten kann – von emotionaler Regulation bis zur gemeinsamen Problemlösung. Das ist die Wissenschaft dahinter.",
+      "keywords": "Mehrspieler-Bildungsspiele, kooperative Puzzlespiele, kompetitives Lernen, Kinderspiele, kognitive Fähigkeiten",
+      "readTime": "7 Minuten Lesezeit",
       "author": "Puzzle PK Team",
       "tags": [
         "Multiplayer",
