@@ -59,49 +59,64 @@ export async function onRequest(context) {
     // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
     const cleanPath = pathname.replace(/\/+$/, '');
 
-    // NOTE: Cloudflare Pages ASSETS.fetch NEVER returns 404 for a missing path —
-    // it answers 200 with the SPA fallback shell (/index.html) instead. So we
-    // cannot detect missing pages via status === 404. Probe the bare path with
-    // redirects disabled: real prerendered directories answer 301 (trailing-slash
-    // redirect), missing paths answer 200 text/html (the fallback shell).
-    const probe = await env.ASSETS.fetch(
-      new Request(new URL(cleanPath, request.url), { redirect: 'manual' })
-    );
-    const isMissing =
-      probe.status !== 301 && probe.status !== 302;
+    // IMPORTANT: Cloudflare Pages ASSETS.fetch NEVER returns 404 for a missing
+    // path — it answers 200 with the SPA fallback shell (/index.html) instead.
+    // So missing pages are detected by comparing the response against the root
+    // shell: the shell is a fixed small file (the zh lobby shell), while every
+    // real prerendered page has a different, much larger body. Compare
+    // Content-Length first (zero overhead for real pages), then confirm by body
+    // when lengths match.
+    let response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
+    const isHtml = (response.headers.get('content-type') || '').includes('text/html');
 
-    let response;
-    if (!isMissing) {
-      // Existing prerendered page — serve its index.html directly.
-      response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
-    } else {
-      // Soft-404 prevention: only client-side-only Angular routes (auth / profile /
-      // admin) legitimately need the app shell. Everything else that is not
-      // prerendered is a genuine 404 — returning 200 with the lobby shell here
-      // would create soft-404s that hurt Google crawl quality.
-      const langPrefix = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)\//)?.[0] || '/';
-      const rel = pathname.slice(langPrefix.length);
-      const isClientRoute =
-        rel === 'login' || rel === 'register' || rel === 'profile' ||
-        rel === 'admin' || rel.startsWith('admin/');
-      if (!isClientRoute) {
-        return new Response(
-          '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found - Puzzle PK</title></head>' +
-          '<body style="font-family:system-ui;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">' +
-          '<div style="text-align:center"><h1 style="font-size:3rem;margin:0">404</h1>' +
-          '<p>The page you are looking for does not exist.</p>' +
-          '<a href="/en/lobby" style="color:#38bdf8">← Back to Puzzle PK</a></div></body></html>',
-          {
-            status: 404,
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'public, max-age=300',
-            },
-          }
-        );
+    if (isHtml) {
+      const shellResp = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
+      const shellLen = shellResp.headers.get('content-length');
+      const pageLen = response.headers.get('content-length');
+      let isFallback = false;
+
+      if (pageLen && shellLen && pageLen !== shellLen) {
+        // Lengths differ → real prerendered page, response stream untouched.
+        isFallback = false;
+      } else {
+        // Same length (or missing length headers) → confirm by comparing bodies.
+        const b = await response.text();
+        const s = await shellResp.text();
+        isFallback = b === s;
+        if (!isFallback) {
+          response = new Response(b, { status: response.status, headers: response.headers });
+        }
       }
-      // SPA fallback: Angular app shell handles client-side routing (login, admin, profile).
-      response = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
+
+      if (isFallback) {
+        // Missing page → soft-404 prevention: only client-side-only Angular
+        // routes (auth / profile / admin) legitimately need the app shell.
+        // Everything else is a genuine 404 — returning 200 with the lobby shell
+        // would create soft-404s that hurt Google crawl quality.
+        const langPrefix = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)\//)?.[0] || '/';
+        const rel = pathname.slice(langPrefix.length);
+        const isClientRoute =
+          rel === 'login' || rel === 'register' || rel === 'profile' ||
+          rel === 'admin' || rel.startsWith('admin/');
+        if (!isClientRoute) {
+          return new Response(
+            '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found - Puzzle PK</title></head>' +
+            '<body style="font-family:system-ui;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">' +
+            '<div style="text-align:center"><h1 style="font-size:3rem;margin:0">404</h1>' +
+            '<p>The page you are looking for does not exist.</p>' +
+            '<a href="/en/lobby" style="color:#38bdf8">← Back to Puzzle PK</a></div></body></html>',
+            {
+              status: 404,
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'public, max-age=300',
+              },
+            }
+          );
+        }
+        // SPA fallback: Angular app shell handles client-side routing (login, admin, profile).
+        response = shellResp;
+      }
     }
 
     // Fix Link header: Cloudflare converts <link rel="modulepreload" href="chunk-X.js"> to HTTP
