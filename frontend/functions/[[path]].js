@@ -90,13 +90,14 @@ export async function onRequest(context) {
 
       if (isFallback) {
         // Missing page → soft-404 prevention: only client-side-only Angular
-        // routes (auth / profile / admin) legitimately need the app shell.
-        // Everything else is a genuine 404 — returning 200 with the lobby shell
-        // would create soft-404s that hurt Google crawl quality.
+        // routes (auth / profile / arena / admin) legitimately need the app
+        // shell. Everything else is a genuine 404 — returning 200 with the
+        // lobby shell would create soft-404s that hurt Google crawl quality.
         const langPrefix = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)\//)?.[0] || '/';
         const rel = pathname.slice(langPrefix.length);
         const isClientRoute =
           rel === 'login' || rel === 'register' || rel === 'profile' ||
+          rel === 'pk-arena' ||
           rel === 'admin' || rel.startsWith('admin/');
         if (!isClientRoute) {
           return new Response(
@@ -114,8 +115,10 @@ export async function onRequest(context) {
             }
           );
         }
-        // SPA fallback: Angular app shell handles client-side routing (login, admin, profile).
-        response = shellResp;
+        // SPA fallback: Angular app shell handles client-side routing (login,
+        // profile, pk-arena, admin). Rebuild from the already-read body `s` —
+        // shellResp's stream is consumed, so reusing it would throw.
+        response = new Response(s, { status: shellResp.status, headers: shellResp.headers });
       }
     }
 
