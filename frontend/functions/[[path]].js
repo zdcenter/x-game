@@ -58,12 +58,27 @@ export async function onRequest(context) {
     // Avoids 301 trailing-slash redirects that env.ASSETS.fetch emits for bare directory paths,
     // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
     const cleanPath = pathname.replace(/\/+$/, '');
-    let response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
-    if (response.status === 404) {
-      // Soft-404 prevention: only a small set of client-side-only Angular routes
-      // (auth / profile / admin) legitimately need the app shell. Everything else
-      // that is not prerendered is a genuine 404 — returning 200 with the lobby
-      // shell here would create soft-404s that hurt Google crawl quality.
+
+    // NOTE: Cloudflare Pages ASSETS.fetch NEVER returns 404 for a missing path —
+    // it answers 200 with the SPA fallback shell (/index.html) instead. So we
+    // cannot detect missing pages via status === 404. Probe the bare path with
+    // redirects disabled: real prerendered directories answer 301 (trailing-slash
+    // redirect), missing paths answer 200 text/html (the fallback shell).
+    const probe = await env.ASSETS.fetch(
+      new Request(new URL(cleanPath, request.url), { redirect: 'manual' })
+    );
+    const isMissing =
+      probe.status !== 301 && probe.status !== 302;
+
+    let response;
+    if (!isMissing) {
+      // Existing prerendered page — serve its index.html directly.
+      response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
+    } else {
+      // Soft-404 prevention: only client-side-only Angular routes (auth / profile /
+      // admin) legitimately need the app shell. Everything else that is not
+      // prerendered is a genuine 404 — returning 200 with the lobby shell here
+      // would create soft-404s that hurt Google crawl quality.
       const langPrefix = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)\//)?.[0] || '/';
       const rel = pathname.slice(langPrefix.length);
       const isClientRoute =
