@@ -1,7 +1,7 @@
 import { Injectable, inject, effect, signal, DOCUMENT } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
-import { I18nService, SUPPORTED_LANGS } from '../i18n/i18n.service';
+import { I18nService, SUPPORTED_LANGS, LANG_LOCALES, LANG_OG_LOCALES } from '../i18n/i18n.service';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import { getOrigin, getHref, isBrowser } from '../utils/browser.util';
 import { GameRegistryService } from './game-registry.service';
@@ -105,7 +105,7 @@ export class SeoService {
       this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
       this.meta.updateTag({ property: 'og:type', content: 'website' });
       this.meta.updateTag({ property: 'og:site_name', content: lang === 'zh' ? '益智擂台' : 'Puzzle PK' });
-      this.meta.updateTag({ property: 'og:locale', content: lang === 'zh' ? 'zh_CN' : 'en_US' });
+      this.meta.updateTag({ property: 'og:locale', content: LANG_OG_LOCALES[lang] });
 
       // Twitter Card
       this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
@@ -124,7 +124,7 @@ export class SeoService {
       
       this.setLinkTag('alternate', defaultUrl, 'x-default');
 
-      // ===== JSON-LD Structured Data (for game pages and tutorials) =====
+      // ===== JSON-LD Structured Data (game pages, tutorials, breadcrumbs) =====
 
       if (gameMatch && gameId) {
         this.setJsonLd({
@@ -140,13 +140,8 @@ export class SeoService {
             'price': '0',
             'priceCurrency': 'USD'
           },
-          'aggregateRating': {
-            '@type': 'AggregateRating',
-            'ratingValue': (4.5 + (gameId.length % 5) * 0.1).toFixed(1), // Deterministic pseudo-random rating between 4.5-4.9
-            'ratingCount': 100 + (gameId.length * 47) % 900
-          },
           'image': fullImageUrl,
-          'inLanguage': lang === 'zh' ? 'zh-CN' : 'en-US'
+          'inLanguage': LANG_LOCALES[lang]
         });
       } else if (docsMatch && gameId) {
         // Add HowTo schema for docs
@@ -162,7 +157,7 @@ export class SeoService {
           'name': pageTitle,
           'description': desc,
           'image': fullImageUrl,
-          'inLanguage': lang === 'zh' ? 'zh-CN' : 'en-US',
+          'inLanguage': LANG_LOCALES[lang],
           'step': [
             {
               '@type': 'HowToStep',
@@ -195,6 +190,44 @@ export class SeoService {
             'query-input': 'required name=search_term_string'
           }
         });
+      }
+
+      // ===== BreadcrumbList (Home > Section > Page) =====
+      const breadcrumbItems: { name: string; path: string }[] = [
+        { name: lang === 'zh' ? '首页' : 'Home', path: `/${lang}/lobby` },
+      ];
+      const seg = routePath.split('/').filter(Boolean); // e.g. ['games','sudoku'] / ['docs','sudoku'] / ['blog','slug'] / ['legal','privacy']
+      if (seg.length >= 1) {
+        const section = seg[0];
+        const sectionNames: Record<string, string> = {
+          games: lang === 'zh' ? '游戏' : 'Games',
+          docs: lang === 'zh' ? '攻略' : 'Guides',
+          blog: lang === 'zh' ? '博客' : 'Blog',
+          legal: lang === 'zh' ? '法律与联系' : 'Legal',
+          lobby: lang === 'zh' ? '大厅' : 'Lobby',
+        };
+        const sectionName = sectionNames[section];
+        if (sectionName) {
+          breadcrumbItems.push({ name: sectionName, path: `/${lang}/${section}` });
+        }
+        if (seg.length >= 2 && (section === 'games' || section === 'docs' || section === 'blog')) {
+          const pageName = (pageTitle || '').split(' - ')[0].split(' | ')[0];
+          if (pageName) {
+            breadcrumbItems.push({ name: pageName, path: `/${lang}${routePath}` });
+          }
+        }
+      }
+      if (breadcrumbItems.length >= 2) {
+        this.setJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          'itemListElement': breadcrumbItems.map((item, i) => ({
+            '@type': 'ListItem',
+            'position': i + 1,
+            'name': item.name,
+            'item': `${origin}${item.path}`,
+          })),
+        }, 'seo-jsonld-breadcrumb');
       }
     });
 
@@ -254,12 +287,13 @@ export class SeoService {
 
   /**
    * Inject or update a JSON-LD <script> block in <head> for structured data.
+   * Each schema type gets its own script element (identified by `id`) so
+   * multiple schemas (e.g. WebApplication + BreadcrumbList) can coexist.
    */
-  private setJsonLd(data: Record<string, any>): void {
+  private setJsonLd(data: Record<string, any>, id: string = 'seo-jsonld'): void {
     const head = this.doc.head;
     if (!head) return;
 
-    const id = 'seo-jsonld';
     let script = head.querySelector(`#${id}`) as HTMLScriptElement | null;
     if (!script) {
       script = this.doc.createElement('script');

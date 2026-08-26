@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026-08] - 🔍 Google 搜索合规优化：结构化数据与爬取质量 (Search Compliance: Structured Data & Crawl Quality)
+
+### 🐛 修复 (Fixes)
+- **移除伪造评分（政策红线）**：游戏页 WebApplication JSON-LD 中原有的伪随机 `aggregateRating`（4.5-4.9 虚构评分 + 虚构评分数量）已删除——Google 结构化数据政策明令禁止虚构评分，可能触发人工处置，影响搜索排名与 AdSense 审核。
+- **修复软 404**：边缘函数对未知路径（如 `/en/nonexistent`、`/en/blog/不存在文章`）原返回 200 + 大厅壳（软 404，低质量信号），现仅对 login/register/profile/admin 等客户端路由返回 SPA 壳，其余未知路径返回真实 404 状态码与最小 404 页面。
+- **8 语言 inLanguage/og:locale 修正**：此前 es/ja/ko/pt/fr/de 页面全部错误标记为 en-US/en_US，现按 `LANG_LOCALES` / `LANG_OG_LOCALES`（新增于 i18n.service.ts）正确映射（es-ES、ja-JP、ko-KR、pt-BR、fr-FR、de-DE 等）。
+
+### ✨ 新功能 (Features)
+- **BreadcrumbList 结构化数据**：游戏页/攻略页/博客页/法律页新增面包屑 JSON-LD（首页 > 分类 > 页面），`setJsonLd` 支持多 schema 共存（各自独立 script id）。
+- **游戏页→相关博客内链**：game-layout 新增 `RELATED_GUIDES` 映射（9 款游戏对应已发布攻略文章），游戏页左侧与移动端底部 SEO 版块新增"📖 阅读完整攻略"入口（八语言 `game.read_guide`），强化内链与内容深度。
+
+## [2026-08] - 🚀 阶段三：内容管线与收录加速 (Phase 3: Content Pipeline & Indexing)
+
+### ✨ 新功能 (Features)
+- **博客创作管线**：新增 `scripts/import_blog_posts.js` —— 读取 `content/blog_new/{slug}.json`（API 同构 snake_case 格式），通过 `POST /api/v1/admin/blog/posts` 批量导入生产库（需 ADMIN_TOKEN，支持 --dry-run）；新文章目录已产出 6 篇原创策略文章（sliding / hexa / block / lightsout / classic2048 / hashi，en + zh 双语）。
+- **IndexNow 收录加速**：运行 `scripts/submit_indexnow.js`，448 条 sitemap URL 已提交至 api.indexnow.org（Bing/Yandex 即时收录；Google 由 sitemap 收录）。
+- **游戏页 FAQ 增补**：为最薄的 6 款游戏（sliding / minesweeper / sudoku / classic2048 / drop2048 / gomoku）seo_desc 追加 FAQ 章节（en + zh，每款 5-6 组问答），提升内容深度与富媒体结果机会。
+- **AdSense 重提检查清单**：新增 `docs/ADSENSE_RECHECK.md` —— 部署 → GSC → 等待 → 重提全流程指南，含部署后验证命令与关键页抽查清单。
+
+### ⚠️ 重要提醒 (Important)
+- **线上版本仍缺阶段二内容**：当前线上站点已含阶段一修复与作者卡片，但 connect/nonogram 新文案、About 扩充、博客多语言翻译尚未生效——旧版 export-blog.js 在构建时用仅含 en/zh 的生产库覆盖了博客文件。**必须用最新仓库代码重新构建部署**（新版 export-blog.js 已带空值保护）。
+
 ## [2026-08] - 📚 阶段二：内容深化与 E-E-A-T 补强 (Phase 2: Content Deepening & E-E-A-T)
 
 ### ✨ 新功能 (Features)

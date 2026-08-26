@@ -17,6 +17,30 @@ export const SUPPORTED_LANGS: { code: Lang; name: string; flag: string }[] = [
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
 ];
 
+/** schema.org inLanguage value per supported language (BCP-47). */
+export const LANG_LOCALES: Record<Lang, string> = {
+  en: 'en-US',
+  zh: 'zh-CN',
+  es: 'es-ES',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  pt: 'pt-BR',
+  fr: 'fr-FR',
+  de: 'de-DE',
+};
+
+/** Open Graph og:locale value per supported language (underscore form). */
+export const LANG_OG_LOCALES: Record<Lang, string> = {
+  en: 'en_US',
+  zh: 'zh_CN',
+  es: 'es_ES',
+  ja: 'ja_JP',
+  ko: 'ko_KR',
+  pt: 'pt_BR',
+  fr: 'fr_FR',
+  de: 'de_DE',
+};
+
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private transloco = inject(TranslocoService);

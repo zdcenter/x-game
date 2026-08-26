@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, booleanAttribute } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
@@ -18,7 +19,7 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent],
+  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
@@ -84,6 +85,12 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
         <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
              [innerHTML]="i18n.t(computedSeoDescKey)()">
         </div>
+        @if (relatedGuideSlug) {
+          <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+             class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/5 hover:bg-[var(--color-accent-from)]/10 transition-colors">
+            📖 {{ i18n.t('game.read_guide')() }}
+          </a>
+        }
       </div>
     }
 
@@ -164,6 +171,12 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
       <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
            [innerHTML]="i18n.t(computedSeoDescKey)()">
       </div>
+      @if (relatedGuideSlug) {
+        <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+           class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/5 hover:bg-[var(--color-accent-from)]/10 transition-colors">
+          📖 {{ i18n.t('game.read_guide')() }}
+        </a>
+      }
     </div>
   </div>
 
@@ -257,6 +270,24 @@ export class GameLayoutComponent implements OnInit {
 
   get computedSeoDescKey() {
     return this.seoDescKey || `game.${this.gameId}.seo_desc`;
+  }
+
+  /** gameId → blog post slug for internal linking (only posts already published
+   *  in the production DB are listed; extend after importing new articles). */
+  static readonly RELATED_GUIDES: Record<string, string> = {
+    minesweeper: 'minesweeper-logic',
+    sudoku: 'sudoku-benefits',
+    gomoku: 'gomoku-strategy-guide',
+    nonogram: 'nonogram-strategy',
+    sokoban: 'sokoban-strategy',
+    watersort: 'water-sort-puzzle-guide',
+    tetris: 'tetris-battle-strategy',
+    codebreaker: '1a2b-bulls-cows',
+    math24: 'why-math24-is-the-best-brain-training-game-for-kids',
+  };
+
+  get relatedGuideSlug(): string | null {
+    return GameLayoutComponent.RELATED_GUIDES[this.gameId] || null;
   }
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;

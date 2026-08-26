@@ -60,7 +60,32 @@ export async function onRequest(context) {
     const cleanPath = pathname.replace(/\/+$/, '');
     let response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
     if (response.status === 404) {
-      // SPA fallback: Angular app shell handles client-side routing (blog, admin, unknown paths).
+      // Soft-404 prevention: only a small set of client-side-only Angular routes
+      // (auth / profile / admin) legitimately need the app shell. Everything else
+      // that is not prerendered is a genuine 404 — returning 200 with the lobby
+      // shell here would create soft-404s that hurt Google crawl quality.
+      const langPrefix = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)\//)?.[0] || '/';
+      const rel = pathname.slice(langPrefix.length);
+      const isClientRoute =
+        rel === 'login' || rel === 'register' || rel === 'profile' ||
+        rel === 'admin' || rel.startsWith('admin/');
+      if (!isClientRoute) {
+        return new Response(
+          '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found - Puzzle PK</title></head>' +
+          '<body style="font-family:system-ui;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">' +
+          '<div style="text-align:center"><h1 style="font-size:3rem;margin:0">404</h1>' +
+          '<p>The page you are looking for does not exist.</p>' +
+          '<a href="/en/lobby" style="color:#38bdf8">← Back to Puzzle PK</a></div></body></html>',
+          {
+            status: 404,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'public, max-age=300',
+            },
+          }
+        );
+      }
+      // SPA fallback: Angular app shell handles client-side routing (login, admin, profile).
       response = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
     }
 

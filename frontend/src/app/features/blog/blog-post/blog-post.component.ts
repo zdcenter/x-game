@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { BlogService, BlogPostMeta, BlogLanguageMeta } from '../../../core/services/blog.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
+import { I18nService, LANG_LOCALES } from '../../../core/i18n/i18n.service';
 import { marked } from 'marked';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
@@ -208,7 +208,7 @@ export class BlogPostComponent implements OnInit {
           mainEntityOfPage: { '@type': 'WebPage', '@id': `${origin}/${lang}/blog/${raw.id}` },
           keywords: meta.keywords,
           image: raw.cover_image || `${origin}/og-cover.png`,
-          inLanguage: lang === 'zh' ? 'zh-CN' : 'en-US',
+          inLanguage: LANG_LOCALES[lang],
         });
 
         // Render markdown (content already available in meta.content from API)

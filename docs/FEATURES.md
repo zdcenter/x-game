@@ -120,6 +120,9 @@
   - **统一法律页体系（/legal/\*）**：privacy / terms / about / **contact** 四类法律与联系页面全部预渲染且进入 sitemap。Contact 页（`legal.contact.*` 八语言 i18n）提供 support@puzzlepk.com 邮箱与 48 小时回复承诺，补齐 AdSense 审核所需的 E-E-A-T 联系信号。
   - **页脚导航修复（AdSense 合规）**：页脚 About/Privacy/Terms/Contact 及 Cookie 弹窗链接从不可预渲染的 `/pages/*` 统一改为 `/legal/*`（此前 `/pages/*` 对爬虫返回空壳页面，属“低价值内容”拒审主因之一）；边缘函数对存量 `/pages/*` 返回 301 至 `/legal/*`，杜绝爬虫空页与重复内容。
   - **/docs 攻略中心首页**
+  - **结构化数据合规**：游戏页 WebApplication JSON-LD 移除伪造 AggregateRating（合规红线）；8 语言 inLanguage/og:locale 正确映射（LANG_LOCALES / LANG_OG_LOCALES）；新增 BreadcrumbList 面包屑结构化数据（游戏/攻略/博客/法律页）。
+  - **软 404 修复**：边缘函数仅对 login/register/profile/admin 客户端路由返回 SPA 壳，其余未预渲染路径返回真实 404，杜绝软 404 对爬取质量的损害。
+  - **游戏页→博客内链**：game-layout 内置 RELATED_GUIDES 映射，9 款游戏页展示"阅读完整攻略"入口（八语言 game.read_guide），强化内链传递与内容深度。
   - **游戏页 SEO 文案全覆盖**：18 款游戏均具备 8 语言 `game.{id}.seo_desc` 富文本（HTML）SEO 版块（桌面端左侧 / 移动端底部展示），其中 connect 补齐全站缺失文案、nonogram 由 75 词扩至 500+ 词；文案覆盖玩法规则、难度等级、制胜技巧与模式介绍，满足 AdSense 内容质量要求。
   - **E-E-A-T 信号补强**：About 页 8 语言扩至 450-550 词（游戏清单、联系方式、隐私安全章节）；博客文章底部新增作者卡片区块（`blog.author_bio` / `blog.author_more`，8 语言）并链接 About 页；博客内容 11 篇全量多语言化（5 篇补译中），杜绝非英语页面回退英文原文的重复内容问题。：`/docs` 由空壳占位改为真实攻略中心（H1 + 八语言介绍 + 全游戏攻略卡片网格），移除自动跳转，成为可索引常驻页；`/daily` 每日挑战页新增八语言 SEO 介绍段落。
 - **结果页智能推荐 (Smart Game Recommendation)**：每局单机或联机游戏结束后，胜利/失败的 Overlay 面板底部会智能展示一排相关游戏的精美入口卡片。结合 `GameRegistryService` 动态匹配相关游戏，有效提高用户粘性和游戏间引流。
