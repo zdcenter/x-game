@@ -74,6 +74,7 @@ export async function onRequest(context) {
       const shellLen = shellResp.headers.get('content-length');
       const pageLen = response.headers.get('content-length');
       let isFallback = false;
+      let shellBody = '';
 
       if (pageLen && shellLen && pageLen !== shellLen) {
         // Lengths differ → real prerendered page, response stream untouched.
@@ -81,8 +82,8 @@ export async function onRequest(context) {
       } else {
         // Same length (or missing length headers) → confirm by comparing bodies.
         const b = await response.text();
-        const s = await shellResp.text();
-        isFallback = b === s;
+        shellBody = await shellResp.text();
+        isFallback = b === shellBody;
         if (!isFallback) {
           response = new Response(b, { status: response.status, headers: response.headers });
         }
@@ -116,9 +117,9 @@ export async function onRequest(context) {
           );
         }
         // SPA fallback: Angular app shell handles client-side routing (login,
-        // profile, pk-arena, admin). Rebuild from the already-read body `s` —
-        // shellResp's stream is consumed, so reusing it would throw.
-        response = new Response(s, { status: shellResp.status, headers: shellResp.headers });
+        // profile, pk-arena, admin). Rebuild from the already-read body
+        // `shellBody` — shellResp's stream is consumed, so reusing it would throw.
+        response = new Response(shellBody, { status: shellResp.status, headers: shellResp.headers });
       }
     }
 
