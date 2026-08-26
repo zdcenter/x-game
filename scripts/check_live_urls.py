@@ -35,7 +35,11 @@ def fetch_loc(loc: str):
     m = re.search(r'<body.*?>(.*)</body>', body, re.S | re.I)
     txt = html.unescape(re.sub(r'<script.*?</script>|<style.*?</style>|<[^>]+>', ' ',
                                m.group(1) if m else body, flags=re.S | re.I))
-    words = len(re.findall(r'[A-Za-z]{2,}', txt))
+    # CJK has no spaces — count CJK + Hangul chars (2 chars ≈ 1 word) + latin
+    # words so Chinese/Japanese/Korean pages are not falsely flagged as thin.
+    latin_words = len(re.findall(r'[A-Za-z]{2,}', txt))
+    cjk_chars = len(re.findall(r'[\u4e00-\u9fff\uac00-\ud7af]', txt))
+    words = latin_words + cjk_chars // 2
     return {'loc': loc, 'status': status, 'final': final_url, 'words': words, 'title': title[:90], 'error': ''}
 
 

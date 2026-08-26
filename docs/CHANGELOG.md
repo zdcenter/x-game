@@ -4,7 +4,7 @@
 
 ### 🐛 修复 (Fixes)
 - **移除伪造评分（政策红线）**：游戏页 WebApplication JSON-LD 中原有的伪随机 `aggregateRating`（4.5-4.9 虚构评分 + 虚构评分数量）已删除——Google 结构化数据政策明令禁止虚构评分，可能触发人工处置，影响搜索排名与 AdSense 审核。
-- **修复软 404**：边缘函数对未知路径（如 `/en/nonexistent`、`/en/blog/不存在文章`）原返回 200 + 大厅壳（软 404，低质量信号），现仅对 login/register/profile/admin 等客户端路由返回 SPA 壳，其余未知路径返回真实 404 状态码与最小 404 页面。
+- **软 404 彻底修复（三次迭代）**：边缘函数对未知路径（如 `/en/nonexistent`、`/en/blog/不存在文章`）原返回 200 + 大厅壳（软 404，低质量信号）。修复过程中发现关键事实——**Cloudflare Pages 的 `env.ASSETS.fetch` 对缺失路径永不返回 404，而是返回 200 + SPA 壳**，因此无法用 `status === 404` 判断。最终方案：请求页面的 `index.html` 与根壳（26KB）做 Content-Length 对比（长度不同即真实页，零开销），长度相同再读 body 确认；缺失页仅对 login/register/profile/pk-arena/admin 客户端路由返回 SPA 壳，其余返回真实 404（`Cache-Control: public, max-age=300`）。经本地 19 项模拟 + 线上 32 项实测全部通过。
 - **8 语言 inLanguage/og:locale 修正**：此前 es/ja/ko/pt/fr/de 页面全部错误标记为 en-US/en_US，现按 `LANG_LOCALES` / `LANG_OG_LOCALES`（新增于 i18n.service.ts）正确映射（es-ES、ja-JP、ko-KR、pt-BR、fr-FR、de-DE 等）。
 
 ### ✨ 新功能 (Features)
