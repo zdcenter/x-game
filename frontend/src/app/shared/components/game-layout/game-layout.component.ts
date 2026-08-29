@@ -284,6 +284,12 @@ export class GameLayoutComponent implements OnInit {
     tetris: 'tetris-battle-strategy',
     codebreaker: '1a2b-bulls-cows',
     math24: 'why-math24-is-the-best-brain-training-game-for-kids',
+    sliding: 'sliding-puzzle-strategy',
+    hexa: 'hexa-puzzle-strategy',
+    block: 'block-puzzle-strategy',
+    lightsout: 'lights-out-puzzle-guide',
+    classic2048: 'classic2048-strategy',
+    hashi: 'hashi-bridges-strategy',
   };
 
   get relatedGuideSlug(): string | null {

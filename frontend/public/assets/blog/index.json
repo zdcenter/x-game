@@ -1098,5 +1098,175 @@
         "Education"
       ]
     }
+  },
+  {
+    "id": "block-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Block Puzzle Strategy: 10 Tips to Survive Longer and Score Higher",
+      "description": "10 proven Block Puzzle tips: keep the board flat, read the piece queue, time your combos, avoid early-game mistakes. Practice in Endless and PK modes.",
+      "keywords": "block puzzle strategy, block puzzle tips, wood block puzzle, block blast strategy, high score tips",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Block Puzzle",
+        "Strategy",
+        "Tips"
+      ]
+    },
+    "zh": {
+      "title": "方块拼图策略：10 个技巧，让你活得更久、分数更高",
+      "description": "10 个经过验证的方块拼图技巧：保持棋盘平整、读懂积木队列、把握连击时机、避开提前出局的常见错误。在 Puzzle PK 的无限模式与 PK 模式中反复练习，分数自然更高。",
+      "keywords": "方块拼图, 木块拼图技巧, 消方块攻略, 益智游戏, 高分技巧",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "方块拼图",
+        "策略",
+        "技巧"
+      ]
+    }
+  },
+  {
+    "id": "classic2048-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "2048 Strategy: How to Reach 2048, 4096 and Beyond",
+      "description": "Master Classic 2048 with the corner strategy, chain building, snake patterns and Speed PK tactics. A complete guide to reaching 2048, 4096 and beyond.",
+      "keywords": "2048 strategy, how to beat 2048, 2048 tips and tricks, 2048 corner strategy, reach 4096",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "2048",
+        "Strategy",
+        "Tips"
+      ]
+    },
+    "zh": {
+      "title": "2048攻略：如何合成2048、4096甚至更高",
+      "description": "掌握角落策略、阶梯搭建、蛇形布局与竞速PK战术，从0到2048、4096的完整攻略，含常见错误与四周练习计划。",
+      "keywords": "2048攻略, 2048技巧, 2048怎么玩, 2048合成, 益智游戏",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "2048",
+        "策略",
+        "技巧"
+      ]
+    }
+  },
+  {
+    "id": "hashi-bridges-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Hashi (Bridges) Puzzle Strategy: From Beginner to Expert",
+      "description": "Learn Hashi (Bridges): rules, corner and edge patterns, 8- and 6-islands, forced pairs, connectivity, a solved 7x7 example, and Speed PK tips.",
+      "keywords": "hashi puzzle, bridges puzzle strategy, hashi solver tips, bridge logic puzzle, how to play hashi",
+      "readTime": "10 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Hashi",
+        "Bridges",
+        "Strategy",
+        "Logic Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "桥梁谜题（Hashi）从入门到精通：完整攻略",
+      "description": "从五条规则到专家级技巧，学会玩桥梁谜题（Hashi）：角落与边缘规律、8 与 6 的处理、强制配对、连通性推理、完整 7×7 解题演示，还有竞速对战（Speed PK）的实战建议。",
+      "keywords": "桥梁谜题, 岛桥谜题, 数桥游戏, 桥梁攻略, 逻辑谜题",
+      "readTime": "10 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "桥梁谜题",
+        "数桥",
+        "策略",
+        "逻辑谜题"
+      ]
+    }
+  },
+  {
+    "id": "hexa-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Hexa Puzzle Strategy: 12 Tips to Clear Lines and Score Higher",
+      "description": "Master Hexa Puzzle with 12 tips: keep the board flat, avoid isolated holes, plan 2-3 moves ahead, clear multiple lines, and win PK battles on Puzzle PK.",
+      "keywords": "hexa puzzle strategy, hexa block puzzle tips, hexa puzzle high score, block puzzle strategy, hex grid puzzle",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Hexa Puzzle",
+        "Strategy",
+        "Block Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "六角拼图高分攻略：12 个消除与得分技巧",
+      "description": "掌握六角拼图的 12 个实用技巧：保持棋盘平整、避开孤立空格、提前两三步规划、一次消除多行，还能在 Puzzle PK 的 PK 对战模式中赢下比赛。",
+      "keywords": "六角拼图, 六边形拼图技巧, 方块拼图攻略, 益智游戏, 高分技巧",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "六角拼图",
+        "策略",
+        "方块拼图"
+      ]
+    }
+  },
+  {
+    "id": "lights-out-puzzle-guide",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Lights Out Puzzle: The Complete Solver Guide & Strategy",
+      "description": "Master the Lights Out chase method: tap rules, corner and edge toggles, parity, and bottom-row correction. Solve any 4x4–8x8 board, then race in Speed PK.",
+      "keywords": "lights out puzzle, lights out solver, lights out strategy, how to solve lights out, toggle puzzle",
+      "readTime": "10 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Lights Out",
+        "Strategy",
+        "Logic Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "关灯游戏全攻略：从追光法到竞速对决的完整解法指南",
+      "description": "掌握追光法：点灯规则、边角翻转、奇偶性与末行修正技巧，轻松解出 4×4 到 8×8 的任意棋盘，再在竞速对决中一较高下。",
+      "keywords": "关灯游戏, 关灯攻略, 关灯技巧, 灭灯游戏解法, 逻辑谜题",
+      "readTime": "10 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "关灯游戏",
+        "策略",
+        "逻辑谜题"
+      ]
+    }
+  },
+  {
+    "id": "sliding-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Sliding Puzzle Strategy: How to Solve Any 4x4, 5x5 or 6x6 Board",
+      "description": "Master the sliding puzzle: row-by-row method, corner and two-row techniques, parity check, and Speed PK tips. Solve any 4x4, 5x5, or 6x6 board every time.",
+      "keywords": "sliding puzzle strategy, solve sliding puzzle, 15 puzzle solution, sliding tile puzzle tips, 4x4 sliding puzzle",
+      "readTime": "10 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sliding Puzzle",
+        "Strategy",
+        "Logic Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "数字华容道攻略：如何破解任意 4x4、5x5 或 6x6 棋盘",
+      "description": "掌握逐行解法、角块技巧与双行技巧，学会奇偶性检查与空格路线规划，从此任何 4x4、5x5、6x6 数字华容道棋盘都能一次解开，还能在 Speed PK 对战里领先对手！",
+      "keywords": "数字华容道, 华容道技巧, 拼图攻略, 滑动拼图, 益智游戏",
+      "readTime": "10 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "数字华容道",
+        "策略",
+        "逻辑谜题"
+      ]
+    }
   }
 ]

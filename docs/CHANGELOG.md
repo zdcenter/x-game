@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-08] - 📰 博客扩容：6 篇新文章上线 (Blog Expansion: 6 New Articles)
+
+### ✨ 新功能 (Features)
+- **博客从 11 篇增至 17 篇**：通过 `scripts/import_blog_posts.js` 将 6 篇原创策略文章（sliding-puzzle-strategy / hexa-puzzle-strategy / block-puzzle-strategy / lights-out-puzzle-guide / classic2048-strategy / hashi-bridges-strategy，各 en ~2000 词 + zh 完整翻译）导入生产库（id 12-17），sitemap 由 448 增至 **496 URLs**。
+- **游戏页"阅读完整攻略"内链全覆盖**：`RELATED_GUIDES` 映射扩展至 15 款游戏，6 款新文章对应游戏（sliding/hexa/block/lightsout/classic2048/hashi）自动出现攻略入口。
+- **export-blog.js 空语言跳过**：构建导出时跳过无内容的语言对象（前端回退英文渲染），避免空对象导致非英语页面空白；index.json 生成改为安全处理缺失语言。
+- **6 篇新文章多语言翻译（进行中）**：并行翻译流水线补齐 es/ja/ko/pt/fr/de，与其余 11 篇对齐。
+
 ## [2026-08] - 🔍 Google 搜索合规优化：结构化数据与爬取质量 (Search Compliance: Structured Data & Crawl Quality)
 
 ### 🐛 修复 (Fixes)

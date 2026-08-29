@@ -63,22 +63,33 @@ async function main() {
         const v = api[f];
         obj[f] = (v !== undefined && v !== null && v !== '') ? v : (loc[f] ?? '');
       }
+      // Skip languages with no content at all — the frontend then falls back to
+      // the English version (`raw[lang] || raw.en`). An object of empty strings
+      // would be truthy and render a blank page instead.
+      if (!obj.content) continue;
       postData[lang] = obj;
     }
     fs.writeFileSync(path.join(OUT_DIR, `${slug}.json`), JSON.stringify(postData, null, 2), 'utf-8');
 
-    // Index entry (no content)
-    const { 
-      en: { content: _ec, ...enMeta }, 
-      zh: { content: _zc, ...zhMeta },
-      es: { content: _sc, ...esMeta },
-      ja: { content: _jc, ...jaMeta },
-      ko: { content: _kc, ...koMeta },
-      pt: { content: _pc, ...ptMeta },
-      fr: { content: _fc, ...frMeta },
-      de: { content: _dc, ...deMeta }
-    } = postData;
-    index.push({ id: slug, date: postData.date, en: enMeta, zh: zhMeta, es: esMeta, ja: jaMeta, ko: koMeta, pt: ptMeta, fr: frMeta, de: deMeta });
+    // Index entry (no content). Languages skipped above (no content) fall back
+    // to undefined meta — the blog list renders them from the English version.
+    const langMeta = (obj) => {
+      if (!obj || !obj.content) return undefined;
+      const { content, ...meta } = obj;
+      return meta;
+    };
+    index.push({
+      id: slug,
+      date: postData.date,
+      en: langMeta(postData.en),
+      zh: langMeta(postData.zh),
+      es: langMeta(postData.es),
+      ja: langMeta(postData.ja),
+      ko: langMeta(postData.ko),
+      pt: langMeta(postData.pt),
+      fr: langMeta(postData.fr),
+      de: langMeta(postData.de),
+    });
   }
 
   fs.writeFileSync(path.join(OUT_DIR, 'index.json'), JSON.stringify(index, null, 2), 'utf-8');
