@@ -56,17 +56,17 @@ import { I18nService } from '../../i18n/i18n.service';
           <!-- Resources -->
           <div>
             <h3 class="font-bold text-lg mb-4" style="color: var(--color-text-primary)">
-              {{ i18n.currentLang() === 'zh' ? '探索' : 'Explore' }}
+              {{ i18n.t('footer.explore')() || 'Explore' }}
             </h3>
             <ul class="space-y-3 text-sm">
               <li>
                 <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
-                  {{ i18n.currentLang() === 'zh' ? '经典益智游戏说明' : 'Game Guides' }}
+                  {{ i18n.t('footer.game_guides')() || 'Game Guides' }}
                 </a>
               </li>
               <li>
                 <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
-                  {{ i18n.currentLang() === 'zh' ? '开发博客' : 'Developer Blog' }}
+                  {{ i18n.t('footer.developer_blog')() || 'Developer Blog' }}
                 </a>
               </li>
             </ul>

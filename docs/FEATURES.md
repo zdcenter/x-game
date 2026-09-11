@@ -348,3 +348,12 @@
 ## 社交与对战系统 (Social & Multiplayer)
 - **快速匹配**: 支持一键将大厅内的玩家自动撮合到相同的游戏与难度房间。
 - **局内表情互动**: 支持玩家在 PK 模式中实时发送气泡表情，增强对战趣味性。
+
+## AdSense 审核合规优化 (AdSense Compliance Optimization)
+- **首页内容优先策略**：首页布局重排为"平台介绍 → 博客/攻略 → SEO 文案 → 游戏列表"，确保 Google 审核员和爬虫优先看到有实质价值的文字内容。
+- **"为什么选择 Puzzle PK"价值主张**：4 大平台特色（脑力训练 / 多人对战 / 寓教于乐 / 8语言），全 8 语言翻译。
+- **合规页面齐全**：About / Contact / Privacy Policy / Terms of Service 四页齐全且预渲染，页脚全局链接可达。
+- **Cookie 同意弹窗**：首次访问弹出 Cookie 同意提示，隐私政策披露 AdSense 与 Google Analytics Cookie 使用。
+- **结构化数据 (JSON-LD)**：WebApplication / HowTo / BlogPosting / BreadcrumbList 结构化标记，无虚构评分。
+- **真实 404 页面**：未知路径返回 HTTP 404 状态码而非 SPA 壳，消除软 404 问题。
+- **广告位可控开关**：lobby 广告位支持通过 HTML 注释临时禁用，审核通过后恢复。

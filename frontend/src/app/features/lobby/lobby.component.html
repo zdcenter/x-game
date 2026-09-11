@@ -23,8 +23,8 @@
           <app-daily-challenge-banner />
         </div>
 
-        <!-- Lobby Top Banner Ad (Visible on all devices) -->
-        @if (adService.getBannerSlotId('lobby_banner')) {
+        <!-- Lobby Top Banner Ad — TEMPORARILY DISABLED for AdSense review -->
+        <!-- @if (adService.getBannerSlotId('lobby_banner')) {
           <div class="w-full max-w-[1600px] mb-4">
             <app-adsense
               [adSlot]="adService.getBannerSlotId('lobby_banner')!"
@@ -33,7 +33,7 @@
               class="w-full min-h-[100px] rounded-xl overflow-hidden flex justify-center items-center">
             </app-adsense>
           </div>
-        }
+        } -->
 
         <!-- Welcome Header -->
         <div class="flex flex-col items-center justify-center w-full mb-8 lg:mb-16 mt-2 lg:mt-4 relative max-w-[1600px]">
@@ -57,6 +57,48 @@
           </p>
 
 
+        </div>
+
+        <!-- Platform Value Proposition — Why Puzzle PK -->
+        <div class="max-w-[1600px] w-full px-4 lg:px-8 pb-8">
+          <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 sm:p-8 shadow-sm">
+            <h2 class="text-xl sm:text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
+              {{ i18n.t('lobby.why_title')() || 'Why Puzzle PK?' }}
+            </h2>
+            <p class="text-[var(--color-text-secondary)] text-sm sm:text-base leading-relaxed mb-6">
+              {{ i18n.t('lobby.why_description')() || 'Puzzle PK is a free online platform featuring 18+ carefully curated logic and brain games. Whether you\'re a student looking to sharpen your math skills, a parent seeking educational screen time for your kids, or a puzzle enthusiast craving a daily challenge — we\'ve got you covered.' }}
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                <span class="text-2xl shrink-0">🧠</span>
+                <div>
+                  <h3 class="font-bold text-sm mb-1" style="color: var(--color-text-primary)">{{ i18n.t('lobby.why_feature1_title')() || 'Brain Training' }}</h3>
+                  <p class="text-xs text-[var(--color-text-secondary)]">{{ i18n.t('lobby.why_feature1_desc')() || 'Scientifically-backed puzzles that improve memory, logic, and spatial reasoning.' }}</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                <span class="text-2xl shrink-0">⚔️</span>
+                <div>
+                  <h3 class="font-bold text-sm mb-1" style="color: var(--color-text-primary)">{{ i18n.t('lobby.why_feature2_title')() || 'Multiplayer PK' }}</h3>
+                  <p class="text-xs text-[var(--color-text-secondary)]">{{ i18n.t('lobby.why_feature2_desc')() || 'Challenge friends or random opponents in real-time puzzle battles.' }}</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                <span class="text-2xl shrink-0">🎓</span>
+                <div>
+                  <h3 class="font-bold text-sm mb-1" style="color: var(--color-text-primary)">{{ i18n.t('lobby.why_feature3_title')() || 'Educational' }}</h3>
+                  <p class="text-xs text-[var(--color-text-secondary)]">{{ i18n.t('lobby.why_feature3_desc')() || 'Perfect for kids and students — learn math, logic, and problem-solving through play.' }}</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                <span class="text-2xl shrink-0">🌍</span>
+                <div>
+                  <h3 class="font-bold text-sm mb-1" style="color: var(--color-text-primary)">{{ i18n.t('lobby.why_feature4_title')() || '8 Languages' }}</h3>
+                  <p class="text-xs text-[var(--color-text-secondary)]">{{ i18n.t('lobby.why_feature4_desc')() || 'Available in English, Chinese, Spanish, Japanese, Korean, Portuguese, French, and German.' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Latest News / Blogs Section (For SEO & Rich Content) -->
@@ -97,6 +139,15 @@
             </div>
           </div>
         }
+
+        <!-- SEO Text Block — moved above game grid for content-first impression -->
+        <div class="max-w-[1600px] w-full px-4 lg:px-8 pb-8">
+          <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="markdown-body text-[var(--color-text-secondary)] text-sm sm:text-base leading-relaxed" 
+                 [innerHTML]="i18n.t('lobby.seo_content_html')()">
+            </div>
+          </div>
+        </div>
 
         <!-- Games Grid -->
         <div class="grid gap-6 lg:gap-8 max-w-[1600px] w-full pb-10" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
@@ -150,17 +201,8 @@
         }
         </div>
 
-
-
-        <!-- SEO Text Block -->
-        <div class="max-w-[1600px] w-full px-4 lg:px-8 pb-10">
-          <div class="markdown-body text-[var(--color-text-secondary)] text-sm sm:text-base leading-relaxed" 
-               [innerHTML]="i18n.t('lobby.seo_content_html')()">
-          </div>
-        </div>
-
-        <!-- Lobby Bottom Banner Ad -->
-        @if (adService.getBannerSlotId('lobby_bottom')) {
+        <!-- Lobby Bottom Banner Ad — TEMPORARILY DISABLED for AdSense review -->
+        <!-- @if (adService.getBannerSlotId('lobby_bottom')) {
           <div class="w-full max-w-[1600px] mb-8 px-4 lg:px-8">
             <app-adsense
               [adSlot]="adService.getBannerSlotId('lobby_bottom')!"
@@ -169,7 +211,7 @@
               class="w-full min-h-[100px] bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-border-card)] shadow-sm overflow-hidden flex justify-center items-center">
             </app-adsense>
           </div>
-        }
+        } -->
 
         <!-- Footer -->
       </div>

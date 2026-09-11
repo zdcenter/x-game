@@ -1125,6 +1125,54 @@
         "策略",
         "技巧"
       ]
+    },
+    "es": {
+      "title": "Estrategia de Block Puzzle: 10 consejos para durar más y sumar más puntos",
+      "description": "10 consejos probados de Block Puzzle: mantén el tablero plano, lee la cola de piezas, elige el momento de tus combos y evita los errores de las primeras partidas. Practica en los modos Endless y PK.",
+      "keywords": "estrategia de block puzzle, consejos de block puzzle, puzzle de bloques de madera, estrategia de block blast, trucos para puntuación alta",
+      "readTime": "9 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ブロックパズル攻略：長く生き延びて高得点を狙う10のコツ",
+      "description": "実証済みのブロックパズルのコツ10選：盤面を平らに保つ、ピースの並びを読む、コンボのタイミングを計る、序盤のミスを避ける。エンドレスモードとPKモードで練習しよう。",
+      "keywords": "ブロックパズル 攻略, ブロックパズル コツ, ウッドブロックパズル, ブロックブラスト 攻略, 高得点 コツ",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "블록 퍼즐 전략: 더 오래 살아남고 더 높은 점수를 받는 10가지 팁",
+      "description": "검증된 블록 퍼즐 팁 10가지: 보드를 평평하게 유지하고, 조각 큐를 읽고, 콤보 타이밍을 맞추고, 초반 실수를 피하세요. 엔들리스 모드와 PK 모드에서 연습하세요.",
+      "keywords": "블록 퍼즐 전략, 블록 퍼즐 팁, 우드 블록 퍼즐, 블록 블라스트 전략, 고득점 팁",
+      "readTime": "9분 소요",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia de Block Puzzle: 10 dicas para durar mais e pontuar mais alto",
+      "description": "10 dicas comprovadas de Block Puzzle: mantenha o tabuleiro plano, leia a fila de peças, escolha o momento dos seus combos e evite erros de início de partida. Pratique nos modos Endless e PK.",
+      "keywords": "estratégia de block puzzle, dicas de block puzzle, puzzle de blocos de madeira, estratégia de block blast, dicas de pontuação alta",
+      "readTime": "9 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie de Block Puzzle : 10 astuces pour survivre plus longtemps et marquer plus de points",
+      "description": "10 astuces éprouvées de Block Puzzle : gardez le plateau plat, lisez la file de pièces, choisissez le moment de vos combos et évitez les erreurs de début de partie. Entraînez-vous dans les modes Endless et PK.",
+      "keywords": "stratégie block puzzle, astuces block puzzle, puzzle de blocs de bois, stratégie block blast, astuces pour un score élevé",
+      "readTime": "9 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Block-Puzzle-Strategie: 10 Tipps, um länger zu überleben und höhere Punktzahlen zu erreichen",
+      "description": "10 bewährte Block-Puzzle-Tipps: Halte das Spielfeld eben, lies die Steine-Reihenfolge, wähle den Zeitpunkt deiner Combos und vermeide Anfängerfehler. Trainiere im Endlos- und PK-Modus.",
+      "keywords": "Block-Puzzle-Strategie, Block-Puzzle-Tipps, Holzblock-Puzzle, Block-Blast-Strategie, Tipps für hohe Punktzahlen",
+      "readTime": "9 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
     }
   },
   {
@@ -1153,6 +1201,54 @@
         "策略",
         "技巧"
       ]
+    },
+    "es": {
+      "title": "Estrategia del 2048: cómo llegar a 2048, 4096 y más allá",
+      "description": "Domina el 2048 clásico con la estrategia de la esquina, la construcción de cadenas, los patrones de serpiente y las tácticas de Speed PK. Una guía completa para llegar a 2048, 4096 y más allá.",
+      "keywords": "estrategia 2048, cómo ganar al 2048, trucos y consejos para 2048, estrategia de la esquina en 2048, llegar a 4096",
+      "readTime": "9 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "2048 戦略: 2048、4096、そしてその先へ到達する方法",
+      "description": "コーナー戦略、チェーン構築、スネークパターン、Speed PK の戦術で Classic 2048 を極めよう。2048、4096、そしてその先へ到達するための完全ガイド。",
+      "keywords": "2048 戦略、2048 のクリア方法、2048 のコツと裏技、2048 コーナー戦略、4096 に到達する方法",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "2048 전략: 2048, 4096과 그 이상에 도달하는 방법",
+      "description": "코너 전략, 체인 만들기, 스네이크 패턴, Speed PK 전술로 클래식 2048을 마스터하세요. 2048, 4096과 그 이상에 도달하는 완벽한 가이드입니다.",
+      "keywords": "2048 전략, 2048 이기는 법, 2048 팁과 요령, 2048 코너 전략, 4096 도달",
+      "readTime": "9분 분량",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia do 2048: como chegar ao 2048, 4096 e além",
+      "description": "Domine o 2048 Clássico com a estratégia do canto, a construção de cadeias, os padrões cobra e as táticas de Speed PK. Um guia completo para chegar ao 2048, 4096 e além.",
+      "keywords": "estratégia 2048, como vencer no 2048, dicas e truques do 2048, estratégia do canto 2048, chegar ao 4096",
+      "readTime": "9 minutos de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie 2048 : comment atteindre 2048, 4096 et au-delà",
+      "description": "Maîtrisez le 2048 classique avec la stratégie du coin, la construction de chaînes, le motif serpent et les tactiques Speed PK. Un guide complet pour atteindre 2048, 4096 et au-delà.",
+      "keywords": "stratégie 2048, comment battre 2048, astuces et conseils 2048, stratégie du coin 2048, atteindre 4096",
+      "readTime": "9 minutes de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "2048-Strategie: So erreichst du 2048, 4096 und mehr",
+      "description": "Meistere das klassische 2048 mit der Eck-Strategie, dem Kettenaufbau, Schlangenmustern und Speed-PK-Taktiken. Ein kompletter Leitfaden, um 2048, 4096 und mehr zu erreichen.",
+      "keywords": "2048 Strategie, 2048 schlagen, 2048 Tipps und Tricks, 2048 Eck-Strategie, 4096 erreichen",
+      "readTime": "9 Minuten Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
     }
   },
   {
@@ -1183,6 +1279,54 @@
         "策略",
         "逻辑谜题"
       ]
+    },
+    "es": {
+      "title": "Estrategia del puzzle Hashi (Puentes): de principiante a experto",
+      "description": "Aprende Hashi (Puentes): reglas, patrones de esquinas y bordes, islas 8 y 6, pares forzados, conectividad, un ejemplo resuelto de 7×7 y consejos para Speed PK.",
+      "keywords": "puzzle hashi, estrategia puzzle de puentes, trucos para resolver hashi, puzzle lógico de puentes, cómo jugar a hashi",
+      "readTime": "10 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ハシ（橋）パズル攻略：初心者から上級者まで",
+      "description": "ハシ（橋）パズルを学ぼう：ルール、角と辺のパターン、8と6の島、強制ペア、連結性、解ききった7×7の例題、スピードPKのコツ。",
+      "keywords": "ハシパズル, 橋パズル 攻略, ハシ 解き方 コツ, 橋 ロジックパズル, ハシパズルの遊び方",
+      "readTime": "10分で読了",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "하시(다리) 퍼즐 전략: 초보자부터 고수까지",
+      "description": "하시(다리) 퍼즐 배우기: 규칙, 모서리·가장자리 패턴, 8과 6 섬, 강제 페어, 연결성, 풀이된 7×7 예제, 스피드 PK 팁.",
+      "keywords": "하시 퍼즐, 다리 퍼즐 전략, 하시 퍼즐 풀이 팁, 다리 연결 논리 퍼즐, 하시 퍼즐 하는 법",
+      "readTime": "10분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia do puzzle Hashi (Pontes): do iniciante ao especialista",
+      "description": "Aprenda Hashi (Pontes): regras, padrões de cantos e bordas, ilhas 8 e 6, pares forçados, conectividade, um exemplo resolvido de 7×7 e dicas de Speed PK.",
+      "keywords": "puzzle hashi, estratégia de puzzle de pontes, dicas para resolver hashi, puzzle lógico de pontes, como jogar hashi",
+      "readTime": "10 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie du puzzle Hashi (Ponts) : du débutant à l'expert",
+      "description": "Apprenez le Hashi (Ponts) : règles, motifs de coins et de bords, îles 8 et 6, paires forcées, connectivité, un exemple résolu de 7×7 et des conseils pour le Speed PK.",
+      "keywords": "puzzle hashi, stratégie puzzle de ponts, astuces pour résoudre le hashi, puzzle logique de ponts, comment jouer au hashi",
+      "readTime": "10 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Hashi-Strategie (Brücken-Rätsel): vom Anfänger zum Experten",
+      "description": "Lerne Hashi (Brücken): Regeln, Ecken- und Randmuster, 8er- und 6er-Inseln, Zwangspaare, Konnektivität, ein gelöstes 7×7-Beispiel und Speed-PK-Tipps.",
+      "keywords": "Hashi-Rätsel, Brückenrätsel Strategie, Hashi-Lösungstipps, Brücken-Logikrätsel, wie spielt man Hashi",
+      "readTime": "10 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
     }
   },
   {
@@ -1211,6 +1355,54 @@
         "策略",
         "方块拼图"
       ]
+    },
+    "es": {
+      "title": "Estrategia de Hexa Puzzle: 12 consejos para eliminar líneas y conseguir más puntos",
+      "description": "Domina Hexa Puzzle con 12 consejos: mantén el tablero plano, evita los huecos aislados, planifica 2-3 movimientos por adelantado, elimina varias líneas a la vez y gana las batallas PK en Puzzle PK.",
+      "keywords": "estrategia hexa puzzle, consejos hexa puzzle bloques, hexa puzzle puntuación alta, estrategia puzzle de bloques, puzzle de cuadrícula hexagonal",
+      "readTime": "9 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ヘキサパズル攻略：ラインを消して高得点を狙う12のコツ",
+      "description": "12のコツでヘキサパズルをマスター：盤面を平らに保ち、孤立した穴を避け、2〜3手先を読んで、複数ラインを同時に消し、Puzzle PKでPKバトルに勝利しよう。",
+      "keywords": "ヘキサパズル 攻略, ヘキサブロックパズル コツ, ヘキサパズル ハイスコア, ブロックパズル 攻略, 六角グリッドパズル",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "헥사 퍼즐 공략: 라인을 지우고 더 높은 점수를 얻는 12가지 팁",
+      "description": "12가지 팁으로 헥사 퍼즐을 마스터하세요: 보드를 평평하게 유지하고, 고립된 구멍을 피하고, 2~3수 앞을 계획하고, 여러 줄을 한 번에 지우고, Puzzle PK에서 PK 배틀에서 승리하세요.",
+      "keywords": "헥사 퍼즐 공략, 헥사 블록 퍼즐 팁, 헥사 퍼즐 고득점, 블록 퍼즐 공략, 육각 그리드 퍼즐",
+      "readTime": "9분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia de Hexa Puzzle: 12 dicas para eliminar linhas e pontuar mais",
+      "description": "Domine o Hexa Puzzle com 12 dicas: mantenha o tabuleiro plano, evite buracos isolados, planeje 2-3 jogadas à frente, elimine várias linhas e vença as batalhas PK no Puzzle PK.",
+      "keywords": "estratégia hexa puzzle, dicas de hexa block puzzle, hexa puzzle pontuação alta, estratégia de puzzle de blocos, puzzle de grade hexagonal",
+      "readTime": "9 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie Hexa Puzzle : 12 conseils pour effacer des lignes et marquer plus de points",
+      "description": "Maîtrisez Hexa Puzzle grâce à 12 conseils : gardez le plateau plat, évitez les trous isolés, anticipez de 2 à 3 coups, effacez plusieurs lignes à la fois et gagnez les batailles PK sur Puzzle PK.",
+      "keywords": "stratégie hexa puzzle, conseils hexa block puzzle, hexa puzzle score élevé, stratégie puzzle de blocs, puzzle grille hexagonale",
+      "readTime": "9 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Hexa-Puzzle-Strategie: 12 Tipps zum Auflösen von Linien für höhere Punktzahlen",
+      "description": "Meistere Hexa Puzzle mit 12 Tipps: halte das Spielfeld eben, vermeide isolierte Löcher, plane 2-3 Züge im Voraus, löse mehrere Linien auf und gewinne PK-Kämpfe auf Puzzle PK.",
+      "keywords": "Hexa-Puzzle-Strategie, Hexa-Block-Puzzle Tipps, Hexa-Puzzle Highscore, Block-Puzzle-Strategie, Hexagon-Grid-Puzzle",
+      "readTime": "9 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
     }
   },
   {
@@ -1239,6 +1431,54 @@
         "策略",
         "逻辑谜题"
       ]
+    },
+    "es": {
+      "title": "Lights Out Puzzle: la guía completa de soluciones y estrategia",
+      "description": "Domina el método de persecución de Lights Out: reglas de pulsación, alternancia en esquinas y bordes, paridad y corrección de la fila inferior. Resuelve cualquier tablero de 4×4 a 8×8 y compite en Speed PK.",
+      "keywords": "lights out puzzle, solucionador lights out, estrategia lights out, cómo resolver lights out, puzzle de alternancia",
+      "readTime": "10 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ライツアウト完全攻略ガイド：解法と戦略",
+      "description": "チェイス法（追光法）を極めよう：タップのルール、隅と端の反転、パリティ、最下段の修正まで。4×4〜8×8 のどんな盤面も解いて、Speed PK で競おう。",
+      "keywords": "ライツアウト パズル, ライツアウト 攻略, ライツアウト 解き方, ライツアウト 解法, トグルパズル",
+      "readTime": "10 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "라이트 아웃 퍼즐: 완벽한 해법 가이드와 전략",
+      "description": "라이트 아웃 체이스(chase) 기법 마스터하기: 탭 규칙, 모서리와 가장자리 토글, 패리티, 마지막 줄 보정까지. 4×4~8×8 보드를 모두 풀고 Speed PK에서 경쟁하세요.",
+      "keywords": "라이트 아웃 퍼즐, 라이트 아웃 해법, 라이트 아웃 전략, 라이트 아웃 푸는 법, 토글 퍼즐",
+      "readTime": "10분 소요",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Lights Out Puzzle: guia completo de soluções e estratégia",
+      "description": "Domine o método da perseguição do Lights Out: regras de toque, alternância nos cantos e bordas, paridade e correção da última linha. Resolva qualquer tabuleiro de 4×4 a 8×8 e corra no Speed PK.",
+      "keywords": "lights out puzzle, solucionador de lights out, estratégia lights out, como resolver lights out, puzzle de alternância",
+      "readTime": "10 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Lights Out Puzzle : le guide complet de solutions et de stratégie",
+      "description": "Maîtrisez la méthode de la chasse de Lights Out : règles de tap, bascules dans les coins et sur les bords, parité et correction de la rangée du bas. Résolvez n'importe quelle grille de 4×4 à 8×8, puis affrontez-vous en Speed PK.",
+      "keywords": "lights out puzzle, solveur lights out, stratégie lights out, comment résoudre lights out, puzzle à bascule",
+      "readTime": "10 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Lights Out Puzzle: Der komplette Lösungs- und Strategie-Guide",
+      "description": "Meistere die Chase-Methode von Lights Out: Tipp-Regeln, Umschalten an Ecken und Kanten, Parität und die Korrektur der untersten Reihe. Löse jedes Brett von 4×4 bis 8×8 und tritt dann im Speed PK an.",
+      "keywords": "lights out puzzle, lights out lösung, lights out strategie, wie löst man lights out, toggle puzzle",
+      "readTime": "10 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
     }
   },
   {
@@ -1267,6 +1507,54 @@
         "策略",
         "逻辑谜题"
       ]
+    },
+    "es": {
+      "title": "Estrategia del Rompecabezas Deslizante: Cómo Resolver Cualquier Tablero de 4x4, 5x5 o 6x6",
+      "description": "Domina el rompecabezas deslizante: el método fila por fila, las técnicas de esquina y de dos filas, la verificación de paridad y consejos para Speed PK. Resuelve cualquier tablero de 4x4, 5x5 o 6x6, siempre.",
+      "keywords": "estrategia rompecabezas deslizante, cómo resolver rompecabezas deslizante, solución puzzle 15, trucos rompecabezas deslizante, rompecabezas deslizante 4x4",
+      "readTime": "10 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "スライドパズルの攻略法：4x4、5x5、6x6の盤面をすべて解く方法",
+      "description": "スライドパズルをマスターしよう。行ごとの解法、角と2行のテクニック、パリティチェック、Speed PKのコツ。4x4、5x5、6x6の盤面なら、どんなときも確実に解けます。",
+      "keywords": "スライドパズル 攻略, スライドパズル 解き方, 15パズル 解法, スライドパズル コツ, 4x4 スライドパズル",
+      "readTime": "10分で読める",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "슬라이딩 퍼즐 공략법: 4x4, 5x5, 6x6 보드를 모두 푸는 방법",
+      "description": "슬라이딩 퍼즐을 마스터하세요: 행 단위 해법, 코너·두 줄 테크닉, 패리티 확인, Speed PK 팁까지. 4x4, 5x5, 6x6 보드를 언제나 확실하게 풀 수 있습니다.",
+      "keywords": "슬라이딩 퍼즐 공략, 슬라이딩 퍼즐 푸는 법, 15 퍼즐 풀이, 슬라이딩 타일 퍼즐 팁, 4x4 슬라이딩 퍼즐",
+      "readTime": "10분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia do Quebra-Cabeça Deslizante: Como Resolver Qualquer Tabuleiro 4x4, 5x5 ou 6x6",
+      "description": "Domine o quebra-cabeça deslizante: o método linha por linha, as técnicas de canto e de duas linhas, a verificação de paridade e dicas de Speed PK. Resolva qualquer tabuleiro 4x4, 5x5 ou 6x6, sempre.",
+      "keywords": "estratégia quebra-cabeça deslizante, como resolver quebra-cabeça deslizante, solução 15 puzzle, dicas quebra-cabeça deslizante, quebra-cabeça deslizante 4x4",
+      "readTime": "10 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie du Puzzle à Glissière : Comment Résoudre N'importe Quel Plateau 4x4, 5x5 ou 6x6",
+      "description": "Maîtrisez le puzzle à glissière : la méthode rangée par rangée, les techniques du coin et des deux rangées, la vérification de parité et des conseils Speed PK. Résolvez n'importe quel plateau 4x4, 5x5 ou 6x6, à chaque fois.",
+      "keywords": "stratégie puzzle à glissière, résoudre puzzle à glissière, solution 15 puzzle, astuces puzzle à glissière, puzzle à glissière 4x4",
+      "readTime": "10 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Schiebepuzzle-Strategie: So löst du jedes 4x4-, 5x5- oder 6x6-Brett",
+      "description": "Meistere das Schiebepuzzle: die Reihen-für-Reihe-Methode, Eck- und Zwei-Reihen-Techniken, die Paritätsprüfung und Tipps für Speed PK. Löse jedes 4x4-, 5x5- oder 6x6-Brett – jedes Mal.",
+      "keywords": "Schiebepuzzle Strategie, Schiebepuzzle lösen, 15-Puzzle Lösung, Schiebepuzzle Tipps, 4x4 Schiebepuzzle",
+      "readTime": "10 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
     }
   }
 ]

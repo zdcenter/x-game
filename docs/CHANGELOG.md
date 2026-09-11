@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-09] - 🔍 AdSense 过审优化：内容优先策略 (AdSense Approval Optimization: Content-First Strategy)
+
+### ✨ 新功能 (Features)
+- **首页"为什么选择 Puzzle PK"价值主张板块**：在游戏列表之前新增平台介绍区块（4 大特色：脑力训练 / 多人对战 / 寓教于乐 / 8语言），全 8 语言 i18n 覆盖，提升审核员首屏内容价值感知。
+- **首页内容区块重排**：SEO 文案区块从游戏列表下方移至上方，确保审核员和爬虫优先看到有实质内容的文字信息。
+
+### 🐛 修复 (Fixes)
+- **Footer 硬编码文本国际化**：`探索` / `经典益智游戏说明` / `开发博客` 三处 `currentLang() === 'zh'` 三元表达式替换为 `i18n.t()` 调用，新增 `footer.explore` / `footer.game_guides` / `footer.developer_blog` 翻译 key（8 语言）。
+- **Navbar 硬编码文本国际化**：桌面端和移动端导航栏的 `攻略文档` / `开发博客` 共 4 处硬编码替换为 `nav.docs` / `nav.blog` 翻译 key（8 语言）。
+
+### ⚠️ 重要变更 (Important)
+- **广告位临时禁用**：`lobby_banner` 和 `lobby_bottom` 两个广告组件在 AdSense 审核通过前暂时注释掉（HTML 注释），避免空白/报错广告位给审核员负面印象。审核通过后取消注释即可恢复。
+
 ## [2026-08] - 📰 博客扩容：6 篇新文章上线 (Blog Expansion: 6 New Articles)
 
 ### ✨ 新功能 (Features)
