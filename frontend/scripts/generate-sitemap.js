@@ -6,6 +6,12 @@ const langs = ['en', 'zh', 'es', 'ja', 'ko', 'pt', 'fr', 'de'];
 const defaultLang = 'en';
 const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
+// ──────────────────────────────────────────────────────────────────────
+// Sitemap languages — temporarily limited to en/zh for AdSense approval.
+// After AdSense approval, change this back to `langs` to include all 8.
+// ──────────────────────────────────────────────────────────────────────
+const sitemapLangs = ['en', 'zh'];
+
 // Auto-discover games
 const gamesDir = path.join(__dirname, '../src/app/features/games');
 const games = fs.existsSync(gamesDir)
@@ -46,6 +52,14 @@ const blogPostPaths = blogPosts.map(post => [
 
 const allPaths = [...staticPaths, ...blogPostPaths];
 
+// ──────────────────────────────────────────────────────────────────────
+// Sitemap: exclude low-value dynamic pages that hurt AdSense review.
+// These pages have little indexable text (pure dynamic data).
+// After AdSense approval, remove this filter to include all routes.
+// ──────────────────────────────────────────────────────────────────────
+const sitemapExclude = new Set(['leaderboard', 'daily']);
+const sitemapPaths = allPaths.filter(([p]) => !sitemapExclude.has(p));
+
 // Routes that Angular SSG should prerender at build time.
 // Blog content is now static JSON, so all routes including blog can be prerendered.
 const prerenderPaths = [...staticPaths, ...blogPostPaths];
@@ -54,7 +68,8 @@ function urlEntry(p, changefreq, priority, lastmod, lang) {
   let xml = `  <url>\n`;
   xml += `    <loc>${domain}/${lang}/${p}</loc>\n`;
   xml += `    <lastmod>${lastmod}</lastmod>\n`;
-  for (const altLang of langs) {
+  // hreflang alternates always point to all available languages
+  for (const altLang of sitemapLangs) {
     xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${domain}/${altLang}/${p}"/>\n`;
   }
   xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domain}/${defaultLang}/${p}"/>\n`;
@@ -69,8 +84,8 @@ let xml = `<?xml version="1.0" encoding="UTF-8"?>
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
 `;
 
-for (const [p, changefreq, priority, lastmod] of allPaths) {
-  for (const lang of langs) {
+for (const [p, changefreq, priority, lastmod] of sitemapPaths) {
+  for (const lang of sitemapLangs) {
     xml += urlEntry(p, changefreq, priority, lastmod, lang);
   }
 }
@@ -81,9 +96,9 @@ const outDir = path.join(__dirname, '../public');
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
 fs.writeFileSync(path.join(outDir, 'sitemap.xml'), xml, 'utf-8');
-console.log(`sitemap.xml generated — ${allPaths.length * langs.length} URLs`);
+console.log(`sitemap.xml generated — ${sitemapPaths.length * sitemapLangs.length} URLs (${sitemapLangs.join(',')} only)`);
 
-// Routes for Angular SSG prerender — lang-prefixed, all routes included
+// Routes for Angular SSG prerender — all 8 languages, all routes (unchanged)
 const routesContent = prerenderPaths
   .flatMap(([p]) => langs.map(lang => `/${lang}/${p}`))
   .join('\n') + '\n';
