@@ -153,21 +153,18 @@ export class AdminSettingsComponent implements OnInit {
   };
 
   ngOnInit() {
-    this.adminService.getSettings().subscribe({
-      next: (res) => {
-        this.settings.site_maintenance = res.site_maintenance === 'true';
-        this.settings.maintenance_message = res.maintenance_message || '';
-        this.settings.global_announcement = res.global_announcement || '';
-        this.settings.simulator_enabled = res.simulator_enabled === 'true';
-        this.settings.multiplayer_enabled = res.multiplayer_enabled === 'true';
-        this.settings.pk_multi_round_enabled = (res.pk_multi_round_enabled ?? 'true') === 'true';
+    this.adminService.getSettingsMap().subscribe({
+      next: (map) => {
+        this.settings.site_maintenance = map['site_maintenance'] === 'true';
+        this.settings.maintenance_message = map['maintenance_message'] || '';
+        this.settings.global_announcement = map['global_announcement'] || '';
+        this.settings.simulator_enabled = map['simulator_enabled'] === 'true';
+        this.settings.multiplayer_enabled = map['multiplayer_enabled'] === 'true';
+        this.settings.pk_multi_round_enabled = (map['pk_multi_round_enabled'] ?? 'true') === 'true';
+        this.devtoApiKey = map['devto_api_key'] || '';
         this.cdr.detectChanges();
       },
       error: () => this.toast.show(this.i18n.t('admin.settings.load_error')(), 'error')
-    });
-
-    this.adminService.getSettingsMap().subscribe({
-      next: (map) => { this.devtoApiKey = map['devto_api_key'] || ''; this.cdr.detectChanges(); }
     });
   }
 
