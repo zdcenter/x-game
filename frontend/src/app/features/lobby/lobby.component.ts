@@ -13,7 +13,7 @@ import { environment as versionEnv } from '../../../environments/version';
 import { environment as appEnvironment } from '../../../environments/environment';
 import { SettingsService } from '../../core/services/settings.service';
 import { AnnouncementService, Announcement } from '../../core/services/announcement.service';
-import { AdsenseComponent } from '../../shared/components/adsense/adsense.component';
+// AdsenseComponent import temporarily removed — ad slots are commented out for AdSense review
 import { ShareService } from '../../core/services/share.service';
 import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
@@ -26,7 +26,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, AdsenseComponent, DailyChallengeBannerComponent],
+  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, DailyChallengeBannerComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })

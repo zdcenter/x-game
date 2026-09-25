@@ -143,6 +143,28 @@ export class SeoService {
           'image': fullImageUrl,
           'inLanguage': LANG_LOCALES[lang]
         });
+
+        // ===== FAQ Schema for game pages (rich snippets in Google search) =====
+        const seoDescKey = `game.${gameId}.seo_desc`;
+        const seoHtml = this.i18n.t(seoDescKey)();
+        const faqPairs = this.extractFaqPairs(seoHtml);
+        if (faqPairs.length > 0) {
+          this.setJsonLd({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            'mainEntity': faqPairs.map(faq => ({
+              '@type': 'Question',
+              'name': faq.question,
+              'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': faq.answer
+              }
+            }))
+          }, 'seo-jsonld-faq');
+        } else {
+          // Remove stale FAQ schema if navigating away
+          this.removeJsonLd('seo-jsonld-faq');
+        }
       } else if (docsMatch && gameId) {
         // Add HowTo schema for docs
         
@@ -302,5 +324,39 @@ export class SeoService {
       head.appendChild(script);
     }
     script.textContent = JSON.stringify(data);
+  }
+
+  /** Remove a JSON-LD script block by id (cleanup when navigating away). */
+  private removeJsonLd(id: string): void {
+    const head = this.doc.head;
+    if (!head) return;
+    const el = head.querySelector(`#${id}`);
+    if (el) el.remove();
+  }
+
+  /**
+   * Extract FAQ question-answer pairs from seo_desc HTML.
+   * Expects pattern: <h2>FAQ</h2> followed by <h3>Question</h3><p>Answer</p> pairs.
+   */
+  private extractFaqPairs(html: string): { question: string; answer: string }[] {
+    if (!html) return [];
+    // Find the FAQ section — support variants: "FAQ", "常见问题（FAQ）", "常见问题", etc.
+    const faqPattern = /(?:>FAQ<|>常见问题|>FAQ\s)/i;
+    const faqMatch = faqPattern.exec(html);
+    if (!faqMatch) return [];
+    const faqSection = html.substring(faqMatch.index);
+
+    const pairs: { question: string; answer: string }[] = [];
+    // Match <h3>Question</h3> followed by <p>Answer</p>
+    const regex = /<h3>(.*?)<\/h3>\s*<p>(.*?)<\/p>/gs;
+    let match;
+    while ((match = regex.exec(faqSection)) !== null) {
+      const question = match[1].replace(/<[^>]+>/g, '').trim();
+      const answer = match[2].replace(/<[^>]+>/g, '').trim();
+      if (question && answer) {
+        pairs.push({ question, answer });
+      }
+    }
+    return pairs;
   }
 }

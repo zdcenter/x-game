@@ -9,6 +9,7 @@ import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { XPResult } from '../../../core/services/game-stats.service';
 import { ShareService } from '../../../core/services/share.service';
+import { TextShareService, TextShareData } from '../../../core/services/text-share.service';
 import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
 import { AdsenseComponent } from '../adsense/adsense.component';
@@ -27,6 +28,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private gameRegistry = inject(GameRegistryService);
   adService = inject(AdService);
   private shareService = inject(ShareService);
+  private textShareService = inject(TextShareService);
   private streakService = inject(StreakService);
   authStore = inject(AuthStore);
 
@@ -51,6 +53,10 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   /** Optional: pass result from submitSingleStat() response to show XP & new-record badge */
   @Input() xpResult?: XPResult | null;
   @Input() isNewRecord?: boolean;
+  /** Game-specific extras for Wordle-style text share card (e.g. { mines: 99, hints: 0 }) */
+  @Input() textShareExtras?: Record<string, any>;
+
+  textCopied = signal(false);
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() restart = new EventEmitter<void>();
@@ -262,6 +268,21 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
       isWin: this.status === GameResult.Win,
       stats: this.stats,
     });
+  }
+
+  copyTextResult() {
+    if (!this.currentGameId) return;
+    this.textShareService.copyTextCard({
+      gameId: this.currentGameId,
+      isWin: this.status === GameResult.Win,
+      stats: this.stats,
+      extras: {
+        ...this.textShareExtras,
+        streak: this.streak(),
+      },
+    });
+    this.textCopied.set(true);
+    setTimeout(() => this.textCopied.set(false), 2000);
   }
 
   shareNewRecord() {

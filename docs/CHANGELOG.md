@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-09-25] - 🚀 SEO 增长引擎：FAQ 富摘要 + Wordle 分享 (SEO Growth: FAQ Rich Snippets + Viral Share)
+
+### ✨ 新功能 (Features)
+- **FAQ Schema 结构化数据 (FAQPage JSON-LD)**：`SeoService` 新增 `extractFaqPairs()` 方法，自动从游戏页 `seo_desc` HTML 中解析 FAQ 问答对，注入 `FAQPage` JSON-LD 到 `<head>`。Google 搜索结果将展示展开式 FAQ 富摘要，大幅提升搜索点击率。支持 `FAQ`、`常见问题（FAQ）` 等中英文标签格式自动识别。
+- **全游戏 FAQ 覆盖**：为原本缺少 FAQ 的 12 款游戏（block / codebreaker / connect / hashi / hexa / idiom / lightsout / math24 / nonogram / sokoban / tetris / watersort）在 en.json + zh.json 中补充了 5 个高搜索量 FAQ 问答，现全 18 款游戏均具备完整 FAQ 内容。
+- **Wordle 风格文字分享 (TextShareService)**：新增 `TextShareService`，游戏结束后可一键复制 emoji 格式战绩摘要到剪贴板。每种游戏有独特的 emoji 模板（扫雷/数独/2048/俄罗斯方块等各有专属格式）。结果弹窗新增醒目的"📋 Copy Result"按钮，带"已复制 ✅"视觉反馈动画。
+
+### 📝 文件变更
+- `frontend/src/app/core/services/seo.service.ts` — 新增 FAQ Schema 注入 + `extractFaqPairs()` + `removeJsonLd()` 方法
+- `frontend/src/app/core/services/text-share.service.ts` — 新增 Wordle 风格文字分享服务
+- `frontend/src/app/shared/components/game-result-overlay/` — 新增 Copy Result 按钮 + TextShareService 集成
+- `frontend/src/assets/i18n/en.json` — 12 款游戏新增 FAQ + text_share i18n keys
+- `frontend/src/assets/i18n/zh.json` — 12 款游戏新增 FAQ + text_share i18n keys
+
 ## [2026-09] - 🔍 AdSense 过审优化：内容优先策略 (AdSense Approval Optimization: Content-First Strategy)
 
 ### ✨ 新功能 (Features)

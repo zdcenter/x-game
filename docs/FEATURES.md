@@ -355,5 +355,12 @@
 - **合规页面齐全**：About / Contact / Privacy Policy / Terms of Service 四页齐全且预渲染，页脚全局链接可达。
 - **Cookie 同意弹窗**：首次访问弹出 Cookie 同意提示，隐私政策披露 AdSense 与 Google Analytics Cookie 使用。
 - **结构化数据 (JSON-LD)**：WebApplication / HowTo / BlogPosting / BreadcrumbList 结构化标记，无虚构评分。
+- **FAQ Schema 富摘要 (FAQPage JSON-LD)**：所有 18 款游戏页面自动从 `seo_desc` 中提取 FAQ 问答对，注入 `FAQPage` JSON-LD 结构化数据。Google 搜索结果将展示展开式 FAQ 富摘要，占据 3-5 倍屏幕面积，大幅提升点击率 (CTR)。支持中英文多种 FAQ 标签格式（`FAQ`、`常见问题（FAQ）`）自动识别。
+- **全游戏 FAQ 覆盖**：18 款游戏（en + zh）均已配备 5-6 个高搜索量 FAQ 问答（免费性、移动端兼容性、多人模式、策略技巧等），确保 Google 索引每个游戏页面均有丰富的结构化问答内容。
 - **真实 404 页面**：未知路径返回 HTTP 404 状态码而非 SPA 壳，消除软 404 问题。
 - **广告位可控开关**：lobby 广告位支持通过 HTML 注释临时禁用，审核通过后恢复。
+
+## 用户增长与留存 (Growth & Retention)
+- **Wordle 风格文字分享 (TextShareService)**：游戏结束后支持一键复制 emoji 格式的紧凑战绩摘要到剪贴板（如 `🔢 Sudoku | Puzzle PK ⏱ 05:23 ✅ Solved!`），用户可粘贴到 Twitter/微信/群聊实现病毒式传播。按钮带"已复制 ✅"视觉反馈动画。每种游戏有独特的 emoji 模板（扫雷显示地雷数、2048 显示最高方块、俄罗斯方块显示消除行数等）。
+- **游戏结果交叉推荐**：结果弹窗底部展示 6 个推荐游戏卡片，优先使用 `GameConfig.recommendations` 配置的关联游戏，不足部分随机补充，促进用户站内多游戏体验。
+

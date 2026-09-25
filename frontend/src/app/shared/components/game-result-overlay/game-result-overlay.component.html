@@ -150,9 +150,25 @@
       </div>
     </div>
 
-    <!-- Share + Dismiss row -->
+    <!-- Share + Copy + Dismiss row -->
     <div class="w-full flex gap-3 mt-3 relative z-10">
       @if (currentGameId) {
+        <button (click)="copyTextResult()"
+          [class]="textCopied() 
+            ? 'flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all' 
+            : 'flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white border border-amber-500/20 active:scale-95 transition-all'">
+          @if (textCopied()) {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ i18n.t('text_share.copied_short')() || 'Copied!' }}
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            {{ i18n.t('text_share.copy_result')() || 'Copy Result' }}
+          }
+        </button>
         <button (click)="shareResult()"
           class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white border border-blue-500/20 active:scale-95 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
