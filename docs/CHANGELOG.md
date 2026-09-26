@@ -1,5 +1,14 @@
 # Changelog
 
+## [2026-09-27] - 🎨 Nonogram 棋盘 PC 端布局优化 (Nonogram Board PC Layout Fix)
+
+### 🐛 修复 (Fixes)
+- **Nonogram 棋盘垂直居上对齐**：将棋盘从垂直居中 (`m-auto`) 改为垂直居上 (`mx-auto mt-2`)，与其他游戏保持一致。修复 PC 端棋盘被推到视口下方、需要滚动才能看到的问题。
+
+### 📝 文件变更
+- `frontend/src/app/features/games/nonogram/nonogram.component.html` — 移除条件式 `m-auto` / `mx-auto` / `mt-2` class 绑定，统一使用静态 `mx-auto mt-2`
+
+
 ## [2026-09-25] - 🚀 SEO 增长引擎：FAQ 富摘要 + Wordle 分享 (SEO Growth: FAQ Rich Snippets + Viral Share)
 
 ### ✨ 新功能 (Features)

@@ -96,10 +96,7 @@
             <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto flex flex-col p-4 min-h-[400px]"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
-              <div class="flex flex-col items-center"
-                   [class.m-auto]="!hideLeftPanel()"
-                   [class.mx-auto]="hideLeftPanel()"
-                   [class.mt-2]="hideLeftPanel()">
+              <div class="flex flex-col items-center mx-auto mt-2">
                 <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
                      [style.--cell-size.px]="cellSize()"
