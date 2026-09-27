@@ -4,9 +4,11 @@
 
 ### 🐛 修复 (Fixes)
 - **Nonogram 棋盘垂直居上对齐**：将棋盘从垂直居中 (`m-auto`) 改为垂直居上 (`mx-auto mt-2`)，与其他游戏保持一致。修复 PC 端棋盘被推到视口下方、需要滚动才能看到的问题。
+- **游戏结算弹窗固定定位**：将 `game-result-overlay` 从 `absolute inset-0`（相对父容器）改为 `fixed inset-0`（相对视口），并将内容从垂直居中 (`m-auto`) 改为顶部偏移 (`mt-8 lg:mt-12 mb-auto`)。修复当游戏棋盘内容较高时，结算界面被推到视口下方需要滚动才能看到的问题。此修复惠及所有游戏。
 
 ### 📝 文件变更
 - `frontend/src/app/features/games/nonogram/nonogram.component.html` — 移除条件式 `m-auto` / `mx-auto` / `mt-2` class 绑定，统一使用静态 `mx-auto mt-2`
+- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.html` — `absolute` → `fixed`，`m-auto` → `mt-8 lg:mt-12 mb-auto mx-auto`
 
 
 ## [2026-09-25] - 🚀 SEO 增长引擎：FAQ 富摘要 + Wordle 分享 (SEO Growth: FAQ Rich Snippets + Viral Share)
