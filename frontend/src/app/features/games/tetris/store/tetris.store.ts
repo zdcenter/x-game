@@ -2,7 +2,7 @@ import { GameMode, GameModeType, GameStatus, GameStatusType } from '../../../../
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { AudioService } from '../../../../core/services/audio.service';
-import { getEmptyGrid, Piece, Tetromino } from '../models/tetris.model';
+import { getEmptyGrid, Piece, Tetromino, TetrisColorTheme } from '../models/tetris.model';
 import { TetrisEngine, TetrisActionType, TetrisState } from './tetris-engine';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { storageGet, storageSet } from '../../../../core/utils/browser.util';
@@ -41,8 +41,22 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   shakeTrigger = signal<number>(0);
   levelUpSignal = signal<number>(0);
   comboTrigger = signal<number>(0);
+  tetrisTrigger = signal<number>(0);
   hasRevived = signal<boolean>(false);
   particles = signal<any[]>([]);
+  clearingRows = signal<number[]>([]);
+
+  // Color Theme Signal with persistence
+  colorTheme = signal<TetrisColorTheme>(
+    (storageGet('tetris_color_theme') as TetrisColorTheme) || 'crystal'
+  );
+
+  cycleColorTheme() {
+    const current = this.colorTheme();
+    const next: TetrisColorTheme = current === 'crystal' ? 'gold' : current === 'gold' ? 'ocean' : 'crystal';
+    this.colorTheme.set(next);
+    storageSet('tetris_color_theme', next);
+  }
 
   readonly singlePlayerStatus = computed(() => this.localStatus());
 
@@ -146,10 +160,11 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
 
       this.engine.initGame({
         mode: GameMode.Single,
-        onSound: (s) => this.audio.playTetris(s),
+        onSound: (s, lines, combo) => this.audio.playTetris(s, lines, combo),
         onHardDrop: () => this.shakeTrigger.update(n => n + 1),
         onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
         onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
+        onTetris: () => { this.tetrisTrigger.update(n => n + 1); },
         onShake: () => { this.shakeTrigger.update(n => n + 1); this.updateSignals(); },
       });
       this.updateSignals();
@@ -190,7 +205,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.engine.initGame({
       seed,
       mode: this.currentRoomMode(),
-      onSound: (s) => this.audio.playTetris(s),
+      onSound: (s, lines, combo) => this.audio.playTetris(s, lines, combo),
       onGarbageSent: (lines) => {
         this.ws.send({ action: C2SAction.Attack, lines });
       },
@@ -200,6 +215,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       onHardDrop: () => this.shakeTrigger.update(n => n + 1),
       onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
       onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
+      onTetris: () => { this.tetrisTrigger.update(n => n + 1); },
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
@@ -215,6 +231,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.isDead.set(false);
     this.hasRevived.set(false);
     this.particles.set([]);
+    this.clearingRows.set([]);
   }
 
   private syncState() {
@@ -239,6 +256,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.isDead.set(state.isDead);
     this.ghostY.set(state.ghostY);
     this.particles.set([...(state.particles || [])]);
+    this.clearingRows.set(state.clearingRows || []);
     
     if (this.currentRoomMode() === GameMode.Single && state.score > this.bestScore()) {
       this.bestScore.set(state.score);

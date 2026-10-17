@@ -200,11 +200,15 @@ export class AudioService {
   }
 
   // --- Tetris Sounds ---
-  async playTetris(name: 'move' | 'rotate' | 'land' | 'clear') {
+  async playTetris(
+    name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris',
+    linesCount = 1,
+    combo = 0
+  ) {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
-      playTetrisSound(this.audioCtx, this.masterGain, name);
+      playTetrisSound(this.audioCtx, this.masterGain, name, linesCount, combo);
     }
   }
 

@@ -18,7 +18,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES } from './models/tetris.model';
+import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES, TETROMINO_THEMES } from './models/tetris.model';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
@@ -78,6 +78,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   isShaking = signal(false);
   showLevelUp = signal(false);
   levelUpNum = signal(0);
+  showTetrisBanner = signal(false);
 
   // Touch Handling properties
   private touchStartX = 0;
@@ -127,6 +128,14 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     effect(() => {
       const lv = this.store.levelUpSignal();
       if (lv > 0) { this.levelUpNum.set(lv); this.showLevelUp.set(true); setTimeout(() => this.showLevelUp.set(false), 1600); }
+    });
+
+    effect(() => {
+      const t = this.store.tetrisTrigger();
+      if (t > 0) {
+        this.showTetrisBanner.set(true);
+        setTimeout(() => this.showTetrisBanner.set(false), 1400);
+      }
     });
 
     effect(() => {
@@ -187,23 +196,34 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     
     switch (event.code) {
       case 'ArrowLeft':
+      case 'KeyA':
         this.store.moveLeft();
         event.preventDefault();
         break;
       case 'ArrowRight':
+      case 'KeyD':
         this.store.moveRight();
         event.preventDefault();
         break;
       case 'ArrowUp':
+      case 'KeyW':
+      case 'KeyZ':
         this.store.rotate();
         event.preventDefault();
         break;
       case 'ArrowDown':
+      case 'KeyS':
         this.store.softDrop();
         event.preventDefault();
         break;
       case 'Space':
         this.store.hardDrop();
+        event.preventDefault();
+        break;
+      case 'KeyC':
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        this.store.hold();
         event.preventDefault();
         break;
     }
@@ -264,7 +284,17 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   getPieceColor(type: Tetromino): string {
-    return this.COLORS[type] || 'transparent';
+    const theme = this.store.colorTheme();
+    return TETROMINO_THEMES[theme]?.[type] || TETROMINO_COLORS[type] || 'transparent';
+  }
+
+  getThemeName(theme: string): string {
+    switch (theme) {
+      case 'crystal': return this.i18n.t('tetris.theme.crystal')();
+      case 'gold': return this.i18n.t('tetris.theme.gold')();
+      case 'ocean': return this.i18n.t('tetris.theme.ocean')();
+      default: return theme;
+    }
   }
 
   getShapeArray(type: Tetromino): number[][] {
@@ -276,10 +306,13 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     const grid = this.store.grid();
     const current = this.store.currentPiece();
     const ghostY = this.store.ghostY();
-    const colors = this.COLORS;
+    const theme = this.store.colorTheme();
+    const colors = TETROMINO_THEMES[theme] || this.COLORS;
+    const clearingRows = this.store.clearingRows();
     
-    const result: { bg: string, border: string, shadow: string, isGhost: boolean, isFilled: boolean }[][] = [];
+    const result: { bg: string, border: string, shadow: string, isGhost: boolean, isFilled: boolean, isClearing: boolean }[][] = [];
     for (let y = 0; y < this.ROWS; y++) {
+      const isClearingRow = clearingRows.includes(y);
       const row = [];
       for (let x = 0; x < this.COLS; x++) {
         let bg = 'transparent';
@@ -287,10 +320,14 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         let shadow = 'none';
         let isGhost = false;
         let isFilled = false;
+        let isClearing = false;
         
         if (grid[y] && grid[y][x] !== 0) {
           bg = colors[grid[y][x] as Tetromino];
           isFilled = true;
+          if (isClearingRow) {
+            isClearing = true;
+          }
         } else if (current &&
             x >= current.x && x < current.x + current.shape[0].length &&
             y >= current.y && y < current.y + current.shape.length &&
@@ -302,17 +339,23 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
             y >= ghostY && y < ghostY + current.shape.length &&
             current.shape[y - ghostY]?.[x - current.x] !== 0) {
           isGhost = true;
-          bg = colors[current.type] + '20'; // Very faint fill
-          border = `2px solid ${colors[current.type]}80`; // Colored border
-          shadow = `inset 0 0 8px ${colors[current.type]}40`; // Inner glow
+          const pieceColor = colors[current.type] || '#38bdf8';
+          bg = pieceColor + '22';
+          border = `2px dashed ${pieceColor}cc`;
+          shadow = `inset 0 0 10px ${pieceColor}66, 0 0 8px ${pieceColor}44`;
         }
         
-        if (isFilled) {
-          // Classic 3D Bevel effect
-          shadow = `inset 0 3px 0 rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.3), inset 3px 0 0 rgba(255,255,255,0.2), inset -3px 0 0 rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.5)`;
+        if (isClearing) {
+          bg = '#ffffff';
+          border = '1px solid #ffffff';
+          shadow = '0 0 24px #ffffff, inset 0 0 12px #ffffff';
+        } else if (isFilled) {
+          // Modern 3D Bevel crystal reflection
+          shadow = `inset 0 2px 2px rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.4), inset 2px 0 2px rgba(255,255,255,0.25), inset -2px 0 2px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.35)`;
+          border = '1px solid rgba(255,255,255,0.22)';
         }
         
-        row.push({ bg, border, shadow, isGhost, isFilled });
+        row.push({ bg, border, shadow, isGhost, isFilled, isClearing });
       }
       result.push(row);
     }

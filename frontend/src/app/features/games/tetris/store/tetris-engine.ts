@@ -36,12 +36,13 @@ export interface TetrisState {
   ghostY: number;
   comboCount: number;
   particles: any[];
+  clearingRows: number[];
 }
 
 export interface TetrisConfig {
   seed?: number;
   mode?: string;
-  onSound?: (sound: 'move' | 'rotate' | 'land' | 'clear') => void;
+  onSound?: (sound: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris', linesCount?: number, combo?: number) => void;
   onHaptic?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
   onGarbageSent?: (lines: number) => void;
   onSyncState?: () => void;
@@ -50,6 +51,7 @@ export interface TetrisConfig {
   onCombo?: (count: number) => void;
   onParticle?: (particle: any) => void;
   onShake?: () => void;
+  onTetris?: () => void;
 }
 
 export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
@@ -65,8 +67,11 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   isDead = false;
   comboCount = 0;
   particles: any[] = [];
+  clearingRows: number[] = [];
+  isClearing = false;
 
   private dropInterval: any;
+  private clearingTimer: any;
   private localGarbageApplied = 0;
   private prng: PRNG | undefined;
 
@@ -75,6 +80,10 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   constructor() {}
 
   initGame(config: TetrisConfig = {}): void {
+    if (this.clearingTimer) {
+      clearTimeout(this.clearingTimer);
+      this.clearingTimer = null;
+    }
     this.config = config;
     this.grid = getEmptyGrid();
     this.score = 0;
@@ -85,6 +94,9 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     this.localGarbageApplied = 0;
     this.isDead = false;
     this.comboCount = 0;
+    this.particles = [];
+    this.clearingRows = [];
+    this.isClearing = false;
     this.status = GameStatus.Playing;
     
     if (config.seed) {
@@ -99,6 +111,10 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   }
 
   stop() {
+    if (this.clearingTimer) {
+      clearTimeout(this.clearingTimer);
+      this.clearingTimer = null;
+    }
     this.stopGameLoop();
   }
 
@@ -117,6 +133,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       ghostY: this.getGhostY(),
       comboCount: this.comboCount,
       particles: this.particles,
+      clearingRows: this.clearingRows,
     };
   }
 
@@ -130,7 +147,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   }
 
   handleAction(action: TetrisAction): void {
-    if (this.isDead || this.status !== GameStatus.Playing) return;
+    if (this.isDead || this.status !== GameStatus.Playing || this.isClearing) return;
 
     switch (action.type) {
       case TetrisActionType.MoveLeft:
@@ -201,10 +218,11 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   }
 
   private hold() {
-    if (!this.canHold || !this.currentPiece) return;
+    if (!this.canHold || !this.currentPiece || this.isClearing) return;
     const hold = this.holdPiece;
     this.holdPiece = this.currentPiece.type;
     this.canHold = false;
+    this.config.onSound?.('hold');
     this.spawnPiece(hold || undefined);
   }
 
@@ -241,7 +259,7 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   }
 
   private softDrop() {
-    if (!this.currentPiece) return;
+    if (!this.currentPiece || this.isClearing) return;
     if (!this.checkCollision(this.currentPiece.x, this.currentPiece.y + 1, this.currentPiece.shape, this.grid)) {
       this.currentPiece = { ...this.currentPiece, y: this.currentPiece.y + 1 };
       this.score += 1;
@@ -251,16 +269,42 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   }
 
   private hardDrop() {
-    if (!this.currentPiece) return;
+    if (!this.currentPiece || this.isClearing) return;
     let y = this.currentPiece.y;
     while (!this.checkCollision(this.currentPiece.x, y + 1, this.currentPiece.shape, this.grid)) {
       y++;
       this.score += 2;
     }
     this.currentPiece = { ...this.currentPiece, y };
-    this.config.onSound?.('land');
+    this.config.onSound?.('hardDrop');
     this.config.onHardDrop?.();
     this.lockPiece();
+  }
+
+  private spawnClearParticles(rows: number[]) {
+    const newParticles: any[] = [];
+    rows.forEach(r => {
+      for (let c = 0; c < TETRIS_COLS; c += 2) {
+        const val = this.grid[r]?.[c] || 1;
+        const color = TETROMINO_COLORS[val as Tetromino] || '#38bdf8';
+        for (let i = 0; i < 4; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 15 + Math.random() * 35;
+          newParticles.push({
+            id: Math.random().toString(36).substring(2, 9),
+            r,
+            c,
+            color,
+            w: 3 + Math.random() * 4,
+            h: 3 + Math.random() * 4,
+            tx: Math.cos(angle) * speed,
+            ty: Math.sin(angle) * speed - 6,
+            rot: Math.floor(Math.random() * 360 - 180),
+          });
+        }
+      }
+    });
+    this.particles = [...this.particles.slice(-40), ...newParticles];
   }
 
   private lockPiece() {
@@ -281,13 +325,43 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
 
     this.grid = newGrid;
     this.currentPiece = null;
-    this.clearLines();
 
-    if (this.config.mode === 'diff_pk_attack') {
-      // Applied externally or here if we tracked it
+    // Check for full rows
+    const fullRows: number[] = [];
+    for (let r = 0; r < TETRIS_ROWS; r++) {
+      if (this.grid[r].every(cell => cell !== 0 && cell !== Tetromino.GARBAGE)) {
+        fullRows.push(r);
+      }
     }
 
-    this.spawnPiece();
+    if (fullRows.length === 0) {
+      this.comboCount = 0;
+      this.spawnPiece();
+      this.config.onSyncState?.();
+      return;
+    }
+
+    // Dynamic line clear sequence (180ms snappy burst)
+    this.isClearing = true;
+    this.clearingRows = fullRows;
+    this.spawnClearParticles(fullRows);
+
+    this.comboCount++;
+    this.config.onSound?.('clear', fullRows.length, this.comboCount);
+    if (fullRows.length >= 4) {
+      this.config.onTetris?.();
+      this.config.onSound?.('tetris', 4, this.comboCount);
+    }
+    this.config.onShake?.();
+    this.config.onSyncState?.();
+
+    if (this.clearingTimer) clearTimeout(this.clearingTimer);
+    this.clearingTimer = setTimeout(() => {
+      this.clearLines();
+      this.clearingRows = [];
+      this.isClearing = false;
+      this.spawnPiece();
+    }, 180);
   }
 
   private clearLines() {
@@ -316,7 +390,6 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
         this.config.onLevelUp?.(this.level);
       }
 
-      this.comboCount++;
       if (this.comboCount >= 2) {
         const comboBonus = this.comboCount * 50 * this.level;
         this.score += comboBonus;
@@ -324,14 +397,11 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       }
 
       this.updateDropSpeed();
-      this.config.onSound?.('clear');
 
       if (this.config.mode === 'diff_pk_attack' && linesCleared >= 2) {
         const garbageSent = linesCleared === 4 ? 4 : linesCleared - 1;
         this.config.onGarbageSent?.(garbageSent);
       }
-    } else {
-      this.comboCount = 0;
     }
 
     this.config.onSyncState?.();
