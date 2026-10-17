@@ -1,5 +1,43 @@
 # Changelog
 
+## [2026-10-17] - 🎯 游戏内页宽屏沉浸聚焦与极速复开重构 (Game Layout Focus Arena & Fast-Replay)
+
+### ✨ 新功能与重构 (Features & Redesign)
+- **宽屏沉浸聚焦主战场 (Focus Arena)**：解除游戏棋盘被左侧 SEO 文本与右侧常驻房间列表夹击的狭隘布局。将棋盘视口最大宽度扩展至 1400px，全平台 15+ 款益智游戏（扫雷大棋盘、数独、华容道、数织等）获得宽阔舒展的居中舞台，告别拥挤逼仄感。
+- **一体化操作控制台条 (Unified Action Console Bar)**：在棋盘上方整合难度选择器、联机模式指示、`⚔️ 找人PK`、`👥 邀请好友`、`💡 玩法规则` 等快捷操作，界面对称雅致，操作链路一目了然。
+- **智能联机对战抽屉 (Smart PK Drawer)**：将冷清尴尬的右侧常驻房间列表重塑为按需呼出的侧滑抽屉。单机模式下界面纯净零打扰，需要联机对战时一键唤出，移动端与桌面端实现逻辑与视觉大统一。
+- **键盘极速重开快捷键 (Instant Replay Shortcuts)**：全局支持键盘 `Space`（空格键）与 `R` 键极速再来一盘，通关或结算状态下无需鼠标横跨屏幕点击，一键重开，极大提升核心玩家的爽感与局数留存。
+- **底部 SEO 与深度策略指南专区 (Bottom Strategy & SEO Section)**：将桌面端左侧的 SEO 长文与移动端底部 SEO 整合迁移至游戏画布正下方，卡片式呈现，带有专属攻略博客链接与 FAQ。既 100% 留存搜索引擎抓取权重，又彻底解放游玩视野。
+
+### 📝 文件变更
+- `frontend/src/app/shared/components/game-layout/game-layout.component.ts` — 核心游戏通用布局重构
+- `frontend/src/assets/i18n/zh.json` & `en.json` — 补充游戏内页快捷键与策略专区多语言词条
+
+## [2026-10-17] - 🎮 首页大厅极简化与短链路重构 (Lobby Modernization & Quick Action Engine)
+
+### ✨ 新功能与重构 (Features & Redesign)
+- **极简沉浸式全宽布局**：解除桌面端常驻冷启动"在线大厅"右侧栏对视口的强行压缩，重塑为响应式全宽流体网格布局（Poki / Steam 式现代游戏库）。在线对战大厅改为按需抽屉模式或顶部直达，消除冷启动"零房间"的心理负面暗示。
+- **短链路转化三联卡 (Quick Action Triple Deck)**：
+  - **每日挑战聚光灯 (Daily Spotlight)**：首屏直接外露当天精选挑战游戏与一键开局。
+  - **双人竞技场直通卡 (Instant PK Arena)**：突出真人对战特性，1 步直达 `/pk-arena` 快速匹配与建房。
+  - **随便来一把 (Lucky Pick)**：提供"手气不错"随机开局功能，降低选择困难症门槛，提高用户启动率。
+- **分类筛选胶囊与即时搜索 (Category Filter & Live Search)**：
+  - 支持 `全部`、`🔥 热门榜`、`⚔️ 实时联机PK`、`🔢 数字推理`、`🧩 空间拼图` 5 维动态过滤，内置实时本地搜索框，秒级过滤定位游戏。
+- **游戏卡片 CTA 转化重构 (Direct-Action Game Cards)**：
+  - 剔除无意义的"已就绪"等视觉杂音标签。
+  - 卡片底部增加模式直达分流双按钮：`🕹️ 单人试玩` 与 `⚔️ 实时对战`，链路从原先的 3~4 步缩短为 1 步直达指定玩法。
+- **内容动线优化 (Content-First & SEO Friendly)**：
+  - 将平台说明与大段 SEO 文本移至游戏网格下方，保证搜索引擎抓取权重的完整留存，同时让真实玩家打开页面第一眼即可开始游玩。
+- **界面细节与多语言多主题优化**：
+  - 优化顶部导航退出登录按钮样式，从突兀红框改为雅致悬停变色。
+  - 新增所有交互文本的完整 i18n 键值，严格遵循全站 CSS 变量与全端响应式断点规范。
+
+### 📝 文件变更
+- `frontend/src/app/features/lobby/lobby.component.html` — 全面重构页面结构与卡片动作条
+- `frontend/src/app/features/lobby/lobby.component.ts` — 新增分类过滤、实时搜索、短链路直达与随机游戏逻辑
+- `frontend/src/app/core/layouts/main-layout.component.ts` — 优化顶部导航栏操作按钮视觉质感
+- `frontend/src/assets/i18n/zh.json` & `en.json` — 补充大厅改版相关的多语言词条
+
 ## [2026-09-27] - 🎨 Nonogram 棋盘 PC 端布局优化 (Nonogram Board PC Layout Fix)
 
 ### 🐛 修复 (Fixes)

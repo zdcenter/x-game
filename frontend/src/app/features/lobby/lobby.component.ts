@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameConfig as BackendGameConfig, getLocalizedField } from '../../core/services/game.service';
 import { WebSocketService } from '../../core/services/websocket.service';
@@ -26,7 +27,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameLobbyPanelComponent, DailyChallengeBannerComponent],
+  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
@@ -42,6 +43,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
   announcementService = inject(AnnouncementService);
   shareService = inject(ShareService);
   adService = inject(AdService);
+  gameRegistry = inject(GameRegistryService);
+
   // Statically populate all games from frontend SSOT to prevent SSR sorting flicker.
   games = signal<BackendGameConfig[]>(
     GAME_DEFINITIONS.map(def => ({
@@ -50,6 +53,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }))
   );
   
+  // Active category filter: 'all' | 'hot' | 'pk' | 'logic' | 'puzzle'
+  selectedCategory = signal<'all' | 'hot' | 'pk' | 'logic' | 'puzzle'>('all');
+  searchQuery = signal<string>('');
+
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
@@ -64,6 +71,65 @@ export class LobbyComponent implements OnInit, OnDestroy {
       meta: lang === 'zh' ? post.zh : post.en
     }));
   });
+
+  hasMultiplayer(gameId: string): boolean {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (!config || !config.modes) return false;
+    return config.modes.some(m => m.id !== 'single');
+  }
+
+  filteredGames = computed(() => {
+    let list = [...this.games()];
+    const cat = this.selectedCategory();
+    const q = this.searchQuery().trim().toLowerCase();
+
+    if (cat === 'hot') {
+      list.sort((a, b) => (b.visitCount || 0) - (a.visitCount || 0));
+    } else if (cat === 'pk') {
+      list = list.filter(g => this.hasMultiplayer(g.id));
+    } else if (cat === 'logic') {
+      const logicIds = ['minesweeper', 'sudoku', 'nonogram', 'sliding', 'codebreaker', 'math24', 'connect', 'drop2048', 'classic2048'];
+      list = list.filter(g => logicIds.includes(g.id));
+    } else if (cat === 'puzzle') {
+      const puzzleIds = ['hexa', 'block', 'tetris', 'gomoku', 'sokoban', 'watersort', 'lightsout', 'hashi', 'idiom'];
+      list = list.filter(g => puzzleIds.includes(g.id));
+    }
+
+    if (q) {
+      list = list.filter(g => {
+        const title = this.getGameTitle(g.id).toLowerCase();
+        const desc = this.getGameDesc(g.id).toLowerCase();
+        return title.includes(q) || desc.includes(q) || g.id.toLowerCase().includes(q);
+      });
+    }
+
+    return list;
+  });
+
+  playRandomGame() {
+    const all = this.games();
+    if (!all.length) return;
+    const randomIndex = Math.floor(Math.random() * all.length);
+    const targetGame = all[randomIndex];
+    this.router.navigate(['/', this.i18n.currentLang(), 'games', targetGame.id]);
+  }
+
+  goToPkArena(gameId?: string) {
+    const queryParams = gameId ? { game: gameId } : {};
+    this.router.navigate(['/', this.i18n.currentLang(), 'pk-arena'], { queryParams });
+  }
+
+  playSoloGame(event: Event, gameId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.router.navigate(['/', this.i18n.currentLang(), 'games', gameId]);
+  }
+
+  playPkGame(event: Event, gameId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.goToPkArena(gameId);
+  }
 
   ngOnInit() {
     // Load dynamic game stats (visitCounts) and merge without reordering
@@ -152,8 +218,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
       return `${icon} ${label}`;
     });
   }
-
-  gameRegistry = inject(GameRegistryService);
 
   getGameTitle(gameId: string): string {
     const config = this.gameRegistry.getConfig(gameId);

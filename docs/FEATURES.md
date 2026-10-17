@@ -16,13 +16,14 @@
 - **实时对战表情与嘲讽 (Emoji Broadcast)**：基于 WebSocket 的纯后端无状态广播机制。对局中点击头像即可发送表情或快捷嘲讽短语，对方屏幕瞬间弹出带物理引擎质感的 CSS 飘浮动画，零延迟且与底层单机/联机状态机完全解耦，大幅强化对局临场社交属性。
 - **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 14 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。多局系列赛通用信号（`pkWins` / `isSeriesOver` / `pkScoreLabel`）全部内置于基类，各游戏无需重复实现；系列赛重启时 `_pkStatSubmitted` 自动重置，确保每局战绩独立提交。
 - **统一游戏组件基类（BaseGameComponent）**：`openChangeSettings()`、`navigateToPkArena()`、`handleJoinRoom()` 等 8 个公共方法上移至基类，消除 11 款游戏的重复样板代码；`GameStoreInterface` 接口新增 `pkWins` / `isSeriesOver` / `pkScoreLabel` 三项约束，确保编译时类型安全。`lobbyPanel` 通过 `@ViewChild override` 模式让子类可选复写而不重复声明。
-- **标准化全局游戏布局 (app-game-layout)**：构建了高度封装的 `<app-game-layout>` 视图组件。它以组件投影 (`ng-content`) 和响应式设计接管了全系 15 款游戏的最外层视图层，彻底统一了“全屏游戏导航栏”、“自适应单双栏响应式”、“动态模式难度标题”、“底端 SEO 版块”和“移动端大厅侧边栏”等全套 UI 交互，实现了 HTML 层面的终极复用。
+- **标准化全局游戏布局 (app-game-layout)**：构建了高度封装的 `<app-game-layout>` 视图组件。它以组件投影 (`ng-content`) 接管了全系 15+ 款游戏的最外层视图层。最新升级为宽屏沉浸聚焦主战场（解除左右侧栏夹攻，棋盘最大宽度扩展至 1400px）；统一了棋盘上方的操作控制台条（难度/PK/好友/规则）；将联机房间面板重塑为智能呼出抽屉（单机零打扰，联机一键唤出）；全局支持 Space/R 键盘极速重开；并将 SEO 与深度策略指南整合沉淀至棋盘正下方，实现大方、专注且兼顾 SEO 的现代化游戏内页体验。
 - **现代美学 UI**：结合 TailwindCSS v4 的原子化 CSS 特性，实现了全面现代化、毛玻璃（Glassmorphism）、微动画（Micro-animations）、金色脉冲光晕等具有震撼视觉的高级游戏界面。
 - **自动化版本号**：在前端编译命令中嵌入了自定义 Node 脚本，全自动根据构建时间生成版本号（如 `v2023.10.23.1234`），与后端版本号一并以非侵入式的 UI Overlay 悬浮于全站右下角，供管理员与玩家精准识别系统构建版本。
 - **路由懒加载**：实现了核心游戏大厅（Lobby）与具体游戏页面（Minesweeper）的独立路由控制与分离渲染。
 - **广告商业化架构 (AdSense)**：全局集成了 Google AdSense 体系，提供独立的 `AdsenseComponent`。该组件完美适配了 SPA 单页应用的路由切换生命周期，能自适应各种广告布局格式，实现优雅的商业化变现方案。
 - **游戏元数据 DB 化（运行时覆盖层）**：`gm_game_configs.config`（JSONB）存储完整元数据（icon / multiRound / modes[] / difficulties[]）。`GameRegistryService.loadFromDB()` 通过 `APP_INITIALIZER` 在浏览器端拉取 `GET /api/v1/games/meta` 并覆盖 TS registry；SSR/预渲染期自动降级为 `game-definitions.ts` 静态 fallback，不影响构建。管理员可通过 Admin UI `/admin/games` 直接修改元数据，无需代码部署即时生效。
 - **大厅游戏列表无限滚动**：`GET /api/v1/games` 支持分页（`?page&limit`），返回 `{ games, total, hasMore }`。大厅组件用 `IntersectionObserver` 监听底部 sentinel，滚到底自动加载下一页并追加卡片，首屏默认加载 6 款游戏。
+- **现代化大厅与极速短链路架构 (Modern Lobby & Quick Actions)**：采用沉浸式全宽响应式网格布局，彻底解绑常驻冷启动侧边栏，改为按需抽屉模式与竞技大厅直达；首屏打造“今日挑战 + 双人对战直通 + 随便来一把”三联转化引擎；游戏卡片支持 5 维胶囊筛选（全部/热门/联机/逻辑/拼图）与即时模糊搜索；卡片底端提供“单人试玩 / 实时对战”分流双 CTA，使对战开局链路极度压缩至 1 步直达。
 
 ---
 

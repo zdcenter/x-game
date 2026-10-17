@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, booleanAttribute } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, booleanAttribute, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -21,13 +21,13 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent],
   template: `
-<div class="flex min-h-[calc(100dvh-64px)] lg:h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="gameId" [isOpen]="showRules" (closed)="rulesClosed.emit()"></app-game-rules-modal>
 
-  <!-- Top Full-Width Game Header -->
-  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-4 px-2 lg:px-6 z-40 sticky top-0 pb-2">
-    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.3)] overflow-hidden" style="background-color: var(--color-bg-card);">
+  <!-- Top Game Header Bar -->
+  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-3 px-2 sm:px-4 lg:px-6 z-40 sticky top-0 pb-1.5">
+    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-sm overflow-hidden" style="background-color: var(--color-bg-card);">
       <app-game-header (titleClick)="titleClick.emit()"
         [title]="title"
         [subtitle]="subtitle"
@@ -45,29 +45,33 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
         </ng-container>
 
         <ng-container header-right>
-          <div class="flex items-center gap-1 sm:gap-2 lg:gap-4">
+          <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
             @if (showPlayAgainBtn) {
-              <button (click)="playAgain.emit()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/50 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button (click)="playAgain.emit()"
+                      class="px-2.5 sm:px-3.5 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/40 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 group"
+                      [title]="i18n.t('game.space_shortcut_hint')() || 'Press Space or R to restart'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.play_again')() }}</span>
+                <span>{{ i18n.t('game.play_again')() }}</span>
+                <span class="hidden md:inline text-[10px] opacity-75 font-mono">Space</span>
               </button>
             }
 
             @if (showLeaveBtn) {
-              <button (click)="back.emit()" class="px-2 lg:px-4 py-1 lg:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-lg lg:rounded-xl text-xs lg:text-sm font-bold transition-colors flex items-center gap-1 lg:gap-2 shadow-inner active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 lg:h-4 lg:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button (click)="back.emit()" class="px-2.5 sm:px-3.5 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center gap-1.5 shadow-sm active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
               </button>
             }
+
             @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="navigateToPk.emit()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+              <button (click)="togglePkDrawer(true)"
+                      class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:border-amber-500/50 hover:text-amber-500 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs sm:text-sm font-bold"
+                      title="PK Arena">
+                <span class="text-sm group-hover:scale-110 transition-transform">⚔️</span>
                 <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
               </button>
             }
@@ -77,125 +81,130 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
     </div>
   </div>
 
-  <div class="flex-grow min-h-0 w-full flex flex-col lg:flex-row p-1 sm:p-2 lg:p-4 lg:px-6 gap-2 sm:gap-4 lg:gap-8 justify-center lg:items-stretch max-w-[1600px] mx-auto transition-colors duration-300">
+  <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
+  <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3 z-10 transition-all">
     
-    <!-- LEFT: SEO Description (Desktop only) -->
-    @if (!hideLeftPanel) {
-      <div class="hidden xl:flex w-[260px] xl:w-[300px] flex-shrink-0 flex-col gap-4 justify-start pt-2 z-10 overflow-y-auto custom-scrollbar min-h-0 pr-2">
-        <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
-             [innerHTML]="i18n.t(computedSeoDescKey)()">
-        </div>
-        @if (relatedGuideSlug) {
-          <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-             class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/5 hover:bg-[var(--color-accent-from)]/10 transition-colors">
-            📖 {{ i18n.t('game.read_guide')() }}
-          </a>
+    <!-- Top Action Console Bar (Difficulty, Quick PK, Rules) -->
+    <div class="w-full flex flex-wrap justify-between items-center mb-2 px-1 gap-2">
+      <!-- Left: Difficulty Selector or Mode Indicator -->
+      <div class="flex items-center gap-2">
+        @if (currentRoomMode === GameMode.Single && !hideDefaultDifficulty && availableDifficulties.length > 1) {
+          <app-difficulty-selector 
+            [availableDifficulties]="availableDifficulties"
+            [currentDifficulty]="currentDifficulty"
+            (difficultyChange)="onDifficultyChange($event)">
+          </app-difficulty-selector>
+        } @else if (currentRoomMode !== GameMode.Single) {
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1">
+            <span>⚔️</span> {{ currentRoomMode }}
+          </span>
+        }
+      </div>
+
+      <!-- Right: Direct Utility Shortcuts -->
+      <div class="flex items-center gap-2 ml-auto">
+        @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
+          <button (click)="quickCreatePkRoom()"
+                  class="px-2 sm:px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
+            <span class="group-hover:scale-110 transition-transform">⚔️</span>
+            <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '1秒建PK房' }}</span>
+            <span class="sm:hidden">PK</span>
+          </button>
+          <button (click)="openFriendList()"
+                  class="px-2 sm:px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
+            <span class="group-hover:scale-110 transition-transform">👥</span>
+            <span class="hidden sm:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
+            <span class="sm:hidden">邀请</span>
+          </button>
+        }
+        @if (currentRoomMode !== GameMode.Single && status !== GameStatus.Waiting && isHost) {
+          <button (click)="openChangeSettingsGlobal()"
+                  class="px-2 sm:px-3 py-1.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
+            <span class="group-hover:rotate-90 transition-transform">⚙️</span>
+            <span>{{ i18n.t('game.change_settings')() || 'Settings' }}</span>
+          </button>
+        }
+        <button (click)="rulesOpen.emit()"
+                class="px-2 sm:px-3 py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95">
+          <span>💡</span>
+          <span class="hidden sm:inline">{{ i18n.t('game.rules')() || '规则' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- The Game Stage (Canvas / Board Container) -->
+    <div class="w-full flex-grow flex flex-col items-center justify-center backdrop-blur-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-md transition-colors duration-300 p-1.5 sm:p-4 min-h-[360px] sm:min-h-[460px] overflow-hidden relative">
+      <!-- Project custom game components here -->
+      <ng-content></ng-content>
+    </div>
+
+    <!-- Emoji Broadcast Bar (When inside multiplayer room) -->
+    @if (currentRoomId) {
+      <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
+        @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
+          <button (click)="sendEmoji(em)" class="w-9 h-9 sm:w-11 sm:h-11 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-lg sm:text-xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
+            {{ em }}
+          </button>
         }
       </div>
     }
 
-    <!-- CENTER: Game Arena -->
-    <div class="flex-grow flex flex-col items-center relative min-w-0 min-h-0 w-full self-center lg:self-stretch z-10 animate-fade-in"
-         [class.max-w-[960px]]="!hideLeftPanel" [class.max-w-[1200px]]="hideLeftPanel">
-      
-      @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting) {
-        <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1 gap-2">
-          @if (settingsService.settings().multiplayer_enabled === 'true') {
-            <button (click)="quickCreatePkRoom()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
-              <span class="group-hover:scale-110 transition-transform">⚔️</span>
-              <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '1秒建PK房' }}</span>
-              <span class="sm:hidden">PK</span>
-            </button>
-            <button (click)="openFriendList()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
-              <span class="group-hover:scale-110 transition-transform">👥</span>
-              <span class="hidden sm:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
-              <span class="sm:hidden">邀请</span>
-            </button>
-          }
-          @if (!hideDefaultDifficulty && availableDifficulties.length > 1) {
-            <app-difficulty-selector 
-              [availableDifficulties]="availableDifficulties"
-              [currentDifficulty]="currentDifficulty"
-              (difficultyChange)="onDifficultyChange($event)">
-            </app-difficulty-selector>
-          }
-        </div>
-      }
-      @if (currentRoomMode !== GameMode.Single && status !== GameStatus.Waiting) {
-        <div class="w-full flex justify-end items-center mb-1.5 lg:mb-2 px-1 gap-2 animate-fade-in">
-          @if (isHost) {
-            <button (click)="openChangeSettingsGlobal()" class="px-3 py-1.5 lg:py-2 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all text-xs lg:text-sm font-bold flex items-center gap-1.5 shadow-sm active:scale-95 group">
-              <span class="group-hover:rotate-90 transition-transform">⚙️</span>
-              <span>{{ i18n.t('game.change_settings')() || 'Settings' }}</span>
-            </button>
-          }
-        </div>
-      }
+  </main>
 
-      <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto custom-scrollbar"
-           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-        <!-- Project custom content into center area -->
-        <ng-content></ng-content>
+  <!-- In-depth Strategy & SEO Section (Moved Gracefully Below Arena) -->
+  <section class="w-full max-w-[1200px] mx-auto px-3 sm:px-6 mt-6 sm:mt-10 pb-12">
+    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 shadow-sm">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-card)]">
+        <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">
+          <span>{{ i18n.t('game.strategy_guide_title')() || '🧠 深度解谜策略与游戏说明' }}</span>
+        </h2>
+        @if (relatedGuideSlug) {
+          <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)]/20 transition-all">
+            📖 {{ i18n.t('game.read_guide')() }}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        }
       </div>
-
-      <!-- Emoji Panel -->
-      @if (currentRoomId) {
-        <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
-          @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
-            <button (click)="sendEmoji(em)" class="w-10 h-10 lg:w-12 lg:h-12 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-xl lg:text-2xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
-              {{ em }}
-            </button>
-          }
-        </div>
-      }
+      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
+           [innerHTML]="i18n.t(computedSeoDescKey)()">
+      </div>
     </div>
+  </section>
 
-    <!-- RIGHT: Right Column / Multiplayer Sidebar -->
-    <div class="w-[260px] xl:w-[300px] flex-shrink-0 hidden lg:flex flex-col gap-4">
-      @if (settingsService.settings().multiplayer_enabled === 'true') {
+  <!-- Contextual PK Arena Drawer (Sliding Smoothly on Demand) -->
+  @if (isPkDrawerOpen() || showMobileSidebar) {
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+         (click)="togglePkDrawer(false)"></div>
+    
+    <!-- Drawer Panel -->
+    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] max-w-[380px] bg-[var(--color-bg-main)] shadow-2xl border-l border-[var(--color-border-card)] flex flex-col animate-in slide-in-from-right duration-300">
+      <div class="flex items-center justify-between p-4 border-b border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">⚔️</span>
+          <h3 class="font-bold text-sm text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || '联机对战大厅' }}</h3>
+        </div>
+        <button (click)="togglePkDrawer(false)"
+                class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors">
+          ✕
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-2">
         <app-game-lobby-panel
           #lobbyPanel
-          class="flex-grow flex"
+          class="w-full h-full flex"
           [currentGameId]="gameId"
           [currentRoomId]="currentRoomId!"
           (joinRoom)="joinRoom.emit($event)"
           (createRoom)="createRoom.emit($event)">
         </app-game-lobby-panel>
-      }
-    </div>
-  </div>
-
-  <!-- BOTTOM: Mobile SEO Section -->
-  <div class="lg:hidden w-full max-w-[800px] mt-4 pb-8 mx-auto px-4">
-    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-6 shadow-sm">
-      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
-           [innerHTML]="i18n.t(computedSeoDescKey)()">
       </div>
-      @if (relatedGuideSlug) {
-        <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-           class="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg text-sm font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/5 hover:bg-[var(--color-accent-from)]/10 transition-colors">
-          📖 {{ i18n.t('game.read_guide')() }}
-        </a>
-      }
-    </div>
-  </div>
-
-  <!-- Mobile Sidebar Overlay Backdrop -->
-  @if (showMobileSidebar) {
-    <div class="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40 lg:hidden" (click)="mobileSidebarClosed.emit()"></div>
-    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] sm:w-96 bg-[var(--color-bg-main)] shadow-2xl p-4 flex flex-col transition-transform duration-300">
-       <div class="flex justify-between items-center mb-4 lg:hidden" >
-         <h3 class="font-bold text-lg text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() }}</h3>
-       </div>
-       <app-game-lobby-panel
-          [currentGameId]="gameId"
-          [currentRoomId]="currentRoomId!"
-          (joinRoom)="joinRoom.emit($event)"
-          (createRoom)="createRoom.emit($event)">
-       </app-game-lobby-panel>
     </div>
   }
-  
+
   <app-floating-emoji></app-floating-emoji>
   
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
@@ -211,6 +220,31 @@ export class GameLayoutComponent implements OnInit {
   wsService = inject(WebSocketService);
   friendService = inject(FriendService);
   editRoomService = inject(EditRoomService);
+
+  isPkDrawerOpen = signal(false);
+
+  togglePkDrawer(open?: boolean) {
+    if (typeof open === 'boolean') {
+      this.isPkDrawerOpen.set(open);
+    } else {
+      this.isPkDrawerOpen.update(v => !v);
+    }
+    if (!this.isPkDrawerOpen()) {
+      this.mobileSidebarClosed.emit();
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      return;
+    }
+    if ((event.code === 'Space' || event.key === 'r' || event.key === 'R') && this.showPlayAgainBtn) {
+      event.preventDefault();
+      this.playAgain.emit();
+    }
+  }
 
   @Input({ required: true }) gameId!: string;
   @Input() title: string = '';
