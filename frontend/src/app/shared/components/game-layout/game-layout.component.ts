@@ -112,7 +112,7 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
           <button (click)="quickCreatePkRoom()"
                   class="px-2 sm:px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
             <span class="group-hover:scale-110 transition-transform">⚔️</span>
-            <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '1秒建PK房' }}</span>
+            <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
             <span class="sm:hidden">PK</span>
           </button>
           <button (click)="openFriendList()"
