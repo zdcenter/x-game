@@ -1318,5 +1318,6 @@
   "xp.level": "Nível",
   "xp.leveled_up": "Suba de nível!",
   "xp.login_streak": "Sequência de Login",
-  "xp.to_next_level": "para o próximo nível"
+  "xp.to_next_level": "para o próximo nível",
+  "game.fill_board_hint": "Todas as linhas conectadas! Preencha as casas vazias que brilham (100% necessário)."
 }

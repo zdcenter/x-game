@@ -1448,5 +1448,6 @@
   "pwa.ios_guide_title": "Add to Home Screen",
   "pwa.ios_guide_desc": "Add Puzzle PK to your Home Screen for a standalone fullscreen app and offline play experience:",
   "pwa.ios_step1": "Tap the Share button in Safari toolbar",
-  "pwa.ios_step2": "Scroll down and select 'Add to Home Screen'"
+  "pwa.ios_step2": "Scroll down and select 'Add to Home Screen'",
+  "game.fill_board_hint": "All flows connected! Re-route lines to fill the glowing empty cells (100% coverage required)."
 }

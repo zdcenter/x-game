@@ -1444,5 +1444,6 @@
   "pwa.ios_guide_title": "添加到主屏幕",
   "pwa.ios_guide_desc": "将 Puzzle PK 添加到主屏幕，享受全屏、离线畅玩与秒速启动的独立 App 体验：",
   "pwa.ios_step1": "点击 Safari 底部栏的【分享】按钮",
-  "pwa.ios_step2": "在弹出菜单中向下滑动，选择【添加到主屏幕】"
+  "pwa.ios_step2": "在弹出菜单中向下滑动，选择【添加到主屏幕】",
+  "game.fill_board_hint": "所有连线已接通！请调整走线填满发光的剩余空格 (需100%覆盖)"
 }

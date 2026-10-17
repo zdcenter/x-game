@@ -1318,5 +1318,6 @@
   "xp.level": "레벨",
   "xp.leveled_up": "레벨 업!",
   "xp.login_streak": "로그인 연속 기록",
-  "xp.to_next_level": "다음 단계로"
+  "xp.to_next_level": "다음 단계로",
+  "game.fill_board_hint": "모든 선이 연결되었습니다! 깜빡이는 빈 칸을 채워 클리어하세요 (100% 필요)"
 }

@@ -105,12 +105,20 @@
         </app-game-pk-hud>
       </div>
 
+      <!-- Unfilled board hint banner -->
+      <div *ngIf="store.currentRoomMode() === GameMode.Single && store.connectedFlows() === store.totalFlows() && store.coveragePercent() < 100"
+           class="w-full max-w-xl mx-auto -mt-2 mb-3 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 animate-bounce shadow-sm">
+        <span>💡</span>
+        <span>{{ i18n.t('game.fill_board_hint')() }}</span>
+      </div>
+
       <!-- Board Container -->
       <div class="w-full max-w-xl mx-auto flex items-center justify-center">
         <app-connect-board 
           *ngIf="store.localEngine()"
           [engine]="store.localEngine()!"
           [disabled]="store.status() !== GameStatus.Playing"
+          [highlightUnfilled]="store.connectedFlows() === store.totalFlows() && store.coveragePercent() < 100"
           (boardChange)="onBoardChange()">
         </app-connect-board>
       </div>

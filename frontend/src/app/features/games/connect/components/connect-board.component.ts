@@ -37,6 +37,12 @@ import { ConnectEngine, Position } from '../connect-engine';
             <!-- Grey Square (Dot) for empty spots -->
             <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[20%] h-[20%] bg-[var(--color-border-card)] opacity-40 rounded-sm z-0"></div>
 
+            <!-- Unfilled cell pulse when all flows are connected but coverage < 100% -->
+            <div *ngIf="highlightUnfilled && engine.grid[r][c] === 0 && !engine.isEndpoint(r, c) && !engine.isBlock(r, c)"
+                 class="absolute inset-1 rounded-lg border-2 border-amber-400 bg-amber-400/20 shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-pulse pointer-events-none z-10 flex items-center justify-center">
+              <span class="text-amber-400 text-xs font-black drop-shadow">✦</span>
+            </div>
+
             <!-- Endpoint Dot -->
             <div *ngIf="engine.isEndpoint(r, c)" 
                  class="w-[85%] h-[85%] rounded-full z-10 flex items-center justify-center transition-transform relative shadow-[inset_0_-4px_6px_rgba(0,0,0,0.3),_0_4px_8px_rgba(0,0,0,0.2)]"
@@ -110,6 +116,7 @@ import { ConnectEngine, Position } from '../connect-engine';
 export class ConnectBoardComponent implements AfterViewInit {
   @Input() engine!: ConnectEngine;
   @Input() disabled = false;
+  @Input() highlightUnfilled = false;
   @Output() boardChange = new EventEmitter<void>();
 
   @ViewChild('boardContainer') boardContainer!: ElementRef<HTMLDivElement>;

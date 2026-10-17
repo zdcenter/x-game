@@ -1318,5 +1318,6 @@
   "xp.level": "Nivel",
   "xp.leveled_up": "¡Sube de nivel!",
   "xp.login_streak": "Racha de inicio de sesión",
-  "xp.to_next_level": "al siguiente nivel"
+  "xp.to_next_level": "al siguiente nivel",
+  "game.fill_board_hint": "¡Todas las líneas conectadas! Llena las casillas vacías que brillan (100% requerido)."
 }

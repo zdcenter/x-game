@@ -1318,5 +1318,6 @@
   "xp.level": "Niveau",
   "xp.leveled_up": "Montez de niveau !",
   "xp.login_streak": "Série de connexions",
-  "xp.to_next_level": "au niveau suivant"
+  "xp.to_next_level": "au niveau suivant",
+  "game.fill_board_hint": "Tous les flux sont connectés ! Remplissez les cases vides surbrillantes (100% requis)."
 }

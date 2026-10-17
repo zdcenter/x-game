@@ -1318,5 +1318,6 @@
   "xp.level": "レベル",
   "xp.leveled_up": "レベルアップ！",
   "xp.login_streak": "ログイン連続記録",
-  "xp.to_next_level": "次のレベルへ"
+  "xp.to_next_level": "次のレベルへ",
+  "game.fill_board_hint": "すべての線が繋がりました！光っている残りのマスを埋めてください (100%必要)"
 }

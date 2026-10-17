@@ -16,8 +16,11 @@
   - `ConnectEngine` 新增 `getConnectedFlowsCount()`、`getTotalFlowsCount()`、`getFilledCellsCount()` 与 `getTotalCellsCount()` 指标算法；
   - `ConnectStore` 接入 `boardVersion` 响应式版本信号，在玩家触控划线、配对连通或擦除管道时毫秒级广播当前连线数 (`connectedFlows`) 与棋盘占满率 (`coveragePercent`)；
   - 关卡顶部信息栏新增 **`连线: X/Y`** 与 **`覆盖率: X%`**，当覆盖率达到 100% 时自动切换为高亮生态绿，与 Flow Free 经典规则形成完整闭环；
+- **未满盘智能提示横幅与空格金色脉冲光晕 (Unfilled Board Guidance)**：
+  - 当玩家连通全部颜色线条（`Flows: 5/5`）但棋盘覆盖率未达 100%（存在遗漏空格导致无法通关）时，自动弹出醒目的金色提示横幅 `💡 所有连线已接通！请调整走线填满发光的剩余空格 (需100%覆盖)`；
+  - 棋盘上所有遗留的空白格子实时激活金色呼吸脉冲光晕与高光星标（`border-2 border-amber-400 bg-amber-400/20 shadow animate-pulse`），彻底解决玩家“明明连上了为什么不通关”的困惑，指引清晰直观；
 - **全语言与深浅色主题无缝对齐**：
-  - 新增 `game.flows` 与 `game.coverage` 字典，同步覆盖中、英、日、韩、德、法、西、葡 8 种语言；
+  - 新增 `game.flows`、`game.coverage` 与 `game.fill_board_hint` 字典，同步覆盖中、英、日、韩、德、法、西、葡 8 种语言；
   - 布局样式与颜色全量遵循全局 CSS 变量，确保 Light/Dark 模式下视觉质感细腻统一。
 
 ## [2026-10-17] - ⚔️ 棋盘顶部操作栏“1秒开战”按钮重命名为“开房PK”体验优化
