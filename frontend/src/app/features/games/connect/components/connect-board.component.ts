@@ -35,7 +35,7 @@ import { ConnectEngine, Position } from '../connect-engine';
             </div>
 
             <!-- Grey Square (Dot) for spots without endpoints -->
-            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[22%] h-[22%] bg-slate-300 dark:bg-slate-600/60 rounded-[3px] z-0"></div>
+            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[38%] h-[38%] bg-[#a3a3a3] dark:bg-[#737373] rounded-[3px] z-0"></div>
 
             <!-- Unfilled cell pulse when all flows are connected but coverage < 100% -->
             <div *ngIf="highlightUnfilled && engine.grid[r][c] === 0 && !engine.isEndpoint(r, c) && !engine.isBlock(r, c)"
