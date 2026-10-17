@@ -1,5 +1,48 @@
 # Changelog
 
+## [2026-10-17] - 🏆 游戏结算成就大面板与社交 PK 邀请舱重构 (Game Result Overlay & PK Challenge Deck Redesign)
+
+### ✨ 新功能与重构 (Features & Redesign)
+- **宽阔大气的成就荣誉大屏 (Grand Achievement Dashboard)**：
+  - 解除原有 448px (`max-w-md`) 逼仄单薄的垂直管状布局，扩展至最高 680px (`max-w-xl sm:max-w-2xl`) 的控制台级成就荣誉卡片，消除原本“稀疏空洞、小家子气”的视觉痛点。
+  - 顶部集成大面积环境光晕（胜利金黄 / 惜败紫红）与动态 3D 浮雕荣誉徽章（👑 胜利皇冠 / 🏆 连胜奖杯 / 🛡️ 不屈之盾），并搭配新纪录高光标签与胜利粒子动效，显著强化通关仪式感。
+- **高对比多维战绩矩阵 (Multi-dimensional Performance Matrix)**：
+  - 摒弃单调的一维文本堆砌，重构为 2~3 列玻璃拟态高对比数据方阵（用时、步数/操作、最终得分、命中率/评级），核心战绩指标一目了然、层次分明。
+- **RPG 等级与经验成长舱 (RPG Level & XP Progression Bar)**：
+  - 结算弹窗内直接外露玩家等级与动态 XP 进度条（如 `Lv.3 (+50 XP)`），直观呈现经验累计动效与距离下一级的百分比，给予玩家极强的心流正反馈与长线成就感。
+- **社交裂变与好友 PK 挑战舱 (Social Challenge & PK Arena Deck)**：
+  - 针对联机与竞技属性，新增专属的“向好友发起挑战”功能区：
+    - **一键复制挑战邀请链接**：自动附带专属对战邀请参数，好友点击即可直达该游戏发起同难度复仇/挑战，并在界面显示即时复制成功动效反馈。
+    - **一键直达联机竞技场 (PK Arena)**：若该游戏支持联机对战（如五子棋、扫雷、数独、推箱子等），一键跳转至该游戏的实时对战大厅，大幅促进单机流量向联机 PvP 转化。
+- **极速重开与对称操作工具条 (Instant Replay & Balanced Tool Deck)**：
+  - 主操作按钮强化为超大“再来一局”能量键，外露键盘 `Space` / `R` 极速重开快捷键提示。
+  - 底部工具条重构为对称三联卡：`[ 📋 复制战报 (Wordle等专用) ]`、`[ 📤 分享战果 ]` 与 `[ 🚪 返回大厅 ]`，各模块各司其职，大方得体。
+- **全站规范遵循与多语言 (100% i18n & CSS Vars)**：
+  - 新增挑战邀请、经验进度、连胜激活等中英文多语言词条（`game.result_challenge_title`, `game.result_copy_challenge`, `game.result_go_pk` 等），严禁硬编码文本与颜色。
+
+### 📝 文件变更
+- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.html` — 游戏结算界面全面重构
+- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.ts` — 新增 PK 模式判定、挑战链接复制与经验条计算
+- `frontend/src/assets/i18n/zh.json` & `en.json` — 补充结算界面与挑战邀请多语言词条
+
+
+### ✨ 核心增强 (Enhancements)
+- **博客-游戏双向深度闭环内链**：
+  - **博文底端实战竞技网关 (Interactive Practice Gateway)**：全面将 17 篇深度策略攻略与对应游戏建立精确映射字典（涵盖五子棋、数独、扫雷、数织、俄罗斯方块、推箱子等全矩阵）。博文底部新增极具视觉冲击力的实战演练卡，提供 `[ 🕹️ 单人试玩 ]` 与 `[ ⚔️ 实时对战 (PK Arena) ]` 双 CTA 按钮，实现“深度学习 → 立即实战”的高粘性转化闭环。
+  - **精选相关深度攻略推荐 (Related Masterclasses)**：每篇博文末尾智能推荐 3 篇相关领域的策略文章卡片，包含阅读时间、分类标签与直达链接，大幅增加页面停留时间并降低跳出率，为 Google AdSense 审核提供极佳的站内导航与高权重内容互联（E-E-A-T）信号。
+  - **游戏内页攻略导流卡 (Game Layout Guide Callout)**：补齐所有 18 款游戏的专属深度攻略映射，在棋盘下方 SEO 说明区末尾新增专属的“进阶战术指南”卡片与一键直达完整攻略按钮。
+- **全站多语言与规范加固**：
+  - 新增实战演练与攻略推荐相关的中英文多语言词条（`blog.interactive_practice_badge`, `blog.cta_play_pk`, `game.guide_callout_title` 等），严禁硬编码。
+  - 严格使用全局 CSS 主题变量与响应式断点（`sm:`, `md:`）。
+- **🐛 修复玩法规则弹窗教程链接 404 问题**：
+  - 修复 `game-rules-modal.component.ts` 底部“📖 查看详细通关教程与高分技巧”由于硬编码 `[href]="'/docs/' + gameId"` 缺失当前语言前缀导致的整站 404 无法访问问题，重构为带多语言前缀的 Angular `[routerLink]="['/', i18n.currentLang(), 'docs', gameId]"`。
+
+### 📝 文件变更
+- `frontend/src/app/shared/components/game-rules-modal/game-rules-modal.component.ts` — 修复规则弹窗底部通关教程链接的前缀 404 缺陷
+- `frontend/src/app/features/blog/blog-post/blog-post.component.ts` — 映射 17 篇攻略至具体游戏，新增实战双 CTA 与相关策略推荐
+- `frontend/src/app/shared/components/game-layout/game-layout.component.ts` — 补齐 18 款游戏攻略映射并新增底部完整攻略导流卡
+- `frontend/src/assets/i18n/zh.json` & `en.json` — 补充实战引导与攻略推荐多语言词条
+
 ## [2026-10-17] - 🎯 游戏内页宽屏沉浸聚焦与极速复开重构 (Game Layout Focus Arena & Fast-Replay)
 
 ### ✨ 新功能与重构 (Features & Redesign)

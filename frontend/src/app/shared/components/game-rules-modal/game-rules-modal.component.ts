@@ -6,6 +6,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { RouterLink } from '@angular/router';
 
 /**
  * Reusable game rules modal — any game can use this by providing its gameId.
@@ -17,7 +18,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 @Component({
   selector: 'app-game-rules-modal',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule, DragDropModule, RouterLink],
   template: `
     @if (isOpen) {
       <!-- Overlay Container: Centers on mobile, floats top-right on PC. 
@@ -62,8 +63,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
           
           <!-- Footer -->
           <div class="p-4 border-t border-[var(--color-border-card)] flex flex-col gap-3">
-            <a [href]="'/docs/' + gameId" target="_blank"
-               class="w-full py-2 text-center text-sm font-medium text-[var(--color-accent-from)] hover:text-[var(--color-accent-to)] hover:underline flex items-center justify-center gap-1">
+            <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]" target="_blank"
+               class="w-full py-2 text-center text-sm font-medium text-[var(--color-accent-from)] hover:text-[var(--color-accent-to)] hover:underline flex items-center justify-center gap-1 transition-colors">
               {{ i18n.t('docs.read_more')() || '📖 Read full tutorial & strategies' }}
             </a>
             <button (click)="closed.emit()"

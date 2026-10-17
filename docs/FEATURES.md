@@ -24,6 +24,8 @@
 - **游戏元数据 DB 化（运行时覆盖层）**：`gm_game_configs.config`（JSONB）存储完整元数据（icon / multiRound / modes[] / difficulties[]）。`GameRegistryService.loadFromDB()` 通过 `APP_INITIALIZER` 在浏览器端拉取 `GET /api/v1/games/meta` 并覆盖 TS registry；SSR/预渲染期自动降级为 `game-definitions.ts` 静态 fallback，不影响构建。管理员可通过 Admin UI `/admin/games` 直接修改元数据，无需代码部署即时生效。
 - **大厅游戏列表无限滚动**：`GET /api/v1/games` 支持分页（`?page&limit`），返回 `{ games, total, hasMore }`。大厅组件用 `IntersectionObserver` 监听底部 sentinel，滚到底自动加载下一页并追加卡片，首屏默认加载 6 款游戏。
 - **现代化大厅与极速短链路架构 (Modern Lobby & Quick Actions)**：采用沉浸式全宽响应式网格布局，彻底解绑常驻冷启动侧边栏，改为按需抽屉模式与竞技大厅直达；首屏打造“今日挑战 + 双人对战直通 + 随便来一把”三联转化引擎；游戏卡片支持 5 维胶囊筛选（全部/热门/联机/逻辑/拼图）与即时模糊搜索；卡片底端提供“单人试玩 / 实时对战”分流双 CTA，使对战开局链路极度压缩至 1 步直达。
+- **Google AdSense 过审与高权重双向内链闭环 (AdSense & Bi-directional Internal Linking)**：将平台 17 篇深度策略博文与 18 款游戏进行精准双向绑定。每篇博文底端建立专属“实战验证网关”，提供单机试练与实时联机 PK 双 CTA，并展示 3 篇相关深度解析推荐卡片；在各游戏内页棋盘下方 SEO 区末尾嵌入“进阶战术指南”直达卡。既为真实玩家打造“深度攻略学习 → 即刻投入实战”的高粘性闭环，又为 Google AdSense 爬虫构建了极高内容深度、强大 E-E-A-T 信号与高连通度的站内导航网络。
+- **游戏结算成就大面板与社交 PK 邀请舱 (Grand Result Overlay & Social PK Deck)**：重构全局游戏结算弹窗 `<app-game-result-overlay>`。告别过去狭窄单薄、稀疏单调的纵向卡片，升级为最高 680px 的控制台级成就荣誉大屏。集成 3D 浮雕荣誉徽标、动态金色/紫红环境光晕、高对比多维战绩矩阵（用时/步数/得分/评级）、RPG 等级经验进度条（`Lv.X (+50 XP)`）与连续获胜标识。并内置社交裂变与联机转化舱，支持一键复制带参数的好友挑战链接，以及一键跳转支持 PK 的游戏房间大厅（PK Arena），主按钮外露 Space/R 极速重开快捷键提示，实现了高成就感、高美观度与强联机转化的结算体验。
 
 ---
 

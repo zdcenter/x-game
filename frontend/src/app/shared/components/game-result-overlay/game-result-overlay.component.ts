@@ -57,6 +57,21 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() textShareExtras?: Record<string, any>;
 
   textCopied = signal(false);
+  challengeCopied = signal(false);
+
+  get hasPkMode(): boolean {
+    if (!this.currentGameId) return false;
+    const config = this.gameRegistry.getConfig(this.currentGameId);
+    if (!config || !config.modes) return false;
+    return config.modes.some(m => m.id !== 'single');
+  }
+
+  get levelProgressPercent(): number {
+    if (!this.xpResult) return 50;
+    const currentLevelBase = (this.xpResult.level - 1) * 100;
+    const progress = Math.max(12, Math.min(100, Math.floor(((this.xpResult.xp - currentLevelBase) / 100) * 100)));
+    return isNaN(progress) ? 65 : progress;
+  }
 
   @Output() nextLevel = new EventEmitter<void>();
   @Output() restart = new EventEmitter<void>();
@@ -320,6 +335,31 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
       .replace('[game]', gameName);
     this.shareService.share({ title: `${this.i18n.t('app.title')()} - ${gameName}`, text, url,
       gameName, gameEmoji: config?.iconEmoji, isWin: true });
+  }
+
+  copyChallengeLink() {
+    if (!this.currentGameId) return;
+    const username = this.authStore.currentUser()?.username || this.authStore.guestId;
+    const challengeParam = username ? `?challenge=${encodeURIComponent(username)}` : '';
+    const url = `${getOrigin()}/games/${this.currentGameId}${challengeParam}`;
+    const config = this.gameRegistry.getConfig(this.currentGameId);
+    const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
+    const bestStat = (this.stats || [])[0];
+    const statStr = bestStat ? `${bestStat.label || ''}: ${bestStat.value}` : '';
+    const text = `${this.i18n.t('share.challenge_banner')().replace('[challenger]', username)}\n${gameName} ${statStr}\n${url}`;
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.challengeCopied.set(true);
+        setTimeout(() => this.challengeCopied.set(false), 2500);
+      });
+    }
+  }
+
+  goToPkArena() {
+    if (!this.currentGameId) return;
+    const lang = this.i18n.currentLang();
+    this.router.navigate(['/', lang, 'pk-arena'], { queryParams: { game: this.currentGameId } });
   }
 
   handleGoToGame(gameId: string) {

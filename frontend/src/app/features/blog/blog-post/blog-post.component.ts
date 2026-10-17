@@ -8,6 +8,32 @@ import { marked } from 'marked';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
+export interface BlogGameDef {
+  id: string;
+  nameKey: string;
+  icon: string;
+}
+
+const BLOG_TO_GAME_MAP: Record<string, BlogGameDef> = {
+  'gomoku-strategy-guide': { id: 'gomoku', nameKey: 'lobby.gomoku', icon: '⚪' },
+  'nonogram-strategy': { id: 'nonogram', nameKey: 'lobby.nonogram', icon: '🎨' },
+  'water-sort-puzzle-guide': { id: 'watersort', nameKey: 'lobby.watersort', icon: '🧪' },
+  'tetris-battle-strategy': { id: 'tetris', nameKey: 'lobby.tetris', icon: '🧱' },
+  'sokoban-strategy': { id: 'sokoban', nameKey: 'lobby.sokoban', icon: '📦' },
+  'minesweeper-logic': { id: 'minesweeper', nameKey: 'lobby.minesweeper', icon: '💣' },
+  '1a2b-bulls-cows': { id: 'codebreaker', nameKey: 'lobby.codebreaker', icon: '🐮' },
+  'sudoku-benefits': { id: 'sudoku', nameKey: 'lobby.sudoku', icon: '🔢' },
+  'why-math24-is-the-best-brain-training-game-for-kids': { id: 'math24', nameKey: 'lobby.math24', icon: '➗' },
+  'sudoku-for-kids-a-beginners-guide': { id: 'sudoku', nameKey: 'lobby.sudoku', icon: '🔢' },
+  'benefits-of-multiplayer-educational-games': { id: 'lobby', nameKey: 'nav.lobby', icon: '🏆' },
+  'block-puzzle-strategy': { id: 'block', nameKey: 'lobby.block', icon: '🧩' },
+  'classic2048-strategy': { id: 'classic2048', nameKey: 'lobby.classic2048', icon: '🔢' },
+  'hashi-bridges-strategy': { id: 'hashi', nameKey: 'lobby.hashi', icon: '🌉' },
+  'hexa-puzzle-strategy': { id: 'hexa', nameKey: 'lobby.hexa', icon: '⬡' },
+  'lights-out-puzzle-guide': { id: 'lightsout', nameKey: 'lobby.lightsout', icon: '💡' },
+  'sliding-puzzle-strategy': { id: 'sliding', nameKey: 'lobby.sliding', icon: '🔲' },
+};
+
 @Component({
   selector: 'app-blog-post',
   standalone: true,
@@ -42,7 +68,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
               <h1 class="text-3xl sm:text-4xl font-black mb-6 leading-tight text-[var(--color-text-main)]">
                 {{ displayMeta()?.title }}
               </h1>
-              <div class="flex items-center text-sm text-[var(--color-text-muted)] gap-4">
+              <div class="flex items-center text-sm text-[var(--color-text-secondary)] gap-4">
                 <span class="flex items-center gap-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                   {{ displayMeta()?.author }}
@@ -64,7 +90,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
             <!-- Author / Team bio — E-E-A-T signal -->
             <div class="mt-10 p-6 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
               <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-lg font-black shrink-0 text-white">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-lg font-black shrink-0 text-white shadow-md">
                   PK
                 </div>
                 <div>
@@ -77,12 +103,88 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
               </div>
             </div>
             
-            <div class="mt-12 pt-8 border-t border-[var(--color-border-card)] text-center">
-              <h3 class="text-xl font-bold mb-4">{{ rawMeta()?.relatedGameId ? i18n.t('blog.cta_title_game')() || i18n.t('blog.cta_title')() : i18n.t('blog.cta_title')() }}</h3>
-              <a [routerLink]="rawMeta()?.relatedGameId ? ['/', i18n.currentLang(), 'games', rawMeta()?.relatedGameId] : ['/', i18n.currentLang(), 'lobby']" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
-                {{ rawMeta()?.relatedGameId ? i18n.t('blog.cta_btn_game')() || i18n.t('blog.cta_btn')() : i18n.t('blog.cta_btn')() }}
-              </a>
-            </div>
+            <!-- Interactive Practice & Battle Arena Gateway (Bi-directional Linking) -->
+            @if (relatedGame(); as game) {
+              <div class="mt-10 p-6 sm:p-8 rounded-2xl border border-[var(--color-border-card)] bg-gradient-to-br from-[var(--color-bg-card)] via-[var(--color-bg-card)] to-[var(--color-bg-main)] shadow-xl relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
+                  <div class="flex items-center gap-4">
+                    <div class="text-4xl sm:text-5xl shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center shadow-inner">
+                      {{ game.icon }}
+                    </div>
+                    <div>
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wide mb-1.5">
+                        <span>🎯</span>
+                        <span>{{ i18n.t('blog.interactive_practice_badge')() }}</span>
+                      </div>
+                      <h3 class="text-xl sm:text-2xl font-black text-[var(--color-text-main)]">
+                        {{ i18n.t(game.nameKey)() }}
+                      </h3>
+                      <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mt-1 max-w-md leading-relaxed">
+                        {{ i18n.t('blog.interactive_practice_desc')() }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons: Solo & PK -->
+                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">
+                    <a [routerLink]="game.id === 'lobby' ? ['/', i18n.currentLang(), 'lobby'] : ['/', i18n.currentLang(), 'games', game.id]"
+                       class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all">
+                      <span>🕹️</span>
+                      <span>{{ i18n.t('blog.cta_play_solo')() }}</span>
+                    </a>
+                    @if (game.id !== 'lobby') {
+                      <a [routerLink]="['/', i18n.currentLang(), 'pk-arena']"
+                         [queryParams]="{ game: game.id }"
+                         class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-[var(--color-bg-main)] border border-violet-500/40 text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/60 shadow-md shadow-violet-500/10 hover:scale-[1.02] active:scale-95 transition-all">
+                        <span>⚔️</span>
+                        <span>{{ i18n.t('blog.cta_play_pk')() }}</span>
+                      </a>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Recommended Strategy Masterclasses (AdSense Navigation & Internal Linking) -->
+            @if (recommendedPosts().length > 0) {
+              <div class="mt-12 pt-8 border-t border-[var(--color-border-card)]">
+                <div class="mb-6">
+                  <h3 class="text-xl font-black text-[var(--color-text-main)] flex items-center gap-2">
+                    <span>📖</span>
+                    <span>{{ i18n.t('blog.related_guides_title')() }}</span>
+                  </h3>
+                  <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mt-1">
+                    {{ i18n.t('blog.related_guides_subtitle')() }}
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  @for (post of recommendedPosts(); track post.id) {
+                    @let pMeta = getPostDisplayMeta(post);
+                    <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]"
+                       class="group flex flex-col justify-between p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-emerald-500/40 hover:bg-[var(--color-bg-card)] transition-all shadow-sm hover:shadow-md">
+                      <div>
+                        <div class="flex items-center gap-2 mb-2">
+                          @if (pMeta?.tags?.[0]; as firstTag) {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              {{ firstTag }}
+                            </span>
+                          }
+                          <span class="text-[10px] text-[var(--color-text-secondary)]">{{ pMeta?.readTime }}</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-[var(--color-text-main)] group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                          {{ pMeta?.title }}
+                        </h4>
+                      </div>
+                      <div class="mt-4 flex items-center text-xs font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">
+                        <span>{{ i18n.t('game.read_guide')() }}</span>
+                        <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                      </div>
+                    </a>
+                  }
+                </div>
+              </div>
+            }
           </article>
         }
       </div>
@@ -141,7 +243,7 @@ const PROD_ORIGIN = 'https://www.puzzlepk.com';
       border-left-color: var(--color-border-card);
       padding-left: 1em;
       font-style: italic;
-      color: var(--color-text-muted);
+      color: var(--color-text-secondary);
     }
     ::ng-deep .prose-invert code {
       color: #6ee7b7;
@@ -162,6 +264,7 @@ export class BlogPostComponent implements OnInit {
   i18n = inject(I18nService);
 
   rawMeta = signal<BlogPostMeta | null>(null);
+  allPosts = signal<BlogPostMeta[]>([]);
   displayMeta = computed(() => {
     const raw = this.rawMeta();
     if (!raw) return null;
@@ -173,6 +276,30 @@ export class BlogPostComponent implements OnInit {
   loading = signal(true);
   error = signal(false);
   currentId = signal<string | null>(null);
+
+  relatedGame = computed<BlogGameDef | null>(() => {
+    const slug = this.currentId();
+    if (slug && BLOG_TO_GAME_MAP[slug]) {
+      return BLOG_TO_GAME_MAP[slug];
+    }
+    const raw = this.rawMeta();
+    if (raw?.relatedGameId) {
+      return { id: raw.relatedGameId, nameKey: `lobby.${raw.relatedGameId}`, icon: '🎮' };
+    }
+    return null;
+  });
+
+  recommendedPosts = computed<BlogPostMeta[]>(() => {
+    const current = this.currentId();
+    return this.allPosts()
+      .filter(p => p.id !== current)
+      .slice(0, 3);
+  });
+
+  getPostDisplayMeta(post: BlogPostMeta): BlogLanguageMeta {
+    const lang = this.i18n.currentLang() as keyof BlogPostMeta;
+    return (post[lang] as BlogLanguageMeta) || post.en;
+  }
 
   constructor() {
     // Re-render content + SEO when language or loaded post changes
@@ -227,7 +354,15 @@ export class BlogPostComponent implements OnInit {
       if (slug) {
         this.currentId.set(slug);
         this.loadPost(slug);
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
+    });
+
+    this.blogService.getBlogPosts().subscribe({
+      next: (posts) => this.allPosts.set(posts || []),
+      error: () => {}
     });
   }
 

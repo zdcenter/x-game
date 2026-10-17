@@ -171,6 +171,25 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
       <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
            [innerHTML]="i18n.t(computedSeoDescKey)()">
       </div>
+
+      @if (relatedGuideSlug) {
+        <div class="mt-6 pt-5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[var(--color-bg-main)]">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner">📚</span>
+            <div>
+              <div class="text-xs font-bold text-[var(--color-accent-from)]">{{ i18n.t('game.guide_callout_tag')() }}</div>
+              <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-main)] mt-0.5">{{ i18n.t('game.guide_callout_title')() }}</div>
+            </div>
+          </div>
+          <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all shrink-0">
+            📖 {{ i18n.t('game.read_full_guide')() }}
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      }
     </div>
   </section>
 
@@ -324,6 +343,9 @@ export class GameLayoutComponent implements OnInit {
     lightsout: 'lights-out-puzzle-guide',
     classic2048: 'classic2048-strategy',
     hashi: 'hashi-bridges-strategy',
+    drop2048: 'classic2048-strategy',
+    connect: 'gomoku-strategy-guide',
+    idiom: 'benefits-of-multiplayer-educational-games',
   };
 
   get relatedGuideSlug(): string | null {
