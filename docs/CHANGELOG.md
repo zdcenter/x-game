@@ -25,6 +25,13 @@
   - **推箱子 (Sokoban)**：接入通用 PK HUD，对称展示步数 `🦶 24`、用时与目标箱子归位进度；
   - 严格遵循全局 CSS 变量（`--color-bg-card`, `--color-border-card` 等），Light/Dark 主题无缝适配；所有提示与状态文本统一由 `i18n.service.ts` 字典驱动。
 
+### 🚪 解决联机进房遮挡体验：PK 抽屉与黑色毛玻璃蒙层全自动闭合 (Auto-Close PK Drawer on Join)
+- **问题根因定位**：从游戏内右上角打开“PK 竞技场”呼出右侧抽屉面板后，点击“加入房间 / 重新进入 / 创建房间”时，虽然底层已切换至联机等待大厅，但抽屉的 `isPkDrawerOpen` 状态未自动复位为 `false`，导致右侧抽屉面板持续驻留、全屏黑色半透明蒙层 (`bg-black/50 backdrop-blur-sm`) 持续模糊遮挡正中央的等待大厅；
+- **全链路自动收起机制**：
+  - 在 `GameLayoutComponent` 中：在 `handleJoinRoomFromLobby`、`handleCreateRoomFromLobby`、`quickCreatePkRoom` 以及 `ngOnChanges(currentRoomId)` 中统一自动调用 `togglePkDrawer(false)`；
+  - 在 `BaseGameComponent` 中：`handleJoinRoom` 与 `handleCreateRoom` 中同步调用 `this.gameLayout.togglePkDrawer(false)`，即使二次点击已在房间的“重新进入”也能立即秒关抽屉并呈现等待大厅；
+  - 玩家点击加入或创建房间的瞬间，抽屉平滑滑出视野，黑色遮罩立即清除，双翼等待大厅一览无余地呈现在中央。
+
 
 ### 🕹️ 告别老式头像占位，接入街机级三联 HUD 仪表舱 (Modern Triad HUD Console)
 - **单人模式彻底重构顶部信息栏**：

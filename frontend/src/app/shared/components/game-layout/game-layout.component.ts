@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, booleanAttribute, signal, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnChanges, SimpleChanges, booleanAttribute, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -218,8 +218,8 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
           class="w-full h-full flex"
           [currentGameId]="gameId"
           [currentRoomId]="currentRoomId!"
-          (joinRoom)="joinRoom.emit($event)"
-          (createRoom)="createRoom.emit($event)">
+          (joinRoom)="handleJoinRoomFromLobby($event)"
+          (createRoom)="handleCreateRoomFromLobby($event)">
         </app-game-lobby-panel>
       </div>
     </div>
@@ -232,7 +232,7 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
 </div>
   `
 })
-export class GameLayoutComponent implements OnInit {
+export class GameLayoutComponent implements OnInit, OnChanges {
   settingsService = inject(SettingsService);
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
@@ -317,6 +317,22 @@ export class GameLayoutComponent implements OnInit {
     }
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['currentRoomId'] && changes['currentRoomId'].currentValue) {
+      this.togglePkDrawer(false);
+    }
+  }
+
+  handleJoinRoomFromLobby(event: any) {
+    this.togglePkDrawer(false);
+    this.joinRoom.emit(event);
+  }
+
+  handleCreateRoomFromLobby(event: any) {
+    this.togglePkDrawer(false);
+    this.createRoom.emit(event);
+  }
+
   onDifficultyChange(newDiff: string) {
     this.currentDifficulty = newDiff;
     this.difficultyChange.emit(newDiff);
@@ -362,6 +378,7 @@ export class GameLayoutComponent implements OnInit {
   }
 
   quickCreatePkRoom() {
+    this.togglePkDrawer(false);
     const config = this.gameRegistry.getConfig(this.gameId);
     if (!config) return;
     const pkMode = config.modes.find(m => m.id !== GameMode.Single);
