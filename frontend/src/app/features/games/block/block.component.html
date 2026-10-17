@@ -62,27 +62,57 @@
 
           <!-- Players Status Bar -->
           @if (store.currentRoomMode() === GameMode.Single) {
-            <!-- Single Player Classic Header -->
-            <div class="flex-none flex items-center justify-between px-4 sm:px-8 py-3 bg-[var(--color-bg-sub)] border-b border-[var(--color-border-card)] shrink-0 w-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+            <!-- Single Player Modern Jewel Glass HUD -->
+            <div class="flex-none flex items-center justify-between px-3 sm:px-8 py-2.5 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm">
               
-              <!-- Score -->
-              <div class="flex items-center gap-1 sm:gap-2">
-                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Score">⭐</span>
-                <div class="bg-rose-50 dark:bg-[#050505] border-2 border-rose-200 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-24 justify-center transition-colors duration-300">
-                  <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+              <!-- Current Score (Gemini Capsule) -->
+              <div class="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-2xl px-3 sm:px-4 py-1.5 shadow-[inset_0_1px_2px_rgba(59,130,246,0.15)] transition-all">
+                <span class="text-xl sm:text-2xl drop-shadow-[0_2px_4px_rgba(59,130,246,0.4)]">⭐</span>
+                <div class="flex flex-col">
+                  <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 leading-tight">
+                    {{ i18n.t('hexa.score')() || 'SCORE' }}
+                  </span>
+                  <span class="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-800 dark:text-blue-300 leading-none">
                     {{ store.score() | number:'1.0-0' }}
                   </span>
                 </div>
               </div>
 
-              <!-- Best Score -->
-              <div class="flex items-center gap-1 sm:gap-2">
-                <div class="bg-slate-100 dark:bg-[#050505] border-2 border-slate-300 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-24 justify-center transition-colors duration-300">
-                  <span class="font-digital text-slate-700 dark:text-amber-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(245,158,11,0.8)] transition-colors duration-300">
+              <!-- Center: Dynamic Combo Badge & Theme Switcher -->
+              <div class="flex items-center gap-2 sm:gap-3">
+                @if (store.clearTrigger() > 1) {
+                  <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border border-emerald-500/40 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.3)] animate-pulse">
+                    <span class="text-sm">🔥</span>
+                    <span class="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 tracking-wider">
+                      {{ store.clearTrigger() }}x COMBO
+                    </span>
+                  </div>
+                }
+
+                <!-- Palette Theme Toggle Button (单一色/多色自由切换) -->
+                <button
+                  type="button"
+                  (click)="store.cycleColorTheme()"
+                  class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all"
+                  [title]="i18n.t('hexa.theme_tooltip')()">
+                  <span class="text-sm">🎨</span>
+                  <span class="hidden sm:inline font-medium">
+                    {{ i18n.t('hexa.theme.' + store.colorTheme())() }}
+                  </span>
+                </button>
+              </div>
+
+              <!-- Best Score Capsule -->
+              <div class="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-[#252528] dark:to-[#1c1c1e] border border-[var(--color-border-card)] rounded-2xl px-3 sm:px-4 py-1.5 shadow-sm transition-all">
+                <div class="flex flex-col text-right">
+                  <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] leading-tight">
+                    {{ i18n.t('hexa.best')() || 'BEST' }}
+                  </span>
+                  <span class="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-700 dark:text-slate-200 leading-none">
                     {{ Math.max(store.score(), store.bestScore()) | number:'1.0-0' }}
                   </span>
                 </div>
-                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Best Score">👑</span>
+                <span class="text-xl sm:text-2xl drop-shadow-sm">👑</span>
               </div>
             </div>
           } @else {
@@ -152,7 +182,8 @@
                 }
               </div>
 
-              <div class="w-full h-full relative flex items-center justify-center bg-[var(--color-bg-card)] p-1 sm:p-2 rounded-xl shadow-2xl border border-[var(--color-border-card)] touch-none select-none overflow-hidden">
+              <div class="w-full h-full relative flex items-center justify-center bg-[var(--color-bg-card)] p-1 sm:p-2 rounded-xl shadow-2xl border border-[var(--color-border-card)] touch-none select-none overflow-hidden"
+                   [ngClass]="'block-theme-' + store.colorTheme()">
                 <div #boardElement
                      class="grid gap-1 block-board p-1 rounded-lg w-full h-full"
                      [style.gridTemplateColumns]="'repeat(' + store.boardSize() + ', minmax(0, 1fr))'">
@@ -162,7 +193,7 @@
                     @for (cell of row; track cIndex; let cIndex = $index) {
                       <div class="w-full h-full aspect-square rounded-sm"
                            [ngClass]="store.clearingSet().has(rIndex + '-' + cIndex) ? 'block-clearing' : (cell > 0 ? 'block-piece' : 'block-empty')"
-                           [style.--clear-delay]="store.clearingSet().has(rIndex + '-' + cIndex) ? ((rIndex + cIndex) * 25) + 'ms' : '0ms'">
+                           [style.--clear-delay]="store.clearingSet().has(rIndex + '-' + cIndex) ? (((rIndex + cIndex) * 12) + 'ms') : '0ms'">
                       </div>
                     }
                   }
@@ -196,7 +227,8 @@
           </div>
 
           <!-- Hand Shapes (Always visible at bottom) -->
-          <div class="w-full flex justify-around items-end max-w-md mx-auto h-24 sm:h-32 lg:h-48 shrink-0 touch-none select-none relative z-10 px-2 pb-1 sm:pb-2 gap-2 sm:gap-4 border-t border-transparent lg:border-[var(--color-border-card)]">
+          <div class="w-full flex justify-around items-end max-w-md mx-auto h-24 sm:h-32 lg:h-48 shrink-0 touch-none select-none relative z-10 px-2 pb-1 sm:pb-2 gap-2 sm:gap-4 border-t border-transparent lg:border-[var(--color-border-card)]"
+               [ngClass]="'block-theme-' + store.colorTheme()">
             @for (shape of store.hand(); track $index; let idx = $index) {
               <div class="flex-1 h-full flex items-center justify-center relative cursor-grab active:cursor-grabbing"
                    (mousedown)="shape ? onDragStart($event, shape, idx) : null"
@@ -250,6 +282,7 @@
   <!-- Dragged Piece Overlay -->
   @if (isDragging && draggedShape) {
     <div game-overlay class="fixed pointer-events-none z-[9999] transition-none will-change-transform"
+         [ngClass]="'block-theme-' + store.colorTheme()"
          [style.left.px]="dragPos.x - dragStartOffset.x"
          [style.top.px]="dragPos.y - dragStartOffset.y">
       <div class="flex flex-col drop-shadow-[0_25px_25px_rgba(0,0,0,0.5)] opacity-95" [style.gap.px]="dragCellGap">

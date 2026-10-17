@@ -38,7 +38,22 @@ export class BlockStore extends BaseGameStore {
   shakeTrigger = signal<number>(0);
   clearingCells = signal<string[]>([]);
   clearingSet = computed(() => new Set(this.clearingCells()));
+  private clearTimerId: any = null;
   lastScoreGain = signal<{ score: number; lines: number; ts: number } | null>(null);
+
+  // Visual Theme: 'crystal' (Harmonious Multi-Gem) | 'gold' (Royal Amber Gold) | 'ocean' (Deep Ocean Ice)
+  colorTheme = signal<'crystal' | 'gold' | 'ocean'>((storageGet('block_theme') as any) || 'crystal');
+
+  setColorTheme(theme: 'crystal' | 'gold' | 'ocean') {
+    this.colorTheme.set(theme);
+    storageSet('block_theme', theme);
+  }
+
+  cycleColorTheme() {
+    const cur = this.colorTheme();
+    const next = cur === 'crystal' ? 'gold' : (cur === 'gold' ? 'ocean' : 'crystal');
+    this.setColorTheme(next);
+  }
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
 
@@ -172,7 +187,14 @@ export class BlockStore extends BaseGameStore {
       mode: GameMode.Single,
       difficulty: this.currentDifficulty(),
       seed,
-      onSound: (sound) => this.audio.playBlock(sound),
+      onSound: (sound) => {
+        if (sound === 'clear') {
+          const count = Math.max(this.clearTrigger(), this._pendingClearRows.length + this._pendingClearCols.length, 1);
+          this.audio.playBlock('clear', count);
+        } else {
+          this.audio.playBlock(sound);
+        }
+      },
       onSyncState: () => this.syncState(),
       onLinesClear: (c, rows, cols) => {
         this._pendingClearRows = rows;
@@ -192,7 +214,14 @@ export class BlockStore extends BaseGameStore {
       mode: this.currentRoomMode(),
       difficulty: this.currentDifficulty(),
       seed,
-      onSound: (sound) => this.audio.playBlock(sound),
+      onSound: (sound) => {
+        if (sound === 'clear') {
+          const count = Math.max(this.clearTrigger(), this._pendingClearRows.length + this._pendingClearCols.length, 1);
+          this.audio.playBlock('clear', count);
+        } else {
+          this.audio.playBlock(sound);
+        }
+      },
       onSyncState: () => this.syncState(),
       onLinesClear: (c, rows, cols) => {
         this._pendingClearRows = rows;
@@ -233,7 +262,11 @@ export class BlockStore extends BaseGameStore {
         }
       });
       this.clearingCells.set(keys);
-      setTimeout(() => this.clearingCells.set([]), 750);
+      if (this.clearTimerId) clearTimeout(this.clearTimerId);
+      this.clearTimerId = setTimeout(() => {
+        this.clearingCells.set([]);
+        this.clearTimerId = null;
+      }, 320); // 320ms 极速利落清理，绝不让方块卡住发呆！
       this.lastScoreGain.set({
         score: gained,
         lines: this._pendingClearRows.length + this._pendingClearCols.length,

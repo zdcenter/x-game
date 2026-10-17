@@ -122,56 +122,68 @@
   }
 
   .block-piece {
-    background: linear-gradient(135deg, var(--color-hexa-piece-light), var(--color-hexa-piece-dark));
-    box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 5px var(--color-cell-shadow);
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    box-shadow: inset 0 1.5px 2px rgba(255,255,255,0.75), inset 0 -1.5px 2px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.18);
+    border: 0.5px solid rgba(255,255,255,0.45);
+    border-radius: 4px;
+  }
+  .block-theme-gold .block-piece {
+    background: linear-gradient(135deg, #fde047 0%, #d97706 100%);
+    box-shadow: inset 0 1.5px 2px rgba(255,255,255,0.85), inset 0 -1.5px 2px rgba(0,0,0,0.25), 0 2px 6px rgba(217,119,6,0.3);
+    border: 0.5px solid rgba(255,255,255,0.5);
+  }
+  .block-theme-ocean .block-piece {
+    background: linear-gradient(135deg, #22d3ee 0%, #0369a1 100%);
+    box-shadow: inset 0 1.5px 2px rgba(255,255,255,0.85), inset 0 -1.5px 2px rgba(0,0,0,0.25), 0 2px 6px rgba(3,105,161,0.3);
+    border: 0.5px solid rgba(255,255,255,0.5);
   }
   .block-empty {
     background-color: var(--color-hexa-empty);
     border: 1px solid var(--color-hexa-empty-stroke);
+    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
   }
   .block-board {
     background-color: var(--color-bg-card);
     border: 1px solid var(--color-border-card);
   }
+
   /* ═══════════════════════════════════════════════════════
-     Block Clearing Animation — "Starburst Dissolve"
-     Phase 1 (0-25%):  White flash + scale up — the "pop" moment
-     Phase 2 (25-60%): Glow ring expands, color saturates
-     Phase 3 (60-100%): Dissolve into nothing with brightness surge
+     Block Clearing Animation — Snappy 0.22s Crystal Dissolve
      ═══════════════════════════════════════════════════════ */
   @keyframes block-clear-cell {
     0% { 
       transform: scale(1); 
       opacity: 1; 
-      filter: brightness(1) saturate(1);
-      box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 0 0px rgba(255,255,255,0);
+      filter: brightness(1.2);
+      box-shadow: inset 0 0 6px #fff, 0 0 4px rgba(255,255,255,0.6);
     }
-    18% { 
-      transform: scale(1.25); 
+    22% { 
+      transform: scale(1.26); 
       opacity: 1; 
-      filter: brightness(2.2) saturate(1.8);
-      box-shadow: inset 0 0 12px rgba(255,255,255,0.9), 0 0 18px rgba(255,200,50,0.7);
+      filter: brightness(2.8) saturate(1.8);
+      box-shadow: inset 0 0 14px #fff, 0 0 18px rgba(255,255,255,1);
     }
-    40% { 
-      transform: scale(1.05); 
-      opacity: 0.95; 
-      filter: brightness(1.6) saturate(1.4);
-      box-shadow: inset 0 0 6px rgba(255,255,255,0.4), 0 0 12px rgba(255,200,50,0.3);
+    65% {
+      transform: scale(0.65);
+      opacity: 0.85;
+      filter: brightness(2.2);
     }
     100% { 
       transform: scale(0); 
       opacity: 0; 
-      filter: brightness(3) saturate(0);
-      box-shadow: inset 0 0 0px rgba(255,255,255,0), 0 0 0px rgba(255,200,50,0);
+      filter: brightness(3.2);
+      box-shadow: none;
     }
   }
   .block-clearing {
-    background: linear-gradient(135deg, #fff8e1, var(--color-hexa-piece-light), var(--color-hexa-piece-dark));
-    animation: block-clear-cell 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    background: linear-gradient(135deg, #ffffff 0%, var(--color-hexa-piece-light) 60%, #ffffff 100%) !important;
+    animation: block-clear-cell 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     animation-delay: var(--clear-delay, 0ms);
     position: relative;
     z-index: 10;
     border-radius: 4px;
+    will-change: transform, opacity, filter;
   }
 
 

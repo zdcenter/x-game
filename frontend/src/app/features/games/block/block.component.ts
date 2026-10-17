@@ -137,27 +137,31 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       if (!gain) return;
 
       const tier: 1 | 2 | 3 = gain.lines >= 4 ? 3 : gain.lines >= 2 ? 2 : 1;
-      const text = gain.lines >= 4
-        ? `PERFECT ×${gain.lines}  +${gain.score}`
-        : gain.lines >= 2
-        ? `DOUBLE ×${gain.lines}  +${gain.score}`
-        : `CLEAR!  +${gain.score}`;
+      let text = `✨ CLEAR! +${gain.score}`;
+      if (gain.lines >= 4) {
+        text = `👑 BLOCK MASTER! +${gain.score}`;
+      } else if (gain.lines === 3) {
+        text = `💥 TRIPLE CRUSH! +${gain.score}`;
+      } else if (gain.lines === 2) {
+        text = `⚡ DOUBLE CLEAR! +${gain.score}`;
+      }
 
-      const item = { id: gain.ts, text, tier, xPct: 30 + Math.random() * 40 };
+      const item = { id: gain.ts, text, tier, xPct: 35 + Math.random() * 30 };
       this.floatItems.update(items => [...items, item]);
-      setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1200);
+      setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1250);
 
-      const colors = ['#fbbf24', '#fcd34d', '#f59e0b', '#f97316', '#fb923c', '#fde68a', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8', '#ffffff'];
-      const count = gain.lines >= 4 ? 28 : gain.lines >= 2 ? 20 : 14;
+      // 全屏爆裂星芒火花
+      const colors = ['#fde047', '#fbbf24', '#f59e0b', '#38bdf8', '#c084fc', '#34d399', '#ffffff'];
+      const count = gain.lines >= 4 ? 36 : gain.lines >= 2 ? 26 : 18;
       const sparks = Array.from({ length: count }, (_, i) => ({
         id: `${gain.ts}-${i}`,
         color: colors[i % colors.length],
-        size: 4 + Math.random() * 10,
-        tx: Math.random() * 340 - 170,
-        ty: Math.random() * 340 - 170,
+        size: 5 + Math.random() * 10,
+        tx: Math.random() * 360 - 180,
+        ty: Math.random() * 360 - 180,
       }));
       this.particles.update(p => [...p, ...sparks]);
-      setTimeout(() => this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`))), 900);
+      setTimeout(() => this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`))), 950);
     });
 
     effect((onCleanup) => {
