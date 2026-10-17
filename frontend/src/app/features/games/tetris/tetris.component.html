@@ -288,11 +288,12 @@
                   <div class="grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1.5px] sm:gap-[2px] w-full h-full relative z-10 bg-black/40 rounded-xl p-[2px]">
                     @for (row of viewGrid(); track $index; let r = $index) {
                       @for (cell of row; track $index; let c = $index) {
-                        <div class="w-full h-full rounded-[2.5px] sm:rounded-[3.5px] transition-all duration-75 box-border relative overflow-hidden"
+                        <div class="w-full h-full rounded-[2.5px] sm:rounded-[3.5px] box-border relative overflow-hidden"
                              [class.tetris-empty-slot]="!cell.isFilled && !cell.isGhost"
-                             [class.tetris-solid-cell]="cell.isFilled && !cell.isClearing"
+                             [class.tetris-solid-cell]="cell.isFilled && !cell.isClearing && !cell.isDissolving"
                              [class.tetris-clearing-cell]="cell.isClearing"
-                             [class.tetris-ghost-cell]="cell.isGhost"
+                             [class.tetris-dissolving-cell]="cell.isDissolving"
+                             [style.animationDelay]="cell.isDissolving ? cell.dissolveDelay + 'ms' : null"
                              [style.backgroundColor]="cell.bg"
                              [style.border]="cell.border"
                              [style.boxShadow]="cell.shadow">
@@ -300,6 +301,11 @@
                       }
                     }
                   </div>
+
+                  <!-- Revive Dissolve Laser Scan Beam -->
+                  @if (store.isDissolving()) {
+                    <div class="dissolve-scan-beam"></div>
+                  }
 
                   <!-- Revive & Line Clear Shatter Particles -->
                   @for (p of store.particles(); track p.id) {
@@ -309,6 +315,7 @@
                          [style.height.px]="p.h"
                          [style.left]="'calc(' + ((p.c + 0.5) / 10 * 100) + '% - ' + (p.w / 2) + 'px)'"
                          [style.top]="'calc(' + ((p.r + 0.5) / 20 * 100) + '% - ' + (p.h / 2) + 'px)'"
+                         [style.animation-delay]="p.delay ? p.delay + 'ms' : null"
                          [style.--tx]="p.tx + 'px'"
                          [style.--ty]="p.ty + 'px'"
                          [style.--rot]="p.rot + 'deg'"

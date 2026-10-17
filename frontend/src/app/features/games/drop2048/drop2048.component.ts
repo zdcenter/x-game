@@ -1,11 +1,12 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Drop2048Store } from './store/drop2048.store';
+import { getDrop2048BlockStyle } from './store/drop2048-engine';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
@@ -43,7 +44,8 @@ import { FloatingTextService } from '../../../core/services/floating-text.servic
     GameToolbarComponent, GameLayoutComponent],
   providers: [Drop2048Store,
     ],
-  templateUrl: './drop2048.component.html'
+  templateUrl: './drop2048.component.html',
+  styleUrls: ['./drop2048.component.css']
 })
 export class Drop2048Component extends BaseGameComponent implements OnInit, OnDestroy {
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
@@ -233,5 +235,102 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   handleRevive() {
     this.store.reviveGame();
+  }
+
+  Math = Math;
+
+  cellSize = computed(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 380) return 54;
+    if (typeof window !== 'undefined' && window.innerWidth < 640) return 58;
+    return 64;
+  });
+
+  getBlockStyle(val: number): Record<string, string> {
+    return getDrop2048BlockStyle(val);
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (this.store.status() !== GameStatus.Playing) return;
+
+    const isLeft = event.code === 'ArrowLeft' || event.key === 'ArrowLeft' || event.code === 'KeyA' || event.key === 'a' || event.key === 'A';
+    const isRight = event.code === 'ArrowRight' || event.key === 'ArrowRight' || event.code === 'KeyD' || event.key === 'd' || event.key === 'D';
+    const isDown = event.code === 'ArrowDown' || event.key === 'ArrowDown' || event.code === 'KeyS' || event.key === 's' || event.key === 'S';
+    const isSpace = event.code === 'Space' || event.key === ' ' || event.key === 'Space';
+
+    if (isLeft) {
+      this.store.moveLeft();
+      event.preventDefault();
+      event.stopPropagation();
+    } else if (isRight) {
+      this.store.moveRight();
+      event.preventDefault();
+      event.stopPropagation();
+    } else if (isDown) {
+      this.store.softDrop();
+      event.preventDefault();
+      event.stopPropagation();
+    } else if (isSpace) {
+      this.store.hardDrop();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private lastProcessedX = 0;
+  private lastProcessedY = 0;
+  private touchStartTime = 0;
+  private hasMoved = false;
+
+  onTouchStart(e: TouchEvent) {
+    if (this.store.status() !== GameStatus.Playing) return;
+    this.touchStartX = e.touches[0].clientX;
+    this.touchStartY = e.touches[0].clientY;
+    this.lastProcessedX = this.touchStartX;
+    this.lastProcessedY = this.touchStartY;
+    this.touchStartTime = Date.now();
+    this.hasMoved = false;
+  }
+
+  onTouchMove(e: TouchEvent) {
+    if (this.store.status() !== GameStatus.Playing) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+
+    const dx = currentX - this.lastProcessedX;
+    const dy = currentY - this.lastProcessedY;
+
+    // Horizontal movement (switch columns)
+    if (Math.abs(dx) > 26) {
+      if (dx > 0) {
+        this.store.moveRight();
+      } else {
+        this.store.moveLeft();
+      }
+      this.lastProcessedX = currentX;
+      this.hasMoved = true;
+    }
+
+    // Vertical soft drop (only downwards)
+    if (dy > 32) {
+      this.store.softDrop();
+      this.lastProcessedY = currentY;
+      this.hasMoved = true;
+    }
+  }
+
+  onTouchEnd(e: TouchEvent) {
+    if (this.store.status() !== GameStatus.Playing) return;
+    const currentX = e.changedTouches[0].clientX;
+    const currentY = e.changedTouches[0].clientY;
+    const totalDy = currentY - this.touchStartY;
+    const duration = Date.now() - this.touchStartTime;
+
+    // Fast downward flick triggers hard drop
+    if (!this.hasMoved && totalDy > 45 && duration < 280) {
+      this.store.hardDrop();
+    }
   }
 }

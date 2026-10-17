@@ -201,7 +201,7 @@ export class AudioService {
 
   // --- Tetris Sounds ---
   async playTetris(
-    name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris',
+    name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris' | 'dissolve',
     linesCount = 1,
     combo = 0
   ) {

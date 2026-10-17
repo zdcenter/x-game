@@ -1,0 +1,14 @@
+/* Drop 2048 Console Wing Cards Glassmorphism */
+.drop2048-wing-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-card);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drop2048-wing-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 12px 30px -5px rgba(99, 102, 241, 0.15);
+}

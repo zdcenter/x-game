@@ -45,6 +45,8 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   hasRevived = signal<boolean>(false);
   particles = signal<any[]>([]);
   clearingRows = signal<number[]>([]);
+  isDissolving = signal<boolean>(false);
+  dissolvingRows = signal<number[]>([]);
 
   // Color Theme Signal with persistence
   colorTheme = signal<TetrisColorTheme>(
@@ -257,6 +259,8 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.ghostY.set(state.ghostY);
     this.particles.set([...(state.particles || [])]);
     this.clearingRows.set(state.clearingRows || []);
+    this.isDissolving.set(state.isDissolving || false);
+    this.dissolvingRows.set(state.dissolvingRows || []);
     
     if (this.currentRoomMode() === GameMode.Single && state.score > this.bestScore()) {
       this.bestScore.set(state.score);

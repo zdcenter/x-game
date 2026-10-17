@@ -1,7 +1,7 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
-import { Component, Input, HostListener, signal, effect } from '@angular/core';
+import { Component, Input, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store';
+import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
 
 @Component({
   selector: 'app-drop2048-board',
@@ -19,40 +19,12 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
       <!-- Inner visual layer: this one shakes, but click overlay is NOT inside it -->
       <div class="absolute inset-0" [class.board-shake]="isShaking()">
 
+        <!-- Top Neon Accent Line -->
+        <div class="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-75 z-20"></div>
+
         <!-- Column guide lines -->
-        <div class="absolute inset-0 pointer-events-none z-0 flex" style="padding: 8px; gap: 5px;">
-          <div *ngFor="let col of colsArray" class="flex-1 h-full rounded-lg" style="background: rgba(255,255,255,0.025);"></div>
-        </div>
-
-        <!-- Inner Score Overlays -->
-        <div class="absolute top-4 left-4 z-0 flex flex-col pointer-events-none text-left text-white/20 font-black leading-tight">
-          <span class="text-[10px] tracking-widest uppercase">SCORE</span>
-          <span class="text-2xl mb-2">{{ store.score() }}</span>
-          <span class="text-[10px] tracking-widest uppercase text-cyan-500/50">LEVEL</span>
-          <span class="text-2xl text-cyan-400/50">{{ store.level() }}</span>
-        </div>
-
-        <div class="absolute top-4 right-4 z-0 flex flex-col items-end pointer-events-none font-black leading-tight">
-          <div class="flex flex-col items-end text-white/40 mb-2">
-            <span class="text-[10px] tracking-widest uppercase mb-1">NEXT</span>
-            <div class="w-12 h-12 flex items-center justify-center text-white text-xl block-3d shadow-md opacity-80"
-                 [ngStyle]="getBlockStyle(store.nextVal())"
-                 style="border-radius: 8px;">
-               {{ store.nextVal() }}
-            </div>
-          </div>
-          <div class="flex flex-col items-end text-white/25 mb-2">
-            <span class="text-[9px] tracking-widest uppercase mb-1">AFTER</span>
-            <div class="w-9 h-9 flex items-center justify-center text-white text-sm block-3d shadow-md opacity-60"
-                 [ngStyle]="getBlockStyle(store.nextVal2())"
-                 style="border-radius: 6px;">
-               {{ store.nextVal2() }}
-            </div>
-          </div>
-          <div *ngIf="store.currentRoomMode() === GameMode.Single" class="flex flex-col items-end text-white/20 mt-1">
-            <span class="text-[10px] tracking-widest uppercase">BEST</span>
-            <span class="text-2xl">{{ store.bestScore() }}</span>
-          </div>
+        <div class="absolute inset-0 pointer-events-none z-0 flex" [style.padding.px]="padding" [style.gap.px]="gap">
+          <div *ngFor="let col of colsArray" class="flex-1 h-full rounded-lg" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.04);"></div>
         </div>
 
         <!-- Ghost Block -->
@@ -221,7 +193,6 @@ import { Drop2048Store, DropBlock, ComboText } from '../../store/drop2048.store'
   `]
 })
 export class Drop2048BoardComponent {
-  GameMode = GameMode;
   @Input() board: DropBlock[] = [];
   @Input() activeBlock: { id: string, val: number, c: number, r: number } | null = null;
   @Input() combos: ComboText[] = [];
@@ -267,8 +238,8 @@ export class Drop2048BoardComponent {
 
   readonly ROWS = 7;
   readonly COLS = 5;
-  readonly cellSize = 60;
-  readonly gap = 2;
+  @Input() cellSize = 64;
+  readonly gap = 3;
   readonly padding = 6;
 
   get boardWidth()  { return this.COLS * this.cellSize + (this.COLS - 1) * this.gap + this.padding * 2; }
@@ -282,42 +253,7 @@ export class Drop2048BoardComponent {
   rowPx(r: number) { return r * (this.cellSize + this.gap) + this.padding; }
 
   getBlockStyle(val: number): Record<string, string> {
-    // Vivid saturated palette — top color (bright), bottom color (deep)
-    const g: Record<number, [string, string]> = {
-      2:    ['#FF5252', '#D50000'],
-      4:    ['#00E676', '#00C853'],
-      8:    ['#FFD600', '#FF8F00'],
-      16:   ['#2196F3', '#0D47A1'],
-      32:   ['#E040FB', '#AA00FF'],
-      64:   ['#FF6D00', '#E65100'],
-      128:  ['#FF9100', '#E65C00'],
-      256:  ['#00BFA5', '#00796B'],
-      512:  ['#7C4DFF', '#4527A0'],
-      1024: ['#F50057', '#B71C1C'],
-      2048: ['#FFD740', '#FF6D00'],
-    };
-    const [c1, c2] = g[val] || ['#78909C', '#455A64'];
-    const glowPx = val >= 8 ? Math.min(10 + Math.log2(val) * 2.5, 32) : 4;
-    const glowOpacity = val >= 128 ? 'ee' : val >= 32 ? 'cc' : 'aa';
-    const shadows = [
-      'inset 0 4px 0 rgba(255,255,255,0.38)',
-      'inset 0 -5px 0 rgba(0,0,0,0.40)',
-      '0 6px 12px rgba(0,0,0,0.5)',
-      `0 0 ${glowPx}px ${c1}${glowOpacity}`,
-    ].join(', ');
-    return { background: `linear-gradient(145deg, ${c1}, ${c2})`, 'box-shadow': shadows };
-  }
-
-  @HostListener('window:keydown', ['$event'])
-  handleKeyDown(event: KeyboardEvent) {
-    if (!this.activeBlock) return;
-    if (event.key === 'ArrowLeft' || event.key === 'a') {
-      this.store.moveActive(-1);
-    } else if (event.key === 'ArrowRight' || event.key === 'd') {
-      this.store.moveActive(1);
-    } else if (event.key === 'ArrowDown' || event.key === 's' || event.key === ' ') {
-      this.store.dropActive();
-    }
+    return getDrop2048BlockStyle(val);
   }
 
   onColumnClick(c: number) {

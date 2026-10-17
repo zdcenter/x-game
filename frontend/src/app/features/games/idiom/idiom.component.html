@@ -1,48 +1,70 @@
 
-<div class="h-full w-full flex flex-col md:flex-row relative bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-colors duration-300">
-
-  <!-- 左侧 SEO 描述 (响应式隐藏) -->
-  <div class="hidden xl:flex w-[300px] xl:w-[350px] shrink-0 p-6 flex-col border-r border-[var(--color-border-card)] overflow-y-auto bg-[var(--color-bg-sub)]">
-    <h2 class="text-2xl font-black mb-4 text-[var(--color-text-main)]">{{ i18n.t('lobby.idiom')() }}</h2>
-    <div class="markdown-body text-[var(--color-text-secondary)] text-sm leading-relaxed text-left" 
-         [innerHTML]="i18n.t('game.idiom.seo_desc')()">
-    </div>
+<app-game-layout
+  [isHost]="pkStore.hostId() === pkStore.playerId()"
+  [gameId]="'idiom'"
+  [title]="i18n.t('lobby.idiom')()"
+  [subtitle]="getHeaderSubtitle()"
+  [icon]="view() === 'wordle' ? '🟩' : (pkRoomId() ? '⚡' : '📖')"
+  [iconGradientClass]="view() === 'wordle' ? 'from-green-500 to-emerald-600' : 'from-purple-500 to-violet-600'"
+  [titleGradientClass]="view() === 'wordle' ? 'from-green-400 to-emerald-500' : 'from-purple-400 to-violet-500'"
+  [shadowClass]="view() === 'wordle' ? 'shadow-green-500/20' : 'shadow-purple-500/20'"
+  [headerBgClass]="view() === 'wordle' ? 'dark:bg-gradient-to-r dark:from-green-900/20 dark:to-emerald-900/20 px-4 lg:px-6 py-2 lg:py-3 mb-0' : 'dark:bg-gradient-to-r dark:from-purple-900/20 dark:to-violet-900/20 px-4 lg:px-6 py-2 lg:py-3 mb-0'"
+  [currentRoomMode]="pkRoomId() ? pkRoomMode() : GameMode.Single"
+  [currentRoomId]="pkRoomId()"
+  [status]="pkStore.status()"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [currentDifficulty]="pkDifficulty()"
+  [hideDefaultDifficulty]="true"
+  [showLeaveBtn]="!!pkRoomId()"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
+  (titleClick)="handleTitleClick()"
+  (back)="handleHeaderBack()"
+  (navigateToPk)="navigateToPkArena()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+>
+  <div header-right class="contents">
+    @if (pkRoomId()) {
+      @if (pkStore.status() === 'playing' || pkStore.status() === 'finished') {
+        <div class="flex items-center gap-1 text-sm font-black">
+          <span class="text-green-400">{{ pkStore.myWins() }}</span>
+          <span class="text-[var(--color-text-secondary)]">:</span>
+          <span class="text-red-400">{{ pkStore.opponentWins() }}</span>
+          <span class="text-[10px] text-[var(--color-text-secondary)] ml-1">/ {{ pkStore.target() }}</span>
+        </div>
+      }
+    } @else if (view() === 'lobby') {
+      @if (authStore.isAuthenticated() && idiomStats()) {
+        <div class="text-right">
+          <div class="text-xs font-black text-purple-400">{{ idiomStats()!.mastered }}/{{ idiomStats()!.total }}</div>
+          <div class="text-[10px] text-[var(--color-text-secondary)]">{{ i18n.t('idiom.mastered')() }}</div>
+        </div>
+      }
+    } @else if (view() === 'fill') {
+      @if (fillDifficulty()) {
+        <button (click)="fillDifficulty.set(null)"
+          class="px-2.5 py-1 rounded-full text-xs font-bold border transition-colors border-[var(--color-border-card)] hover:border-purple-500/50">
+          {{ diffLabel(fillDifficulty()!) }} ▾
+        </button>
+      }
+    } @else if (view() === 'wordle') {
+      @if (socialStats()) {
+        <div class="text-right text-xs text-[var(--color-text-secondary)]">
+          <div>👥 {{ socialStats()!.total_players }}</div>
+          <div>🏆 {{ socialStats()!.winners }}</div>
+        </div>
+      }
+    }
   </div>
 
-  <!-- 中心主要游戏区域 -->
-  <div class="flex-1 flex flex-col min-w-0 relative h-[100dvh]">
-
-  <!-- ===== 左侧：游戏内容区 ===== -->
-  <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-
+  <div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2">
   <!-- ===================== PK MODE ===================== -->
   @if (pkRoomId()) {
-    <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden select-none">
-      <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
-
-        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
-          [title]="i18n.t('lobby.idiom')()"
-          subtitle="极速填空 PK"
-          iconGradientClass="from-purple-500 to-violet-600"
-          titleGradientClass="from-purple-400 to-violet-500"
-          shadowClass="shadow-purple-500/20"
-          headerBgClass="dark:bg-gradient-to-r dark:from-purple-900/20 dark:to-violet-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
-          (back)="leavePkRoom()"
-          (rules)="showRules.set(true)">
-          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">⚡</div>
-          <div header-right class="flex items-center gap-2">
-            @if (pkStore.status() === 'playing' || pkStore.status() === 'finished') {
-              <div class="flex items-center gap-1 text-sm font-black">
-                <span class="text-green-400">{{ pkStore.myWins() }}</span>
-                <span class="text-[var(--color-text-secondary)]">:</span>
-                <span class="text-red-400">{{ pkStore.opponentWins() }}</span>
-                <span class="text-[10px] text-[var(--color-text-secondary)] ml-1">/ {{ pkStore.target() }}</span>
-              </div>
-            }
-          </div>
-        </app-game-header>
-
-        <div class="flex-1 overflow-hidden relative">
+    <div class="w-full flex-1 flex flex-col items-center justify-start relative min-h-0 select-none">
+      <div class="w-full flex-1 overflow-hidden relative">
 
           <!-- 等待室 -->
           @if (pkStore.status() === 'waiting') {
@@ -185,45 +207,13 @@
             </app-game-result-overlay>
           }
 
-        </div>
       </div>
     </div>
   }
 
   <!-- ===================== LOBBY ===================== -->
   @if (view() === 'lobby' && !pkRoomId()) {
-    <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
-      <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
-
-        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
-          [title]="i18n.t('lobby.idiom')()"
-          [subtitle]="i18n.t('idiom.subtitle')()"
-          iconGradientClass="from-purple-500 to-violet-600"
-          titleGradientClass="from-purple-400 to-violet-500"
-          shadowClass="shadow-purple-500/20"
-          headerBgClass="dark:bg-gradient-to-r dark:from-purple-900/20 dark:to-violet-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
-          (back)="goBack()"
-          (rules)="showRules.set(true)">
-          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">📖</div>
-          <div header-right class="flex items-center gap-2">
-            @if (authStore.isAuthenticated() && idiomStats()) {
-              <div class="text-right">
-                <div class="text-xs font-black text-purple-400">{{ idiomStats()!.mastered }}/{{ idiomStats()!.total }}</div>
-                <div class="text-[10px] text-[var(--color-text-secondary)]">{{ i18n.t('idiom.mastered')() }}</div>
-              </div>
-            }
-            @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
-              </button>
-            }
-          </div>
-        </app-game-header>
-
-        <div class="flex-1 overflow-y-auto p-4 lg:p-6">
+    <div class="w-full flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6">
           <div class="w-full max-w-lg mx-auto flex flex-col gap-4">
 
             <!-- ── 模式选择 ─────────────────────────── -->
@@ -404,48 +394,12 @@
             </div><!-- /stats+history -->
 
           </div><!-- /max-w-lg -->
-        </div><!-- /lobby 内容 -->
-      </div><!-- /.bg-card rounded -->
-    </div><!-- /.flex-1 outer -->
+    </div>
   }
 
   <!-- ===================== FILL MODE ===================== -->
   @if (view() === 'fill' && !pkRoomId()) {
-    <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden select-none">
-      <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
-
-        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
-          [title]="i18n.t('lobby.idiom')()"
-          [subtitle]="fillDifficulty() ? diffLabel(fillDifficulty()!) : i18n.t('idiom.mode_fill')()"
-          iconGradientClass="from-purple-500 to-violet-600"
-          titleGradientClass="from-purple-400 to-violet-500"
-          shadowClass="shadow-purple-500/20"
-          headerBgClass="dark:bg-gradient-to-r dark:from-purple-900/20 dark:to-violet-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
-          (back)="fillDifficulty() ? fillDifficulty.set(null) : backToLobby()"
-          (rules)="showRules.set(true)">
-          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">📖</div>
-          <div header-right class="flex items-center gap-2">
-            @if (fillDifficulty()) {
-              <button (click)="fillDifficulty.set(null)"
-                class="px-2.5 py-1 rounded-full text-xs font-bold border transition-colors"
-                [class]="fillDifficulty() === 'easy' ? 'border-green-500/40 text-green-400 bg-green-500/10 hover:bg-green-500/20'
-                        : fillDifficulty() === 'medium' ? 'border-yellow-500/40 text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20'
-                        : 'border-red-500/40 text-red-400 bg-red-500/10 hover:bg-red-500/20'">
-                {{ diffLabel(fillDifficulty()!) }} ↕
-              </button>
-            }
-            @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
-              </button>
-            }
-          </div>
-        </app-game-header>
-
-        <div class="flex-1 overflow-y-auto flex flex-col items-center px-4 pt-6 pb-4 gap-6">
+    <div class="w-full flex-1 overflow-y-auto flex flex-col items-center px-2 sm:px-4 pt-4 sm:pt-6 pb-4 gap-6 select-none">
 
           <!-- ── 难度选关（未选难度时显示） ── -->
           @if (!fillDifficulty()) {
@@ -723,43 +677,12 @@
           }
 
           } <!-- /答题区 @if fillDifficulty() -->
-        </div><!-- /填空内容 -->
-      </div>
     </div>
   }
 
   <!-- ===================== WORDLE MODE ===================== -->
   @if (view() === 'wordle' && !pkRoomId()) {
-    <div class="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden select-none">
-      <div class="flex-1 flex flex-col bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl m-1 lg:m-2 border border-[var(--color-border-card)] shadow-xl overflow-hidden">
-
-        <app-game-header (titleClick)="handleTitleClick()" class="sticky top-0 z-40"
-          [title]="i18n.t('lobby.idiom')()"
-          [subtitle]="i18n.t('idiom.mode_wordle')()"
-          iconGradientClass="from-green-500 to-emerald-600"
-          titleGradientClass="from-green-400 to-emerald-500"
-          shadowClass="shadow-green-500/20"
-          headerBgClass="dark:bg-gradient-to-r dark:from-green-900/20 dark:to-emerald-900/20 border-b border-[var(--color-border-card)] px-4 lg:px-6 pb-2"
-          (back)="view.set('lobby')"
-          (rules)="showRules.set(true)">
-          <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">🟩</div>
-          <div header-right class="flex items-center gap-2">
-            @if (socialStats()) {
-              <div class="text-right text-xs text-[var(--color-text-secondary)]">
-                <div>👥 {{ socialStats()!.total_players }}</div>
-                <div>🏆 {{ socialStats()!.winners }}</div>
-              </div>
-            }
-            @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="navigateToPkArena()" class="px-2 lg:px-4 py-1 lg:py-1.5 rounded-lg border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:text-amber-500 hover:border-amber-500/50 hover:bg-[var(--color-bg-card)] transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs lg:text-sm font-bold">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 lg:h-5 lg:w-5 text-amber-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
-              </button>
-            }
-          </div>
-        </app-game-header>
+    <div class="w-full flex-1 flex flex-col items-center justify-start relative min-h-0 select-none">
 
         <!-- Hidden IME input for wordle -->
         <input id="wordle-input" type="text" autocomplete="off" autocorrect="off"
@@ -935,22 +858,8 @@
             }
           </div>
         </ng-template>
-      </div>
     </div>
   }
 
-  <!-- Rules modal -->
-  <app-game-rules-modal [gameId]="'idiom'" [isOpen]="showRules()" (closed)="showRules.set(false)"></app-game-rules-modal>
-
-  <!-- Tutorial overlay -->
-    </div><!-- /左侧游戏内容区 -->
-  </div><!-- /中心主要游戏区域 -->
-
-  <!-- ===== 右侧：竞技大厅面板（PC 专属，跨所有视图持久显示） ===== -->
-  @if (settingsService.settings().multiplayer_enabled === 'true') {
-    <div class="hidden xl:flex w-[320px] xl:w-[400px] shrink-0 border-l border-[var(--color-border-card)] bg-[var(--color-bg-sub)] flex-col">
-      <app-game-lobby-panel class="flex-1 flex" [currentGameId]="'idiom'" (joinRoom)="handleLobbyJoinRoom($event)"></app-game-lobby-panel>
-    </div>
-  }
-
-</div>
+  </div>
+</app-game-layout>

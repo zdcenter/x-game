@@ -1,0 +1,180 @@
+<app-game-layout
+  [isHost]="store.hostId() === store.playerId()"
+  [gameId]="'sokoban'"
+  [title]="i18n.t('lobby.sokoban')()"
+  [subtitle]="showLobby() ? i18n.t('lobby.select_level')() : (getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === GameMode.Single ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : ''))"
+  icon="📦"
+  iconGradientClass="from-amber-400 to-orange-500"
+  titleGradientClass="from-amber-300 to-orange-400"
+  shadowClass="shadow-orange-500/20"
+  headerBgClass="dark:bg-gradient-to-r dark:from-amber-900/30 dark:to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+  [currentRoomMode]="store.currentRoomMode()"
+  [currentRoomId]="store.roomId()"
+  [status]="store.status()"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [currentDifficulty]="store.currentDifficulty()"
+  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
+  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [hideDefaultDifficulty]="true"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
+  (titleClick)="handleTitleClick()"
+  (back)="goBack()"
+  (playAgain)="handleRestart()"
+  (navigateToPk)="navigateToPkArena()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+>
+  <div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2">
+    @if (showLobby()) {
+      <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-[500px]"
+                         (openLobby)="navigateToPkArena()"
+                         (levelSelect)="onLevelSelect($event)">
+      </app-sokoban-lobby>
+    } @else {
+      <!-- Starting Overlay -->
+      @if (store.status() === GameStatus.Starting) {
+        <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+      }
+
+      @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <!-- Single Player Unified HUD Bar: 关卡大厅 + 移动步数 + 游戏用时 (单行对齐棋盘宽度) -->
+          <div class="w-full max-w-[520px] flex items-center justify-between px-1 mb-2 shrink-0 relative z-10">
+            <!-- Left: 选关大厅快捷按钮 -->
+            <button (click)="showLobby.set(true)" 
+                    class="px-2.5 sm:px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group"
+                    [title]="i18n.t('lobby.select_level')() || '选择关卡'">
+              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span>{{ i18n.t('game.levels_lobby')() }}</span>
+              <span class="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-mono font-black">#{{ store.currentLevelNum() }}</span>
+            </button>
+
+            <!-- Right: 步数 & 时间双仪表舱 -->
+            <div class="flex items-center gap-2 sm:gap-3">
+              <!-- 移动步数 -->
+              <div class="flex items-center gap-1.5 sm:gap-2 bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] rounded-xl px-2.5 sm:px-3.5 py-1 shadow-sm">
+                <span class="text-[11px] sm:text-xs uppercase tracking-wider text-[var(--color-text-secondary)] font-bold flex items-center gap-1">
+                  <span>🦶</span>
+                  <span class="hidden sm:inline">{{ i18n.t('game.moves')() || '步数' }}</span>
+                </span>
+                <span class="text-base sm:text-xl font-black text-amber-500 font-mono min-w-[2ch] text-right">{{ store.myMoves() }}</span>
+              </div>
+
+              <!-- 游戏用时 -->
+              <div class="flex items-center gap-1.5 sm:gap-2 bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] rounded-xl px-2.5 sm:px-3.5 py-1 shadow-sm">
+                <span class="text-[11px] sm:text-xs uppercase tracking-wider text-[var(--color-text-secondary)] font-bold flex items-center gap-1">
+                  <span>⏱️</span>
+                  <span class="hidden sm:inline">{{ i18n.t('game.time')() || '用时' }}</span>
+                </span>
+                <span class="text-base sm:text-xl font-black text-blue-400 font-mono min-w-[5ch] text-right">{{ gameTimer.formatTime(store.timeSpent()) }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <!-- PK Style -->
+          <div class="flex-none py-1 mb-1 shrink-0 w-full relative z-10">
+            <app-game-pk-hud
+              [myPlayer]="myPlayerPkStats()"
+              [opponents]="opponentsPkStats()"
+              [targetWins]="store.currentRoomTarget()"
+              [gameMode]="store.currentRoomMode()"
+              [status]="store.status()"
+              [elapsedTime]="gameTimer.formatTime(store.timeSpent())">
+            </app-game-pk-hud>
+          </div>
+        }
+
+        <!-- Board Area -->
+        <div class="relative flex-none flex flex-col lg:flex-row items-center justify-center min-h-0 overflow-hidden w-full py-2 px-2 z-10 gap-8">
+          <div class="flex flex-col items-center justify-center shrink-0">
+            <div class="relative flex items-center justify-center shrink-0"
+               style="width: min(88vw, calc(100vh - 320px), 540px); height: min(88vw, calc(100vh - 320px), 540px);">
+              <app-sokoban-board class="w-full h-full"></app-sokoban-board>
+            </div>
+          </div>
+
+          @if (store.status() === GameStatus.Playing && store.isDead()) {
+            <app-game-spectating-overlay
+              [players]="spectatingPlayers()"
+              [currentUserId]="playerId"
+            ></app-game-spectating-overlay>
+          }
+        </div>
+
+        <!-- Action Toolbar -->
+        <div class="w-full max-w-[520px] mt-2">
+          <app-game-toolbar
+            [layoutStyle]="'compact'"
+            [showBack]="true"
+            [showPrev]="store.currentRoomMode() === GameMode.Single"
+            [showUndo]="true"
+            [showRestart]="true"
+            [showHint]="store.currentRoomMode() === GameMode.Single"
+            [showNext]="store.currentRoomMode() === GameMode.Single"
+            [disablePrev]="store.currentLevelNum() <= 1"
+            [disableNext]="!store.hasNextLevel()"
+            hintLayout="sudoku"
+            (back)="goBack()"
+            (prevLevel)="store.prevLevel()"
+            (undo)="store.undo()"
+            (restart)="handleRestart()"
+            (hintApplied)="applyHint()"
+            (nextLevel)="store.nextLevel()"
+            class="w-full"
+          ></app-game-toolbar>
+        </div>
+      }
+
+      @if (store.status() === GameStatus.Finished && showOverlay()) {
+        <app-game-result-overlay
+          currentGameId="sokoban"
+          [status]="getGameResult()"
+          [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
+          [stats]="[
+            { label: i18n.t('game.moves')(), value: store.myMoves() },
+            { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
+          ]"
+          [xpResult]="store.lastStatResult()?.xp_result"
+          [isNewRecord]="store.lastStatResult()?.isNewRecord"
+          [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
+          [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
+          [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
+          [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
+          (nextLevel)="handleNextLevel()"
+          (restart)="handleRestart()"
+          (leave)="goBack()"
+          (dismiss)="handleDismissRoom()"
+          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+          (changeRoomGame)="store.changeRoomGame($event)">
+        </app-game-result-overlay>
+      }
+    }
+  </div>
+
+  @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
+    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
+      <app-game-waiting-room class="w-full h-full flex"
+        [gameId]="'sokoban'"
+        [mode]="store.currentRoomMode()"
+        [roomId]="store.roomId()"
+        [difficulty]="store.currentDifficulty()"
+        [players]="store.playersList()"
+        [hostId]="store.hostId()"
+        [currentUserId]="playerId"
+        [readyPlayers]="store.readyPlayers()"
+        (start)="store.startGame()"
+        (leave)="goBack()"
+        (changeSettings)="openChangeSettings()"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+        (kick)="store.kickPlayer($event)"
+        [target]="store.currentRoomTarget()"
+      ></app-game-waiting-room>
+    </div>
+  }
+</app-game-layout>

@@ -37,12 +37,14 @@ export interface TetrisState {
   comboCount: number;
   particles: any[];
   clearingRows: number[];
+  isDissolving: boolean;
+  dissolvingRows: number[];
 }
 
 export interface TetrisConfig {
   seed?: number;
   mode?: string;
-  onSound?: (sound: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris', linesCount?: number, combo?: number) => void;
+  onSound?: (sound: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris' | 'dissolve', linesCount?: number, combo?: number) => void;
   onHaptic?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
   onGarbageSent?: (lines: number) => void;
   onSyncState?: () => void;
@@ -69,9 +71,12 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   particles: any[] = [];
   clearingRows: number[] = [];
   isClearing = false;
+  isDissolving = false;
+  dissolvingRows: number[] = [];
 
   private dropInterval: any;
   private clearingTimer: any;
+  private dissolveTimer: any;
   private localGarbageApplied = 0;
   private prng: PRNG | undefined;
 
@@ -83,6 +88,10 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     if (this.clearingTimer) {
       clearTimeout(this.clearingTimer);
       this.clearingTimer = null;
+    }
+    if (this.dissolveTimer) {
+      clearTimeout(this.dissolveTimer);
+      this.dissolveTimer = null;
     }
     this.config = config;
     this.grid = getEmptyGrid();
@@ -97,6 +106,8 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     this.particles = [];
     this.clearingRows = [];
     this.isClearing = false;
+    this.isDissolving = false;
+    this.dissolvingRows = [];
     this.status = GameStatus.Playing;
     
     if (config.seed) {
@@ -114,6 +125,10 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
     if (this.clearingTimer) {
       clearTimeout(this.clearingTimer);
       this.clearingTimer = null;
+    }
+    if (this.dissolveTimer) {
+      clearTimeout(this.dissolveTimer);
+      this.dissolveTimer = null;
     }
     this.stopGameLoop();
   }
@@ -134,6 +149,8 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       comboCount: this.comboCount,
       particles: this.particles,
       clearingRows: this.clearingRows,
+      isDissolving: this.isDissolving,
+      dissolvingRows: this.dissolvingRows,
     };
   }
 
@@ -470,114 +487,104 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
   revive() {
     if (!this.isDead || (this.config.mode && this.config.mode !== GameMode.Single && this.config.mode !== 'single')) return;
 
-    this.isDead = false;
-    this.status = GameStatus.Playing;
-    
-    // Select the bottom 12 rows
-    const rowsToClear = 12;
-    const startRow = TETRIS_ROWS - rowsToClear;
+    if (this.dissolveTimer) {
+      clearTimeout(this.dissolveTimer);
+      this.dissolveTimer = null;
+    }
 
-    // Collect all non-empty blocks in the bottom 12 rows
-    const blocksToDestroy: {r: number, c: number, type: number}[] = [];
-    for (let r = startRow; r < TETRIS_ROWS; r++) {
-      for (let c = 0; c < TETRIS_COLS; c++) {
-        if (this.grid[r][c] !== 0) {
-          blocksToDestroy.push({r, c, type: this.grid[r][c]});
-        }
+    // 计算消融区域：消融导致死亡的上方堆叠危险方块（自最高有方块行向下消融 10 行）
+    let minOccupiedRow = TETRIS_ROWS;
+    for (let r = 0; r < TETRIS_ROWS; r++) {
+      if (this.grid[r].some(c => c !== 0)) {
+        minOccupiedRow = r;
+        break;
       }
     }
 
-    // Sort blocks randomly for a popcorn effect
-    blocksToDestroy.sort(() => Math.random() - 0.5);
+    const rowsToClearCount = 10;
+    const startRow = Math.max(0, Math.min(minOccupiedRow, TETRIS_ROWS - rowsToClearCount));
+    const endRow = Math.min(TETRIS_ROWS - 1, startRow + rowsToClearCount - 1);
 
-    // Sequential explosion — dramatic popcorn effect
-    const intervalTime = 80; // 80ms between each block pop (matching Drop2048)
-    blocksToDestroy.forEach((block, index) => {
-      setTimeout(() => {
-        // Destroy the block
-        this.grid[block.r][block.c] = 0;
-        
-        // Shatter into 8 rectangular debris fragments
-        const newParticles: any[] = [];
-        const blockColor = TETROMINO_COLORS[block.type as Tetromino] || '#fff';
-        for (let i = 0; i < 8; i++) {
-          const angle = (Math.PI * 2 * i) / 8 + (Math.random() - 0.5) * 0.8;
-          const speed = 15 + Math.random() * 40;
-          // Mix of larger shards and small chips
-          const isLarge = i < 3;
-          newParticles.push({
-            id: Math.random().toString(36).substring(2, 9),
-            r: block.r,
-            c: block.c,
-            color: blockColor,
-            w: isLarge ? 5 + Math.random() * 6 : 2 + Math.random() * 4,
-            h: isLarge ? 4 + Math.random() * 5 : 2 + Math.random() * 3,
-            tx: Math.cos(angle) * speed,
-            ty: Math.sin(angle) * speed + 8, // slight gravity pull downward
-            rot: Math.floor(Math.random() * 360 - 180),
-          });
+    const rowsToDissolve: number[] = [];
+    for (let r = startRow; r <= endRow; r++) {
+      rowsToDissolve.push(r);
+    }
+
+    this.isDissolving = true;
+    this.dissolvingRows = rowsToDissolve;
+
+    // 播放专属消融升华音效与微触感
+    this.config.onSound?.('dissolve');
+    if (this.config.onHaptic) this.config.onHaptic('medium');
+
+    // 生成微光向上升腾的消融光尘粒子 (Dissolve Embers)
+    const newParticles: any[] = [];
+    rowsToDissolve.forEach((r, rowIdx) => {
+      for (let c = 0; c < TETRIS_COLS; c++) {
+        const val = this.grid[r][c];
+        if (val !== 0) {
+          const blockColor = TETROMINO_COLORS[val as Tetromino] || '#38bdf8';
+          for (let i = 0; i < 3; i++) {
+            const spreadX = (Math.random() - 0.5) * 20;
+            const floatUpY = -(16 + Math.random() * 28);
+            newParticles.push({
+              id: Math.random().toString(36).substring(2, 9),
+              r,
+              c,
+              color: i === 0 ? '#ffffff' : i === 1 ? '#38bdf8' : blockColor,
+              w: 2 + Math.random() * 2,
+              h: 2 + Math.random() * 2,
+              tx: spreadX,
+              ty: floatUpY,
+              rot: Math.floor(Math.random() * 180 - 90),
+              delay: rowIdx * 30 + c * 8,
+            });
+          }
         }
-        this.particles = [...this.particles, ...newParticles];
-
-        // Vibrate for haptic feedback
-        if (this.config.onHaptic) this.config.onHaptic('medium');
-        if (this.config.onSound) this.config.onSound('clear');
-
-        // Sync to Angular signals
-        this.config.onShake?.();
-
-        // Clear particles after animation
-        setTimeout(() => {
-          const pIds = new Set(newParticles.map(pp => pp.id));
-          this.particles = this.particles.filter(x => !pIds.has(x.id));
-          this.config.onShake?.();
-        }, 700);
-
-        // If it's the last block, drop the remaining blocks and resume
-        if (index === blocksToDestroy.length - 1) {
-          setTimeout(() => {
-            // Apply gravity to the remaining blocks
-            this.applyGravity(startRow);
-            this.currentPiece = null;
-            this.spawnPiece();
-            this.startGameLoop();
-            this.config.onSyncState?.();
-          }, 600);
-        }
-      }, index * intervalTime);
+      }
     });
-    
-    if (blocksToDestroy.length === 0) {
-      // If bottom is already empty (rare), just resume
+
+    this.particles = [...this.particles.slice(-40), ...newParticles];
+    this.config.onSyncState?.();
+
+    // 550ms 消融动画后完成结算、沉降与恢复游戏
+    this.dissolveTimer = setTimeout(() => {
+      // 清空消融区域
+      for (const r of rowsToDissolve) {
+        for (let c = 0; c < TETRIS_COLS; c++) {
+          this.grid[r][c] = 0;
+        }
+      }
+
+      // 将未消融的存量方块平整落位到底部
+      this.collapseRemainingRows();
+
+      // 清理消融粒子
+      const pIds = new Set(newParticles.map(p => p.id));
+      this.particles = this.particles.filter(x => !pIds.has(x.id));
+
+      this.isDissolving = false;
+      this.dissolvingRows = [];
+      this.isDead = false;
+      this.status = GameStatus.Playing;
       this.currentPiece = null;
       this.spawnPiece();
       this.startGameLoop();
-    }
+      this.config.onSyncState?.();
+    }, 550);
   }
 
-  private applyGravity(clearedStartRow: number) {
+  private collapseRemainingRows() {
     const newGrid = getEmptyGrid();
     let writeRow = TETRIS_ROWS - 1;
-    
-    // Copy all rows that were not in the destroyed section (from top to clearedStartRow - 1)
-    for (let r = clearedStartRow - 1; r >= 0; r--) {
-      // Check if row has any blocks
-      let hasBlocks = false;
-      for (let c = 0; c < TETRIS_COLS; c++) {
-        if (this.grid[r][c] !== 0) {
-          hasBlocks = true;
-          break;
-        }
-      }
-      
-      if (hasBlocks) {
+    for (let r = TETRIS_ROWS - 1; r >= 0; r--) {
+      if (this.grid[r].some(c => c !== 0)) {
         for (let c = 0; c < TETRIS_COLS; c++) {
           newGrid[writeRow][c] = this.grid[r][c];
         }
         writeRow--;
       }
     }
-    
     this.grid = newGrid;
   }
 }

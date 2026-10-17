@@ -3,11 +3,36 @@ import { createOsc, createGain, createNoise, createLpf, createBpf } from './audi
 export function playTetrisSound(
   audioCtx: AudioContext,
   out: AudioNode,
-  name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris',
+  name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris' | 'dissolve',
   linesCount = 1,
   combo = 0
 ) {
   const t = audioCtx.currentTime;
+
+  if (name === 'dissolve') {
+    // 复活消融 —— 高能激光扫掠 + 粒子升华空灵向上泛音
+    const n = createNoise(audioCtx, 0.35);
+    const bp = createBpf(audioCtx, 1200, 3);
+    bp.frequency.exponentialRampToValueAtTime(3600, t + 0.45);
+    const g = createGain(audioCtx, 0.4);
+    g.gain.setValueAtTime(0.35, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    n.connect(bp); bp.connect(g); g.connect(out);
+    n.start(t); n.stop(t + 0.52);
+
+    // 两个晶莹正弦波升调，带来治愈消融重生的质感
+    [440, 660, 880, 1320].forEach((freq, idx) => {
+      const o = createOsc(audioCtx, 'sine', freq);
+      o.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.4 + idx * 0.04);
+      const og = createGain(audioCtx, 0);
+      const dt = t + idx * 0.06;
+      og.gain.setValueAtTime(0.18, dt);
+      og.gain.exponentialRampToValueAtTime(0.001, dt + 0.35);
+      o.connect(og); og.connect(out);
+      o.start(dt); o.stop(dt + 0.38);
+    });
+    return;
+  }
 
   if (name === 'move') {
     // 左右移动 —— 极短清脆微滴答

@@ -22,12 +22,14 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { HapticService } from '../../../core/services/haptic.service';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule,  GameWaitingRoomComponent,   GameResultOverlayComponent, GamePlayerMiniHudComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -328,6 +330,31 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     };
   });
 
+  myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const prog = Math.round(this.myProgress());
+    const wins = this.store.pkWins()[this.playerId] || 0;
+    const target = this.store.currentRoomTarget();
+    const isFinished = this.store.status() === GameStatus.Finished;
+    const metrics: PkMetric[] = [];
+
+    if (target > 1) {
+      metrics.push({ icon: '🏆', label: 'WIN', value: `${wins}/${target}` });
+    }
+
+    return {
+      id: this.playerId,
+      nickname: this.playerId,
+      isMe: true,
+      isHost: this.playerId === this.store.hostId(),
+      isFinished,
+      progress: prog,
+      score: this.myScore(),
+      wins,
+      metrics,
+      status: isFinished ? 'finished' : 'playing'
+    };
+  });
+
   opponentsHUD = computed(() => {
     return this.getPlayerScores()
       .filter(p => p.id !== this.playerId)
@@ -339,6 +366,35 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
           : [{ icon: '⭐', value: opp.score || 0 }],
         status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
       }));
+  });
+
+  opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const target = this.store.currentRoomTarget();
+    const isFinished = this.store.status() === GameStatus.Finished;
+    return this.getPlayerScores()
+      .filter(p => p.id !== this.playerId)
+      .map(opp => {
+        const oppProg = Math.round(opp.progress || 0);
+        const wins = this.store.pkWins()[opp.id] || 0;
+        const metrics: PkMetric[] = [];
+
+        if (target > 1) {
+          metrics.push({ icon: '🏆', label: 'WIN', value: `${wins}/${target}` });
+        }
+
+        return {
+          id: opp.id,
+          nickname: opp.id,
+          isMe: false,
+          isHost: opp.id === this.store.hostId(),
+          isFinished: isFinished || oppProg === 100,
+          progress: oppProg,
+          score: opp.score || 0,
+          wins,
+          metrics,
+          status: (isFinished || oppProg === 100) ? 'finished' : 'playing'
+        };
+      });
   });
 
   getGameResult(): 'win' | 'lose' {

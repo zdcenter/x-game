@@ -23,6 +23,7 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameStatus, GameMode } from '../../../core/models/game.model';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
+import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 
 type IdiomView = 'lobby' | 'fill' | 'wordle';
 
@@ -31,6 +32,7 @@ type IdiomView = 'lobby' | 'fill' | 'wordle';
   standalone: true,
   providers: [IdiomPKStore],
   imports: [CommonModule,
+    GameLayoutComponent,
     GameHeaderComponent,
     GameRulesModalComponent,
     GameToolbarComponent,
@@ -253,6 +255,47 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   handleLobbyJoinRoom(room: any) {
     if (room.password) this.wsService.setPendingPassword(room.password);
     this.joinPkRoom(room.roomId, room.mode, room.difficulty || '', room.host);
+  }
+
+  getHeaderSubtitle(): string {
+    if (this.pkRoomId()) {
+      return '极速填空 PK';
+    }
+    if (this.view() === 'fill') {
+      return this.fillDifficulty() ? this.diffLabel(this.fillDifficulty()!) : this.i18n.t('idiom.mode_fill')();
+    }
+    if (this.view() === 'wordle') {
+      return this.i18n.t('idiom.mode_wordle')();
+    }
+    return this.i18n.t('idiom.subtitle')();
+  }
+
+  handleHeaderBack() {
+    if (this.pkRoomId()) {
+      this.leavePkRoom();
+    } else if (this.view() === 'fill') {
+      if (this.fillDifficulty()) {
+        this.fillDifficulty.set(null);
+      } else {
+        this.backToLobby();
+      }
+    } else if (this.view() === 'wordle') {
+      this.backToLobby();
+    } else {
+      this.goBack();
+    }
+  }
+
+  override handleJoinRoom(event: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
+    this.joinPkRoom(event.roomId, event.mode, event.difficulty || '', event.host);
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  override handleCreateRoom(event: { name: string; mode: string; difficulty: string; password?: string; target?: number }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
+    this.joinPkRoom(event.name, event.mode, event.difficulty || '', this.playerId, event.target ?? 3);
+    this.isMobileSidebarOpen.set(false);
   }
   // ---- Navigation ----
   view = signal<IdiomView>('lobby');

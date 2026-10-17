@@ -1,123 +1,321 @@
-/* Base Board */
-.c2048-board {
-  background-color: var(--c2048-board-bg);
-  border-radius: 0.75rem;
-  border: var(--c2048-board-border-width, 0) solid var(--c2048-board-border, transparent);
-  box-shadow: var(--c2048-board-shadow, none);
+/* ==========================================================================
+   CLASSIC 2048 - ARCADE VISUAL DESIGN SYSTEM
+   Supports 3 selectable themes: 'classic' | 'neon' | 'glacier'
+   Fully responsive with CSS variables & high-performance hardware animations
+   ========================================================================== */
+
+/* Host & Base Styles */
+:host {
+  display: block;
+  width: 100%;
 }
 
-/* Empty Cell */
+/* Floating Delta Score Animation (+Score) */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.15);
+  }
+  75% {
+    opacity: 0.95;
+    transform: translateY(-16px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-26px) scale(0.9);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fadeSlideUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tile Merge / Spawn Pop */
+@keyframes tilePop {
+  0% {
+    transform: scale(0.65);
+    opacity: 0.7;
+  }
+  65% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.c2048-tile-pop {
+  animation: tilePop 0.16s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Board Outer Frame */
+.c2048-board {
+  background: var(--c2048-board-bg);
+  border-radius: 1rem;
+  border: var(--c2048-board-border);
+  box-shadow: var(--c2048-board-shadow);
+  touch-action: none;
+  user-select: none;
+}
+
+/* Board Empty Cells */
 .c2048-empty-cell {
   background: var(--c2048-empty-bg);
-  border-radius: 0.5rem;
-  box-shadow: var(--c2048-empty-shadow, none);
+  border-radius: 0.75rem;
+  box-shadow: var(--c2048-empty-shadow);
+  border: var(--c2048-empty-border, none);
 }
 
 .c2048-tile-wrapper {
-  perspective: 500px;
+  perspective: 600px;
 }
 
-/* Tile Base (Shadow Layer) */
+/* Tile Shell & Card Top */
 .c2048-tile-base {
-  background-color: var(--c2048-tile-shadow-color, transparent);
-  border-radius: 0.5rem;
-  box-shadow: var(--c2048-tile-drop-shadow, 0 0 0 transparent), var(--c2048-tile-glow, 0 0 0 transparent);
-  transform: var(--c2048-tile-base-transform, none);
+  border-radius: 0.75rem;
+  box-shadow: var(--c2048-tile-glow, none);
 }
 
-/* Tile Top Layer */
 .c2048-tile-top {
-  background: var(--c2048-tile-grad);
-  border: var(--c2048-tile-inner-border, none);
-  border-radius: 0.5rem;
-  transform: var(--c2048-tile-top-transform, none);
-  transition: transform 0.1s;
+  background: var(--c2048-tile-bg);
+  border-radius: 0.75rem;
+  border: var(--c2048-tile-border, none);
+  box-shadow: var(--c2048-tile-inner-shadow, none);
+  color: var(--c2048-tile-color);
+  font-family: inherit;
+  letter-spacing: -0.02em;
 }
 
-.c2048-tile-top:active {
-  transform: var(--c2048-tile-top-active-transform, none);
-}
-
-/* ----------------------------------------------------- */
-/* LIGHT MODE VARIABLES (Classic Flat Style)           */
-/* ----------------------------------------------------- */
-:host {
+/* --------------------------------------------------------------------------
+   THEME 1: CLASSIC (Iconic Warm Timber & Earthy Clay Palette)
+   -------------------------------------------------------------------------- */
+[data-theme="classic"] {
   --c2048-board-bg: #bbada0;
+  --c2048-board-border: 4px solid #a89a8e;
+  --c2048-board-shadow: 0 10px 25px -5px rgba(142, 122, 107, 0.45), inset 0 2px 4px rgba(0, 0, 0, 0.1);
   --c2048-empty-bg: #cdc1b4;
-  
-  /* Reset 3D properties to none/flat */
-  --c2048-board-border-width: 0;
-  --c2048-board-shadow: none;
-  --c2048-empty-shadow: none;
-  
-  --c2048-tile-shadow-color: transparent;
-  --c2048-tile-drop-shadow: none;
-  --c2048-tile-base-transform: none;
-  
-  --c2048-tile-inner-border: none;
-  --c2048-tile-top-transform: none;
-  --c2048-tile-top-active-transform: scale(0.95);
-  
-  /* Default Tile */
-  --c2048-tile-grad: #eee4da;
-  --c2048-text-color: #776e65;
+  --c2048-empty-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+  --c2048-tile-border: none;
+  --c2048-tile-inner-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* Light Mode Specific Colors (Classic) */
-.tile-2 { --c2048-tile-grad: #eee4da; }
-.tile-4 { --c2048-tile-grad: #ede0c8; }
-.tile-8 { --c2048-tile-grad: #f2b179; --c2048-text-color: #f9f6f2; }
-.tile-16 { --c2048-tile-grad: #f59563; --c2048-text-color: #f9f6f2; }
-.tile-32 { --c2048-tile-grad: #f67c5f; --c2048-text-color: #f9f6f2; }
-.tile-64 { --c2048-tile-grad: #f65e3b; --c2048-text-color: #f9f6f2; }
-.tile-128 { --c2048-tile-grad: #edcf72; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 15px rgba(237, 207, 114, 0.4); }
-.tile-256 { --c2048-tile-grad: #edcc61; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 20px rgba(237, 204, 97, 0.5); }
-.tile-512 { --c2048-tile-grad: #edc850; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 25px rgba(237, 200, 80, 0.6); }
-.tile-1024 { --c2048-tile-grad: #edc53f; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 30px rgba(237, 197, 63, 0.7); }
-.tile-2048 { --c2048-tile-grad: #edc22e; --c2048-text-color: #f9f6f2; --c2048-tile-glow: 0 0 40px rgba(237, 194, 46, 0.8); }
-
-/* ----------------------------------------------------- */
-/* DARK MODE VARIABLES (Premium 3D Cool Colors)          */
-/* ----------------------------------------------------- */
-:host-context(.theme-dark) {
-  --c2048-board-bg: #0f172a;
-  
-  /* Enable 3D properties */
-  --c2048-board-border-width: 4px;
-  --c2048-board-border: #1e293b;
-  --c2048-board-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  --c2048-empty-bg: linear-gradient(180deg, #334155, #1e293b);
-  --c2048-empty-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
-  
-  --c2048-tile-drop-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-  --c2048-tile-base-transform: translateY(2px);
-  
-  --c2048-tile-inner-border: 1px solid rgba(255, 255, 255, 0.15);
-  --c2048-tile-top-transform: translateY(-4px);
-  --c2048-tile-top-active-transform: translateY(-2px);
-  
-  /* Default Tile */
-  --c2048-tile-grad: linear-gradient(180deg, #334155, #1e293b);
-  --c2048-tile-shadow-color: #0f172a;
-  --c2048-text-color: #f8fafc;
+:host-context(.theme-dark) [data-theme="classic"] {
+  --c2048-board-bg: #3f3934;
+  --c2048-board-border: 4px solid #2d2824;
+  --c2048-board-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(0, 0, 0, 0.25);
+  --c2048-empty-bg: #524b45;
+  --c2048-empty-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.25);
 }
 
-/* Dark Mode Specific Colors */
-:host-context(.theme-dark) .tile-2 { --c2048-tile-grad: linear-gradient(180deg, #475569, #334155); --c2048-text-color: #f8fafc; --c2048-tile-shadow-color: #1e293b; }
-:host-context(.theme-dark) .tile-4 { --c2048-tile-grad: linear-gradient(180deg, #334155, #1e293b); --c2048-text-color: #f8fafc; --c2048-tile-shadow-color: #0f172a; }
-:host-context(.theme-dark) .tile-8 { --c2048-tile-grad: linear-gradient(180deg, #f97316, #c2410c); --c2048-text-color: #fff; --c2048-tile-shadow-color: #7c2d12; }
-:host-context(.theme-dark) .tile-16 { --c2048-tile-grad: linear-gradient(180deg, #ea580c, #9a3412); --c2048-text-color: #fff; --c2048-tile-shadow-color: #7c2d12; }
-:host-context(.theme-dark) .tile-32 { --c2048-tile-grad: linear-gradient(180deg, #ef4444, #b91c1c); --c2048-text-color: #fff; --c2048-tile-shadow-color: #7f1d1d; }
-:host-context(.theme-dark) .tile-64 { --c2048-tile-grad: linear-gradient(180deg, #e11d48, #9f1239); --c2048-text-color: #fff; --c2048-tile-shadow-color: #881337; }
-:host-context(.theme-dark) .tile-128 { --c2048-tile-grad: linear-gradient(180deg, #eab308, #a16207); --c2048-text-color: #fff; --c2048-tile-shadow-color: #713f12; --c2048-tile-glow: 0 0 0 transparent; }
-:host-context(.theme-dark) .tile-256 { --c2048-tile-grad: linear-gradient(180deg, #ca8a04, #854d0e); --c2048-text-color: #fff; --c2048-tile-shadow-color: #713f12; --c2048-tile-glow: 0 0 0 transparent; }
-:host-context(.theme-dark) .tile-512 { --c2048-tile-grad: linear-gradient(180deg, #8b5cf6, #5b21b6); --c2048-text-color: #fff; --c2048-tile-shadow-color: #4c1d95; --c2048-tile-glow: 0 0 0 transparent; }
-:host-context(.theme-dark) .tile-1024 { --c2048-tile-grad: linear-gradient(180deg, #a855f7, #7e22ce); --c2048-text-color: #fff; --c2048-tile-shadow-color: #581c87; --c2048-tile-glow: 0 0 0 transparent; }
-:host-context(.theme-dark) .tile-2048 { --c2048-tile-grad: linear-gradient(180deg, #fbbf24, #d97706); --c2048-text-color: #fff; --c2048-tile-shadow-color: #92400e; --c2048-tile-glow: 0 0 40px rgba(217, 119, 6, 0.6); }
+[data-theme="classic"] .tile-2 {
+  --c2048-tile-bg: #eee4da;
+  --c2048-tile-color: #776e65;
+}
+[data-theme="classic"] .tile-4 {
+  --c2048-tile-bg: #ede0c8;
+  --c2048-tile-color: #776e65;
+}
+[data-theme="classic"] .tile-8 {
+  --c2048-tile-bg: #f2b179;
+  --c2048-tile-color: #f9f6f2;
+}
+[data-theme="classic"] .tile-16 {
+  --c2048-tile-bg: #f59563;
+  --c2048-tile-color: #f9f6f2;
+}
+[data-theme="classic"] .tile-32 {
+  --c2048-tile-bg: #f67c5f;
+  --c2048-tile-color: #f9f6f2;
+}
+[data-theme="classic"] .tile-64 {
+  --c2048-tile-bg: #f65e3b;
+  --c2048-tile-color: #f9f6f2;
+}
+[data-theme="classic"] .tile-128 {
+  --c2048-tile-bg: #edcf72;
+  --c2048-tile-color: #f9f6f2;
+  --c2048-tile-glow: 0 0 16px rgba(237, 207, 114, 0.45);
+}
+[data-theme="classic"] .tile-256 {
+  --c2048-tile-bg: #edcc61;
+  --c2048-tile-color: #f9f6f2;
+  --c2048-tile-glow: 0 0 20px rgba(237, 204, 97, 0.55);
+}
+[data-theme="classic"] .tile-512 {
+  --c2048-tile-bg: #edc850;
+  --c2048-tile-color: #f9f6f2;
+  --c2048-tile-glow: 0 0 24px rgba(237, 200, 80, 0.65);
+}
+[data-theme="classic"] .tile-1024 {
+  --c2048-tile-bg: #edc53f;
+  --c2048-tile-color: #f9f6f2;
+  --c2048-tile-glow: 0 0 28px rgba(237, 197, 63, 0.75);
+}
+[data-theme="classic"] .tile-2048 {
+  --c2048-tile-bg: #edc22e;
+  --c2048-tile-color: #f9f6f2;
+  --c2048-tile-glow: 0 0 35px rgba(237, 194, 46, 0.9);
+}
+[data-theme="classic"] .tile-super {
+  --c2048-tile-bg: #3c3a32;
+  --c2048-tile-color: #f9f6f2;
+  --c2048-tile-glow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
 
-/* Override font size logic since we are keeping dynamic font sizes in TS but colors in CSS */
-.c2048-tile-text {
-  color: var(--c2048-text-color);
+/* --------------------------------------------------------------------------
+   THEME 2: CYBER NEON (Electric High-Tech Luminescent Palette)
+   -------------------------------------------------------------------------- */
+[data-theme="neon"] {
+  --c2048-board-bg: #0b0f19;
+  --c2048-board-border: 2px solid rgba(99, 102, 241, 0.4);
+  --c2048-board-shadow: 0 16px 38px rgba(0, 0, 0, 0.8), 0 0 25px rgba(99, 102, 241, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.05);
+  --c2048-empty-bg: #141b2d;
+  --c2048-empty-border: 1px solid rgba(255, 255, 255, 0.04);
+  --c2048-empty-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+  --c2048-tile-border: 1px solid rgba(255, 255, 255, 0.2);
+  --c2048-tile-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="neon"] .tile-2 {
+  --c2048-tile-bg: linear-gradient(145deg, #1e293b, #0f172a);
+  --c2048-tile-color: #94a3b8;
+  --c2048-tile-border: 1px solid rgba(148, 163, 184, 0.2);
+}
+[data-theme="neon"] .tile-4 {
+  --c2048-tile-bg: linear-gradient(145deg, #334155, #1e293b);
+  --c2048-tile-color: #cbd5e1;
+  --c2048-tile-border: 1px solid rgba(203, 213, 225, 0.25);
+}
+[data-theme="neon"] .tile-8 {
+  --c2048-tile-bg: linear-gradient(145deg, #0284c7, #0369a1);
+  --c2048-tile-color: #f0f9ff;
+  --c2048-tile-glow: 0 0 16px rgba(2, 132, 199, 0.55);
+}
+[data-theme="neon"] .tile-16 {
+  --c2048-tile-bg: linear-gradient(145deg, #06b6d4, #0891b2);
+  --c2048-tile-color: #ecfeff;
+  --c2048-tile-glow: 0 0 20px rgba(6, 182, 212, 0.6);
+}
+[data-theme="neon"] .tile-32 {
+  --c2048-tile-bg: linear-gradient(145deg, #10b981, #059669);
+  --c2048-tile-color: #ecfdf5;
+  --c2048-tile-glow: 0 0 22px rgba(16, 185, 129, 0.65);
+}
+[data-theme="neon"] .tile-64 {
+  --c2048-tile-bg: linear-gradient(145deg, #84cc16, #65a30d);
+  --c2048-tile-color: #f7fee7;
+  --c2048-tile-glow: 0 0 24px rgba(132, 204, 22, 0.7);
+}
+[data-theme="neon"] .tile-128 {
+  --c2048-tile-bg: linear-gradient(145deg, #f59e0b, #d97706);
+  --c2048-tile-color: #fffbeb;
+  --c2048-tile-glow: 0 0 26px rgba(245, 158, 11, 0.75);
+}
+[data-theme="neon"] .tile-256 {
+  --c2048-tile-bg: linear-gradient(145deg, #f97316, #ea580c);
+  --c2048-tile-color: #fff7ed;
+  --c2048-tile-glow: 0 0 28px rgba(249, 115, 22, 0.8);
+}
+[data-theme="neon"] .tile-512 {
+  --c2048-tile-bg: linear-gradient(145deg, #ef4444, #dc2626);
+  --c2048-tile-color: #fef2f2;
+  --c2048-tile-glow: 0 0 32px rgba(239, 68, 68, 0.85);
+}
+[data-theme="neon"] .tile-1024 {
+  --c2048-tile-bg: linear-gradient(145deg, #ec4899, #db2777);
+  --c2048-tile-color: #fdf2f8;
+  --c2048-tile-glow: 0 0 36px rgba(236, 72, 153, 0.9);
+}
+[data-theme="neon"] .tile-2048 {
+  --c2048-tile-bg: linear-gradient(145deg, #8b5cf6, #7c3aed);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 45px rgba(139, 92, 246, 0.95);
+}
+[data-theme="neon"] .tile-super {
+  --c2048-tile-bg: linear-gradient(145deg, #a855f7, #6366f1);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 55px rgba(168, 85, 247, 1);
+}
+
+/* --------------------------------------------------------------------------
+   THEME 3: GLACIER ICE (Deep Ocean & Arctic Crystal Diamond Palette)
+   -------------------------------------------------------------------------- */
+[data-theme="glacier"] {
+  --c2048-board-bg: #081d2f;
+  --c2048-board-border: 2px solid rgba(56, 189, 248, 0.35);
+  --c2048-board-shadow: 0 16px 36px rgba(3, 14, 24, 0.8), 0 0 28px rgba(6, 182, 212, 0.25), inset 0 2px 5px rgba(255, 255, 255, 0.1);
+  --c2048-empty-bg: #0f2d47;
+  --c2048-empty-border: 1px solid rgba(56, 189, 248, 0.1);
+  --c2048-empty-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.5);
+  --c2048-tile-border: 1px solid rgba(224, 242, 254, 0.3);
+  --c2048-tile-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="glacier"] .tile-2 {
+  --c2048-tile-bg: linear-gradient(145deg, #e0f2fe, #bae6fd);
+  --c2048-tile-color: #0369a1;
+  --c2048-tile-border: 1px solid rgba(255, 255, 255, 0.8);
+}
+[data-theme="glacier"] .tile-4 {
+  --c2048-tile-bg: linear-gradient(145deg, #bae6fd, #7dd3fc);
+  --c2048-tile-color: #0284c7;
+  --c2048-tile-border: 1px solid rgba(255, 255, 255, 0.8);
+}
+[data-theme="glacier"] .tile-8 {
+  --c2048-tile-bg: linear-gradient(145deg, #7dd3fc, #38bdf8);
+  --c2048-tile-color: #0c4a6e;
+  --c2048-tile-glow: 0 0 14px rgba(56, 189, 248, 0.45);
+}
+[data-theme="glacier"] .tile-16 {
+  --c2048-tile-bg: linear-gradient(145deg, #38bdf8, #0ea5e9);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 18px rgba(14, 165, 233, 0.55);
+}
+[data-theme="glacier"] .tile-32 {
+  --c2048-tile-bg: linear-gradient(145deg, #0ea5e9, #0284c7);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 20px rgba(2, 132, 199, 0.6);
+}
+[data-theme="glacier"] .tile-64 {
+  --c2048-tile-bg: linear-gradient(145deg, #0284c7, #0369a1);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 22px rgba(3, 105, 161, 0.65);
+}
+[data-theme="glacier"] .tile-128 {
+  --c2048-tile-bg: linear-gradient(145deg, #06b6d4, #0891b2);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 26px rgba(6, 182, 212, 0.7);
+}
+[data-theme="glacier"] .tile-256 {
+  --c2048-tile-bg: linear-gradient(145deg, #14b8a6, #0d9488);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 30px rgba(20, 184, 166, 0.75);
+}
+[data-theme="glacier"] .tile-512 {
+  --c2048-tile-bg: linear-gradient(145deg, #3b82f6, #1d4ed8);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 34px rgba(59, 130, 246, 0.8);
+}
+[data-theme="glacier"] .tile-1024 {
+  --c2048-tile-bg: linear-gradient(145deg, #6366f1, #4338ca);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 38px rgba(99, 102, 241, 0.85);
+}
+[data-theme="glacier"] .tile-2048 {
+  --c2048-tile-bg: linear-gradient(145deg, #06b6d4, #3b82f6);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 46px rgba(6, 182, 212, 0.95);
+}
+[data-theme="glacier"] .tile-super {
+  --c2048-tile-bg: linear-gradient(145deg, #22d3ee, #818cf8);
+  --c2048-tile-color: #ffffff;
+  --c2048-tile-glow: 0 0 55px rgba(34, 211, 238, 1);
 }
 
 /* Spark particles — revive explosion */

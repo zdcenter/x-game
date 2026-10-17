@@ -48,8 +48,8 @@
 
         @if (view() === 'play') {
           <div class="flex-1 flex flex-col relative w-full min-h-0">
-            <div class="flex-1 overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-4">
-        
+            <div class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2">
+
               <!-- Mobile floating HUD (PK only) -->
               @if (store.currentRoomMode() !== GameMode.Single) {
                 <app-game-player-mini-hud
@@ -59,21 +59,69 @@
                 </app-game-player-mini-hud>
               }
 
-              <!-- Top Opponents Panel in PK Mode / Local Player Panel in Single -->
-              <div class="flex-none py-1 shrink-0 w-full">
-                <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center justify-center px-2">
-                  <!-- Local Player (You) -->
-                  <app-player-badge
-                    class="flex-1 w-full max-w-[400px] shrink-0"
-                    layout="card"
-                    [playerName]="playerId"
-                    [isHost]="playerId === store.hostId()"
-                    [isMe]="true"
-                    [score]="store.score()"
-                    [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"
-                  ></app-player-badge>
+              <!-- Single Player Modern Glass Capsule HUD -->
+              @if (store.currentRoomMode() === GameMode.Single) {
+                <div class="flex-none flex items-center justify-between px-3 sm:px-5 py-2.5 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto gap-2">
+                  <!-- Left: Score with Golden Star -->
+                  <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <span class="text-xl sm:text-2xl drop-shadow-[0_2px_4px_rgba(234,179,8,0.3)] select-none">⭐</span>
+                    <div class="flex flex-col">
+                      <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider uppercase leading-none">
+                        {{ i18n.t('drop2048.score')() }}
+                      </span>
+                      <span class="font-black font-mono text-lg sm:text-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent leading-tight tracking-tight drop-shadow-sm">
+                        {{ store.score() | number:'1.0-0' }}
+                      </span>
+                    </div>
+                  </div>
 
-                  @if (store.currentRoomMode() !== GameMode.Single) {
+                  <!-- Center: Level & Dynamic Combo Badge -->
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                      <span class="text-xs sm:text-sm font-bold text-cyan-500">LV</span>
+                      <div class="flex flex-col">
+                        <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('drop2048.level')() }}</span>
+                        <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
+                          {{ store.level() }}
+                        </span>
+                      </div>
+                    </div>
+
+                    @if (store.comboCount() >= 1) {
+                      <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
+                        <span>🔥</span>
+                        <span>x{{ store.comboCount() + 1 }}</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Right: Best Record -->
+                  <div class="flex items-center gap-1.5 sm:gap-2">
+                    <span class="text-lg sm:text-xl drop-shadow-sm select-none">👑</span>
+                    <div class="flex flex-col">
+                      <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider uppercase leading-none">
+                        {{ i18n.t('drop2048.best')() }}
+                      </span>
+                      <span class="font-black font-mono text-base sm:text-xl text-amber-500 dark:text-amber-400 leading-tight">
+                        {{ Math.max(store.score(), store.bestScore()) | number:'1.0-0' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              } @else {
+                <!-- Top Opponents Panel in PK Mode -->
+                <div class="flex-none py-1 shrink-0 hidden lg:block w-full">
+                  <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center justify-center px-2">
+                    <app-player-badge
+                      class="flex-1 w-full max-w-[400px] shrink-0"
+                      layout="card"
+                      [playerName]="playerId"
+                      [isHost]="playerId === store.hostId()"
+                      [isMe]="true"
+                      [score]="store.score()"
+                      [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"
+                    ></app-player-badge>
+
                     <app-player-list-container [opponentsCount]="store.opponents().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
                       <ng-template #opponentsList>
                         @for (opp of store.opponents(); track opp.id) {
@@ -89,59 +137,220 @@
                         }
                       </ng-template>
                     </app-player-list-container>
-                  }
+                  </div>
+                </div>
+              }
+
+              <!-- Mobile Top Compact Indicators for Small Screens -->
+              <div class="flex md:hidden items-center justify-between w-full max-w-[350px] px-2 pt-0 pb-1 shrink-0 mx-auto">
+                <!-- Mobile Level Badge -->
+                <div class="px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm flex items-center gap-1.5">
+                  <span class="text-[10px] font-bold text-[var(--color-text-muted)] uppercase">{{ i18n.t('drop2048.level')() }}</span>
+                  <span class="font-black font-mono text-xs text-amber-500">LV.{{ store.level() }}</span>
+                </div>
+
+                <!-- Mobile Next & After Indicators -->
+                <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase">{{ i18n.t('drop2048.next')() }}</span>
+                    <div class="w-6 h-6 rounded flex items-center justify-center font-black text-white text-[11px] shadow-sm select-none"
+                         [ngStyle]="getBlockStyle(store.nextVal())">
+                      {{ store.nextVal() }}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5 pl-1.5 border-l border-[var(--color-border-card)]">
+                    <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase">{{ i18n.t('drop2048.after')() }}</span>
+                    <div class="w-5 h-5 rounded flex items-center justify-center font-black text-white text-[9px] shadow-sm opacity-80 select-none"
+                         [ngStyle]="getBlockStyle(store.nextVal2())">
+                      {{ store.nextVal2() }}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Main Game Board with Top Stats -->
-              <div class="flex-1 relative flex flex-col items-center justify-start min-h-0 overflow-hidden w-full gap-2">
-                <div class="relative w-[320px] h-[444px] md:w-[384px] md:h-[533px] lg:w-[400px] lg:h-[555px] shrink-0"
-                     [class.animate-shake]="store.shakeTrigger() > 0">
-                  <!-- Local Player Spectating overlay if dead in PK -->
-                  @if (store.currentRoomMode() !== GameMode.Single && store.isDead() && store.status() === GameStatus.Playing) {
-                    <app-game-spectating-overlay
-                      [players]="spectatingPlayers()"
-                      [currentUserId]="playerId"
-                    ></app-game-spectating-overlay>
-                  }
+              <!-- MAIN GAMING CONSOLE STAGE -->
+              <div class="flex items-start justify-center gap-3 md:gap-5 lg:gap-8 w-full max-w-5xl mx-auto px-1 sm:px-2 lg:px-4 flex-1 relative min-h-0"
+                   (touchstart)="onTouchStart($event)"
+                   (touchmove)="onTouchMove($event)"
+                   (touchend)="onTouchEnd($event)">
 
-                  <!-- Single Player Start Overlay -->
-                  @if (store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
-                    <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl">
-                      <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {{ i18n.t('game.start_match')() }}
-                      </button>
+                <!-- LEFT WING CONSOLE (Desktop / Tablet) -->
+                <div class="hidden md:flex flex-col gap-3 lg:gap-4 self-start mt-1 items-end w-28 lg:w-36 shrink-0">
+
+                  <!-- Level Card -->
+                  <div class="drop2048-wing-card p-3 rounded-2xl flex flex-col items-center w-full select-none">
+                    <span class="text-[10px] lg:text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none mb-1.5">
+                      {{ i18n.t('drop2048.level')() }}
+                    </span>
+                    <span class="font-black font-mono text-2xl lg:text-4xl text-amber-500 leading-none drop-shadow-sm mb-2">
+                      {{ store.level() }}
+                    </span>
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-[var(--color-bg-sub)] rounded-full h-1.5 overflow-hidden border border-[var(--color-border-card)]">
+                      <div class="bg-gradient-to-r from-amber-400 to-rose-500 h-full rounded-full transition-all duration-300"
+                           [style.width.%]="Math.min(100, ((store.score() % 1000) / 1000) * 100)"></div>
+                    </div>
+                  </div>
+
+                  <!-- Quick Controls Guide Card (PC) -->
+                  <div class="drop2048-wing-card p-2.5 lg:p-3 rounded-2xl flex flex-col w-full text-[10px] lg:text-[11px] text-[var(--color-text-muted)] gap-1.5 select-none">
+                    <span class="font-bold uppercase tracking-wider text-[var(--color-text-main)] border-b border-[var(--color-border-card)] pb-1 mb-0.5">
+                      {{ i18n.t('drop2048.controls')() }}
+                    </span>
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono text-[var(--color-text-main)] font-semibold">← →</span>
+                      <span>{{ i18n.t('drop2048.controls_move')() }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono text-[var(--color-text-main)] font-semibold">↓ / S</span>
+                      <span>{{ i18n.t('drop2048.controls_soft_drop')() }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono text-[var(--color-text-main)] font-semibold">SPACE</span>
+                      <span>{{ i18n.t('drop2048.controls_hard_drop')() }}</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- CENTER: MAIN MATRIX BOARD -->
+                <div class="relative flex-shrink-0 touch-none flex flex-col items-center justify-start min-h-0">
+                  <div class="relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.15)] border-4 border-slate-700/80 dark:border-slate-800 p-1.5 sm:p-2 bg-slate-900/90 backdrop-blur-xl shrink-0"
+                       [class.animate-shake]="store.shakeTrigger() > 0">
+
+                    <!-- Local Player Spectating overlay if dead in PK -->
+                    @if (store.currentRoomMode() !== GameMode.Single && store.isDead() && store.status() === GameStatus.Playing) {
+                      <app-game-spectating-overlay
+                        [players]="spectatingPlayers()"
+                        [currentUserId]="playerId"
+                      ></app-game-spectating-overlay>
+                    }
+
+                    <!-- Single Player Start Overlay -->
+                    @if (store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
+                      <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl">
+                        <button (click)="store.startGame()" class="px-6 py-3 bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] rounded-xl font-black text-xl shadow-[0_0_20px_var(--color-cell-highlight)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-[var(--color-border-thick)]">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ i18n.t('game.start_match')() }}
+                        </button>
+                      </div>
+                    }
+
+                    <app-drop2048-board
+                      [cellSize]="cellSize()"
+                      [board]="store.board()"
+                      [activeBlock]="store.activeBlock()"
+                      [combos]="store.combos()"
+                      [particles]="store.particles()"
+                      [ghostRow]="store.ghostRow()"
+                    ></app-drop2048-board>
+                  </div>
+
+                  @if (store.currentRoomMode() === GameMode.Single) {
+                    <div class="w-full max-w-[360px] z-10 shrink-0 mt-2">
+                      <app-game-toolbar
+                        [layoutStyle]="'compact'"
+                        [showRestart]="true"
+                        [showUndo]="false"
+                        [showHint]="false"
+                        [showPrev]="false"
+                        [showNext]="false"
+                        (restart)="store.restartGame()"
+                      ></app-game-toolbar>
                     </div>
                   }
-
-                  <app-drop2048-board
-                    class="absolute top-0 left-0 transform scale-100 md:scale-[1.2] lg:scale-[1.25] transition-transform duration-300 origin-top-left block"
-                    [board]="store.board()"
-                    [activeBlock]="store.activeBlock()"
-                    [combos]="store.combos()"
-                    [particles]="store.particles()"
-                    [ghostRow]="store.ghostRow()"
-                  ></app-drop2048-board>
                 </div>
 
-                @if (store.currentRoomMode() === GameMode.Single) {
-                  <div class="w-full max-w-[400px] z-10 shrink-0">
-                    <app-game-toolbar
-                      [layoutStyle]="'compact'"
-                      [showRestart]="true"
-                      [showUndo]="false"
-                      [showHint]="false"
-                      [showPrev]="false"
-                      [showNext]="false"
-                      (restart)="store.restartGame()"
-                    ></app-game-toolbar>
+                <!-- RIGHT WING CONSOLE (Desktop / Tablet) -->
+                <div class="hidden md:flex flex-col gap-3 lg:gap-4 self-start mt-1 items-start w-28 lg:w-36 shrink-0">
+
+                  <!-- NEXT Chamber -->
+                  <div class="drop2048-wing-card p-3 rounded-2xl flex flex-col items-center w-full select-none">
+                    <span class="text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-500 dark:text-cyan-400 mb-2">
+                      {{ i18n.t('drop2048.next')() }}
+                    </span>
+
+                    <!-- Primary Next Tile -->
+                    <div class="flex items-center justify-center w-full aspect-square max-w-[80px] rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] p-2 mb-2">
+                      <div class="w-14 h-14 rounded-xl flex items-center justify-center font-black text-white text-2xl shadow-lg"
+                           [ngStyle]="getBlockStyle(store.nextVal())">
+                        {{ store.nextVal() }}
+                      </div>
+                    </div>
+
+                    <!-- Secondary After Tile -->
+                    <div class="flex flex-col items-center gap-1 w-full pt-2 border-t border-[var(--color-border-card)]">
+                      <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                        {{ i18n.t('drop2048.after')() }}
+                      </span>
+                      <div class="w-9 h-9 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md opacity-80"
+                           [ngStyle]="getBlockStyle(store.nextVal2())">
+                        {{ store.nextVal2() }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- STREAK Card -->
+                  <div class="drop2048-wing-card p-3 rounded-2xl flex flex-col items-center w-full select-none">
+                    <span class="text-[10px] lg:text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none mb-1">
+                      {{ i18n.t('drop2048.streak')() }}
+                    </span>
+                    <div class="flex items-center gap-1">
+                      <span class="text-amber-500 font-black text-xl lg:text-2xl font-mono">
+                        {{ store.comboCount() }}
+                      </span>
+                      <span class="text-xs text-amber-500">🔥</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Opponents (PK Mode Extra Right Column) -->
+                @if (store.currentRoomMode() !== GameMode.Single) {
+                  <div class="flex flex-col gap-2 lg:gap-3 w-24 sm:w-28 lg:w-36 shrink-0 self-start overflow-y-auto custom-scrollbar" style="max-height: min(calc(100dvh - 260px), 720px);">
+                    @for (opp of store.opponents(); track opp.id) {
+                      <div class="bg-[var(--color-bg-card)] backdrop-blur-sm rounded-xl p-2.5 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full">
+                        <div class="text-[10px] font-bold text-[var(--color-text-main)] truncate w-full text-center">
+                          {{ opp.id === store.hostId() ? '👑 ' : '' }}{{ opp.id }}
+                          @if (opp.finished) { <span class="text-red-500">💀</span> }
+                        </div>
+                        <div class="text-xs font-mono font-bold text-amber-500">
+                          {{ opp.score }}
+                        </div>
+                      </div>
+                    }
                   </div>
                 }
+
               </div>
+
+              <!-- Mobile Virtual On-Screen Controller (Phone Only) -->
+              <div class="flex md:hidden items-center justify-center gap-2.5 sm:gap-4 w-full max-w-[360px] px-2 py-1 shrink-0 z-20 mx-auto">
+                <button (click)="store.moveLeft()"
+                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                        title="Left">
+                  ◀
+                </button>
+                <button (click)="store.softDrop()"
+                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-amber-500/20 transition-all select-none"
+                        title="Soft Drop">
+                  ▼
+                </button>
+                <button (click)="store.moveRight()"
+                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                        title="Right">
+                  ▶
+                </button>
+                <button (click)="store.hardDrop()"
+                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-base font-black active:scale-90 transition-all select-none"
+                        title="Hard Drop">
+                  ⚡
+                </button>
+              </div>
+
             </div>
           </div>
         }

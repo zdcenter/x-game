@@ -51,23 +51,99 @@
           
           <div class="relative flex-grow flex flex-col items-center justify-start min-h-0 overflow-y-auto touch-none p-4 pb-8 w-full gap-2">
             
-            <!-- START BUTTON OVERLAY -->
-            @if (store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
-              <div class="absolute inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl">
-                <button (click)="store.startGame()"
-                  class="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-black text-xl shadow-[0_0_20px_rgba(245,158,11,0.5)] hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-white/20">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ i18n.t('game.start_match')() }}
-                </button>
-              </div>
-            }
+            <!-- TOP HUD & INFO BAR -->
+            @if (store.currentRoomMode() === GameMode.Single) {
+              <div class="flex-none w-full max-w-[460px] mx-auto flex flex-col gap-2.5">
+                <!-- Theme Switcher & Reset Quick Bar -->
+                <div class="flex items-center justify-between w-full px-0.5">
+                  <!-- Theme Pill Selector -->
+                  <div class="inline-flex items-center p-0.5 sm:p-1 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl border border-[var(--color-border)] shadow-sm text-xs font-semibold">
+                    <button type="button"
+                            (click)="setTheme('classic')"
+                            [class.bg-[var(--color-bg-main)]]="currentTheme() === 'classic'"
+                            [class.text-amber-500]="currentTheme() === 'classic'"
+                            [class.shadow-sm]="currentTheme() === 'classic'"
+                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 hover:text-[var(--color-text-main)]">
+                      <span>🪵</span>
+                      <span>{{ i18n.t('game.classic2048.theme_classic')() }}</span>
+                    </button>
+                    <button type="button"
+                            (click)="setTheme('neon')"
+                            [class.bg-[var(--color-bg-main)]]="currentTheme() === 'neon'"
+                            [class.text-cyan-400]="currentTheme() === 'neon'"
+                            [class.shadow-sm]="currentTheme() === 'neon'"
+                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 hover:text-[var(--color-text-main)]">
+                      <span>⚡</span>
+                      <span>{{ i18n.t('game.classic2048.theme_neon')() }}</span>
+                    </button>
+                    <button type="button"
+                            (click)="setTheme('glacier')"
+                            [class.bg-[var(--color-bg-main)]]="currentTheme() === 'glacier'"
+                            [class.text-sky-400]="currentTheme() === 'glacier'"
+                            [class.shadow-sm]="currentTheme() === 'glacier'"
+                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 hover:text-[var(--color-text-main)]">
+                      <span>🧊</span>
+                      <span>{{ i18n.t('game.classic2048.theme_glacier')() }}</span>
+                    </button>
+                  </div>
 
-              <!-- Players / Opponents (Top) -->
+                  <!-- Quick Restart Button -->
+                  <button type="button"
+                          (click)="store.restartGame()"
+                          class="px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)]/80 hover:bg-[var(--color-bg-card)] text-xs font-bold text-[var(--color-text-main)] border border-[var(--color-border)] hover:border-amber-500/40 shadow-sm transition-all flex items-center gap-1.5 active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>{{ i18n.t('game.restart')() }}</span>
+                  </button>
+                </div>
+
+                <!-- 3-Deck HUD Cards: Score / Best / Stats -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-3 w-full">
+                  <!-- SCORE CARD -->
+                  <div class="relative overflow-visible flex flex-col items-center justify-center py-2 px-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
+                    <span class="text-[10px] sm:text-xs font-black tracking-wider uppercase text-[var(--color-text-muted)]">
+                      {{ i18n.t('game.classic2048.score')() }}
+                    </span>
+                    <span class="text-xl sm:text-2xl font-black text-[var(--color-text-main)] tabular-nums leading-none mt-1">
+                      {{ store.localScore() }}
+                    </span>
+                    <!-- Floating +Score Delta -->
+                    @if (showDelta() && scoreDelta() > 0) {
+                      <span class="absolute -top-3 right-2 text-xs sm:text-sm font-black text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] animate-fade-slide-up pointer-events-none z-30">
+                        +{{ scoreDelta() }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- BEST SCORE CARD -->
+                  <div class="flex flex-col items-center justify-center py-2 px-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
+                    <div class="flex items-center gap-1">
+                      <span class="text-[10px] sm:text-xs font-black tracking-wider uppercase text-amber-500">👑 {{ i18n.t('game.classic2048.best')() }}</span>
+                    </div>
+                    <span class="text-xl sm:text-2xl font-black text-amber-500/95 tabular-nums leading-none mt-1">
+                      {{ bestScore() }}
+                    </span>
+                  </div>
+
+                  <!-- MOVES / TIMER STATS CARD -->
+                  <div class="flex flex-col items-center justify-center py-2 px-2.5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
+                    <div class="flex items-center justify-between w-full text-[11px] font-bold text-[var(--color-text-muted)] px-1">
+                      <span>⏱️</span>
+                      <span class="tabular-nums font-mono text-[var(--color-text-main)]">{{ timeDisplay }}</span>
+                    </div>
+                    <div class="w-full my-1 border-t border-[var(--color-border)]/60"></div>
+                    <div class="flex items-center justify-between w-full text-[11px] font-bold text-[var(--color-text-muted)] px-1">
+                      <span>🔄</span>
+                      <span class="tabular-nums font-mono text-[var(--color-text-main)]">{{ store.localMoves() }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <!-- PK / Multiplayer Mode Players -->
               <div class="flex-none py-1 shrink-0 w-full">
-                <div class="w-full max-w-[450px] mx-auto flex gap-2 lg:gap-4 items-center justify-center">
+                <div class="w-full max-w-[460px] mx-auto flex gap-2 lg:gap-4 items-center justify-center">
                   <!-- Local Player -->
                   <app-player-badge class="flex-1 w-full shrink-0" layout="card"
                     [playerName]="playerId"
@@ -82,54 +158,54 @@
                   </app-player-badge>
 
                   <!-- Opponents -->
-                  @if (store.currentRoomMode() !== GameMode.Single) {
-                    @for (player of store.playersList(); track player.id) {
-                      @if (player.id !== playerId) {
-                        <app-player-badge class="flex-1 w-full shrink-0" layout="card"
-                          [playerName]="player.id"
-                          [isHost]="player.id === store.hostId()"
-                          [isMe]="false"
-                          [score]="store.pkBoards()[player.id]?.score || 0"
-                          [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
-                        </app-player-badge>
-                      }
+                  @for (player of store.playersList(); track player.id) {
+                    @if (player.id !== playerId) {
+                      <app-player-badge class="flex-1 w-full shrink-0" layout="card"
+                        [playerName]="player.id"
+                        [isHost]="player.id === store.hostId()"
+                        [isMe]="false"
+                        [score]="store.pkBoards()[player.id]?.score || 0"
+                        [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
+                      </app-player-badge>
                     }
                   }
                 </div>
               </div>
+            }
 
-              <!-- Game Board -->
-              <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-colors duration-300 w-full max-w-[450px] aspect-square mx-auto"
-                   [class.animate-shake]="store.shakeTrigger() > 0">
-                <!-- Grid background -->
-                <div class="absolute inset-2 md:inset-3 grid gap-2" 
-                     [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
-                     [style.grid-template-rows]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'">
-                  @for (row of store.cells().length ? store.cells() : [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]; track $index) {
-                    @for (col of row; track $index) {
-                      <div class="w-full h-full c2048-empty-cell transition-colors duration-300"></div>
-                    }
+            <!-- Game Board -->
+            <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-all duration-300 w-full max-w-[460px] aspect-square mx-auto"
+                 [attr.data-theme]="currentTheme()"
+                 [class.animate-shake]="store.shakeTrigger() > 0">
+              <!-- Grid background -->
+              <div class="absolute inset-2 md:inset-3 grid gap-2" 
+                   [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
+                   [style.grid-template-rows]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'">
+                @for (row of store.cells().length ? store.cells() : [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]; track $index) {
+                  @for (col of row; track $index) {
+                    <div class="w-full h-full c2048-empty-cell transition-colors duration-300"></div>
                   }
-                </div>
-                <!-- Tiles -->
-                <div class="absolute inset-2 md:inset-3 grid gap-2 c2048-tile-wrapper"
-                     [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
-                     [style.grid-template-rows]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'">
-                  @for (row of store.cells(); track rIdx; let rIdx = $index) {
-                    @for (cell of row; track cIdx; let cIdx = $index) {
-                      <div class="w-full h-full relative">
-                        @if (cell > 0) {
-                          <div class="absolute inset-0 flex flex-col c2048-tile-base transition-colors duration-300 animate-[pop_0.1s_ease-out] {{ getTileClass(cell) }}">
-                            <div class="w-full h-full c2048-tile-top transition-colors duration-300 flex items-center justify-center font-black shadow-sm c2048-tile-text"
-                                 [style.font-size]="getTileFontSize(cell)">
-                              {{ cell }}
-                            </div>
+                }
+              </div>
+              <!-- Tiles -->
+              <div class="absolute inset-2 md:inset-3 grid gap-2 c2048-tile-wrapper"
+                   [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
+                   [style.grid-template-rows]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'">
+                @for (row of store.cells(); track rIdx; let rIdx = $index) {
+                  @for (cell of row; track cIdx; let cIdx = $index) {
+                    <div class="w-full h-full relative">
+                      @if (cell > 0) {
+                        <div class="absolute inset-0 flex flex-col c2048-tile-base transition-colors duration-300 c2048-tile-pop {{ getTileClass(cell) }}">
+                          <div class="w-full h-full c2048-tile-top transition-colors duration-300 flex items-center justify-center font-black shadow-sm"
+                               [style.font-size]="getTileFontSize(cell)">
+                            {{ cell }}
                           </div>
-                        }
-                      </div>
-                    }
+                        </div>
+                      }
+                    </div>
                   }
-                </div>
+                }
+              </div>
                 
                 <!-- Revive Explosion Particles -->
                 @for (p of store.particles(); track p.id) {

@@ -22,18 +22,19 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
 import { ToastService } from '../../../core/services/toast.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 
+import { AudioService } from '../../../core/services/audio.service';
+
+export type C2048Theme = 'classic' | 'neon' | 'glacier';
+
 @Component({
   selector: 'app-classic2048',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
-    
-    
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
-    
     GameToolbarComponent, GameLayoutComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
@@ -56,12 +57,18 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   private statsService = inject(GameStatsService);
   authStore = inject(AuthStore);
   toastService = inject(ToastService);
+  private audio = inject(AudioService);
   
   GameStatus = GameStatus;
   GameMode = GameMode;
   math = Math;
 
   showRules = signal(false);
+  bestScore = signal<number>(0);
+  scoreDelta = signal<number>(0);
+  showDelta = signal<boolean>(false);
+  currentTheme = signal<C2048Theme>('classic');
+  private prevScore = 0;
 
   get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
 
@@ -69,8 +76,6 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   timeSeconds = 0;
   private timerInterval: any;
-
-  // Board sizes removed, using CSS aspect-square instead
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
@@ -85,6 +90,16 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       },
     });
 
+    if (typeof localStorage !== 'undefined') {
+      const savedBest = localStorage.getItem('classic2048_best_score');
+      if (savedBest) this.bestScore.set(parseInt(savedBest, 10) || 0);
+
+      const savedTheme = localStorage.getItem('classic2048_theme') as C2048Theme;
+      if (savedTheme && ['classic', 'neon', 'glacier'].includes(savedTheme)) {
+        this.currentTheme.set(savedTheme);
+      }
+    }
+
     effect(() => {
       if (this.store.status() === GameStatus.Finished && this.store.currentRoomMode() === GameMode.Single) {
         this.submitScore();
@@ -92,12 +107,46 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     });
 
     effect(() => {
-      if (this.store.status() === GameStatus.Playing) {
+      const s = this.store.status();
+      if (s === GameStatus.Playing) {
+        if (this.store.localMoves() === 0 && this.store.localScore() === 0) {
+          this.timeSeconds = 0;
+        }
+        clearInterval(this.timerInterval);
         this.timerInterval = setInterval(() => { this.timeSeconds++; }, 1000);
       } else {
         clearInterval(this.timerInterval);
       }
     });
+
+    effect(() => {
+      const score = this.store.localScore();
+      if (score > this.prevScore) {
+        const delta = score - this.prevScore;
+        this.scoreDelta.set(delta);
+        this.showDelta.set(true);
+        setTimeout(() => this.showDelta.set(false), 800);
+        this.audio.playDrop2048('merge');
+
+        if (score > this.bestScore()) {
+          this.bestScore.set(score);
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('classic2048_best_score', score.toString());
+          }
+        }
+      } else if (score === 0) {
+        this.prevScore = 0;
+      }
+      this.prevScore = score;
+    });
+  }
+
+  setTheme(theme: C2048Theme) {
+    this.currentTheme.set(theme);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('classic2048_theme', theme);
+    }
+    this.audio.playClick();
   }
 
   get timeDisplay() {
@@ -111,6 +160,10 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     const pending = this.lifecycle.consumePendingOrReconnect();
     if (pending) {
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host ?? '');
+    } else {
+      if (this.store.currentRoomMode() === GameMode.Single && this.store.status() === GameStatus.Waiting) {
+        this.store.startGame();
+      }
     }
   }
 
@@ -142,24 +195,28 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       case 'w':
       case 'W':
         this.store.move('up');
+        this.audio.playDrop2048('move');
         event.preventDefault();
         break;
       case 'ArrowDown':
       case 's':
       case 'S':
         this.store.move('down');
+        this.audio.playDrop2048('move');
         event.preventDefault();
         break;
       case 'ArrowLeft':
       case 'a':
       case 'A':
         this.store.move('left');
+        this.audio.playDrop2048('move');
         event.preventDefault();
         break;
       case 'ArrowRight':
       case 'd':
       case 'D':
         this.store.move('right');
+        this.audio.playDrop2048('move');
         event.preventDefault();
         break;
     }
@@ -194,10 +251,11 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       if (dy > 0) this.store.move('down');
       else this.store.move('up');
     }
+    this.audio.playDrop2048('move');
   }
 
   getTileClass(value: number): string {
-    return value <= 2048 ? `tile-${value}` : 'tile-2048';
+    return value <= 2048 ? `tile-${value}` : 'tile-super';
   }
 
   getTileFontSize(value: number): string {

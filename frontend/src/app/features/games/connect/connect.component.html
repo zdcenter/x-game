@@ -1,0 +1,143 @@
+<app-game-layout
+  [isHost]="store.hostId() === store.playerId()"
+  [gameId]="'connect'"
+  [title]="i18n.t('lobby.connect')()"
+  [subtitle]="getSubtitle()"
+  icon="🔗"
+  iconGradientClass="from-cyan-500 to-blue-500"
+  titleGradientClass="from-cyan-400 to-blue-400"
+  shadowClass="shadow-cyan-500/20"
+  headerBgClass="dark:bg-gradient-to-r dark:from-cyan-900/30 dark:to-blue-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
+  [currentRoomMode]="store.currentRoomMode()"
+  [currentRoomId]="store.roomId()"
+  [status]="store.status()"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [currentDifficulty]="store.currentDifficulty()"
+  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
+  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [hideDefaultDifficulty]="true"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
+  (titleClick)="handleTitleClick()"
+  (back)="goBack()"
+  (playAgain)="store.restart(); showOverlay.set(false)"
+  (navigateToPk)="navigateToPkArena()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+>
+  <div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2">
+    <ng-container *ngIf="view() === 'lobby'">
+      <app-connect-lobby class="flex-grow flex flex-col w-full h-full min-h-[500px]"
+        (startLevel)="startLevel($event)">
+      </app-connect-lobby>
+    </ng-container>
+
+    <ng-container *ngIf="view() === 'play'">
+      <!-- INFO BAR for single player -->
+      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full max-w-xl mx-auto flex justify-between items-center px-4 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl mb-4 text-sm sm:text-base border border-[var(--color-border-card)] shadow-sm">
+        <div class="text-[var(--color-text-main)] font-bold flex items-center gap-2">
+          <span class="text-[var(--color-accent-from)] uppercase">{{ i18n.t('game.diff_' + store.currentDifficulty())() }}</span>
+          <span class="text-[var(--color-text-muted)]">|</span>
+          <span>第 {{ store.currentLevelNum() }} 关</span>
+        </div>
+        <div class="text-[var(--color-text-main)] font-mono flex items-center gap-4">
+          <span>⏱️ {{ formatTime(store.timeSpent()) }}</span>
+        </div>
+      </div>
+
+      <!-- Waiting room in play view if PK waiting -->
+      <app-game-waiting-room
+        class="absolute inset-0 z-30 w-full h-full flex bg-[var(--color-bg-base)]/90 backdrop-blur-sm"
+        *ngIf="store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single"
+        [gameId]="'connect'"
+        [mode]="store.currentRoomMode()"
+        [roomId]="store.roomId()"
+        [difficulty]="store.currentDifficulty() || GameDifficulty.Medium"
+        [players]="getPlayers()"
+        [hostId]="store.hostId()"
+        [currentUserId]="store.playerId()"
+        [readyPlayers]="$any(store.rawState())?.readyPlayers || {}"
+        (leave)="store.leaveRoom(); goBackToLobby()"
+        (start)="store.startGame()"
+        (changeSettings)="openChangeSettings()"
+        (kick)="store.kickPlayer($event)"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+        [target]="store.currentRoomTarget()"
+      ></app-game-waiting-room>
+
+      <!-- Starting countdown -->
+      <div *ngIf="store.status() === GameStatus.Starting" class="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-base)]/80 backdrop-blur-md z-40">
+        <div class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-blue-600 animate-pulse drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">
+          {{ gameTimer.countdownDisplay() }}
+        </div>
+      </div>
+
+      <!-- Opponents PK Stats overlay (top area) -->
+      <div *ngIf="store.currentRoomMode() !== GameMode.Single" class="w-full flex justify-center gap-4 mb-4">
+        <app-player-badge 
+          *ngFor="let opp of store.opponents()"
+          [playerName]="opp.id"
+          [isMe]="false"
+          [isHost]="opp.isHost"
+          [stats]="[{ icon: '🌟', value: (opp.progress | number:'1.0-0') + '%' }]"
+          [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing">
+        </app-player-badge>
+      </div>
+
+      <!-- Board Container -->
+      <div class="w-full max-w-xl mx-auto flex items-center justify-center">
+        <app-connect-board 
+          *ngIf="store.localEngine()"
+          [engine]="store.localEngine()!"
+          [disabled]="store.status() !== GameStatus.Playing"
+          (boardChange)="onBoardChange()">
+        </app-connect-board>
+      </div>
+
+      <!-- Level Switcher Buttons -->
+      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full max-w-xl flex justify-between items-center mt-6 px-2">
+        <button (click)="store.prevLevel()" 
+                [disabled]="store.currentLevelNum() <= 1"
+                class="px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 active:scale-95"
+                [ngClass]="store.currentLevelNum() <= 1 ? 'bg-[var(--color-bg-base)] text-[var(--color-text-muted)] cursor-not-allowed border border-[var(--color-border-card)]/40' : 'bg-[var(--color-bg-card)] text-[var(--color-text-main)] hover:border-cyan-500/50 border border-[var(--color-border-card)] shadow-sm'">
+          <span>←</span> {{ i18n.t('game.prev_level')() }}
+        </button>
+        <button (click)="goBackToLobby()"
+                class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-cyan-500/50 transition-all shadow-sm active:scale-95">
+          {{ i18n.t('game.levels_lobby')() }}
+        </button>
+        <button (click)="store.nextLevel()" 
+                [disabled]="!store.hasNextLevel()"
+                class="px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 active:scale-95"
+                [ngClass]="!store.hasNextLevel() ? 'bg-[var(--color-bg-base)] text-[var(--color-text-muted)] cursor-not-allowed border border-[var(--color-border-card)]/40' : 'bg-[var(--color-bg-card)] text-[var(--color-text-main)] hover:border-cyan-500/50 border border-[var(--color-border-card)] shadow-sm'">
+          {{ i18n.t('game.next_level')() }} <span>→</span>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Result Overlay -->
+  <app-game-result-overlay
+    *ngIf="showOverlay()"
+    [currentGameId]="'connect'"
+    [status]="store.winners().includes(playerId) ? GameResult.Win : GameResult.Lose"
+    [title]="store.winners().includes(playerId) ? 'Victory' : 'Defeat'"
+    [stats]="getSinglePlayerStats()"
+    [showNextLevel]="store.currentRoomMode() === GameMode.Single"
+    [showRestart]="true"
+    [showLeave]="true"
+    [isNewRecord]="store.lastStatResult()?.isNewRecord"
+    [xpResult]="store.lastStatResult()?.xp_result"
+    (nextLevel)="onOverlayClose()"
+    (restart)="store.restart(); showOverlay.set(false)"
+    (leave)="goBackToLobby(); showOverlay.set(false)">
+  </app-game-result-overlay>
+
+  <app-game-spectating-overlay 
+    *ngIf="store.isSpectator()"
+    [players]="store.opponents()">
+  </app-game-spectating-overlay>
+</app-game-layout>

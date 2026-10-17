@@ -309,11 +309,26 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     const theme = this.store.colorTheme();
     const colors = TETROMINO_THEMES[theme] || this.COLORS;
     const clearingRows = this.store.clearingRows();
+    const dissolvingRows = this.store.dissolvingRows();
+    const isDissolving = this.store.isDissolving();
+    const minDissolveRow = dissolvingRows.length > 0 ? Math.min(...dissolvingRows) : 0;
     
-    const result: { bg: string, border: string, shadow: string, isGhost: boolean, isFilled: boolean, isClearing: boolean }[][] = [];
+    const result: {
+      bg: string;
+      border: string;
+      shadow: string;
+      isGhost: boolean;
+      isFilled: boolean;
+      isClearing: boolean;
+      isDissolving: boolean;
+      dissolveDelay: number;
+    }[][] = [];
+
     for (let y = 0; y < this.ROWS; y++) {
       const isClearingRow = clearingRows.includes(y);
+      const isDissolveRow = isDissolving && dissolvingRows.includes(y);
       const row = [];
+
       for (let x = 0; x < this.COLS; x++) {
         let bg = 'transparent';
         let border = 'none';
@@ -321,6 +336,8 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         let isGhost = false;
         let isFilled = false;
         let isClearing = false;
+        let isCellDissolving = false;
+        let dissolveDelay = 0;
         
         if (grid[y] && grid[y][x] !== 0) {
           bg = colors[grid[y][x] as Tetromino];
@@ -328,21 +345,26 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
           if (isClearingRow) {
             isClearing = true;
           }
+          if (isDissolveRow) {
+            isCellDissolving = true;
+            dissolveDelay = (y - minDissolveRow) * 30 + x * 8;
+          }
         } else if (current &&
             x >= current.x && x < current.x + current.shape[0].length &&
             y >= current.y && y < current.y + current.shape.length &&
             current.shape[y - current.y][x - current.x] !== 0) {
           bg = colors[current.type];
           isFilled = true;
-        } else if (ghostY !== -1 && current && ghostY !== current.y &&
+        } else if (ghostY !== -1 && current && (ghostY - current.y >= 2) &&
             x >= current.x && x < current.x + current.shape[0].length &&
             y >= ghostY && y < ghostY + current.shape.length &&
             current.shape[y - ghostY]?.[x - current.x] !== 0) {
+          // 仅在落点距离较远时显示底部轻量着陆虚影，与方块相邻时完全不显示，杜绝贴身暗色尾影
           isGhost = true;
           const pieceColor = colors[current.type] || '#38bdf8';
-          bg = pieceColor + '22';
-          border = `2px dashed ${pieceColor}cc`;
-          shadow = `inset 0 0 10px ${pieceColor}66, 0 0 8px ${pieceColor}44`;
+          bg = pieceColor + '18';
+          border = `1.5px solid ${pieceColor}66`;
+          shadow = 'none';
         }
         
         if (isClearing) {
@@ -350,12 +372,21 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
           border = '1px solid #ffffff';
           shadow = '0 0 24px #ffffff, inset 0 0 12px #ffffff';
         } else if (isFilled) {
-          // Modern 3D Bevel crystal reflection
-          shadow = `inset 0 2px 2px rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.4), inset 2px 0 2px rgba(255,255,255,0.25), inset -2px 0 2px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.35)`;
-          border = '1px solid rgba(255,255,255,0.22)';
+          // 纯内嵌微晶宝石切面倒角（严格无任何向外扩散的暗部阴影，杜绝位移产生的拖影）
+          shadow = `inset 0 2px 2px rgba(255,255,255,0.65), inset 0 -2px 2px rgba(0,0,0,0.35), inset 2px 0 2px rgba(255,255,255,0.2), inset -2px 0 2px rgba(0,0,0,0.2)`;
+          border = '1px solid rgba(255,255,255,0.2)';
         }
         
-        row.push({ bg, border, shadow, isGhost, isFilled, isClearing });
+        row.push({
+          bg,
+          border,
+          shadow,
+          isGhost,
+          isFilled,
+          isClearing,
+          isDissolving: isCellDissolving,
+          dissolveDelay
+        });
       }
       result.push(row);
     }

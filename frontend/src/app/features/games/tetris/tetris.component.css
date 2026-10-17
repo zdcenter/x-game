@@ -60,13 +60,64 @@
   100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.3); opacity: 0; }
 }
 
-/* Ghost Piece Breathing Glow */
-@keyframes ghost-pulse {
-  0%, 100% { opacity: 0.65; transform: scale(0.96); }
-  50%      { opacity: 0.95; transform: scale(0.98); }
+/* Revive Block Dissolve & Melting Animation */
+@keyframes cell-dissolve {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+    transform: scale(1);
+    opacity: 1;
+  }
+  20% {
+    filter: brightness(2.6) drop-shadow(0 0 8px #38bdf8);
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  55% {
+    filter: brightness(3.2) blur(1.5px) drop-shadow(0 0 12px #fbbf24);
+    transform: scale(0.7) translateY(-3px);
+    opacity: 0.7;
+  }
+  100% {
+    filter: brightness(4) blur(3.5px);
+    transform: scale(0.08) translateY(-8px);
+    opacity: 0;
+  }
 }
-.tetris-ghost-cell {
-  animation: ghost-pulse 1.8s ease-in-out infinite;
+
+.tetris-dissolving-cell {
+  animation: cell-dissolve 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* Revive Dissolve Laser Scan Beam */
+@keyframes dissolve-scan-anim {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 60%;
+    opacity: 0;
+  }
+}
+
+.dissolve-scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #38bdf8 20%, #ffffff 50%, #fbbf24 80%, transparent 100%);
+  box-shadow: 0 0 15px #38bdf8, 0 0 25px #fbbf24, 0 0 6px #ffffff;
+  animation: dissolve-scan-anim 0.52s ease-in-out forwards;
+  z-index: 40;
+  pointer-events: none;
 }
 
 /* Console Wing Cards Glassmorphism */
@@ -86,14 +137,12 @@
 
 /* Matrix Slot Grids */
 .tetris-empty-slot {
-  background: rgba(0, 0, 0, 0.08);
-  box-shadow: inset 0 1.5px 2px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.025);
 }
 :host-context(.dark) .tetris-empty-slot {
-  background: rgba(0, 0, 0, 0.45);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 /* Solid Crystal Blocks 3D Highlight Specular Bar */

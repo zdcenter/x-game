@@ -1,0 +1,340 @@
+<div class="pk-hud-container w-full max-w-4xl mx-auto px-1 sm:px-3 py-1">
+  
+  <!-- ==================== 1V1 DUEL ARENA MODE ==================== -->
+  @if (isDuel()) {
+    <div class="relative bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl border border-[var(--color-border-card)] shadow-lg overflow-hidden transition-all duration-300">
+      
+      <!-- DESKTOP / TABLET (>= sm) -->
+      <div class="hidden sm:flex items-center gap-3 p-2.5 lg:p-3">
+        
+        <!-- ================= LEFT WING: YOU (LOCAL PLAYER) ================= -->
+        <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+          <!-- Top Row: Avatar + Name + Status + Score/Prog -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <!-- Avatar -->
+              <div class="relative shrink-0">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm text-white shadow-md bg-gradient-to-br from-blue-500 to-indigo-600 ring-2 ring-blue-400/50">
+                  {{ avatarChar(myPlayer.nickname || myPlayer.id) }}
+                </div>
+                @if (myPlayer.isHost) {
+                  <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black px-1 rounded shadow-sm border border-amber-200 leading-tight">
+                    👑
+                  </span>
+                }
+              </div>
+
+              <!-- Name & Badge -->
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[120px] lg:max-w-[160px]" [title]="myPlayer.nickname || myPlayer.id">
+                  {{ myPlayer.nickname || myPlayer.id }}
+                </span>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 shrink-0">
+                  {{ i18n.t('game.pk.me')() || '我' }}
+                </span>
+                @if (myPlayer.isFinished) {
+                  <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
+                    🏁 {{ i18n.t('game.pk.finished')() || '完赛' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Primary Metric (Big Score or % in Monospace) -->
+            <div class="shrink-0 flex items-baseline gap-1">
+              @if (isScoreBased()) {
+                <span class="text-lg font-black font-mono tracking-tight text-blue-600 dark:text-blue-400">
+                  {{ myPlayer.score ?? 0 }}
+                </span>
+                <span class="text-[10px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
+              } @else {
+                <span class="text-lg font-black font-mono tracking-tight text-blue-600 dark:text-blue-400">
+                  {{ myProgress() }}%
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Middle Row: Animated Sleek Progress Bar -->
+          <div class="relative w-full h-3 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
+            <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 shadow-[0_0_12px_rgba(59,130,246,0.5)] relative overflow-hidden"
+                 [style.width.%]="myProgress()">
+              <div class="absolute inset-0 pk-progress-stripe opacity-40"></div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Metrics Chips -->
+          @if (filterMetrics(myPlayer.metrics).length > 0) {
+            <div class="flex items-center gap-1.5 flex-wrap">
+              @for (metric of filterMetrics(myPlayer.metrics); track $index) {
+                <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-sm"
+                     [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
+                  @if (metric.icon) { <span class="opacity-80">{{ metric.icon }}</span> }
+                  @if (metric.label) { <span class="opacity-60 text-[9px] uppercase">{{ metric.label }}:</span> }
+                  <span>{{ metric.value }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+
+        <!-- ================= CENTER HUB: VS & SERIES ================= -->
+        <div class="flex-none flex flex-col items-center justify-center px-1 sm:px-3 min-w-[90px] border-x border-[var(--color-border-card)]/60">
+          <!-- ⚔️ VS Badge -->
+          <div class="flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white font-black text-xs tracking-wider shadow-md ring-1 ring-amber-300/40 select-none">
+            <span>⚔️</span>
+            <span>{{ i18n.t('game.pk.vs')() || 'VS' }}</span>
+          </div>
+
+          <!-- Series Score (BO3 / BO5) if target > 1 -->
+          @if (targetWins > 1) {
+            <div class="mt-1 flex items-center gap-1.5 text-xs font-mono font-black">
+              <span class="text-blue-500 text-sm">{{ myWins() }}</span>
+              <span class="text-[var(--color-text-muted)]">:</span>
+              <span class="text-rose-500 text-sm">{{ opponentWins() }}</span>
+            </div>
+            <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-tight">
+              {{ seriesText() }}
+            </span>
+          }
+
+          <!-- Match Elapsed Timer -->
+          @if (elapsedTime) {
+            <div class="mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] shadow-inner">
+              <span class="opacity-70 text-[9px]">⏱️</span>
+              <span>{{ elapsedTime }}</span>
+            </div>
+          }
+
+          <!-- Dynamic Differential Pill (Lead/Lag delta) -->
+          @if (leadDeltaText()) {
+            <div class="mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold leading-tight shadow-sm shrink-0 whitespace-nowrap"
+                 [ngClass]="{
+                   'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': leadState() === 'lead',
+                   'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': leadState() === 'behind',
+                   'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]': leadState() === 'tied'
+                 }">
+              {{ leadDeltaText() }}
+            </div>
+          }
+        </div>
+
+
+        <!-- ================= RIGHT WING: OPPONENT ================= -->
+        @if (primaryOpponent(); as opp) {
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <!-- Top Row: Score/Prog + Status + Name + Avatar -->
+            <div class="flex items-center justify-between gap-2">
+              <!-- Primary Metric -->
+              <div class="shrink-0 flex items-baseline gap-1">
+                @if (isScoreBased()) {
+                  <span class="text-lg font-black font-mono tracking-tight text-rose-500 dark:text-rose-400">
+                    {{ opp.score ?? 0 }}
+                  </span>
+                  <span class="text-[10px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
+                } @else {
+                  <span class="text-lg font-black font-mono tracking-tight text-rose-500 dark:text-rose-400">
+                    {{ opponentProgress() }}%
+                  </span>
+                }
+              </div>
+
+              <!-- Name & Avatar -->
+              <div class="flex items-center gap-2 min-w-0 justify-end">
+                @if (opp.isFinished) {
+                  <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
+                    🏁 {{ i18n.t('game.pk.finished')() || '完赛' }}
+                  </span>
+                }
+                <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[120px] lg:max-w-[160px]" [title]="opp.nickname || opp.id">
+                  {{ opp.nickname || opp.id }}
+                </span>
+
+                <!-- Avatar -->
+                <div class="relative shrink-0">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm text-white shadow-md bg-gradient-to-br from-rose-500 to-amber-600 ring-2 ring-rose-400/50">
+                    {{ avatarChar(opp.nickname || opp.id) }}
+                  </div>
+                  @if (opp.isHost) {
+                    <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black px-1 rounded shadow-sm border border-amber-200 leading-tight">
+                      👑
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Middle Row: Opponent Animated Progress Bar -->
+            <div class="relative w-full h-3 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
+              <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 shadow-[0_0_12px_rgba(244,63,94,0.4)] relative overflow-hidden ml-auto"
+                   [style.width.%]="opponentProgress()">
+                <div class="absolute inset-0 pk-progress-stripe opacity-40"></div>
+              </div>
+            </div>
+
+            <!-- Bottom Row: Metrics Chips (Aligned Right) -->
+            @if (filterMetrics(opp.metrics).length > 0) {
+              <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                @for (metric of filterMetrics(opp.metrics); track $index) {
+                  <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-sm"
+                       [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
+                    @if (metric.icon) { <span class="opacity-80">{{ metric.icon }}</span> }
+                    @if (metric.label) { <span class="opacity-60 text-[9px] uppercase">{{ metric.label }}:</span> }
+                    <span>{{ metric.value }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+
+
+      <!-- ================= MOBILE COMPACT STREAMLINED HUD (< sm) ================= -->
+      <div class="block sm:hidden p-2">
+        <!-- Row 1: Player VS Opponent Header -->
+        <div class="flex items-center justify-between gap-1 mb-1.5">
+          <!-- Left: My Player Mini -->
+          <div class="flex items-center gap-1.5 min-w-0 flex-1">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] text-white shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-blue-400">
+              {{ avatarChar(myPlayer.nickname || myPlayer.id) }}
+            </div>
+            <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[70px]">
+              {{ myPlayer.nickname || myPlayer.id }}
+            </span>
+            <span class="font-mono font-black text-xs text-blue-600 dark:text-blue-400 shrink-0">
+              {{ isScoreBased() ? (myPlayer.score ?? 0) : (myProgress() + '%') }}
+            </span>
+          </div>
+
+          <!-- Center: VS / Lead Pill -->
+          <div class="flex items-center gap-1 shrink-0 px-1.5">
+            @if (targetWins > 1) {
+              <span class="font-mono font-black text-xs text-blue-500">{{ myWins() }}</span>
+              <span class="text-[10px] font-black text-amber-500">VS</span>
+              <span class="font-mono font-black text-xs text-rose-500">{{ opponentWins() }}</span>
+            } @else {
+              <span class="px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-black border border-amber-500/30">
+                VS
+              </span>
+            }
+            @if (elapsedTime) {
+              <span class="text-[9px] font-mono font-bold px-1 py-0.2 rounded bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
+                {{ elapsedTime }}
+              </span>
+            }
+            @if (leadDeltaText()) {
+              <span class="text-[9px] font-bold px-1 rounded"
+                    [ngClass]="{
+                      'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10': leadState() === 'lead',
+                      'text-rose-600 dark:text-rose-400 bg-rose-500/10': leadState() === 'behind',
+                      'text-[var(--color-text-muted)]': leadState() === 'tied'
+                    }">
+                {{ leadDeltaText() }}
+              </span>
+            }
+          </div>
+
+          <!-- Right: Opponent Mini -->
+          @if (primaryOpponent(); as opp) {
+            <div class="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
+              <span class="font-mono font-black text-xs text-rose-500 dark:text-rose-400 shrink-0">
+                {{ isScoreBased() ? (opp.score ?? 0) : (opponentProgress() + '%') }}
+              </span>
+              <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[70px]">
+                {{ opp.nickname || opp.id }}
+              </span>
+              <div class="w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] text-white shrink-0 bg-gradient-to-br from-rose-500 to-amber-600 ring-1 ring-rose-400">
+                {{ avatarChar(opp.nickname || opp.id) }}
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Row 2: Symmetrical Duel Progress Bars facing each other -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <!-- Left Bar (You) -->
+          <div class="w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
+            <div class="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-cyan-500 to-blue-600"
+                 [style.width.%]="myProgress()"></div>
+          </div>
+          <!-- Right Bar (Opponent) -->
+          <div class="w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
+            <div class="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-amber-500 to-rose-600 ml-auto"
+                 [style.width.%]="opponentProgress()"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+
+  <!-- ==================== 3+ PLAYERS LEADERBOARD GRID ==================== -->
+  @if (!isDuel()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+      @for (player of allPlayersSorted(); track player.id; let idx = $index) {
+        <div class="relative flex items-center gap-2.5 p-2 rounded-xl border transition-all duration-200 overflow-hidden shadow-sm"
+             [ngClass]="{
+               'border-blue-500/40 bg-blue-500/10 dark:bg-blue-900/20 ring-1 ring-blue-500/20': player.isMe,
+               'border-[var(--color-border-card)] bg-[var(--color-bg-card)]/80': !player.isMe,
+               'border-emerald-500/50 bg-emerald-500/10': player.isFinished
+             }">
+          
+          <!-- Rank Badge -->
+          <div class="shrink-0 w-5 text-center font-black text-xs"
+               [ngClass]="{
+                 'text-amber-500': idx === 0,
+                 'text-slate-400': idx === 1,
+                 'text-amber-700': idx === 2,
+                 'text-[var(--color-text-muted)]': idx > 2
+               }">
+            @if (idx === 0) { 🥇 }
+            @else if (idx === 1) { 🥈 }
+            @else if (idx === 2) { 🥉 }
+            @else { #{{ idx + 1 }} }
+          </div>
+
+          <!-- Avatar -->
+          <div class="relative shrink-0">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-inner"
+                 [ngClass]="player.isMe ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-slate-600 to-slate-800'">
+              {{ avatarChar(player.nickname || player.id) }}
+            </div>
+            @if (player.isHost) {
+              <span class="absolute -bottom-1 -right-1 text-[8px]">👑</span>
+            }
+          </div>
+
+          <!-- Details & Progress Bar -->
+          <div class="flex-1 min-w-0 flex flex-col gap-1">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold truncate text-[var(--color-text-main)]" [title]="player.nickname || player.id">
+                {{ player.nickname || player.id }}
+                @if (player.isMe) {
+                  <span class="text-[9px] text-blue-500 font-normal">({{ i18n.t('game.pk.me')() || '我' }})</span>
+                }
+              </span>
+
+              <!-- Value -->
+              <span class="font-mono font-black text-xs"
+                    [ngClass]="player.isMe ? 'text-blue-500' : 'text-[var(--color-text-main)]'">
+                {{ isScoreBased() ? (player.score ?? 0) : ((player.progress ?? 0) + '%') }}
+              </span>
+            </div>
+
+            <!-- Mini Progress Bar -->
+            <div class="w-full h-1.5 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
+              <div class="h-full rounded-full transition-all duration-300"
+                   [ngClass]="player.isMe ? 'bg-blue-500' : 'bg-amber-500'"
+                   [style.width.%]="player.progress ?? 0"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

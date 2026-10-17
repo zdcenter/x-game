@@ -41,7 +41,8 @@ export interface Drop2048State {
 export enum Drop2048ActionType {
   MoveLeft = 'MoveLeft',
   MoveRight = 'MoveRight',
-  Drop = 'Drop'
+  Drop = 'Drop',
+  SoftDrop = 'SoftDrop'
 }
 
 export interface Drop2048Action {
@@ -57,6 +58,32 @@ export interface Drop2048EngineConfig {
   onBigMerge?: (val: number) => void;
   onLevelUp?: (newLevel: number) => void;
   onReviveShake?: () => void;
+}
+
+export function getDrop2048BlockStyle(val: number): Record<string, string> {
+  const g: Record<number, [string, string]> = {
+    2:    ['#FF5252', '#D50000'],
+    4:    ['#00E676', '#00C853'],
+    8:    ['#FFD600', '#FF8F00'],
+    16:   ['#2196F3', '#0D47A1'],
+    32:   ['#E040FB', '#AA00FF'],
+    64:   ['#FF6D00', '#E65100'],
+    128:  ['#FF9100', '#E65C00'],
+    256:  ['#00BFA5', '#00796B'],
+    512:  ['#7C4DFF', '#4527A0'],
+    1024: ['#F50057', '#B71C1C'],
+    2048: ['#FFD740', '#FF6D00'],
+  };
+  const [c1, c2] = g[val] || ['#78909C', '#455A64'];
+  const glowPx = val >= 8 ? Math.min(10 + Math.log2(val) * 2.5, 32) : 4;
+  const glowOpacity = val >= 128 ? 'ee' : val >= 32 ? 'cc' : 'aa';
+  const shadows = [
+    'inset 0 4px 0 rgba(255,255,255,0.38)',
+    'inset 0 -5px 0 rgba(0,0,0,0.40)',
+    '0 6px 12px rgba(0,0,0,0.5)',
+    `0 0 ${glowPx}px ${c1}${glowOpacity}`,
+  ].join(', ');
+  return { background: `linear-gradient(145deg, ${c1}, ${c2})`, 'box-shadow': shadows };
 }
 
 export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Action> {
@@ -121,6 +148,9 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         break;
       case Drop2048ActionType.MoveRight:
         this.moveActive(1);
+        break;
+      case Drop2048ActionType.SoftDrop:
+        this.softDrop();
         break;
       case Drop2048ActionType.Drop:
         this.dropActive();
@@ -261,6 +291,19 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     const nc = this.activeBlock.c + dc;
     if (nc >= 0 && nc < DROP2048_COLS) {
       this.activeBlock = { ...this.activeBlock, c: nc };
+      if (this.config?.onSound) this.config.onSound('move');
+    }
+  }
+
+  private softDrop() {
+    if (this.isDead || !this.activeBlock) return;
+
+    const curr = this.activeBlock;
+    if (curr.r >= DROP2048_ROWS - 1 || this.board.some(b => b.c === curr.c && b.r === curr.r + 1)) {
+      this.dropActive();
+    } else {
+      this.activeBlock = { ...curr, r: curr.r + 1 };
+      this.lastDropTime = performance.now();
       if (this.config?.onSound) this.config.onSound('move');
     }
   }

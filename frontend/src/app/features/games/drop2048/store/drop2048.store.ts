@@ -258,6 +258,14 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
 
   moveLeft() { this.engine.handleAction({ type: Drop2048ActionType.MoveLeft }); this.updateSignals(); }
   moveRight() { this.engine.handleAction({ type: Drop2048ActionType.MoveRight }); this.updateSignals(); }
+  softDrop() {
+    this.engine.handleAction({ type: Drop2048ActionType.SoftDrop });
+    this.updateSignals();
+    if (this.engine.isDead) this.onGameOver();
+  }
+  hardDrop() {
+    this.dropActive();
+  }
   dropActive() {
     this.engine.handleAction({ type: Drop2048ActionType.Drop });
     this.updateSignals();

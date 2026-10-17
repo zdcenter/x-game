@@ -46,6 +46,7 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
 
         <ng-container header-right>
           <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
+            <ng-content select="[header-right]"></ng-content>
             @if (showPlayAgainBtn) {
               <button (click)="playAgain.emit()"
                       class="px-2.5 sm:px-3.5 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/40 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 group"
