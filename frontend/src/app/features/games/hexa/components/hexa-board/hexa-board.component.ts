@@ -17,6 +17,10 @@ export class HexaBoardComponent {
   cellKey(cell: HexCell): string { return `${cell.q},${cell.r},${cell.s}`; }
   isClearing(cell: HexCell): boolean { return this.clearingCells.has(this.cellKey(cell)); }
   clearingColor(cell: HexCell): string { return this.clearingCells.get(this.cellKey(cell)) || 'url(#pieceGrad)'; }
+  getClearDelay(cell: HexCell): string {
+    const dist = Math.abs(cell.q) + Math.abs(cell.r);
+    return `${dist * 12}ms`;
+  }
   Math = Math;
   
   // Hex sizing for SVG viewport

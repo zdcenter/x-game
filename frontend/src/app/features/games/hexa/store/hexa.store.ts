@@ -26,6 +26,7 @@ export class HexaStore extends BaseGameStore {
   shakeTrigger = signal<number>(0);
   lastScoreGain = signal<{ score: number; combo: number; ts: number } | null>(null);
   clearingCells = signal<Map<string, string>>(new Map());
+  private clearTimerId: any = null;
   fillPct = computed(() => this.cells().filter(c => c.filled).length / 61);
 
   // PK Mode
@@ -167,7 +168,13 @@ export class HexaStore extends BaseGameStore {
     this.updateSignals();
 
     if (clearingMap.size > 0) {
-      setTimeout(() => this.clearingCells.set(new Map()), 750);
+      if (this.clearTimerId) {
+        clearTimeout(this.clearTimerId);
+      }
+      this.clearTimerId = setTimeout(() => {
+        this.clearingCells.set(new Map());
+        this.clearTimerId = null;
+      }, 320);
     }
 
     const newCombo = this.engine.combo;
@@ -187,7 +194,7 @@ export class HexaStore extends BaseGameStore {
 
     // Play sound effects
     if (linesCleared) {
-      this.audio.playBlock('clear');
+      this.audio.playBlock('clear', newCombo);
     } else {
       this.audio.playBlock('place');
     }

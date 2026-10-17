@@ -27,41 +27,15 @@
   animation: hexa-danger-red 0.7s ease-in-out infinite;
 }
 
-/* ═══════════════════════════════════════════════════════
-   Hexa Cell Clearing — "Starburst Dissolve" for SVG hexagons
-   Phase 1 (0-18%):  White flash + scale up — the satisfying "pop"
-   Phase 2 (18-40%): Glow ring stabilizes, color saturates
-   Phase 3 (40-100%): Dissolve into brightness with scale to zero
-   ═══════════════════════════════════════════════════════ */
+/* Hexa Cell Clearing */
 @keyframes hexa-cell-clear {
-  0%   { 
-    opacity: 1;    
-    transform: scale(1);    
-    filter: brightness(1) saturate(1); 
-  }
-  18%  { 
-    opacity: 1;    
-    transform: scale(1.3); 
-    filter: brightness(2.2) saturate(1.8) drop-shadow(0 0 6px rgba(255,200,50,0.8)); 
-  }
-  40%  { 
-    opacity: 0.9;    
-    transform: scale(1.05); 
-    filter: brightness(1.6) saturate(1.4) drop-shadow(0 0 4px rgba(255,200,50,0.4)); 
-  }
-  100% { 
-    opacity: 0;    
-    transform: scale(0); 
-    filter: brightness(3) saturate(0) drop-shadow(0 0 0px rgba(255,200,50,0)); 
-  }
+  0%   { opacity: 1; transform: scale(1); filter: brightness(1.2); }
+  22%  { opacity: 1; transform: scale(1.25); filter: brightness(2.6) drop-shadow(0 0 8px #fff); }
+  100% { opacity: 0; transform: scale(0); filter: brightness(3); }
 }
 .hexa-cell-clearing {
-  stroke: rgba(255,255,255,0.9) !important;
-  stroke-width: 2px !important;
-  animation: hexa-cell-clear 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation: hexa-cell-clear 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: var(--clear-delay, 0ms);
-  transform-box: fill-box;
-  transform-origin: center;
 }
 
 /* Score float-up */

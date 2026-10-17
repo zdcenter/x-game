@@ -218,11 +218,11 @@ export class AudioService {
   }
 
   // --- Block/Hexa Sounds ---
-  async playBlock(name: 'place' | 'clear' | 'error') {
+  async playBlock(name: 'place' | 'clear' | 'error', combo: number = 0) {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
-      playBlockSound(this.audioCtx, this.masterGain, name);
+      playBlockSound(this.audioCtx, this.masterGain, name, combo);
     }
   }
 

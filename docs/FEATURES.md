@@ -42,6 +42,7 @@
   - Modes: Single Player (3x3 to 6x6), PK Speed
 - **Hexa Puzzle (六边形消除)**
   - Modes: Single Player (无尽模式), PK Score
+  - 核心功能: 纯客户端内存无损本地运算，支持 61 轴线六边形蜂窝网格；三维坐标曼哈顿距离精确变换；**极速清脆消融重构 (Snappy Dissolve)**：彻底修复样式隔离与拖沓延时，将消除延迟缩短至 220ms，配合紧凑 12ms 波纹级联与 320ms 状态清理；立体双层常驻底槽网格与中心光爆冲击波（Burst Ring Shockwave）；连击音阶动态攀升与清脆落子打击感。
 - **Tetris Battle (俄罗斯方块)**
   - Modes: Single Player (无尽马拉松), PK Attack (异盘乱斗 / 发送垃圾行)
 - **Gomoku (五子棋)**

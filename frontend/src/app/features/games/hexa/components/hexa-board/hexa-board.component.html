@@ -1,33 +1,67 @@
 
     <div class="relative w-full h-full select-none" (contextmenu)="$event.preventDefault()">
-      <svg [attr.viewBox]="viewBox" class="w-full h-full drop-shadow-lg overflow-visible">
-        <!-- Grid Cells -->
-        <g *ngFor="let cell of cells; let i = index">
-          <polygon
-            [attr.points]="hexPoints(cell.q, cell.r)"
-            [attr.fill]="cell.filled ? (cell.color || 'url(#pieceGrad)') : (isClearing(cell) ? clearingColor(cell) : 'var(--color-hexa-empty)')"
-            [attr.stroke]="isClearing(cell) ? 'rgba(255,255,255,0.9)' : ((cell.filled) ? 'rgba(255,255,255,0.2)' : 'var(--color-hexa-empty-stroke)')"
-            [attr.stroke-width]="isClearing(cell) ? '2' : ((cell.filled) ? '0.8' : '1.2')"
-            stroke-linejoin="round"
-            [class.hexa-cell-clearing]="isClearing(cell)"
-            [class.transition-colors]="!isClearing(cell)"
-            class="duration-200"
-            [attr.filter]="cell.filled ? 'url(#shadow3dLight)' : null"
-            [style.--clear-delay]="isClearing(cell) ? ((Math.abs(cell.q) + Math.abs(cell.r)) * 30) + 'ms' : '0ms'">
-          </polygon>
-        </g>
-        
-        <!-- Hover Preview -->
-        <g *ngIf="previewPiece && previewOrigin">
-          <polygon *ngFor="let offset of previewPiece.shape"
-            [attr.points]="hexPoints(previewOrigin.q + offset.q, previewOrigin.r + offset.r)"
-            [attr.fill]="previewPiece.color || 'url(#pieceGrad)'"
-            class="opacity-40"
-            stroke="white"
-            stroke-width="2"
-            stroke-dasharray="4">
-          </polygon>
-        </g>
-      </svg>
-    </div>
+  <svg [attr.viewBox]="viewBox" class="w-full h-full drop-shadow-lg overflow-visible">
+    <!-- Grid Cells -->
+    <g *ngFor="let cell of cells">
+      <!-- 1. Permanent Base Slot: 始终存在且立体的底座槽位 -->
+      <polygon
+        [attr.points]="hexPoints(cell.q, cell.r)"
+        fill="var(--color-hexa-empty)"
+        stroke="var(--color-hexa-empty-stroke)"
+        stroke-width="1.2"
+        stroke-linejoin="round">
+      </polygon>
+
+      <!-- 2. Filled Cell: 正常放置的方块 -->
+      <polygon
+        *ngIf="cell.filled"
+        [attr.points]="hexPoints(cell.q, cell.r)"
+        [attr.fill]="cell.color || 'url(#pieceGrad)'"
+        stroke="rgba(255,255,255,0.25)"
+        stroke-width="0.8"
+        stroke-linejoin="round"
+        [attr.filter]="'url(#shadow3dLight)'"
+        class="transition-opacity duration-150">
+      </polygon>
+
+      <!-- 3. Burst Shockwave Ring: 消除瞬间从中心爆发的光波 -->
+      <circle
+        *ngIf="isClearing(cell)"
+        [attr.cx]="hexCenter(cell.q, cell.r).x"
+        [attr.cy]="hexCenter(cell.q, cell.r).y"
+        r="3"
+        fill="none"
+        stroke="rgba(255,255,255,0.95)"
+        stroke-width="2"
+        class="hexa-cell-burst"
+        [style.--clear-delay]="getClearDelay(cell)">
+      </circle>
+
+      <!-- 4. Clearing Dissolve Cell: 瞬间闪光暴击并快速坍缩消失 -->
+      <polygon
+        *ngIf="isClearing(cell)"
+        [attr.points]="hexPoints(cell.q, cell.r)"
+        [attr.fill]="clearingColor(cell)"
+        stroke="rgba(255,255,255,0.95)"
+        stroke-width="2.2"
+        stroke-linejoin="round"
+        class="hexa-cell-clearing"
+        [style.transform-origin]="hexCenter(cell.q, cell.r).x + 'px ' + hexCenter(cell.q, cell.r).y + 'px'"
+        [style.--clear-delay]="getClearDelay(cell)">
+      </polygon>
+    </g>
+    
+    <!-- Hover Preview -->
+    <g *ngIf="previewPiece && previewOrigin">
+      <polygon *ngFor="let offset of previewPiece.shape"
+        [attr.points]="hexPoints(previewOrigin.q + offset.q, previewOrigin.r + offset.r)"
+        [attr.fill]="previewPiece.color || 'url(#pieceGrad)'"
+        class="opacity-45"
+        stroke="white"
+        stroke-width="2"
+        stroke-dasharray="4">
+      </polygon>
+    </g>
+  </svg>
+</div>
   
