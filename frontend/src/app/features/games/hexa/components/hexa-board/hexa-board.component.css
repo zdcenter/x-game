@@ -55,3 +55,27 @@
   animation-delay: var(--clear-delay, 0ms);
   pointer-events: none;
 }
+
+@keyframes hexa-shard-fly {
+  0% {
+    transform: translateY(0) scale(1.4);
+    opacity: 1;
+    filter: drop-shadow(0 0 4px #fff);
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px #fff);
+  }
+  100% {
+    transform: translateY(-24px) scale(0);
+    opacity: 0;
+    filter: drop-shadow(0 0 0px transparent);
+  }
+}
+
+.hexa-shard-spark {
+  will-change: transform, opacity;
+  animation: hexa-shard-fly 0.28s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+  animation-delay: var(--clear-delay, 0ms);
+  pointer-events: none;
+}

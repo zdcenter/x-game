@@ -131,31 +131,39 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
       if (gain.combo === 0) return;
 
-      const tier: 1 | 2 = gain.combo >= 2 ? 2 : 1;
-      const text = gain.combo >= 2
-        ? `COMBO ×${gain.combo}  +${gain.score}`
-        : `CLEAR!  +${gain.score}`;
+      const lines = gain.lines || 1;
+      let text = `✨ CLEAR! +${gain.score}`;
+      let tier: 1 | 2 = 1;
 
-      const item = { id: gain.ts, text, tier, xPct: 32 + Math.random() * 36 };
-      this.floatItems.update(items => [...items, item]);
-      setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1150);
-
-      if (gain.combo >= 1) {
-        const colors = ['#fbbf24', '#fcd34d', '#f59e0b', '#f97316', '#fb923c', '#fde68a', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#ffffff'];
-        const count = gain.combo >= 2 ? 22 : 14;
-        const sparks = Array.from({ length: count }, (_, i) => ({
-          id: `${gain.ts}-${i}`,
-          color: colors[i % colors.length],
-          size: 4 + Math.random() * 10,
-          tx: (Math.random() * 300 - 150),
-          ty: (Math.random() * 300 - 150),
-        }));
-        this.particles.update(p => [...p, ...sparks]);
-        setTimeout(() => {
-          this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`)));
-        }, 900);
-
+      if (lines >= 3 || gain.combo >= 4) {
+        text = `💥 TRIPLE CRUSH! +${gain.score}`;
+        tier = 2;
+      } else if (lines === 2) {
+        text = `⚡ DOUBLE CLEAR! +${gain.score}`;
+        tier = 2;
+      } else if (gain.combo > 1) {
+        text = `🔥 COMBO ×${gain.combo}  +${gain.score}`;
+        tier = 2;
       }
+
+      const item = { id: gain.ts, text, tier, xPct: 35 + Math.random() * 30 };
+      this.floatItems.update(items => [...items, item]);
+      setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1250);
+
+      // 全屏爆裂星芒火花粒子喷泉
+      const colors = ['#fde047', '#fbbf24', '#f59e0b', '#38bdf8', '#c084fc', '#34d399', '#ffffff'];
+      const count = tier === 2 ? 32 : 18;
+      const sparks = Array.from({ length: count }, (_, i) => ({
+        id: `${gain.ts}-${i}`,
+        color: colors[i % colors.length],
+        size: 5 + Math.random() * 10,
+        tx: (Math.random() * 360 - 180),
+        ty: (Math.random() * 360 - 180),
+      }));
+      this.particles.update(p => [...p, ...sparks]);
+      setTimeout(() => {
+        this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`)));
+      }, 950);
     });
 
     // Handle PK Start countdown
@@ -396,5 +404,36 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       points.push(`${pointX},${pointY}`);
     }
     return points.join(' ');
+  }
+
+  getPieceFacetPoints(q: number, r: number): string {
+    const size = 10;
+    const x = size * Math.sqrt(3) * (q + r / 2);
+    const y = size * (3 / 2) * r;
+    const points = [`${x},${y}`];
+    for (let i of [3, 4, 5]) {
+      const angle_deg = 60 * i - 30;
+      const angle_rad = Math.PI / 180 * angle_deg;
+      const pointX = x + (size - 0.6) * Math.cos(angle_rad);
+      const pointY = y + (size - 0.6) * Math.sin(angle_rad);
+      points.push(`${pointX},${pointY}`);
+    }
+    return points.join(' ');
+  }
+
+  resolveColor(color?: string): string {
+    if (!color) return 'url(#pieceGrad)';
+    const theme = this.store.colorTheme();
+    if (theme === 'gold') {
+      if (color.includes('amber') || color.includes('red')) return 'url(#grad-gold-bright)';
+      if (color.includes('blue') || color.includes('purple')) return 'url(#grad-gold-deep)';
+      return 'url(#grad-gold-mid)';
+    }
+    if (theme === 'ocean') {
+      if (color.includes('blue')) return 'url(#grad-ocean-bright)';
+      if (color.includes('green') || color.includes('amber')) return 'url(#grad-ocean-cyan)';
+      return 'url(#grad-ocean-deep)';
+    }
+    return color;
   }
 }

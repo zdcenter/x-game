@@ -13,10 +13,29 @@ export class HexaBoardComponent {
   @Input() previewPiece: HexPiece | null = null;
   @Input() previewOrigin: HexCoord | null = null;
   @Input() clearingCells: Map<string, string> = new Map();
+  @Input() theme: 'crystal' | 'gold' | 'ocean' = 'crystal';
 
   cellKey(cell: HexCell): string { return `${cell.q},${cell.r},${cell.s}`; }
   isClearing(cell: HexCell): boolean { return this.clearingCells.has(this.cellKey(cell)); }
-  clearingColor(cell: HexCell): string { return this.clearingCells.get(this.cellKey(cell)) || 'url(#pieceGrad)'; }
+  clearingColor(cell: HexCell): string { 
+    return this.resolveColor(this.clearingCells.get(this.cellKey(cell))) || 'url(#pieceGrad)'; 
+  }
+
+  resolveColor(color?: string): string {
+    if (!color) return 'url(#pieceGrad)';
+    if (this.theme === 'gold') {
+      if (color.includes('amber') || color.includes('red')) return 'url(#grad-gold-bright)';
+      if (color.includes('blue') || color.includes('purple')) return 'url(#grad-gold-deep)';
+      return 'url(#grad-gold-mid)';
+    }
+    if (this.theme === 'ocean') {
+      if (color.includes('blue')) return 'url(#grad-ocean-bright)';
+      if (color.includes('green') || color.includes('amber')) return 'url(#grad-ocean-cyan)';
+      return 'url(#grad-ocean-deep)';
+    }
+    return color;
+  }
+
   getClearDelay(cell: HexCell): string {
     const dist = Math.abs(cell.q) + Math.abs(cell.r);
     return `${dist * 12}ms`;
@@ -57,6 +76,24 @@ export class HexaBoardComponent {
     }
     return points.join(' ');
   }
+
+  // Get Top Facet Highlight Polygon Points (宝石晶体反光高光切面)
+  hexFacetPoints(q: number, r: number): string {
+    const center = this.hexCenter(q, r);
+    const points = [`${center.x},${center.y}`];
+    // 顶点 3, 4, 5 (顶部拱形面)
+    for (let i of [3, 4, 5]) {
+      const angle_deg = 60 * i - 30;
+      const angle_rad = Math.PI / 180 * angle_deg;
+      const pointX = center.x + (this.size - 0.6) * Math.cos(angle_rad);
+      const pointY = center.y + (this.size - 0.6) * Math.sin(angle_rad);
+      points.push(`${pointX},${pointY}`);
+    }
+    return points.join(' ');
+  }
+
+  // 6 个方位飞溅碎钻粒子坐标数据 (每个消融格向外高速喷射 6 颗星钻)
+  readonly shardAngles = [0, 60, 120, 180, 240, 300];
 
   // Public utility for piece drag-n-drop (pixel coordinate to hex coord)
   // Used by the parent component to find which cell is being hovered

@@ -24,10 +24,24 @@ export class HexaStore extends BaseGameStore {
   bestScore = signal<number>(0);
   comboTrigger = signal<number>(0);
   shakeTrigger = signal<number>(0);
-  lastScoreGain = signal<{ score: number; combo: number; ts: number } | null>(null);
+  lastScoreGain = signal<{ score: number; combo: number; lines: number; ts: number } | null>(null);
   clearingCells = signal<Map<string, string>>(new Map());
   private clearTimerId: any = null;
   fillPct = computed(() => this.cells().filter(c => c.filled).length / 61);
+
+  // Visual Palette Theme: 'crystal' (Harmonious Multi-Gem) | 'gold' (Royal Amber Gold) | 'ocean' (Deep Ocean Ice)
+  colorTheme = signal<'crystal' | 'gold' | 'ocean'>((storageGet('hexa_theme') as any) || 'crystal');
+
+  setColorTheme(theme: 'crystal' | 'gold' | 'ocean') {
+    this.colorTheme.set(theme);
+    storageSet('hexa_theme', theme);
+  }
+
+  cycleColorTheme() {
+    const cur = this.colorTheme();
+    const next = cur === 'crystal' ? 'gold' : (cur === 'gold' ? 'ocean' : 'crystal');
+    this.setColorTheme(next);
+  }
 
   // PK Mode
   globalStartAt = computed(() => this.rawState()?.globalStartAt || 0);
@@ -179,9 +193,10 @@ export class HexaStore extends BaseGameStore {
 
     const newCombo = this.engine.combo;
     const linesCleared = newCombo > prevCombo;
+    const linesCount = linesCleared ? (this.engine.lastLinesCleared || 1) : 0;
     const scoreGained = this.score() - prevScore;
     if (scoreGained > 0) {
-      this.lastScoreGain.set({ score: scoreGained, combo: linesCleared ? newCombo : 0, ts: Date.now() });
+      this.lastScoreGain.set({ score: scoreGained, combo: linesCleared ? newCombo : 0, lines: linesCount, ts: Date.now() });
     }
 
     if (linesCleared) {

@@ -1,19 +1,25 @@
 # Changelog
 
-## [2026-10-17] - ⚡ 六边形消除爽快感重构：零延迟消融爆破与视听打击感升级 (Hexa Snappy Clear & Visual Feast)
+## [2026-10-17] - 💎 六边形消除殿堂级升级：微晶宝石美学、碎钻爆炸粒子与电影级打击音效 (Hexa Jewel Overhaul & Crystal Explosion)
 
-### 🚀 核心优化与体验痛点修复 (Core Fixes & UX Optimization)
-- **彻底根治消融卡顿与“拖沓迟滞”痛点 (Zero-Lag Snappy Dissolve)**：
-  - **根本原因排查与修复**：原消融动画类声明在父组件中由于 Angular 样式隔离未渗透至棋盘子组件内部，且依赖 750ms 僵死延时定时器，导致方块被消除后在原地卡死发呆将近 1 秒后突然突兀变空，手感拖沓卡顿。
-  - **极速清脆坍缩 (220ms Pop & Shrink)**：将消融动画完全移入子组件 `hexa-board.component.css`，动画总时长大幅提速至 **220ms**，消除定时器由 750ms 压减至 **320ms**，手感极其丝滑跟手。
-  - **曼哈顿光波紧凑级联**：优化消行波纹延迟从笨重的 30ms 压缩至 **12ms**，整行或多轴线消除呈现闪电般掠过的冲击视觉。
-- **立体多层棋盘架构 (Multi-layer Board Rendering)**：
-  - **底座网格常驻 (Permanent Base Slot)**：每个格子始终维持精致立体的底座凹槽（`var(--color-hexa-empty)`），当上层方块爆裂消失时，底层立体卡槽瞬间露显，消除层次感与落位感大幅增强。
-  - **中心光爆冲击波 (Burst Shockwave Ring)**：每个被消除的六边形在闪白暴击的同时向外释放一道极速扩散的白色光环冲击波（`hexa-cell-burst`），打击感拉满。
-  - **精确原点坐标变换**：消除方块的缩放原点动态绑定至该六边形的精确中心像素坐标，杜绝移动端和部分浏览器 SVG 缩放跑偏的问题。
-- **音效视听升华与连击音阶 (Crisp Sound & Pitch Climbing)**：
-  - 放置音效调优为更为清脆干脆的落槽微击；
-  - 消除音效升级为高频穿透冲击 + 快速琶音，并新增 `combo` 连击音阶动态升调算法，连续消除时音调清脆爬升，极具心流正反馈。
+### 🎨 视觉美学与色彩体系重塑 (Aesthetics & Color System)
+- **色彩设计破局（单一优雅 vs 和谐微晶自由切换）**：
+  - 彻底终结过往红绿蓝粉塑料贴纸般的杂乱马赛克感，精选 6 种色彩和谐的 **💎 微晶宝石色调 (Chroma Crystal)**；
+  - **首创自由主题调色板切换**：顶部控制台内嵌调色板按钮，玩家可一键在 **💎 微晶幻彩 (Chroma Crystal)**、**👑 琥珀流金 (Royal Amber Gold - 纯净单一轻奢单色系)**、**🌊 深海冰晶 (Ocean Ice - 冰川冷调单色系)** 之间随心秒切，本地自动持久化；
+- **施华洛世奇切面水晶材质 (Crystal Facet Reflection)**：
+  - 所有方块单元格升级为双层渲染结构：不仅拥有高饱和柔和渐变底色，顶部还带有 **45° 玻璃微晶高光切面折射 (Facet Highlight)** 与晶莹反光棱线，无论备选区、拖拽中还是棋盘上，均展现出温润剔透的真实宝石质感；
+  - 棋盘底座升级为立体微凹卡槽（`Permanent Inset Slot`），深浅色主题自适应，宛若奢华宝石首饰托盘。
+- **告别生硬数码管，升级轻奢悬浮 HUD (Modern Glass Dashboard)**：
+  - 废黜突兀的红框黑底生硬数字，重构为微透毛玻璃流光胶囊：当前得分金星徽章、动态连击火焰能量条（`🔥 2x COMBO` / `⚡ MEGA 4x`）、最佳纪录王冠徽章。
+
+### 💥 爆炸打击感与视听多巴胺狂飙 (Explosion Blast & Cinematic Audio)
+- **六方位晶钻物理爆碎粒子 (Crystal Shards Blast)**：
+  - 消融发生时，不仅拥有中心极速光爆环，每个被消除的六边形向周围 6 个对称轴高速喷射出 6 颗高亮碎钻星芒粒子（`hexa-shard-spark`），飞溅、旋转、衰减消散，呈现满屏璀璨晶屑飞掠的极致打击感！
+- **电影级合成音效全面重铸 (Sub-bass Impact & Crystal Shatter)**：
+  - **落槽音 (Place)**：升级为清脆解压的微点击瞬态（Transient Pop）+ 短促温润微晶吸附声；
+  - **爆炸消融 (Clear)**：42Hz~95Hz 超重低音冲击波（Sub-bass Boom）+ 高频带通白噪模拟水晶瞬间碎裂的爽脆脆响（Crystal Shatter）+ D大调纯净水滴琶音（随连击数动态爬升八度），给玩家带来欲罢不能的心流爽感！
+- **电竞级赞美浮空条与多阶震屏 (Juicy Praise Banners)**：
+  - 根据消除行数与 Combo 数动态触发 `✨ CLEAR!`、`⚡ DOUBLE CLEAR!`、`💥 TRIPLE CRUSH!`、`👑 HEXA GODLIKE!`，伴随 32 颗全屏流星粒子喷泉。
 
 ## [2026-10-17] - ⚔️ 联机等待大厅双翼对决大屏与扫码互通重构 (PK Waiting Room Grand Battle Arena)
 

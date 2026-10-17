@@ -50,6 +50,7 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
   piecesPlaced = 0;
   gameOver = false;
   status: GameStatusType = GameStatus.Waiting;
+  lastLinesCleared = 0;
   
   private prng: PRNG | undefined;
 
@@ -178,6 +179,7 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
       this.status = GameStatus.Finished;
     }
 
+    this.lastLinesCleared = cleared.lines;
     return { linesCleared: cleared.lines };
   }
 

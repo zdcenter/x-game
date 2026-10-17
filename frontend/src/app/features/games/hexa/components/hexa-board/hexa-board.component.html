@@ -3,7 +3,7 @@
   <svg [attr.viewBox]="viewBox" class="w-full h-full drop-shadow-lg overflow-visible">
     <!-- Grid Cells -->
     <g *ngFor="let cell of cells">
-      <!-- 1. Permanent Base Slot: 始终存在且立体的底座槽位 -->
+      <!-- 1. Permanent Base Slot: 始终存在且立体的凹槽 -->
       <polygon
         [attr.points]="hexPoints(cell.q, cell.r)"
         fill="var(--color-hexa-empty)"
@@ -12,19 +12,25 @@
         stroke-linejoin="round">
       </polygon>
 
-      <!-- 2. Filled Cell: 正常放置的方块 -->
-      <polygon
-        *ngIf="cell.filled"
-        [attr.points]="hexPoints(cell.q, cell.r)"
-        [attr.fill]="cell.color || 'url(#pieceGrad)'"
-        stroke="rgba(255,255,255,0.25)"
-        stroke-width="0.8"
-        stroke-linejoin="round"
-        [attr.filter]="'url(#shadow3dLight)'"
-        class="transition-opacity duration-150">
-      </polygon>
+      <!-- 2. Filled Cell: 晶体宝石方块（渐变基色 + 顶部切面反光高光） -->
+      <g *ngIf="cell.filled" class="transition-opacity duration-150">
+        <polygon
+          [attr.points]="hexPoints(cell.q, cell.r)"
+          [attr.fill]="resolveColor(cell.color)"
+          stroke="rgba(255,255,255,0.38)"
+          stroke-width="0.85"
+          stroke-linejoin="round"
+          [attr.filter]="'url(#shadow3dLight)'">
+        </polygon>
+        <!-- 晶莹高光切面折射 (Crystal Facet Reflection) -->
+        <polygon
+          [attr.points]="hexFacetPoints(cell.q, cell.r)"
+          fill="rgba(255,255,255,0.22)"
+          pointer-events="none">
+        </polygon>
+      </g>
 
-      <!-- 3. Burst Shockwave Ring: 消除瞬间从中心爆发的光波 -->
+      <!-- 3. Burst Shockwave Ring: 消除瞬间向外辐射的光波 -->
       <circle
         *ngIf="isClearing(cell)"
         [attr.cx]="hexCenter(cell.q, cell.r).x"
@@ -32,17 +38,28 @@
         r="3"
         fill="none"
         stroke="rgba(255,255,255,0.95)"
-        stroke-width="2"
+        stroke-width="2.5"
         class="hexa-cell-burst"
         [style.--clear-delay]="getClearDelay(cell)">
       </circle>
 
-      <!-- 4. Clearing Dissolve Cell: 瞬间闪光暴击并快速坍缩消失 -->
+      <!-- 4. Crystal Shards Fly: 6方位飞溅的高速碎钻晶体粒子 -->
+      <g *ngIf="isClearing(cell)" [style.--clear-delay]="getClearDelay(cell)" class="hexa-shards-emitter">
+        <polygon
+          *ngFor="let ang of shardAngles"
+          points="-1.2,-1.2 0,-3.2 1.2,-1.2 0,0.8"
+          fill="white"
+          class="hexa-shard-spark"
+          [attr.transform]="'translate(' + hexCenter(cell.q, cell.r).x + ',' + hexCenter(cell.q, cell.r).y + ') rotate(' + ang + ')'">
+        </polygon>
+      </g>
+
+      <!-- 5. Clearing Dissolve Cell: 瞬间闪光暴击并快速坍缩消失 -->
       <polygon
         *ngIf="isClearing(cell)"
         [attr.points]="hexPoints(cell.q, cell.r)"
         [attr.fill]="clearingColor(cell)"
-        stroke="rgba(255,255,255,0.95)"
+        stroke="rgba(255,255,255,0.98)"
         stroke-width="2.2"
         stroke-linejoin="round"
         class="hexa-cell-clearing"
