@@ -20,7 +20,10 @@ func SeedConnect() {
 		log.Fatalf("SeedConnect: failed to parse connect_seeds.json: %v", err)
 	}
 
-	if count != int64(len(seeds)) {
+	var firstPuzzle domain.ConnectPuzzle
+	hasFirst := DB.Model(&domain.ConnectPuzzle{}).Where("id = ?", seeds[0].ID).First(&firstPuzzle).Error == nil
+
+	if count != int64(len(seeds)) || !hasFirst || firstPuzzle.Endpoints != seeds[0].Endpoints {
 		log.Println("Re-seeding Connect puzzles...")
 		DB.Exec("DELETE FROM gm_connect_puzzles")
 		

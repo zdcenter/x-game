@@ -109,7 +109,7 @@
       <div *ngIf="store.currentRoomMode() === GameMode.Single && store.connectedFlows() === store.totalFlows() && store.coveragePercent() < 100"
            class="w-full max-w-xl mx-auto -mt-2 mb-3 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 animate-bounce shadow-sm">
         <span>💡</span>
-        <span>{{ i18n.t('game.fill_board_hint')() }}</span>
+        <span>{{ (i18n.t('game.fill_board_hint')() && i18n.t('game.fill_board_hint')() !== 'game.fill_board_hint') ? i18n.t('game.fill_board_hint')() : '所有连线已接通！请调整走线填满发光的剩余空格 (需100%覆盖)' }}</span>
       </div>
 
       <!-- Board Container -->

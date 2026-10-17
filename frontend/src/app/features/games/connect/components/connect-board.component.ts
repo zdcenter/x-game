@@ -28,14 +28,14 @@ import { ConnectEngine, Position } from '../connect-engine';
            [style.gridTemplateRows]="'repeat(' + engine.height + ', minmax(0, 1fr))'">
         <ng-container *ngFor="let r of rows">
           <div *ngFor="let c of cols" 
-               class="relative flex items-center justify-center transition-colors border border-[var(--color-border-card)] border-opacity-30">
+               class="relative flex items-center justify-center transition-colors">
             
             <!-- Block (Wall) -->
             <div *ngIf="engine.isBlock(r, c)" class="w-[90%] h-[90%] bg-slate-700 rounded-lg z-20 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center">
             </div>
 
-            <!-- Grey Square (Dot) for empty spots -->
-            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[20%] h-[20%] bg-[var(--color-border-card)] opacity-40 rounded-sm z-0"></div>
+            <!-- Grey Square (Dot) for spots without endpoints -->
+            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[22%] h-[22%] bg-slate-300 dark:bg-slate-600/60 rounded-[3px] z-0"></div>
 
             <!-- Unfilled cell pulse when all flows are connected but coverage < 100% -->
             <div *ngIf="highlightUnfilled && engine.grid[r][c] === 0 && !engine.isEndpoint(r, c) && !engine.isBlock(r, c)"
