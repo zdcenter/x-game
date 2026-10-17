@@ -9,26 +9,22 @@ import { HashiStore } from './store/hashi.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { HashiLobbyComponent } from './components/hashi-lobby/hashi-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
-import { boardSizePx } from '../../../core/utils/board-size.util';
 import { WindowSizeService } from '../../../core/services/window-size.service';
-import { SettingsService } from '../../../core/services/settings.service';
 import { environment } from '../../../../environments/environment';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
-import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 @Component({
   selector: 'app-hashi',
   standalone: true,
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     FormsModule,
     GameResultOverlayComponent,
     GameToolbarComponent,
@@ -36,7 +32,8 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     GameLayoutComponent,
-    GamePkHudComponent],
+    GamePkHudComponent
+  ],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'
 })
@@ -56,6 +53,61 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   // Interaction state
   selectedIsland = signal<{r: number, c: number} | null>(null);
   touchStartIsland = signal<{r: number, c: number} | null>(null);
+
+  readonly gridWidth = computed(() => {
+    const grid = this.store.boardGrid();
+    return grid[0]?.length || this.store.engine.width || 7;
+  });
+
+  readonly gridHeight = computed(() => {
+    const grid = this.store.boardGrid();
+    return grid.length || this.store.engine.height || 7;
+  });
+
+  readonly boardDimensions = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    const gw = this.gridWidth();
+    const gh = this.gridHeight();
+    const ratio = gh / gw;
+    const isPk = this.store.currentRoomMode() !== GameMode.Single;
+
+    // Real vertical chrome:
+    // Top Nav (64px) + Game Header (~55px) + Action Bar (~42px) + Card Padding (~24px)
+    // + Level/Timer bar (~48px) + Board Toolbar (~60px) + Margins (~25px)
+    // = ~318px on Desktop, ~280px on Tablet, ~240px on Mobile.
+    // In PK mode, PK HUD adds ~65px.
+    const chromeH = isPk
+      ? (vw < 640 ? 300 : vw < 1024 ? 340 : 380)
+      : (vw < 640 ? 240 : vw < 1024 ? 280 : 320);
+    const padW = vw < 640 ? 20 : vw < 1024 ? 40 : 64;
+
+    const availH = Math.max(240, vh - chromeH);
+    const availW = Math.max(240, Math.min(vw - padW, 1300));
+
+    // Dynamic max board dimension based on grid density:
+    // 7x7: 460px (cell ~65px, large and comfortable)
+    // 10x10: 580px (cell ~58px)
+    // 15x15: 720px (cell ~48px)
+    // 20x20: 820px (cell ~41px)
+    let maxBoardW = 460;
+    if (gw >= 20) {
+      maxBoardW = 820;
+    } else if (gw >= 15) {
+      maxBoardW = 720;
+    } else if (gw >= 10) {
+      maxBoardW = 580;
+    }
+
+    const w = Math.max(240, Math.floor(Math.min(availW, availH / ratio, maxBoardW)));
+    const h = Math.round(w * ratio);
+
+    return {
+      width: `${w}px`,
+      height: `${h}px`,
+      widthPx: w,
+      heightPx: h
+    };
+  });
   
   hideLeftPanel = computed(() => {
     const grid = this.store.boardGrid();
@@ -181,6 +233,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
       const firstLevel = levelsRes[0];
       if (firstLevel) {
         const puzzleRes = await lastValueFrom(this.http.get<any>(`${environment.apiUrl}/hashi/puzzle/${firstLevel.id}`));
+        this.view.set('play');
         this.store.startSinglePlayer(firstLevel.id, puzzleRes.puzzle.content, diff, 0);
         this.selectedIsland.set(null);
       }
