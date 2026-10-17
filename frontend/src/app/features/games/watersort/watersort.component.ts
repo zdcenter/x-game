@@ -1,6 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { storageGet, storageSet } from '../../../core/utils/browser.util';
-import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -30,7 +30,7 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
   standalone: true,
   imports: [CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent,  
-    GameResultOverlayComponent,  PlayerBadgeComponent,
+    GameResultOverlayComponent,
     GameToolbarComponent,  GamePlayerMiniHudComponent, FormsModule, GameLayoutComponent,
     GamePkHudComponent],
   templateUrl: './watersort.component.html',

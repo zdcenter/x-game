@@ -34,7 +34,6 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     GameToolbarComponent,
     HashiLobbyComponent,
     GameWaitingRoomComponent,
-    PlayerBadgeComponent,
     GameStartingOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent],

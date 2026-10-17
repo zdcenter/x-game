@@ -76,8 +76,7 @@
                 [opponents]="opponentsPkStats()"
                 [targetWins]="_store.currentRoomTarget()"
                 [gameMode]="currentRoomMode()"
-                [status]="status"
-                [elapsedTime]="timerService.formatTime(timerService.elapsedSeconds())">
+                [status]="status">
               </app-game-pk-hud>
             </div>
           }
@@ -152,7 +151,7 @@
             [isPkMatch]="currentRoomMode() !== GameMode.Single"
             [opponentInfo]="opponentsPkStats()[0]"
             [pkSeriesScore]="seriesScore()"
-            [pkRoundFormat]="_store.room()?.roundFormat || 'BO3'"
+            [pkRoundFormat]="'BO3'"
             (rematch)="handleRematch()"
             [showLeave]="currentRoomMode() === GameMode.Single || !isHost()"
             [showRestart]="currentRoomMode() === GameMode.Single || isHost()"

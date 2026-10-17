@@ -21,7 +21,7 @@ import { computed } from '@angular/core';
 @Component({
   selector: 'app-sudoku-pk-steal',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GamePkHudComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, GameFrozenOverlayComponent, GamePkHudComponent],
   templateUrl: './sudoku-pk-steal.component.html',
   styleUrl: './sudoku-pk-steal.component.css'})
 export class SudokuPkStealComponent {
@@ -36,7 +36,7 @@ export class SudokuPkStealComponent {
     const p = this.store.players()[this.store.playerId()];
     const score = p?.score || 0;
     return {
-      playerId: this.store.playerId(),
+      id: this.store.playerId(),
       nickname: this.store.playerId(),
       isHost: this.store.playerId() === this.store.hostId(),
       isMe: true,
@@ -52,7 +52,7 @@ export class SudokuPkStealComponent {
     const myId = this.store.playerId();
     const players = this.getSortedPlayers().filter(p => p.id !== myId);
     return players.map(p => ({
-      playerId: p.id,
+      id: p.id,
       nickname: p.id,
       isHost: p.id === this.store.hostId(),
       isMe: false,
@@ -65,7 +65,7 @@ export class SudokuPkStealComponent {
   });
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
-    const oppId = this.opponentsPkStats()[0]?.playerId;
+    const oppId = this.opponentsPkStats()[0]?.id;
     if (!oppId) return undefined;
     const wins = this.store.pkWins();
     return {

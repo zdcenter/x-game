@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -38,7 +38,6 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     ConnectBoardComponent,
     ConnectLobbyComponent,
     GameResultOverlayComponent,
-    PlayerBadgeComponent,
     GameSpectatingOverlayComponent,
     GameWaitingRoomComponent,
     GameLayoutComponent,
@@ -80,7 +79,7 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     const isFinished = this.store.winners().includes(this.playerId);
-    const prog = Math.round(this.store.progress());
+    const prog = Math.round(this.store.myProgress());
     return {
       id: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,

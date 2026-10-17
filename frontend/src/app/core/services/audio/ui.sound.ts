@@ -1,6 +1,6 @@
 import { createOsc, createGain, createLpf } from './audio-utils';
 
-export function playUISound(audioCtx: AudioContext, out: AudioNode, name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown') {
+export function playUISound(audioCtx: AudioContext, out: AudioNode, name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown' | 'countdown_go') {
   const t = audioCtx.currentTime;
 
   if (name === 'click') {

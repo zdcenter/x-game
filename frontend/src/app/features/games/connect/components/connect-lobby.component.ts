@@ -14,58 +14,72 @@ import { ConnectStore } from '../connect.store';
       <div class="flex-1 flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0 min-h-0">
       
       <!-- Header Tabs -->
-      <div class="flex border-b border-[var(--color-border-card)] bg-black/20">
-        <button *ngFor="let diff of difficulties"
+      <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
+        @for (diff of difficulties; track diff.id) {
+          <button 
             (click)="selectDifficulty(diff.id)"
             class="flex-1 py-4 text-center font-bold text-lg transition-all border-b-2"
             [class.text-[var(--color-accent-from)]]="store.currentDifficulty() === diff.id"
             [class.border-[var(--color-accent-from)]]="store.currentDifficulty() === diff.id"
-            [class.text-slate-400]="store.currentDifficulty() !== diff.id"
+            [class.text-[var(--color-text-muted)]]="store.currentDifficulty() !== diff.id"
             [class.border-transparent]="store.currentDifficulty() !== diff.id"
-            [class.hover:text-slate-200]="store.currentDifficulty() !== diff.id">
-          {{ i18n.t(diff.labelKey)() }}
-        </button>
+            [class.hover:text-[var(--color-text-main)]]="store.currentDifficulty() !== diff.id">
+            {{ i18n.t(diff.labelKey)() }}
+          </button>
+        }
       </div>
 
-      <!-- Level Grid -->
+      <!-- Level Grid Header -->
       <div class="flex items-center justify-between px-6 pt-4 pb-2">
         <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
           {{ i18n.t('game.total_levels')() }}: {{ store.levelsList().length }}
         </span>
       </div>
+
+      <!-- Level Grid Body -->
       <div class="flex-1 px-6 pb-6 overflow-y-auto custom-scrollbar min-h-0">
-        <div *ngIf="store.levelsList().length === 0" class="flex justify-center items-center h-full">
-          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-accent-from)]"></div>
-        </div>
-        
-        <div *ngIf="store.levelsList().length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <button *ngFor="let level of store.levelsList(); let i = index"
-            (click)="startLevel.emit(level.id)"
-            class="flex flex-col items-center p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-from)] hover:shadow-[0_0_15px_rgba(var(--color-accent-from-rgb),0.3)] transition-all group relative overflow-hidden"
-          >
-            <!-- Status indicator -->
-            <div *ngIf="level.progress?.status === GameStatus.Playing" class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
-            <div *ngIf="level.progress?.status === GameStatus.Playing" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-            
-            <span class="text-sm sm:text-lg font-black text-slate-300 group-hover:text-white transition-colors mb-2 whitespace-nowrap">
-              关卡 {{ i + 1 | number:'3.0-0' }}
-            </span>
-            
-            <!-- Stars -->
-            <div class="flex gap-1 h-4">
-              <ng-container *ngIf="level.progress?.status === GameStatus.Finished">
-                <span *ngFor="let star of [1,2,3]" 
-                      [class.text-yellow-400]="star <= (level.progress.stars || 3)"
-                      [class.text-slate-700]="star > (level.progress.stars || 3)"
-                      class="drop-shadow-[0_0_2px_rgba(250,204,21,0.5)] text-xs">
-                  ★
+        @if (store.levelsList().length === 0) {
+          <div class="flex justify-center items-center h-full">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-accent-from)]"></div>
+          </div>
+        } @else {
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            @for (level of store.levelsList(); track level.id; let i = $index) {
+              <button 
+                (click)="startLevel.emit(level.id)"
+                class="flex flex-col items-center p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-from)] hover:shadow-[0_0_15px_rgba(var(--color-accent-from-rgb),0.3)] transition-all group relative overflow-hidden"
+              >
+                <!-- Status indicator -->
+                @if (level.progress?.status === GameStatus.Playing) {
+                  <div class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
+                  <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                }
+                
+                <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)] transition-colors mb-2 whitespace-nowrap">
+                  关卡 {{ i + 1 | number:'3.0-0' }}
                 </span>
-              </ng-container>
-            </div>
-            
-            <span *ngIf="level.progress?.status === GameStatus.Playing" class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider">In Progress</span>
-          </button>
-        </div>
+                
+                <!-- Stars -->
+                <div class="flex gap-1 h-4">
+                  @if (level.progress?.status === GameStatus.Finished) {
+                    @for (star of [1,2,3]; track star) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" 
+                           [class.text-yellow-400]="(level.progress?.stars || 3) >= star"
+                           [class.text-[var(--color-border-thick)]]="(level.progress?.stars || 3) < star"
+                           viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    }
+                  }
+                </div>
+                
+                @if (level.progress?.status === GameStatus.Playing) {
+                  <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider">{{ i18n.t('game.in_progress')() }}</span>
+                }
+              </button>
+            }
+          </div>
+        }
       </div>
 
       </div>

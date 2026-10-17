@@ -32,7 +32,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
@@ -55,7 +55,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
-      playerId: this.playerId,
+      id: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
@@ -70,15 +70,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];
-    const room = this.store.room();
-    const players = room?.players || [];
 
     return this.store.opponents().map(opp => {
-      const pInfo = players.find(x => x.id === opp.id);
       return {
-        playerId: opp.id,
-        nickname: pInfo?.nickname || opp.id,
-        avatar: pInfo?.avatar,
+        id: opp.id,
+        nickname: opp.id,
         isHost: opp.id === this.store.hostId(),
         isMe: false,
         score: opp.score,
@@ -92,7 +88,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
     if (this.currentRoomMode() === GameMode.Single) return undefined;
-    const oppId = this.opponentsPkStats()[0]?.playerId;
+    const oppId = this.opponentsPkStats()[0]?.id;
     if (!oppId) return undefined;
     const wins = this.store.pkWins();
     return {

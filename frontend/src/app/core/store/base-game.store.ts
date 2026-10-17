@@ -94,6 +94,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
   // Derive all state from the WebSocketService's global gameState
   protected rawState = computed(() => this.ws.gameState());
+  readonly room = computed<any>(() => this.ws.gameState());
 
   // Default implementations for aliases required by GameStoreInterface
   readonly hostId = computed<string>(() => {

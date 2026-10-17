@@ -35,7 +35,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule, GameStartingOverlayComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -99,6 +99,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         ];
 
     return {
+      id: this.playerId,
       playerId: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
@@ -121,9 +122,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       const scores = this.store.scores();
       const oppId = Object.keys(scores).find(id => id !== this.playerId);
       if (!oppId) {
-        const otherPlayer = players.find(p => p.id !== this.playerId);
+        const otherPlayer = players.find((p: any) => p.id !== this.playerId);
         if (!otherPlayer) return [];
         return [{
+          id: otherPlayer.id,
           playerId: otherPlayer.id,
           nickname: otherPlayer.nickname || otherPlayer.id,
           avatar: otherPlayer.avatar,
@@ -134,9 +136,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
           metrics: [{ label: this.i18n.t('game.pk.score')(), value: 0, icon: '⭐', colorClass: 'text-amber-500 font-bold' }]
         }];
       }
-      const otherInfo = players.find(p => p.id === oppId);
+      const otherInfo = players.find((p: any) => p.id === oppId);
       const oppScore = scores[oppId] || 0;
       return [{
+        id: oppId,
         playerId: oppId,
         nickname: otherInfo?.nickname || oppId,
         avatar: otherInfo?.avatar,
@@ -153,8 +156,9 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
     // Speed mode
     return this.store.speedOpponents().map(opp => {
-      const pInfo = players.find(p => p.id === opp.id);
+      const pInfo = players.find((p: any) => p.id === opp.id);
       return {
+        id: opp.id,
         playerId: opp.id,
         nickname: pInfo?.nickname || opp.id,
         avatar: pInfo?.avatar,
@@ -171,7 +175,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
     if (this.currentRoomMode() === GameMode.Single) return undefined;
-    const oppId = this.opponentsPkStats()[0]?.playerId;
+    const oppId = this.opponentsPkStats()[0]?.id || this.opponentsPkStats()[0]?.playerId;
     if (!oppId) return undefined;
     const wins = this.store.pkWins();
     return {

@@ -9,6 +9,8 @@ export type UserStatus = 'active' | 'banned';
 export interface User {
   id: number;
   username: string;
+  nickname?: string;
+  avatar?: string;
   role: UserRole;
   status: UserStatus;
   xp: number;

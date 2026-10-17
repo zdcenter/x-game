@@ -33,7 +33,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -117,6 +117,7 @@ export class SlidingComponent extends BaseGameComponent {
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     const board = this.store.myBoard();
     return {
+      id: this.playerId,
       playerId: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
@@ -136,7 +137,7 @@ export class SlidingComponent extends BaseGameComponent {
     const players = room?.players || [];
 
     return this.store.otherPlayers().map(opp => {
-      const pInfo = players.find(p => p.id === opp.id);
+      const pInfo = players.find((p: any) => p.id === opp.id);
       const oppBoard = opp.board;
       let oppProgress = 0;
       if (oppBoard && oppBoard.size) {
@@ -149,7 +150,7 @@ export class SlidingComponent extends BaseGameComponent {
       }
 
       return {
-        playerId: opp.id,
+        id: opp.id,
         nickname: pInfo?.nickname || opp.id,
         avatar: pInfo?.avatar,
         isHost: opp.id === this.store.hostId(),
@@ -165,7 +166,7 @@ export class SlidingComponent extends BaseGameComponent {
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
     if (this.currentRoomMode() === GameMode.Single) return undefined;
-    const oppId = this.opponentsPkStats()[0]?.playerId;
+    const oppId = this.opponentsPkStats()[0]?.id;
     if (!oppId) return undefined;
     const wins = this.store.pkWins();
     return {

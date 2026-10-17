@@ -771,7 +771,6 @@
   "game.started": "STARTED",
   "game.starting": "Starting...",
   "game.battle_go": "BATTLE START!",
-  "game.ready": "GET READY",
   "game.status_offline": "Offline",
   "game.status_online": "Online",
   "game.status_playing": "Playing",

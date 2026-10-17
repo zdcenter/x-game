@@ -397,6 +397,17 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       });
   });
 
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.id;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
+
   getGameResult(): 'win' | 'lose' {
     if (this.store.currentRoomMode() === GameMode.Single) return 'win';
     return this.isDefeat() ? 'lose' : 'win';

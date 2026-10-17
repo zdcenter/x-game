@@ -39,6 +39,17 @@ export class LightsoutStore extends BaseGameStore {
     return 0;
   });
 
+  readonly remainingLights = computed<number>(() => {
+    const b = this.board();
+    let count = 0;
+    for (const row of b) {
+      for (const light of row) {
+        if (light) count++;
+      }
+    }
+    return count;
+  });
+
   readonly size = computed<number>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();

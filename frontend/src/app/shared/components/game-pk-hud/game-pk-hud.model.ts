@@ -9,7 +9,8 @@ export interface PkMetric {
 }
 
 export interface PkPlayerStats {
-  id: string;
+  id?: string;
+  playerId?: string;
   nickname?: string;
   avatar?: string;
   isMe?: boolean;

@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-10-17] - 🧹 消除全系游戏模板冗余导入警告 (NG8113 Zero-Warning Build)
+
+### 🚀 代码树精简与独立组件声明优化
+- **根除全量 15 个子游戏的 NG8113 警告**：
+  - 伴随全平台向通用电竞对战组件 `<app-game-pk-hud>` 与标准化布局 `<app-game-layout>` 迁移完成，全量清理了 `Block`、`Classic2048`、`Connect`、`Drop2048`、`Hashi`、`Hexa`、`Idiom`、`Lightsout`、`Minesweeper`、`Sliding`、`Sokoban`、`SudokuPkSpeed`、`SudokuPkSteal`、`Tetris`、`Watersort` 中已不再使用的 `PlayerBadgeComponent`、`PlayerListContainerComponent`、`GameLobbyPanelComponent` 等废弃导入；
+  - 生产构建打包 (`npm run build`) 实现 **0 Warning / 0 Error** 完美通过。
+
+## [2026-10-17] - 🎨 数字连线选关大厅视觉与排版重塑：对齐数独高对比度与全局主题变量规范
+
+### 🔗 数字连线选关大厅 (`ConnectLobbyComponent`) 美学升级
+- **彻底根治低对比度浅灰与发白视觉缺陷**：
+  - 移除了原组件表头中导致浅色模式下灰蒙浑浊的硬编码 `bg-black/20`，统一使用全局设计体系背景变量 `bg-[var(--color-bg-main)]` 与边框 `border-[var(--color-border-card)]`；
+  - 彻底淘汰硬编码浅灰色文字 `text-slate-400`、`hover:text-slate-200` 以及关卡卡片中的 `text-slate-300`，全面切换为全局主题感知变量 `var(--color-text-main)` 与 `var(--color-text-muted)`；
+- **完全对齐数独选关大厅 (`SudokuLobbyComponent`) 排版与组件规范**：
+  - 难度切换标签页重构为高对比度自适应胶囊，选中时呈现品牌流光 `text-[var(--color-accent-from)] border-[var(--color-accent-from)]`，未选中时呈现清爽的次级字体并在 Hover 时敏锐加深为主要文本；
+  - 关卡卡片数字统一为 `text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)]`，无论是深色还是浅色主题均清晰饱满；
+  - 淘汰旧式字符星星 `★` 与硬编码深灰 `text-slate-700`，替换为数独一致的矢量 SVG 评星（`text-yellow-400` 与未达成的 `var(--color-border-thick)`）；
+  - 状态标签改用全局多语言 `i18n.t('game.in_progress')()`，符合国际化与主题准则。
+
 ## [2026-10-17] - ⚔️ 全游戏通用电竞 PK 仪表盘 (GamePkHudComponent) 全矩阵覆盖与结算复仇流打通
 
 ### 🎮 彻底终结遗留老旧对战界面，全系游戏 100% 接入通用电竞 HUD

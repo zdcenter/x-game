@@ -17,8 +17,6 @@ import { BlockShape } from './utils/shapes';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
@@ -34,7 +32,6 @@ import { HapticService } from '../../../core/services/haptic.service';
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    PlayerBadgeComponent,
     GamePlayerMiniHudComponent,
     GameLayoutComponent,
     GamePkHudComponent],
@@ -106,10 +103,11 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     return this.store.playersList()
       .filter(p => p.id !== this.playerId)
       .map(p => {
-        const pInfo = players.find(x => x.id === p.id);
+        const pInfo = players.find((x: any) => x.id === p.id);
         const oppScore = this.getOpponentScore(p.id);
         const oppStatus = this.getOpponentStatus(p.id);
         return {
+          id: p.id,
           playerId: p.id,
           nickname: pInfo?.nickname || p.id,
           avatar: pInfo?.avatar,

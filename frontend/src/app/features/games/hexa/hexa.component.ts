@@ -38,8 +38,6 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    PlayerBadgeComponent,
-    PlayerListContainerComponent,
     GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
@@ -99,8 +97,9 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     const players = room?.players || [];
 
     return this.store.otherPlayers().map(opp => {
-      const pInfo = players.find(x => x.id === opp.id);
+      const pInfo = players.find((x: any) => x.id === opp.id);
       return {
+        id: opp.id,
         playerId: opp.id,
         nickname: pInfo?.nickname || opp.id,
         avatar: pInfo?.avatar,

@@ -16,7 +16,6 @@ import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-p
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -37,7 +36,6 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    PlayerBadgeComponent,
     GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
@@ -89,7 +87,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     return this.store.playersList()
       .filter(p => p.id !== this.playerId)
       .map(p => {
-        const pInfo = players.find(x => x.id === p.id);
+        const pInfo = players.find((x: any) => x.id === p.id);
         const board = pkBoards[p.id];
         let maxT = 0;
         if (board?.cells) {
@@ -100,6 +98,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
           }
         }
         return {
+          id: p.id,
           playerId: p.id,
           nickname: pInfo?.nickname || p.id,
           avatar: pInfo?.avatar,

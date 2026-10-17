@@ -37,7 +37,6 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     GameResultOverlayComponent,
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
-    GameLobbyPanelComponent,
     SokobanBoardComponent,
     SokobanLobbyComponent,
     GameToolbarComponent,
@@ -121,6 +120,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
         ],
         status: isFinished ? 'finished' : 'playing'
       };
+    });
   });
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
