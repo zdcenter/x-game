@@ -1015,6 +1015,8 @@
   "result.enter_pk": "Enter PK Match",
   "result.faster_by": "{n}s faster than last time",
   "result.higher_score": "{n} more than last time",
+  "result.honor_title_lose": "Good effort! Practice makes perfect",
+  "result.honor_title_win": "Flawless Clear! Outstanding logic and reaction",
   "result.instant_replay_hint": "Press Space / R for Instant Replay",
   "result.level_progress": "Rank Progression",
   "result.level_up": "Level Up!",

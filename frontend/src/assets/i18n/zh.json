@@ -1017,6 +1017,8 @@
   "result.enter_pk": "进入联机对战 (PK)",
   "result.faster_by": "比上次快了 {n} 秒",
   "result.higher_score": "比上次高 {n} 分",
+  "result.honor_title_lose": "棋差一着，吸取经验卷土重来！",
+  "result.honor_title_win": "恭喜完美通关！你的逻辑与反应令人赞叹",
   "result.instant_replay_hint": "键盘 Space / R 极速再战",
   "result.level_progress": "等级进阶进度",
   "result.level_up": "升级了！",

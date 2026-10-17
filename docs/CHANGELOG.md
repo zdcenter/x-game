@@ -17,12 +17,26 @@
 - **极速重开与对称操作工具条 (Instant Replay & Balanced Tool Deck)**：
   - 主操作按钮强化为超大“再来一局”能量键，外露键盘 `Space` / `R` 极速重开快捷键提示。
   - 底部工具条重构为对称三联卡：`[ 📋 复制战报 (Wordle等专用) ]`、`[ 📤 分享战果 ]` 与 `[ 🚪 返回大厅 ]`，各模块各司其职，大方得体。
-- **全站规范遵循与多语言 (100% i18n & CSS Vars)**：
-  - 新增挑战邀请、经验进度、连胜激活等中英文多语言词条（`game.result_challenge_title`, `game.result_copy_challenge`, `game.result_go_pk` 等），严禁硬编码文本与颜色。
+- **棋盘去嵌套与页面合为一体 (Seamless Board Stage)**：
+  - 彻底移除了数织 (Nonogram)、数独 (Sudoku)、华容道 (Sliding Puzzle)、2048、桥梁谜题 (Hashi)、24点等游戏中残留的二次嵌套暗黑内盒（`backdrop-blur-xl border rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-y-auto`）及其右侧难看的独立垂直滚动条。
+  - 棋盘舞台直接自然融入页面整体舞台中，呼吸感极大提升，告别“小窗口嵌入式 (iframe-like)”生硬感。
+- **全局结算弹窗解除容器绑架 (True Global Viewport Overlay)**：
+  - 移除了游戏舞台与父级容器中的 `backdrop-blur-xl` 与 `overflow-hidden`，并为结算组件配置 `:host { display: contents; }`，彻底解决结算弹窗被困在棋盘小黑盒内部导致滚动和顶部奖杯被裁切的问题，升级为覆盖全浏览器视口的大气全局模态。
+- **单项战绩轻巧胶囊化 (Compact Stat Capsule)**：
+  - 针对数织等仅有用时指标的游戏，自动收缩为优雅小巧的数据高光胶囊（`⏱️ 时间 70:16`），不再占据庞大纵向空间，布局更加紧凑协调。
+- **补全缺失的通关荣誉文案**：
+  - 补全 `result.honor_title_win`（"恭喜完美通关！你的逻辑与反应令人赞叹"）与 `result.honor_title_lose` 多语言词条，消除下划线原始 key 显示。
 
 ### 📝 文件变更
-- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.html` — 游戏结算界面全面重构
-- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.ts` — 新增 PK 模式判定、挑战链接复制与经验条计算
+- `frontend/src/app/shared/components/game-layout/game-layout.component.ts` — 移除舞台容器的 backdrop-blur 与 overflow-hidden，释放全屏 fixed 定位
+- `frontend/src/app/features/games/nonogram/nonogram.component.html` — 移除多余内嵌黑盒与垂直滚动条，棋盘全面融入页面
+- `frontend/src/app/features/games/sudoku/sudoku.component.html` — 移除内层嵌套黑盒
+- `frontend/src/app/features/games/sliding/sliding.component.html` — 移除内层嵌套黑盒
+- `frontend/src/app/features/games/classic2048/classic2048.component.html` — 移除内层嵌套黑盒
+- `frontend/src/app/features/games/hashi/hashi.component.html` — 移除内层嵌套黑盒
+- `frontend/src/app/features/games/math24/math24.component.html` — 移除内层嵌套黑盒
+- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.html` — 解决单指标巨大占位、优化顶部奖杯边距
+- `frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.ts` — 添加 `:host { display: contents; }`
 - `frontend/src/assets/i18n/zh.json` & `en.json` — 补充结算界面与挑战邀请多语言词条
 
 

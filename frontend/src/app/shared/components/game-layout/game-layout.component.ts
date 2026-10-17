@@ -132,8 +132,8 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
       </div>
     </div>
 
-    <!-- The Game Stage (Canvas / Board Container) -->
-    <div class="w-full flex-grow flex flex-col items-center justify-center backdrop-blur-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-md transition-colors duration-300 p-1.5 sm:p-4 min-h-[360px] sm:min-h-[460px] overflow-hidden relative">
+    <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
+    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1.5 sm:p-4 min-h-[360px] sm:min-h-[460px] relative">
       <!-- Project custom game components here -->
       <ng-content></ng-content>
     </div>

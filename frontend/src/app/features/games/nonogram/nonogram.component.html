@@ -27,10 +27,8 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow min-h-0 flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto custom-scrollbar"
-           style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-           
-        <div class="flex-grow flex flex-col relative min-h-0 bg-[var(--color-bg-base)] w-full">
+<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-start">
+
 
           @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
             <app-game-waiting-room class="w-full h-full flex min-h-[500px]" [gameId]="'nonogram'" [mode]="store.currentRoomMode()"
@@ -92,8 +90,8 @@
               </div>
             }
 
-            <!-- Main Board -->
-            <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto flex flex-col p-4 min-h-[400px]"
+            <!-- Main Board (Seamless & Integrated) -->
+            <div class="flex-1 min-h-0 overflow-x-auto flex flex-col items-center p-2 sm:p-4 w-full"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
               <div class="flex flex-col items-center mx-auto mt-2">
@@ -231,7 +229,6 @@
 
           @if (store.status() === GameStatus.Finished && showOverlay()) {
             <app-game-result-overlay
-              class="absolute inset-0 z-50"
               currentGameId="nonogram"
               [status]="getGameResult()"
               [title]="getGameResult() === 'win' ? t('game.you_win')() : t('game.you_lose')()"
@@ -252,5 +249,4 @@
           }
 
       </div>
-    </div>
 </app-game-layout>

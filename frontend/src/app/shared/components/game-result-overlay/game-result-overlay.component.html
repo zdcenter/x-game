@@ -1,8 +1,8 @@
-<div class="fixed inset-0 z-[100] flex flex-col items-center justify-center backdrop-blur-md p-3 sm:p-6 bg-black/75 overflow-y-auto animate-fade-in custom-scrollbar">
+<div class="fixed inset-0 z-[100] flex flex-col items-center justify-start sm:justify-center backdrop-blur-md p-3 sm:p-6 bg-black/75 overflow-y-auto animate-fade-in custom-scrollbar py-6 sm:py-10">
   <div class="my-auto mx-auto w-full max-w-xl sm:max-w-2xl flex flex-col items-center">
     
     <!-- Grand Achievement Result Card -->
-    <div class="relative w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] rounded-3xl p-6 sm:p-9 flex flex-col items-center animate-scale-in overflow-hidden my-3 shrink-0 transition-all"
+    <div class="relative w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] rounded-3xl pt-8 pb-6 px-5 sm:pt-10 sm:pb-8 sm:px-9 flex flex-col items-center animate-scale-in overflow-hidden my-2 shrink-0 transition-all"
          [ngClass]="{
            'ring-2 ring-amber-500/30': status === GameResult.Win,
            'ring-1 ring-rose-500/20': status === GameResult.Lose
@@ -18,20 +18,20 @@
 
       <!-- Top Achievement Medal Emblem & Title -->
       <div class="relative z-10 flex flex-col items-center text-center mb-2">
-        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center text-4xl sm:text-5xl mb-3 shadow-xl relative border transition-transform hover:scale-105"
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl mb-2.5 shadow-lg relative border transition-transform"
              [ngClass]="{
                'bg-gradient-to-b from-amber-300/25 to-amber-500/10 border-amber-400/50 shadow-amber-500/25': status === GameResult.Win,
                'bg-[var(--color-bg-main)] border-[var(--color-border-card)] shadow-slate-900/30': status !== GameResult.Win
              }">
           <span>{{ status === GameResult.Win ? (isNewRecord ? '👑' : '🏆') : '🛡️' }}</span>
           @if (status === GameResult.Win) {
-            <span class="absolute -bottom-2.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-md">
+            <span class="absolute -bottom-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow-md">
               {{ isNewRecord ? 'RECORD' : 'CLEAR' }}
             </span>
           }
         </div>
 
-        <h2 class="text-3xl sm:text-4xl font-black mb-1 tracking-tight"
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-black mb-1 tracking-tight"
             [ngClass]="{
               'bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-sm': status === GameResult.Win,
               'text-rose-400 drop-shadow-sm': status === GameResult.Lose
@@ -45,15 +45,15 @@
 
         <!-- Honor Badges: Record & Streak -->
         @if (isNewRecord || streak() >= 3) {
-          <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
+          <div class="flex flex-wrap items-center justify-center gap-2 mt-2.5">
             @if (isNewRecord) {
-              <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-400/20 to-yellow-300/10 border border-amber-400/50 text-amber-300 shadow-sm animate-pulse">
+              <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black bg-gradient-to-r from-amber-400/20 to-yellow-300/10 border border-amber-400/50 text-amber-300 shadow-sm animate-pulse">
                 <span>🏆</span>
                 <span>{{ i18n.t('result.new_record')() }}</span>
               </div>
             }
             @if (streak() >= 3 && status === GameResult.Win) {
-              <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-gradient-to-r from-orange-500/20 to-red-500/10 border border-orange-500/40 text-orange-400 shadow-sm">
+              <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black bg-gradient-to-r from-orange-500/20 to-red-500/10 border border-orange-500/40 text-orange-400 shadow-sm">
                 <span>🔥</span>
                 <span>{{ i18n.t('result.streak_active')().replace('{n}', streak().toString()) }}</span>
               </div>
@@ -64,17 +64,44 @@
 
       <!-- Core Performance Matrix (Stats Grid) -->
       @if (animatedStats() && animatedStats().length > 0) {
-        <div class="w-full grid grid-cols-2 sm:grid-cols-3 gap-3 my-4 relative z-10">
-          @for (stat of animatedStats(); track stat.label || stat.icon) {
-            <div class="bg-[var(--color-bg-main)]/80 backdrop-blur-sm p-3.5 rounded-2xl border border-[var(--color-border-card)] text-center flex flex-col justify-center shadow-inner hover:border-[var(--color-accent-from)]/40 transition-colors">
-              <div class="text-[11px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold mb-1 flex items-center justify-center gap-1">
-                @if (stat.icon) { <span>{{ stat.icon }}</span> }
-                @if (stat.label) { <span>{{ stat.label }}</span> }
-              </div>
-              <div class="text-2xl sm:text-3xl font-black text-[var(--color-text-main)] font-mono tracking-tight">{{ stat.value }}</div>
+        @if (animatedStats().length === 1) {
+          <!-- Single Stat Capsule: Compact, Elegant, Non-Intrusive -->
+          <div class="my-2.5 px-6 py-2 rounded-2xl bg-[var(--color-bg-main)]/90 border border-[var(--color-border-card)] shadow-inner flex items-center justify-center gap-3 relative z-10">
+            <div class="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-bold flex items-center gap-1.5">
+              @if (animatedStats()[0].icon) { <span class="text-sm">{{ animatedStats()[0].icon }}</span> }
+              @if (animatedStats()[0].label) { <span>{{ animatedStats()[0].label }}</span> }
             </div>
-          }
-        </div>
+            <div class="text-2xl sm:text-3xl font-black text-[var(--color-text-main)] font-mono tracking-tight">
+              {{ animatedStats()[0].value }}
+            </div>
+          </div>
+        } @else if (animatedStats().length === 2) {
+          <!-- Two Column Stats Matrix -->
+          <div class="w-full max-w-md grid grid-cols-2 gap-2.5 my-3 relative z-10 mx-auto">
+            @for (stat of animatedStats(); track stat.label || stat.icon) {
+              <div class="bg-[var(--color-bg-main)]/80 backdrop-blur-sm p-3 rounded-2xl border border-[var(--color-border-card)] text-center flex flex-col justify-center shadow-inner hover:border-[var(--color-accent-from)]/40 transition-colors">
+                <div class="text-[11px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold mb-1 flex items-center justify-center gap-1">
+                  @if (stat.icon) { <span>{{ stat.icon }}</span> }
+                  @if (stat.label) { <span>{{ stat.label }}</span> }
+                </div>
+                <div class="text-2xl sm:text-3xl font-black text-[var(--color-text-main)] font-mono tracking-tight">{{ stat.value }}</div>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Multi Column Stats Matrix -->
+          <div class="w-full grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3 relative z-10">
+            @for (stat of animatedStats(); track stat.label || stat.icon) {
+              <div class="bg-[var(--color-bg-main)]/80 backdrop-blur-sm p-3 rounded-2xl border border-[var(--color-border-card)] text-center flex flex-col justify-center shadow-inner hover:border-[var(--color-accent-from)]/40 transition-colors">
+                <div class="text-[11px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold mb-1 flex items-center justify-center gap-1">
+                  @if (stat.icon) { <span>{{ stat.icon }}</span> }
+                  @if (stat.label) { <span>{{ stat.label }}</span> }
+                </div>
+                <div class="text-2xl sm:text-3xl font-black text-[var(--color-text-main)] font-mono tracking-tight">{{ stat.value }}</div>
+              </div>
+            }
+          </div>
+        }
       }
 
       <!-- XP & Level Progress Bar -->

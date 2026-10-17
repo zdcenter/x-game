@@ -31,11 +31,9 @@
           (levelSelect)="startLevel($event)"
           (openLobby)="navigateToPkArena()">
         </app-math24-lobby>
-      } @else if (view() === 'room') {
-        <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto custom-scrollbar"
-             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
           <app-game-waiting-room
-            class="flex-1 min-h-0"
+            class="flex-1 min-h-0 w-full"
             [gameId]="'math24'"
             [mode]="store.currentRoomMode()"
             [roomId]="store.roomId()" [difficulty]="GameDifficulty.Medium"
@@ -54,8 +52,7 @@
         </div>
       } @else {
         <!-- PLAY VIEW -->
-        <div class="w-full flex-grow flex flex-col backdrop-blur-xl border rounded-2xl lg:rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 overflow-y-auto custom-scrollbar"
-             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
           
           <div class="flex-1 overflow-y-auto relative p-2 lg:p-4 h-full flex flex-col items-center justify-start">
             <!-- Result Overlay -->

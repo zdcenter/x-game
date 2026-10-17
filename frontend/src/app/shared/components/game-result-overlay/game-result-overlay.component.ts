@@ -20,6 +20,11 @@ import confetti from 'canvas-confetti';
   standalone: true,
   imports: [CommonModule, AdsenseComponent],
   templateUrl: './game-result-overlay.component.html',
+  styles: [`
+    :host {
+      display: contents;
+    }
+  `]
 })
 export class GameResultOverlayComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
