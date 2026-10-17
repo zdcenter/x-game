@@ -15,7 +15,6 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -23,7 +22,8 @@ import { AudioService } from '../../../core/services/audio.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
-import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { getLiquidTheme, LiquidColorTheme } from './water-colors.util';
 
 @Component({
   selector: 'app-watersort',
@@ -52,6 +52,21 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     @keyframes liquid-wave {
       0% { transform: scaleY(1); }
       100% { transform: scaleY(1.05); filter: brightness(1.2); }
+    }
+    .water-stream-flow {
+      background-size: 100% 24px;
+      animation: water-flow 0.25s linear infinite;
+    }
+    @keyframes water-flow {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 24px; }
+    }
+    @keyframes splash-ripple {
+      0%, 100% { transform: translate(-50%, 0) scale(0.7); opacity: 0.7; }
+      50% { transform: translate(-50%, 0) scale(1.3); opacity: 1; }
+    }
+    .splash-ripple-anim {
+      animation: splash-ripple 0.16s ease-in-out infinite;
     }
   `]
 })
@@ -88,6 +103,10 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     streamY: number,
     streamHeight: number
   } | null = null;
+
+  getStreamTheme(color: string): LiquidColorTheme {
+    return getLiquidTheme(color);
+  }
   
   private roomLifecycle = setupRoomLifecycle({
     gameId: 'watersort',
@@ -421,7 +440,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
               this.cdr.markForCheck();
             }
           }, 300);
-        }, 350); // Pouring duration
+        }, 450); // Pouring duration (extended for smooth fluid visual)
       }, 300); // Flying duration
     }
   }
