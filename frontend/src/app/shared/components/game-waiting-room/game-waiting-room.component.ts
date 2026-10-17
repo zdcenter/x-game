@@ -87,6 +87,8 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   showCopiedToast = signal(false);
+  linkCopied = signal(false);
+  roomCopied = signal(false);
 
   getInviteUrl(): string {
     const url = new URL(getHref());
@@ -95,6 +97,14 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     url.searchParams.set('diff', this.difficulty);
     url.searchParams.set('host', this.hostId);
     return url.toString();
+  }
+
+  copyRoomId() {
+    navigator.clipboard.writeText(this.roomId).then(() => {
+      this.roomCopied.set(true);
+      this.toast.show(this.i18n.t('game.copied_room_id')() || 'Room ID copied!', 'success');
+      setTimeout(() => this.roomCopied.set(false), 2000);
+    });
   }
 
   copyInviteLink() {
@@ -109,6 +119,8 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
       text: text,
       url: url
     });
+    this.linkCopied.set(true);
+    setTimeout(() => this.linkCopied.set(false), 2500);
   }
 
   openFriendList() {

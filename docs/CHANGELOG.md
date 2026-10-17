@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026-10-17] - ⚔️ 联机等待大厅双翼对决大屏与扫码互通重构 (PK Waiting Room Grand Battle Arena)
+
+### ✨ 新功能与重构 (Features & Redesign)
+- **告别 PC 狭窄压抑，升级至宽阔大屏 (Grand Duel Arena Layout)**：
+  - 将原本限制在 512px (`max-w-lg`) 狭窄管道的等待大厅，全面重构扩展至最高 1024px (`max-w-4xl xl:max-w-5xl`) 的电竞级对决大屏，在大屏幕下视野宽阔、左右对称、气势磅礴。
+- **PC 端双翼功能分区架构 (Dual-Wing Layout on PC)**：
+  - **左翼 · ⚔️ 双人对决擂台 (Combat Arena)**：
+    - 房主与挑战者采用大尺寸对立战术舱布局，配有高品质头像、段位称号、动态高光准备光环（绿光已就绪 / 金光房主就绪）与金属质感微动效 `VS` 徽标。
+    - 挑战者空席状态下，以极具呼吸感的高级玻璃拟态虚位以待，提供一键 `👥 呼叫在线好友` 与 `🔗 复制邀请链接` 两个明确动作，彻底剔除原本三处重复堆叠的混乱按钮。
+  - **右翼 · 📡 邀请互通与对局操作台 (Gateway & Match Controls)**：
+    - **跨端秒连卡**：高清单色二维码面对面扫码（支持手机微信/系统相机秒进房间），搭配带即时复制动效的邀请链接按钮。
+    - **对局操作控制台**：房主专属的全局呼吸渐变 `[ ⚔️ 开始对决 ]` 大能量键（未就绪时禁用并附带贴心提示），以及对称的 `[ 🚪 退出房间 ]` 与 `[ ⚙️ 切换游戏/设置 ]`。
+- **全端响应式与全主题变量适配 (100% Responsive & CSS Vars)**：
+  - 移动端（手机/iPad）自动优雅收敛为垂直流式卡片，零横向滚动条，触控舒适；
+  - 严格使用全局 CSS 变量（`var(--color-bg-card)`, `var(--color-bg-main)`, `var(--color-border-card)`），深浅色主题无缝切换；
+  - 全新补充房间号一键复制、对决擂台席位等多语言词条，严禁硬编码。
+
+### 📝 文件变更
+- `frontend/src/app/shared/components/game-waiting-room/game-waiting-room.component.html` — 全面重构等待大厅双翼对战大屏与操作台
+- `frontend/src/app/shared/components/game-waiting-room/game-waiting-room.component.ts` — 新增房间号与链接复制动效信号
+- `frontend/src/assets/i18n/zh.json` & `en.json` — 补充等待大厅多语言词条
+
 ## [2026-10-17] - 🏆 游戏结算成就大面板与社交 PK 邀请舱重构 (Game Result Overlay & PK Challenge Deck Redesign)
 
 ### ✨ 新功能与重构 (Features & Redesign)
