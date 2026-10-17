@@ -1,8 +1,8 @@
-<div class="fixed inset-0 z-[100] flex flex-col items-center justify-start sm:justify-center backdrop-blur-md p-3 sm:p-6 bg-black/75 overflow-y-auto animate-fade-in custom-scrollbar py-6 sm:py-10">
-  <div class="my-auto mx-auto w-full max-w-xl sm:max-w-2xl flex flex-col items-center">
+<div class="fixed inset-0 z-[100] flex flex-col items-center justify-center backdrop-blur-md p-3 sm:p-6 bg-[var(--color-overlay)] overflow-y-auto animate-fade-in custom-scrollbar">
+  <div class="m-auto w-full max-w-xl sm:max-w-2xl flex flex-col items-center py-4">
     
     <!-- Grand Achievement Result Card -->
-    <div class="relative w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] rounded-3xl pt-8 pb-6 px-5 sm:pt-10 sm:pb-8 sm:px-9 flex flex-col items-center animate-scale-in overflow-hidden my-2 shrink-0 transition-all"
+    <div class="relative w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] rounded-3xl pt-8 pb-6 px-5 sm:pt-10 sm:pb-8 sm:px-9 flex flex-col items-center animate-scale-in overflow-hidden shrink-0 transition-all"
          [ngClass]="{
            'ring-2 ring-amber-500/30': status === GameResult.Win,
            'ring-1 ring-rose-500/20': status === GameResult.Lose
@@ -271,26 +271,6 @@
       }
 
     </div>
-
-    <!-- Recommendations Hub -->
-    @if (recommendedGames.length > 0) {
-      <div class="w-full max-w-2xl mt-2 flex flex-col items-center animate-fade-in shrink-0 pb-6">
-        <div class="text-[11px] text-white/70 uppercase tracking-widest font-black mb-3 bg-black/40 px-3.5 py-1 rounded-full backdrop-blur-sm border border-white/10">
-          {{ i18n.t('game.recommendations')() }}
-        </div>
-        <div class="flex gap-3 w-full overflow-x-auto pb-2 px-2 custom-scrollbar snap-x justify-start sm:justify-center">
-          @for (game of recommendedGames; track game.id) {
-            <div (click)="handleGoToGame(game.id)" 
-                 class="shrink-0 w-[120px] sm:w-[140px] bg-[var(--color-bg-card)]/90 backdrop-blur-sm border border-[var(--color-border-card)] hover:border-emerald-500/50 rounded-2xl p-3 flex flex-col items-center gap-2 cursor-pointer transition-all hover:scale-105 hover:shadow-lg snap-center group">
-              <img [src]="'/assets/games/icons/' + game.id + '.svg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-md group-hover:scale-110 transition-transform" alt="icon">
-              <div class="font-bold text-xs text-center text-[var(--color-text-main)] group-hover:text-emerald-400 transition-colors line-clamp-1">
-                {{ i18n.t(game.titleKey)() }}
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    }
 
   </div>
 </div>

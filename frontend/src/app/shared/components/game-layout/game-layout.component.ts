@@ -82,7 +82,7 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
   </div>
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
-  <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3 z-10 transition-all">
+  <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
     
     <!-- Top Action Console Bar (Difficulty, Quick PK, Rules) -->
     <div class="w-full flex flex-wrap justify-between items-center mb-2 px-1 gap-2">

@@ -24,8 +24,12 @@
   - 移除了游戏舞台与父级容器中的 `backdrop-blur-xl` 与 `overflow-hidden`，并为结算组件配置 `:host { display: contents; }`，彻底解决结算弹窗被困在棋盘小黑盒内部导致滚动和顶部奖杯被裁切的问题，升级为覆盖全浏览器视口的大气全局模态。
 - **单项战绩轻巧胶囊化 (Compact Stat Capsule)**：
   - 针对数织等仅有用时指标的游戏，自动收缩为优雅小巧的数据高光胶囊（`⏱️ 时间 70:16`），不再占据庞大纵向空间，布局更加紧凑协调。
-- **补全缺失的通关荣誉文案**：
-  - 补全 `result.honor_title_win`（"恭喜完美通关！你的逻辑与反应令人赞叹"）与 `result.honor_title_lose` 多语言词条，消除下划线原始 key 显示。
+- **移除结算底端推荐，极致净化弹窗 (Removed Recommendations Hub)**：
+  - 根据体验反馈彻底移除结算面板下方的“你可能也喜欢”多余游戏轮播卡片，消除了横向滚动条与布局冗余，使结算弹窗高度极致收敛，保持整体界面的干净整洁与专注感。
+- **全站多主题色遮罩自适应 (Theme-Aware Overlay Backdrop)**：
+  - 将结算遮罩层硬编码的 `bg-black/75` 全面重构为全站 CSS 主题变量 `bg-[var(--color-overlay)] backdrop-blur-md`。在浅色主题下呈现温润透气的 30% 柔和微光蒙版，在深色主题下呈现 70% 沉浸深色，彻底解决在浅色模式下出现突兀黑洞卡片的不匹配违和感。
+- **解除 main 容器层叠限制，全屏自由居中**：
+  - 移除了 `game-layout` 中 `<main>` 容器的 `z-10` 与 `transition-all`，使结算层在根层叠上下文中以 `z-[100]` 完全覆盖包括顶部导航与游戏标题在内的整个浏览器视口，结合 `m-auto` 彻底根除顶部荣誉徽章被截断的显示缺陷。
 
 ### 📝 文件变更
 - `frontend/src/app/shared/components/game-layout/game-layout.component.ts` — 移除舞台容器的 backdrop-blur 与 overflow-hidden，释放全屏 fixed 定位
