@@ -492,6 +492,8 @@
   "game.diff_custom": "Personnalisé",
   "game.diff_custom_desc": "Grille et mines personnalisées",
   "game.diff_drop2048_standard": "Planche standard 5x7",
+  "game.coverage": "Couverture",
+  "game.flows": "Lignes",
   "game.diff_easy": "Facile",
   "game.diff_expert": "expert",
   "game.diff_gomoku_easy": "IA Facile (15x15)",

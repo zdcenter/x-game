@@ -492,6 +492,8 @@
   "game.diff_custom": "カスタム",
   "game.diff_custom_desc": "カスタムグリッドと地雷",
   "game.diff_drop2048_standard": "標準5x7ボード",
+  "game.coverage": "カバレッジ",
+  "game.flows": "ライン",
   "game.diff_easy": "簡単",
   "game.diff_expert": "専門家",
   "game.diff_gomoku_easy": "簡単AI（15x15）",

@@ -492,6 +492,8 @@
   "game.diff_custom": "Angepasst",
   "game.diff_custom_desc": "Benutzerdefiniertes Raster und Minen",
   "game.diff_drop2048_standard": "Standard 5x7 Brett",
+  "game.coverage": "Abdeckung",
+  "game.flows": "Linien",
   "game.diff_easy": "Einfach",
   "game.diff_expert": "Experte",
   "game.diff_gomoku_easy": "Einfaches KI (15x15)",

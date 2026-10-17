@@ -492,6 +492,8 @@
   "game.diff_custom": "Personalizado",
   "game.diff_custom_desc": "Cuadrícula y minas personalizadas",
   "game.diff_drop2048_standard": "Tablero estándar 5x7",
+  "game.coverage": "Cobertura",
+  "game.flows": "Líneas",
   "game.diff_easy": "Fácil",
   "game.diff_expert": "experto",
   "game.diff_gomoku_easy": "IA Fácil (15x15)",

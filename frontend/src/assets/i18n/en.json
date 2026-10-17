@@ -519,6 +519,8 @@
   "drop2048.controls_move": "Move Left/Right",
   "drop2048.controls_soft_drop": "Soft Drop",
   "drop2048.controls_hard_drop": "Hard Drop",
+  "game.coverage": "Coverage",
+  "game.flows": "Flows",
   "game.diff_easy": "Easy",
   "game.diff_expert": "Expert",
   "game.diff_gomoku_easy": "Easy AI (15x15)",

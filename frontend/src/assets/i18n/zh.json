@@ -519,6 +519,8 @@
   "drop2048.controls_move": "左右移动",
   "drop2048.controls_soft_drop": "软降加速",
   "drop2048.controls_hard_drop": "硬降直落",
+  "game.coverage": "覆盖率",
+  "game.flows": "连线",
   "game.diff_easy": "简单",
   "game.diff_expert": "专家",
   "game.diff_gomoku_easy": "简单 AI (15x15)",

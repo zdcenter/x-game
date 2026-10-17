@@ -160,6 +160,38 @@ export class ConnectEngine {
     return true;
   }
 
+  getConnectedFlowsCount(): number {
+    let count = 0;
+    for (const ep of this.endpoints) {
+      const path = this.paths.get(ep.color);
+      if (path && path.length >= 2) {
+        const head = path[path.length - 1];
+        if (this.isEndpointOfColor(head.r, head.c, ep.color)) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  getTotalFlowsCount(): number {
+    return this.endpoints.length;
+  }
+
+  getFilledCellsCount(): number {
+    let filled = 0;
+    for (let r = 0; r < this.height; r++) {
+      for (let c = 0; c < this.width; c++) {
+        if (this.grid[r][c] !== 0) filled++;
+      }
+    }
+    return filled;
+  }
+
+  getTotalCellsCount(): number {
+    return this.width * this.height;
+  }
+
   // Find which color path a position belongs to
   getColorAt(r: number, c: number): number {
     return this.grid[r][c];

@@ -36,14 +36,33 @@
 
     <ng-container *ngIf="view() === 'play'">
       <!-- INFO BAR for single player -->
-      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full max-w-xl mx-auto flex justify-between items-center px-4 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl mb-4 text-sm sm:text-base border border-[var(--color-border-card)] shadow-sm">
+      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full max-w-xl mx-auto flex flex-wrap justify-between items-center gap-2 px-3 sm:px-4 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl mb-4 text-xs sm:text-sm border border-[var(--color-border-card)] shadow-sm">
         <div class="text-[var(--color-text-main)] font-bold flex items-center gap-2">
-          <span class="text-[var(--color-accent-from)] uppercase">{{ i18n.t('game.diff_' + store.currentDifficulty())() }}</span>
-          <span class="text-[var(--color-text-muted)]">|</span>
+          <span class="px-2 py-0.5 rounded-md bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black text-xs uppercase">{{ i18n.t('game.diff_' + store.currentDifficulty())() }}</span>
           <span>第 {{ store.currentLevelNum() }} 关</span>
         </div>
-        <div class="text-[var(--color-text-main)] font-mono flex items-center gap-4">
-          <span>⏱️ {{ formatTime(store.timeSpent()) }}</span>
+        
+        <div class="flex items-center gap-2 sm:gap-3 font-semibold">
+          <!-- Flow Pairs Connected -->
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border-card)]"
+               [class.text-emerald-500]="store.connectedFlows() === store.totalFlows()"
+               [class.border-emerald-500/40]="store.connectedFlows() === store.totalFlows()"
+               [class.text-[var(--color-text-secondary)]]="store.connectedFlows() !== store.totalFlows()">
+            <span>🔗</span>
+            <span>{{ i18n.t('game.flows')() || '连线' }}: {{ store.connectedFlows() }}/{{ store.totalFlows() }}</span>
+          </div>
+
+          <!-- Board Coverage Percentage -->
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border-card)]"
+               [class.text-emerald-500]="store.coveragePercent() === 100"
+               [class.border-emerald-500/40]="store.coveragePercent() === 100"
+               [class.text-[var(--color-text-secondary)]]="store.coveragePercent() !== 100">
+            <span>🟩</span>
+            <span>{{ i18n.t('game.coverage')() || '覆盖率' }}: {{ store.coveragePercent() }}%</span>
+          </div>
+
+          <!-- Timer -->
+          <span class="text-[var(--color-text-main)] font-mono font-bold">⏱️ {{ formatTime(store.timeSpent()) }}</span>
         </div>
       </div>
 

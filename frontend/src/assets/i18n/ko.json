@@ -492,6 +492,8 @@
   "game.diff_custom": "사용자 정의",
   "game.diff_custom_desc": "사용자 지정 그리드 및 지뢰",
   "game.diff_drop2048_standard": "표준 5x7 보드",
+  "game.coverage": "커버리지",
+  "game.flows": "연결",
   "game.diff_easy": "쉬운",
   "game.diff_expert": "전문가",
   "game.diff_gomoku_easy": "쉬운 AI (15x15)",

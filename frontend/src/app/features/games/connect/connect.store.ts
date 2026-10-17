@@ -85,19 +85,39 @@ export class ConnectStore extends BaseGameStore {
     return state.players[this.playerId()];
   });
 
+  boardVersion = signal<number>(0);
+
   myProgress = computed(() => {
+    this.boardVersion();
     const engine = this.localEngine();
     if (!engine) return 0;
     
-    // Count filled cells
-    let filled = 0;
-    for (let r = 0; r < engine.height; r++) {
-      for (let c = 0; c < engine.width; c++) {
-        if (engine.grid[r][c] !== 0) filled++;
-      }
-    }
-    const total = engine.width * engine.height;
+    const filled = engine.getFilledCellsCount();
+    const total = engine.getTotalCellsCount();
     return total > 0 ? (filled / total) * 100 : 0;
+  });
+
+  connectedFlows = computed(() => {
+    this.boardVersion();
+    const engine = this.localEngine();
+    if (!engine) return 0;
+    return engine.getConnectedFlowsCount();
+  });
+
+  totalFlows = computed(() => {
+    this.boardVersion();
+    const engine = this.localEngine();
+    if (!engine) return 0;
+    return engine.getTotalFlowsCount();
+  });
+
+  coveragePercent = computed(() => {
+    this.boardVersion();
+    const engine = this.localEngine();
+    if (!engine) return 0;
+    const filled = engine.getFilledCellsCount();
+    const total = engine.getTotalCellsCount();
+    return total > 0 ? Math.round((filled / total) * 100) : 0;
   });
 
   opponents = computed(() => {
@@ -173,6 +193,7 @@ export class ConnectStore extends BaseGameStore {
   }
 
   checkSolution() {
+    this.boardVersion.update(v => v + 1);
     const engine = this.localEngine();
     if (!engine) return;
 

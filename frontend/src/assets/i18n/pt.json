@@ -492,6 +492,8 @@
   "game.diff_custom": "Personalizado",
   "game.diff_custom_desc": "Grade personalizada e minas",
   "game.diff_drop2048_standard": "Placa padrão 5x7",
+  "game.coverage": "Cobertura",
+  "game.flows": "Linhas",
   "game.diff_easy": "Fácil",
   "game.diff_expert": "Especialista",
   "game.diff_gomoku_easy": "IA Fácil (15x15)",
