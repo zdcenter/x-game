@@ -20,9 +20,17 @@ export class GamePkHudComponent {
   readonly GameMode = GameMode;
   readonly GameStatus = GameStatus;
 
-  @Input({ required: true }) myPlayer!: PkPlayerStats;
+  @Input() myPlayer!: PkPlayerStats;
+  @Input() set myStats(val: PkPlayerStats) { if (val) this.myPlayer = val; }
   @Input() opponents: PkPlayerStats[] = [];
   @Input() targetWins: number = 1;
+  @Input() set roundFormat(val: string | undefined) {
+    if (!val) return;
+    if (val === 'BO3') this.targetWins = 2;
+    else if (val === 'BO5') this.targetWins = 3;
+    else if (val === 'BO1') this.targetWins = 1;
+  }
+  @Input() seriesScore?: { me: number; opponent: number };
   @Input() currentRound?: number;
   @Input() gameMode: GameModeType | string = GameMode.Speed;
   @Input() status: GameStatusType | string = GameStatus.Playing;

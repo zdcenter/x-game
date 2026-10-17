@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { OfflineSyncService } from './offline-sync.service';
 
 export interface UserGameStat {
   ID: number;
@@ -57,6 +58,7 @@ export interface SubmitStatResponse {
 })
 export class GameStatsService {
   private http = inject(HttpClient);
+  private offlineSync = inject(OfflineSyncService);
   private apiUrl = environment.apiUrl;
 
   getStats(gameId: string): Observable<UserGameStat[]> {
@@ -69,7 +71,16 @@ export class GameStatsService {
   }
 
   submitStat(gameId: string, payload: SubmitStatRequest): Observable<SubmitStatResponse> {
-    return this.http.post<SubmitStatResponse>(`${this.apiUrl}/stats/${gameId}`, payload);
+    if (this.offlineSync.isOffline()) {
+      return of(this.offlineSync.queueStat(gameId, payload));
+    }
+
+    return this.http.post<SubmitStatResponse>(`${this.apiUrl}/stats/${gameId}`, payload).pipe(
+      catchError(err => {
+        // Fallback for offline/timeout/unreachable: queue locally
+        return of(this.offlineSync.queueStat(gameId, payload));
+      })
+    );
   }
 
   getMatchHistory(options: { limit?: number; gameId?: string; mode?: string } = {}): Observable<any[]> {

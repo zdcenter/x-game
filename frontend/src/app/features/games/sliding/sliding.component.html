@@ -68,41 +68,16 @@
               </div>
             </div>
           } @else {
-          <!-- Players / Opponents (Top) -->
-          <div class="flex-none py-1 mb-2 border-b border-[var(--color-border-card)] shrink-0 hidden lg:block w-full">
-            <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
-              
-              <!-- Local Player (You) -->
-              <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                [playerName]="playerId"
-                [isHost]="playerId === store.hostId()"
-                [isMe]="true"
-                [stats]="[
-                  (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                  { icon: '⏱️', value: formatTime(getElapsedMs(store.globalStartAt())), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
-                  { icon: '🔄', value: store.myBoard()?.moves || 0 }
-                ]"
-                [status]="store.myBoard()?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
-              </app-player-badge>
-
-              <app-player-list-container [opponentsCount]="store.otherPlayers().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                <ng-template #opponentsList>
-                  @for (opp of store.otherPlayers(); track opp.id) {
-                    <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                      [playerName]="opp.id"
-                      [isHost]="opp.id === store.hostId()"
-                      [isMe]="false"
-                      [stats]="[
-                        (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                        { icon: '🔄', value: opp.board?.moves || 0 }
-                      ]"
-                      [status]="opp.board?.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing">
-                    </app-player-badge>
-                  }
-                </ng-template>
-              </app-player-list-container>
+            <!-- Universal PK Battle HUD (Sliding Puzzle) -->
+            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+              <app-game-pk-hud
+                [myStats]="myPlayerPkStats()"
+                [opponents]="opponentsPkStats()"
+                [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                [seriesScore]="seriesScore()"
+                [elapsedTime]="formattedElapsedTime()"
+              ></app-game-pk-hud>
             </div>
-          </div>
           }
 
           <!-- The Grid Area -->
@@ -179,14 +154,20 @@
           @if (store.status() === GameStatus.Finished && showOverlay()) {
             <app-game-result-overlay currentGameId="sliding" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
               [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()"
+              [isPkMatch]="currentRoomMode() !== GameMode.Single"
+              [opponentInfo]="opponentsPkStats()[0]"
+              [pkSeriesScore]="seriesScore()"
+              [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
               [xpResult]="store.lastStatResult()?.xp_result"
               [isNewRecord]="store.lastStatResult()?.isNewRecord"
               [showRestart]="currentRoomMode() === GameMode.Single || store.hostId() === playerId"
               [showDismiss]="currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-              [showLeave]="currentRoomMode() === GameMode.Single || store.hostId() !== playerId" (leave)="goBack()"
+              [showLeave]="currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
+              (rematch)="handleRematch()"
+              (leave)="goBack()"
               (restart)="store.playAgain()" (dismiss)="dismissRoom()"
-          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-          (changeRoomGame)="store.changeRoomGame($event)">
+              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+              (changeRoomGame)="store.changeRoomGame($event)">
             </app-game-result-overlay>
           }
 

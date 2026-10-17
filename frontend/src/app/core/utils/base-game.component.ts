@@ -223,6 +223,10 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleRematch() {
+    this.doRestart();
+  }
+
   dismissRoom() {
     this.baseToastService.confirm({
       title: this.i18nBase.t('game.dismiss_title')(),

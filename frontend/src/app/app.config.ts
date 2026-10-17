@@ -48,19 +48,13 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' }), withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([ssrNoopInterceptor, authInterceptor]), withFetch()),
-    // Register sw.js (a self-killing SW) so legacy ngsw caches get cleared.
-    // Also listen for SW_KILL_ALL message to unregister any remaining SW registrations.
+    // Register PWA Service Worker for offline play and asset caching
     {
       provide: APP_INITIALIZER,
       useFactory: () => () => {
         if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-          navigator.serviceWorker.addEventListener('message', (e) => {
-            if (e.data?.type === 'SW_KILL_ALL') {
-              navigator.serviceWorker.getRegistrations().then(regs =>
-                regs.forEach(reg => reg.unregister())
-              );
-            }
+          navigator.serviceWorker.register('/sw.js').catch(err => {
+            console.warn('[PWA] Service Worker registration failed:', err);
           });
         }
       },

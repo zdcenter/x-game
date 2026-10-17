@@ -1,57 +1,29 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
-import { Component, effect, inject, Input, signal } from '@angular/core';
+import { Component, effect, inject, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';
 import { Math24BoardComponent } from '../math24-board/math24-board.component';
-import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
-import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
-import { GamePlayerMiniHudComponent } from '../../../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GamePkHudComponent } from '../../../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { AuthStore } from '../../../../../core/auth/auth.store';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-math24-pk-speed',
   standalone: true,
-  imports: [CommonModule, Math24BoardComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
+  imports: [CommonModule, Math24BoardComponent, GamePkHudComponent],
   template: `
     <div class="flex flex-col h-full relative overflow-hidden bg-transparent">
 
-      <!-- Mobile floating HUD -->
-      <app-game-player-mini-hud
-        class="lg:hidden"
-        [myPlayer]="{ playerName: playerId, isHost: playerId === hostId, stats: [{ icon: '🧩', value: (store.players()[playerId]?.progress || 0) + '/' + totalPuzzles }], status: isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === GameStatus.Finished ? 'finished' : 'playing') }"
-        [opponents]="opponentHudConfigs">
-      </app-game-player-mini-hud>
-
-      <!-- Top Progress Board (desktop only) -->
-      <div class="hidden lg:block flex-none py-1 mb-1 border-b border-[var(--color-border-card)] w-full">
-        <div class="flex items-center gap-2 lg:gap-4 max-w-[800px] mx-auto px-2">
-
-          <!-- Local Player -->
-          <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-            [playerName]="playerId"
-            [isHost]="playerId === hostId"
-            [isMe]="true"
-            [stats]="[{ icon: '🧩', value: (store.players()[playerId]?.progress || 0) + '/' + totalPuzzles }]"
-            [status]="isFrozen(store.players()[playerId]) ? 'frozen' : (store.status() === GameStatus.Finished ? GameStatus.Finished : 'playing')"
-            [freezeCountdown]="isFrozen(store.players()[playerId]) ? getFrozenRemaining(store.players()[playerId]) : undefined"
-          ></app-player-badge>
-
-          <!-- Opponents -->
-          <app-player-list-container [opponentsCount]="store.players() ? (store.players() | keyvalue)?.length! - 1 : 0" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-            <ng-template #opponentsList>
-              <ng-container *ngFor="let kv of store.players() | keyvalue">
-                <app-player-badge *ngIf="kv.key !== playerId" class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="$any(kv.key)"
-                  [isHost]="kv.key === hostId"
-                  [isMe]="false"
-                  [stats]="[{ icon: '🧩', value: (kv.value.progress || 0) + '/' + totalPuzzles }]"
-                  [status]="isFrozen(kv.value) ? 'frozen' : (store.status() === GameStatus.Finished ? GameStatus.Finished : 'playing')"
-                  [freezeCountdown]="isFrozen(kv.value) ? getFrozenRemaining(kv.value) : undefined"
-                ></app-player-badge>
-              </ng-container>
-            </ng-template>
-          </app-player-list-container>
-        </div>
+      <!-- Universal PK HUD -->
+      <div class="flex-none py-1 mb-1 shrink-0 w-full">
+        <app-game-pk-hud
+          [myPlayer]="myPlayerPkStats()"
+          [opponents]="opponentsPkStats()"
+          [targetWins]="totalPuzzles"
+          [gameMode]="GameMode.Speed"
+          [status]="store.status()">
+        </app-game-pk-hud>
       </div>
 
       <!-- Rule Banner -->
@@ -93,6 +65,8 @@ export class Math24PkSpeedComponent {
 
   store = inject(Math24Store);
   i18n = inject(I18nService);
+  private authStore = inject(AuthStore);
+  GameMode = GameMode;
   frozenRemaining = signal(0);
 
   get totalPuzzles(): number {
@@ -103,16 +77,45 @@ export class Math24PkSpeedComponent {
     return this.store.players()[this.playerId]?.progress || 0;
   }
 
-  get opponentHudConfigs() {
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const p = this.store.players()[this.playerId];
+    const isFinished = this.store.winners().includes(this.playerId) || (p?.progress || 0) >= this.totalPuzzles;
+    const prog = this.totalPuzzles > 0 ? Math.min(100, Math.round(((p?.progress || 0) / this.totalPuzzles) * 100)) : 0;
+    return {
+      id: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.hostId,
+      isMe: true,
+      score: p?.progress || 0,
+      progress: prog,
+      status: this.isFrozen(p) ? 'frozen' : (isFinished ? GameStatus.Finished : GameStatus.Playing),
+      metrics: [
+        { label: this.i18n.t('game.puzzles')() || '题数', value: `${p?.progress || 0}/${this.totalPuzzles}`, icon: '🧩', colorClass: 'text-blue-500 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     return Object.entries(this.store.players())
       .filter(([k]) => k !== this.playerId)
-      .map(([k, v]: [string, any]) => ({
-        playerName: k,
-        isHost: k === this.hostId,
-        stats: [{ icon: '🧩', value: (v.progress || 0) + '/' + this.totalPuzzles }],
-        status: this.isFrozen(v) ? 'frozen' : (this.store.status() === GameStatus.Finished ? 'finished' : 'playing')
-      }));
-  }
+      .map(([k, v]: [string, any]) => {
+        const isFinished = this.store.winners().includes(k) || (v.progress || 0) >= this.totalPuzzles;
+        const prog = this.totalPuzzles > 0 ? Math.min(100, Math.round(((v.progress || 0) / this.totalPuzzles) * 100)) : 0;
+        return {
+          id: k,
+          nickname: k,
+          isHost: k === this.hostId,
+          isMe: false,
+          score: v.progress || 0,
+          progress: prog,
+          status: this.isFrozen(v) ? 'frozen' : (isFinished ? GameStatus.Finished : GameStatus.Playing),
+          metrics: [
+            { label: this.i18n.t('game.puzzles')() || '题数', value: `${v.progress || 0}/${this.totalPuzzles}`, icon: '🧩', colorClass: 'text-blue-500 font-bold' }
+          ]
+        };
+      });
+  });
 
   constructor() {
     effect(() => {

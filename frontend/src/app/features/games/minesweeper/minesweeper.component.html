@@ -86,61 +86,15 @@
               </div>
             </div>
           } @else {
-            <!-- Players / Opponents (Top) PK Mode -->
-            <div class="flex-none py-1 shrink-0 w-full hidden lg:block">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center justify-center px-2">
-                
-                <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="playerId === store.hostId()"
-                  [isMe]="true"
-                  [score]="currentRoomMode() === GameMode.Steal ? (getPlayerScores()[0]?.score || 0) : undefined"
-                  [stats]="[
-                    (currentRoomMode() === GameMode.Speed && store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                    { icon: '⏱️', value: store.status() === GameStatus.Playing ? elapsedTime() : (store.status() === GameStatus.Waiting ? '00:00' : elapsedTime()), colorClass: store.status() === GameStatus.Playing ? 'text-pink-400' : '' },
-                    { icon: '💣', value: store.remainingMines() | number:'2.0' },
-                    (store.myErrors() > 0 ? { icon: '❌', value: store.myErrors(), colorClass: 'text-red-400' } : $any(null))
-                  ]"
-                  [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-
-                <app-player-list-container
-                  [opponentsCount]="currentRoomMode() === GameMode.Speed ? store.speedOpponents().length : (getPlayerScores().length - 1)"
-                  class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                  <ng-template #opponentsList>
-                    @if (currentRoomMode() === GameMode.Speed && store.speedOpponents().length > 0) {
-                      @for (opp of store.speedOpponents(); track opp.id) {
-                        <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                          [playerName]="opp.id"
-                          [isHost]="opp.id === store.hostId()"
-                          [isMe]="false"
-                          [stats]="[
-                            (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                            { label: 'PROG', value: (opp.progress | number:'1.0-0') + '%' },
-                            (opp.errors > 0 ? { icon: '❌', value: opp.errors, colorClass: 'text-red-400' } : $any(null))
-                          ]"
-                          [status]="opp.progress === 100 ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-                      }
-                    }
-
-                    @if (currentRoomMode() === GameMode.Steal) {
-                      @for (player of getPlayerScores(); track player.id) {
-                        @if (player.id !== playerId) {
-                          <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                            [playerName]="player.id"
-                            [isHost]="player.id === store.hostId()"
-                            [isMe]="false"
-                            [score]="player.score"
-                            [stats]="[
-                              (store.opponentErrors() > 0 ? { icon: '❌', value: store.opponentErrors(), colorClass: 'text-red-400' } : $any(null))
-                            ]"
-                            [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-                        }
-                      }
-                    }
-                  </ng-template>
-                </app-player-list-container>
-              </div>
+            <!-- Universal PK Battle HUD (Minesweeper Speed & Steal Mode) -->
+            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+              <app-game-pk-hud
+                [myStats]="myPlayerPkStats()"
+                [opponents]="opponentsPkStats()"
+                [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                [seriesScore]="seriesScore()"
+                [elapsedTime]="elapsedTime()"
+              ></app-game-pk-hud>
             </div>
           }
 
@@ -214,12 +168,17 @@
         @if (store.status() === GameStatus.Finished && showOverlay()) {
           <app-game-result-overlay currentGameId="minesweeper" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
             [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()" [disableAudio]="true"
+            [isPkMatch]="currentRoomMode() !== GameMode.Single"
+            [opponentInfo]="opponentsPkStats()[0]"
+            [pkSeriesScore]="seriesScore()"
+            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
             [xpResult]="store.lastStatResult()?.xp_result"
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="currentRoomMode() === GameMode.Single || store.host() === playerId"
             [showRevive]="currentRoomMode() === GameMode.Single"
             [showDismiss]="currentRoomMode() !== GameMode.Single && store.host() === playerId"
             [showLeave]="currentRoomMode() === GameMode.Single || store.host() !== playerId" (leave)="goBack()"
+            (rematch)="store.restartGame()"
             (restart)="currentRoomMode() === GameMode.Single ? changeSingleDifficulty(currentDifficulty()) : store.restartGame()" 
             (revive)="store.reviveGame()"
             (dismiss)="dismissRoom()"

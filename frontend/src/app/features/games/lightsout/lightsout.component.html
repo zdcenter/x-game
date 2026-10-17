@@ -76,34 +76,14 @@
                 </div>
               </div>
             } @else {
-              <!-- PK Style -->
-              <div class="flex-none py-1 mb-1 w-full max-w-[800px] border-b border-[var(--color-border-card)] shrink-0 hidden lg:block">
-                <div class="w-full flex items-center gap-2 lg:gap-4 px-2 overflow-x-auto custom-scrollbar">
-                  <!-- Local Player -->
-                  <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                    [playerName]="playerId"
-                    [isHost]="store.hostId() === playerId"
-                    [isMe]="true"
-                    [stats]="[
-                      (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[playerId] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                      { icon: '🦶', value: store.moves() }
-                    ]"
-                    [status]="store.isFinished() ? GameStatus.Finished : GameStatus.Playing"
-                  ></app-player-badge>
-
-                  <!-- Opponents -->
-                  @for (opp of store.opponents(); track opp.id) {
-                    <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                      [playerName]="opp.id"
-                      [isHost]="store.hostId() === opp.id"
-                      [stats]="[
-                        (store.currentRoomTarget() > 1 ? { icon: '🏆', value: (store.pkWins()[opp.id] || 0) + '/' + store.currentRoomTarget() } : $any(null)),
-                        { icon: '💡', value: opp.remainingLights }
-                      ]"
-                      [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
-                    ></app-player-badge>
-                  }
-                </div>
+              <!-- Universal PK Battle HUD (Lights Out) -->
+              <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+                <app-game-pk-hud
+                  [myStats]="myPlayerPkStats()"
+                  [opponents]="opponentsPkStats()"
+                  [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                  [seriesScore]="seriesScore()"
+                ></app-game-pk-hud>
               </div>
             }
 
@@ -246,10 +226,15 @@
             [title]="getOverlayTitle()"
             [subtitle]="getOverlaySubtitle()"
             [stats]="getOverlayStats()"
+            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+            [opponentInfo]="opponentsPkStats()[0]"
+            [pkSeriesScore]="seriesScore()"
+            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
             [xpResult]="store.lastStatResult()?.xp_result"
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="true"
             [showLeave]="store.currentRoomMode() !== GameMode.Single"
+            (rematch)="handleRematch()"
             (restart)="store.restartGame()"
             (leave)="goBack()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"

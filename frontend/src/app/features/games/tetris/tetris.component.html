@@ -112,34 +112,14 @@
 
             </div>
           } @else {
-            <!-- Players / Opponents (Top) PK Mode -->
-            <div class="flex-none py-1 shrink-0 hidden lg:block w-full">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
-                
-                <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="playerId === store.hostId()"
-                  [isMe]="true"
-                  [score]="store.score()"
-                  [stats]="[
-                    { icon: '≣', value: store.lines(), label: 'LINES' }
-                  ]"
-                  [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-
-                <app-player-list-container [opponentsCount]="store.opponents().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                  <ng-template #opponentsList>
-                    @for (opp of store.opponents(); track opp.id) {
-                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                        [playerName]="opp.id"
-                        [isHost]="opp.id === store.hostId()"
-                        [isMe]="false"
-                        [score]="opp.score"
-                        [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"></app-player-badge>
-                    }
-                  </ng-template>
-                </app-player-list-container>
-              </div>
+            <!-- Universal PK Battle HUD (Tetris) -->
+            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+              <app-game-pk-hud
+                [myStats]="myPlayerPkStats()"
+                [opponents]="opponentsPkStats()"
+                [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                [seriesScore]="seriesScore()"
+              ></app-game-pk-hud>
             </div>
           }
 
@@ -499,12 +479,17 @@
             [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
             [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
             [stats]="getOverlayStats()"
+            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+            [opponentInfo]="opponentsPkStats()[0]"
+            [pkSeriesScore]="seriesScore()"
+            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
             [xpResult]="store.lastStatResult()?.xp_result"
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
             [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
             [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
             [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
+            (rematch)="handleRematch()"
             (leave)="goBack()"
             (restart)="store.restartGame()"
             (dismiss)="dismissRoom()"

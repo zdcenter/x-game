@@ -21,6 +21,9 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { HapticService } from '../../../core/services/haptic.service';
 
 
 @Component({
@@ -28,15 +31,13 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
-    
-    
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    
     PlayerBadgeComponent,
-    GamePlayerMiniHudComponent
-  , GameLayoutComponent],
+    GamePlayerMiniHudComponent,
+    GameLayoutComponent,
+    GamePkHudComponent],
   templateUrl: './block.component.html',
   styles: [`
     @keyframes block-shake {
@@ -67,6 +68,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
   `]
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  private haptic = inject(HapticService);
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     const opps = this.store.opponents().map(opp => ({
       id: opp.id,
@@ -80,6 +82,59 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     };
     return [me, ...opps];
   });
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.pk.score')(), value: this.store.score(), icon: '⭐', colorClass: 'text-amber-500 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return [];
+    const room = this.store.room();
+    const players = room?.players || [];
+
+    return this.store.playersList()
+      .filter(p => p.id !== this.playerId)
+      .map(p => {
+        const pInfo = players.find(x => x.id === p.id);
+        const oppScore = this.getOpponentScore(p.id);
+        const oppStatus = this.getOpponentStatus(p.id);
+        return {
+          playerId: p.id,
+          nickname: pInfo?.nickname || p.id,
+          avatar: pInfo?.avatar,
+          isHost: p.id === this.store.hostId(),
+          isMe: false,
+          score: oppScore,
+          status: oppStatus === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+          metrics: [
+            { label: this.i18n.t('game.pk.score')(), value: oppScore, icon: '⭐', colorClass: 'text-amber-500 font-bold' }
+          ]
+        };
+      });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
+
   adService = inject(AdService);
   GameDifficulty = GameDifficulty;
   GameStatus = GameStatus;
@@ -299,6 +354,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     this.isDragging = true;
     this.draggedShape = shape;
     this.draggedIndex = index;
+    this.haptic.vibrateLight();
 
     const clientX = 'touches' in event ? event.touches[0].clientX : (event as MouseEvent).clientX;
     const clientY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
@@ -404,6 +460,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     if (this.previewShadow()) {
       const { row, col } = this.previewShadow()!;
       this.store.placeShape(this.draggedIndex, row, col);
+      this.haptic.vibrateSnap();
     }
 
     this.isDragging = false;

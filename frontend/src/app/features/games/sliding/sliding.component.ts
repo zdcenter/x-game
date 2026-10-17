@@ -19,18 +19,21 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
+import { HapticService } from '../../../core/services/haptic.service';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent,  GameResultOverlayComponent,   GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameLayoutComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -48,6 +51,7 @@ export class SlidingComponent extends BaseGameComponent {
   readonly i18n = inject(I18nService);
   private toastService = inject(ToastService);
   private gameRegistry = inject(GameRegistryService);
+  private haptic = inject(HapticService);
 
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
@@ -104,6 +108,70 @@ export class SlidingComponent extends BaseGameComponent {
     const size = board.size;
     const idx = board.emptyIdx;
     return { row: Math.floor(idx / size), col: idx % size, size };
+  });
+
+  readonly formattedElapsedTime = computed(() => {
+    return this.formatTime(this.getElapsedMs(this.store.globalStartAt()));
+  });
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const board = this.store.myBoard();
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      progress: this.store.myProgress(),
+      status: board?.status === GameStatus.Finished ? GameStatus.Finished : this.store.status(),
+      metrics: [
+        { label: this.i18n.t('game.pk.steps')(), value: board?.moves || 0, icon: '🔄', colorClass: 'text-amber-500 font-semibold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const room = this.store.room();
+    const players = room?.players || [];
+
+    return this.store.otherPlayers().map(opp => {
+      const pInfo = players.find(p => p.id === opp.id);
+      const oppBoard = opp.board;
+      let oppProgress = 0;
+      if (oppBoard && oppBoard.size) {
+        let correct = 0;
+        const total = oppBoard.size * oppBoard.size - 1;
+        for (let i = 0; i < total; i++) {
+          if (oppBoard.cells && oppBoard.cells[i] === i + 1) correct++;
+        }
+        oppProgress = total > 0 ? (correct / total) * 100 : 0;
+      }
+
+      return {
+        playerId: opp.id,
+        nickname: pInfo?.nickname || opp.id,
+        avatar: pInfo?.avatar,
+        isHost: opp.id === this.store.hostId(),
+        isMe: false,
+        progress: oppProgress,
+        status: oppBoard?.status === GameStatus.Finished ? GameStatus.Finished : this.store.status(),
+        metrics: [
+          { label: this.i18n.t('game.pk.steps')(), value: oppBoard?.moves || 0, icon: '🔄', colorClass: 'text-amber-500 font-semibold' }
+        ]
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
   });
 
   constructor() {
@@ -233,6 +301,7 @@ export class SlidingComponent extends BaseGameComponent {
     if (!board) return;
     const idx = tile.row * tile.size + tile.col;
     this.store.dispatch({ type: SlidingActionType.Move, index: idx });
+    this.haptic.vibrateSwipe();
   }
 
   private touchStartX = 0;
@@ -291,6 +360,7 @@ export class SlidingComponent extends BaseGameComponent {
     if (targetRow >= 0 && targetRow < size && targetCol >= 0 && targetCol < size) {
       const idx = targetRow * size + targetCol;
       this.store.dispatch({ type: SlidingActionType.Move, index: idx });
+      this.haptic.vibrateSwipe();
     }
   }
 

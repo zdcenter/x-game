@@ -24,26 +24,24 @@ import { CrossGameJoinService } from '../../../core/services/cross-game-join.ser
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
-
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { AuthStore } from '../../../core/auth/auth.store';
 
 @Component({
   selector: 'app-drop2048',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
-     
-    
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     Drop2048BoardComponent,
-    
     PlayerListContainerComponent,
     GamePlayerMiniHudComponent,
-    GameToolbarComponent, GameLayoutComponent],
-  providers: [Drop2048Store,
-    ],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+  providers: [Drop2048Store],
   templateUrl: './drop2048.component.html',
   styleUrls: ['./drop2048.component.css']
 })
@@ -62,6 +60,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     return [me, ...opps];
   });
   adService = inject(AdService);
+  private authStore = inject(AuthStore);
   GameStatus = GameStatus;
   GameMode = GameMode;
   override store = inject(Drop2048Store);
@@ -70,6 +69,48 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   i18n = inject(I18nService);
   private gameRegistry = inject(GameRegistryService);
   private floatingText = inject(FloatingTextService);
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    return {
+      id: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.pk.score')() || '分', value: this.store.score(), icon: '⭐', colorClass: 'text-amber-500 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    return this.store.opponents().map(opp => {
+      return {
+        id: opp.id,
+        nickname: opp.id,
+        isHost: opp.id === this.store.hostId(),
+        isMe: false,
+        score: opp.score,
+        status: opp.finished ? GameStatus.Finished : GameStatus.Playing,
+        metrics: [
+          { label: this.i18n.t('game.pk.score')() || '分', value: opp.score, icon: '⭐', colorClass: 'text-amber-500 font-bold' }
+        ]
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.id;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 

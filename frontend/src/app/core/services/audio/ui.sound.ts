@@ -81,8 +81,28 @@ export function playUISound(audioCtx: AudioContext, out: AudioNode, name: 'click
     const o = createOsc(audioCtx, 'sine', 880);
     const g = createGain(audioCtx, 0.22);
     g.gain.setValueAtTime(0.22, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
     o.connect(g); g.connect(out);
-    o.start(t); o.stop(t + 0.08);
+    o.start(t); o.stop(t + 0.09);
+  } else if (name === 'countdown_go') {
+    // Powerful arcade BATTLE / GO fanfare
+    // Low sub-bass impact
+    const sub = createOsc(audioCtx, 'sine', 140);
+    const subG = createGain(audioCtx, 0.45);
+    sub.frequency.exponentialRampToValueAtTime(45, t + 0.4);
+    subG.gain.setValueAtTime(0.45, t);
+    subG.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    sub.connect(subG); subG.connect(out);
+    sub.start(t); sub.stop(t + 0.48);
+
+    // High brass triumphant chord (C major: C6, E6, G6)
+    [1046.5, 1318.5, 1567.98].forEach(freq => {
+      const o = createOsc(audioCtx, 'triangle', freq);
+      const g = createGain(audioCtx, 0.16);
+      g.gain.setValueAtTime(0.16, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.65);
+    });
   }
 }

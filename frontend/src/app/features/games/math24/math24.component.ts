@@ -1,11 +1,12 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Math24Store } from './store/math24.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-steal.component';
@@ -68,6 +69,32 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    return Object.entries(this.store.players())
+      .filter(([k]) => k !== this.playerId)
+      .map(([k, v]: [string, any]) => {
+        return {
+          id: k,
+          nickname: k,
+          isHost: k === this.store.hostId(),
+          isMe: false,
+          score: v.score || v.progress || 0,
+          status: this.store.winners().includes(k) ? GameStatus.Finished : GameStatus.Playing
+        };
+      });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.id;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   constructor() {
     super();

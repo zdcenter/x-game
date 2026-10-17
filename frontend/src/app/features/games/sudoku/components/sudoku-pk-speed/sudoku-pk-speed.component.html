@@ -20,40 +20,14 @@
 
 
 
-      <!-- Mobile floating HUD -->
-      <app-game-player-mini-hud
-        class="lg:hidden"
-        [myPlayer]="{ playerName: store.playerId(), isHost: store.playerId() === store.hostId(), stats: [{ icon: '📝', value: (store.players()[store.playerId()]?.progress || 0) + '/81' }], status: store.players()[store.playerId()]?.finished ? 'finished' : 'playing' }"
-        [opponents]="getPlayers().filter(p => p.id !== store.playerId()).map(p => ({ playerName: p.id, isHost: p.id === store.hostId(), stats: [{ icon: '📝', value: p.progress + '/81' }], status: p.finished ? 'finished' : 'playing' }))">
-      </app-game-player-mini-hud>
-
-      <!-- Top Progress Bars (desktop only) -->
-      <div class="hidden lg:flex w-full max-w-[800px] mx-auto gap-2 lg:gap-4 items-center pb-2 px-2">
-        <!-- Local Player -->
-        <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-          [playerName]="store.playerId()"
-          [isHost]="store.playerId() === store.hostId()"
-          [isMe]="true"
-          [stats]="[{ icon: '📝', value: (store.players()[store.playerId()]?.progress || 0) + '/81' }]"
-          [status]="store.players()[store.playerId()]?.finished ? GameStatus.Finished : GameStatus.Playing">
-        </app-player-badge>
-
-        <!-- Opponents -->
-        <app-player-list-container [opponentsCount]="getPlayers().length - 1" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-          <ng-template #opponentsList>
-            @for (player of getPlayers(); track player.id) {
-              @if (player.id !== store.playerId()) {
-                <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="player.id"
-                  [isHost]="player.id === store.hostId()"
-                  [isMe]="false"
-                  [stats]="[{ icon: '📝', value: player.progress + '/81' }]"
-                  [status]="player.finished ? GameStatus.Finished : GameStatus.Playing">
-                </app-player-badge>
-              }
-            }
-          </ng-template>
-        </app-player-list-container>
+      <!-- Universal PK Battle HUD -->
+      <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+        <app-game-pk-hud
+          [myStats]="myPlayerPkStats()"
+          [opponents]="opponentsPkStats()"
+          [roundFormat]="store.room()?.roundFormat || 'BO3'"
+          [seriesScore]="seriesScore()"
+        ></app-game-pk-hud>
       </div>
 
       <div class="flex-grow flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-start md:justify-center md:content-start items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto">

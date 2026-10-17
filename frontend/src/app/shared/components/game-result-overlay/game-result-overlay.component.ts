@@ -1,5 +1,5 @@
 import { GameResult, GameResultType } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
@@ -61,6 +61,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   /** Game-specific extras for Wordle-style text share card (e.g. { mines: 99, hints: 0 }) */
   @Input() textShareExtras?: Record<string, any>;
 
+  /** PK Match Specific Inputs */
+  @Input() isPkMatch: boolean = false;
+  @Input() opponentInfo?: { nickname?: string; avatar?: string; score?: number | string; isHost?: boolean; id?: string; playerId?: string };
+  @Input() pkSeriesScore?: { me: number; opponent: number };
+  @Input() pkRoundFormat?: string;
+
   textCopied = signal(false);
   challengeCopied = signal(false);
 
@@ -84,23 +90,50 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Output() leave = new EventEmitter<void>();
   @Output() changeRoomGame = new EventEmitter<string>();
   @Output() revive = new EventEmitter<void>();
+  @Output() rematch = new EventEmitter<void>();
 
   private audioPlayed = false;
   recommendedGames: GameConfig[] = [];
   animatedStats = signal<{ icon?: string, label?: string, value: string | number }[]>([]);
 
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.code === 'Space' || event.code === 'KeyR') {
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+      event.preventDefault();
+      if (this.isPkMatch) {
+        this.handleRematch();
+      } else if (this.showNextLevel) {
+        this.handleNextLevel();
+      } else if (this.showRestart) {
+        this.handleRestart();
+      }
+    }
+  }
+
+  handleRematch() {
+    this.adService.tryShowInterstitial(() => {
+      if (this.rematch.observed) {
+        this.rematch.emit();
+      } else {
+        this.restart.emit();
+      }
+    });
+  }
+
   ngOnInit() {
     this.playEffect();
     this.loadRecommendations();
+    const isWin = this.status === GameResult.Win;
     if (this.currentGameId) {
-      const isWin = this.status === GameResult.Win;
       this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));
-      if (isWin) {
-        if (this.isNewRecord) {
-          this.fireNewRecordConfetti();
-        } else {
-          this.fireConfetti();
-        }
+    }
+    if (isWin) {
+      if (this.isNewRecord) {
+        this.fireNewRecordConfetti();
+      } else {
+        this.fireConfetti();
       }
     }
     this.animateStats();

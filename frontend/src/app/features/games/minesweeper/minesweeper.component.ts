@@ -28,12 +28,14 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
 import { FormsModule } from '@angular/forms';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent,  GameResultOverlayComponent, GameWaitingRoomComponent,  DragDropModule,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -81,6 +83,101 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       return myScore < maxOtherScore;
     }
     return false;
+  });
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const isSteal = this.currentRoomMode() === GameMode.Steal;
+    const myScore = this.store.scores()[this.playerId] || 0;
+    const metrics = isSteal 
+      ? [
+          { label: this.i18n.t('game.pk.score')(), value: myScore, icon: '⭐', colorClass: 'text-amber-500 font-bold' },
+          ...(this.store.myErrors() > 0 ? [{ label: this.i18n.t('game.pk.errors')(), value: this.store.myErrors(), icon: '❌', colorClass: 'text-red-500 font-semibold' }] : [])
+        ]
+      : [
+          { label: this.i18n.t('game.pk.mines')(), value: this.store.remainingMines(), icon: '💣', colorClass: 'text-rose-500 font-semibold' },
+          ...(this.store.myErrors() > 0 ? [{ label: this.i18n.t('game.pk.errors')(), value: this.store.myErrors(), icon: '❌', colorClass: 'text-red-500 font-semibold' }] : [])
+        ];
+
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.host(),
+      isMe: true,
+      progress: isSteal ? undefined : this.store.myProgress(),
+      score: isSteal ? myScore : undefined,
+      status: this.store.status(),
+      metrics
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const isSteal = this.currentRoomMode() === GameMode.Steal;
+    const room = this.store.room();
+    const players = room?.players || [];
+
+    if (isSteal) {
+      const scores = this.store.scores();
+      const oppId = Object.keys(scores).find(id => id !== this.playerId);
+      if (!oppId) {
+        const otherPlayer = players.find(p => p.id !== this.playerId);
+        if (!otherPlayer) return [];
+        return [{
+          playerId: otherPlayer.id,
+          nickname: otherPlayer.nickname || otherPlayer.id,
+          avatar: otherPlayer.avatar,
+          isHost: otherPlayer.id === this.store.host(),
+          isMe: false,
+          score: 0,
+          status: this.store.status(),
+          metrics: [{ label: this.i18n.t('game.pk.score')(), value: 0, icon: '⭐', colorClass: 'text-amber-500 font-bold' }]
+        }];
+      }
+      const otherInfo = players.find(p => p.id === oppId);
+      const oppScore = scores[oppId] || 0;
+      return [{
+        playerId: oppId,
+        nickname: otherInfo?.nickname || oppId,
+        avatar: otherInfo?.avatar,
+        isHost: oppId === this.store.host(),
+        isMe: false,
+        score: oppScore,
+        status: this.store.status(),
+        metrics: [
+          { label: this.i18n.t('game.pk.score')(), value: oppScore, icon: '⭐', colorClass: 'text-amber-500 font-bold' },
+          ...(this.store.opponentErrors() > 0 ? [{ label: this.i18n.t('game.pk.errors')(), value: this.store.opponentErrors(), icon: '❌', colorClass: 'text-red-500 font-semibold' }] : [])
+        ]
+      }];
+    }
+
+    // Speed mode
+    return this.store.speedOpponents().map(opp => {
+      const pInfo = players.find(p => p.id === opp.id);
+      return {
+        playerId: opp.id,
+        nickname: pInfo?.nickname || opp.id,
+        avatar: pInfo?.avatar,
+        isHost: opp.id === this.store.host(),
+        isMe: false,
+        progress: opp.progress,
+        status: opp.progress >= 100 ? GameStatus.Finished : this.store.status(),
+        metrics: [
+          ...(opp.errors > 0 ? [{ label: this.i18n.t('game.pk.errors')(), value: opp.errors, icon: '❌', colorClass: 'text-red-500 font-semibold' }] : [])
+        ]
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
   });
 
   @ViewChild('boardContainer') boardContainer!: ElementRef<HTMLDivElement>;

@@ -109,35 +109,15 @@
                   </div>
                 </div>
               } @else {
-                <!-- Top Opponents Panel in PK Mode -->
-                <div class="flex-none py-1 shrink-0 hidden lg:block w-full">
-                  <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center justify-center px-2">
-                    <app-player-badge
-                      class="flex-1 w-full max-w-[400px] shrink-0"
-                      layout="card"
-                      [playerName]="playerId"
-                      [isHost]="playerId === store.hostId()"
-                      [isMe]="true"
-                      [score]="store.score()"
-                      [status]="store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing"
-                    ></app-player-badge>
-
-                    <app-player-list-container [opponentsCount]="store.opponents().length" class="flex-1 min-w-0 flex justify-end lg:justify-start">
-                      <ng-template #opponentsList>
-                        @for (opp of store.opponents(); track opp.id) {
-                          <app-player-badge
-                            class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0"
-                            layout="card"
-                            [playerName]="opp.id"
-                            [isHost]="opp.id === store.hostId()"
-                            [isMe]="false"
-                            [score]="opp.score"
-                            [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing"
-                          ></app-player-badge>
-                        }
-                      </ng-template>
-                    </app-player-list-container>
-                  </div>
+                <!-- Top Opponents Panel in PK Mode (Modern Universal GamePkHud) -->
+                <div class="w-full flex-none shrink-0 py-1">
+                  <app-game-pk-hud
+                    [myStats]="myPlayerPkStats()"
+                    [opponents]="opponentsPkStats()"
+                    [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                    [seriesScore]="seriesScore()"
+                    [elapsedTime]="gameTimer.formatTime(store.timeSpent())"
+                  ></app-game-pk-hud>
                 </div>
               }
 
@@ -368,12 +348,17 @@
             [title]="i18n.t(getResultTitle())()"
             [subtitle]="store.currentRoomMode() === GameMode.Single ? i18n.t('game.final_score')() + ': ' + store.score() : ''"
             [stats]="[{label: 'SCORE', value: store.score()}]"
+            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+            [opponentInfo]="opponentsPkStats()[0]"
+            [pkSeriesScore]="seriesScore()"
+            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
             [xpResult]="store.lastStatResult()?.xp_result"
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
             [showLeave]="true"
             [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+            (rematch)="handleRematch()"
             (restart)="store.restartGame()"
             (leave)="goBack()"
             (revive)="handleRevive()"

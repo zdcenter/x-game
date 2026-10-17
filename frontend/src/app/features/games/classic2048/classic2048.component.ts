@@ -21,8 +21,11 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 import { AudioService } from '../../../core/services/audio.service';
+import { HapticService } from '../../../core/services/haptic.service';
 
 export type C2048Theme = 'classic' | 'neon' | 'glacier';
 
@@ -35,12 +38,13 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
-    GameToolbarComponent, GameLayoutComponent],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
   providers: [Classic2048Store]
 })
 export class Classic2048Component extends BaseGameComponent implements OnInit, OnDestroy {
+  private haptic = inject(HapticService);
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     return this.store.playersList().map(p => {
       const board = this.store.pkBoards()[p.id];
@@ -51,6 +55,76 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       };
     });
   });
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    let maxT = 0;
+    const cells = this.store.cells();
+    for (const row of cells) {
+      for (const val of row) {
+        if (val > maxT) maxT = val;
+      }
+    }
+
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: this.store.localScore(),
+      status: this.store.status(),
+      metrics: [
+        ...(maxT > 0 ? [{ label: this.i18n.t('game.pk.max_tile')(), value: maxT, icon: '🏆', colorClass: 'text-amber-500 font-bold' }] : []),
+        { label: this.i18n.t('game.pk.steps')(), value: this.store.localMoves(), icon: '🔄', colorClass: 'text-sky-500 font-semibold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return [];
+    const room = this.store.room();
+    const players = room?.players || [];
+    const pkBoards = this.store.pkBoards();
+
+    return this.store.playersList()
+      .filter(p => p.id !== this.playerId)
+      .map(p => {
+        const pInfo = players.find(x => x.id === p.id);
+        const board = pkBoards[p.id];
+        let maxT = 0;
+        if (board?.cells) {
+          for (const row of board.cells) {
+            for (const val of row) {
+              if (val > maxT) maxT = val;
+            }
+          }
+        }
+        return {
+          playerId: p.id,
+          nickname: pInfo?.nickname || p.id,
+          avatar: pInfo?.avatar,
+          isHost: p.id === this.store.hostId(),
+          isMe: false,
+          score: board?.score || 0,
+          status: (board?.status as any) || this.store.status(),
+          metrics: [
+            ...(maxT > 0 ? [{ label: this.i18n.t('game.pk.max_tile')(), value: maxT, icon: '🏆', colorClass: 'text-amber-500 font-bold' }] : []),
+          ]
+        };
+      });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
+
   adService = inject(AdService);
   override store = inject(Classic2048Store);
   i18n = inject(I18nService);
@@ -252,6 +326,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       else this.store.move('up');
     }
     this.audio.playDrop2048('move');
+    this.haptic.vibrateSwipe();
   }
 
   getTileClass(value: number): string {

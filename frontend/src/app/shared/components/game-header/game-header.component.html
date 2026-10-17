@@ -47,6 +47,22 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
                   </svg>
                 </button>
+
+                <!-- PWA Install Button (When installable) -->
+                @if (pwaService.canInstall()) {
+                  <button (click)="pwaService.install()"
+                          class="opacity-80 hover:opacity-100 transition-all px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1 shrink-0 active:scale-95 shadow-sm"
+                          [title]="i18n.t('pwa.install_app')()">
+                    <span>📱</span>
+                    <span class="hidden md:inline">{{ i18n.t('pwa.install')() }}</span>
+                  </button>
+                } @else if (pwaService.isIos() && !pwaService.isStandalone()) {
+                  <button (click)="pwaService.openIosGuide()"
+                          class="opacity-70 hover:opacity-100 transition-all p-0.5 sm:p-1 rounded-full hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] shrink-0"
+                          [title]="i18n.t('pwa.ios_guide_title')()">
+                    <span class="text-xs sm:text-sm">📲</span>
+                  </button>
+                }
               </h1>
               <p class="text-[10px] sm:text-xs md:text-sm text-[var(--color-text-main)] opacity-70 font-medium sm:mt-1 truncate hidden sm:block" *ngIf="subtitle">
                 {{ subtitle }}
@@ -65,3 +81,39 @@
         </div>
       </div>
     </div>
+
+    <!-- iOS PWA Install Guide Modal -->
+    @if (pwaService.showIosGuide()) {
+      <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+           (click)="pwaService.closeIosGuide()">
+        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl max-w-sm w-full p-5 shadow-2xl relative"
+             (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">📱</span>
+              <h3 class="text-sm font-black text-[var(--color-text-main)]">
+                {{ i18n.t('pwa.ios_guide_title')() }}
+              </h3>
+            </div>
+            <button (click)="pwaService.closeIosGuide()" class="text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] text-lg font-bold">✕</button>
+          </div>
+          <p class="text-xs text-[var(--color-text-secondary)] mb-4 leading-relaxed">
+            {{ i18n.t('pwa.ios_guide_desc')() }}
+          </p>
+          <div class="flex flex-col gap-2.5 text-xs text-[var(--color-text-main)] bg-[var(--color-bg-main)] p-3 rounded-xl border border-[var(--color-border-card)]">
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center shrink-0">1</span>
+              <span>{{ i18n.t('pwa.ios_step1')() }} <span class="font-bold text-blue-400">⎋ / ⬆️</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center shrink-0">2</span>
+              <span>{{ i18n.t('pwa.ios_step2')() }} <span class="font-bold text-amber-400">➕</span></span>
+            </div>
+          </div>
+          <button (click)="pwaService.closeIosGuide()"
+                  class="w-full mt-4 py-2 rounded-xl text-xs font-black bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md shadow-blue-500/20">
+            {{ i18n.t('game.got_it')() || 'OK' }}
+          </button>
+        </div>
+      </div>
+    }

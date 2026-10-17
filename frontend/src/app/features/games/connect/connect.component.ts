@@ -27,6 +27,8 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 @Component({
   selector: 'app-connect',
@@ -39,7 +41,8 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
     PlayerBadgeComponent,
     GameSpectatingOverlayComponent,
     GameWaitingRoomComponent,
-    GameLayoutComponent
+    GameLayoutComponent,
+    GamePkHudComponent
   ],
   providers: [ConnectStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,6 +77,54 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const isFinished = this.store.winners().includes(this.playerId);
+    const prog = Math.round(this.store.progress());
+    return {
+      id: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: prog,
+      progress: prog,
+      status: isFinished ? GameStatus.Finished : (this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing),
+      metrics: [
+        { label: this.i18n.t('game.progress')() || '进度', value: `${prog}%`, icon: '🌟', colorClass: 'text-amber-500 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    return this.store.opponents().map(opp => {
+      const prog = Math.round(opp.progress || 0);
+      const isFinished = this.store.winners().includes(opp.id);
+      return {
+        id: opp.id,
+        nickname: opp.id,
+        isHost: opp.isHost,
+        isMe: false,
+        score: prog,
+        progress: prog,
+        status: isFinished ? GameStatus.Finished : (opp.finished ? GameStatus.Finished : GameStatus.Playing),
+        metrics: [
+          { label: this.i18n.t('game.progress')() || '进度', value: `${prog}%`, icon: '🌟', colorClass: 'text-amber-500 font-bold' }
+        ]
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.id;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   getPlayers(): any[] {
     const raw = this.store.rawState() as any;

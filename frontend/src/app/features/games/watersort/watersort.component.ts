@@ -22,7 +22,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 @Component({
   selector: 'app-watersort',
@@ -30,7 +31,8 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
   imports: [CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent,  
     GameResultOverlayComponent,  PlayerBadgeComponent,
-    GameToolbarComponent,  GamePlayerMiniHudComponent, FormsModule, GameLayoutComponent],
+    GameToolbarComponent,  GamePlayerMiniHudComponent, FormsModule, GameLayoutComponent,
+    GamePkHudComponent],
   templateUrl: './watersort.component.html',
   styles: [`
     .is-receiving {
@@ -221,6 +223,76 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   didIWin(): boolean {
     return this._store.winners().includes(this.myId);
   }
+
+  calcTubesProgress(tubes: any[]): { completed: number; target: number; percent: number } {
+    if (!tubes || tubes.length === 0) return { completed: 0, target: 1, percent: 0 };
+    const target = Math.max(1, tubes.length - 2);
+    let completed = 0;
+    for (const tube of tubes) {
+      if (tube.colors && tube.colors.length === 4) {
+        const c = tube.colors[0];
+        if (tube.colors.every((col: string) => col === c)) {
+          completed++;
+        }
+      }
+    }
+    const percent = Math.min(100, Math.round((completed / target) * 100));
+    return { completed, target, percent };
+  }
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const isFinished = this.didIWin();
+    const tubes = this.myTubes();
+    const progInfo = this.calcTubesProgress(tubes);
+    const moves = this.myMoves();
+    return {
+      id: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.isHost(),
+      isMe: true,
+      score: moves,
+      progress: progInfo.percent,
+      status: isFinished ? GameStatus.Finished : (this.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing),
+      metrics: [
+        { label: this.i18n.t('game.completed')() || '完成', value: `${progInfo.completed}/${progInfo.target}`, icon: '🧪', colorClass: 'text-cyan-500 font-bold' },
+        { label: this.i18n.t('game.moves')() || '步数', value: moves, icon: '🔄', colorClass: 'text-blue-400 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const oppId = this.opponentId();
+    if (!oppId) return [];
+    const oppTubes = this.opponentTubes();
+    const progInfo = this.calcTubesProgress(oppTubes);
+    const oppMoves = this.opponentMoves();
+    const isFinished = this._store.winners().includes(oppId);
+    return [{
+      id: oppId,
+      nickname: oppId,
+      isHost: oppId === this._store.hostId(),
+      isMe: false,
+      score: oppMoves,
+      progress: progInfo.percent,
+      status: isFinished ? GameStatus.Finished : (this.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing),
+      metrics: [
+        { label: this.i18n.t('game.completed')() || '完成', value: `${progInfo.completed}/${progInfo.target}`, icon: '🧪', colorClass: 'text-cyan-500 font-bold' },
+        { label: this.i18n.t('game.moves')() || '步数', value: oppMoves, icon: '🔄', colorClass: 'text-blue-400 font-bold' }
+      ]
+    }];
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentId();
+    if (!oppId) return undefined;
+    const wins = this._store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   isValidPour(from: number, to: number): boolean {
     const fromTube = this.myTubes()[from];

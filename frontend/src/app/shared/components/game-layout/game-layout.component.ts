@@ -15,13 +15,17 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
+import { OfflineBannerComponent } from '../offline-banner/offline-banner.component';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent],
+  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+  <!-- Offline Mode Banner -->
+  <app-offline-banner></app-offline-banner>
+
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="gameId" [isOpen]="showRules" (closed)="rulesClosed.emit()"></app-game-rules-modal>
 

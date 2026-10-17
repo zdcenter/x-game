@@ -19,22 +19,26 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES, TETROMINO_THEMES } from './models/tetris.model';
+import { HapticService } from '../../../core/services/haptic.service';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent,   GameResultOverlayComponent,  GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameLayoutComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  private haptic = inject(HapticService);
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     const opps = this.store.opponents().map(opp => ({
       id: opp.id,
@@ -47,6 +51,54 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       status: this.store.status() === GameStatus.Finished ? 'finished' : 'playing'
     };
     return [me, ...opps];
+  });
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.pk.lines')(), value: this.store.lines(), icon: '≣', colorClass: 'text-amber-500 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const room = this.store.room();
+    const players = room?.players || [];
+
+    return this.store.opponents().map(opp => {
+      const pInfo = players.find(x => x.id === opp.id);
+      return {
+        playerId: opp.id,
+        nickname: pInfo?.nickname || opp.id,
+        avatar: pInfo?.avatar,
+        isHost: opp.id === this.store.hostId(),
+        isMe: false,
+        score: opp.score,
+        status: opp.finished ? GameStatus.Finished : this.store.status(),
+        metrics: [
+          { label: this.i18n.t('game.pk.lines')(), value: opp.lines, icon: '≣', colorClass: 'text-amber-500 font-bold' }
+        ]
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
   });
   adService = inject(AdService);
   GameDifficulty = GameDifficulty;
@@ -254,6 +306,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       } else {
         this.store.moveLeft();
       }
+      this.haptic.vibrateLight();
       this.lastProcessedX = currentX;
       this.hasMoved = true;
     }
@@ -277,9 +330,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     if (!this.hasMoved && duration < 300 && Math.abs(totalDx) < 10 && Math.abs(totalDy) < 10) {
       // Tap -> Rotate
       this.store.rotate();
+      this.haptic.vibrateLight();
     } else if (totalDy > 60 && duration < 300 && totalDy > Math.abs(totalDx)) {
       // Fast flick down -> Hard Drop
       this.store.hardDrop();
+      this.haptic.vibrateImpact();
     }
   }
 

@@ -139,12 +139,17 @@
             { label: i18n.t('game.moves')(), value: store.myMoves() },
             { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
           ]"
+          [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+          [opponentInfo]="opponentsPkStats()[0]"
+          [pkSeriesScore]="seriesScore()"
+          [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
           [xpResult]="store.lastStatResult()?.xp_result"
           [isNewRecord]="store.lastStatResult()?.isNewRecord"
           [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
           [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
           [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
           [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
+          (rematch)="handleRematch()"
           (nextLevel)="handleNextLevel()"
           (restart)="handleRestart()"
           (leave)="goBack()"

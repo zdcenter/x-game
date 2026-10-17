@@ -67,6 +67,34 @@ export class HapticService {
   }
 
   /**
+   * Crisp micro-vibration (10ms). Ideal for smooth swiping, sliding, or quick grid navigation.
+   */
+  vibrateSwipe() {
+    this.triggerVibrate(10);
+  }
+
+  /**
+   * Crisp tactile snap (20ms). Ideal for magnetic block drops, tile snaps, or merging.
+   */
+  vibrateSnap() {
+    this.triggerVibrate(20);
+  }
+
+  /**
+   * Rhythmic cascade pulse. Ideal for clearing lines, cascading combos, or chained matches.
+   */
+  vibrateCombo() {
+    this.triggerVibrate([18, 30, 24]);
+  }
+
+  /**
+   * Solid thud (45ms). Ideal for hard drop, heavy block impact, or boundary collision.
+   */
+  vibrateImpact() {
+    this.triggerVibrate(45);
+  }
+
+  /**
    * Long strong vibration. Ideal for hitting a wall, making a mistake, or losing.
    */
   vibrateError() {

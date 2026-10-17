@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Cell, CellState } from '../../store/minesweeper.store';
+import { HapticService } from '../../../../../core/services/haptic.service';
 
 @Component({
   selector: 'app-cell',
@@ -10,6 +11,7 @@ import { Cell, CellState } from '../../store/minesweeper.store';
   templateUrl: './cell.component.html',
   styleUrl: './cell.component.css'})
 export class CellComponent {
+  private haptic = inject(HapticService);
   @Input({ required: true }) cell!: Cell;
   @Output() reveal = new EventEmitter<void>();
   @Output() flag = new EventEmitter<void>();
@@ -61,6 +63,7 @@ export class CellComponent {
     this.touchTimeout = setTimeout(() => {
       this.touchFired = true;
       this.flag.emit();
+      this.haptic.vibrateSnap();
     }, 400); // 400ms for long press
   }
 
@@ -80,6 +83,7 @@ export class CellComponent {
     if (!this.touchFired) {
       event.preventDefault(); // Prevent emulated mouse clicks
       this.reveal.emit();
+      this.haptic.vibrateLight();
     } else {
       event.preventDefault();
     }

@@ -13,11 +13,14 @@ import { PlayerBadgeComponent } from '../../../../../shared/components/player-ba
 
 import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
 import { GamePlayerMiniHudComponent } from '../../../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
+import { GamePkHudComponent } from '../../../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { computed } from '@angular/core';
 
 @Component({
   selector: 'app-sudoku-pk-speed',
   standalone: true,
-  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent],
+  imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GameResultOverlayComponent, PlayerBadgeComponent, PlayerListContainerComponent, GamePlayerMiniHudComponent, GamePkHudComponent],
   templateUrl: './sudoku-pk-speed.component.html',
   styleUrl: './sudoku-pk-speed.component.css'})
 export class SudokuPkSpeedComponent {
@@ -27,6 +30,48 @@ export class SudokuPkSpeedComponent {
   store = inject(SudokuStore);
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const p = this.store.players()[this.store.playerId()];
+    const prog = p?.progress || 0;
+    return {
+      playerId: this.store.playerId(),
+      nickname: this.store.playerId(),
+      isHost: this.store.playerId() === this.store.hostId(),
+      isMe: true,
+      progress: (prog / 81) * 100,
+      status: p?.finished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.pk.cleared')(), value: `${prog}/81`, icon: '📝', colorClass: 'text-sky-500 font-semibold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const myId = this.store.playerId();
+    const players = this.getPlayers().filter(p => p.id !== myId);
+    return players.map(p => ({
+      playerId: p.id,
+      nickname: p.id,
+      isHost: p.id === this.store.hostId(),
+      isMe: false,
+      progress: (p.progress / 81) * 100,
+      status: p.finished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.pk.cleared')(), value: `${p.progress}/81`, icon: '📝', colorClass: 'text-sky-500 font-semibold' }
+      ]
+    }));
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.store.playerId()] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   @Output() openLobby = new EventEmitter<void>();
 

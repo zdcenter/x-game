@@ -20,21 +20,20 @@ import { GameRulesModalComponent } from '../../../shared/components/game-rules-m
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { computed } from '@angular/core';
 
 @Component({
   selector: 'app-lightsout',
   standalone: true,
   imports: [CommonModule,
-    
-    
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     PlayerBadgeComponent,
     GameResultOverlayComponent,
-    
     GameToolbarComponent,
-    GamePlayerMiniHudComponent, GameLayoutComponent],
+    GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html'
 })
@@ -60,6 +59,53 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.store.hostId() === this.playerId,
+      isMe: true,
+      status: this.store.isFinished() ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.pk.light_rem')(), value: this.store.remainingLights(), icon: '💡', colorClass: 'text-amber-400 font-bold' },
+        { label: this.i18n.t('game.pk.steps')(), value: this.store.moves(), icon: '🦶', colorClass: 'text-sky-400 font-semibold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const room = this.store.room();
+    const players = room?.players || [];
+
+    return this.store.opponents().map(opp => {
+      const pInfo = players.find(x => x.id === opp.id);
+      return {
+        playerId: opp.id,
+        nickname: pInfo?.nickname || opp.id,
+        avatar: pInfo?.avatar,
+        isHost: this.store.hostId() === opp.id,
+        isMe: false,
+        status: opp.finished ? GameStatus.Finished : GameStatus.Playing,
+        metrics: [
+          { label: this.i18n.t('game.pk.light_rem')(), value: opp.remainingLights, icon: '💡', colorClass: 'text-amber-400 font-bold' }
+        ]
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   getModeName() {
     const mode = this.store.currentRoomMode();

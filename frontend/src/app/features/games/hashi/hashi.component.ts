@@ -22,21 +22,22 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 @Component({
   selector: 'app-hashi',
   standalone: true,
   imports: [CommonModule,
     FormsModule,
-    
     GameResultOverlayComponent,
-    
     GameToolbarComponent,
     HashiLobbyComponent,
     GameWaitingRoomComponent,
     PlayerBadgeComponent,
-    GameStartingOverlayComponent, GameLayoutComponent],
+    GameStartingOverlayComponent,
+    GameLayoutComponent,
+    GamePkHudComponent],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'
 })
@@ -65,6 +66,63 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    const isFinished = this.store.winners().includes(this.playerId);
+    const totalIslands = this.store.islands().length;
+    const targetBridges = totalIslands > 0 ? totalIslands * 2 : 100;
+    const bridgeCount = this.store.bridges().length;
+    const prog = targetBridges > 0 ? Math.min(100, Math.round((bridgeCount / targetBridges) * 100)) : 0;
+    return {
+      id: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: bridgeCount,
+      progress: prog,
+      status: isFinished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        { label: this.i18n.t('game.bridges')() || '桥数', value: `${bridgeCount} / ${targetBridges}`, icon: '🌉', colorClass: 'text-sky-500 font-bold' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const totalIslands = this.store.islands().length;
+    const targetBridges = totalIslands > 0 ? totalIslands * 2 : 100;
+    const oppProg = this.store.opponentProgress();
+    return this.store.playersList()
+      .filter(p => p.id !== this.playerId)
+      .map(p => {
+        const isFinished = this.store.winners().includes(p.id);
+        const count = oppProg[p.id] || 0;
+        const prog = targetBridges > 0 ? Math.min(100, Math.round((count / targetBridges) * 100)) : 0;
+        return {
+          id: p.id,
+          nickname: p.id,
+          isHost: p.id === this.store.hostId(),
+          isMe: false,
+          score: count,
+          progress: prog,
+          status: isFinished ? GameStatus.Finished : GameStatus.Playing,
+          metrics: [
+            { label: this.i18n.t('game.bridges')() || '桥数', value: `${count} / ${targetBridges}`, icon: '🌉', colorClass: 'text-sky-500 font-bold' }
+          ]
+        };
+      });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.id;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   constructor() {
     super();

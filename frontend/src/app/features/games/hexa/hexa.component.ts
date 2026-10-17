@@ -20,10 +20,13 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { AudioService } from '../../../core/services/audio.service';
+import { HapticService } from '../../../core/services/haptic.service';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 
 @Component({
@@ -33,14 +36,11 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
     FormsModule,
     HexaBoardComponent,
     GameWaitingRoomComponent,
-    
-    
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    
     PlayerBadgeComponent,
     PlayerListContainerComponent,
-    GamePlayerMiniHudComponent, GameLayoutComponent],
+    GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'
@@ -57,6 +57,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   override gameTimer = inject(GameTimerService);
   readonly i18n = inject(I18nService);
   private audioService = inject(AudioService);
+  private haptic = inject(HapticService);
   private gameRegistry = inject(GameRegistryService);
 
   showRules = signal(false);
@@ -76,6 +77,51 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   override get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
+
+  readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
+    return {
+      playerId: this.playerId,
+      nickname: this.authStore.currentUser()?.nickname || this.playerId,
+      avatar: this.authStore.currentUser()?.avatar,
+      isHost: this.playerId === this.store.hostId(),
+      isMe: true,
+      score: this.store.score(),
+      status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+      metrics: [
+        ...(this.store.combo() > 1 ? [{ label: 'COMBO', value: `${this.store.combo()}x`, icon: '🔥', colorClass: 'text-amber-500 font-bold' }] : [])
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return [];
+    const room = this.store.room();
+    const players = room?.players || [];
+
+    return this.store.otherPlayers().map(opp => {
+      const pInfo = players.find(x => x.id === opp.id);
+      return {
+        playerId: opp.id,
+        nickname: pInfo?.nickname || opp.id,
+        avatar: pInfo?.avatar,
+        isHost: opp.id === this.store.hostId(),
+        isMe: false,
+        score: opp.score,
+        status: opp.finished ? GameStatus.Finished : GameStatus.Playing
+      };
+    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.playerId;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
+  });
 
   // Dragging state
   draggedPiece: HexPiece | null = null;
@@ -273,6 +319,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       x: clientX,
       y: clientY
     };
+    this.haptic.vibrateLight();
   }
 
   @HostListener('document:mousemove', ['$event'])
@@ -311,6 +358,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
     if (this.previewOrigin) {
       this.store.placePiece(this.draggedPiece, this.previewOrigin, this.draggedPieceIndex);
+      this.haptic.vibrateSnap();
     }
 
     this.isDragging = false;

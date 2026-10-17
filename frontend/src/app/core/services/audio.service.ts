@@ -136,7 +136,7 @@ export class AudioService {
   }
 
   // --- UI Sounds ---
-  async playUI(name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown') {
+  async playUI(name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown' | 'countdown_go') {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
@@ -150,6 +150,7 @@ export class AudioService {
   playDrop() { this.playUI('click'); }
   playClear() { this.playUI('click'); }
   playCountdown() { this.playUI('countdown'); }
+  playCountdownGo() { this.playUI('countdown_go'); }
 
   // --- Minesweeper Sounds ---
   async playMinesweeper(name: 'dig' | 'flag' | 'explosion' | 'win') {

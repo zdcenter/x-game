@@ -53,38 +53,17 @@
             </app-game-waiting-room>
           } @else {
           
-          <!-- Players / Opponents (Top) -->
+          <!-- Players / Opponents (Top Universal PK HUD) -->
           @if (store.currentRoomMode() !== GameMode.Single && store.localStatus() !== GameStatus.Waiting) {
-            <div class="flex-none py-1 mb-0.5 border-b border-[var(--color-border-card)] shrink-0 hidden lg:block">
-              <div class="w-full max-w-[800px] mx-auto flex gap-2 lg:gap-4 items-center px-2">
-                <!-- Local Player (You) -->
-                <app-player-badge class="flex-1 min-w-[150px] lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                  [playerName]="playerId"
-                  [isHost]="playerId === store.hostId()"
-                  [isMe]="true"
-                  [stats]="[
-                    { icon: '🌉', value: store.bridges().length + ' / ' + (store.islands().length > 0 ? store.islands().length * 2 : 100) }
-                  ]"
-                  [status]="store.winners().includes(playerId) ? GameStatus.Finished : GameStatus.Playing">
-                </app-player-badge>
-
-                <!-- Opponents -->
-                <div class="flex-1 min-w-0 flex justify-end lg:justify-start gap-2 lg:gap-4">
-                  @for (p of store.playersList(); track p.id) {
-                    @if (p.id !== playerId) {
-                      <app-player-badge class="w-full lg:flex-1 lg:min-w-[200px] lg:max-w-[300px] shrink-0" layout="card"
-                        [playerName]="p.id"
-                        [isHost]="p.id === store.hostId()"
-                        [isMe]="false"
-                        [stats]="[
-                          { icon: '🌉', value: (store.opponentProgress()[p.id] || 0) + ' / ' + (store.islands().length > 0 ? store.islands().length * 2 : 100) }
-                        ]"
-                        [status]="store.winners().includes(p.id) ? GameStatus.Finished : GameStatus.Playing">
-                      </app-player-badge>
-                    }
-                  }
-                </div>
-              </div>
+            <div class="flex-none py-1 mb-1 shrink-0 w-full">
+              <app-game-pk-hud
+                [myPlayer]="myPlayerPkStats()"
+                [opponents]="opponentsPkStats()"
+                [targetWins]="store.currentRoomTarget()"
+                [gameMode]="store.currentRoomMode()"
+                [status]="store.localStatus()"
+                [elapsedTime]="formatTime(getElapsedMs(0))">
+              </app-game-pk-hud>
             </div>
           }
 
@@ -293,6 +272,11 @@
               [subtitle]="getOverlaySubtitle()"
               [xpResult]="store.lastStatResult()?.xp_result"
               [isNewRecord]="store.lastStatResult()?.isNewRecord"
+              [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+              [opponentInfo]="opponentsPkStats()[0]"
+              [pkSeriesScore]="seriesScore()"
+              [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
+              (rematch)="handleRematch()"
               [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
               [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
               [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"

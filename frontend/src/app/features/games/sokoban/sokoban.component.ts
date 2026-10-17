@@ -121,7 +121,17 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
         ],
         status: isFinished ? 'finished' : 'playing'
       };
-    });
+  });
+
+  readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
+    if (this.store.currentRoomMode() === GameMode.Single) return undefined;
+    const oppId = this.opponentsPkStats()[0]?.id;
+    if (!oppId) return undefined;
+    const wins = this.store.pkWins();
+    return {
+      me: wins[this.playerId] || 0,
+      opponent: wins[oppId] || 0
+    };
   });
 
   constructor() {

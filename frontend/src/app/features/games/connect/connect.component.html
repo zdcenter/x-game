@@ -75,16 +75,15 @@
         </div>
       </div>
 
-      <!-- Opponents PK Stats overlay (top area) -->
-      <div *ngIf="store.currentRoomMode() !== GameMode.Single" class="w-full flex justify-center gap-4 mb-4">
-        <app-player-badge 
-          *ngFor="let opp of store.opponents()"
-          [playerName]="opp.id"
-          [isMe]="false"
-          [isHost]="opp.isHost"
-          [stats]="[{ icon: '🌟', value: (opp.progress | number:'1.0-0') + '%' }]"
-          [status]="opp.finished ? GameStatus.Finished : GameStatus.Playing">
-        </app-player-badge>
+      <!-- Universal PK HUD -->
+      <div *ngIf="store.currentRoomMode() !== GameMode.Single" class="flex-none py-1 mb-2 shrink-0 w-full">
+        <app-game-pk-hud
+          [myPlayer]="myPlayerPkStats()"
+          [opponents]="opponentsPkStats()"
+          [targetWins]="store.currentRoomTarget()"
+          [gameMode]="store.currentRoomMode()"
+          [status]="store.status()">
+        </app-game-pk-hud>
       </div>
 
       <!-- Board Container -->
@@ -131,6 +130,11 @@
     [showLeave]="true"
     [isNewRecord]="store.lastStatResult()?.isNewRecord"
     [xpResult]="store.lastStatResult()?.xp_result"
+    [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+    [opponentInfo]="opponentsPkStats()[0]"
+    [pkSeriesScore]="seriesScore()"
+    [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
+    (rematch)="handleRematch()"
     (nextLevel)="onOverlayClose()"
     (restart)="store.restart(); showOverlay.set(false)"
     (leave)="goBackToLobby(); showOverlay.set(false)">
