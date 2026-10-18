@@ -27,6 +27,8 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 
 @Component({
@@ -38,7 +40,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
+    GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'
@@ -57,7 +59,9 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   private audioService = inject(AudioService);
   private haptic = inject(HapticService);
   private gameRegistry = inject(GameRegistryService);
+  private leaderboardService = inject(LeaderboardService);
 
+  worldRecord = signal<{ bestScore: number; username: string } | null>(null);
   showRules = signal(false);
   showOverlay = signal(false);
   isShaking = signal(false);
@@ -231,6 +235,10 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   override ngOnInit(): void {
     super.ngOnInit(); // connects lobby WS automatically
+
+    this.leaderboardService.getWorldRecord('hexa').subscribe(rec => {
+      if (rec) this.worldRecord.set(rec);
+    });
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {

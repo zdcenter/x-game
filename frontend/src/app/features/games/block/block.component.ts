@@ -22,6 +22,8 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { HapticService } from '../../../core/services/haptic.service';
+import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 
 @Component({
@@ -34,7 +36,8 @@ import { HapticService } from '../../../core/services/haptic.service';
     GameStartingOverlayComponent,
     GamePlayerMiniHudComponent,
     GameLayoutComponent,
-    GamePkHudComponent],
+    GamePkHudComponent,
+    GameScoreCapsuleComponent],
   templateUrl: './block.component.html',
   styles: [`
     @keyframes block-shake {
@@ -142,8 +145,10 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   private authStore = inject(AuthStore);
   gameRegistry = inject(GameRegistryService);
   public i18n = inject(I18nService);
-  private router = inject(Router);
   private audioService = inject(AudioService);
+  private leaderboardService = inject(LeaderboardService);
+
+  worldRecord = signal<{ bestScore: number; username: string } | null>(null);
   
   @HostBinding('class') override get hostClass() { return 'block h-full w-full'; }
 
@@ -229,6 +234,10 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   override ngOnInit(): void {
     super.ngOnInit();
+
+    this.leaderboardService.getWorldRecord('block').subscribe(rec => {
+      if (rec) this.worldRecord.set(rec);
+    });
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, catchError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface LeaderboardEntry {
@@ -62,5 +62,36 @@ export class LeaderboardService {
   getMyRanks(): Observable<RankEntry[]> {
     return this.http.get<{ ranks: RankEntry[] }>(`${this.apiUrl}/leaderboard/my-ranks`)
       .pipe(map(r => r.ranks ?? []));
+  }
+
+  private worldRecordCache = new Map<string, { data: { bestScore: number; username: string } | null; ts: number }>();
+
+  getWorldRecord(gameId: string, mode?: string): Observable<{ bestScore: number; username: string } | null> {
+    const cacheKey = `${gameId}:${mode || 'all'}`;
+    const cached = this.worldRecordCache.get(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.ts < 60000) {
+      return of(cached.data);
+    }
+
+    const opts: { mode?: string; limit: number } = { limit: 1 };
+    if (mode) opts.mode = mode;
+
+    return this.getLeaderboard(gameId, opts).pipe(
+      map(res => {
+        if (res && res.entries && res.entries.length > 0 && res.entries[0].best_score > 0) {
+          const top = res.entries[0];
+          const rec = {
+            bestScore: top.best_score,
+            username: top.username || 'Top Player'
+          };
+          this.worldRecordCache.set(cacheKey, { data: rec, ts: now });
+          return rec;
+        }
+        this.worldRecordCache.set(cacheKey, { data: null, ts: now });
+        return null;
+      }),
+      catchError(() => of(cached ? cached.data : null))
+    );
   }
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { LeaderboardService, LeaderboardEntry, LeaderboardResponse } from '../../core/services/leaderboard.service';
 import { FriendService } from '../../core/services/friend.service';
+import { ToastService } from '../../core/services/toast.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 
@@ -301,9 +302,11 @@ export class LeaderboardComponent implements OnInit {
     return ((entry.win_count / entry.play_count) * 100).toFixed(1);
   }
 
+  private toast = inject(ToastService);
+
   addFriend(userId: number) {
     this.friendService.sendRequest(userId).subscribe(() => {
-      alert(this.i18n.t('game.friend_request_sent')() || 'Friend request sent!');
+      this.toast.success(this.i18n.t('game.friend_request_sent')() || 'Friend request sent!');
     });
   }
 }

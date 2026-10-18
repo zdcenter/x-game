@@ -25,6 +25,8 @@ import { FloatingTextService } from '../../../core/services/floating-text.servic
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 @Component({
   selector: 'app-drop2048',
@@ -36,7 +38,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
     GameStartingOverlayComponent,
     Drop2048BoardComponent,
     GamePlayerMiniHudComponent,
-    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html',
   styleUrls: ['./drop2048.component.css']
@@ -65,6 +67,9 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   i18n = inject(I18nService);
   private gameRegistry = inject(GameRegistryService);
   private floatingText = inject(FloatingTextService);
+  private leaderboardService = inject(LeaderboardService);
+
+  worldRecord = signal<{ bestScore: number; username: string } | null>(null);
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
@@ -197,6 +202,10 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   override ngOnInit() {
     super.ngOnInit();
+
+    this.leaderboardService.getWorldRecord('drop2048').subscribe(rec => {
+      if (rec) this.worldRecord.set(rec);
+    });
     
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
 

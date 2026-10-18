@@ -61,52 +61,34 @@
 
               <!-- Single Player Modern Glass Capsule HUD -->
               @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="flex-none flex items-center justify-between px-3 sm:px-5 py-2.5 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto gap-2">
-                  <!-- Left: Score with Golden Star -->
-                  <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                    <span class="text-xl sm:text-2xl drop-shadow-[0_2px_4px_rgba(234,179,8,0.3)] select-none">⭐</span>
-                    <div class="flex flex-col">
-                      <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider uppercase leading-none">
-                        {{ i18n.t('drop2048.score')() }}
-                      </span>
-                      <span class="font-black font-mono text-lg sm:text-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent leading-tight tracking-tight drop-shadow-sm">
-                        {{ store.score() | number:'1.0-0' }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Center: Level & Dynamic Combo Badge -->
-                  <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
-                      <span class="text-xs sm:text-sm font-bold text-cyan-500">LV</span>
-                      <div class="flex flex-col">
-                        <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('drop2048.level')() }}</span>
-                        <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
-                          {{ store.level() }}
-                        </span>
+                <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
+                  <app-game-score-capsule
+                    [score]="store.score()"
+                    [bestScore]="store.bestScore()"
+                    [worldBestScore]="worldRecord()?.bestScore"
+                    [worldRecordHolder]="worldRecord()?.username"
+                    scoreIcon="⭐"
+                  >
+                    <!-- Center: Level & Dynamic Combo Badge -->
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                      <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                        <span class="text-xs sm:text-sm font-bold text-cyan-500">LV</span>
+                        <div class="flex flex-col">
+                          <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('drop2048.level')() }}</span>
+                          <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
+                            {{ store.level() }}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    @if (store.comboCount() >= 1) {
-                      <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
-                        <span>🔥</span>
-                        <span>x{{ store.comboCount() + 1 }}</span>
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Right: Best Record -->
-                  <div class="flex items-center gap-1.5 sm:gap-2">
-                    <span class="text-lg sm:text-xl drop-shadow-sm select-none">👑</span>
-                    <div class="flex flex-col">
-                      <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider uppercase leading-none">
-                        {{ i18n.t('drop2048.best')() }}
-                      </span>
-                      <span class="font-black font-mono text-base sm:text-xl text-amber-500 dark:text-amber-400 leading-tight">
-                        {{ Math.max(store.score(), store.bestScore()) | number:'1.0-0' }}
-                      </span>
+                      @if (store.comboCount() >= 1) {
+                        <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
+                          <span>🔥</span>
+                          <span>x{{ store.comboCount() + 1 }}</span>
+                        </div>
+                      }
                     </div>
-                  </div>
+                  </app-game-score-capsule>
                 </div>
               } @else {
                 <!-- Top Opponents Panel in PK Mode (Modern Universal GamePkHud) -->

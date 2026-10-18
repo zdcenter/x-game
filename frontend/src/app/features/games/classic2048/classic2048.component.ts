@@ -25,6 +25,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 
 import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 export type C2048Theme = 'classic' | 'neon' | 'glacier';
 
@@ -43,6 +44,9 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
 })
 export class Classic2048Component extends BaseGameComponent implements OnInit, OnDestroy {
   private haptic = inject(HapticService);
+  private leaderboardService = inject(LeaderboardService);
+  worldRecord = signal<{ bestScore: number; username: string } | null>(null);
+  Math = Math;
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     return this.store.playersList().map(p => {
       const board = this.store.pkBoards()[p.id];
@@ -230,6 +234,11 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   override ngOnInit() {
     super.ngOnInit();
+
+    this.leaderboardService.getWorldRecord('classic2048').subscribe(rec => {
+      if (rec) this.worldRecord.set(rec);
+    });
+
     const pending = this.lifecycle.consumePendingOrReconnect();
     if (pending) {
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host ?? '');

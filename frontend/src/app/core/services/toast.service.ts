@@ -33,6 +33,10 @@ export class ToastService {
       this.removeToast(id);
     }, 3000);
   }
+
+  success(message: string) { this.show(message, 'success'); }
+  error(message: string) { this.show(message, 'error'); }
+  info(message: string) { this.show(message, 'info'); }
   
   removeToast(id: number) {
     this.toasts.update(t => t.filter(toast => toast.id !== id));

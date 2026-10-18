@@ -95,8 +95,27 @@ export class BlockStore extends BaseGameStore {
     return this.localHand();
   });
 
+  loadBestScore() {
+    const savedBest = parseInt(storageGet('block_best_score') || '0', 10);
+    if (savedBest > this.bestScore()) {
+      this.bestScore.set(savedBest);
+    }
+    if (this.auth.isAuthenticated()) {
+      this.getStats().subscribe(res => {
+        if (res && res.length > 0) {
+          const maxBest = Math.max(...res.map(s => s.BestScore || 0), savedBest, this.bestScore());
+          this.bestScore.set(maxBest);
+          storageSet('block_best_score', maxBest.toString());
+        }
+      });
+    }
+  }
+
   constructor() {
     super();
+
+    // Always load personal best score on startup
+    this.loadBestScore();
 
     // Initialize local board size and empty board
     this.localBoard.set(this.engine.board);
@@ -149,15 +168,7 @@ export class BlockStore extends BaseGameStore {
     if (mode === GameMode.Single) {
       this.localStatus.set(GameStatus.Waiting);
       this.loadSinglePlayerProgress();
-      
-      if (this.auth.isAuthenticated()) {
-        this.getStats().subscribe(res => {
-          if (res && res.length > 0) {
-            const maxBest = Math.max(...res.map(s => s.BestScore || 0));
-            this.bestScore.set(maxBest);
-          }
-        });
-      }
+      this.loadBestScore();
     }
   }
 
@@ -274,6 +285,13 @@ export class BlockStore extends BaseGameStore {
       });
     }
 
+    if (this.currentRoomMode() === GameMode.Single) {
+      if (this.localScore() > this.bestScore()) {
+        this.bestScore.set(this.localScore());
+        storageSet('block_best_score', this.localScore().toString());
+      }
+    }
+
     if (this.engine.isDead) {
       this.onGameOver();
     }
@@ -312,10 +330,15 @@ export class BlockStore extends BaseGameStore {
         matrix: this.localBoard()
       });
     } else {
+      if (this.localScore() > this.bestScore()) {
+        this.bestScore.set(this.localScore());
+        storageSet('block_best_score', this.localScore().toString());
+      }
       storageRemove('block_save');
       this.submitSingleStat({ score: this.localScore(), won: false }).subscribe(res => {
         if (res && res.isNewRecord) {
           this.bestScore.set(this.localScore());
+          storageSet('block_best_score', this.localScore().toString());
         }
       });
     }

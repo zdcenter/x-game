@@ -25,6 +25,43 @@ import confetti from 'canvas-confetti';
     :host {
       display: contents;
     }
+    @keyframes spinSlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes floatTrophy {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-6px) scale(1.03); }
+    }
+    @keyframes shieldImpact {
+      0% { transform: scale(0.65) rotate(-6deg); opacity: 0; }
+      50% { transform: scale(1.08) rotate(3deg); opacity: 1; }
+      75% { transform: scale(0.97) rotate(-1deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    @keyframes revengePulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(249, 115, 22, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(249, 115, 22, 0.7), inset 0 0 20px rgba(239, 68, 68, 0.4); }
+    }
+    @keyframes sparkTwinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.6); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    .animate-spin-slow {
+      animation: spinSlow 30s linear infinite;
+    }
+    .animate-float-trophy {
+      animation: floatTrophy 3s ease-in-out infinite;
+    }
+    .animate-shield-impact {
+      animation: shieldImpact 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .animate-revenge-pulse {
+      animation: revengePulse 2s ease-in-out infinite;
+    }
+    .animate-sparkle {
+      animation: sparkTwinkle 2s ease-in-out infinite;
+    }
   `]
 })
 export class GameResultOverlayComponent implements OnInit, OnDestroy {
@@ -41,6 +78,8 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   GameResult = GameResult;
   streak = signal<number>(0);
+  rays = Array.from({ length: 16 }, (_, i) => i);
+  sparkles = signal<{ id: number; x: number; y: number; size: number; delay: number; duration: number }[]>([]);
 
   @Input() currentGameId?: string;
 
@@ -132,6 +171,16 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
       this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));
     }
     if (isWin) {
+      const generated = Array.from({ length: 14 }, (_, i) => ({
+        id: i,
+        x: 6 + Math.random() * 88,
+        y: 6 + Math.random() * 88,
+        size: 8 + Math.random() * 12,
+        delay: Math.random() * 2,
+        duration: 1.6 + Math.random() * 1.6
+      }));
+      this.sparkles.set(generated);
+
       if (this.isNewRecord) {
         this.fireNewRecordConfetti();
       } else {
@@ -447,9 +496,9 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private playEffect() {
     if (this.audioPlayed || this.disableAudio) return;
     if (this.status === GameResult.Win) {
-      this.audio.playWin();
+      this.audio.playWin(this.isPkMatch);
     } else if (this.status === GameResult.Lose) {
-      this.audio.playLose();
+      this.audio.playLose(this.isPkMatch);
     }
     this.audioPlayed = true;
   }

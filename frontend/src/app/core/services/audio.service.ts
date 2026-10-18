@@ -136,7 +136,7 @@ export class AudioService {
   }
 
   // --- UI Sounds ---
-  async playUI(name: 'click' | 'victory' | 'gameover' | 'error' | 'countdown' | 'countdown_go') {
+  async playUI(name: 'click' | 'victory' | 'pk_victory' | 'gameover' | 'pk_defeat' | 'error' | 'countdown' | 'countdown_go') {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
@@ -145,8 +145,8 @@ export class AudioService {
   }
 
   playClick() { this.playUI('click'); }
-  playWin() { this.playUI('victory'); }
-  playLose() { this.playUI('gameover'); }
+  playWin(isPk = false) { this.playUI(isPk ? 'pk_victory' : 'victory'); }
+  playLose(isPk = false) { this.playUI(isPk ? 'pk_defeat' : 'gameover'); }
   playDrop() { this.playUI('click'); }
   playClear() { this.playUI('click'); }
   playCountdown() { this.playUI('countdown'); }

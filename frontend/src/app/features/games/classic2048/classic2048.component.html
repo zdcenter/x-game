@@ -116,14 +116,18 @@
                     }
                   </div>
 
-                  <!-- BEST SCORE CARD -->
-                  <div class="flex flex-col items-center justify-center py-2 px-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
-                    <div class="flex items-center gap-1">
-                      <span class="text-[10px] sm:text-xs font-black tracking-wider uppercase text-amber-500">👑 {{ i18n.t('game.classic2048.best')() }}</span>
+                  <!-- BEST & WORLD RECORD CARD -->
+                  <div class="flex flex-col items-center justify-center py-1.5 px-2.5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm relative group"
+                       [title]="(i18n.t('game.record_holder')() || 'Record Holder') + ': ' + (worldRecord()?.username || i18n.t('game.unclaimed')())">
+                    <div class="flex items-center justify-between w-full text-[10px] sm:text-[11px] font-bold text-[var(--color-text-muted)] px-1">
+                      <span class="text-amber-500">👑 {{ i18n.t('game.my_best')() }}</span>
+                      <span class="tabular-nums font-black text-amber-500 text-xs sm:text-sm">{{ Math.max(store.localScore(), bestScore()) }}</span>
                     </div>
-                    <span class="text-xl sm:text-2xl font-black text-amber-500/95 tabular-nums leading-none mt-1">
-                      {{ bestScore() }}
-                    </span>
+                    <div class="w-full my-1 border-t border-[var(--color-border)]/60"></div>
+                    <div class="flex items-center justify-between w-full text-[10px] sm:text-[11px] font-bold text-[var(--color-text-muted)] px-1">
+                      <span class="text-orange-500">🏆 {{ i18n.t('game.world_best')() }}</span>
+                      <span class="tabular-nums font-black text-orange-500 text-xs sm:text-sm">{{ (worldRecord()?.bestScore && worldRecord()!.bestScore > 0 ? worldRecord()!.bestScore : Math.max(store.localScore(), bestScore())) }}</span>
+                    </div>
                   </div>
 
                   <!-- MOVES / TIMER STATS CARD -->

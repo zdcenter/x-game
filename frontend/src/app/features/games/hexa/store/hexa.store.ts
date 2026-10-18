@@ -94,9 +94,29 @@ export class HexaStore extends BaseGameStore {
   private currentSeed: number | null = null;
   private piecesPlaced = 0;
 
+  loadBestScore() {
+    const savedBest = parseInt(storageGet('hexa_best_score') || '0', 10);
+    if (savedBest > this.bestScore()) {
+      this.bestScore.set(savedBest);
+    }
+    if (this.auth.isAuthenticated()) {
+      this.getStats().subscribe(stats => {
+        const stat = stats?.find(s => s.Mode === GameMode.Single);
+        if (stat) {
+          const maxBest = Math.max(stat.BestScore, this.bestScore(), savedBest);
+          this.bestScore.set(maxBest);
+          storageSet('hexa_best_score', maxBest.toString());
+        }
+      });
+    }
+  }
+
   constructor() {
     super();
     
+    // Always load personal best score from local storage and user stats immediately
+    this.loadBestScore();
+
     // Initialize single player game on startup
     if (!this.loadSinglePlayer()) {
       this.startSinglePlayer();
@@ -113,13 +133,9 @@ export class HexaStore extends BaseGameStore {
           if (state.status === GameStatus.Playing) {
             const me = state.players?.[this.playerId()];
             if (me) {
-              // Note: For a robust replay, we'd need to simulate all their piece placements or just trust the score.
-              // We'll trust the score for now and restore PRNG state implicitly.
               this.engine.score = me.score || 0;
               this.engine.piecesPlaced = me.piecesPlaced || 0;
               this.updateSignals();
-              
-              // We'd ideally need a way to restore the exact pieces.
             }
           }
         }
@@ -131,20 +147,7 @@ export class HexaStore extends BaseGameStore {
     super.joinRoom(roomId, mode, difficulty, hostId, target);
     if (mode === GameMode.Single) {
       this.startSinglePlayer();
-      
-      const savedBest = parseInt(storageGet('hexa_best_score') || '0', 10);
-      this.bestScore.set(savedBest);
-      
-      if (this.auth.isAuthenticated()) {
-        this.getStats().subscribe(stats => {
-          const stat = stats.find(s => s.Mode === GameMode.Single);
-          if (stat) {
-             const maxBest = Math.max(stat.BestScore, savedBest);
-             this.bestScore.set(maxBest);
-             storageSet('hexa_best_score', maxBest.toString());
-          }
-        });
-      }
+      this.loadBestScore();
     } else {
       this.currentSeed = null;
     }
@@ -251,9 +254,19 @@ export class HexaStore extends BaseGameStore {
     this.piecesPlaced = state.piecesPlaced;
   }
 
+  override startGame() {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.startSinglePlayer();
+      this.loadBestScore();
+    } else {
+      super.startGame();
+    }
+  }
+
   override restartGame() {
     if (this.currentRoomMode() === GameMode.Single) {
       this.startSinglePlayer();
+      this.loadBestScore();
     } else {
       super.restartGame();
     }

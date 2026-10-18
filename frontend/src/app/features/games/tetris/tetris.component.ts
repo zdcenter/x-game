@@ -27,18 +27,22 @@ import { GamePlayerMiniHudComponent } from '../../../shared/components/game-play
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
   private haptic = inject(HapticService);
+  private leaderboardService = inject(LeaderboardService);
+  worldRecord = signal<{ bestScore: number; username: string } | null>(null);
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     const opps = this.store.opponents().map(opp => ({
       id: opp.id,
@@ -199,6 +203,10 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   override ngOnInit() {
     super.ngOnInit();
+
+    this.leaderboardService.getWorldRecord('tetris').subscribe(rec => {
+      if (rec) this.worldRecord.set(rec);
+    });
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {

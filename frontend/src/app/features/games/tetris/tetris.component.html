@@ -50,66 +50,44 @@
             
           <!-- Single Player Modern Glass Capsule HUD -->
           @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex items-center justify-between px-3 sm:px-5 py-2.5 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto gap-2">
-              
-              <!-- Left: Score with Golden Star -->
-              <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <span class="text-xl sm:text-2xl drop-shadow-[0_2px_4px_rgba(234,179,8,0.3)] select-none">⭐</span>
-                <div class="flex flex-col">
-                  <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider uppercase leading-none">
-                    {{ i18n.t('tetris.score')() }}
-                  </span>
-                  <span class="font-black font-mono text-lg sm:text-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent leading-tight tracking-tight drop-shadow-sm">
-                    {{ store.score() | number:'1.0-0' }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Center: Lines Cleared & Dynamic Combo Badge -->
-              <div class="flex items-center gap-2 sm:gap-3">
-                <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
-                  <span class="text-xs sm:text-sm font-bold text-cyan-500">≣</span>
-                  <div class="flex flex-col">
-                    <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('tetris.lines')() }}</span>
-                    <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
-                      {{ store.lines() }}
-                    </span>
+            <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
+              <app-game-score-capsule
+                [score]="store.score()"
+                [bestScore]="store.bestScore()"
+                [worldBestScore]="worldRecord()?.bestScore"
+                [worldRecordHolder]="worldRecord()?.username"
+                scoreIcon="🧱"
+              >
+                <!-- Center: Lines Cleared, Dynamic Combo Badge & Theme Palette Button -->
+                <div class="flex items-center gap-1.5 sm:gap-2.5">
+                  <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                    <span class="text-xs sm:text-sm font-bold text-cyan-500">≣</span>
+                    <div class="flex flex-col">
+                      <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('tetris.lines')() }}</span>
+                      <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
+                        {{ store.lines() }}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                @if (store.comboTrigger() >= 2) {
-                  <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
-                    <span>🔥</span>
-                    <span>x{{ store.comboTrigger() }}</span>
-                  </div>
-                }
-              </div>
+                  @if (store.comboTrigger() >= 2) {
+                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
+                      <span>🔥</span>
+                      <span>x{{ store.comboTrigger() }}</span>
+                    </div>
+                  }
 
-              <!-- Right: Best Record & Theme Palette Button -->
-              <div class="flex items-center gap-2 sm:gap-3">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-lg sm:text-xl drop-shadow-sm select-none">👑</span>
-                  <div class="flex flex-col">
-                    <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] tracking-wider uppercase leading-none">
-                      {{ i18n.t('tetris.best')() }}
+                  <!-- Palette Switcher Button -->
+                  <button (click)="store.cycleColorTheme()"
+                          class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-amber-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1"
+                          [title]="i18n.t('tetris.theme_tooltip')()">
+                    <span class="text-xs sm:text-sm group-hover:rotate-12 transition-transform">🎨</span>
+                    <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
+                      {{ getThemeName(store.colorTheme()) }}
                     </span>
-                    <span class="font-black font-mono text-base sm:text-xl text-amber-500 dark:text-amber-400 leading-tight">
-                      {{ Math.max(store.score(), store.bestScore()) | number:'1.0-0' }}
-                    </span>
-                  </div>
+                  </button>
                 </div>
-
-                <!-- Palette Switcher Button -->
-                <button (click)="store.cycleColorTheme()"
-                        class="p-1.5 sm:p-2 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-amber-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1"
-                        [title]="i18n.t('tetris.theme_tooltip')()">
-                  <span class="text-sm sm:text-base group-hover:rotate-12 transition-transform">🎨</span>
-                  <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden sm:inline">
-                    {{ getThemeName(store.colorTheme()) }}
-                  </span>
-                </button>
-              </div>
-
+              </app-game-score-capsule>
             </div>
           } @else {
             <!-- Universal PK Battle HUD (Tetris) -->
