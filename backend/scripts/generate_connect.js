@@ -17,10 +17,38 @@ const path = require('path');
 const csvPath = path.resolve(__dirname, 'puzzle_data.csv');
 const lines = fs.readFileSync(csvPath, 'utf8').trim().split('\n').slice(1);
 
+function getSolutionPath(complete, size, ch, start, target) {
+  const visited = new Set();
+  const path = [start];
+  visited.add(`${start[0]},${start[1]}`);
+  while (path.length > 0) {
+    const [cr, cc] = path[path.length - 1];
+    if (cr === target[0] && cc === target[1]) break;
+    let next = null;
+    for (const [dr, dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+      const nr = cr + dr, nc = cc + dc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+        if (!visited.has(`${nr},${nc}`) && complete[nr * size + nc] === ch) {
+          next = [nr, nc];
+          break;
+        }
+      }
+    }
+    if (next) {
+      visited.add(`${next[0]},${next[1]}`);
+      path.push(next);
+    } else {
+      break;
+    }
+  }
+  return path;
+}
+
 function parsePuzzle(line) {
   const parts = line.split(',');
   const size = parseInt(parts[3]);
   const init = parts[1];
+  const complete = parts[2];
   const charMap = {};
   for (let i = 0; i < init.length; i++) {
     const ch = init[i];
@@ -34,7 +62,8 @@ function parsePuzzle(line) {
   const endpoints = Object.entries(charMap).map(([ch, pts], idx) => ({
     color: idx + 1,
     p1: pts[0], // [row, col]
-    p2: pts[1]
+    p2: pts[1],
+    path: getSolutionPath(complete, size, ch, pts[0], pts[1])
   }));
   return { size, endpoints, colorCount: endpoints.length };
 }
@@ -119,7 +148,8 @@ function toDbFormat(puzzle, id, difficulty) {
   const clientEndpoints = puzzle.endpoints.map(ep => ({
     color: ep.color,
     p1: [ep.p1[1], ep.p1[0]], // [col, row]
-    p2: [ep.p2[1], ep.p2[0]]
+    p2: [ep.p2[1], ep.p2[0]],
+    path: ep.path ? ep.path.map(pt => [pt[1], pt[0]]) : undefined // [col, row]
   }));
 
   return {

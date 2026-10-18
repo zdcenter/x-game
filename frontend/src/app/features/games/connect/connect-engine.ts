@@ -7,6 +7,7 @@ export interface Endpoint {
   color: number;
   p1: Position;
   p2: Position;
+  path?: Position[];
 }
 
 export interface ConnectPuzzleDef {
@@ -197,33 +198,102 @@ export class ConnectEngine {
     return this.grid[r][c];
   }
 
-  // Allows starting a drag from ANY part of an existing pipe
-  // This effectively truncates the pipe to that point and sets it as active
-  startDragFrom(r: number, c: number): number | null {
-    const color = this.grid[r][c];
-    if (color === 0) return null;
-
-    // Truncate the path to this point
+  // Clear any drawn path for a given color
+  clearColor(color: number) {
     const path = this.paths.get(color);
     if (path) {
-      const index = path.findIndex(p => p.r === r && p.c === c);
-      if (index !== -1) {
-        // Break after this point
-        const removed = path.splice(index + 1);
-        for (const pos of removed) {
-          if (!this.isEndpoint(pos.r, pos.c)) {
-            this.grid[pos.r][pos.c] = 0;
+      for (const pos of path) {
+        if (!this.isEndpoint(pos.r, pos.c)) {
+          this.grid[pos.r][pos.c] = 0;
+        }
+      }
+    }
+    const ep = this.endpoints.find(e => e.color === color);
+    if (ep) {
+      this.paths.set(color, [ep.p1]);
+    }
+  }
+
+  hasPath(color: number): boolean {
+    const path = this.paths.get(color);
+    return !!(path && path.length > 1);
+  }
+
+  // Reset entire board to starting state (clear all lines)
+  resetAll() {
+    for (const ep of this.endpoints) {
+      this.clearColor(ep.color);
+    }
+  }
+
+  // Provide a hint by correctly connecting one unsolved color
+  applyHint(): boolean {
+    for (const ep of this.endpoints) {
+      if (!ep.path || ep.path.length === 0) continue;
+      const currentPath = this.paths.get(ep.color);
+      const isConnected = currentPath && currentPath.length > 1 &&
+        this.isEndpointOfColor(currentPath[currentPath.length - 1].r, currentPath[currentPath.length - 1].c, ep.color);
+
+      let matches = isConnected && currentPath?.length === ep.path.length;
+      if (matches && currentPath) {
+        for (let i = 0; i < currentPath.length; i++) {
+          if (currentPath[i].r !== ep.path[i].r || currentPath[i].c !== ep.path[i].c) {
+            matches = false;
+            break;
           }
         }
-      } else if (this.isEndpointOfColor(r, c, color)) {
-        // Clicked on the OTHER endpoint which is not in the path yet.
-        // Clear the old path and start from here.
+      }
+
+      if (!matches) {
+        // Clear this color first
+        this.clearColor(ep.color);
+
+        // Clear any conflicting paths crossing this color's solution
+        for (const pt of ep.path) {
+          const occColor = this.grid[pt.r][pt.c];
+          if (occColor !== 0 && occColor !== -1 && occColor !== ep.color) {
+            this.clearColor(occColor);
+          }
+        }
+
+        // Apply authentic solution path
+        this.paths.set(ep.color, ep.path.map(p => ({ r: p.r, c: p.c })));
+        for (const pt of ep.path) {
+          this.grid[pt.r][pt.c] = ep.color;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Allows starting a drag from ANY part of an existing pipe or either endpoint
+  startDragFrom(r: number, c: number): number | null {
+    const color = this.grid[r][c];
+    if (color === 0 || color === -1) return null;
+
+    const path = this.paths.get(color);
+    if (path) {
+      // If clicking either endpoint (p1 or p2):
+      // Clear old line segments and start from this endpoint
+      if (this.isEndpointOfColor(r, c, color)) {
         for (const pos of path) {
           if (!this.isEndpoint(pos.r, pos.c)) {
             this.grid[pos.r][pos.c] = 0;
           }
         }
         this.paths.set(color, [{ r, c }]);
+      } else {
+        const index = path.findIndex(p => p.r === r && p.c === c);
+        if (index !== -1) {
+          // Break after this point
+          const removed = path.splice(index + 1);
+          for (const pos of removed) {
+            if (!this.isEndpoint(pos.r, pos.c)) {
+              this.grid[pos.r][pos.c] = 0;
+            }
+          }
+        }
       }
     }
     return color;

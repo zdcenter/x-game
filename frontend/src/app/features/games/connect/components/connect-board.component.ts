@@ -34,8 +34,9 @@ import { ConnectEngine, Position } from '../connect-engine';
             <div *ngIf="engine.isBlock(r, c)" class="w-[90%] h-[90%] bg-slate-700 rounded-lg z-20 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center">
             </div>
 
-            <!-- Grey Square (Dot) for spots without endpoints -->
-            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c)" class="w-[38%] h-[38%] bg-[#a3a3a3] dark:bg-[#737373] rounded-[3px] z-0"></div>
+            <!-- Grey Square (Dot) for spots without endpoints or pipes -->
+            <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c) && engine.grid[r][c] === 0" 
+                 class="w-[38%] h-[38%] bg-[#a3a3a3] dark:bg-[#737373] rounded-[3px] z-0"></div>
 
             <!-- Unfilled cell pulse when all flows are connected but coverage < 100% -->
             <div *ngIf="highlightUnfilled && engine.grid[r][c] === 0 && !engine.isEndpoint(r, c) && !engine.isBlock(r, c)"
@@ -45,15 +46,14 @@ import { ConnectEngine, Position } from '../connect-engine';
 
             <!-- Endpoint Dot -->
             <div *ngIf="engine.isEndpoint(r, c)" 
-                 class="w-[85%] h-[85%] rounded-full z-10 flex items-center justify-center transition-transform relative shadow-[inset_0_-4px_6px_rgba(0,0,0,0.3),_0_4px_8px_rgba(0,0,0,0.2)]"
-                 [class.scale-110]="activeColor === engine.grid[r][c]"
+                 class="w-[88%] h-[88%] rounded-full z-10 flex items-center justify-center relative shadow-[inset_0_-4px_6px_rgba(0,0,0,0.3),_0_4px_8px_rgba(0,0,0,0.2)]"
                  [style.backgroundColor]="getColorHex(engine.getColorAt(r, c)!)">
               
               <!-- Subtle top highlight for 3D effect -->
               <div class="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent pointer-events-none"></div>
 
-              <span class="text-white font-black pointer-events-none drop-shadow-md z-20"
-                    [ngClass]="engine.height >= 12 ? 'text-[10px] sm:text-xs md:text-sm lg:text-base' : (engine.height >= 10 ? 'text-xs sm:text-sm md:text-base lg:text-lg' : (engine.height >= 7 ? 'text-sm sm:text-base md:text-lg lg:text-2xl' : 'text-base sm:text-xl md:text-2xl lg:text-3xl'))">
+              <span class="text-white font-black leading-none select-none pointer-events-none drop-shadow-md z-20"
+                    [ngClass]="engine.height >= 12 ? 'text-sm sm:text-base md:text-lg lg:text-xl' : (engine.height >= 10 ? 'text-base sm:text-lg md:text-xl lg:text-2xl' : (engine.height >= 7 ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl' : 'text-xl sm:text-2xl md:text-3xl lg:text-4xl'))">
                 {{ engine.getColorAt(r, c) }}
               </span>
             </div>
@@ -62,50 +62,20 @@ import { ConnectEngine, Position } from '../connect-engine';
         </ng-container>
       </div>
 
-      <!-- SVG Overlay for Pipes -->
+      <!-- SVG Overlay for Pipes (Solid, vibrant, 100% opaque) -->
       <svg class="absolute inset-0 w-full h-full pointer-events-none" 
            [attr.viewBox]="'0 0 ' + engine.width * 100 + ' ' + engine.height * 100" 
            preserveAspectRatio="none">
 
         <ng-container *ngFor="let color of activeColors">
-          
-          <!-- Shadow Pipe (3D effect) -->
-          <polyline 
-            *ngIf="getPointsForColor(color)"
-            [attr.points]="getPointsForColor(color)"
-            fill="none"
-            stroke="rgba(0,0,0,0.2)"
-            stroke-width="48"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="transition-opacity duration-150 translate-y-[3px]"
-            [class.opacity-40]="activeColor !== null && activeColor !== color"
-          />
-
-          <!-- Main Pipe -->
           <polyline 
             *ngIf="getPointsForColor(color)"
             [attr.points]="getPointsForColor(color)"
             fill="none"
             [attr.stroke]="getColorHex(color)"
-            stroke-width="45"
+            stroke-width="44"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="transition-opacity duration-150"
-            [class.opacity-40]="activeColor !== null && activeColor !== color"
-          />
-          
-          <!-- Highlight Pipe (Inner glow) -->
-          <polyline 
-            *ngIf="getPointsForColor(color)"
-            [attr.points]="getPointsForColor(color)"
-            fill="none"
-            stroke="rgba(255,255,255,0.25)"
-            stroke-width="15"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="transition-opacity duration-150 -translate-y-[6px]"
-            [class.opacity-40]="activeColor !== null && activeColor !== color"
           />
         </ng-container>
       </svg>
@@ -221,6 +191,11 @@ export class ConnectBoardComponent implements AfterViewInit {
     return null;
   }
 
+  private downPos: Position | null = null;
+  private downEndpointColor: number | null = null;
+  private downEndpointHadPath = false;
+  private hasMoved = false;
+
   onPointerDown(event: MouseEvent | TouchEvent) {
     if (this.disabled) return;
     
@@ -229,6 +204,17 @@ export class ConnectBoardComponent implements AfterViewInit {
 
     const pos = this.getCellFromEvent(event);
     if (!pos) return;
+
+    this.downPos = pos;
+    this.hasMoved = false;
+
+    if (this.engine.isEndpoint(pos.r, pos.c)) {
+      this.downEndpointColor = this.engine.getColorAt(pos.r, pos.c);
+      this.downEndpointHadPath = this.engine.hasPath(this.downEndpointColor);
+    } else {
+      this.downEndpointColor = null;
+      this.downEndpointHadPath = false;
+    }
 
     // Check if clicking on an existing pipe or endpoint
     const color = this.engine.startDragFrom(pos.r, pos.c);
@@ -246,23 +232,66 @@ export class ConnectBoardComponent implements AfterViewInit {
     const pos = this.getCellFromEvent(event);
     if (!pos) return;
 
+    if (this.downPos && (pos.r !== this.downPos.r || pos.c !== this.downPos.c)) {
+      this.hasMoved = true;
+    }
+
     const path = this.engine.paths.get(this.activeColor);
     if (!path || path.length === 0) return;
 
     const head = path[path.length - 1];
     
-    // If we moved to an adjacent cell, attempt to draw
-    const dr = Math.abs(head.r - pos.r);
-    const dc = Math.abs(head.c - pos.c);
-    if (dr + dc === 1) {
+    // If moved to same cell, nothing to do
+    const dr = pos.r - head.r;
+    const dc = pos.c - head.c;
+    if (dr === 0 && dc === 0) return;
+
+    if (Math.abs(dr) + Math.abs(dc) === 1) {
       this.engine.drawTo(pos.r, pos.c, this.activeColor);
       this.boardChange.emit();
+      return;
     }
+
+    // Step smoothly if dragging across multiple cells in a single event frame
+    const stepR = dr === 0 ? 0 : (dr > 0 ? 1 : -1);
+    const stepC = dc === 0 ? 0 : (dc > 0 ? 1 : -1);
+    let currR = head.r;
+    let currC = head.c;
+
+    if (Math.abs(dr) >= Math.abs(dc)) {
+      while (currR !== pos.r) {
+        currR += stepR;
+        this.engine.drawTo(currR, currC, this.activeColor);
+      }
+      while (currC !== pos.c) {
+        currC += stepC;
+        this.engine.drawTo(currR, currC, this.activeColor);
+      }
+    } else {
+      while (currC !== pos.c) {
+        currC += stepC;
+        this.engine.drawTo(currR, currC, this.activeColor);
+      }
+      while (currR !== pos.r) {
+        currR += stepR;
+        this.engine.drawTo(currR, currC, this.activeColor);
+      }
+    }
+    this.boardChange.emit();
   }
 
   onPointerUp() {
-    if (this.activeColor !== null) {
+    // If user tapped/clicked on an endpoint that already had a path without dragging away, clear it
+    if (!this.hasMoved && this.downEndpointColor !== null && this.downEndpointHadPath) {
+      this.engine.clearColor(this.downEndpointColor);
+    }
+
+    if (this.activeColor !== null || this.downEndpointColor !== null) {
       this.activeColor = null;
+      this.downPos = null;
+      this.downEndpointColor = null;
+      this.downEndpointHadPath = false;
+      this.hasMoved = false;
       this.boardChange.emit();
     }
   }

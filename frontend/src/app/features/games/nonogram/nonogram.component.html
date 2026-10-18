@@ -97,9 +97,18 @@
                   </div>
                 </div>
 
-                <div class="cells-grid"
+                <div #cellsGrid
+                     class="cells-grid prevent-select"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'"
-                     [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
+                     [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'"
+                     (pointerdown)="handlePointerDown($event)"
+                     (pointermove)="handlePointerMove($event)"
+                     (pointerup)="handlePointerUp($event)"
+                     (pointercancel)="handlePointerCancel($event)"
+                     (touchstart)="handleTouchFallbackStart($event)"
+                     (touchmove)="handleTouchFallbackMove($event)"
+                     (touchend)="handleTouchFallbackEnd()"
+                     (touchcancel)="handleTouchFallbackEnd()">
                   <ng-container *ngFor="let row of store.grid(); let y = index">
                     <div *ngFor="let cell of row; let x = index" 
                          class="cell cursor-pointer flex items-center justify-center transition-colors"
@@ -112,14 +121,9 @@
                          [class.bg-[var(--color-text-main)]]="cell === 1"
                          [class.bg-transparent]="cell === 0"
                          [class.hover:bg-[var(--color-bg-main)]]="cell === 0"
-                         (mousedown)="handleMouseDown(x, y, $event)"
-                         (mouseenter)="handleMouseEnter(x, y)"
-                         (touchstart)="handleTouchStart2(x, y, $event)"
-                         (touchmove)="handleTouchMove2($event)"
-                         (touchend)="handleTouchEnd2()"
-                         (touchcancel)="handleTouchEnd2()">
+                         (contextmenu)="onContextMenu($event)">
                       
-                      <div *ngIf="cell === 2" class="text-rose-500 font-bold" [style.font-size.px]="cellSize() * 0.7">✕</div>
+                      <div *ngIf="cell === 2" class="text-rose-500 font-bold pointer-events-none select-none" [style.font-size.px]="cellSize() * 0.7">✕</div>
                     </div>
                   </ng-container>
                 </div>

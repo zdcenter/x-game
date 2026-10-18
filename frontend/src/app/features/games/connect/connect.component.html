@@ -123,24 +123,25 @@
         </app-connect-board>
       </div>
 
-      <!-- Level Switcher Buttons -->
-      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full max-w-xl flex justify-between items-center mt-6 px-2">
-        <button (click)="store.prevLevel()" 
-                [disabled]="store.currentLevelNum() <= 1"
-                class="px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 active:scale-95"
-                [ngClass]="store.currentLevelNum() <= 1 ? 'bg-[var(--color-bg-base)] text-[var(--color-text-muted)] cursor-not-allowed border border-[var(--color-border-card)]/40' : 'bg-[var(--color-bg-card)] text-[var(--color-text-main)] hover:border-cyan-500/50 border border-[var(--color-border-card)] shadow-sm'">
-          <span>←</span> {{ i18n.t('game.prev_level')() }}
-        </button>
-        <button (click)="goBackToLobby()"
-                class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-cyan-500/50 transition-all shadow-sm active:scale-95">
-          {{ i18n.t('game.levels_lobby')() }}
-        </button>
-        <button (click)="store.nextLevel()" 
-                [disabled]="!store.hasNextLevel()"
-                class="px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 active:scale-95"
-                [ngClass]="!store.hasNextLevel() ? 'bg-[var(--color-bg-base)] text-[var(--color-text-muted)] cursor-not-allowed border border-[var(--color-border-card)]/40' : 'bg-[var(--color-bg-card)] text-[var(--color-text-main)] hover:border-cyan-500/50 border border-[var(--color-border-card)] shadow-sm'">
-          {{ i18n.t('game.next_level')() }} <span>→</span>
-        </button>
+      <!-- Bottom Control Toolbar -->
+      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full max-w-xl mx-auto mt-4 px-2">
+        <app-game-toolbar
+          [layoutStyle]="'compact'"
+          [hintLayout]="'toolbar-compact'"
+          [showBack]="true"
+          [showPrev]="true"
+          [showRestart]="true"
+          [showHint]="true"
+          [showNext]="true"
+          [showShare]="true"
+          [disablePrev]="store.currentLevelNum() <= 1"
+          [disableNext]="!store.hasNextLevel()"
+          (back)="goBackToLobby()"
+          (prevLevel)="store.prevLevel()"
+          (nextLevel)="store.nextLevel()"
+          (restart)="onRestart()"
+          (hintApplied)="onHintApplied()">
+        </app-game-toolbar>
       </div>
     </ng-container>
   </div>

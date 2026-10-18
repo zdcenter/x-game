@@ -21,6 +21,7 @@ export interface NonogramHistoryEntry {
   x: number;
   y: number;
   prevState: CellState;
+  batchId?: number;
 }
 
 @Injectable()
@@ -269,23 +270,41 @@ export class NonogramStore extends BaseGameStore {
     }
   }
 
-  setCell(x: number, y: number, nextState: CellState) {
+  setCell(x: number, y: number, nextState: CellState, batchId?: number) {
+    this.setCellsBatch([{ x, y }], nextState, batchId);
+  }
+
+  setCellsBatch(cells: { x: number; y: number }[], nextState: CellState, batchId?: number) {
     if (this.status() !== GameStatus.Playing) return;
 
     const state = this.localState();
     if (!state) return;
 
-    const current = state.grid[y][x];
-    if (current === nextState) return; // No change needed
-
     if (this.currentRoomMode() === GameMode.Steal) {
-       this.ws.send({ action: C2SAction.Move, x, y });
-       return;
+      for (const { x, y } of cells) {
+        if (state.grid[y] && state.grid[y][x] !== nextState) {
+          this.ws.send({ action: C2SAction.Move, x, y });
+        }
+      }
+      return;
     }
-    
+
     const newGrid = state.grid.map(row => [...row]);
-    this.history.update(h => [...h, { x, y, prevState: current }]);
-    newGrid[y][x] = nextState;
+    const changes: NonogramHistoryEntry[] = [];
+
+    for (const { x, y } of cells) {
+      if (y >= 0 && y < state.height && x >= 0 && x < state.width) {
+        const current = newGrid[y][x];
+        if (current !== nextState) {
+          changes.push({ x, y, prevState: current, batchId });
+          newGrid[y][x] = nextState;
+        }
+      }
+    }
+
+    if (changes.length === 0) return;
+
+    this.history.update(h => [...h, ...changes]);
     this.audio.playPuzzle('move');
     this.localState.set({ ...state, grid: newGrid });
     this.checkProgressAndWin(newGrid, state);
@@ -373,10 +392,23 @@ export class NonogramStore extends BaseGameStore {
     if (!state || hist.length === 0) return;
 
     const lastMove = hist[hist.length - 1];
+    const targetBatchId = lastMove.batchId;
+
+    let countToUndo = 1;
+    if (targetBatchId !== undefined) {
+      while (countToUndo < hist.length && hist[hist.length - 1 - countToUndo].batchId === targetBatchId) {
+        countToUndo++;
+      }
+    }
+
+    const movesToUndo = hist.slice(hist.length - countToUndo);
     const newGrid = state.grid.map(row => [...row]);
-    newGrid[lastMove.y][lastMove.x] = lastMove.prevState;
+    for (let i = movesToUndo.length - 1; i >= 0; i--) {
+      const m = movesToUndo[i];
+      newGrid[m.y][m.x] = m.prevState;
+    }
     
-    this.history.set(hist.slice(0, -1));
+    this.history.set(hist.slice(0, hist.length - countToUndo));
     this.localState.set({ ...state, grid: newGrid });
     this.audio.playPuzzle('move');
     

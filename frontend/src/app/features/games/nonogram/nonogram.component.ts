@@ -1,4 +1,4 @@
-import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, ElementRef, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
@@ -183,101 +183,339 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
      return Math.max(20, Math.min(finalSize, 120));
   });
 
+  @ViewChild('cellsGrid') cellsGridRef?: ElementRef<HTMLElement>;
+
   private isDragging = false;
-  private dragTargetState: any = -1;
-  private touchTimer: any;
-  private touchMoved = false;
-  private touchStartX = -1;
-  private touchStartY = -1;
+  private activePointerId: number | null = null;
+  private currentBatchId: number = 0;
+  private dragTargetState: number = -1;
+  private lastCoord: { x: number; y: number } | null = null;
+  private startCoord: { x: number; y: number } | null = null;
+  private startPointerPos: { x: number; y: number } | null = null;
+  private longPressTimer: any = null;
+  private isLongPressTriggered = false;
+  private hasPaintedStartCell = false;
+  private pointerHandled = false;
 
-  handleMouseDown(x: number, y: number, event: MouseEvent) {
-    if (event.button === 2) event.preventDefault();
-    this.isDragging = true;
-    const isRightClick = event.button === 2;
-    this.dragTargetState = this.store.determineNextState(x, y, isRightClick);
-    this.store.setCell(x, y, this.dragTargetState);
-    
-    const mouseUpHandler = () => {
-      this.isDragging = false;
-      this.dragTargetState = -1;
-      document.removeEventListener('mouseup', mouseUpHandler);
-    };
-    document.addEventListener('mouseup', mouseUpHandler);
-  }
-
-  handleMouseEnter(x: number, y: number) {
-    if (this.isDragging && this.dragTargetState !== -1) {
-      this.store.setCell(x, y, this.dragTargetState);
+  private clearLongPressTimer() {
+    if (this.longPressTimer) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
     }
   }
 
-  handleTouchStart2(x: number, y: number, event: TouchEvent) {
-    if (event.touches.length > 1) return;
-    this.isDragging = true;
-    this.touchMoved = false;
-    this.touchStartX = x;
-    this.touchStartY = y;
-    this.dragTargetState = -1;
+  private getLineCells(x0: number, y0: number, x1: number, y1: number): { x: number; y: number }[] {
+    const points: { x: number; y: number }[] = [];
+    const dx = Math.abs(x1 - x0);
+    const dy = Math.abs(y1 - y0);
+    const sx = x0 < x1 ? 1 : -1;
+    const sy = y0 < y1 ? 1 : -1;
+    let err = dx - dy;
 
-    this.touchTimer = setTimeout(() => {
-      if (!this.touchMoved && this.isDragging) {
-        this.dragTargetState = this.store.determineNextState(x, y, true);
-        this.store.setCell(x, y, this.dragTargetState);
-        if (navigator.vibrate) navigator.vibrate(50);
-        this.touchTimer = null;
+    let currX = x0;
+    let currY = y0;
+    const w = this.store.width();
+    const h = this.store.height();
+
+    while (true) {
+      if (currX >= 0 && currX < w && currY >= 0 && currY < h) {
+        points.push({ x: currX, y: currY });
       }
-    }, 400);
-  }
-
-  handleTouchMove2(event: TouchEvent) {
-    if (!this.isDragging || event.touches.length === 0) return;
-    event.preventDefault(); // Prevent scrolling while drawing
-
-    if (!this.touchMoved) {
-      this.touchMoved = true;
-      if (this.touchTimer) {
-        clearTimeout(this.touchTimer);
-        this.touchTimer = null;
+      if (currX === x1 && currY === y1) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        currX += sx;
       }
-      if (this.dragTargetState === -1) {
-        this.dragTargetState = this.store.determineNextState(this.touchStartX, this.touchStartY, false);
-        this.store.setCell(this.touchStartX, this.touchStartY, this.dragTargetState);
+      if (e2 < dx) {
+        err += dx;
+        currY += sy;
       }
     }
+    return points;
+  }
 
-    const touch = event.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
-    
-    if (element && element.classList.contains('cell')) {
-      const xStr = element.getAttribute('data-x');
-      const yStr = element.getAttribute('data-y');
-      if (xStr && yStr) {
-        const x = parseInt(xStr, 10);
-        const y = parseInt(yStr, 10);
-        if (this.dragTargetState !== -1) {
-          this.store.setCell(x, y, this.dragTargetState);
+  private getCoordFromClient(clientX: number, clientY: number): { x: number; y: number } | null {
+    // 1. Try DOM element hit first
+    const el = document.elementFromPoint(clientX, clientY);
+    if (el) {
+      const cellEl = el.closest('.cell') as HTMLElement | null;
+      if (cellEl) {
+        const xStr = cellEl.getAttribute('data-x');
+        const yStr = cellEl.getAttribute('data-y');
+        if (xStr !== null && yStr !== null) {
+          const x = parseInt(xStr, 10);
+          const y = parseInt(yStr, 10);
+          if (!isNaN(x) && !isNaN(y)) {
+            return { x, y };
+          }
         }
       }
     }
+
+    // 2. Geometric fallback
+    const gridEl = this.cellsGridRef?.nativeElement;
+    if (!gridEl) return null;
+    const rect = gridEl.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const relY = clientY - rect.top;
+
+    if (relX < 0 || relY < 0 || relX >= rect.width || relY >= rect.height) return null;
+
+    const w = this.store.width();
+    const h = this.store.height();
+    if (w <= 0 || h <= 0) return null;
+
+    const cellW = rect.width / w;
+    const cellH = rect.height / h;
+    const x = Math.floor(relX / cellW);
+    const y = Math.floor(relY / cellH);
+
+    if (x >= 0 && x < w && y >= 0 && y < h) {
+      return { x, y };
+    }
+    return null;
   }
 
-  handleTouchEnd2() {
+  handlePointerDown(event: PointerEvent) {
+    if (this.store.status() !== GameStatus.Playing) return;
+    if (event.button !== 0 && event.button !== 2) return;
+
+    this.pointerHandled = true;
+    const coord = this.getCoordFromClient(event.clientX, event.clientY);
+    if (!coord) return;
+
+    if (event.cancelable) event.preventDefault();
+
+    try {
+      (event.currentTarget as HTMLElement)?.setPointerCapture(event.pointerId);
+    } catch (_) {}
+
+    this.clearLongPressTimer();
+    this.isDragging = true;
+    this.activePointerId = event.pointerId;
+    this.currentBatchId = Date.now();
+    this.startCoord = coord;
+    this.lastCoord = coord;
+    this.startPointerPos = { x: event.clientX, y: event.clientY };
+    this.isLongPressTriggered = false;
+    this.hasPaintedStartCell = false;
+
+    const isRightClick = event.button === 2;
+    const isTouch = event.pointerType === 'touch' || event.pointerType === 'pen';
+
+    if (isRightClick) {
+      // Right-click: immediate cross
+      this.dragTargetState = this.store.determineNextState(coord.x, coord.y, true, 'cross');
+      this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
+      this.hasPaintedStartCell = true;
+      this.haptic.vibrateLight();
+      return;
+    }
+
+    if (isTouch) {
+      // Touch: start long-press timer (300ms) to toggle cross (❌) if user holds still
+      this.dragTargetState = -1;
+      this.longPressTimer = setTimeout(() => {
+        if (this.isDragging && !this.isLongPressTriggered && this.startCoord) {
+          this.isLongPressTriggered = true;
+          // Long-press activated: mark as cross (❌)
+          this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, true, 'cross');
+          this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+          this.hasPaintedStartCell = true;
+          this.haptic.vibrateMedium();
+        }
+      }, 300);
+    } else {
+      // Desktop mouse left-click: apply immediately
+      this.dragTargetState = this.store.determineNextState(coord.x, coord.y, false);
+      this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
+      this.hasPaintedStartCell = true;
+      this.haptic.vibrateLight();
+    }
+  }
+
+  handlePointerMove(event: PointerEvent) {
     if (!this.isDragging) return;
-    
-    if (!this.touchMoved && this.touchTimer) {
-      clearTimeout(this.touchTimer);
-      this.touchTimer = null;
-      if (this.dragTargetState === -1) {
-        this.dragTargetState = this.store.determineNextState(this.touchStartX, this.touchStartY, false);
-        this.store.setCell(this.touchStartX, this.touchStartY, this.dragTargetState);
+    if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
+
+    if (event.cancelable) event.preventDefault();
+
+    // Check if moved significantly (> 8px) before long press triggered
+    if (this.startPointerPos && !this.isLongPressTriggered) {
+      const dist = Math.hypot(event.clientX - this.startPointerPos.x, event.clientY - this.startPointerPos.y);
+      if (dist > 8) {
+        this.clearLongPressTimer();
+        // If start cell was deferred, apply default draw mode to start cell now
+        if (!this.hasPaintedStartCell && this.startCoord) {
+          this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
+          this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+          this.hasPaintedStartCell = true;
+          this.haptic.vibrateLight();
+        }
       }
     }
+
+    const coord = this.getCoordFromClient(event.clientX, event.clientY);
+    if (!coord) return;
+
+    // Moving to another cell also cancels long press
+    if (this.startCoord && (coord.x !== this.startCoord.x || coord.y !== this.startCoord.y)) {
+      this.clearLongPressTimer();
+      if (!this.hasPaintedStartCell && this.startCoord) {
+        this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
+        this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+        this.hasPaintedStartCell = true;
+        this.haptic.vibrateLight();
+      }
+    }
+
+    if (this.lastCoord) {
+      if (this.lastCoord.x === coord.x && this.lastCoord.y === coord.y) {
+        return;
+      }
+      const lineCells = this.getLineCells(this.lastCoord.x, this.lastCoord.y, coord.x, coord.y);
+      if (lineCells.length > 0 && this.dragTargetState !== -1) {
+        this.store.setCellsBatch(lineCells, this.dragTargetState as any, this.currentBatchId);
+        this.haptic.vibrateLight();
+      }
+    } else {
+      if (this.dragTargetState !== -1) {
+        this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
+        this.haptic.vibrateLight();
+      }
+    }
+
+    this.lastCoord = coord;
+  }
+
+  handlePointerUp(event: PointerEvent) {
+    if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
+
+    // If released before long-press triggered and hasn't moved (short tap)
+    if (this.longPressTimer && !this.isLongPressTriggered && !this.hasPaintedStartCell && this.startCoord) {
+      this.clearLongPressTimer();
+      this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
+      this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+      this.haptic.vibrateLight();
+    }
+
+    this.clearLongPressTimer();
+    this.endDrag(event);
+  }
+
+  handlePointerCancel(event: PointerEvent) {
+    if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
+    this.clearLongPressTimer();
+    this.endDrag(event);
+  }
+
+  private endDrag(event?: PointerEvent) {
+    if (event && this.activePointerId !== null) {
+      try {
+        (event.currentTarget as HTMLElement)?.releasePointerCapture(event.pointerId);
+      } catch (_) {}
+    }
+    this.clearLongPressTimer();
     this.isDragging = false;
+    this.activePointerId = null;
+    this.lastCoord = null;
+    this.startCoord = null;
+    this.startPointerPos = null;
+    this.isLongPressTriggered = false;
+    this.hasPaintedStartCell = false;
     this.dragTargetState = -1;
   }
 
-  handleCellClick(x: number, y: number, event: MouseEvent) {
-    // Replaced by handleMouseDown
+  handleTouchFallbackStart(event: TouchEvent) {
+    if (this.pointerHandled || this.store.status() !== GameStatus.Playing) return;
+    if (event.touches.length !== 1) return;
+
+    const touch = event.touches[0];
+    const coord = this.getCoordFromClient(touch.clientX, touch.clientY);
+    if (!coord) return;
+
+    if (event.cancelable) event.preventDefault();
+
+    this.clearLongPressTimer();
+    this.isDragging = true;
+    this.currentBatchId = Date.now();
+    this.startCoord = coord;
+    this.lastCoord = coord;
+    this.startPointerPos = { x: touch.clientX, y: touch.clientY };
+    this.isLongPressTriggered = false;
+    this.hasPaintedStartCell = false;
+    this.dragTargetState = -1;
+
+    this.longPressTimer = setTimeout(() => {
+      if (this.isDragging && !this.isLongPressTriggered && this.startCoord) {
+        this.isLongPressTriggered = true;
+        this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, true, 'cross');
+        this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+        this.hasPaintedStartCell = true;
+        this.haptic.vibrateMedium();
+      }
+    }, 300);
+  }
+
+  handleTouchFallbackMove(event: TouchEvent) {
+    if (this.pointerHandled || !this.isDragging || event.touches.length === 0) return;
+    if (event.cancelable) event.preventDefault();
+
+    const touch = event.touches[0];
+    if (this.startPointerPos && !this.isLongPressTriggered) {
+      const dist = Math.hypot(touch.clientX - this.startPointerPos.x, touch.clientY - this.startPointerPos.y);
+      if (dist > 8) {
+        this.clearLongPressTimer();
+        if (!this.hasPaintedStartCell && this.startCoord) {
+          this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
+          this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+          this.hasPaintedStartCell = true;
+          this.haptic.vibrateLight();
+        }
+      }
+    }
+
+    const coord = this.getCoordFromClient(touch.clientX, touch.clientY);
+    if (!coord) return;
+
+    if (this.startCoord && (coord.x !== this.startCoord.x || coord.y !== this.startCoord.y)) {
+      this.clearLongPressTimer();
+      if (!this.hasPaintedStartCell && this.startCoord) {
+        this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
+        this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+        this.hasPaintedStartCell = true;
+        this.haptic.vibrateLight();
+      }
+    }
+
+    if (this.lastCoord) {
+      if (this.lastCoord.x === coord.x && this.lastCoord.y === coord.y) return;
+      const lineCells = this.getLineCells(this.lastCoord.x, this.lastCoord.y, coord.x, coord.y);
+      if (lineCells.length > 0 && this.dragTargetState !== -1) {
+        this.store.setCellsBatch(lineCells, this.dragTargetState as any, this.currentBatchId);
+        this.haptic.vibrateLight();
+      }
+    }
+    this.lastCoord = coord;
+  }
+
+  handleTouchFallbackEnd() {
+    if (this.pointerHandled) return;
+    if (this.longPressTimer && !this.isLongPressTriggered && !this.hasPaintedStartCell && this.startCoord) {
+      this.clearLongPressTimer();
+      this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
+      this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
+      this.haptic.vibrateLight();
+    }
+    this.clearLongPressTimer();
+    this.isDragging = false;
+    this.lastCoord = null;
+    this.startCoord = null;
+    this.startPointerPos = null;
+    this.isLongPressTriggered = false;
+    this.hasPaintedStartCell = false;
+    this.dragTargetState = -1;
   }
 
   useHint() {

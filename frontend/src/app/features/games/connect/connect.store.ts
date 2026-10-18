@@ -245,15 +245,29 @@ export class ConnectStore extends BaseGameStore {
 
   restart() {
     if (this.currentRoomMode() === GameMode.Single) {
-      // Just reload the current level from memory
-      const levelId = this.currentLevelId();
-      if (levelId) {
-        this.loadLevel(levelId);
-      }
+      this.resetBoard();
       return;
     }
     this.timeSpent.set(0);
     this.ws.send({ action: C2SAction.RestartGame });
+  }
+
+  resetBoard() {
+    const engine = this.localEngine();
+    if (engine) {
+      engine.resetAll();
+      this.singlePlayerFinished.set(false);
+      this.boardVersion.update(v => v + 1);
+    }
+  }
+
+  applyHint() {
+    const engine = this.localEngine();
+    if (!engine) return;
+    const applied = engine.applyHint();
+    if (applied) {
+      this.checkSolution();
+    }
   }
 
   changeSingleDifficulty(diff: string) {
@@ -298,11 +312,12 @@ export class ConnectStore extends BaseGameStore {
             }
           }
         } else if (Array.isArray(parsed[0].p1)) {
-          // Convert array format {"color": 1, "p1": [c, r], "p2": [c, r]}
+          // Convert array format {"color": 1, "p1": [c, r], "p2": [c, r], "path": [[c, r], ...]}
           endpointsDef = parsed.map((ep: any) => ({
             color: ep.color,
             p1: { r: ep.p1[1], c: ep.p1[0] },
-            p2: { r: ep.p2[1], c: ep.p2[0] }
+            p2: { r: ep.p2[1], c: ep.p2[0] },
+            path: ep.path ? ep.path.map((pt: any) => ({ r: pt[1], c: pt[0] })) : undefined
           }));
         } else {
           // Assume already correct format {r, c}

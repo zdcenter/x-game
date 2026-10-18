@@ -29,6 +29,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-connect',
@@ -41,7 +42,8 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     GameSpectatingOverlayComponent,
     GameWaitingRoomComponent,
     GameLayoutComponent,
-    GamePkHudComponent
+    GamePkHudComponent,
+    GameToolbarComponent
   ],
   providers: [ConnectStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -260,9 +262,18 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
 
   startLevel(levelId: string) {
     this.view.set('play');
-    this.store.loadLevel(levelId);  }
+    this.store.joinRoomWithLevel(levelId, this.store.currentDifficulty());
+  }
   onBoardChange() {
     this.store.checkSolution();
+  }
+
+  onRestart() {
+    this.store.restart();
+  }
+
+  onHintApplied() {
+    this.store.applyHint();
   }
 
   onOverlayClose() {

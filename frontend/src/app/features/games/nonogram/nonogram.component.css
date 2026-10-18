@@ -74,12 +74,20 @@
   background: var(--color-bg-base);
   border: 3px solid var(--color-text-main);
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .cell {
   border-right: 1px solid var(--color-border-thick);
   border-bottom: 1px solid var(--color-border-thick);
   box-sizing: border-box;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .cell.thick-r {
   border-right: 2px solid var(--color-text-muted);
