@@ -164,7 +164,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
             <!-- Total count badge -->
             <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] flex items-center gap-2">
               <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-accent-from)]"></span>
-              <span>{{ i18n.t('leaderboard.total_players', { total: data()?.total || 0 })() }}</span>
+              <span>{{ totalPlayersLabel() }}</span>
             </div>
 
             <!-- Page actions -->
@@ -177,7 +177,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
               </button>
 
               <span class="text-xs font-mono font-bold text-[var(--color-text-main)] px-2">
-                {{ i18n.t('leaderboard.page', { page: currentPage(), total: data()?.total_pages || 1 })() }}
+                {{ pageInfoLabel() }}
               </span>
 
               <button
@@ -207,6 +207,23 @@ export class LeaderboardComponent implements OnInit {
 
   isLoading = signal(false);
   data = signal<LeaderboardResponse | null>(null);
+
+  totalPlayersLabel = computed(() => {
+    const total = this.data()?.total || 0;
+    const raw = this.i18n.t('leaderboard.total_players', { total })();
+    return raw.replace(/\[total\]/g, String(total)).replace(/\{total\}/g, String(total));
+  });
+
+  pageInfoLabel = computed(() => {
+    const page = this.currentPage();
+    const total = this.data()?.total_pages || 1;
+    const raw = this.i18n.t('leaderboard.page', { page, total })();
+    return raw
+      .replace(/\[page\]/g, String(page))
+      .replace(/\{page\}/g, String(page))
+      .replace(/\[total\]/g, String(total))
+      .replace(/\{total\}/g, String(total));
+  });
 
   selectedGame = computed(() => GAME_DEFINITIONS.find(g => g.id === this.selectedGameId()));
 

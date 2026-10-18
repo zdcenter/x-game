@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-10-18] - 🌐 全球排行榜分页与上榜人数国际化插值修复 (I18n Interpolation Fix)
+
+### 🐛 缺陷修复与全语言插值加固
+- **Transloco 插值语法对齐**：
+  - 修复多语言配置文件（`zh.json`、`en.json`）中分页与上榜玩家文本错误使用中括号 `[total]`、`[page]` 导致 Transloco 无法解析而直接裸露给用户的缺陷；
+  - 全面补全德语 (`de.json`)、法语 (`fr.json`)、西班牙语 (`es.json`)、日语 (`ja.json`)、韩语 (`ko.json`)、葡萄牙语 (`pt.json`) 的 `leaderboard.total_players`、`leaderboard.page`、`leaderboard.prev`、`leaderboard.next` 国际化词条；
+- **组件级安全防御与响应式计算属性**：
+  - 在 `LeaderboardComponent` 中引入 `totalPlayersLabel` 与 `pageInfoLabel` 双重兜底信号（`computed`）；
+  - 内置防御性正则双重替换（同时支持 `{total}` / `[total]` 和 `{page}` / `[page]`），杜绝因浏览器缓存、Service Worker 旧词条版本或多语言缺失导致原始标记暴露的问题。
+
 ## [2026-10-18] - 🚀 用户长效留存引擎 (P0 & P1)：连胜断签保护、五维脑力雷达、脑力金币装扮中心与好友异步幽灵挑战
 
 ### 🧊 连胜断签保护 (Streak Freeze) 与里程碑路线图 (P0)
