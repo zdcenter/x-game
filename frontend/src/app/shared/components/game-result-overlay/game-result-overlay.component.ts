@@ -13,6 +13,7 @@ import { TextShareService, TextShareData } from '../../../core/services/text-sha
 import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
 import { AdsenseComponent } from '../adsense/adsense.component';
+import { GhostChallengeService } from '../../../core/services/ghost-challenge.service';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -35,6 +36,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private shareService = inject(ShareService);
   private textShareService = inject(TextShareService);
   private streakService = inject(StreakService);
+  private ghostChallengeService = inject(GhostChallengeService);
   authStore = inject(AuthStore);
 
   GameResult = GameResult;
@@ -377,21 +379,51 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   copyChallengeLink() {
     if (!this.currentGameId) return;
-    const username = this.authStore.currentUser()?.username || this.authStore.guestId;
-    const challengeParam = username ? `?challenge=${encodeURIComponent(username)}` : '';
-    const url = `${getOrigin()}/games/${this.currentGameId}${challengeParam}`;
     const config = this.gameRegistry.getConfig(this.currentGameId);
     const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
     const bestStat = (this.stats || [])[0];
     const statStr = bestStat ? `${bestStat.label || ''}: ${bestStat.value}` : '';
-    const text = `${this.i18n.t('share.challenge_banner')().replace('[challenger]', username)}\n${gameName} ${statStr}\n${url}`;
 
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        this.challengeCopied.set(true);
-        setTimeout(() => this.challengeCopied.set(false), 2500);
-      });
+    let targetTime = 0;
+    let targetScore = 0;
+    const timeGames = ['minesweeper','sudoku','sliding','codebreaker','math24','watersort','sokoban','lightsout'];
+    if (timeGames.includes(this.currentGameId)) {
+      const val = typeof bestStat?.value === 'number' ? bestStat.value : parseInt(String(bestStat?.value || 0), 10);
+      targetTime = isNaN(val) ? 0 : val;
+    } else {
+      const val = typeof bestStat?.value === 'number' ? bestStat.value : parseInt(String(bestStat?.value || 0), 10);
+      targetScore = isNaN(val) ? 0 : val;
     }
+
+    this.ghostChallengeService.createChallenge({
+      game_id: this.currentGameId,
+      target_time: targetTime,
+      target_score: targetScore,
+    }).subscribe({
+      next: res => {
+        const lang = this.i18n.currentLang();
+        const url = `${getOrigin()}/${lang}/games/${this.currentGameId}?challengeId=${res.challenge_id}`;
+        const text = `⚔️ ${this.i18n.t('challenge.ghost_title')()}！\n【${gameName}】来看看你能否超越我的成绩 (${statStr})：\n${url}`;
+
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(() => {
+            this.challengeCopied.set(true);
+            setTimeout(() => this.challengeCopied.set(false), 2500);
+          });
+        }
+      },
+      error: () => {
+        const username = this.authStore.currentUser()?.username || this.authStore.guestId;
+        const url = `${getOrigin()}/${this.i18n.currentLang()}/games/${this.currentGameId}?challenge=${encodeURIComponent(username)}`;
+        const text = `${this.i18n.t('share.challenge_banner')().replace('[challenger]', username)}\n${gameName} ${statStr}\n${url}`;
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(text).then(() => {
+            this.challengeCopied.set(true);
+            setTimeout(() => this.challengeCopied.set(false), 2500);
+          });
+        }
+      }
+    });
   }
 
   goToPkArena() {

@@ -49,10 +49,12 @@ export interface Drop2048Action {
   type: Drop2048ActionType;
 }
 
+export const WILD_BLOCK_VAL = 0;
+
 export interface Drop2048EngineConfig {
   mode?: GameModeType | string;
   seed?: number;
-  onSound?: (sound: 'move' | 'drop' | 'merge', comboCount?: number) => void;
+  onSound?: (sound: 'move' | 'drop' | 'merge' | 'wild', comboCount?: number) => void;
   onHaptic?: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
   onSyncState?: () => void;
   onBigMerge?: (val: number) => void;
@@ -61,6 +63,14 @@ export interface Drop2048EngineConfig {
 }
 
 export function getDrop2048BlockStyle(val: number): Record<string, string> {
+  if (val === WILD_BLOCK_VAL) {
+    return {
+      background: 'linear-gradient(135deg, #ff007f, #7928ca, #0070f3, #00dfd8)',
+      'box-shadow': 'inset 0 4px 0 rgba(255,255,255,0.6), inset 0 -4px 0 rgba(0,0,0,0.3), 0 0 20px rgba(0,223,216,0.6), 0 0 35px rgba(255,0,127,0.4)',
+      animation: 'rainbow-pulse 2s infinite ease-in-out'
+    };
+  }
+
   const g: Record<number, [string, string]> = {
     2:    ['#FF5252', '#D50000'],
     4:    ['#00E676', '#00C853'],
@@ -111,6 +121,8 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     this.combos = [];
     this.particles = [];
     this.activeBlock = null;
+    this.dropCount = 0;
+    this.noMergeDropStreak = 0;
     this.nextVal = this.generateRandomValue();
     this.nextVal2 = this.generateRandomValue();
     this.lastComboCount = 0;
@@ -124,6 +136,8 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     if (!state) return;
     this.board = state.board || [];
     this.activeBlock = state.activeBlock || null;
+    this.dropCount = state.dropCount || 0;
+    this.noMergeDropStreak = 0;
     this.nextVal = state.nextVal || 2;
     this.nextVal2 = state.nextVal2 || this.generateRandomValue();
     this.score = state.localScore || 0;
@@ -202,27 +216,80 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     return speeds[Math.min(this.getLevel() - 1, 9)];
   }
 
+  private dropCount: number = 0;
+  private noMergeDropStreak: number = 0;
+
   private generateRandomValue(): number {
+    this.dropCount++;
+
+    // 1. 彩虹万能方块 🌈 (Wild Block)
+    // 触发时机：每20次下落必出一次保底；或者连续5次下落未能发生合并时，有 15% 几率救急掉落
+    const isWildGuaranteed = this.dropCount > 0 && this.dropCount % 20 === 0;
+    const isWildStuckSave = this.noMergeDropStreak >= 5 && Math.random() < 0.15;
+    if (this.board.length > 0 && (isWildGuaranteed || isWildStuckSave)) {
+      return WILD_BLOCK_VAL;
+    }
+
     const lvl = this.getLevel();
-    // Level-based minimum ceiling (ensures early game starts small)
     const levelFloors = [8, 16, 32, 32, 64, 64, 128, 128, 256, 256];
     const levelFloor = levelFloors[Math.min(lvl - 1, 9)];
 
-    // Board-aware ceiling: grows with the board's max tile, no hard cap
-    const boardMax = this.board.length > 0
-      ? Math.max(...this.board.map(b => b.val))
-      : 0;
-    // Generate at most 1/4 of boardMax so players still need 2 merges to "reach" the top
+    // 棋盘上目前所有的方块数值
+    const boardValues = this.board.map(b => b.val).filter(v => v > 0);
+    const boardMax = boardValues.length > 0 ? Math.max(...boardValues) : 0;
     const ceiling = Math.min(Math.max(levelFloor, boardMax > 0 ? boardMax / 4 : levelFloor), 1024);
 
-    // Build candidate pool: powers of 2 from 2 up to ceiling
+    // 2. 动态阶梯淘汰机制 (Tile Deprecation)
+    // 只有当场上已经完全没有该较小数值时，才正式从掉落牌池淘汰，绝不让场上残存的小数成为死子！
+    let minFloor = 2;
+    if (boardMax >= 512 && !boardValues.includes(2)) {
+      minFloor = 4;
+    }
+    if (boardMax >= 1024 && !boardValues.includes(2) && !boardValues.includes(4)) {
+      minFloor = 8;
+    }
+    if (boardMax >= 2048 && !boardValues.includes(2) && !boardValues.includes(4) && !boardValues.includes(8)) {
+      minFloor = 16;
+    }
+
+    // 3. 智能盘面感知补牌 (Smart Spawner)
+    // 识别当前每列最上方暴露的方块数字，以及数量为奇数的孤立数字
+    const exposedTops = new Set<number>();
+    for (let c = 0; c < DROP2048_COLS; c++) {
+      const colBlocks = this.board.filter(b => b.c === c && b.val > 0).sort((a, b) => a.r - b.r);
+      if (colBlocks.length > 0) {
+        exposedTops.add(colBlocks[0].val);
+      }
+    }
+
+    // 统计场上出现次数为奇数（落单需要凑对）的数字
+    const counts = new Map<number, number>();
+    for (const v of boardValues) {
+      counts.set(v, (counts.get(v) || 0) + 1);
+    }
+    const oddValCandidates = Array.from(counts.entries())
+      .filter(([val, count]) => count % 2 === 1 && val <= ceiling)
+      .map(([val]) => val);
+
+    // 综合急需的数字清单
+    const urgentNeeded = Array.from(new Set([...exposedTops, ...oddValCandidates]))
+      .filter(v => v >= minFloor && v <= ceiling);
+
+    // 约 38% 的概率定向从急需救急列表中发放，解救孤立死子
+    if (urgentNeeded.length > 0 && Math.random() < 0.38) {
+      return urgentNeeded[Math.floor(Math.random() * urgentNeeded.length)];
+    }
+
+    // 4. 标准加权掉落池
     const pool: number[] = [];
-    for (let v = 2; v <= ceiling; v *= 2) pool.push(v);
+    for (let v = minFloor; v <= ceiling; v *= 2) {
+      pool.push(v);
+    }
 
     const n = pool.length;
     if (n === 1) return pool[0];
 
-    // Weight peak at index n-2 (ceiling/2), tails at both ends
+    // 权重峰值分布
     const weights = pool.map((_, i) => Math.max(2, 10 - Math.abs(i - (n - 2)) * 3));
     const total = weights.reduce((s, w) => s + w, 0);
 
@@ -352,10 +419,39 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
     let toRemove = new Set<string>();
     let toUpdate = new Map<string, DropBlock>();
 
+    // 第一步：彩虹方块 🌈 自动变形
+    // 如果场上有彩虹方块(val === 0)，优先检测其正下方或相邻的最大数字，变身为该数字
+    let wildTransformed = false;
+    for (const b of board) {
+      if (b.val === WILD_BLOCK_VAL) {
+        // 查找其正下方邻居、左右邻居、上方邻居
+        const directBelow = board.find(other => other.id !== b.id && other.c === b.c && other.r === b.r + 1 && other.val > 0);
+        const adjacent = board.filter(other =>
+          other.id !== b.id && other.val > 0 &&
+          ((other.r === b.r && Math.abs(other.c - b.c) === 1) || (other.c === b.c && Math.abs(other.r - b.r) === 1))
+        );
+
+        if (directBelow) {
+          b.val = directBelow.val;
+          wildTransformed = true;
+        } else if (adjacent.length > 0) {
+          // 选择相邻数字中最大的数值进行同化
+          const target = adjacent.reduce((max, cur) => cur.val > max.val ? cur : max, adjacent[0]);
+          b.val = target.val;
+          wildTransformed = true;
+        }
+      }
+    }
+
+    if (wildTransformed && this.config?.onSound) {
+      this.config.onSound('wild');
+    }
+
+    // 第二步：标准方块合并
     for (let r = DROP2048_ROWS - 1; r >= 0; r--) {
       for (let c = 0; c < DROP2048_COLS; c++) {
         const block = board.find(b => b.r === r && b.c === c && !toRemove.has(b.id));
-        if (!block) continue;
+        if (!block || block.val <= 0) continue;
 
         const neighbors = board.filter(b =>
           !toRemove.has(b.id) && b.id !== block.id && b.val === block.val &&
@@ -420,23 +516,33 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         if (firstMerge.val >= 128 && this.config?.onBigMerge) {
           this.config.onBigMerge(firstMerge.val);
         }
+
+        // 连击街机级赞赏词体系 (Arcade Praise)
+        let comboText = '+' + scoreGained;
+        if (comboCount >= 1) {
+          const praiseWords = ['GREAT! 🔥', 'AMAZING! ⚡', 'SUPER! 💥', 'UNREAL! 🌟', 'LEGENDARY! 👑'];
+          const praise = praiseWords[Math.min(comboCount - 1, praiseWords.length - 1)];
+          comboText = `${praise} ×${comboCount + 1}`;
+        }
+
         this.combos = [...this.combos, {
           id: comboId,
-          text: comboCount >= 1 ? 'COMBO ×' + (comboCount + 1) + '!' : '+' + scoreGained,
+          text: comboText,
           r: firstMerge.r,
           c: firstMerge.c,
           comboCount,
           scoreGained,
         }];
 
+        const particleCount = comboCount >= 2 ? 24 : 16;
         const newParticles: { id: string, x: number, y: number, color: string, size: number }[] = [];
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < particleCount; i++) {
           newParticles.push({
             id: this.generateId(),
             x: firstMerge.c,
             y: firstMerge.r,
             color: this.getColorForValue(firstMerge.val),
-            size: Math.round(4 + Math.random() * 10), // 4–14px
+            size: Math.round(4 + Math.random() * (comboCount >= 2 ? 14 : 10)), // 4–18px
           });
         }
         this.particles = [...this.particles, ...newParticles];
@@ -450,12 +556,17 @@ export class Drop2048Engine implements ILocalEngine<Drop2048State, Drop2048Actio
         }, 650);
       }
 
+      this.noMergeDropStreak = 0;
+
       // Clear isMerging before next round
       setTimeout(() => {
         this.board = this.board.map(b => ({ ...b, isMerging: false }));
         this.processMerges(comboCount + 1);
       }, 300);
     } else {
+      if (comboCount === 0) {
+        this.noMergeDropStreak++;
+      }
       if (this.config?.onSyncState) this.config.onSyncState();
       this.spawnBlock();
     }

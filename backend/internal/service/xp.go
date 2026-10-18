@@ -117,21 +117,33 @@ func GetLevelProgress(xp int) LevelProgress {
 }
 
 // CheckLoginStreak detects consecutive logins and awards bonus XP.
-// Returns (bonusXP, currentStreak). Safe to call on every authenticated request;
-// it updates only once per calendar day.
-func CheckLoginStreak(userID uint) (int, int) {
+// Supports automatic streak freeze protection if yesterday was missed!
+// Returns (bonusXP, currentStreak, freezeUsed, freezesLeft).
+func CheckLoginStreak(userID uint) (int, int, bool, int) {
 	var user domain.User
-	db.DB.First(&user, userID)
+	if err := db.DB.First(&user, userID).Error; err != nil {
+		return 0, 0, false, 0
+	}
 
 	today := time.Now().Format("2006-01-02")
 	if user.LastLoginDate == today {
-		return 0, user.LoginStreak
+		return 0, user.LoginStreak, false, user.StreakFreezes
 	}
 
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+	twoDaysAgo := time.Now().AddDate(0, 0, -2).Format("2006-01-02")
+
+	freezeUsed := false
+
 	if user.LastLoginDate == yesterday {
 		user.LoginStreak++
+	} else if user.LastLoginDate == twoDaysAgo && user.StreakFreezes > 0 {
+		// Missed yesterday! Streak freeze saves the streak!
+		user.StreakFreezes--
+		user.LoginStreak++
+		freezeUsed = true
 	} else {
+		// First login or missed 2+ days
 		user.LoginStreak = 1
 	}
 
@@ -150,7 +162,8 @@ func CheckLoginStreak(userID uint) (int, int) {
 		"level":           user.Level,
 		"login_streak":    user.LoginStreak,
 		"last_login_date": user.LastLoginDate,
+		"streak_freezes":  user.StreakFreezes,
 	})
 
-	return bonus, user.LoginStreak
+	return bonus, user.LoginStreak, freezeUsed, user.StreakFreezes
 }

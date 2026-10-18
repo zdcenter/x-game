@@ -45,9 +45,9 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
              [style.width.px]="cellSize"
              [style.height.px]="cellSize"
              [style.transform]="'translate(' + colPx(activeBlock.c) + 'px,' + rowPx(activeBlock.r) + 'px)'">
-          <div class="w-full h-full flex items-center justify-center font-black text-white text-3xl block-3d"
+          <div class="w-full h-full flex items-center justify-center font-black text-white text-3xl block-3d select-none"
                [ngStyle]="getBlockStyle(activeBlock.val)">
-             {{ activeBlock.val }}
+             {{ activeBlock.val === 0 ? '🌈' : activeBlock.val }}
           </div>
         </div>
 
@@ -58,20 +58,24 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
              [style.width.px]="cellSize"
              [style.height.px]="cellSize"
              [style.transform]="'translate(' + colPx(block.c) + 'px,' + rowPx(block.r) + 'px)'">
-          <div class="w-full h-full flex items-center justify-center font-black text-white text-3xl block-3d"
+          <div class="w-full h-full flex items-center justify-center font-black text-white text-3xl block-3d select-none"
                [ngStyle]="getBlockStyle(block.val)">
-             {{ block.val }}
+             {{ block.val === 0 ? '🌈' : block.val }}
              <div *ngIf="block.isLanding"
                   class="absolute inset-0 rounded-xl landing-ring pointer-events-none"></div>
           </div>
         </div>
 
-        <!-- Score Float Texts (No Combo) -->
+        <!-- Score & Combo Float Texts -->
         <div *ngFor="let combo of combos"
-             class="absolute z-30 font-black pointer-events-none float-up drop-shadow-lg text-3xl text-yellow-300"
-             [style.left.px]="colPx(combo.c) + cellSize / 4"
-             [style.top.px]="rowPx(combo.r) - cellSize / 2">
-          +{{ combo.scoreGained }}
+             class="absolute z-30 font-black pointer-events-none float-up drop-shadow-xl select-none text-center whitespace-nowrap"
+             [ngClass]="combo.comboCount >= 1 ? 'text-amber-300 font-mono text-2xl sm:text-3xl' : 'text-yellow-300 text-xl sm:text-2xl'"
+             [style.left.px]="colPx(combo.c) + cellSize / 2"
+             [style.top.px]="rowPx(combo.r) - cellSize / 3"
+             style="transform: translateX(-50%);">
+          <div [class.combo-praise-pop]="combo.comboCount >= 1">
+            {{ combo.text }}
+          </div>
         </div>
 
         <!-- Level Up Badge -->
@@ -80,6 +84,19 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
           <div class="level-up-badge px-6 py-3 rounded-2xl font-black text-3xl text-white text-center"
                style="background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 0 40px rgba(245,158,11,0.8), 0 0 80px rgba(239,68,68,0.4); text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
             LEVEL {{ levelUpNum() }}!
+          </div>
+        </div>
+
+        <!-- Newcomer Micro Guide Hint (Auto fades out after first action) -->
+        <div *ngIf="showGuideHint()"
+             class="absolute inset-x-4 bottom-16 z-30 flex flex-col items-center justify-center p-3 rounded-2xl bg-black/75 backdrop-blur-md border border-cyan-400/40 text-center pointer-events-none guide-fade-anim shadow-2xl">
+          <div class="flex items-center gap-2 text-cyan-300 font-bold text-xs sm:text-sm mb-1">
+            <span class="animate-pulse">👈</span>
+            <span>滑动 / 点击选列</span>
+            <span class="animate-pulse">👉</span>
+          </div>
+          <div class="text-[10px] sm:text-xs text-slate-300 font-mono">
+            下滑/SPACE 极速落子 · 合成更高数字
           </div>
         </div>
 
@@ -118,6 +135,11 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
       letter-spacing: -0.02em;
     }
 
+    @keyframes rainbow-pulse {
+      0%, 100% { filter: hue-rotate(0deg) brightness(1); transform: scale(1); }
+      50% { filter: hue-rotate(180deg) brightness(1.2); transform: scale(1.04); }
+    }
+
     /* Merge burst */
     @keyframes merge-pop {
       0%   { transform: scale(1);    filter: brightness(1); }
@@ -134,6 +156,13 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
       100% { transform: translateY(-92px) scale(0.8);  opacity: 0; }
     }
     .float-up { animation: float-up 1s ease-out forwards; }
+
+    @keyframes combo-praise-pop {
+      0%   { transform: scale(0.6); filter: brightness(1.5); }
+      40%  { transform: scale(1.25); filter: brightness(2) drop-shadow(0 0 12px rgba(251,191,36,0.8)); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    .combo-praise-pop { animation: combo-praise-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
     /* Landing ripple */
     @keyframes landing-ring {
@@ -189,7 +218,14 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
       75%  { opacity: 1; transform: scale(1) translateY(0); }
       100% { opacity: 0; transform: scale(0.85) translateY(-10px); }
     }
-    .level-up-badge { animation: level-up-anim 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    /* Guide hint pulse fade */
+    @keyframes guide-fade {
+      0%   { opacity: 0; transform: translateY(10px) scale(0.95); }
+      15%  { opacity: 1; transform: translateY(0) scale(1); }
+      85%  { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    }
+    .guide-fade-anim { animation: guide-fade 5s ease-in-out forwards; }
   `]
 })
 export class Drop2048BoardComponent {
@@ -204,8 +240,23 @@ export class Drop2048BoardComponent {
   isShaking = signal(false);
   showLevelUp = signal(false);
   levelUpNum = signal(0);
+  showGuideHint = signal(false);
 
   constructor(public store: Drop2048Store) {
+    // Show guide only once per session/first play
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('drop2048_guide_seen')) {
+      this.showGuideHint.set(true);
+      setTimeout(() => {
+        this.dismissGuide();
+      }, 5000);
+    }
+
+    effect(() => {
+      // Once player places blocks or score increases, hide guide immediately
+      if (this.board.length > 0 || this.store.score() > 0) {
+        this.dismissGuide();
+      }
+    });
     effect(() => {
       const trigger = this.store.shakeTrigger();
       if (trigger > 0) {
@@ -256,7 +307,15 @@ export class Drop2048BoardComponent {
     return getDrop2048BlockStyle(val);
   }
 
+  dismissGuide() {
+    this.showGuideHint.set(false);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('drop2048_guide_seen', 'true');
+    }
+  }
+
   onColumnClick(c: number) {
+    this.dismissGuide();
     if (this.activeBlock) {
       if (this.activeBlock.c === c) {
         this.store.dropActive();
@@ -267,3 +326,4 @@ export class Drop2048BoardComponent {
     }
   }
 }
+

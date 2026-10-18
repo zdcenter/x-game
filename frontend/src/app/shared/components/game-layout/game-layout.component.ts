@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnChanges, SimpleChanges, booleanAttribute, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
@@ -15,6 +15,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
+import { GhostChallengeService, GhostChallenge } from '../../../core/services/ghost-challenge.service';
 import { OfflineBannerComponent } from '../offline-banner/offline-banner.component';
 
 @Component({
@@ -89,6 +90,29 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
   <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
     
+    <!-- Active Ghost Challenge Banner -->
+    @if (ghostChallenge(); as ch) {
+      <div class="w-full mb-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-md animate-pulse">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-xl">⚔️</span>
+          <div class="text-xs">
+            <span class="font-bold text-amber-400">{{ i18n.t('challenge.ghost_title')() }}: 正在挑战 {{ ch.challenger_name }} 的战绩！</span>
+            <span class="text-[var(--color-text-muted)] ml-2">
+              目标:
+              @if (ch.target_time > 0) {
+                <b class="text-[var(--color-text-main)] font-mono">{{ formatChallengeTime(ch.target_time) }}</b>
+              } @else {
+                <b class="text-[var(--color-text-main)] font-mono">{{ ch.target_score }} 分</b>
+              }
+            </span>
+          </div>
+        </div>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap">
+          幽灵擂台
+        </span>
+      </div>
+    }
+
     <!-- Top Action Console Bar (Difficulty, Quick PK, Rules) -->
     <div class="w-full flex flex-wrap justify-between items-center mb-2 px-1 gap-2">
       <!-- Left: Difficulty Selector or Mode Indicator -->
@@ -244,6 +268,10 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   wsService = inject(WebSocketService);
   friendService = inject(FriendService);
   editRoomService = inject(EditRoomService);
+  private route = inject(ActivatedRoute);
+  private ghostChallengeService = inject(GhostChallengeService);
+
+  ghostChallenge = signal<GhostChallenge | null>(null);
 
   isPkDrawerOpen = signal(false);
 
@@ -319,6 +347,21 @@ export class GameLayoutComponent implements OnInit, OnChanges {
         this.availableDifficulties = config.difficulties;
       }
     }
+
+    const challengeId = this.route.snapshot.queryParams['challengeId'];
+    if (challengeId) {
+      this.ghostChallengeService.getChallenge(challengeId).subscribe({
+        next: ch => this.ghostChallenge.set(ch),
+        error: () => {},
+      });
+    }
+  }
+
+  formatChallengeTime(seconds: number): string {
+    if (seconds <= 0) return '--:--';
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   }
 
   ngOnChanges(changes: SimpleChanges) {

@@ -139,6 +139,16 @@ func SubmitStat(c fiber.Ctx) error {
 		UserID: userID, GameID: gameID, Mode: req.Mode, Won: req.Won,
 	})
 
+	// Progress daily quests
+	if isPK {
+		service.ProgressDailyQuest(userID, "pk_play", 1)
+	} else {
+		service.ProgressDailyQuest(userID, "solo_play", 1)
+	}
+	if req.Won || isNewRecord {
+		service.ProgressDailyQuest(userID, "win_game", 1)
+	}
+
 	return c.JSON(fiber.Map{
 		"message":          "Stat submitted successfully",
 		"stat":             stat,

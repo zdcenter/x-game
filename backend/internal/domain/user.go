@@ -29,9 +29,15 @@ type User struct {
 	Status        Status         `gorm:"type:varchar(20);default:'active'" json:"status"`
 	XP            int            `gorm:"default:0" json:"xp"`
 	Level         int            `gorm:"default:1" json:"level"`
-	LoginStreak   int            `gorm:"default:0" json:"login_streak"`
-	LastLoginDate string         `gorm:"type:varchar(10);default:''" json:"last_login_date"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
+	LoginStreak    int            `gorm:"default:0" json:"login_streak"`
+	LastLoginDate  string         `gorm:"type:varchar(10);default:''" json:"last_login_date"`
+	StreakFreezes  int            `gorm:"default:1" json:"streak_freezes"`
+	BrainCoins     int            `gorm:"default:100" json:"brain_coins"`
+	EquippedFrame  string         `gorm:"type:varchar(50);default:'none'" json:"equipped_frame"`
+	EquippedTitle  string         `gorm:"type:varchar(50);default:'novice'" json:"equipped_title"`
+	UnlockedFrames string         `gorm:"type:text;default:'[\"none\"]'" json:"unlocked_frames"`
+	UnlockedTitles string         `gorm:"type:text;default:'[\"novice\"]'" json:"unlocked_titles"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"index" json:"-"`
 }

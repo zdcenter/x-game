@@ -29,16 +29,33 @@
     --color-hexa-piece-dark: #b45309;
     --color-hexa-empty: #f1f5f9; /* slate-100 */
     --color-hexa-empty-stroke: #e2e8f0;
-    --color-ms-1: #3b82f6;
-    --color-ms-2: #10b981;
-    --color-ms-3: #ef4444;
-    --color-ms-4: #6366f1;
-    --color-ms-5: #f97316;
-    --color-ms-6: #14b8a6;
-    --color-ms-7: #a855f7;
-    --color-ms-8: #71717a;
+    --color-ms-1: #0000ff;
+    --color-ms-2: #008000;
+    --color-ms-3: #ff0000;
+    --color-ms-4: #000080;
+    --color-ms-5: #800000;
+    --color-ms-6: #008080;
+    --color-ms-7: #000000;
+    --color-ms-8: #808080;
+    --color-ms-board-bg: #bdbdbd;
+    --color-ms-cell-bg: #c0c0c0;
+    --color-ms-cell-hover: #cdcdcd;
+    --color-ms-cell-active: #b4b4b4;
+    --color-ms-bevel-light: #ffffff;
+    --color-ms-bevel-dark: #7b7b7b;
+    --color-ms-revealed-border: #7b7b7b;
+    --color-ms-revealed-bg: #bdbdbd;
+    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.28);
     --color-danger-bg: rgba(239, 68, 68, 0.1);
     --color-danger-border: rgba(239, 68, 68, 0.3);
+    /* Sliding Puzzle - Sage Morandi Theme */
+    --color-sliding-board-bg: #cfd3d8;
+    --color-sliding-board-border: #bec3c9;
+    --color-sliding-tile-bg: #7d836d;
+    --color-sliding-tile-hover: #888e78;
+    --color-sliding-tile-active: #727863;
+    --color-sliding-tile-text: #ffffff;
+    --color-sliding-tile-shadow: rgba(0, 0, 0, 0.12);
   }
 
   .theme-dark {
@@ -70,8 +87,25 @@
     --color-ms-6: #2dd4bf;
     --color-ms-7: #c084fc;
     --color-ms-8: #a1a1aa;
+    --color-ms-board-bg: #18181b;
+    --color-ms-cell-bg: #2a2a2e;
+    --color-ms-cell-hover: #36363c;
+    --color-ms-cell-active: #1e1e22;
+    --color-ms-bevel-light: #52525b;
+    --color-ms-bevel-dark: #09090b;
+    --color-ms-revealed-border: #27272a;
+    --color-ms-revealed-bg: #18181b;
+    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.65);
     --color-danger-bg: rgba(239, 68, 68, 0.2);
     --color-danger-border: rgba(239, 68, 68, 0.5);
+    /* Sliding Puzzle - Sage Morandi Dark Theme */
+    --color-sliding-board-bg: #27272a;
+    --color-sliding-board-border: #3f3f46;
+    --color-sliding-tile-bg: #636856;
+    --color-sliding-tile-hover: #707662;
+    --color-sliding-tile-active: #575c4b;
+    --color-sliding-tile-text: #ffffff;
+    --color-sliding-tile-shadow: rgba(0, 0, 0, 0.4);
   }
 
   .theme-light {
@@ -98,16 +132,33 @@
     --color-hexa-empty: #f1f5f9;
     --color-hexa-empty-stroke: #e2e8f0;
     --color-block-board: #f1f5f9;
-    --color-ms-1: #3b82f6;
-    --color-ms-2: #10b981;
-    --color-ms-3: #ef4444;
-    --color-ms-4: #6366f1;
-    --color-ms-5: #f97316;
-    --color-ms-6: #14b8a6;
-    --color-ms-7: #a855f7;
-    --color-ms-8: #71717a;
+    --color-ms-1: #0000ff;
+    --color-ms-2: #008000;
+    --color-ms-3: #ff0000;
+    --color-ms-4: #000080;
+    --color-ms-5: #800000;
+    --color-ms-6: #008080;
+    --color-ms-7: #000000;
+    --color-ms-8: #808080;
+    --color-ms-board-bg: #bdbdbd;
+    --color-ms-cell-bg: #c0c0c0;
+    --color-ms-cell-hover: #cdcdcd;
+    --color-ms-cell-active: #b4b4b4;
+    --color-ms-bevel-light: #ffffff;
+    --color-ms-bevel-dark: #7b7b7b;
+    --color-ms-revealed-border: #7b7b7b;
+    --color-ms-revealed-bg: #bdbdbd;
+    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.28);
     --color-danger-bg: rgba(239, 68, 68, 0.1);
     --color-danger-border: rgba(239, 68, 68, 0.3);
+    /* Sliding Puzzle - Sage Morandi Light Theme */
+    --color-sliding-board-bg: #cfd3d8;
+    --color-sliding-board-border: #bec3c9;
+    --color-sliding-tile-bg: #7d836d;
+    --color-sliding-tile-hover: #888e78;
+    --color-sliding-tile-active: #727863;
+    --color-sliding-tile-text: #ffffff;
+    --color-sliding-tile-shadow: rgba(0, 0, 0, 0.12);
   }
 
   /* Light mode soft shadows override for Tailwind shadow classes */

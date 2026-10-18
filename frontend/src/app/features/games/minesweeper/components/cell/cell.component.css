@@ -1,33 +1,68 @@
-.ms-cell-unrevealed {
-  background-color: var(--color-border-card);
-  border-width: 1.5px;
-  border-style: solid;
-  border-top-color: var(--color-cell-highlight);
-  border-left-color: var(--color-cell-highlight);
-  border-bottom-color: var(--color-cell-shadow);
-  border-right-color: var(--color-cell-shadow);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+:host {
+  display: block;
+}
+
+.ms-cell-btn {
+  box-sizing: border-box;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   cursor: pointer;
+  outline: none;
+  transition: none;
 }
 
-:host-context(.theme-light) .ms-cell-unrevealed {
-  background-color: #cbd5e1; /* slate-300 for better contrast */
+/* === 未翻开格子：经典 3D 浮雕凸起方块 === */
+.ms-cell-unrevealed {
+  background-color: var(--color-ms-cell-bg);
+  border-style: solid;
+  border-width: 3px;
+  border-top-color: var(--color-ms-bevel-light);
+  border-left-color: var(--color-ms-bevel-light);
+  border-right-color: var(--color-ms-bevel-dark);
+  border-bottom-color: var(--color-ms-bevel-dark);
+}
+
+.ms-cell-unrevealed:hover {
+  background-color: var(--color-ms-cell-hover);
+}
+
+/* 点下去的时候：瞬间深度凹陷 (Sunken Active Effect) */
+.ms-cell-unrevealed:active {
+  background-color: var(--color-ms-cell-active);
   border-width: 2px;
-  border-top-color: #ffffff;
-  border-left-color: #ffffff;
-  border-bottom-color: #94a3b8; /* slate-400 */
-  border-right-color: #94a3b8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-ms-bevel-dark);
+  border-left-color: var(--color-ms-bevel-dark);
+  border-right-color: var(--color-ms-bevel-light);
+  border-bottom-color: var(--color-ms-bevel-light);
+  box-shadow: inset 1.5px 1.5px 3px var(--color-ms-sunken-shadow);
+  transform: translate(0.5px, 0.5px);
 }
 
+/* === 已翻开格子：凹下去的平盘质感 (Sunken Inset Plate) === */
 .ms-cell-revealed {
-  background-color: var(--color-bg-card);
-  border: 1px solid var(--color-border-card);
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+  background-color: var(--color-ms-revealed-bg);
+  border-style: solid;
+  border-width: 1px;
+  border-top-color: var(--color-ms-revealed-border);
+  border-left-color: var(--color-ms-revealed-border);
+  border-right-color: var(--color-ms-bevel-light);
+  border-bottom-color: var(--color-ms-bevel-light);
+  box-shadow: inset 1px 1px 2px var(--color-ms-sunken-shadow);
+  cursor: default;
 }
 
-:host-context(.theme-light) .ms-cell-revealed {
-  background-color: #f1f5f9; /* slate-100 */
-  border-color: #cbd5e1; /* slate-300 */
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+/* 踩雷状态：红色凹陷警示 */
+.ms-cell-exploded {
+  background-color: var(--color-danger-bg, #ef4444);
+  border-style: solid;
+  border-width: 1px;
+  border-top-color: var(--color-danger-border, #991b1b);
+  border-left-color: var(--color-danger-border, #991b1b);
+  border-right-color: var(--color-ms-bevel-light);
+  border-bottom-color: var(--color-ms-bevel-light);
+  box-shadow: inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.5);
 }

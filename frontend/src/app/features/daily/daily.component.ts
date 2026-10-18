@@ -2,9 +2,8 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { DailyChallengeService, TodayChallengeResponse, DailyChallengeHistory } from '../../core/services/daily-challenge.service';
+import { DailyQuestService, DailyQuestsResponse, DailyQuestItem, StreakMilestone } from '../../core/services/daily-quest.service';
 import { AuthStore } from '../../core/auth/auth.store';
-import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 
 @Component({
   selector: 'app-daily',
@@ -12,197 +11,256 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] p-4 md:p-8">
-      <div class="max-w-5xl mx-auto flex flex-col gap-6">
+      <div class="max-w-4xl mx-auto flex flex-col gap-6">
 
         <!-- Header -->
-        <div class="flex items-center gap-3 border-b border-[var(--color-border-card)] pb-5">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-2xl shadow-lg animate-pulse">
-            📅
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border-card)] pb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-2xl shadow-lg text-white">
+              🎯
+            </div>
+            <div>
+              <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
+                {{ i18n.t('quests.title')() || '每日任务' }}
+              </h1>
+              <p class="text-sm text-[var(--color-text-muted)]">{{ i18n.t('quests.subtitle')() }}</p>
+            </div>
           </div>
-          <div>
-            <h1 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]">
-              {{ i18n.t('daily.title')() }}
-            </h1>
-            <p class="text-sm text-[var(--color-text-muted)]">{{ i18n.t('daily.subtitle')() }}</p>
+
+          <!-- Countdown Pill -->
+          <div class="flex items-center gap-2 self-start sm:self-auto px-4 py-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-xs text-[var(--color-text-muted)] font-semibold shadow-sm">
+            <span>⏱️ {{ i18n.t('quests.reset_in')() }}:</span>
+            <span class="font-mono font-black text-sm text-[var(--color-text-main)]">{{ countdown() }}</span>
           </div>
         </div>
 
-        <!-- SEO intro -->
-        <p class="text-[var(--color-text-secondary)] leading-relaxed border-b border-[var(--color-border-card)] pb-5">
-          {{ i18n.t('daily.seo_intro')() }}
-        </p>
+        @if (isLoading()) {
+          <div class="flex flex-col items-center justify-center h-64 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-accent-to)]"></div>
+          </div>
+        } @else if (data(); as d) {
+          <!-- Highlights Deck: Streak, Freeze, Grand Chest, and Coins -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <!-- Streak Card -->
+            <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-4 sm:p-5 flex items-center gap-3.5 shadow-sm relative overflow-hidden group">
+              <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                🔥
+              </div>
+              <div class="flex-1 min-w-0">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-500">
+                  {{ i18n.t('quests.streak')() || '连续打卡' }}
+                </span>
+                <div class="text-2xl font-black text-[var(--color-text-main)] font-mono">
+                  {{ d.streak }} <span class="text-xs font-sans font-bold text-[var(--color-text-muted)]">天</span>
+                </div>
+                <p class="text-[11px] text-[var(--color-text-muted)] truncate">
+                  {{ i18n.t('quests.streak_hint')() }}
+                </p>
+              </div>
+            </div>
 
-        <!-- Today's Challenge Card -->
-        @if (todayData()) {
-          @if (todayData()!.challenge; as ch) {
-            <div class="relative bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] overflow-hidden shadow-xl">
-              <!-- Background emoji decoration -->
-              <div class="absolute -right-6 -bottom-6 text-[10rem] opacity-[0.04] pointer-events-none select-none">
-                {{ getGameEmoji(ch.game_id) }}
+            <!-- Streak Freeze Protection Card -->
+            <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-4 sm:p-5 flex items-center gap-3.5 shadow-sm relative overflow-hidden group">
+              <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
+                🧊
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">
+                    {{ i18n.t('streak.freeze_title')() }}
+                  </span>
+                  <span class="px-1.5 py-0.2 rounded bg-cyan-500/15 text-cyan-400 text-[10px] font-mono font-bold">
+                    {{ d.streak_freezes }}/2 张
+                  </span>
+                </div>
+                <div class="text-xs font-bold text-[var(--color-text-main)] mt-0.5">
+                  {{ d.streak_freezes > 0 ? '已开启防护' : '已耗尽，连胜3天可获赠' }}
+                </div>
+                <p class="text-[11px] text-[var(--color-text-muted)] truncate">
+                  {{ i18n.t('streak.freeze_desc')() }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Grand Chest Card -->
+            <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-4 sm:p-5 flex items-center justify-between gap-3 shadow-sm relative overflow-hidden group sm:col-span-2 lg:col-span-1"
+                 [class.border-amber-500/50]="d.chest.completed && !d.chest.claimed">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 transition-transform group-hover:scale-110"
+                     [ngClass]="d.chest.completed ? 'bg-amber-500/20 border border-amber-500/30' : 'bg-[var(--color-bg-main)] border border-[var(--color-border-card)]'">
+                  🎁
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-from)] truncate">
+                      {{ i18n.t('quests.daily_chest')() || '全清大宝箱' }}
+                    </span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 whitespace-nowrap">
+                      +{{ d.chest.xp_amount }} XP / +100 🪙
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-[var(--color-text-muted)] truncate">
+                    @if (d.chest.claimed) {
+                      <span class="text-green-500 font-bold">✓ {{ i18n.t('quests.chest_claimed')() }}</span>
+                    } @else if (d.chest.completed) {
+                      <span class="text-amber-500 font-bold animate-pulse">{{ i18n.t('quests.chest_ready')() }}</span>
+                    } @else {
+                      <span>{{ d.completed_count }}/{{ d.total_count }} {{ i18n.t('quests.chest_desc')() }}</span>
+                    }
+                  </p>
+                </div>
               </div>
 
-              <div class="relative z-10 p-6 flex flex-col gap-5">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-accent-from)] mb-1 block">
-                      {{ i18n.t('daily.today')() }}
-                    </span>
-                    <h2 class="text-xl font-black text-[var(--color-text-main)]">
-                      {{ getGameName(ch.game_id) }}
-                    </h2>
-                    <p class="text-sm text-[var(--color-text-muted)] mt-1">
-                      {{ ch.difficulty }} · {{ ch.mode }}
-                    </p>
-                  </div>
-                  <span class="text-5xl">{{ getGameEmoji(ch.game_id) }}</span>
-                </div>
-
-                <!-- XP reward badge -->
-                <div class="flex items-center gap-3">
-                  <span class="px-3 py-1.5 rounded-xl bg-[var(--color-accent-to)]/20 text-[var(--color-accent-to)] font-bold text-sm border border-[var(--color-accent-to)]/30">
-                    +30 XP {{ i18n.t('daily.xp_reward')() }}
-                  </span>
-                  @if (todayData()!.is_completed) {
-                    <span class="px-3 py-1.5 rounded-xl bg-green-500/20 text-green-400 font-bold text-sm border border-green-500/30">
-                      ✓ {{ i18n.t('daily.already_done')() }}
-                    </span>
-                  }
-                </div>
-
-                <!-- Countdown -->
-                @if (!todayData()!.is_completed) {
-                  <div class="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
-                    <span>⏱️</span>
-                    <span>{{ i18n.t('daily.next_in')() }}: <span class="font-mono font-black text-[var(--color-text-main)]">{{ countdown() }}</span></span>
-                  </div>
-                  <a [routerLink]="['/', i18n.currentLang(), 'games', ch.game_id]"
-                     [queryParams]="{ dailyChallengeId: ch.id, difficulty: ch.difficulty }"
-                     class="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl font-black text-white text-base
-                            bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)]
-                            shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    🎮 {{ i18n.t('daily.go_play')() }}
-                  </a>
+              <!-- Chest Action -->
+              <div>
+                @if (d.chest.claimed) {
+                  <button disabled class="px-3 py-1.5 rounded-xl text-xs font-bold bg-green-500/10 text-green-500 border border-green-500/20 cursor-default">
+                    ✓ {{ i18n.t('quests.claimed')() }}
+                  </button>
+                } @else if (d.chest.completed) {
+                  <button (click)="claim(d.chest.id)" [disabled]="claiming() === d.chest.id"
+                          class="px-3.5 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all animate-bounce">
+                    {{ claiming() === d.chest.id ? '...' : (i18n.t('quests.claim')() || '开箱') }}
+                  </button>
                 } @else {
-                  <div class="w-full py-3 text-center text-green-400 font-bold text-base bg-green-500/10 rounded-xl border border-green-500/20">
-                    🎉 {{ i18n.t('daily.complete')() }}
-                  </div>
+                  <button disabled class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)] opacity-50 cursor-not-allowed whitespace-nowrap">
+                    {{ d.completed_count }}/{{ d.total_count }}
+                  </button>
                 }
               </div>
             </div>
-          }
-        } @else {
-          <div class="flex flex-col items-center justify-center h-40 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent-to)]"></div>
           </div>
-        }
 
-        <!-- History Section -->
-        @if (authStore.isAuthenticated()) {
-          <div>
-            <h2 class="text-lg font-black text-[var(--color-text-main)] mb-4">{{ i18n.t('daily.history')() }}</h2>
+          <!-- Streak Milestones Roadmap -->
+          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-sm font-black uppercase tracking-wider text-[var(--color-text-main)] flex items-center gap-2">
+                <span>🏆</span> {{ i18n.t('milestones.track_title')() }}
+              </h2>
+              <span class="text-xs text-[var(--color-text-muted)] font-mono font-bold">
+                当前: <b class="text-amber-500">{{ d.streak }}</b> 天连胜
+              </span>
+            </div>
 
-            @if (historyLoading()) {
-              <div class="flex justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent-to)]"></div>
-              </div>
-            } @else if (!history().length) {
-              <div class="flex flex-col items-center justify-center h-32 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)]">
-                <span class="text-3xl mb-2">📭</span>
-                <p class="text-sm font-bold">{{ i18n.t('daily.no_history')() }}</p>
-              </div>
-            } @else {
-              <!-- Calendar grid -->
-              <div class="grid grid-cols-7 gap-1.5">
-                @for (day of calendarDays(); track day.date) {
-                  <div class="aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition-all"
-                       [class]="day.completed
-                         ? 'bg-green-500/20 border border-green-500/40 text-green-400'
-                         : day.isPast
-                           ? 'bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)] opacity-50'
-                           : 'bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)]'"
-                       [title]="day.date">
-                    @if (day.completed) {
-                      <span>✓</span>
+            <!-- Milestones Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              @for (m of d.milestones; track m.days) {
+                <div class="rounded-xl border p-3 flex flex-col justify-between gap-2 transition-all relative overflow-hidden"
+                     [ngClass]="m.reached
+                       ? 'bg-amber-500/10 border-amber-500/30 text-[var(--color-text-main)]'
+                       : 'bg-[var(--color-bg-main)] border-[var(--color-border-card)] opacity-70'">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xl">{{ m.reward_icon }}</span>
+                    @if (m.reached) {
+                      <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-green-500/20 text-green-400 font-bold border border-green-500/30">已达成</span>
+                    } @else {
+                      <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-[var(--color-bg-card)] text-[var(--color-text-muted)] border border-[var(--color-border-card)] font-bold">未解锁</span>
                     }
-                    <span>{{ day.dayNum }}</span>
                   </div>
-                }
-              </div>
+                  <div>
+                    <h3 class="font-bold text-xs">{{ i18n.t(m.title_key)() }}</h3>
+                    <p class="text-[11px] text-[var(--color-text-muted)] mt-0.5 line-clamp-2">{{ i18n.t(m.reward_desc)() }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
 
-              <!-- History list -->
-              <div class="flex flex-col gap-3 mt-5">
-                @for (h of history(); track h.id) {
-                  <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-                    <span class="text-2xl">{{ getGameEmoji(h.game_id) }}</span>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-bold text-sm text-[var(--color-text-main)]">{{ getGameName(h.game_id) }}</p>
-                      <p class="text-xs text-[var(--color-text-muted)]">{{ h.date }} · {{ h.difficulty }}</p>
+          <!-- Quests List Section -->
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between px-1">
+              <h2 class="text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                {{ i18n.t('quests.title')() }} ({{ d.completed_count }}/{{ d.total_count }})
+              </h2>
+            </div>
+
+            @for (q of d.quests; track q.id) {
+              <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-[var(--color-accent-from)]/30 hover:shadow-md"
+                   [class.bg-[var(--color-accent-from)]/5]="q.completed && !q.claimed">
+                
+                <!-- Left Details -->
+                <div class="flex items-center gap-4 min-w-0">
+                  <div class="w-12 h-12 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-2xl flex-shrink-0 shadow-sm">
+                    {{ q.icon }}
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 class="font-black text-sm sm:text-base text-[var(--color-text-main)] truncate">
+                        {{ i18n.t(q.title_key)() || q.id }}
+                      </h3>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)]">
+                        +{{ q.xp_amount }} XP
+                      </span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-500">
+                        +{{ q.coins || 20 }} 🪙
+                      </span>
                     </div>
-                    <div class="flex flex-col items-end gap-0.5">
-                      <span class="text-xs font-bold text-[var(--color-accent-to)]">+{{ h.xp_earned }} XP</span>
-                      @if (h.score) {
-                        <span class="text-xs text-[var(--color-text-muted)] font-mono">{{ h.score }} pts</span>
-                      }
+                    <p class="text-xs text-[var(--color-text-muted)] line-clamp-1">
+                      {{ i18n.t(q.desc_key)() }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Right Progress & Action -->
+                <div class="flex items-center justify-between sm:justify-end gap-4 flex-shrink-0 border-t sm:border-t-0 border-[var(--color-border-card)] pt-3 sm:pt-0">
+                  <!-- Progress Bar -->
+                  <div class="flex flex-col items-end gap-1 min-w-[90px]">
+                    <span class="text-xs font-mono font-bold text-[var(--color-text-main)]">
+                      {{ q.current }} / {{ q.target }}
+                    </span>
+                    <div class="w-24 h-1.5 rounded-full bg-[var(--color-bg-main)] overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] transition-all duration-300"
+                           [style.width.%]="calcPercent(q.current, q.target)"></div>
                     </div>
                   </div>
-                }
+
+                  <!-- CTA -->
+                  <div>
+                    @if (q.claimed) {
+                      <button disabled class="px-4 py-2 rounded-xl text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/20 cursor-default">
+                        ✓ {{ i18n.t('quests.claimed')() }}
+                      </button>
+                    } @else if (q.completed) {
+                      <button (click)="claim(q.id)" [disabled]="claiming() === q.id"
+                              class="px-5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all">
+                        {{ claiming() === q.id ? '...' : (i18n.t('quests.claim')() || '领取') }}
+                      </button>
+                    } @else {
+                      <a [routerLink]="['/', i18n.currentLang(), q.action_url.replace('/', '')]"
+                         class="px-4 py-2 rounded-xl text-xs font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:bg-[var(--color-accent-from)]/10 hover:border-[var(--color-accent-from)]/30 transition-all inline-block">
+                        {{ i18n.t('quests.go_do')() || '去完成' }} →
+                      </a>
+                    }
+                  </div>
+                </div>
+
               </div>
             }
           </div>
-        } @else {
-          <div class="flex flex-col items-center gap-3 p-6 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-            <p class="text-[var(--color-text-muted)] font-bold">{{ i18n.t('daily.login_for_history')() }}</p>
-            <a routerLink="/login" class="px-5 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-sm">
-              {{ i18n.t('auth.login')() }}
-            </a>
-          </div>
         }
+
       </div>
     </div>
   `
 })
 export class DailyComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
+  private questService = inject(DailyQuestService);
   authStore = inject(AuthStore);
-  private dailyService = inject(DailyChallengeService);
 
-  todayData = signal<TodayChallengeResponse | null>(null);
-  history = signal<DailyChallengeHistory[]>([]);
-  historyLoading = signal(false);
+  isLoading = signal(true);
+  data = computed(() => this.questService.questsData());
+  claiming = signal<string | null>(null);
   countdown = signal('00:00:00');
 
   private timer?: ReturnType<typeof setInterval>;
 
-  calendarDays = computed(() => {
-    const completed = new Set(this.history().map(h => h.date));
-    const now = new Date();
-    const days: { date: string; dayNum: number; completed: boolean; isPast: boolean }[] = [];
-
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      days.push({
-        date: dateStr,
-        dayNum: d.getDate(),
-        completed: completed.has(dateStr),
-        isPast: i > 0,
-      });
-    }
-    return days;
-  });
-
   ngOnInit(): void {
-    this.dailyService.getToday().subscribe(r => this.todayData.set(r));
-
-    if (this.authStore.isAuthenticated()) {
-      this.historyLoading.set(true);
-      this.dailyService.getHistory().subscribe({
-        next: h => { this.history.set(h); this.historyLoading.set(false); },
-        error: () => this.historyLoading.set(false),
-      });
-    }
-
+    this.questService.getTodayQuests().subscribe({
+      next: () => this.isLoading.set(false),
+      error: () => this.isLoading.set(false),
+    });
     this.updateCountdown();
     this.timer = setInterval(() => this.updateCountdown(), 1000);
   }
@@ -211,16 +269,31 @@ export class DailyComponent implements OnInit, OnDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
+  calcPercent(current: number, target: number): number {
+    if (target <= 0) return 0;
+    return Math.min(100, Math.round((current / target) * 100));
+  }
+
+  claim(questId: string): void {
+    if (!this.authStore.isAuthenticated()) {
+      alert(this.i18n.t('auth.login_required')() || 'Please login to claim quest rewards!');
+      return;
+    }
+    this.claiming.set(questId);
+    this.questService.claimQuest(questId).subscribe({
+      next: res => {
+        this.claiming.set(null);
+        if (res.milestone_notice) {
+          alert(res.milestone_notice);
+        }
+      },
+      error: () => {
+        this.claiming.set(null);
+      }
+    });
+  }
+
   private updateCountdown(): void {
-    this.countdown.set(this.dailyService.formatCountdown(this.dailyService.secondsUntilMidnight()));
-  }
-
-  getGameEmoji(id: string): string {
-    return GAME_DEFINITIONS.find(g => g.id === id)?.iconEmoji ?? '🎮';
-  }
-
-  getGameName(id: string): string {
-    const g = GAME_DEFINITIONS.find(g => g.id === id);
-    return g ? (this.i18n.t(g.titleKey)() || id) : id;
+    this.countdown.set(this.questService.formatCountdown(this.questService.secondsUntilMidnight()));
   }
 }

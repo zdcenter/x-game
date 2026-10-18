@@ -39,6 +39,12 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   comboCount = signal<number>(0);
   level = signal<number>(1);
 
+  readonly maxTile = computed(() => {
+    const b = this.board();
+    if (!b || b.length === 0) return 2;
+    return Math.max(...b.map(x => x.val).filter(v => v > 0), 2);
+  });
+
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
   hasRevived = signal<boolean>(false);
   shakeTrigger = signal<number>(0);
@@ -157,7 +163,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
       this.engine.initGame({
         mode: GameMode.Single,
         onSound: (sound, combo) => {
-          if (sound === 'move' || sound === 'drop' || sound === 'merge') {
+          if (sound === 'move' || sound === 'drop' || sound === 'merge' || sound === 'wild') {
             this.audio.playDrop2048(sound, combo);
           }
         },
@@ -203,7 +209,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
       seed,
       mode: this.currentRoomMode(),
       onSound: (sound, combo) => {
-        if (sound === 'move' || sound === 'drop' || sound === 'merge') {
+        if (sound === 'move' || sound === 'drop' || sound === 'merge' || sound === 'wild') {
           this.audio.playDrop2048(sound, combo);
         }
       },

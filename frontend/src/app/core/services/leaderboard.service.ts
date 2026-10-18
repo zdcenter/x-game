@@ -19,6 +19,10 @@ export interface LeaderboardEntry {
 
 export interface LeaderboardResponse {
   entries: LeaderboardEntry[];
+  total?: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
   my_rank: number;
   game_id: string;
   mode: string;
@@ -43,14 +47,15 @@ export class LeaderboardService {
 
   getLeaderboard(
     gameId: string,
-    options: { mode?: string; difficulty?: string; type?: string; period?: string; limit?: number } = {}
+    options: { mode?: string; difficulty?: string; type?: string; period?: string; page?: number; limit?: number } = {}
   ): Observable<LeaderboardResponse> {
     const params: Record<string, string> = {};
     if (options.mode)       params['mode'] = options.mode;
     if (options.difficulty) params['difficulty'] = options.difficulty;
-    if (options.type)       params['type'] = options.type ?? 'time';
+    if (options.type)       params['type'] = options.type;
     if (options.period)     params['period'] = options.period ?? 'all';
-    if (options.limit)      params['limit'] = String(options.limit);
+    if (options.page)       params['page'] = String(options.page);
+    params['limit'] = String(options.limit ?? 20);
     return this.http.get<LeaderboardResponse>(`${this.apiUrl}/leaderboard/${gameId}`, { params });
   }
 

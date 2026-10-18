@@ -88,10 +88,17 @@ func Login(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
 	}
 
-	bonusXP, streak := service.CheckLoginStreak(user.ID)
+	bonusXP, streak, freezeUsed, freezesLeft := service.CheckLoginStreak(user.ID)
 	db.DB.First(&user, user.ID)
 
-	return c.JSON(fiber.Map{"token": t, "user": user, "login_streak": streak, "bonus_xp": bonusXP})
+	return c.JSON(fiber.Map{
+		"token":        t,
+		"user":         user,
+		"login_streak": streak,
+		"bonus_xp":     bonusXP,
+		"freeze_used":  freezeUsed,
+		"freezes_left": freezesLeft,
+	})
 }
 
 func GuestLogin(c fiber.Ctx) error {

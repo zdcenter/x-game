@@ -1,0 +1,13 @@
+/* 经典 Windows 扫雷下沉托盘边框（3D Sunken Frame） */
+.ms-board-plate {
+  background-color: var(--color-ms-board-bg);
+  border-style: solid;
+  border-width: 3px;
+  border-top-color: var(--color-ms-bevel-dark);
+  border-left-color: var(--color-ms-bevel-dark);
+  border-right-color: var(--color-ms-bevel-light);
+  border-bottom-color: var(--color-ms-bevel-light);
+  box-shadow: inset 1px 1px 2px var(--color-ms-sunken-shadow);
+  user-select: none;
+  -webkit-user-select: none;
+}

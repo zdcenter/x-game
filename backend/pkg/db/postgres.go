@@ -57,6 +57,7 @@ func InitPostgres() {
 		&domain.UserAchievement{},
 		&domain.DailyChallenge{},
 		&domain.UserDailyChallenge{},
+		&domain.UserDailyQuest{},
 		&domain.MatchHistory{},
 		&domain.BlogPost{},
 		&domain.BlogDistribution{},
@@ -77,6 +78,8 @@ func InitPostgres() {
 		&domain.UserHashiProgress{},
 		// Social System
 		&domain.Friendship{},
+		// Ghost Challenge & Async Duel
+		&domain.GhostChallenge{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)

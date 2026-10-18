@@ -128,10 +128,10 @@
 
                 @if (store.status() !== GameStatus.Waiting || currentRoomMode() === GameMode.Single) {
                   <div #board
-                    class="inline-flex flex-col gap-1 relative z-0 origin-center"
+                    class="ms-board-plate inline-flex flex-col relative z-0 origin-center"
                     [class.opacity-50]="isFrozen()" [class.animate-board-shake]="store.status() === GameStatus.Finished">
                     @for (row of store.board(); track $index) {
-                    <div class="flex gap-1">
+                    <div class="flex">
                       @for (cell of row; track cell.x + '-' + cell.y) {
                         <app-cell [cell]="cell" (reveal)="handleCellReveal(cell)" (flag)="handleCellFlag(cell)" [id]="'ms-cell-' + cell.x + '-' + cell.y"></app-cell>
                       }

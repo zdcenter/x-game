@@ -17,6 +17,12 @@ export interface User {
   level: number;
   login_streak: number;
   last_login_date: string;
+  streak_freezes?: number;
+  brain_coins?: number;
+  equipped_frame?: string;
+  equipped_title?: string;
+  unlocked_frames?: string;
+  unlocked_titles?: string;
 }
 
 @Injectable({
@@ -63,6 +69,11 @@ export class AuthStore {
     storageSet('x_game_token', token);
     storageSet('x_game_user', JSON.stringify(user));
     this.token.set(token);
+    this.currentUser.set(user);
+  }
+
+  updateUser(user: User) {
+    storageSet('x_game_user', JSON.stringify(user));
     this.currentUser.set(user);
   }
 

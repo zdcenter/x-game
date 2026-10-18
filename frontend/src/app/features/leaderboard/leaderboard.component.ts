@@ -5,7 +5,6 @@ import { LeaderboardService, LeaderboardEntry, LeaderboardResponse } from '../..
 import { FriendService } from '../../core/services/friend.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
-import { GameMode } from '../../core/models/game.model';
 
 @Component({
   selector: 'app-leaderboard',
@@ -29,10 +28,10 @@ import { GameMode } from '../../core/models/game.model';
         </div>
 
         <!-- Filter Row -->
-        <div class="flex flex-wrap gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <!-- Game selector -->
-          <div class="flex-1 min-w-[160px]">
-            <select class="w-full px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm"
+          <div class="flex-1 min-w-[200px]">
+            <select class="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-from)]/50"
                     (change)="onGameChange($event)">
                 <option value="global" [selected]="selectedGameId() === 'global'">
                   🌍 {{ i18n.t('leaderboard.global')() }}
@@ -45,41 +44,23 @@ import { GameMode } from '../../core/models/game.model';
             </select>
           </div>
 
-          <!-- Mode selector -->
-          @if (selectedGameId() !== 'global') {
-            <select class="px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm"
-                    (change)="onModeChange($event)">
-            @for (m of availableModes(); track m) {
-              <option [value]="m" [selected]="m === selectedMode()">{{ m }}</option>
-            }
-          </select>
-
-          <!-- Difficulty selector -->
-          <select class="px-3 py-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm"
-                  (change)="onDifficultyChange($event)">
-            @for (d of availableDiffs(); track d) {
-              <option [value]="d" [selected]="d === selectedDiff()">{{ d }}</option>
-            }
-          </select>
-
           <!-- Period toggle -->
-          <div class="flex rounded-xl border border-[var(--color-border-card)] overflow-hidden">
-            <button (click)="selectedPeriod.set('all')"
-                    class="px-4 py-2 text-sm font-bold transition-all"
+          <div class="flex rounded-xl border border-[var(--color-border-card)] overflow-hidden shadow-sm">
+            <button (click)="setPeriod('all')"
+                    class="px-4 py-2.5 text-sm font-bold transition-all"
                     [class]="selectedPeriod() === 'all'
                       ? 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white'
                       : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
               {{ i18n.t('leaderboard.all_time')() }}
             </button>
-            <button (click)="selectedPeriod.set('weekly')"
-                    class="px-4 py-2 text-sm font-bold transition-all"
+            <button (click)="setPeriod('weekly')"
+                    class="px-4 py-2.5 text-sm font-bold transition-all"
                     [class]="selectedPeriod() === 'weekly'
                       ? 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white'
                       : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
               {{ i18n.t('leaderboard.weekly')() }}
             </button>
           </div>
-          }
         </div>
 
         <!-- My rank -->
@@ -114,10 +95,10 @@ import { GameMode } from '../../core/models/game.model';
                 <div class="col-span-3 text-right">{{ i18n.t('leaderboard.xp')() }}</div>
               } @else {
                 <div class="col-span-3 text-right">
-                  {{ isPKMode() ? i18n.t('leaderboard.rating')() : (isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')()) }}
+                  {{ isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')() }}
                 </div>
                 <div class="col-span-3 text-right">
-                  {{ isPKMode() ? i18n.t('leaderboard.win_rate')() : i18n.t('leaderboard.plays')() }}
+                  {{ i18n.t('leaderboard.plays')() }}
                 </div>
               }
             </div>
@@ -158,19 +139,17 @@ import { GameMode } from '../../core/models/game.model';
                   </div>
                 } @else {
                   <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-to)]">
-                    @if (isPKMode()) {
-                      {{ entry.rating | number }}
-                    } @else if (isTimeType()) {
+                    @if (isTimeType()) {
                       {{ formatTime(entry.best_time) }}
                     } @else {
-                      {{ entry.best_score | number }}
+                      {{ (entry.best_score || entry.rating || 0) | number }}
                     }
                   </div>
                   <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
-                    @if (isPKMode()) {
-                      {{ getWinRate(entry) }}% ({{ entry.win_count }}/{{ entry.play_count }})
+                    @if (entry.win_count > 0 && entry.play_count > 0) {
+                      <span>{{ entry.play_count }} <span class="text-xs opacity-75">({{ getWinRate(entry) }}%)</span></span>
                     } @else {
-                      {{ entry.play_count }}
+                      <span>{{ entry.play_count }}</span>
                     }
                   </div>
                 }
@@ -178,6 +157,38 @@ import { GameMode } from '../../core/models/game.model';
             }
           }
         </div>
+
+        <!-- Pagination Controls -->
+        @if (data() && (data()!.total || 0) > 0) {
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-3.5 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-md">
+            <!-- Total count badge -->
+            <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-muted)] flex items-center gap-2">
+              <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-accent-from)]"></span>
+              <span>{{ i18n.t('leaderboard.total_players', { total: data()?.total || 0 })() }}</span>
+            </div>
+
+            <!-- Page actions -->
+            <div class="flex items-center gap-3">
+              <button
+                (click)="prevPage()"
+                [disabled]="currentPage() <= 1 || isLoading()"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-all hover:bg-[var(--color-accent-from)]/10 disabled:opacity-40 disabled:cursor-not-allowed">
+                ← {{ i18n.t('leaderboard.prev')() }}
+              </button>
+
+              <span class="text-xs font-mono font-bold text-[var(--color-text-main)] px-2">
+                {{ i18n.t('leaderboard.page', { page: currentPage(), total: data()?.total_pages || 1 })() }}
+              </span>
+
+              <button
+                (click)="nextPage()"
+                [disabled]="currentPage() >= (data()?.total_pages || 1) || isLoading()"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] transition-all hover:bg-[var(--color-accent-from)]/10 disabled:opacity-40 disabled:cursor-not-allowed">
+                {{ i18n.t('leaderboard.next')() }} →
+              </button>
+            </div>
+          </div>
+        }
       </div>
     </div>
   `
@@ -191,47 +202,37 @@ export class LeaderboardComponent implements OnInit {
   games = GAME_DEFINITIONS;
 
   selectedGameId = signal<string>('global');
-  selectedMode = signal<string>('single');
-  selectedDiff = signal<string>('medium');
   selectedPeriod = signal<string>('all');
+  currentPage = signal<number>(1);
 
   isLoading = signal(false);
   data = signal<LeaderboardResponse | null>(null);
 
   selectedGame = computed(() => GAME_DEFINITIONS.find(g => g.id === this.selectedGameId()));
 
-  availableModes = computed(() => {
-    const g = this.selectedGame();
-    if (!g) return ['single'];
-    return g.modes.map(m => m.id as string);
-  });
-
-  availableDiffs = computed(() => {
-    const g = this.selectedGame();
-    if (!g) return ['medium'];
-    return g.difficulties.map(d => d.id as string);
-  });
-
   isTimeType = computed(() => {
-    const timeGames = ['minesweeper','sudoku','sliding','codebreaker','math24','watersort','sokoban','lightsout'];
-    return timeGames.includes(this.selectedGameId()) && this.selectedMode() === GameMode.Single;
-  });
-
-  isPKMode = computed(() => {
-    return this.selectedMode() !== GameMode.Single;
+    const timeGames = ['minesweeper', 'sudoku', 'sliding', 'codebreaker', 'math24', 'watersort', 'sokoban', 'lightsout'];
+    return timeGames.includes(this.selectedGameId());
   });
 
   ngOnInit(): void {
     this.load();
   }
 
+  setPeriod(p: string): void {
+    if (this.selectedPeriod() !== p) {
+      this.selectedPeriod.set(p);
+      this.currentPage.set(1);
+      this.load();
+    }
+  }
+
   private load(): void {
     this.isLoading.set(true);
     this.leaderboardService.getLeaderboard(this.selectedGameId(), {
-      mode: this.selectedMode(),
-      difficulty: this.selectedDiff(),
-      type: this.isPKMode() ? 'rating' : (this.isTimeType() ? 'time' : 'score'),
       period: this.selectedPeriod(),
+      page: this.currentPage(),
+      limit: 20,
     }).subscribe({
       next: r => { this.data.set(r); this.isLoading.set(false); },
       error: () => { this.isLoading.set(false); }
@@ -241,22 +242,23 @@ export class LeaderboardComponent implements OnInit {
   onGameChange(e: Event): void {
     const val = (e.target as HTMLSelectElement).value;
     this.selectedGameId.set(val);
-    const g = GAME_DEFINITIONS.find(g => g.id === val);
-    if (g) {
-      this.selectedMode.set(g.modes[0]?.id as string ?? 'single');
-      this.selectedDiff.set(g.difficulties[0]?.id as string ?? 'medium');
+    this.currentPage.set(1);
+    this.load();
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 1) {
+      this.currentPage.update(p => p - 1);
+      this.load();
     }
-    this.load();
   }
 
-  onModeChange(e: Event): void {
-    this.selectedMode.set((e.target as HTMLSelectElement).value);
-    this.load();
-  }
-
-  onDifficultyChange(e: Event): void {
-    this.selectedDiff.set((e.target as HTMLSelectElement).value);
-    this.load();
+  nextPage(): void {
+    const totalPages = this.data()?.total_pages ?? 1;
+    if (this.currentPage() < totalPages) {
+      this.currentPage.update(p => p + 1);
+      this.load();
+    }
   }
 
   rankColor(rank: number): string {

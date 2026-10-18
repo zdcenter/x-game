@@ -192,7 +192,7 @@ export class AudioService {
   }
 
   // --- Drop2048 Sounds ---
-  async playDrop2048(name: 'move' | 'drop' | 'merge', combo: number = 0) {
+  async playDrop2048(name: 'move' | 'drop' | 'merge' | 'wild', combo: number = 0) {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {

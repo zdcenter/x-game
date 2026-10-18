@@ -21,12 +21,12 @@ export class CellComponent {
 
   get cellClass(): string {
     if (this.cell.state === CellState.Revealed) {
-      return 'ms-cell-revealed scale-95';
+      return 'ms-cell-revealed';
     }
     if (this.cell.state === CellState.Exploded) {
-      return 'bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] scale-95';
+      return 'ms-cell-exploded';
     }
-    return 'ms-cell-unrevealed hover:brightness-110 active:scale-95';
+    return 'ms-cell-unrevealed';
   }
 
   get neighborColor(): string {

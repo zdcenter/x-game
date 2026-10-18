@@ -71,8 +71,21 @@ func main() {
 	v1.Post("/games/:id/visit", rest.VisitGame)
 	v1.Get("/rooms", rest.GetRooms) // HTTP polling fallback for room list
 
-	// Profile (Protected)
+	// Profile & Brain Radar
 	v1.Get("/profile/me", middleware.Protected(), rest.GetProfileMe)
+	v1.Get("/profile/radar", middleware.OptionalProtected(), rest.GetBrainRadar)
+
+	// Shop & Vanity Cosmetics
+	shop := v1.Group("/shop")
+	shop.Get("/items", middleware.OptionalProtected(), rest.GetShopItems)
+	shop.Post("/buy", middleware.Protected(), rest.BuyShopItem)
+	shop.Post("/equip", middleware.Protected(), rest.EquipShopItem)
+
+	// Ghost Challenge (Async Duels)
+	challenges := v1.Group("/challenges")
+	challenges.Post("/", middleware.OptionalProtected(), rest.CreateChallenge)
+	challenges.Get("/:id", rest.GetChallenge)
+	challenges.Post("/:id/complete", middleware.OptionalProtected(), rest.CompleteChallenge)
 
 	// Match history (Protected)
 	v1.Get("/history", middleware.Protected(), rest.GetMatchHistory)
@@ -109,6 +122,11 @@ func main() {
 	daily.Get("/", rest.GetTodayChallenge)
 	daily.Post("/finish", middleware.Protected(), rest.FinishDailyChallenge)
 	daily.Get("/history", middleware.Protected(), rest.GetDailyChallengeHistory)
+
+	// Daily Quests (Option 1 - Automated Quests System)
+	quests := v1.Group("/quests")
+	quests.Get("/today", middleware.OptionalProtected(), rest.GetDailyQuests)
+	quests.Post("/claim", middleware.Protected(), rest.ClaimDailyQuest)
 
 	// Stats routes (Protected)
 	stats := v1.Group("/stats")
@@ -180,7 +198,8 @@ func main() {
 	admin.Delete("/achievements/:id", rest.AdminDeleteAchievement)
 	admin.Get("/users/:id/achievements", rest.AdminGetUserAchievements)
 
-	// Daily challenge management
+	// Daily quests automation monitoring & legacy challenges
+	admin.Get("/quests/stats", rest.GetAdminQuestStats)
 	admin.Get("/daily-challenges", rest.AdminListDailyChallenges)
 	admin.Post("/daily-challenges", rest.AdminCreateDailyChallenge)
 	admin.Post("/daily-challenges/bulk", rest.AdminBulkCreateDailyChallenges)
