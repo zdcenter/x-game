@@ -38,12 +38,10 @@ export class InteractiveTutorialService {
       allowClose: false, // Force them to use the buttons
       steps: localizedSteps,
       onDestroyStarted: () => {
-        if (!this.driverObj.hasNextStep() || confirm('Are you sure you want to exit the tutorial?')) {
-          this.driverObj.destroy();
-          if (onDestroy) onDestroy();
-          if (onComplete && !this.driverObj.hasNextStep()) {
-            onComplete();
-          }
+        this.driverObj.destroy();
+        if (onDestroy) onDestroy();
+        if (onComplete && !this.driverObj.hasNextStep()) {
+          onComplete();
         }
       },
     });

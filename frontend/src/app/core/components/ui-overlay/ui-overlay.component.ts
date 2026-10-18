@@ -6,6 +6,27 @@ import { ToastService } from '../../services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
+    <!-- Non-blocking Floating Battle Challenge Capsule -->
+    @if (toastService.activeInvite(); as invite) {
+      <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-[99999] max-w-sm w-[calc(100vw-32px)] sm:w-auto bg-[var(--color-bg-card)] border-2 border-amber-400/80 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-2xl animate-bounce shrink-0">⚔️</span>
+          <div class="min-w-0">
+            <p class="text-xs font-black text-[var(--color-text-main)] truncate">{{ invite.senderName }} 邀请你对决！</p>
+            <p class="text-[11px] text-[var(--color-text-muted)] truncate">{{ invite.gameTitle }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button (click)="invite.onAccept()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+            ⚡ 应战
+          </button>
+          <button (click)="invite.onDismiss()" class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] text-sm transition-colors cursor-pointer" title="关闭">
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Toasts -->
     <div class="fixed top-20 right-4 z-[9999] flex flex-col gap-2">
       @for (toast of toastService.toasts(); track toast.id) {

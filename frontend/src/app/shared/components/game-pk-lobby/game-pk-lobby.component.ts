@@ -276,6 +276,15 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   onDismissRoom(roomId: string) {
+    const targetRoom = this.allRooms().find((r: any) => r.id === roomId);
+    const playerCount = targetRoom?.player_count ?? targetRoom?.players?.length ?? 1;
+
+    if (playerCount <= 1) {
+      this.wsService.sendLobby({ type: 'dismiss_room', roomId });
+      this.toast.show(this.t('game.dismiss_success'), 'success');
+      return;
+    }
+
     this.toast.confirm({
       title: this.t('game.dismiss_title'),
       message: this.t('game.dismiss_msg'),

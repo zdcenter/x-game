@@ -240,6 +240,14 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
     } else {
       if (this.store.roomId()) {
         if (this.store.hostId() === this.playerId) {
+          const storeAny = this.store as any;
+          const players = typeof storeAny.players === 'function' ? storeAny.players() : (typeof storeAny.playerList === 'function' ? storeAny.playerList() : []);
+          if (!players || players.length <= 1) {
+            this.store.dismissRoom();
+            this.baseToastService.show(this.i18n.t('game.dismiss_success')(), 'success');
+            this.goBackToLobby();
+            return;
+          }
           this.baseToastService.confirm({
             title: this.i18n.t('game.dismiss_title')(),
             message: this.i18n.t('game.dismiss_msg')(),

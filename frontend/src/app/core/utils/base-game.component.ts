@@ -198,19 +198,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     }
 
     // For single-session games without a lobby (e.g. Sliding, Minesweeper, 2048)
-    if (this.store.status() === GameStatus.Waiting || this.store.status() === GameStatus.Finished) {
-      this.doRestart();
-    } else {
-      this.baseToastService.confirm({
-        title: this.i18nBase.t('game.restart')() || 'Restart',
-        message: this.i18nBase.t('game.confirm_restart')() || 'Are you sure you want to restart?',
-        confirmText: this.i18nBase.t('game.restart')() || 'Restart',
-        cancelText: this.i18nBase.t('game.cancel')() || 'Cancel',
-        onConfirm: () => {
-          this.doRestart();
-        }
-      });
-    }
+    // Instant frictionless restart — no annoying confirmation dialog to break flow!
+    this.doRestart();
   }
 
   private doRestart() {
@@ -228,6 +217,16 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   dismissRoom() {
+    // If only host is in the room (or empty), dismiss immediately without confirmation!
+    const storeAny = this.store as any;
+    const players = typeof storeAny.players === 'function' ? storeAny.players() : (typeof storeAny.playerList === 'function' ? storeAny.playerList() : []);
+    if (!players || players.length <= 1) {
+      this.store.dismissRoom();
+      this.baseToastService.show(this.i18nBase.t('game.dismiss_success')(), 'success');
+      this.navigateToLobby();
+      return;
+    }
+
     this.baseToastService.confirm({
       title: this.i18nBase.t('game.dismiss_title')(),
       message: this.i18nBase.t('game.dismiss_msg')(),

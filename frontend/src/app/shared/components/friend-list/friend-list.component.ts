@@ -130,21 +130,24 @@ export class FriendListComponent implements OnInit {
     this.friendService.rejectRequest(id).subscribe();
   }
 
+  pendingDeleteId = signal<number | null>(null);
+  private deleteTimer?: any;
+
   removeFriend(id: number) {
-    this.toastService.confirm({
-      title: this.i18n.t('game.remove_friend')() || 'Remove Friend',
-      message: this.i18n.t('game.confirm_remove_friend')() || 'Remove this friend?',
-      confirmText: this.i18n.t('game.remove_friend')() || 'Remove',
-      cancelText: this.i18n.t('game.cancel')() || 'Cancel',
-      confirmStyle: 'danger',
-      onConfirm: () => {
-        this.toastService.closeConfirm();
-        this.friendService.rejectRequest(id).subscribe();
-      },
-      onCancel: () => {
-        this.toastService.closeConfirm();
-      }
-    });
+    if (this.pendingDeleteId() === id) {
+      if (this.deleteTimer) clearTimeout(this.deleteTimer);
+      this.pendingDeleteId.set(null);
+      this.friendService.rejectRequest(id).subscribe(() => {
+        this.toastService.show(this.i18n.t('game.friend_removed')() || 'Friend removed', 'info');
+      });
+      return;
+    }
+
+    this.pendingDeleteId.set(id);
+    if (this.deleteTimer) clearTimeout(this.deleteTimer);
+    this.deleteTimer = setTimeout(() => {
+      this.pendingDeleteId.set(null);
+    }, 3500);
   }
 
   private router = inject(Router);

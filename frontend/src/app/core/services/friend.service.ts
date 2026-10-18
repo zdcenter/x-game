@@ -115,14 +115,13 @@ export class FriendService {
       const { sender_name, room } = event;
       if (!room) return;
 
-      this.toastService.confirm({
-        title: this.i18n.t('game.invite_received_title')() || 'Game Invite',
-        message: `${sender_name} ${this.i18n.t('game.invited_you_to')() || 'invited you to play'} ${this.i18n.t('game.' + room.game)() || room.game}!`,
-        confirmText: this.i18n.t('game.accept')() || 'Accept',
-        cancelText: this.i18n.t('game.ignore')() || 'Ignore',
-        confirmStyle: 'primary',
-        onConfirm: () => {
-          this.toastService.closeConfirm();
+      const gameTitle = this.i18n.t('game.' + room.game)() || room.game;
+      this.toastService.showInvite({
+        senderName: sender_name,
+        gameTitle,
+        room,
+        onAccept: () => {
+          this.toastService.dismissInvite();
           this.crossGameJoin.setPendingJoin({
             game: room.game,
             roomId: room.id,
@@ -142,8 +141,8 @@ export class FriendService {
             this.router.navigate([targetUrl]);
           }
         },
-        onCancel: () => {
-          this.toastService.closeConfirm();
+        onDismiss: () => {
+          this.toastService.dismissInvite();
         }
       });
     });

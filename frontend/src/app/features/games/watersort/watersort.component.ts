@@ -522,10 +522,8 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   restart() {
-    if (confirm(this.i18n.t('watersort.restart_confirm')())) {
-      this._store.restart();
-      this.selectedTubeIndex = null;
-    }
+    this._store.restart();
+    this.selectedTubeIndex = null;
   }
 
   playAgain() {

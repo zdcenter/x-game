@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-10-18] - ⚡ 极简短路径与零阻断体验重塑：单机秒级重开、单人房无感秒退与浮动对决邀请战帖 (Zero-Friction Fast-Path Revamp)
+
+### 🚀 核心对局与流转降噪 (Fast-Path Flow)
+- **单机游戏随时秒重开（0 步阻断）**：
+  - 彻底拔除 `base-game.component.ts` 中单机游戏进行中点击“重玩 (Restart)”或快捷键 Space/R 时弹出的阻塞确认框（`game.confirm_restart`）；
+  - 点击“重开”或按快捷键，棋盘**毫秒级瞬间重置并开始新局**，刷局开局心流无缝延续；
+  - 彻底拔除水排序（`watersort.component.ts`）与新手指引（`interactive-tutorial.service.ts`）中调用的浏览器原生阻断式 `window.confirm()`，消除系统级卡顿感。
+- **单人等待房无感秒退**：
+  - 在 `base-game.component.ts`、`game-lobby-panel.component.ts`、`game-pk-lobby.component.ts` 与 `connect.component.ts` 智能感知房间人数；
+  - 当房间内仅有房主一人（无其他真人玩家受影响）时，点击退出/解散直接 **0 步秒退回大厅**，不再无意义弹窗追问。
+- **好友对战邀请：电竞级浮动应战战帖 (Floating Battle Capsule)**：
+  - 彻底淘汰卡死全屏视线的居中模态确认对话框；
+  - 升级为右上角轻盈的**浮动对决战帖气泡 (`activeInvite`)**，展示发起好友头像、昵称与对战游戏；
+  - 配备 **`⚡ 应战`** 快捷按钮与 12 秒微型呼吸倒计时，单点秒切房间，超时或点关闭自动收拢，绝不打断当前单机对局。
+- **好友列表行内防误触 (Inline Confirm)**：
+  - 将好友列表中点击“删除好友”的全屏阻塞对话框重构为原地跳动的红色微缩“确认? (3s)”行内轻触按钮，3.5 秒无操作自动恢复原状，实现极简轻便管理。
+
 ## [2026-10-18] - ⚡ 经验与奖励水到渠成：3.5秒自动收下与零阻塞极简多巴胺体验 (Frictionless Auto-Dismiss Reward Celebration)
 
 ### 🚀 交互极简与去繁就简重构 (Simplicity & Frictionless UX)

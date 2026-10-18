@@ -16,14 +16,40 @@ export interface ConfirmDialog {
   onCancel?: () => void;
 }
 
+export interface GameInviteBanner {
+  senderName: string;
+  gameTitle: string;
+  room: any;
+  onAccept: () => void;
+  onDismiss: () => void;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ToastService {
   readonly toasts = signal<ToastMessage[]>([]);
   readonly currentConfirm = signal<ConfirmDialog | null>(null);
+  readonly activeInvite = signal<GameInviteBanner | null>(null);
   
   private toastId = 0;
+  private inviteTimer?: any;
+
+  showInvite(invite: GameInviteBanner) {
+    if (this.inviteTimer) clearTimeout(this.inviteTimer);
+    this.activeInvite.set(invite);
+    // Auto-dismiss after 12s so it never blocks the screen
+    this.inviteTimer = setTimeout(() => {
+      this.dismissInvite();
+    }, 12000);
+  }
+
+  dismissInvite() {
+    if (this.inviteTimer) clearTimeout(this.inviteTimer);
+    const curr = this.activeInvite();
+    if (curr?.onDismiss) curr.onDismiss();
+    this.activeInvite.set(null);
+  }
 
   show(message: string, type: 'success' | 'error' | 'info' = 'info') {
     const id = this.toastId++;
