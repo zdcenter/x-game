@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -52,7 +52,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
             </div>
 
             <button type="submit" [disabled]="isLoading()"
-                    class="w-full py-4 mt-8 bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="w-full py-4 mt-8 bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
               {{ isLoading() ? i18n.t('auth.login.submitting')() : i18n.t('auth.login.submit')() }}
             </button>
           </form>
@@ -64,14 +64,14 @@ import { I18nService } from '../../core/i18n/i18n.service';
           </div>
 
           <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
-                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             {{ i18n.t('auth.play_as_guest')() }}
           </button>
 
           <div class="mt-8 text-center text-slate-400 text-sm">
             {{ i18n.t('auth.login.no_account')() }}
-            <a [routerLink]="['/', i18n.currentLang(), 'register']" class="text-indigo-400 font-bold hover:text-pink-400 transition-colors">{{ i18n.t('auth.login.create')() }}</a>
+            <a [routerLink]="['/', i18n.currentLang(), 'register']" [queryParams]="route.snapshot.queryParams" class="text-indigo-400 font-bold hover:text-pink-400 transition-colors">{{ i18n.t('auth.login.create')() }}</a>
           </div>
         </div>
       </div>
@@ -82,12 +82,22 @@ export class LoginComponent {
   authService = inject(AuthService);
   authStore = inject(AuthStore);
   router = inject(Router);
-  i18n = inject(I18nService); // optional for translations
+  route = inject(ActivatedRoute);
+  i18n = inject(I18nService);
 
   username = '';
   password = '';
   isLoading = signal(false);
   errorMsg = signal('');
+
+  private redirectAfterAuth() {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    if (returnUrl) {
+      this.router.navigateByUrl(returnUrl);
+    } else {
+      this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
+    }
+  }
 
   onSubmit() {
     if (!this.username || !this.password) {
@@ -103,7 +113,7 @@ export class LoginComponent {
         this.isLoading.set(false);
         if (res.token && res.user) {
           this.authStore.setCredentials(res.token, res.user);
-          this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
+          this.redirectAfterAuth();
         }
       },
       error: (err) => {
@@ -122,7 +132,7 @@ export class LoginComponent {
         this.isLoading.set(false);
         if (res.token && res.user) {
           this.authStore.setCredentials(res.token, res.user);
-          this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
+          this.redirectAfterAuth();
         }
       },
       error: (err) => {

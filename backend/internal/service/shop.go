@@ -193,3 +193,56 @@ func EquipShopItem(userID uint, itemID, itemType string) (*domain.User, error) {
 
 	return &user, nil
 }
+
+const (
+	CostHint         = 20
+	CostRevive       = 50
+	CostStreakFreeze = 100
+)
+
+// ConsumeCoins consumes user brain coins for in-game perks like hint or revive
+func ConsumeCoins(userID uint, action string) (*domain.User, int, error) {
+	cost := GetActionCoinCost(action)
+	if cost <= 0 {
+		return nil, 0, errors.New("invalid action")
+	}
+
+	var user domain.User
+	if err := db.DB.First(&user, userID).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if user.BrainCoins < cost {
+		return nil, cost, errors.New("insufficient brain coins")
+	}
+
+	user.BrainCoins -= cost
+	if action == "streak_freeze" {
+		user.StreakFreezes += 1
+		db.DB.Model(&user).Updates(map[string]any{
+			"brain_coins":    user.BrainCoins,
+			"streak_freezes": user.StreakFreezes,
+		})
+	} else {
+		db.DB.Model(&user).Update("brain_coins", user.BrainCoins)
+	}
+
+	return &user, cost, nil
+}
+
+// AddCoins awards brain coins to user
+func AddCoins(userID uint, amount int) (int, error) {
+	if amount <= 0 {
+		var user domain.User
+		db.DB.Select("brain_coins").First(&user, userID)
+		return user.BrainCoins, nil
+	}
+	var user domain.User
+	if err := db.DB.First(&user, userID).Error; err != nil {
+		return 0, err
+	}
+	user.BrainCoins += amount
+	db.DB.Model(&user).Update("brain_coins", user.BrainCoins)
+	return user.BrainCoins, nil
+}
+

@@ -25,6 +25,7 @@ export interface SubmitStatRequest {
   score: number;
   time: number;
   won: boolean;
+  bounty_coins?: number;
 }
 
 export interface XPResult {
@@ -50,6 +51,9 @@ export interface SubmitStatResponse {
   stat: UserGameStat;
   isNewRecord: boolean;
   xp_result?: XPResult;
+  coins_earned?: number;
+  bounty_prize?: number;
+  brain_coins?: number;
   new_achievements?: Achievement[];
 }
 

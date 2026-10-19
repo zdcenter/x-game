@@ -83,11 +83,16 @@ func Register(router fiber.Router) {
 		if n, err2 := fmt.Sscanf(targetStr, "%d", &target); n != 1 || err2 != nil || target <= 0 {
 			target = 1
 		}
+		bountyStr := c.Query("bounty", "0")
+		bountyCoins := 0
+		if n, err2 := fmt.Sscanf(bountyStr, "%d", &bountyCoins); n != 1 || err2 != nil || bountyCoins < 0 {
+			bountyCoins = 0
+		}
 		var room *wsManager.Room
 
 		if action == "create" {
 			// Explicit create: only create, fail if exists
-			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target)
+			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target, bountyCoins)
 			if err != nil && err.Error() != string(domain.ErrHostRoomLimit) {
 				// Room might already exist (e.g. reconnect after page refresh).
 				// Only allow fallback to join if caller is already the host of this room AND it's for the same game.

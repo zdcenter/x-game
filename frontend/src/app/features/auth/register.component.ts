@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -71,7 +71,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 
           <div class="mt-8 text-center text-slate-400 text-sm">
             {{ i18n.t('auth.register.has_account')() }}
-            <a [routerLink]="['/', i18n.currentLang(), 'login']" class="text-teal-400 font-bold hover:text-emerald-400 transition-colors">{{ i18n.t('auth.register.signin')() }}</a>
+            <a [routerLink]="['/', i18n.currentLang(), 'login']" [queryParams]="route.snapshot.queryParams" class="text-teal-400 font-bold hover:text-emerald-400 transition-colors">{{ i18n.t('auth.register.signin')() }}</a>
           </div>
         </div>
       </div>
@@ -82,12 +82,22 @@ export class RegisterComponent {
   authService = inject(AuthService);
   authStore = inject(AuthStore);
   router = inject(Router);
+  route = inject(ActivatedRoute);
   i18n = inject(I18nService);
 
   username = '';
   password = '';
   isLoading = signal(false);
   errorMsg = signal('');
+
+  private redirectAfterAuth() {
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+    if (returnUrl) {
+      this.router.navigateByUrl(returnUrl);
+    } else {
+      this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
+    }
+  }
 
   onSubmit() {
     if (!this.username || !this.password) {
@@ -105,8 +115,11 @@ export class RegisterComponent {
     this.authService.register(this.username, this.password).subscribe({
       next: () => {
         this.isLoading.set(false);
-        // Automatically redirect to login page after successful registration
-        this.router.navigate(['/', this.i18n.currentLang(), 'login']);
+        // Automatically redirect to login page after successful registration, preserving returnUrl
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+        this.router.navigate(['/', this.i18n.currentLang(), 'login'], {
+          queryParams: returnUrl ? { returnUrl } : undefined
+        });
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -124,7 +137,7 @@ export class RegisterComponent {
         this.isLoading.set(false);
         if (res.token && res.user) {
           this.authStore.setCredentials(res.token, res.user);
-          this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
+          this.redirectAfterAuth();
         }
       },
       error: (err) => {

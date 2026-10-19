@@ -78,7 +78,7 @@ func (m *Matchmaker) checkMatch(key string) {
 		roomID := "pk-" + uuid.New().String()[:8]
 		
 		// We make player1 the host
-		_, err := CreateRoom(roomID, p1.GameID, p1.Mode, p1.Difficulty, p1.PlayerID, "", p1.Target)
+		_, err := CreateRoom(roomID, p1.GameID, p1.Mode, p1.Difficulty, p1.PlayerID, "", p1.Target, 0)
 		if err != nil {
 			log.Printf("Matchmaking error creating room: %v", err)
 			// Put them back in queue? Nah just fail silently or tell them error.

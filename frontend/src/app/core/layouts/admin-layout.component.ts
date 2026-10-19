@@ -70,7 +70,7 @@ import { ThemeService } from '../theme/theme.service';
             <span>{{ i18n.t('admin.menu.leaderboard')() }}</span>
           </a>
           <a routerLink="/admin/xp-config" routerLinkActive="bg-green-500/20 text-green-400 border-green-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>✨</span>
+            <span>🪙</span>
             <span>{{ i18n.t('admin.menu.xp_config')() }}</span>
           </a>
 

@@ -11,6 +11,7 @@ import { XpService } from '../services/xp.service';
 import { AchievementService } from '../services/achievement.service';
 import { AudioService } from '../services/audio.service';
 import { LayoutService } from '../services/layout.service';
+import { CoinService } from '../services/coin.service';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
@@ -19,6 +20,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly gameRegistry = inject(GameRegistryService);
   protected readonly stats = inject(GameStatsService);
   protected readonly xpService = inject(XpService);
+  protected readonly coinService = inject(CoinService);
   protected readonly achievementService = inject(AchievementService);
   protected readonly layoutService = inject(LayoutService);
 
@@ -89,6 +91,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly currentRoomMode = signal<GameModeType | string>(GameMode.Single);
   readonly currentDifficulty = signal<GameDifficultyType | string>(GameDifficulty.Medium);
   readonly currentRoomTarget = signal<number>(1);
+  readonly bountyCoins = computed<number>(() => (this.rawState() as any)?.bountyCoins ?? 0);
 
   readonly playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
@@ -271,7 +274,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     return `${myW} : ${oppW}`;
   });
 
-  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1, password: string = '') {
+  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1, password: string = '', bounty: number = 0) {
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
@@ -280,7 +283,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
     if (mode !== GameMode.Single) {
-      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, '', password, target);
+      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, '', password, target, bounty);
     }
   }
 
@@ -408,15 +411,23 @@ export abstract class BaseGameStore implements GameStoreInterface {
   private _submitPKStat(): void {
     const won = this.winners().includes(this.playerId());
     const { score, time } = this.extractPKStatPayload();
+    const bounty = this.bountyCoins();
     this.stats.submitStat(this.gameId, {
-      mode:       this.currentRoomMode() as string,
-      difficulty: this.currentDifficulty() as string,
+      mode:         this.currentRoomMode() as string,
+      difficulty:   this.currentDifficulty() as string,
       score,
       time,
       won,
+      bounty_coins: bounty > 0 ? bounty : undefined,
     }).subscribe({
       next: res => {
         this.lastStatResult.set(res);
+        if (res.brain_coins !== undefined) {
+          this.coinService.setCoins(res.brain_coins);
+        }
+        if (res.coins_earned && res.coins_earned > 0) {
+          this.coinService.awardCoinsLocally(res.coins_earned);
+        }
         if (res.xp_result?.xp_earned) {
           this.xpService.showXpGain(res.xp_result.xp_earned);
         }

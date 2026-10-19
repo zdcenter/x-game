@@ -156,9 +156,23 @@
                 {{ xpResult.leveled_up ? (i18n.t('result.level_up')() + ' Lv.' + xpResult.level) : ('Lv.' + xpResult.level + ' ' + (i18n.t('result.level_progress')() || 'Level Progress')) }}
               </span>
             </div>
-            <span class="font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-xs">
-              +{{ xpResult.xp_earned }} XP
-            </span>
+            <div class="flex items-center gap-1.5">
+              @if (status === GameResult.Win && authStore.isAuthenticated()) {
+                <span class="font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm">
+                  <span>🪙</span>
+                  <span>+{{ isPkMatch ? (effectiveBountyCoins > 0 ? (25 + bountyNetReward) : 25) : 10 }}</span>
+                </span>
+              }
+              @if (status === GameResult.Lose && isPkMatch && effectiveBountyCoins > 0 && authStore.isAuthenticated()) {
+                <span class="font-black text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm">
+                  <span>🪙</span>
+                  <span>-{{ effectiveBountyCoins }}</span>
+                </span>
+              }
+              <span class="font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-xs">
+                +{{ xpResult.xp_earned }} XP
+              </span>
+            </div>
           </div>
           <div class="w-full h-2 rounded-full bg-[var(--color-bg-card)] overflow-hidden p-0.5 border border-[var(--color-border-card)]">
             <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 shadow-sm"
@@ -170,6 +184,21 @@
       <!-- PK Duel Summary Deck (Only for PK matches) -->
       @if (isPkMatch && opponentInfo) {
         <div class="w-full my-3 p-3.5 sm:p-4 rounded-2xl bg-[var(--color-bg-main)]/90 border border-[var(--color-border-card)] relative z-10 shadow-inner overflow-hidden">
+          @if (effectiveBountyCoins > 0) {
+            <div class="mb-3 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/40 flex items-center justify-between text-xs">
+              <span class="font-bold text-amber-400 flex items-center gap-1.5">
+                <span>💰</span>
+                <span>{{ i18n.t('game.bounty_label')() }}</span>
+              </span>
+              <span class="font-mono font-black" [class.text-amber-300]="status === GameResult.Win" [class.text-rose-400]="status !== GameResult.Win">
+                @if (status === GameResult.Win) {
+                  +{{ bountyNetReward }} 🪙 ({{ i18n.t('game.bounty_win_pot')() }})
+                } @else {
+                  -{{ effectiveBountyCoins }} 🪙
+                }
+              </span>
+            </div>
+          }
           <div class="text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] text-center mb-3 flex items-center justify-center gap-1.5">
             <span>⚔️</span>
             <span>{{ i18n.t('result.pk_vs_summary')() }}</span>
@@ -305,33 +334,107 @@
         </div>
       }
 
-      <!-- Guest Prompt (Compact & Non-intrusive) -->
+      <!-- Guest Conversion System (Plan B: Progressive Ladder Conversion) -->
       @if (!authStore.isAuthenticated()) {
-        <div class="w-full my-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 flex items-center justify-between gap-3 text-left relative z-10">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <span class="text-xl shrink-0">💡</span>
-            <div class="truncate">
-              <p class="text-xs font-bold text-blue-400 truncate">{{ t('game.guest_prompt_title') || 'Save Your Progress' }}</p>
-              <p class="text-[11px] text-[var(--color-text-muted)] truncate">{{ t('game.guest_prompt_desc') || 'Register for free to save scores & stats.' }}</p>
+        @if (isPkMatch) {
+          @if (status === GameResult.Win) {
+            <!-- 🏆 Victory Gold Conversion Card: Maximum FOMO & Reward Protection -->
+            <div class="w-full my-2.5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-amber-500/20 border-2 border-amber-500/50 shadow-lg shadow-amber-500/15 relative overflow-hidden animate-pulse">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative z-10">
+                <div class="flex items-start gap-3 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-amber-500/25 border border-amber-500/50 text-2xl flex items-center justify-center shrink-0 shadow-inner">
+                    👑
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="text-xs sm:text-sm font-black text-amber-400">
+                        {{ i18n.t('pk.guest_win_title')() }}
+                      </span>
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/30 text-amber-300 border border-amber-500/40">
+                        +25 LP
+                      </span>
+                    </div>
+                    <p class="text-[11px] sm:text-xs text-[var(--color-text-muted)] mt-0.5 leading-relaxed">
+                      {{ i18n.t('pk.guest_win_desc')() }}
+                    </p>
+                  </div>
+                </div>
+                <button (click)="goToRegister()"
+                        class="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-black rounded-xl shadow-md shadow-amber-500/30 hover:scale-[1.02] active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>⚡</span>
+                  <span>{{ i18n.t('pk.guest_claim_btn')() }}</span>
+                </button>
+              </div>
             </div>
+          } @else {
+            <!-- ⚔️ Defeat Revenge Conversion Card: Encouraging Skill Growth -->
+            <div class="w-full my-2.5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-500/15 via-purple-500/10 to-rose-500/15 border border-rose-500/30 shadow-md relative overflow-hidden">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-left relative z-10">
+                <div class="flex items-start gap-3 min-w-0">
+                  <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 text-2xl flex items-center justify-center shrink-0">
+                    🛡️
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-black text-rose-400">
+                      {{ i18n.t('pk.guest_lose_title')() }}
+                    </p>
+                    <p class="text-[11px] sm:text-xs text-[var(--color-text-muted)] mt-0.5 leading-relaxed">
+                      {{ i18n.t('pk.guest_lose_desc')() }}
+                    </p>
+                  </div>
+                </div>
+                <button (click)="goToRegister()"
+                        class="w-full sm:w-auto px-4 py-2.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold rounded-xl shadow-sm hover:scale-[1.02] active:scale-95 transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5">
+                  <span>⚔️</span>
+                  <span>{{ i18n.t('pk.guest_signup_btn')() }}</span>
+                </button>
+              </div>
+            </div>
+          }
+        } @else {
+          <!-- Single Player: Non-intrusive Standard Save Progress Prompt -->
+          <div class="w-full my-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 flex items-center justify-between gap-3 text-left relative z-10">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="text-xl shrink-0">💡</span>
+              <div class="truncate">
+                <p class="text-xs font-bold text-blue-400 truncate">{{ t('game.guest_prompt_title') || 'Save Your Progress' }}</p>
+                <p class="text-[11px] text-[var(--color-text-muted)] truncate">{{ t('game.guest_prompt_desc') || 'Register for free to save scores & stats.' }}</p>
+              </div>
+            </div>
+            <button (click)="goToLogin()" class="px-3.5 py-1.5 bg-blue-500/20 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/40 text-xs font-bold rounded-xl transition-all shadow-sm shrink-0 cursor-pointer">
+              {{ t('nav.login_register') || 'Login' }}
+            </button>
           </div>
-          <button (click)="goToLogin()" class="px-3.5 py-1.5 bg-blue-500/20 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/40 text-xs font-bold rounded-xl transition-all shadow-sm shrink-0 cursor-pointer">
-            {{ t('nav.login_register') || 'Login' }}
-          </button>
-        </div>
+        }
       }
 
       <!-- Actions Deck -->
       <div class="w-full flex flex-col gap-2.5 mt-3 relative z-10">
-        <!-- Watch Ad Revive (Single player only) -->
+        <!-- Revive Options (Single player only) -->
         @if (showRevive && status === GameResult.Lose && !isPkMatch) {
-          <button (click)="handleRevive()"
-            class="w-full py-3.5 rounded-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-            </svg>
-            {{ t('game.watch_ad_revive') || 'Watch Ad to Revive' }}
-          </button>
+          @if (canAffordRevive()) {
+            <!-- Instant Coin Revive (Zero Wait) -->
+            <button (click)="handleCoinRevive($event)"
+              class="w-full py-3.5 rounded-2xl font-black bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 shadow-lg shadow-amber-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <span>⚡</span>
+              <span>{{ i18n.t('game.revive_coins_action', { coins: costRevive() })() }}</span>
+            </button>
+            <!-- Secondary Watch Ad Revive -->
+            <button (click)="handleRevive()"
+              class="w-full py-2.5 rounded-xl font-bold text-xs bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>📺</span>
+              <span>{{ t('game.watch_ad_revive') || 'Watch Ad to Revive' }}</span>
+            </button>
+          } @else {
+            <!-- Standard Watch Ad Revive (When insufficient coins or guest) -->
+            <button (click)="handleRevive()"
+              class="w-full py-3.5 rounded-2xl font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+              </svg>
+              {{ t('game.watch_ad_revive') || 'Watch Ad to Revive' }}
+            </button>
+          }
         }
 
         <!-- Primary Action: PK Rematch OR Next Level / Solo Restart -->

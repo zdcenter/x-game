@@ -6,11 +6,14 @@ import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { PwaService } from '../../../core/services/pwa.service';
 import { ZenModeService } from '../../../core/services/zen-mode.service';
+import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
+import { CoinGuideModalComponent } from '../coin-guide-modal/coin-guide-modal.component';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoinGuideModalComponent],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {
@@ -31,6 +34,8 @@ export class GameHeaderComponent implements OnInit {
   audioService = inject(AudioService);
   hapticService = inject(HapticService);
   pwaService = inject(PwaService);
+  coinService = inject(CoinService);
+  coinGuideService = inject(CoinGuideService);
   i18n = inject(I18nService);
   router = inject(Router);
 

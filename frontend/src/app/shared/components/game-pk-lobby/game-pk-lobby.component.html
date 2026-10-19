@@ -279,6 +279,11 @@
       @if (room.hasPassword) {
         <span class="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/50 text-amber-400 shrink-0">🔒 {{ t('game.room_private') || '私密' }}</span>
       }
+      @if (room.bountyCoins && room.bountyCoins > 0) {
+        <span class="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/15 border border-amber-500/40 text-amber-400 shrink-0 shadow-sm animate-pulse">
+          🪙 {{ t('game.bounty_badge') }}: {{ room.bountyCoins }}
+        </span>
+      }
       <span
         [class]="'text-xs font-bold uppercase px-2 py-0.5 rounded shrink-0 ' + (room.status === GameStatus.Playing ? 'bg-yellow-500 text-black' : room.status === GameStatus.Waiting ? 'bg-violet-600 text-white' : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)]')">
         {{ room.status }}
@@ -301,12 +306,12 @@
 
       <div class="flex items-center gap-1.5 shrink-0">
         @if (currentRoomId === room.id) {
-        <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)"
+        <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword, room.bountyCoins)"
           class="px-3 py-1.5 bg-violet-600 text-white text-xs font-bold rounded-lg shadow hover:opacity-80 transition-opacity">
           {{ t('game.rejoin') }}
         </button>
         } @else if (room.status === GameStatus.Waiting || room.status === GameStatus.Playing) {
-        <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword)"
+        <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword, room.bountyCoins)"
           [class]="'px-3 py-1.5 text-xs font-bold rounded-lg shadow hover:opacity-80 transition-opacity flex items-center gap-1 ' + (room.hasPassword ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black' : 'bg-violet-600 text-white')">
           @if (room.hasPassword && room.status !== GameStatus.Playing) { <span>🔒</span> }
           {{ room.status === GameStatus.Playing ? t('game.rejoin') : t('game.join') }}
@@ -521,6 +526,37 @@
           </div>
         </div>
       }
+
+      <!-- 悬赏擂台设置 -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-[10px] font-bold opacity-60 uppercase tracking-wider">🪙 {{ t('game.bounty_label') }}</label>
+          <span class="text-[10px] text-amber-400 font-bold">🪙 {{ coinService.coins() }}</span>
+        </div>
+        <p class="text-[9px] text-[var(--color-text-muted)] mb-1.5">{{ t('game.bounty_desc') }}</p>
+        <div class="grid grid-cols-4 gap-1.5">
+          @for (b of bountyOptions; track b) {
+            <button type="button" (click)="roomBounty.set(b)"
+              class="py-2 rounded-xl border font-black text-xs transition-all text-center flex flex-col items-center justify-center gap-0.5"
+              [class.bg-gradient-to-r]="roomBounty() === b && b > 0"
+              [class.from-amber-500]="roomBounty() === b && b > 0"
+              [class.to-yellow-500]="roomBounty() === b && b > 0"
+              [class.text-slate-900]="roomBounty() === b && b > 0"
+              [class.border-amber-400]="roomBounty() === b && b > 0"
+              [class.bg-[var(--color-accent-to)]]="roomBounty() === b && b === 0"
+              [class.text-[var(--color-bg-main)]]="roomBounty() === b && b === 0"
+              [class.border-[var(--color-accent-to)]]="roomBounty() === b && b === 0"
+              [class.bg-[var(--color-bg-card)]]="roomBounty() !== b"
+              [class.border-[var(--color-border-card)]]="roomBounty() !== b"
+              [class.text-[var(--color-text-main)]]="roomBounty() !== b">
+              <span>{{ b === 0 ? t('game.bounty_free') : b }}</span>
+              @if (b > 0) {
+                <span class="text-[9px] font-normal opacity-80">{{ t('game.bounty_coins_unit') }}</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
 
       <!-- 公开/私密 -->
       <div class="flex gap-2">

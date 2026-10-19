@@ -1,5 +1,5 @@
 import { GameResult, GameResultType } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, signal, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
@@ -14,6 +14,9 @@ import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
 import { AdsenseComponent } from '../adsense/adsense.component';
 import { GhostChallengeService } from '../../../core/services/ghost-challenge.service';
+import { CoinService } from '../../../core/services/coin.service';
+import { SettingsService } from '../../../core/services/settings.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -75,6 +78,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   private streakService = inject(StreakService);
   private ghostChallengeService = inject(GhostChallengeService);
   authStore = inject(AuthStore);
+  coinService = inject(CoinService);
+  settingsService = inject(SettingsService);
+  private wsService = inject(WebSocketService);
+
+  readonly costRevive = computed(() => this.settingsService.coinEconomy().costRevive);
+  readonly canAffordRevive = computed(() => this.coinService.canAfford(this.costRevive()));
 
   GameResult = GameResult;
   streak = signal<number>(0);
@@ -107,6 +116,21 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() opponentInfo?: { nickname?: string; avatar?: string; score?: number | string; isHost?: boolean; id?: string; playerId?: string };
   @Input() pkSeriesScore?: { me: number; opponent: number };
   @Input() pkRoundFormat?: string;
+  @Input() bountyCoins: number = 0;
+  @Input() bountyPrize: number = 0;
+
+  get effectiveBountyCoins(): number {
+    if (this.bountyCoins > 0) return this.bountyCoins;
+    const state: any = this.wsService?.gameState ? this.wsService.gameState() : null;
+    return state?.bountyCoins || 0;
+  }
+
+  get bountyNetReward(): number {
+    const b = this.effectiveBountyCoins;
+    if (b <= 0) return 0;
+    if (this.bountyPrize > 0) return this.bountyPrize - b;
+    return Math.floor(b * 0.8);
+  }
 
   textCopied = signal(false);
   challengeCopied = signal(false);
@@ -324,7 +348,15 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   }
 
   goToLogin() {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/', this.i18n.currentLang(), 'login'], {
+      queryParams: { returnUrl: this.router.url }
+    });
+  }
+
+  goToRegister() {
+    this.router.navigate(['/', this.i18n.currentLang(), 'register'], {
+      queryParams: { returnUrl: this.router.url }
+    });
   }
 
   handleLeave() {
@@ -341,6 +373,17 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   handleRevive() {
     this.adService.showRewardedAd(() => this.revive.emit());
+  }
+
+  handleCoinRevive(event: MouseEvent) {
+    this.coinService.consumeCoins('revive', event).subscribe({
+      next: () => {
+        this.revive.emit();
+      },
+      error: () => {
+        this.handleRevive();
+      }
+    });
   }
 
   handleDismiss() {

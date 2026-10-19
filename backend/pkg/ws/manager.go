@@ -36,6 +36,7 @@ type Room struct {
 	Difficulty    domain.GameDifficulty // "easy", "medium", "hard"
 	Target        int                   // PK rounds target (e.g. 1/3/5/10), default 1
 	Password      string                // Optional 4-digit password (empty = public room)
+	BountyCoins   int                   // Bounty stake per player (e.g. 0, 50, 100, 200)
 	CreatedAt     int64                 // Unix timestamp of creation
 	LastActivity  int64                 // Unix timestamp of last client action or join
 	GameChangedAt int64                 // Unix timestamp of last game change to prevent disconnect races
@@ -61,6 +62,7 @@ type RoomSnapshot struct {
 	CreatedAt   int64                 `json:"createdAt"`
 	PlayerCount int                   `json:"players"`
 	HasPassword bool                  `json:"hasPassword"`
+	BountyCoins int                   `json:"bountyCoins,omitempty"`
 }
 
 func GetActiveRooms() []RoomSnapshot {
@@ -98,6 +100,7 @@ func GetActiveRooms() []RoomSnapshot {
 		} else {
 			status = domain.StatusWaiting
 		}
+		bounty := r.BountyCoins
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
 
@@ -111,6 +114,7 @@ func GetActiveRooms() []RoomSnapshot {
 			CreatedAt:   createdAt,
 			PlayerCount: count,
 			HasPassword: hasPassword,
+			BountyCoins: bounty,
 		})
 	}
 	return snapshots
@@ -126,7 +130,7 @@ func GetRoomPassword(roomID string) string {
 }
 
 // CreateRoom creates a new room. Returns error if the room already exists or was recently dismissed.
-func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, target int) (*Room, error) {
+func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, target, bountyCoins int) (*Room, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -188,6 +192,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 		Difficulty:    domain.GameDifficulty(difficulty),
 		Target:        target,
 		Password:      password,
+		BountyCoins:   bountyCoins,
 		CreatedAt:     now,
 		LastActivity:  now,
 		Clients:       make(map[string]*Client),
@@ -237,7 +242,7 @@ func GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId string) (*Room, er
 
 	// If room doesn't exist AND hostId matches (meaning the caller is the creator), create it
 	if hostId != "" {
-		return CreateRoom(roomID, gameId, mode, difficulty, hostId, "", 1)
+		return CreateRoom(roomID, gameId, mode, difficulty, hostId, "", 1, 0)
 	}
 
 	return nil, fmt.Errorf(string(domain.ErrRoomNotFound))
@@ -608,6 +613,9 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 						r.Game = domain.GameId(gameId)
 						r.Mode = domain.GameMode(mode)
 						r.Difficulty = domain.GameDifficulty(diff)
+						if bountyVal, ok := baseMsg["bountyCoins"].(float64); ok && bountyVal >= 0 {
+							r.BountyCoins = int(bountyVal)
+						}
 						r.GameChangedAt = time.Now().Unix()
 
 						eng.InitGame(getGameOptions(gameId, mode, diff, r.Target))
@@ -796,6 +804,7 @@ func (r *Room) BroadcastStateLocked() {
 		"host":         r.Host,
 		"readyPlayers": readyPlayers,
 		"players":      playersList,
+		"bountyCoins":  r.BountyCoins,
 	})
 	if err != nil {
 		log.Printf("Failed to marshal state: %v", err)

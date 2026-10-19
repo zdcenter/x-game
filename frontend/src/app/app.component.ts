@@ -17,6 +17,7 @@ import { EditRoomService } from './core/services/edit-room.service';
 import { FloatingTextOverlayComponent } from './shared/components/floating-text-overlay/floating-text-overlay.component';
 import { FriendListComponent } from './shared/components/friend-list/friend-list.component';
 import { InGameChallengeBannerComponent } from './shared/components/in-game-challenge-banner/in-game-challenge-banner.component';
+import { AuthModalOverlayComponent } from './shared/components/auth-modal-overlay/auth-modal-overlay.component';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +32,8 @@ import { InGameChallengeBannerComponent } from './shared/components/in-game-chal
     EditRoomOverlayComponent,
     FloatingTextOverlayComponent,
     FriendListComponent,
-    InGameChallengeBannerComponent
+    InGameChallengeBannerComponent,
+    AuthModalOverlayComponent
   ],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
@@ -50,11 +52,13 @@ import { InGameChallengeBannerComponent } from './shared/components/in-game-chal
         [mode]="editRoomService.mode()"
         [difficulty]="editRoomService.difficulty()"
         [target]="editRoomService.target()"
+        [bountyCoins]="editRoomService.bountyCoins()"
         (apply)="editRoomService.apply($event)"
         (closed)="editRoomService.close()">
       </app-edit-room-overlay>
       <app-friend-list></app-friend-list>
       <app-in-game-challenge-banner></app-in-game-challenge-banner>
+      <app-auth-modal-overlay></app-auth-modal-overlay>
     }
   `
 })

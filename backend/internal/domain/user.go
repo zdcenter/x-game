@@ -32,7 +32,7 @@ type User struct {
 	LoginStreak    int            `gorm:"default:0" json:"login_streak"`
 	LastLoginDate  string         `gorm:"type:varchar(10);default:''" json:"last_login_date"`
 	StreakFreezes  int            `gorm:"default:1" json:"streak_freezes"`
-	BrainCoins     int            `gorm:"default:100" json:"brain_coins"`
+	BrainCoins     int            `gorm:"default:0" json:"brain_coins"`
 	EquippedFrame  string         `gorm:"type:varchar(50);default:'none'" json:"equipped_frame"`
 	EquippedTitle  string         `gorm:"type:varchar(50);default:'novice'" json:"equipped_title"`
 	UnlockedFrames string         `gorm:"type:text;default:'[\"none\"]'" json:"unlocked_frames"`

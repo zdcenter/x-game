@@ -13,6 +13,7 @@ export interface EditRoomConfig {
   mode: string;
   difficulty: string;
   target: number;
+  bountyCoins?: number;
 }
 
 @Component({
@@ -27,20 +28,23 @@ export class EditRoomOverlayComponent implements OnChanges {
   private reg      = inject(GameRegistryService);
   private settings = inject(SettingsService);
 
-  @Input() isOpen     = false;
-  @Input() gameId     = '';
-  @Input() mode       = '';
-  @Input() difficulty = '';
-  @Input() target     = 1;
+  @Input() isOpen      = false;
+  @Input() gameId      = '';
+  @Input() mode        = '';
+  @Input() difficulty  = '';
+  @Input() target      = 1;
+  @Input() bountyCoins = 0;
 
   @Output() apply  = new EventEmitter<EditRoomConfig>();
   @Output() closed = new EventEmitter<void>();
 
-  step          = signal<'game' | 'settings'>('game');
-  editGameId    = signal('');
-  editMode      = signal('');
+  step           = signal<'game' | 'settings'>('game');
+  editGameId     = signal('');
+  editMode       = signal('');
   editDifficulty = signal('');
-  editTarget    = signal(1);
+  editTarget     = signal(1);
+  editBounty     = signal(0);
+  readonly bountyOptions = [0, 50, 100, 200];
 
   allGames = computed(() => this.reg.getAllConfigs());
 
@@ -67,6 +71,7 @@ export class EditRoomOverlayComponent implements OnChanges {
       this.editMode.set(validMode);
       this.editDifficulty.set(this.difficulty || '');
       this.editTarget.set(this.target || 1);
+      this.editBounty.set(this.bountyCoins || 0);
       // 有当前游戏直接进步骤2，否则从选游戏开始
       this.step.set(this.gameId ? 'settings' : 'game');
     }
@@ -85,10 +90,11 @@ export class EditRoomOverlayComponent implements OnChanges {
 
   onConfirm() {
     this.apply.emit({
-      gameId:     this.editGameId(),
-      mode:       this.editMode(),
-      difficulty: this.editDifficulty(),
-      target:     this.editTarget(),
+      gameId:      this.editGameId(),
+      mode:        this.editMode(),
+      difficulty:  this.editDifficulty(),
+      target:      this.editTarget(),
+      bountyCoins: this.editBounty(),
     });
   }
 }

@@ -9,10 +9,18 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="relative group z-20 flex items-center">
-      <div class="absolute left-2 sm:left-2.5 pointer-events-none text-xs sm:text-sm select-none z-10 group-hover:scale-110 transition-transform">
-        🎯
+      <!-- Visual Display Capsule -->
+      <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm group-hover:border-amber-500/60 group-hover:shadow-md transition-all backdrop-blur-md pointer-events-none select-none max-w-[105px] xs:max-w-[125px] sm:max-w-none">
+        <span class="text-xs sm:text-sm shrink-0">🎯</span>
+        <span class="truncate sm:hidden text-[11px] font-bold">{{ currentLabelShort }}</span>
+        <span class="truncate hidden sm:inline">{{ currentLabelFull }}</span>
+        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-text-muted)] group-hover:text-amber-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
       </div>
-      <select class="appearance-none bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] pl-6 sm:pl-8 pr-6 sm:pr-8 py-1 sm:py-1.5 rounded-xl outline-none hover:border-amber-500/60 focus:border-amber-500 transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-sm hover:shadow-md backdrop-blur-md max-w-[140px] sm:max-w-none truncate"
+
+      <!-- Invisible Native Select for 100% Native Mobile Picker Compatibility -->
+      <select class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
               [ngModel]="currentDifficulty" (ngModelChange)="onDifficultyChange($event)">
         @for (diff of availableDifficulties; track diff.id) {
           <option [value]="diff.id">
@@ -23,9 +31,6 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           </option>
         }
       </select>
-      <div class="absolute inset-y-0 right-0 flex items-center px-1.5 sm:px-2 pointer-events-none text-[var(--color-text-muted)] group-hover:text-amber-500 transition-colors">
-        <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-      </div>
     </div>
   `
 })
@@ -36,6 +41,23 @@ export class DifficultySelectorComponent {
   @Input({ required: true }) currentDifficulty: string = '';
   
   @Output() difficultyChange = new EventEmitter<string>();
+
+  get currentDiffItem() {
+    return this.availableDifficulties.find(d => d.id === this.currentDifficulty) || this.availableDifficulties[0];
+  }
+
+  get currentLabelShort(): string {
+    const item = this.currentDiffItem;
+    return item ? this.i18n.t(item.labelKey)() : '';
+  }
+
+  get currentLabelFull(): string {
+    const item = this.currentDiffItem;
+    if (!item) return '';
+    const label = this.i18n.t(item.labelKey)();
+    const desc = item.descKey ? this.i18n.t(item.descKey)() : item.desc;
+    return desc ? `${label} (${desc})` : label;
+  }
 
   onDifficultyChange(newDiff: string) {
     this.difficultyChange.emit(newDiff);

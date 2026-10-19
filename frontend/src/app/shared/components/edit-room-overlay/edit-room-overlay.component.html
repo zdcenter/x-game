@@ -159,6 +159,34 @@
             </div>
           }
 
+          <!-- 悬赏擂台设置 -->
+          <div>
+            <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-1">🪙 {{ t('game.bounty_label') }}</label>
+            <p class="text-[10px] opacity-50 mb-2">{{ t('game.bounty_desc') }}</p>
+            <div class="grid grid-cols-4 gap-2">
+              @for (b of bountyOptions; track b) {
+                <button (click)="editBounty.set(b)"
+                        class="py-2.5 rounded-xl border font-black text-xs transition-all text-center flex flex-col items-center justify-center gap-0.5"
+                        [class.bg-gradient-to-r]="editBounty() === b && b > 0"
+                        [class.from-amber-500]="editBounty() === b && b > 0"
+                        [class.to-yellow-500]="editBounty() === b && b > 0"
+                        [class.text-slate-900]="editBounty() === b && b > 0"
+                        [class.border-amber-400]="editBounty() === b && b > 0"
+                        [class.bg-[var(--color-accent-to)]]="editBounty() === b && b === 0"
+                        [class.text-[var(--color-bg-main)]]="editBounty() === b && b === 0"
+                        [class.border-[var(--color-accent-to)]]="editBounty() === b && b === 0"
+                        [class.bg-[var(--color-bg-card)]]="editBounty() !== b"
+                        [class.border-[var(--color-border-card)]]="editBounty() !== b"
+                        [class.text-[var(--color-text-main)]]="editBounty() !== b">
+                  <span>{{ b === 0 ? t('game.bounty_free') : b }}</span>
+                  @if (b > 0) {
+                    <span class="text-[9px] font-normal opacity-80">{{ t('game.bounty_coins_unit') }}</span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
           <!-- 操作按钮 -->
           <div class="flex gap-3 pt-2">
             <button (click)="step.set('game')"

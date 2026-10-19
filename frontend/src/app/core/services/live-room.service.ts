@@ -19,6 +19,7 @@ export interface WaitingRoom {
   status: string;
   createdAt: number;
   hasPassword?: boolean;
+  bountyCoins?: number;
 }
 
 @Injectable({

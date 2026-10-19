@@ -76,7 +76,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
                 mode: pendingCross.mode,
                 difficulty: pendingCross.difficulty,
                 password: pendingCross.password,
-                target: pendingCross.target
+                target: pendingCross.target,
+                bountyCoins: pendingCross.bountyCoins
               });
 
               if (pendingCross.inviteUsernames && pendingCross.inviteUsernames.length > 0) {
@@ -98,7 +99,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
                 mode: pendingCross.mode,
                 difficulty: pendingCross.difficulty,
                 host: pendingCross.host,
-                password: pendingCross.password
+                password: pendingCross.password,
+                bountyCoins: pendingCross.bountyCoins
               });
             }
           }, 100);
@@ -145,7 +147,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     this._baseRouter.navigate(['/pk-arena'], { queryParams: gameId ? { game: gameId } : {} });
   }
 
-  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
+  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number}) {
     this.isMobileSidebarOpen.set(false);
     if (this.gameLayout) {
       this.gameLayout.togglePkDrawer(false);
@@ -153,17 +155,17 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     if (this.store.roomId() === event.roomId) return;
     this.wsService.setPendingAction('join');
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host, 1, event.password || '', event.bountyCoins ?? 0);
   }
 
-  handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number}) {
+  handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number, bountyCoins?: number}) {
     this.isMobileSidebarOpen.set(false);
     if (this.gameLayout) {
       this.gameLayout.togglePkDrawer(false);
     }
     this.wsService.setPendingAction('create');
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1);
+    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1, event.password || '', event.bountyCoins ?? 0);
   }
 
   handleDismissRoom() {

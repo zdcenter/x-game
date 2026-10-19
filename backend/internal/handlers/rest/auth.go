@@ -40,11 +40,13 @@ func Register(c fiber.Ctx) error {
 		role = domain.RoleAdmin
 	}
 
+	cfg := service.GetEconomyConfig()
 	user := domain.User{
-		Username: req.Username,
-		Password: string(hashedPassword),
-		Role:     role,
-		Status:   domain.StatusActive,
+		Username:   req.Username,
+		Password:   string(hashedPassword),
+		Role:       role,
+		Status:     domain.StatusActive,
+		BrainCoins: cfg.RegisterBonus,
 	}
 
 	result := db.DB.Create(&user)
@@ -112,10 +114,11 @@ func GuestLogin(c fiber.Ctx) error {
 	}
 
 	user := domain.User{
-		Username: username,
-		Password: string(hashedPassword),
-		Role:     domain.RoleGuest,
-		Status:   domain.StatusActive,
+		Username:   username,
+		Password:   string(hashedPassword),
+		Role:       domain.RoleGuest,
+		Status:     domain.StatusActive,
+		BrainCoins: 0,
 	}
 
 	result := db.DB.Create(&user)

@@ -22,6 +22,7 @@ import { AdService } from '../../core/services/ad.service';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { LiveWaitingRoomsComponent } from './components/live-waiting-rooms/live-waiting-rooms.component';
 import { LiveRoomService } from '../../core/services/live-room.service';
+import { AuthModalService } from '../../core/services/auth-modal.service';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
@@ -38,7 +39,8 @@ export class LobbyComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   gameService = inject(GameService);
   private wsService = inject(WebSocketService);
-  private authStore = inject(AuthStore);
+  authStore = inject(AuthStore);
+  private authModal = inject(AuthModalService);
   private crossGameJoin = inject(CrossGameJoinService);
   private http = inject(HttpClient);
   router = inject(Router);
@@ -121,6 +123,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   goToPkArena(gameId?: string) {
+    if (!this.authStore.isAuthenticated()) {
+      const returnUrl = '/' + this.i18n.currentLang() + '/pk-arena' + (gameId ? '?game=' + gameId : '');
+      this.authModal.open({ returnUrl });
+      return;
+    }
     const queryParams = gameId ? { game: gameId } : {};
     this.router.navigate(['/', this.i18n.currentLang(), 'pk-arena'], { queryParams });
   }
@@ -139,6 +146,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
   playPkGame(event: Event, gameId: string) {
     event.preventDefault();
     event.stopPropagation();
+    if (!this.authStore.isAuthenticated()) {
+      const returnUrl = '/' + this.i18n.currentLang() + '/pk-arena' + (gameId ? '?game=' + gameId : '');
+      this.authModal.open({ returnUrl });
+      return;
+    }
     const myId = this.liveRoom.currentUserId();
     const waitingRoom = this.liveRoom.waitingRooms().find(r => r.game === gameId && r.host !== myId);
     if (waitingRoom) {

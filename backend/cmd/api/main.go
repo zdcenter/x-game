@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/x-game/backend/internal/handlers/rest"
 	ws "github.com/x-game/backend/internal/handlers/ws"
+	"github.com/x-game/backend/internal/service"
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/middleware"
 	"github.com/x-game/backend/pkg/r2"
@@ -43,6 +44,7 @@ func main() {
 
 	// Initialize database
 	db.InitPostgres()
+	service.SeedEconomySettings()
 
 	// Start traffic simulator for fake players/rooms
 	simulator.Start()
@@ -80,6 +82,7 @@ func main() {
 	shop.Get("/items", middleware.OptionalProtected(), rest.GetShopItems)
 	shop.Post("/buy", middleware.Protected(), rest.BuyShopItem)
 	shop.Post("/equip", middleware.Protected(), rest.EquipShopItem)
+	shop.Post("/consume", middleware.Protected(), rest.ConsumeCoins)
 
 	// Ghost Challenge (Async Duels)
 	challenges := v1.Group("/challenges")

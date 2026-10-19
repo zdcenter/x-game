@@ -14,11 +14,14 @@ import { LayoutService } from '../services/layout.service';
 import { LiveBattleBeaconComponent } from '../../shared/components/live-battle-beacon/live-battle-beacon.component';
 import { LiveRoomService } from '../services/live-room.service';
 import { ZenModeService } from '../services/zen-mode.service';
+import { CoinService } from '../services/coin.service';
+import { CoinGuideService } from '../services/coin-guide.service';
+import { CoinGuideModalComponent } from '../../shared/components/coin-guide-modal/coin-guide-modal.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, LiveBattleBeaconComponent],
+  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, LiveBattleBeaconComponent, CoinGuideModalComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
@@ -92,6 +95,14 @@ import { ZenModeService } from '../services/zen-mode.service';
 
             <!-- Authenticated -->
             @if (authStore.isAuthenticated()) {
+
+              <!-- Coins Pill (Click to open Coin Economy Guide) -->
+              <button (click)="coinGuideService.open()"
+                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 font-black text-xs shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      [title]="i18n.t('game.coins_balance')() + ': ' + coinService.coins() + ' (' + (i18n.t('coins.guide_title')() || '规则指南') + ')'">
+                <span>🪙</span>
+                <span class="font-mono">{{ coinService.coins() }}</span>
+              </button>
 
               <!-- Avatar + username → profile link -->
               <a [routerLink]="['/', i18n.currentLang(), 'profile']"
@@ -287,6 +298,8 @@ import { ZenModeService } from '../services/zen-mode.service';
           </div>
         </div>
       }
+      <!-- Coin Economy Rules & Guide Modal -->
+      <app-coin-guide-modal />
     </div>
   `
 })
@@ -299,6 +312,8 @@ export class MainLayoutComponent {
   pwa = inject(PwaService);
   layout = inject(LayoutService);
   liveRoom = inject(LiveRoomService);
+  coinService = inject(CoinService);
+  coinGuideService = inject(CoinGuideService);
 
   isSettingsOpen = signal(false);
   isMobileMenuOpen = signal(false);

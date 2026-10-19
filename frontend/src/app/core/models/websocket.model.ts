@@ -12,6 +12,7 @@ export enum WsQueryParam {
   Action     = 'action',
   Password   = 'password',
   Target     = 'target',
+  Bounty     = 'bounty',
 }
 
 /**

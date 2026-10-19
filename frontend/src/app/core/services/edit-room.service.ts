@@ -10,19 +10,21 @@ export class EditRoomService {
   private toast = inject(ToastService);
   private i18n  = inject(I18nService);
 
-  isOpen     = signal(false);
-  gameId     = signal('');
-  mode       = signal('');
-  difficulty = signal('');
-  target     = signal(1);
+  isOpen      = signal(false);
+  gameId      = signal('');
+  mode        = signal('');
+  difficulty  = signal('');
+  target      = signal(1);
+  bountyCoins = signal(0);
   private roomId = '';
 
-  open(params: { roomId: string; gameId: string; mode: string; difficulty: string; target?: number }) {
+  open(params: { roomId: string; gameId: string; mode: string; difficulty: string; target?: number; bountyCoins?: number }) {
     this.roomId = params.roomId;
     this.gameId.set(params.gameId);
     this.mode.set(params.mode);
     this.difficulty.set(params.difficulty);
     this.target.set(params.target ?? 1);
+    this.bountyCoins.set(params.bountyCoins ?? 0);
     this.isOpen.set(true);
   }
 
@@ -36,6 +38,7 @@ export class EditRoomService {
       mode: cfg.mode,
       difficulty: cfg.difficulty,
       target: cfg.target,
+      bountyCoins: cfg.bountyCoins ?? 0,
     });
     this.close();
     this.toast.show(this.i18n.t('game.update_settings')() + ' ✓', 'success');

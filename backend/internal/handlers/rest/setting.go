@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
+	"github.com/x-game/backend/internal/service"
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/simulator"
 )
@@ -10,16 +13,30 @@ import (
 // GetPublicSettings returns non-sensitive settings for the frontend (maintenance mode, announcement)
 func GetPublicSettings(c fiber.Ctx) error {
 	var settings []domain.SystemSetting
-	// Only fetch public settings to avoid leaking admin config
-	if err := db.DB.Where("key IN ?", []string{
+	publicKeys := append([]string{
 		"site_maintenance", "maintenance_message", "global_announcement", "registration_enabled", "multiplayer_enabled", "pk_multi_round_enabled",
 		"ad_interstitial_frequency", "ad_interstitial_daily_limit",
 		"ad_pc_left_slot", "ad_pc_right_slot", "ad_mobile_lobby_slot",
-	}).Find(&settings).Error; err != nil {
+	}, service.AllEconomyKeys...)
+
+	if err := db.DB.Where("key IN ?", publicKeys).Find(&settings).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch settings"})
 	}
 
 	result := make(map[string]string)
+	// Ensure defaults for all economy keys are populated even if DB has no entry yet
+	cfg := service.GetEconomyConfig()
+	result[service.KeyCoinsSoloEasy] = strconv.Itoa(cfg.SoloEasyCoins)
+	result[service.KeyCoinsSoloMedium] = strconv.Itoa(cfg.SoloMediumCoins)
+	result[service.KeyCoinsSoloHard] = strconv.Itoa(cfg.SoloHardCoins)
+	result[service.KeyCoinsSoloExpert] = strconv.Itoa(cfg.SoloExpertCoins)
+	result[service.KeyCoinsSoloMaster] = strconv.Itoa(cfg.SoloMasterCoins)
+	result[service.KeyCoinsPKWin] = strconv.Itoa(cfg.PKWinCoins)
+	result[service.KeyCoinsCostHint] = strconv.Itoa(cfg.CostHint)
+	result[service.KeyCoinsCostRevive] = strconv.Itoa(cfg.CostRevive)
+	result[service.KeyCoinsCostFreeze] = strconv.Itoa(cfg.CostFreeze)
+	result[service.KeyCoinsDailyCap] = strconv.Itoa(cfg.DailyCap)
+
 	for _, s := range settings {
 		result[s.Key] = s.Value
 	}

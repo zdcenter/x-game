@@ -71,3 +71,38 @@ func EquipShopItem(c fiber.Ctx) error {
 		"user":    user,
 	})
 }
+
+type ConsumeCoinsReq struct {
+	Action string `json:"action"` // "hint" | "revive" | "streak_freeze"
+}
+
+// ConsumeCoins handles consuming brain coins for in-game perks
+func ConsumeCoins(c fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+	userID := uint(userIDVal.(float64))
+
+	var req ConsumeCoinsReq
+	if err := c.Bind().Body(&req); err != nil || req.Action == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request payload"})
+	}
+
+	user, cost, err := service.ConsumeCoins(userID, req.Action)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":    err.Error(),
+			"required": cost,
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success":     true,
+		"action":      req.Action,
+		"consumed":    cost,
+		"brain_coins": user.BrainCoins,
+		"user":        user,
+	})
+}
+

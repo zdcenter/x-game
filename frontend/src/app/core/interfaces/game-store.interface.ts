@@ -75,7 +75,7 @@ export interface GameStoreInterface {
    * @param difficulty 难度
    * @param hostId 房主 ID（可选，创建房间时传当前玩家 ID）
    */
-  joinRoom(roomId: string, mode: GameModeType | string, difficulty: GameDifficultyType | string, hostId?: string, target?: number): void;
+  joinRoom(roomId: string, mode: GameModeType | string, difficulty: GameDifficultyType | string, hostId?: string, target?: number, password?: string, bounty?: number): void;
 
   /**
    * 离开房间。

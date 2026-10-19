@@ -47,6 +47,7 @@ export interface PendingJoinInfo {
   host?: string;
   password?: string;
   target?: number;
+  bountyCoins?: number;
 }
 
 export interface RoomLifecycleHandle {
@@ -150,6 +151,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
           host: joinInfo.host,
           password: joinInfo.password,
           target: joinInfo.target,
+          bountyCoins: joinInfo.bountyCoins,
         };
       }
 

@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { tap, catchError } from 'rxjs/operators';
@@ -39,6 +39,24 @@ export class SettingsService {
     ad_mobile_lobby_slot: ''
   });
 
+  // Reactive computed for coin economy parameters
+  readonly coinEconomy = computed(() => {
+    const s = this.settings();
+    return {
+      soloEasy: parseInt(s['coins.solo_easy'] || '2', 10),
+      soloMedium: parseInt(s['coins.solo_medium'] || '5', 10),
+      soloHard: parseInt(s['coins.solo_hard'] || '10', 10),
+      soloExpert: parseInt(s['coins.solo_expert'] || '18', 10),
+      soloMaster: parseInt(s['coins.solo_master'] || '25', 10),
+      pkWin: parseInt(s['coins.pk_win'] || '5', 10),
+      costHint: parseInt(s['coins.cost_hint'] || '20', 10),
+      costRevive: parseInt(s['coins.cost_revive'] || '50', 10),
+      costFreeze: parseInt(s['coins.cost_freeze'] || '100', 10),
+      dailyCap: parseInt(s['coins.daily_cap'] || '80', 10),
+      registerBonus: parseInt(s['coins.register_bonus'] || '0', 10),
+    };
+  });
+
   loadSettings() {
     return this.http.get<PublicSettings>(`${environment.apiUrl}/settings`).pipe(
       tap(res => {
@@ -53,3 +71,4 @@ export class SettingsService {
     );
   }
 }
+

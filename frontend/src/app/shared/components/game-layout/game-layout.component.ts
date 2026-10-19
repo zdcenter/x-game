@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnChanges, SimpleChanges, booleanAttribute, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
@@ -11,6 +11,7 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { AuthModalService } from '../../../core/services/auth-modal.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
@@ -66,7 +67,7 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
             @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
               @if (waitingRoomForThisGame(); as targetRoom) {
                 <button (click)="liveRoom.quickJoin(targetRoom)"
-                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse"
+                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0"
                         [attr.title]="i18n.t('lobby.quick_join')()">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -77,7 +78,7 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
                 </button>
               } @else {
                 <button (click)="quickCreatePkRoom()"
-                        class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group"
+                        class="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm active:scale-95 group shrink-0"
                         [title]="i18n.t('game.quick_pk')() || '开房PK'">
                   <span class="group-hover:scale-110 transition-transform">⚔️</span>
                   <span class="hidden md:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
@@ -122,6 +123,14 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
   <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-1 sm:py-2">
     
+    <!-- Guest Playing in PK Room Badge (Unranked play) -->
+    @if (currentRoomId && !authStore.isAuthenticated()) {
+      <div class="mb-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-bold flex items-center gap-1.5 shadow-sm animate-fade-in">
+        <span>👀</span>
+        <span>{{ i18n.t('pk.guest_badge')() }}</span>
+      </div>
+    }
+
     <!-- Active Ghost Challenge Banner -->
     @if (ghostChallenge(); as ch) {
       <div class="w-full mb-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-md animate-pulse">
@@ -221,6 +230,8 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
   authStore = inject(AuthStore);
+  private authModal = inject(AuthModalService);
+  private router = inject(Router);
   wsService = inject(WebSocketService);
   friendService = inject(FriendService);
   editRoomService = inject(EditRoomService);
@@ -390,6 +401,10 @@ export class GameLayoutComponent implements OnInit, OnChanges {
 
   quickCreatePkRoom() {
     this.togglePkDrawer(false);
+    if (!this.authStore.isAuthenticated()) {
+      this.authModal.open({ returnUrl: this.router.url });
+      return;
+    }
     const config = this.gameRegistry.getConfig(this.gameId);
     if (!config) return;
     const pkMode = config.modes.find(m => m.id !== GameMode.Single);
@@ -418,6 +433,10 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   }
 
   openFriendList() {
+    if (!this.authStore.isAuthenticated()) {
+      this.authModal.open({ returnUrl: this.router.url });
+      return;
+    }
     this.friendService.togglePanel(true, {
       gameId: this.gameId,
       difficulty: this.currentDifficulty,

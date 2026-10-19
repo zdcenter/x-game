@@ -9,11 +9,12 @@ import (
 )
 
 type SubmitStatRequest struct {
-	Mode       string `json:"mode"`
-	Difficulty string `json:"difficulty"`
-	Score      int    `json:string(domain.ModeScore)`
-	Time       int    `json:"time"`
-	Won        bool   `json:"won"`
+	Mode        string `json:"mode"`
+	Difficulty  string `json:"difficulty"`
+	Score       int    `json:"score"`
+	Time        int    `json:"time"`
+	Won         bool   `json:"won"`
+	BountyCoins int    `json:"bounty_coins,omitempty"`
 }
 
 // GetStats returns the personal best stats for the current user and a specific game
@@ -127,9 +128,29 @@ func SubmitStat(c fiber.Ctx) error {
 		db.DB.Save(&stat)
 	}
 
-	// Award XP
+	// Award XP & Brain Coins
 	xpAmount := service.CalcEventXP(isPK, req.Won)
 	xpResult := service.AddXP(userID, xpAmount)
+
+	coinsEarned := 0
+	bountyPrize := 0
+	if isPK && req.BountyCoins > 0 {
+		if req.Won {
+			// Total pool = 2 * BountyCoins, 10% burned by system, winner takes 90% (1.8 * BountyCoins)
+			// Net profit = 1.8 * BountyCoins - 1.0 * BountyCoins (stake) = 0.8 * BountyCoins
+			// Plus base PK win reward from dynamic config
+			bountyPrize = int(float64(req.BountyCoins*2) * 0.9)
+			netProfit := bountyPrize - req.BountyCoins
+			basePKCoins := service.CalcRewardCoins(true, req.Difficulty, true)
+			coinsEarned = basePKCoins + netProfit
+		} else {
+			// Loser forfeits their staked bounty coins
+			coinsEarned = -req.BountyCoins
+		}
+	} else if req.Won {
+		coinsEarned = service.CalcRewardCoins(isPK, req.Difficulty, true)
+	}
+	currentCoins, _ := service.AddCoins(userID, coinsEarned)
 
 	// Record match history
 	service.RecordMatch(userID, gameID, req.Mode, req.Difficulty, req.Won, req.Score, req.Time, xpAmount)
@@ -154,6 +175,9 @@ func SubmitStat(c fiber.Ctx) error {
 		"stat":             stat,
 		"isNewRecord":      isNewRecord,
 		"xp_result":        xpResult,
+		"coins_earned":     coinsEarned,
+		"bounty_prize":     bountyPrize,
+		"brain_coins":      currentCoins,
 		"new_achievements": newAchievements,
 	})
 }

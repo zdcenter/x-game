@@ -83,7 +83,7 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '', target: number = 1) {
+  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '', target: number = 1, bounty: number = 0) {
     // Auto-consume pendingPassword if no explicit password provided
     if (!password && this._pendingPassword) {
       password = this._pendingPassword;
@@ -140,6 +140,9 @@ export class WebSocketService {
     if (password) {
       url += `&${WsQueryParam.Password}=${encodeURIComponent(password)}`;
     }
+    if (bounty > 0) {
+      url += `&${WsQueryParam.Bounty}=${encodeURIComponent(bounty)}`;
+    }
     if (!isBrowser()) return;
     this.socket = createWebSocket(url);
     if (!this.socket) return;
@@ -163,6 +166,9 @@ export class WebSocketService {
         msg.state.readyPlayers = msg.readyPlayers || {};
         if (msg.players) {
           msg.state.roomPlayers = msg.players;
+        }
+        if (msg.bountyCoins !== undefined) {
+          msg.state.bountyCoins = msg.bountyCoins;
         }
         this.gameState.set(msg.state);
       } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {

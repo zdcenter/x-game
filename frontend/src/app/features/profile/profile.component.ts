@@ -66,7 +66,7 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
               <!-- Brain Coins -->
               <div class="flex items-center gap-1 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
                 <span class="text-sm">🪙</span>
-                <span class="font-black text-sm text-yellow-500 font-mono">{{ authStore.currentUser()?.brain_coins ?? 100 }}</span>
+                <span class="font-black text-sm text-yellow-500 font-mono">{{ authStore.currentUser()?.brain_coins ?? 0 }}</span>
                 <span class="text-[10px] text-[var(--color-text-muted)] font-bold">{{ i18n.t('shop.coins_balance')() }}</span>
               </div>
 
@@ -236,7 +236,7 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
                 </div>
               </div>
               <div class="text-3xl font-black font-mono text-yellow-500 drop-shadow-sm">
-                {{ authStore.currentUser()?.brain_coins ?? 100 }}
+                {{ authStore.currentUser()?.brain_coins ?? 0 }}
               </div>
             </div>
 

@@ -16,6 +16,7 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { FriendService } from '../../../core/services/friend.service';
+import { CoinService } from '../../../core/services/coin.service';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -24,6 +25,7 @@ export interface PkCreateRoomEvent {
   difficulty: string;
   password?: string;
   target: number;
+  bountyCoins?: number;
 }
 
 export interface PkJoinRoomEvent {
@@ -32,6 +34,7 @@ export interface PkJoinRoomEvent {
   difficulty: string;
   host: string;
   password?: string;
+  bountyCoins?: number;
 }
 
 @Component({
@@ -57,6 +60,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private settings    = inject(SettingsService);
   private editRoomSvc = inject(EditRoomService);
   friendService       = inject(FriendService);
+  readonly coinService = inject(CoinService);
 
   isFriend(username: string): boolean {
     if (username === this.playerId()) return true;
@@ -97,7 +101,9 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   roomDifficulty = signal('');
   roomPassword   = signal('');
   roomTarget     = signal(1);
+  roomBounty     = signal(0);
   readonly pkTargetOptions = [1, 3, 5, 10];
+  readonly bountyOptions = [0, 50, 100, 200];
 
   // Room list filter
   roomGameFilter = signal('');   // '' = all games
@@ -229,12 +235,18 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       const d = this.availableDifficulties();
       if (d.length) diff = d[0].id;
     }
+    const bounty = this.roomBounty();
+    if (bounty > 0 && this.coinService.coins() < bounty) {
+      this.toast.show(this.t('game.bounty_insufficient') || '脑力币不足，无法创建该悬赏房间', 'error');
+      return;
+    }
+
     const gameId = this.createGameId() || this.gameId;
     const name = this.roomName().trim() || `${gameId}-${Date.now()}`;
     this.wsService.setPendingAction('create');
     const target = this.isMultiRoundEnabled() ? this.roomTarget() : 1;
     const pwd = this.roomPassword().trim();
-    this.createRoom.emit({ name, gameId, mode, difficulty: diff, password: pwd || undefined, target });
+    this.createRoom.emit({ name, gameId, mode, difficulty: diff, password: pwd || undefined, target, bountyCoins: bounty });
     // 方案B: 保存上次选择
     if (typeof localStorage !== 'undefined') localStorage.setItem('pk_last_game_id', gameId);
     const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -243,7 +255,11 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   // ── Room list helpers ─────────────────────────────────────────────────────
-  onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean) {
+  onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean, bountyCoins?: number) {
+    if (bountyCoins && bountyCoins > 0 && this.coinService.coins() < bountyCoins) {
+      this.toast.show(this.t('game.bounty_insufficient') || '脑力币不足，无法加入该悬赏房间', 'error');
+      return;
+    }
     if (hasPassword) {
       this.pwPromptRoomId.set(roomId);
       this.pwPromptGame.set(game);
@@ -254,7 +270,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       this.pwPromptOpen.set(true);
       return;
     }
-    this.doJoin(roomId, game, mode, difficulty, host);
+    this.doJoin(roomId, game, mode, difficulty, host, undefined, bountyCoins);
   }
 
   onConfirmPassword() {
@@ -264,14 +280,18 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     this.doJoin(this.pwPromptRoomId(), this.pwPromptGame(), this.pwPromptMode(), this.pwPromptDiff(), this.pwPromptHost(), pw);
   }
 
-  private doJoin(roomId: string, game: string, mode: string, difficulty: string, host: string, password?: string) {
+  private doJoin(roomId: string, game: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number) {
+    if (bountyCoins && bountyCoins > 0 && this.coinService.coins() < bountyCoins) {
+      this.toast.show(this.t('game.bounty_insufficient') || '脑力币不足，无法加入该悬赏房间', 'error');
+      return;
+    }
     if (this.isArena || (game && game !== this.gameId)) {
-      this.cross.setPendingJoin({ game, roomId, mode, difficulty, host, password });
+      this.cross.setPendingJoin({ game, roomId, mode, difficulty, host, password, bountyCoins });
       const lang = this.router.url.split('/')[1] || 'zh';
       this.router.navigate([`/${lang}/games/${game}`]);
     } else {
       this.wsService.setPendingAction('join');
-      this.joinRoom.emit({ roomId, mode, difficulty, host, password });
+      this.joinRoom.emit({ roomId, mode, difficulty, host, password, bountyCoins });
     }
   }
 
@@ -305,11 +325,12 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   // ── Change-game overlay（通过 EditRoomService + AppComponent 全局覆盖层）──
   openChangeRoomModal(room: any) {
     this.editRoomSvc.open({
-      roomId:     room.id,
-      gameId:     room.game,
-      mode:       room.mode,
-      difficulty: room.difficulty,
-      target:     room.target ?? 1,
+      roomId:      room.id,
+      gameId:      room.game,
+      mode:        room.mode,
+      difficulty:  room.difficulty,
+      target:      room.target ?? 1,
+      bountyCoins: room.bountyCoins ?? 0,
     });
   }
 
