@@ -23,7 +23,6 @@ import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -40,7 +39,7 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
+    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'
@@ -82,15 +81,17 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
+      id: this.playerId,
       playerId: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
       isMe: true,
       score: this.store.score(),
-      status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+      status: this.store.gameOver() ? GameStatus.Finished : (this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing),
       metrics: [
-        ...(this.store.combo() > 1 ? [{ label: 'COMBO', value: `${this.store.combo()}x`, icon: '🔥', colorClass: 'text-amber-500 font-bold' }] : [])
+        ...(this.store.combo() > 1 ? [{ label: 'COMBO', value: `${this.store.combo()}x`, icon: '🔥', colorClass: 'text-amber-500 font-bold' }] : []),
+        { label: this.i18n.t('game.pk.score')() || '得分', value: this.store.score(), icon: '⭐', colorClass: 'text-amber-400 font-bold' }
       ]
     };
   });
@@ -98,21 +99,39 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];
     const room = this.store.room();
-    const players = room?.players || [];
+    const rawPlayers = room?.players;
+    const players: any[] = Array.isArray(rawPlayers)
+      ? rawPlayers
+      : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
 
-    return this.store.otherPlayers().map(opp => {
-      const pInfo = players.find((x: any) => x.id === opp.id);
-      return {
-        id: opp.id,
-        playerId: opp.id,
-        nickname: pInfo?.nickname || opp.id,
-        avatar: pInfo?.avatar,
-        isHost: opp.id === this.store.hostId(),
-        isMe: false,
-        score: opp.score,
-        status: opp.finished ? GameStatus.Finished : GameStatus.Playing
-      };
-    });
+    const rawState = this.store.rawState() as any;
+    const enginePlayers = rawState?.players || {};
+
+    return this.store.playersList()
+      .filter(p => p && p.id !== this.playerId)
+      .map(p => {
+        const pInfo = players.find((x: any) => x && (x.id === p.id || x.playerId === p.id));
+        const ep = (typeof enginePlayers === 'object' && !Array.isArray(enginePlayers))
+          ? (enginePlayers[p.id] || enginePlayers[String(p.id)])
+          : (Array.isArray(enginePlayers) ? enginePlayers.find((x: any) => x?.id === p.id) : null);
+
+        const oppScore = Number(ep?.score ?? p.score ?? 0);
+        const oppFinished = Boolean(ep?.finished ?? p.finished ?? false);
+
+        return {
+          id: p.id,
+          playerId: p.id,
+          nickname: pInfo?.nickname || p.nickname || p.id,
+          avatar: pInfo?.avatar || p.avatar,
+          isHost: p.id === this.store.hostId(),
+          isMe: false,
+          score: oppScore,
+          status: oppFinished ? GameStatus.Finished : GameStatus.Playing,
+          metrics: [
+            { label: this.i18n.t('game.pk.score')() || '得分', value: oppScore, icon: '⭐', colorClass: 'text-amber-400 font-bold' }
+          ]
+        };
+      });
   });
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
@@ -397,7 +416,12 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
 
   getSubtitle(): string {
-    return this.currentRoomMode() === 'diff_pk_score' ? this.t('hexa.mode.diff_pk_score')() : this.t('hexa.mode.single')();
+    const mode = this.currentRoomMode();
+    if (mode === GameMode.Single) {
+      return this.t('hexa.mode.single')();
+    }
+    const labelKey = this.gameRegistry.getModeLabel('hexa', mode);
+    return labelKey ? this.t(labelKey)() : this.t('hexa.mode.diff_pk_score')();
   }
 
 

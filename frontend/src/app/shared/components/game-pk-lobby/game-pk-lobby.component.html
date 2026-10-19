@@ -445,8 +445,8 @@
         <span class="text-[10px] text-violet-400 font-bold">✓</span>
       </div>
 
-      <!-- 模式 -->
-      @if (availableModes().length > 0) {
+      <!-- 模式: 仅当存在多个对战模式可供选择时才展示 -->
+      @if (availableModes().length > 1) {
         <div>
           <label class="block text-[10px] font-bold opacity-60 uppercase tracking-wider mb-1.5">{{ t('game.game_mode') }}</label>
           <div [class]="availableModes().length === 1 ? 'grid grid-cols-1 gap-1.5' : 'grid grid-cols-2 gap-1.5'">

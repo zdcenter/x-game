@@ -5,12 +5,11 @@ import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { PwaService } from '../../../core/services/pwa.service';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {

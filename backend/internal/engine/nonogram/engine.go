@@ -20,6 +20,8 @@ type NonogramEngine struct {
 	Players     map[string]*Player `json:"players"`
 	Wins        map[string]int     `json:"wins"`
 	Target      int                `json:"target"`
+	Winner      string             `json:"winner,omitempty"`
+	Winners     []string           `json:"winners,omitempty"`
 	Mode        string             `json:"mode"`
 	Difficulty  string             `json:"difficulty"`
 	Width       int                `json:"width"`
@@ -52,6 +54,8 @@ func (e *NonogramEngine) InitGame(options interface{}) error {
 
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*Player)
+	e.Winner = ""
+	e.Winners = nil
 	
 	opts, ok := options.(map[string]interface{})
 	if ok {
@@ -156,6 +160,8 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 			p.Errors = 0
 			p.FreezeUntil = 0
 		}
+		e.Winner = ""
+		e.Winners = nil
 		e.setupBoard()
 		e.State = engine.StateWaiting
 	}) {
@@ -182,9 +188,11 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 			}
 			if err := json.Unmarshal(payload, &req); err == nil {
 				p.Progress = req.Progress
-				if req.Finished {
+				if req.Finished && e.State != engine.StateFinished {
 					p.Progress = 100
 					e.State = engine.StateFinished
+					e.Winner = playerID
+					e.Winners = []string{playerID}
 					e.Wins[playerID]++
 				}
 			}
@@ -225,6 +233,8 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 									}
 								}
 								if winner != "" {
+									e.Winner = winner
+									e.Winners = []string{winner}
 									e.Wins[winner]++
 								}
 							}
@@ -248,7 +258,7 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 func (e *NonogramEngine) CheckGameOver() (bool, []string) {
 	e.Mu.RLock()
 	defer e.Mu.RUnlock()
-	return e.State == engine.StateFinished, nil
+	return e.State == engine.StateFinished, e.Winners
 }
 
 func (e *NonogramEngine) GetState() interface{} {
@@ -260,6 +270,8 @@ func (e *NonogramEngine) GetState() interface{} {
 		"players":      e.Players,
 		"wins":         e.Wins,
 		"target":       e.Target,
+		"winner":       e.Winner,
+		"winners":      e.Winners,
 		"mode":         e.Mode,
 		"difficulty":   e.Difficulty,
 		"width":        e.Width,

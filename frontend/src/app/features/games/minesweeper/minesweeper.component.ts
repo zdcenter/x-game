@@ -26,7 +26,6 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { FormsModule } from '@angular/forms';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -35,7 +34,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule, GameStartingOverlayComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule, GameStartingOverlayComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -116,7 +115,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     if (this.currentRoomMode() === GameMode.Single) return [];
     const isSteal = this.currentRoomMode() === GameMode.Steal;
     const room = this.store.room();
-    const players = room?.players || [];
+    const rawPlayers = room?.players;
+    const players: any[] = Array.isArray(rawPlayers)
+      ? rawPlayers
+      : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
 
     if (isSteal) {
       const scores = this.store.scores();
@@ -346,7 +348,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
 
   getSubtitle(): string {
-    return this.currentRoomMode() === GameMode.Steal ? this.i18n.t('game.same_pk_steal_label')() : (this.currentRoomMode() === GameMode.Speed ? this.i18n.t('game.same_pk_speed_label')() : this.i18n.t('game.single_label')());
+    return this.currentRoomMode() !== GameMode.Single ? this.i18n.t('game.same_pk_speed_label')() : this.i18n.t('game.single_label')();
   }
 
 

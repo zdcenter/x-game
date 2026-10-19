@@ -62,7 +62,9 @@ export class EditRoomOverlayComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isOpen']?.currentValue === true) {
       this.editGameId.set(this.gameId || '');
-      this.editMode.set(this.mode || '');
+      const modes = this.availableModes();
+      const validMode = modes.some(m => m.id === this.mode) ? (this.mode || '') : (modes[0]?.id || '');
+      this.editMode.set(validMode);
       this.editDifficulty.set(this.difficulty || '');
       this.editTarget.set(this.target || 1);
       // 有当前游戏直接进步骤2，否则从选游戏开始

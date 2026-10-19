@@ -73,18 +73,45 @@ export class NonogramStore extends BaseGameStore {
   });
   
   readonly totalFilled = computed(() => {
-     if (this.currentRoomMode() === GameMode.Single) {
-        const state = this.localState();
-        if (!state) return 0;
-        let count = 0;
-        for (let y = 0; y < state.height; y++) {
-          for (let x = 0; x < state.width; x++) {
-             if (state.answerGrid[y][x] === 1) count++;
-          }
+    // In Nonogram, the sum of all numbers in all row hints is mathematically
+    // identical to the total number of cells that must be filled.
+    const hints = this.rowHints();
+    if (hints && hints.length > 0) {
+      let sum = 0;
+      for (const row of hints) {
+        if (Array.isArray(row)) {
+          for (const n of row) sum += (Number(n) || 0);
         }
-        return count;
-     }
-     return (this.rawState() as any)?.total_filled || 1;
+      }
+      if (sum > 0) return sum;
+    }
+    const state = this.localState();
+    if (state?.answerGrid && state.answerGrid.length > 0) {
+      let count = 0;
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          if (state.answerGrid[y]?.[x] === 1) count++;
+        }
+      }
+      if (count > 0) return count;
+    }
+    return (this.rawState() as any)?.total_filled || 1;
+  });
+
+  readonly localProgress = computed(() => {
+    const total = this.totalFilled();
+    if (total <= 0) return 0;
+    const g = this.grid();
+    if (!g || g.length === 0) return 0;
+    let filled = 0;
+    for (const row of g) {
+      if (Array.isArray(row)) {
+        for (const cell of row) {
+          if (cell === 1) filled++;
+        }
+      }
+    }
+    return Math.min(100, Math.round((filled / total) * 100));
   });
 
   private tick = signal(0);
@@ -212,12 +239,15 @@ export class NonogramStore extends BaseGameStore {
       }
     });
 
-    // Save state to local storage
+    // Save state and difficulty preference to local storage
     effect(() => {
       const state = this.localState();
       const mode = this.currentRoomMode();
       const diff = this.currentDifficulty();
       
+      if (mode === GameMode.Single && diff && typeof localStorage !== 'undefined') {
+        localStorage.setItem('nonogram_difficulty', diff as string);
+      }
       if (mode === GameMode.Single && state && state.status !== GameStatus.Finished) {
         localStorage.setItem('nonogram_saved_game', JSON.stringify({ state, difficulty: diff }));
       } else if (state?.status === GameStatus.Finished) {
@@ -226,11 +256,19 @@ export class NonogramStore extends BaseGameStore {
     });
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty?: string, hostId?: string, target: number = 1) {
+    if (mode === GameMode.Single) {
+      const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
+      if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
+        difficulty = savedDiff;
+      }
+    }
+    const finalDiff = difficulty || GameDifficulty.Easy;
+    super.joinRoom(roomId, mode, finalDiff, hostId, target);
 
     if (mode === GameMode.Single) {
-      this.initSinglePlayer(difficulty);
+      this.currentDifficulty.set(finalDiff);
+      this.initSinglePlayer(finalDiff);
     }
   }
 
@@ -361,20 +399,22 @@ export class NonogramStore extends BaseGameStore {
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
       }
     } else if (this.currentRoomMode() === GameMode.Speed) {
-      // For speed mode, we don't have answerGrid, so we check if the current grid satisfies all hints.
-      // Easiest way is to extract hints from current grid and compare with original hints.
+      const targetRowHints = state.rowHints || this.rowHints();
+      const targetColHints = state.colHints || this.colHints();
       const currentHints = NonogramEngine.extractHints(newGrid);
-      const isWin = JSON.stringify(currentHints.rowHints) === JSON.stringify(state.rowHints) &&
-                    JSON.stringify(currentHints.colHints) === JSON.stringify(state.colHints);
+      const isWin = JSON.stringify(currentHints.rowHints) === JSON.stringify(targetRowHints) &&
+                    JSON.stringify(currentHints.colHints) === JSON.stringify(targetColHints);
       
-      let progress = 0;
       let filledCount = 0;
-      for(let yy=0; yy<state.height; yy++) {
-        for(let xx=0; xx<state.width; xx++) {
-           if (newGrid[yy][xx] === 1) filledCount++;
+      for (const row of newGrid) {
+        if (Array.isArray(row)) {
+          for (const cell of row) {
+            if (cell === 1) filledCount++;
+          }
         }
       }
-      progress = this.totalFilled() > 0 ? (filledCount / this.totalFilled()) * 100 : 0;
+      const total = this.totalFilled();
+      const progress = total > 0 ? Math.min(100, Math.round((filledCount / total) * 100)) : 0;
       
       this.ws.send({ action: 'progress', progress, finished: isWin });
       if (isWin) {
@@ -488,6 +528,12 @@ export class NonogramStore extends BaseGameStore {
   }
 
   private initSinglePlayer(difficulty: string, forceNew = false) {
+    const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
+    if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
+      difficulty = savedDiff;
+      this.currentDifficulty.set(difficulty);
+    }
+
     if (!forceNew) {
       const saved = localStorage.getItem('nonogram_saved_game');
       if (saved) {

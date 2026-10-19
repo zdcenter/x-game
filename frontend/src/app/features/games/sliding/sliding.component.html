@@ -26,19 +26,9 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-2 sm:py-4">
-
+<div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2">
 
           @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
-
-          <!-- Mobile floating HUD (PK only) -->
-          @if (currentRoomMode() !== GameMode.Single) {
-            <app-game-player-mini-hud
-              class="lg:hidden w-full"
-              [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), stats: [{ icon: '⏱️', value: formatTime(getElapsedMs(store.globalStartAt())) }, { icon: '🔄', value: store.myBoard()?.moves || 0 }], status: store.myBoard()?.status === GameStatus.Finished ? 'finished' : 'playing' }"
-              [opponents]="store.otherPlayers().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), stats: [{ icon: '🔄', value: opp.board?.moves || 0 }], status: opp.board?.status === GameStatus.Finished ? 'finished' : 'playing' }))">
-            </app-game-player-mini-hud>
-          }
 
           <!-- Single Player Classic Header -->
           @if (currentRoomMode() === GameMode.Single) {

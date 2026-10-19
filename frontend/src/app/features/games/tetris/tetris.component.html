@@ -36,17 +36,7 @@
             </app-game-waiting-room>
           </div>
         } @else {
-          
-          <!-- Mobile floating HUD (PK only) -->
-          @if (currentRoomMode() !== GameMode.Single) {
-            <app-game-player-mini-hud
-              class="lg:hidden"
-              [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), stats: [{ icon: '≣', value: store.lines() }], status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
-              [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
-            </app-game-player-mini-hud>
-          }
-
-          <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-4 overflow-hidden gap-2" #boardArea>
+          <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5" #boardArea>
             
           <!-- Single Player Modern Glass Capsule HUD -->
           @if (currentRoomMode() === GameMode.Single) {
@@ -93,8 +83,11 @@
             <!-- Universal PK Battle HUD (Tetris) -->
             <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
               <app-game-pk-hud
-                [myStats]="myPlayerPkStats()"
+                [myPlayer]="myPlayerPkStats()"
                 [opponents]="opponentsPkStats()"
+                [gameMode]="store.currentRoomMode()"
+                [status]="store.status()"
+                [targetWins]="store.currentRoomTarget()"
                 [roundFormat]="store.room()?.roundFormat || 'BO3'"
                 [seriesScore]="seriesScore()"
               ></app-game-pk-hud>

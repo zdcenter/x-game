@@ -29,6 +29,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
@@ -41,6 +42,7 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
     GameResultOverlayComponent,
     GameSpectatingOverlayComponent,
     GameWaitingRoomComponent,
+    GameStartingOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent,
     GameToolbarComponent

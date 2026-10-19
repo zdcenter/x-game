@@ -16,6 +16,7 @@ import { EditRoomOverlayComponent } from './shared/components/edit-room-overlay/
 import { EditRoomService } from './core/services/edit-room.service';
 import { FloatingTextOverlayComponent } from './shared/components/floating-text-overlay/floating-text-overlay.component';
 import { FriendListComponent } from './shared/components/friend-list/friend-list.component';
+import { InGameChallengeBannerComponent } from './shared/components/in-game-challenge-banner/in-game-challenge-banner.component';
 
 @Component({
   selector: 'app-root',
@@ -29,7 +30,8 @@ import { FriendListComponent } from './shared/components/friend-list/friend-list
     AchievementUnlockOverlayComponent, 
     EditRoomOverlayComponent,
     FloatingTextOverlayComponent,
-    FriendListComponent
+    FriendListComponent,
+    InGameChallengeBannerComponent
   ],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
@@ -52,6 +54,7 @@ import { FriendListComponent } from './shared/components/friend-list/friend-list
         (closed)="editRoomService.close()">
       </app-edit-room-overlay>
       <app-friend-list></app-friend-list>
+      <app-in-game-challenge-banner></app-in-game-challenge-banner>
     }
   `
 })

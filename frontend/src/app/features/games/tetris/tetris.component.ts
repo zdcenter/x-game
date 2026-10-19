@@ -22,8 +22,6 @@ import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES
 import { HapticService } from '../../../core/services/haptic.service';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
-import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -34,7 +32,7 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
@@ -455,7 +453,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
 
   getSubtitle(): string {
-    return this.currentRoomMode() === 'diff_pk_attack' ? this.i18n.t('tetris.mode.diff_pk_attack')() : this.i18n.t('tetris.mode.single')();
+    const mode = this.currentRoomMode();
+    if (mode === GameMode.Single) {
+      return this.i18n.t('tetris.mode.single')();
+    }
+    const labelKey = this.gameRegistry.getModeLabel('tetris', mode);
+    return labelKey ? this.i18n.t(labelKey)() : this.i18n.t('tetris.mode.diff_pk_attack')();
   }
 
 

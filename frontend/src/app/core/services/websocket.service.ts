@@ -161,6 +161,9 @@ export class WebSocketService {
       if (msg.type === S2CEvent.RoomStateUpdate && msg.state) {
         msg.state.host = msg.host;
         msg.state.readyPlayers = msg.readyPlayers || {};
+        if (msg.players) {
+          msg.state.roomPlayers = msg.players;
+        }
         this.gameState.set(msg.state);
       } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {
         this.gameDisconnectIntentional = true;

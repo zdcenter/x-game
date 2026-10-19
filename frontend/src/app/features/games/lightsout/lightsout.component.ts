@@ -18,7 +18,6 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -32,7 +31,7 @@ import { computed } from '@angular/core';
     GameStartingOverlayComponent,
     GameResultOverlayComponent,
     GameToolbarComponent,
-    GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
+    GameLayoutComponent, GamePkHudComponent],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html'
 })
@@ -77,10 +76,13 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.store.currentRoomMode() === GameMode.Single) return [];
     const room = this.store.room();
-    const players = room?.players || [];
+    const rawPlayers = room?.players;
+    const players: any[] = Array.isArray(rawPlayers)
+      ? rawPlayers
+      : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
 
     return this.store.opponents().map(opp => {
-      const pInfo = players.find((x: any) => x.id === opp.id);
+      const pInfo = players.find((x: any) => x && (x.id === opp.id || x.playerId === opp.id));
       return {
         id: opp.id,
         nickname: pInfo?.nickname || opp.id,

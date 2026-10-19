@@ -56,6 +56,27 @@
     --color-sliding-tile-active: #727863;
     --color-sliding-tile-text: #ffffff;
     --color-sliding-tile-shadow: rgba(0, 0, 0, 0.12);
+
+    /* PK Button Differentiation Gradients - Light Default */
+    --gradient-pk-speed: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    --shadow-pk-speed: 0 2px 8px rgba(234, 88, 12, 0.35);
+    --color-pk-speed-text: #ffffff;
+
+    --gradient-pk-score: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+    --shadow-pk-score: 0 2px 8px rgba(139, 92, 246, 0.35);
+    --color-pk-score-text: #ffffff;
+
+    --gradient-pk-duel: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+    --shadow-pk-duel: 0 2px 8px rgba(79, 70, 229, 0.35);
+    --color-pk-duel-text: #ffffff;
+
+    --gradient-pk-battle: linear-gradient(135deg, #ef4444 0%, #be123c 100%);
+    --shadow-pk-battle: 0 2px 8px rgba(239, 68, 68, 0.35);
+    --color-pk-battle-text: #ffffff;
+
+    --gradient-pk-word: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    --shadow-pk-word: 0 2px 8px rgba(5, 150, 105, 0.35);
+    --color-pk-word-text: #ffffff;
   }
 
   .theme-dark {
@@ -106,6 +127,27 @@
     --color-sliding-tile-active: #575c4b;
     --color-sliding-tile-text: #ffffff;
     --color-sliding-tile-shadow: rgba(0, 0, 0, 0.4);
+
+    /* PK Button Differentiation Gradients - Dark Theme */
+    --gradient-pk-speed: linear-gradient(135deg, #d97706 0%, #c2410c 100%);
+    --shadow-pk-speed: 0 2px 8px rgba(234, 88, 12, 0.45);
+    --color-pk-speed-text: #ffffff;
+
+    --gradient-pk-score: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+    --shadow-pk-score: 0 2px 8px rgba(192, 38, 211, 0.45);
+    --color-pk-score-text: #ffffff;
+
+    --gradient-pk-duel: linear-gradient(135deg, #4338ca 0%, #0369a1 100%);
+    --shadow-pk-duel: 0 2px 8px rgba(79, 70, 229, 0.45);
+    --color-pk-duel-text: #ffffff;
+
+    --gradient-pk-battle: linear-gradient(135deg, #dc2626 0%, #9f1239 100%);
+    --shadow-pk-battle: 0 2px 8px rgba(220, 38, 38, 0.45);
+    --color-pk-battle-text: #ffffff;
+
+    --gradient-pk-word: linear-gradient(135deg, #047857 0%, #0f766e 100%);
+    --shadow-pk-word: 0 2px 8px rgba(5, 150, 105, 0.45);
+    --color-pk-word-text: #ffffff;
   }
 
   .theme-light {
@@ -159,6 +201,27 @@
     --color-sliding-tile-active: #727863;
     --color-sliding-tile-text: #ffffff;
     --color-sliding-tile-shadow: rgba(0, 0, 0, 0.12);
+
+    /* PK Button Differentiation Gradients - Light Theme */
+    --gradient-pk-speed: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    --shadow-pk-speed: 0 2px 8px rgba(234, 88, 12, 0.35);
+    --color-pk-speed-text: #ffffff;
+
+    --gradient-pk-score: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+    --shadow-pk-score: 0 2px 8px rgba(139, 92, 246, 0.35);
+    --color-pk-score-text: #ffffff;
+
+    --gradient-pk-duel: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+    --shadow-pk-duel: 0 2px 8px rgba(79, 70, 229, 0.35);
+    --color-pk-duel-text: #ffffff;
+
+    --gradient-pk-battle: linear-gradient(135deg, #ef4444 0%, #be123c 100%);
+    --shadow-pk-battle: 0 2px 8px rgba(239, 68, 68, 0.35);
+    --color-pk-battle-text: #ffffff;
+
+    --gradient-pk-word: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    --shadow-pk-word: 0 2px 8px rgba(5, 150, 105, 0.35);
+    --color-pk-word-text: #ffffff;
   }
 
   /* Light mode soft shadows override for Tailwind shadow classes */
@@ -476,4 +539,19 @@
 .animate-result-lose {
   animation: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, result-lose-glow 3s ease-in-out infinite;
   border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+@keyframes slide-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

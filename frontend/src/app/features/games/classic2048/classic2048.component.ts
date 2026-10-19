@@ -26,6 +26,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
+import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 export type C2048Theme = 'classic' | 'neon' | 'glacier';
 
@@ -45,7 +46,17 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
 export class Classic2048Component extends BaseGameComponent implements OnInit, OnDestroy {
   private haptic = inject(HapticService);
   private leaderboardService = inject(LeaderboardService);
+  private gameRegistry = inject(GameRegistryService);
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
+
+  getSubtitle(): string {
+    const mode = this.store.currentRoomMode();
+    if (mode === GameMode.Single) {
+      return this.i18n.t('game.single_mode')();
+    }
+    const labelKey = this.gameRegistry.getModeLabel('classic2048', mode);
+    return labelKey ? this.i18n.t(labelKey)() : this.i18n.t('game.speed_mode')();
+  }
   Math = Math;
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     return this.store.playersList().map(p => {
@@ -85,13 +96,16 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.store.currentRoomMode() === GameMode.Single) return [];
     const room = this.store.room();
-    const players = room?.players || [];
+    const rawPlayers = room?.players;
+    const players: any[] = Array.isArray(rawPlayers)
+      ? rawPlayers
+      : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
     const pkBoards = this.store.pkBoards();
 
     return this.store.playersList()
       .filter(p => p.id !== this.playerId)
       .map(p => {
-        const pInfo = players.find((x: any) => x.id === p.id);
+        const pInfo = players.find((x: any) => x && (x.id === p.id || x.playerId === p.id));
         const board = pkBoards[p.id];
         let maxT = 0;
         if (board?.cells) {

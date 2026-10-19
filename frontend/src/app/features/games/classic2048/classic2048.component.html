@@ -1,7 +1,7 @@
 <app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'classic2048'"
   [title]="i18n.t('app.title.classic2048')()"
-  [subtitle]="''"
+  [subtitle]="getSubtitle()"
   icon="🔢"
   iconGradientClass="from-yellow-500 to-orange-500"
   titleGradientClass="from-yellow-400 to-orange-400"
@@ -148,8 +148,11 @@
               <!-- Universal PK Battle HUD (Classic 2048) -->
               <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
                 <app-game-pk-hud
-                  [myStats]="myPlayerPkStats()"
+                  [myPlayer]="myPlayerPkStats()"
                   [opponents]="opponentsPkStats()"
+                  [gameMode]="store.currentRoomMode()"
+                  [status]="store.status()"
+                  [targetWins]="store.currentRoomTarget()"
                   [roundFormat]="store.room()?.roundFormat || 'BO3'"
                   [seriesScore]="seriesScore()"
                   [elapsedTime]="timeDisplay"

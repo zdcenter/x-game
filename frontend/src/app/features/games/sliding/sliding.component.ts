@@ -24,7 +24,6 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -33,7 +32,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameToolbarComponent, GamePlayerMiniHudComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -134,10 +133,13 @@ export class SlidingComponent extends BaseGameComponent {
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];
     const room = this.store.room();
-    const players = room?.players || [];
+    const rawPlayers = room?.players;
+    const players: any[] = Array.isArray(rawPlayers)
+      ? rawPlayers
+      : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
 
     return this.store.otherPlayers().map(opp => {
-      const pInfo = players.find((p: any) => p.id === opp.id);
+      const pInfo = players.find((p: any) => p && (p.id === opp.id || p.playerId === opp.id));
       const oppBoard = opp.board;
       let oppProgress = 0;
       if (oppBoard && oppBoard.size) {

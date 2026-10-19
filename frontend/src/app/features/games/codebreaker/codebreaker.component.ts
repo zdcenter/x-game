@@ -19,7 +19,6 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { SettingsService } from '../../../core/services/settings.service';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';

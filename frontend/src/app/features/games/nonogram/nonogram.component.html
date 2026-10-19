@@ -39,14 +39,6 @@
               [target]="store.currentRoomTarget()">
             </app-game-waiting-room>
           } @else {
-            <!-- Mobile floating HUD (PK only) -->
-            @if (store.currentRoomMode() !== GameMode.Single) {
-              <app-game-player-mini-hud
-                class="lg:hidden"
-                [myPlayer]="myPlayerHUD()"
-                [opponents]="opponentsHUD()">
-              </app-game-player-mini-hud>
-            }
 
             <!-- Players Info Row (Hidden in Single Player to maximize board height) -->
             @if (store.currentRoomMode() !== GameMode.Single) {

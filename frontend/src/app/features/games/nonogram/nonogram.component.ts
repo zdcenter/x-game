@@ -6,7 +6,6 @@ import { GameWaitingRoomComponent } from '../../../shared/components/game-waitin
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
@@ -29,7 +28,7 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GamePlayerMiniHudComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -71,14 +70,33 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   getPlayerScores() {
     if (this.store.currentRoomMode() === GameMode.Single) {
-      return [{ id: this.playerId, score: 0, progress: 0 }];
+      return [{ id: this.playerId, score: 0, progress: this.store.localProgress() }];
     }
-    return this.store.playersList().map((p: any) => ({ id: p.id, score: p.score || 0, progress: p.progress || 0 }));
+    const raw = this.store.rawState() as any;
+    const enginePlayers = raw?.players || {};
+    return this.store.playersList().map((p: any) => {
+      const ep = (typeof enginePlayers === 'object' && !Array.isArray(enginePlayers))
+        ? (enginePlayers[p.id] || enginePlayers[String(p.id)])
+        : (Array.isArray(enginePlayers) ? enginePlayers.find((x: any) => x?.id === p.id) : null);
+
+      let prog = Number(p.progress ?? ep?.progress ?? 0);
+      if (p.id === this.playerId) {
+        prog = Math.max(prog, this.store.localProgress());
+      }
+      return {
+        id: p.id,
+        score: p.score ?? ep?.score ?? 0,
+        progress: prog
+      };
+    });
   }
 
   changeSingleDifficulty(diff: string) {
     if (this.store.roomId()) return;
     this.store.currentDifficulty.set(diff);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('nonogram_difficulty', diff);
+    }
     this.store.playAgain();
   }
 
@@ -121,7 +139,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       return;
     } else {
-      this.store.joinRoom('', GameMode.Single);
+      const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
+      const initialDiff = savedDiff || GameDifficulty.Easy;
+      this.store.currentDifficulty.set(initialDiff);
+      this.store.joinRoom('', GameMode.Single, initialDiff);
     }
   }
 
@@ -530,22 +551,22 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   isDefeat = computed(() => {
     if (this.store.currentRoomMode() === GameMode.Single) return false;
-    
+
+    const raw = this.store.rawState() as any;
+    if (raw) {
+      if (raw.winner) {
+        return raw.winner !== this.playerId;
+      }
+      if (Array.isArray(raw.winners) && raw.winners.length > 0) {
+        return !raw.winners.includes(this.playerId);
+      }
+    }
+
     const playersList = this.getPlayerScores();
     const me = playersList.find(p => p.id === this.playerId);
     if (!me) return true;
 
-    if (this.store.currentRoomMode() === GameMode.Speed) {
-      return me.progress < 100;
-    }
-    
-    if (this.store.currentRoomMode() === GameMode.Steal) {
-      const myScore = me.score || 0;
-      const otherScores = playersList.filter(p => p.id !== this.playerId).map(p => p.score || 0);
-      const maxOtherScore = otherScores.length > 0 ? Math.max(...otherScores) : 0;
-      return myScore < maxOtherScore;
-    }
-    return false;
+    return (me.progress || 0) < 100;
   });
 
   myProgress = computed(() => {
@@ -569,8 +590,9 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   });
 
   myPlayerPkStats = computed<PkPlayerStats>(() => {
-    const prog = Math.round(this.myProgress());
-    const wins = this.store.pkWins()[this.playerId] || 0;
+    const prog = Math.max(Math.round(this.myProgress()), this.store.localProgress());
+    const myId = this.playerId;
+    const wins = this.store.pkWins()[myId] || 0;
     const target = this.store.currentRoomTarget();
     const isFinished = this.store.status() === GameStatus.Finished;
     const metrics: PkMetric[] = [];
@@ -580,10 +602,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     }
 
     return {
-      id: this.playerId,
-      nickname: this.playerId,
+      id: myId,
+      nickname: myId,
       isMe: true,
-      isHost: this.playerId === this.store.hostId(),
+      isHost: myId === this.store.hostId(),
       isFinished,
       progress: prog,
       score: this.myScore(),
@@ -609,11 +631,23 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   opponentsPkStats = computed<PkPlayerStats[]>(() => {
     const target = this.store.currentRoomTarget();
     const isFinished = this.store.status() === GameStatus.Finished;
-    return this.getPlayerScores()
-      .filter(p => p.id !== this.playerId)
+    const myId = this.playerId;
+    const hostId = this.store.hostId();
+    const winsMap = this.store.pkWins();
+
+    let players = this.getPlayerScores();
+    if (!players || players.length <= 1) {
+      const pl = this.store.playersList();
+      if (pl && pl.length > players.length) {
+        players = pl;
+      }
+    }
+
+    return players
+      .filter(p => p && p.id !== myId)
       .map(opp => {
-        const oppProg = Math.round(opp.progress || 0);
-        const wins = this.store.pkWins()[opp.id] || 0;
+        const oppProg = Math.round(Number(opp.progress || 0));
+        const wins = winsMap[opp.id] || 0;
         const metrics: PkMetric[] = [];
 
         if (target > 1) {
@@ -624,7 +658,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
           id: opp.id,
           nickname: opp.id,
           isMe: false,
-          isHost: opp.id === this.store.hostId(),
+          isHost: opp.id === hostId,
           isFinished: isFinished || oppProg === 100,
           progress: oppProg,
           score: opp.score || 0,
@@ -651,9 +685,15 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     return this.isDefeat() ? 'lose' : 'win';
   }
 
+  override handleRematch() {
+    this.store.playAgain();
+  }
+
   handleRestart() {
     this.store.playAgain();
   }
 
-
+  override handleDismissRoom() {
+    this.dismissRoom();
+  }
 }

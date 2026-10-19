@@ -27,24 +27,25 @@ import { DailyChallengeService } from '../../../core/services/daily-challenge.se
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
 
 @Component({
   selector: 'app-sudoku',
   standalone: true,
-  imports: [CommonModule, 
+  imports: [
+    CommonModule, 
     FormsModule,
     SudokuLobbyComponent, 
     SudokuBoardComponent, 
     SudokuNumpadComponent,
     SudokuToolsComponent,
     SudokuRoomComponent,
-    SudokuPkStealComponent,
     SudokuPkSpeedComponent,
     GameResultOverlayComponent,
-    
-     GameLayoutComponent],
+    GameStartingOverlayComponent,
+    GameLayoutComponent
+  ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sudoku.component.html',
@@ -235,7 +236,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     } else if (v === 'play' && this.store.currentRoomMode() === GameMode.Single) {
       return this.i18n.t('game.single_label')() + ' - ' + this.store.currentPuzzleId();
     } else {
-      return this.store.currentRoomMode() === GameMode.Steal ? this.i18n.t('game.sudoku_same_pk_steal_label')() : this.i18n.t('game.sudoku_same_pk_speed_label')();
+      return this.i18n.t('game.sudoku_same_pk_speed_label')();
     }
   }
 

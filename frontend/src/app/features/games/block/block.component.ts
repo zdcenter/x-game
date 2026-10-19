@@ -17,7 +17,6 @@ import { BlockShape } from './utils/shapes';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -34,7 +33,6 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
-    GamePlayerMiniHudComponent,
     GameLayoutComponent,
     GamePkHudComponent,
     GameScoreCapsuleComponent],
@@ -101,12 +99,15 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.store.currentRoomMode() === GameMode.Single) return [];
     const room = this.store.room();
-    const players = room?.players || [];
+    const rawPlayers = room?.players;
+    const players: any[] = Array.isArray(rawPlayers)
+      ? rawPlayers
+      : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
 
     return this.store.playersList()
       .filter(p => p.id !== this.playerId)
       .map(p => {
-        const pInfo = players.find((x: any) => x.id === p.id);
+        const pInfo = players.find((x: any) => x && (x.id === p.id || x.playerId === p.id));
         const oppScore = this.getOpponentScore(p.id);
         const oppStatus = this.getOpponentStatus(p.id);
         return {
@@ -135,6 +136,15 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       opponent: wins[oppId] || 0
     };
   });
+
+  getSubtitle(): string {
+    const mode = this.store.currentRoomMode();
+    if (mode === GameMode.Single) {
+      return this.i18n.t('game.single_mode')();
+    }
+    const labelKey = this.gameRegistry.getModeLabel('block', mode);
+    return labelKey ? this.i18n.t(labelKey)() : this.i18n.t('game.diff_pk_score_label')();
+  }
 
   adService = inject(AdService);
   GameDifficulty = GameDifficulty;

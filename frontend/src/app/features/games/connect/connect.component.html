@@ -88,11 +88,10 @@
       ></app-game-waiting-room>
 
       <!-- Starting countdown -->
-      <div *ngIf="store.status() === GameStatus.Starting" class="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-base)]/80 backdrop-blur-md z-40">
-        <div class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-blue-600 animate-pulse drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">
-          {{ gameTimer.countdownDisplay() }}
-        </div>
-      </div>
+      <app-game-starting-overlay
+        *ngIf="store.status() === GameStatus.Starting"
+        [countdown]="gameTimer.countdownDisplay()">
+      </app-game-starting-overlay>
 
       <!-- Universal PK HUD -->
       <div *ngIf="store.currentRoomMode() !== GameMode.Single" class="flex-none py-1 mb-2 shrink-0 w-full">

@@ -12,7 +12,6 @@ import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-p
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
@@ -37,7 +36,6 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
     Drop2048BoardComponent,
-    GamePlayerMiniHudComponent,
     GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html',

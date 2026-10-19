@@ -85,8 +85,8 @@
         <!-- STEP 2: 填设置 -->
         @if (step() === 'settings') {
 
-          <!-- Mode -->
-          @if (availableModes().length > 0) {
+          <!-- Mode: only show when there are multiple PK modes to choose from -->
+          @if (availableModes().length > 1) {
             <div>
               <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-2">{{ t('game.game_mode') }}</label>
               <div [class]="availableModes().length === 1 ? 'grid grid-cols-1 gap-2' : 'grid grid-cols-2 gap-2'">

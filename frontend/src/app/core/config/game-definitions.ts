@@ -31,8 +31,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/nonogram/nonogram.component').then(m => m.NonogramComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' },
-      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_score', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'First to solve wins!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_nonogram_5x5', desc: '5x5' },
@@ -58,7 +57,6 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_mine', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Race to flag mines!' },
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
     ],
     difficulties: [
@@ -86,8 +84,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/sudoku/sudoku.component').then(m => m.SudokuComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' },
-      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_number', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'Shared board. Correct=Score, Wrong=Freeze!' }
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc', desc: 'Beginner' },
@@ -135,8 +132,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/hexa/hexa.component').then(m => m.HexaComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.SameScore, labelKey: 'game.same_pk_score_label', descKey: 'game.same_pk_score_desc', icon: '🏎️', desc: 'Same pieces for everyone!' },
-      { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '⚡', desc: 'Shared board. Highest score wins!' }
+      { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '🏆', desc: 'Highest score wins!' }
     ],
     difficulties: [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
@@ -157,8 +153,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/tetris/tetris.component').then(m => m.TetrisComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Battle, labelKey: 'game.diff_pk_attack_label', descKey: 'game.diff_pk_attack_desc', icon: '⚔️', desc: 'Send garbage lines to opponents!' },
-      { id: GameMode.Score, labelKey: 'game.diff_pk_score_label', descKey: 'game.diff_pk_score_desc', icon: '🏆', desc: 'Survive and get the highest score!' }
+      { id: GameMode.Battle, labelKey: 'game.diff_pk_attack_label', descKey: 'game.diff_pk_attack_desc', icon: '⚔️', desc: 'Send garbage lines to opponents!' }
     ],
     difficulties: [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_tetris_standard', desc: 'Normal Drop Speed' }
@@ -226,8 +221,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/math24/math24.component').then(m => m.Math24Component),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Solve 5 puzzles first!' },
-      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_score', descKey: 'game.same_pk_steal_desc', icon: '⚡', desc: 'First to solve gets the point!' }
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Solve 5 puzzles first!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_math24_easy', desc: 'Beginner' },

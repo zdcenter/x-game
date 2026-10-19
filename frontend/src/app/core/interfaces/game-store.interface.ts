@@ -43,11 +43,17 @@ export interface GameStoreInterface {
 
   /**
    * 当前房间内所有玩家列表。
-   * 🚨 必须是数组 (any[])！
-   * 后端下发的 players 是以 playerId 为 Key 的对象，
-   * Store 中必须使用 Object.values() 转换为数组。
+   * 🚨 统一规范化保证 100% 为标准数组 (any[])！
+   * 无论后端是 Object 还是 Array，此处一律保证为数组，支持直接 .find(), .map(), .filter()。
    */
   readonly playersList: Signal<any[]>;
+  readonly roomPlayers?: Signal<any[]>;
+
+  /**
+   * 统一玩家字典映射 (Record<string, any>)。
+   * 支持通过 playerId 进行 O(1) 瞬时索引：roomPlayersMap()[id]
+   */
+  readonly roomPlayersMap?: Signal<Record<string, any>>;
 
   /**
    * 准备状态映射。

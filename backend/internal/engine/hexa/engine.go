@@ -70,11 +70,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 
 	// Handle Start
 	if actionType == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		if e.useSeed {
-			e.state.Seed = time.Now().UnixMilli()
-		} else {
-			e.state.Seed = 0
-		}
+		e.state.Seed = time.Now().UnixMilli()
 		e.state.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
 
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
@@ -110,50 +106,57 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 
 	// Update score/progress
 	if (actionType == "update" || actionType == string(domain.ActionMove)) && e.State == engine.StatePlaying {
-
-		if p, ok := e.state.Players[playerID]; ok {
-			p.Score = act.Score
-			p.PiecesPlaced = act.PiecesPlaced
-			if act.Finished {
-				p.Finished = true
-			}
-
-			// Check if all players are finished
-			allFinished := true
-			for _, p := range e.state.Players {
-				if !p.Finished {
-					allFinished = false
-					break
-				}
-			}
-			if allFinished {
-				e.finishGame()
-			}
-			e.Broadcast()
+		p, ok := e.state.Players[playerID]
+		if !ok {
+			p = &PlayerInfo{ID: playerID}
+			e.state.Players[playerID] = p
 		}
+
+		p.Score = act.Score
+		p.PiecesPlaced = act.PiecesPlaced
+		if act.Finished {
+			p.Finished = true
+		}
+
+		// Check if all players are finished
+		allFinished := true
+		for _, p := range e.state.Players {
+			if !p.Finished {
+				allFinished = false
+				break
+			}
+		}
+		if allFinished {
+			e.finishGame()
+		}
+		e.Broadcast()
 	}
 
 	// Force end for testing or manual game over
 	if (actionType == "game_over" || actionType == string(domain.ActionForfeit)) && e.State == engine.StatePlaying {
-		if p, ok := e.state.Players[playerID]; ok {
-			if act.Score > 0 {
-				p.Score = act.Score
-			}
-			p.Finished = true
-
-			// Check if all finished
-			allFinished := true
-			for _, p := range e.state.Players {
-				if !p.Finished {
-					allFinished = false
-					break
-				}
-			}
-			if allFinished {
-				e.finishGame()
-			}
-			e.Broadcast()
+		p, ok := e.state.Players[playerID]
+		if !ok {
+			p = &PlayerInfo{ID: playerID}
+			e.state.Players[playerID] = p
 		}
+
+		if act.Score > 0 {
+			p.Score = act.Score
+		}
+		p.Finished = true
+
+		// Check if all finished
+		allFinished := true
+		for _, p := range e.state.Players {
+			if !p.Finished {
+				allFinished = false
+				break
+			}
+		}
+		if allFinished {
+			e.finishGame()
+		}
+		e.Broadcast()
 	}
 
 	return e.State, nil
@@ -163,7 +166,13 @@ func (e *PKScoreEngine) GetState() interface{} {
 	e.Mu.RLock()
 	defer e.Mu.RUnlock()
 	e.state.Status = string(e.State) // ensure it's in sync for GetState
-	return e.state
+	return map[string]interface{}{
+		"status":        string(e.State),
+		"players":       e.state.Players,
+		"seed":          e.state.Seed,
+		"globalStartAt": e.state.GlobalStartAt,
+		"winners":       e.state.Winners,
+	}
 }
 
 // Internal method, must be called with lock held

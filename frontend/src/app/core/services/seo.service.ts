@@ -104,7 +104,7 @@ export class SeoService {
       this.meta.updateTag({ property: 'og:image', content: fullImageUrl });
       this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
       this.meta.updateTag({ property: 'og:type', content: 'website' });
-      this.meta.updateTag({ property: 'og:site_name', content: lang === 'zh' ? '益智擂台' : 'Puzzle PK' });
+      this.meta.updateTag({ property: 'og:site_name', content: lang === 'zh' ? '益智游戏PK网' : 'Puzzle PK' });
       this.meta.updateTag({ property: 'og:locale', content: LANG_OG_LOCALES[lang] });
 
       // Twitter Card
@@ -202,7 +202,7 @@ export class SeoService {
         this.setJsonLd({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          'name': lang === 'zh' ? '益智擂台' : 'Puzzle PK',
+          'name': lang === 'zh' ? '益智游戏PK网' : 'Puzzle PK',
           'url': origin,
           'description': desc,
           'inLanguage': SUPPORTED_LANGS.map(l => l.code),

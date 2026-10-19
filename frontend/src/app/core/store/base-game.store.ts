@@ -93,8 +93,108 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
   // Derive all state from the WebSocketService's global gameState
-  protected rawState = computed(() => this.ws.gameState());
-  readonly room = computed<any>(() => this.ws.gameState());
+  public readonly rawState = computed(() => this.ws.gameState());
+
+  /**
+   * 统一标准化多玩家数组 (Array<PlayerInfo>)
+   * 无论后端引擎内部是 Map、Slice 还是以 boards/scores 为键，
+   * 经由此信号计算后，全平台永远 100% 保证为标准 JS 数组。
+   */
+  readonly roomPlayers = computed<any[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      return this.singlePlayerList();
+    }
+    const st = this.rawState() as any;
+    if (!st) return [];
+
+    // Extract engine players map if available
+    const enginePlayersMap: Record<string, any> = {};
+    const rawPlayers = st.players;
+    if (Array.isArray(rawPlayers)) {
+      rawPlayers.forEach((p: any) => {
+        if (p?.id) enginePlayersMap[p.id] = p;
+      });
+    } else if (rawPlayers && typeof rawPlayers === 'object') {
+      Object.keys(rawPlayers).forEach(k => {
+        enginePlayersMap[k] = typeof rawPlayers[k] === 'object' ? rawPlayers[k] : { value: rawPlayers[k] };
+      });
+    }
+
+    // 1. 优先使用统一 WebSocket 房间广播的 players 数组，并深度合并游戏引擎专有数据（进度、得分等）
+    if (Array.isArray(st.roomPlayers) && st.roomPlayers.length > 0) {
+      return st.roomPlayers.map((rp: any) => {
+        const ep = enginePlayersMap[rp.id] || enginePlayersMap[String(rp.id)] || {};
+        return {
+          ...rp,
+          ...ep,
+          score: ep.score ?? rp.score ?? 0,
+          progress: ep.progress ?? rp.progress ?? 0
+        };
+      });
+    }
+
+    // 2. 引擎内部 players 字段自适应安全转换
+    if (Array.isArray(rawPlayers)) {
+      return rawPlayers;
+    }
+    if (rawPlayers && typeof rawPlayers === 'object') {
+      return Object.keys(rawPlayers).map(k => ({
+        id: k,
+        ...(typeof rawPlayers[k] === 'object' ? rawPlayers[k] : { value: rawPlayers[k] })
+      }));
+    }
+
+    // 3. 针对纯棋盘引擎（如 sliding, tetris 等以 boards 区分玩家）
+    if (st.boards && typeof st.boards === 'object') {
+      return Object.keys(st.boards).map(k => ({
+        id: k,
+        board: st.boards[k]
+      }));
+    }
+
+    // 4. 针对 readyPlayers 键
+    if (st.readyPlayers && typeof st.readyPlayers === 'object') {
+      return Object.keys(st.readyPlayers).map(k => ({
+        id: k,
+        isReady: st.readyPlayers[k]
+      }));
+    }
+
+    return [];
+  });
+
+  /**
+   * 兼容接口 playersList -> 统一指向 roomPlayers
+   */
+  readonly playersList = computed<any[]>(() => this.roomPlayers());
+
+  /**
+   * 统一玩家字典映射 (Record<string, PlayerInfo>)
+   * 用于以 Player ID 进行 O(1) 瞬时查询，例如 roomPlayersMap()[playerId]
+   */
+  readonly roomPlayersMap = computed<Record<string, any>>(() => {
+    const list = this.roomPlayers();
+    const map: Record<string, any> = {};
+    for (const p of list) {
+      if (p && p.id) {
+        map[p.id] = p;
+      }
+    }
+    return map;
+  });
+
+  /**
+   * 统一房间快照：将 room.players 强制规范化为标准数组，同时挂载 room.playersMap 提供 O(1) 检索
+   */
+  readonly room = computed<any>(() => {
+    const st = this.ws.gameState();
+    if (!st) return null;
+    return {
+      ...st,
+      players: this.roomPlayers(),
+      playersMap: this.roomPlayersMap()
+    };
+  });
 
   // Default implementations for aliases required by GameStoreInterface
   readonly hostId = computed<string>(() => {
@@ -119,16 +219,6 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
   // 默认实现：无明确胜者（得分类游戏）；需要显示胜者的游戏可 override
   readonly singlePlayerWinners = computed<string[]>(() => []);
-
-  readonly playersList = computed<any[]>(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
-      return this.singlePlayerList();
-    }
-    const players = (this.rawState() as any)?.players;
-    if (!players) return [];
-    // Ensure id is present in the object
-    return Object.keys(players).map(k => ({ id: k, ...players[k] }));
-  });
 
   readonly winners = computed<string[]>(() => {
     if (this.currentRoomMode() === GameMode.Single) {

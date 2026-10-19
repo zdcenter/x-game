@@ -19,7 +19,6 @@ import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
-import { GamePlayerMiniHudComponent } from '../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -31,7 +30,7 @@ import { getLiquidTheme, LiquidColorTheme } from './water-colors.util';
   imports: [CommonModule, TubeComponent, GameStartingOverlayComponent,
     GameWaitingRoomComponent,  
     GameResultOverlayComponent,
-    GameToolbarComponent,  GamePlayerMiniHudComponent, FormsModule, GameLayoutComponent,
+    GameToolbarComponent, FormsModule, GameLayoutComponent,
     GamePkHudComponent],
   templateUrl: './watersort.component.html',
   styles: [`
@@ -566,7 +565,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
 
   getSubtitle(): string {
-    return this.currentRoomMode() === 'same_pk_speed' ? this.i18n.t('game.speed_mode')() : this.i18n.t('game.mode_single_player')();
+    return this.currentRoomMode() !== GameMode.Single ? this.i18n.t('game.speed_mode')() : this.i18n.t('game.mode_single_player')();
   }
 
 

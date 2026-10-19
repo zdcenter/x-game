@@ -58,13 +58,21 @@ export class HexaStore extends BaseGameStore {
     const state = this.rawState() as any;
     if (!state || !state.players) return [];
     
-    return Object.values(state.players)
-      .filter((p: any) => p.id !== this.playerId())
+    const rawPlayers = state.players;
+    const playersMap: Record<string, any> = {};
+    if (Array.isArray(rawPlayers)) {
+      rawPlayers.forEach((p: any) => { if (p?.id) playersMap[p.id] = p; });
+    } else if (typeof rawPlayers === 'object') {
+      Object.assign(playersMap, rawPlayers);
+    }
+
+    return Object.values(playersMap)
+      .filter((p: any) => p && p.id !== this.playerId())
       .map((p: any) => ({
         id: p.id,
-        score: p.score,
-        piecesPlaced: p.piecesPlaced,
-        finished: p.finished
+        score: Number(p.score || 0),
+        piecesPlaced: Number(p.piecesPlaced || 0),
+        finished: Boolean(p.finished)
       }))
       .sort((a: any, b: any) => b.score - a.score);
   });
@@ -76,12 +84,10 @@ export class HexaStore extends BaseGameStore {
 
   myPkState = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return null;
-    const state = this.rawState();
+    const state = this.rawState() as any;
     if (!state || !state.players) return null;
     return state.players[this.playerId()];
   });
-
-
 
   readonly singlePlayerStatus = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) {
@@ -91,7 +97,7 @@ export class HexaStore extends BaseGameStore {
     return s ? (s as GameStatusType) : 'waiting';
   });
 
-  private currentSeed: number | null = null;
+  private currentSeed: any = null;
   private piecesPlaced = 0;
 
   loadBestScore() {
@@ -125,9 +131,10 @@ export class HexaStore extends BaseGameStore {
     effect(() => {
       const state = this.rawState();
       if (this.currentRoomMode() !== GameMode.Single && (state?.status === GameStatus.Starting || state?.status === GameStatus.Playing)) {
-        if (state.seed && this.currentSeed !== state.seed) {
-          this.currentSeed = state.seed;
-          this.engine.initGame({ seed: state.seed });
+        const roundKey = state.globalStartAt || state.seed || 'round';
+        if (this.currentSeed !== roundKey) {
+          this.currentSeed = roundKey;
+          this.engine.initGame({ seed: state.seed || undefined });
           this.updateSignals();
           
           if (state.status === GameStatus.Playing) {

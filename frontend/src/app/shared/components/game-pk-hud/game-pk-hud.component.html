@@ -5,159 +5,158 @@
     <div class="relative bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl border border-[var(--color-border-card)] shadow-lg overflow-hidden transition-all duration-300">
       
       <!-- DESKTOP / TABLET (>= sm) -->
-      <div class="hidden sm:flex items-center gap-3 p-2.5 lg:p-3">
+      <div class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 sm:py-2">
         
         <!-- ================= LEFT WING: YOU (LOCAL PLAYER) ================= -->
-        <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-          <!-- Top Row: Avatar + Name + Status + Score/Prog -->
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 min-w-0">
+        <div class="flex-1 min-w-0 flex flex-col gap-1">
+          <!-- Top Row: Avatar + Name + Badges + Metrics + Big Score -->
+          <div class="flex items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
               <!-- Avatar -->
               <div class="relative shrink-0">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm text-white shadow-md bg-gradient-to-br from-blue-500 to-indigo-600 ring-2 ring-blue-400/50">
+                <div class="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm bg-gradient-to-br from-blue-500 to-indigo-600 ring-1.5 ring-blue-400/50">
                   {{ avatarChar(myPlayer.nickname || myPlayer.id) }}
                 </div>
                 @if (myPlayer.isHost) {
-                  <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black px-1 rounded shadow-sm border border-amber-200 leading-tight">
+                  <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[7px] font-black px-0.5 rounded shadow-sm border border-amber-200 leading-none">
                     👑
                   </span>
                 }
               </div>
 
               <!-- Name & Badge -->
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[120px] lg:max-w-[160px]" [title]="myPlayer.nickname || myPlayer.id">
+              <div class="flex items-center gap-1 min-w-0">
+                <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[85px] sm:max-w-[110px] lg:max-w-[140px]" [title]="myPlayer.nickname || myPlayer.id">
                   {{ myPlayer.nickname || myPlayer.id }}
                 </span>
-                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 shrink-0">
+                <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 shrink-0">
                   {{ i18n.t('game.pk.me')() || '我' }}
                 </span>
                 @if (myPlayer.isFinished) {
-                  <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
-                    🏁 {{ i18n.t('game.pk.finished')() || '完赛' }}
+                  <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
+                    🏁
                   </span>
                 }
               </div>
             </div>
 
-            <!-- Primary Metric (Big Score or % in Monospace) -->
-            <div class="shrink-0 flex items-baseline gap-1">
-              @if (isScoreBased()) {
-                <span class="text-lg font-black font-mono tracking-tight text-blue-600 dark:text-blue-400">
-                  {{ myPlayer.score ?? 0 }}
-                </span>
-                <span class="text-[10px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
-              } @else {
-                <span class="text-lg font-black font-mono tracking-tight text-blue-600 dark:text-blue-400">
-                  {{ myProgress() }}%
-                </span>
+            <!-- Right side of Left Wing: Metrics Chip + Primary Score -->
+            <div class="shrink-0 flex items-center gap-1.5">
+              @if (filterMetrics(myPlayer.metrics).length > 0) {
+                <div class="flex items-center gap-1">
+                  @for (metric of filterMetrics(myPlayer.metrics); track $index) {
+                    <div class="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs"
+                         [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
+                      @if (metric.icon) { <span class="opacity-80 text-[10px]">{{ metric.icon }}</span> }
+                      <span>{{ metric.value }}</span>
+                    </div>
+                  }
+                </div>
               }
+              <div class="flex items-baseline gap-0.5 font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
+                @if (isScoreBased()) {
+                  <span>{{ myPlayer.score ?? 0 }}</span>
+                  <span class="text-[9px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
+                } @else {
+                  <span>{{ myProgress() }}%</span>
+                }
+              </div>
             </div>
           </div>
 
-          <!-- Middle Row: Animated Sleek Progress Bar -->
-          <div class="relative w-full h-3 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
-            <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 shadow-[0_0_12px_rgba(59,130,246,0.5)] relative overflow-hidden"
+          <!-- Bottom Row: Animated Sleek Progress Bar -->
+          <div class="relative w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
+            <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 shadow-[0_0_10px_rgba(59,130,246,0.5)] relative overflow-hidden"
                  [style.width.%]="myProgress()">
               <div class="absolute inset-0 pk-progress-stripe opacity-40"></div>
             </div>
           </div>
-
-          <!-- Bottom Row: Metrics Chips -->
-          @if (filterMetrics(myPlayer.metrics).length > 0) {
-            <div class="flex items-center gap-1.5 flex-wrap">
-              @for (metric of filterMetrics(myPlayer.metrics); track $index) {
-                <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-sm"
-                     [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
-                  @if (metric.icon) { <span class="opacity-80">{{ metric.icon }}</span> }
-                  @if (metric.label) { <span class="opacity-60 text-[9px] uppercase">{{ metric.label }}:</span> }
-                  <span>{{ metric.value }}</span>
-                </div>
-              }
-            </div>
-          }
         </div>
 
 
-        <!-- ================= CENTER HUB: VS & SERIES ================= -->
-        <div class="flex-none flex flex-col items-center justify-center px-1 sm:px-3 min-w-[90px] border-x border-[var(--color-border-card)]/60">
-          <!-- ⚔️ VS Badge -->
-          <div class="flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white font-black text-xs tracking-wider shadow-md ring-1 ring-amber-300/40 select-none">
-            <span>⚔️</span>
-            <span>{{ i18n.t('game.pk.vs')() || 'VS' }}</span>
+        <!-- ================= CENTER HUB: COMPACT VS & SERIES & TIMER ================= -->
+        <div class="flex-none flex flex-col items-center justify-center px-1.5 sm:px-2.5 min-w-[75px] sm:min-w-[85px] border-x border-[var(--color-border-card)]/60">
+          <!-- Row 1: VS Badge + BO Series Score -->
+          <div class="flex items-center justify-center gap-1">
+            <span class="px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white font-black text-[10px] sm:text-xs tracking-wider shadow-sm select-none">
+              ⚔️ VS
+            </span>
+            @if (targetWins > 1) {
+              <span class="font-mono font-black text-[11px] sm:text-xs px-1 rounded bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                <span class="text-blue-500">{{ myWins() }}</span>:<span class="text-rose-500">{{ opponentWins() }}</span>
+              </span>
+            }
           </div>
 
-          <!-- Series Score (BO3 / BO5) if target > 1 -->
-          @if (targetWins > 1) {
-            <div class="mt-1 flex items-center gap-1.5 text-xs font-mono font-black">
-              <span class="text-blue-500 text-sm">{{ myWins() }}</span>
-              <span class="text-[var(--color-text-muted)]">:</span>
-              <span class="text-rose-500 text-sm">{{ opponentWins() }}</span>
-            </div>
-            <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-tight">
-              {{ seriesText() }}
-            </span>
-          }
-
-          <!-- Match Elapsed Timer -->
-          @if (elapsedTime) {
-            <div class="mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] shadow-inner">
-              <span class="opacity-70 text-[9px]">⏱️</span>
-              <span>{{ elapsedTime }}</span>
-            </div>
-          }
-
-          <!-- Dynamic Differential Pill (Lead/Lag delta) -->
-          @if (leadDeltaText()) {
-            <div class="mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold leading-tight shadow-sm shrink-0 whitespace-nowrap"
-                 [ngClass]="{
-                   'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': leadState() === 'lead',
-                   'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': leadState() === 'behind',
-                   'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]': leadState() === 'tied'
-                 }">
-              {{ leadDeltaText() }}
-            </div>
-          }
+          <!-- Row 2: Timer + Differential Pill inline -->
+          <div class="flex items-center gap-1 mt-1">
+            @if (elapsedTime) {
+              <span class="text-[9px] sm:text-[10px] font-mono font-bold text-[var(--color-text-muted)] whitespace-nowrap">
+                ⏱️ {{ elapsedTime }}
+              </span>
+            }
+            @if (leadDeltaText()) {
+              <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold leading-tight shrink-0 whitespace-nowrap"
+                    [ngClass]="{
+                      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': leadState() === 'lead',
+                      'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': leadState() === 'behind',
+                      'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]': leadState() === 'tied'
+                    }">
+                {{ leadDeltaText() }}
+              </span>
+            }
+          </div>
         </div>
 
 
         <!-- ================= RIGHT WING: OPPONENT ================= -->
         @if (primaryOpponent(); as opp) {
-          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-            <!-- Top Row: Score/Prog + Status + Name + Avatar -->
-            <div class="flex items-center justify-between gap-2">
-              <!-- Primary Metric -->
-              <div class="shrink-0 flex items-baseline gap-1">
-                @if (isScoreBased()) {
-                  <span class="text-lg font-black font-mono tracking-tight text-rose-500 dark:text-rose-400">
-                    {{ opp.score ?? 0 }}
-                  </span>
-                  <span class="text-[10px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
-                } @else {
-                  <span class="text-lg font-black font-mono tracking-tight text-rose-500 dark:text-rose-400">
-                    {{ opponentProgress() }}%
-                  </span>
+          <div class="flex-1 min-w-0 flex flex-col gap-1">
+            <!-- Top Row: Primary Score + Metrics + Badges + Name + Avatar -->
+            <div class="flex items-center justify-between gap-1.5">
+              <!-- Left side of Right Wing: Primary Score + Metrics Chip -->
+              <div class="shrink-0 flex items-center gap-1.5">
+                <div class="flex items-baseline gap-0.5 font-mono font-black text-sm sm:text-base text-rose-500 dark:text-rose-400">
+                  @if (isScoreBased()) {
+                    <span>{{ opp.score ?? 0 }}</span>
+                    <span class="text-[9px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
+                  } @else {
+                    <span>{{ opponentProgress() }}%</span>
+                  }
+                </div>
+                @if (filterMetrics(opp.metrics).length > 0) {
+                  <div class="flex items-center gap-1">
+                    @for (metric of filterMetrics(opp.metrics); track $index) {
+                      <div class="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs"
+                           [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
+                        @if (metric.icon) { <span class="opacity-80 text-[10px]">{{ metric.icon }}</span> }
+                        <span>{{ metric.value }}</span>
+                      </div>
+                    }
+                  </div>
                 }
               </div>
 
               <!-- Name & Avatar -->
-              <div class="flex items-center gap-2 min-w-0 justify-end">
-                @if (opp.isFinished) {
-                  <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
-                    🏁 {{ i18n.t('game.pk.finished')() || '完赛' }}
+              <div class="flex items-center gap-1.5 min-w-0 justify-end">
+                <div class="flex items-center gap-1 min-w-0">
+                  @if (opp.isFinished) {
+                    <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
+                      🏁
+                    </span>
+                  }
+                  <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[85px] sm:max-w-[110px] lg:max-w-[140px]" [title]="opp.nickname || opp.id">
+                    {{ opp.nickname || opp.id }}
                   </span>
-                }
-                <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[120px] lg:max-w-[160px]" [title]="opp.nickname || opp.id">
-                  {{ opp.nickname || opp.id }}
-                </span>
+                </div>
 
                 <!-- Avatar -->
                 <div class="relative shrink-0">
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm text-white shadow-md bg-gradient-to-br from-rose-500 to-amber-600 ring-2 ring-rose-400/50">
+                  <div class="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm bg-gradient-to-br from-rose-500 to-amber-600 ring-1.5 ring-rose-400/50">
                     {{ avatarChar(opp.nickname || opp.id) }}
                   </div>
                   @if (opp.isHost) {
-                    <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black px-1 rounded shadow-sm border border-amber-200 leading-tight">
+                    <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[7px] font-black px-0.5 rounded shadow-sm border border-amber-200 leading-none">
                       👑
                     </span>
                   }
@@ -165,27 +164,13 @@
               </div>
             </div>
 
-            <!-- Middle Row: Opponent Animated Progress Bar -->
-            <div class="relative w-full h-3 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
-              <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 shadow-[0_0_12px_rgba(244,63,94,0.4)] relative overflow-hidden ml-auto"
+            <!-- Bottom Row: Opponent Animated Progress Bar -->
+            <div class="relative w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
+              <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 shadow-[0_0_10px_rgba(244,63,94,0.4)] relative overflow-hidden ml-auto"
                    [style.width.%]="opponentProgress()">
                 <div class="absolute inset-0 pk-progress-stripe opacity-40"></div>
               </div>
             </div>
-
-            <!-- Bottom Row: Metrics Chips (Aligned Right) -->
-            @if (filterMetrics(opp.metrics).length > 0) {
-              <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                @for (metric of filterMetrics(opp.metrics); track $index) {
-                  <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-sm"
-                       [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
-                    @if (metric.icon) { <span class="opacity-80">{{ metric.icon }}</span> }
-                    @if (metric.label) { <span class="opacity-60 text-[9px] uppercase">{{ metric.label }}:</span> }
-                    <span>{{ metric.value }}</span>
-                  </div>
-                }
-              </div>
-            }
           </div>
         }
 
@@ -329,7 +314,7 @@
             <div class="w-full h-1.5 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
               <div class="h-full rounded-full transition-all duration-300"
                    [ngClass]="player.isMe ? 'bg-blue-500' : 'bg-amber-500'"
-                   [style.width.%]="player.progress ?? 0"></div>
+                   [style.width.%]="getPlayerBarWidth(player)"></div>
             </div>
           </div>
         </div>

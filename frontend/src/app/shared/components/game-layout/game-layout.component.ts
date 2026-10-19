@@ -1,10 +1,9 @@
-import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnChanges, SimpleChanges, booleanAttribute, signal, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnChanges, SimpleChanges, booleanAttribute, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
-import { GameLobbyPanelComponent } from '../game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
 import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
 import { FloatingEmojiComponent } from '../floating-emoji/floating-emoji.component';
@@ -17,11 +16,12 @@ import { FriendService } from '../../../core/services/friend.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { GhostChallengeService, GhostChallenge } from '../../../core/services/ghost-challenge.service';
 import { OfflineBannerComponent } from '../offline-banner/offline-banner.component';
+import { LiveRoomService } from '../../../core/services/live-room.service';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameLobbyPanelComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent],
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Offline Mode Banner -->
@@ -31,7 +31,7 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
   <app-game-rules-modal [gameId]="gameId" [isOpen]="showRules" (closed)="rulesClosed.emit()"></app-game-rules-modal>
 
   <!-- Top Game Header Bar -->
-  <div class="w-full max-w-[1600px] mx-auto pt-2 lg:pt-3 px-2 sm:px-4 lg:px-6 z-40 sticky top-0 pb-1.5">
+  <div class="w-full max-w-[1600px] mx-auto pt-1 sm:pt-1.5 px-2 sm:px-4 lg:px-6 z-40 sticky top-0 pb-1">
     <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-sm overflow-hidden" style="background-color: var(--color-bg-card);">
       <app-game-header (titleClick)="titleClick.emit()"
         [title]="title"
@@ -43,42 +43,71 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
         (back)="back.emit()"
         (rules)="rulesOpen.emit()"
       >
-        <div game-icon class="text-2xl sm:text-3xl md:text-4xl drop-shadow-md">{{ icon }}</div>
+        <div game-icon class="text-xl sm:text-2xl md:text-3xl drop-shadow-md">{{ icon }}</div>
 
         <ng-container header-center>
+          @if (currentRoomMode === GameMode.Single && !hideDefaultDifficulty && availableDifficulties.length > 1) {
+            <app-difficulty-selector 
+              [availableDifficulties]="availableDifficulties"
+              [currentDifficulty]="currentDifficulty"
+              (difficultyChange)="onDifficultyChange($event)">
+            </app-difficulty-selector>
+          }
           <ng-content select="[header-center]"></ng-content>
         </ng-container>
 
         <ng-container header-right>
-          <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
+          <div class="flex items-center gap-1 sm:gap-2">
             <ng-content select="[header-right]"></ng-content>
+
+            @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
+              @if (waitingRoomForThisGame(); as targetRoom) {
+                <button (click)="liveRoom.quickJoin(targetRoom)"
+                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse"
+                        [attr.title]="i18n.t('lobby.quick_join')()">
+                  <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  <span class="hidden sm:inline">⚡ {{ i18n.t('lobby.quick_join')() }}</span>
+                  <span class="sm:hidden">⚡ 迎战</span>
+                </button>
+              } @else {
+                <button (click)="quickCreatePkRoom()"
+                        class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group"
+                        [title]="i18n.t('game.quick_pk')() || '开房PK'">
+                  <span class="group-hover:scale-110 transition-transform">⚔️</span>
+                  <span class="hidden md:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
+                  <span class="md:hidden text-[11px]">PK</span>
+                </button>
+              }
+              <button (click)="openFriendList()"
+                      class="hidden sm:flex px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold items-center gap-1 shadow-sm active:scale-95 group"
+                      [title]="i18n.t('game.invite_friend_pk')() || '邀请好友PK'">
+                <span class="group-hover:scale-110 transition-transform">👥</span>
+                <span class="hidden md:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
+                <span class="md:hidden text-[11px]">邀请</span>
+              </button>
+            }
+
             @if (showPlayAgainBtn) {
               <button (click)="playAgain.emit()"
-                      class="px-2.5 sm:px-3.5 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/40 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 group"
+                      class="px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 group"
                       [title]="i18n.t('game.space_shortcut_hint')() || 'Press Space or R to restart'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>{{ i18n.t('game.play_again')() }}</span>
-                <span class="hidden md:inline text-[10px] opacity-75 font-mono">Space</span>
+                <span class="hidden sm:inline">{{ i18n.t('game.play_again')() }}</span>
+                <span class="hidden lg:inline text-[10px] opacity-75 font-mono">Space</span>
               </button>
             }
 
             @if (showLeaveBtn) {
-              <button (click)="back.emit()" class="px-2.5 sm:px-3.5 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center gap-1.5 shadow-sm active:scale-95">
+              <button (click)="back.emit()" class="px-2 sm:px-3 py-1 sm:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shadow-sm active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 <span class="hidden sm:inline">{{ i18n.t('game.leave')() }}</span>
-              </button>
-            }
-
-            @if (settingsService.settings().multiplayer_enabled === 'true') {
-              <button (click)="togglePkDrawer(true)"
-                      class="px-2.5 sm:px-3 py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:border-amber-500/50 hover:text-amber-500 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group text-xs sm:text-sm font-bold"
-                      title="PK Arena">
-                <span class="text-sm group-hover:scale-110 transition-transform">⚔️</span>
-                <span class="hidden sm:inline">{{ i18n.t('game.pk_arena')() }}</span>
               </button>
             }
           </div>
@@ -88,7 +117,7 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
   </div>
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
-  <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+  <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-1 sm:py-2">
     
     <!-- Active Ghost Challenge Banner -->
     @if (ghostChallenge(); as ch) {
@@ -113,56 +142,8 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
       </div>
     }
 
-    <!-- Top Action Console Bar (Difficulty, Quick PK, Rules) -->
-    <div class="w-full flex flex-wrap justify-between items-center mb-2 px-1 gap-2">
-      <!-- Left: Difficulty Selector or Mode Indicator -->
-      <div class="flex items-center gap-2">
-        @if (currentRoomMode === GameMode.Single && !hideDefaultDifficulty && availableDifficulties.length > 1) {
-          <app-difficulty-selector 
-            [availableDifficulties]="availableDifficulties"
-            [currentDifficulty]="currentDifficulty"
-            (difficultyChange)="onDifficultyChange($event)">
-          </app-difficulty-selector>
-        } @else if (currentRoomMode !== GameMode.Single) {
-          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1">
-            <span>⚔️</span> {{ currentRoomMode }}
-          </span>
-        }
-      </div>
-
-      <!-- Right: Direct Utility Shortcuts -->
-      <div class="flex items-center gap-2 ml-auto">
-        @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
-          <button (click)="quickCreatePkRoom()"
-                  class="px-2 sm:px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
-            <span class="group-hover:scale-110 transition-transform">⚔️</span>
-            <span class="hidden sm:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
-            <span class="sm:hidden">PK</span>
-          </button>
-          <button (click)="openFriendList()"
-                  class="px-2 sm:px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
-            <span class="group-hover:scale-110 transition-transform">👥</span>
-            <span class="hidden sm:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
-            <span class="sm:hidden">邀请</span>
-          </button>
-        }
-        @if (currentRoomMode !== GameMode.Single && status !== GameStatus.Waiting && isHost) {
-          <button (click)="openChangeSettingsGlobal()"
-                  class="px-2 sm:px-3 py-1.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group">
-            <span class="group-hover:rotate-90 transition-transform">⚙️</span>
-            <span>{{ i18n.t('game.change_settings')() || 'Settings' }}</span>
-          </button>
-        }
-        <button (click)="rulesOpen.emit()"
-                class="px-2 sm:px-3 py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95">
-          <span>💡</span>
-          <span class="hidden sm:inline">{{ i18n.t('game.rules')() || '规则' }}</span>
-        </button>
-      </div>
-    </div>
-
     <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
-    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1.5 sm:p-4 min-h-[360px] sm:min-h-[460px] relative">
+    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 min-h-[320px] sm:min-h-[420px] relative">
       <!-- Project custom game components here -->
       <ng-content></ng-content>
     </div>
@@ -222,36 +203,7 @@ import { OfflineBannerComponent } from '../offline-banner/offline-banner.compone
     </div>
   </section>
 
-  <!-- Contextual PK Arena Drawer (Sliding Smoothly on Demand) -->
-  @if (isPkDrawerOpen() || showMobileSidebar) {
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
-         (click)="togglePkDrawer(false)"></div>
-    
-    <!-- Drawer Panel -->
-    <div class="fixed inset-y-0 right-0 z-50 w-[85vw] max-w-[380px] bg-[var(--color-bg-main)] shadow-2xl border-l border-[var(--color-border-card)] flex flex-col animate-in slide-in-from-right duration-300">
-      <div class="flex items-center justify-between p-4 border-b border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">⚔️</span>
-          <h3 class="font-bold text-sm text-[var(--color-text-main)]">{{ i18n.t('game.room_info')() || '联机对战大厅' }}</h3>
-        </div>
-        <button (click)="togglePkDrawer(false)"
-                class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors">
-          ✕
-        </button>
-      </div>
-      <div class="flex-1 overflow-y-auto p-2">
-        <app-game-lobby-panel
-          #lobbyPanel
-          class="w-full h-full flex"
-          [currentGameId]="gameId"
-          [currentRoomId]="currentRoomId!"
-          (joinRoom)="handleJoinRoomFromLobby($event)"
-          (createRoom)="handleCreateRoomFromLobby($event)">
-        </app-game-lobby-panel>
-      </div>
-    </div>
-  }
+
 
   <app-floating-emoji></app-floating-emoji>
   
@@ -268,8 +220,14 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   wsService = inject(WebSocketService);
   friendService = inject(FriendService);
   editRoomService = inject(EditRoomService);
+  liveRoom = inject(LiveRoomService);
   private route = inject(ActivatedRoute);
   private ghostChallengeService = inject(GhostChallengeService);
+
+  readonly waitingRoomForThisGame = computed(() => {
+    const myId = this.liveRoom.currentUserId();
+    return this.liveRoom.waitingRooms().find(r => r.game === this.gameId && r.host !== myId);
+  });
 
   ghostChallenge = signal<GhostChallenge | null>(null);
 
@@ -416,12 +374,14 @@ export class GameLayoutComponent implements OnInit, OnChanges {
     return GameLayoutComponent.RELATED_GUIDES[this.gameId] || null;
   }
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
-
   openUpdateRoomModal(data: any) {
-    if (this.lobbyPanel) {
-      this.lobbyPanel.openUpdateRoomModal(data);
-    }
+    this.editRoomService.open({
+      roomId: data.id || data.roomId || this.currentRoomId || '',
+      gameId: data.game || data.gameId || this.gameId,
+      mode: data.mode || '',
+      difficulty: data.difficulty || this.currentDifficulty,
+      target: data.target ?? 1
+    });
   }
 
   quickCreatePkRoom() {
@@ -431,7 +391,8 @@ export class GameLayoutComponent implements OnInit, OnChanges {
     const pkMode = config.modes.find(m => m.id !== GameMode.Single);
     if (!pkMode) return;
     const username = this.authStore.currentUser()?.username || this.authStore.guestId;
-    const name = `${username}'s PK`;
+    const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const name = `${username}-${suffix}`;
     this.createRoom.emit({
       name,
       gameId: this.gameId,

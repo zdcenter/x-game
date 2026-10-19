@@ -1,7 +1,7 @@
 <app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'block'"
   [title]="i18n.t('app.title.block')() || 'Block Puzzle'"
-  [subtitle]="''"
+  [subtitle]="getSubtitle()"
   icon="🟩"
   iconGradientClass="from-blue-500 to-indigo-500"
   titleGradientClass="from-blue-400 to-indigo-400"
@@ -51,14 +51,6 @@
 
         <!-- Main Game Area -->
         @if (store.currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
-          <!-- Mobile floating HUD (PK only) -->
-          @if (store.currentRoomMode() !== GameMode.Single) {
-            <app-game-player-mini-hud
-              class="lg:hidden"
-              [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
-              [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
-            </app-game-player-mini-hud>
-          }
 
           <!-- Players Status Bar -->
           @if (store.currentRoomMode() === GameMode.Single) {
@@ -100,8 +92,11 @@
             <!-- Universal PK Battle HUD (Block Puzzle) -->
             <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
               <app-game-pk-hud
-                [myStats]="myPlayerPkStats()"
+                [myPlayer]="myPlayerPkStats()"
                 [opponents]="opponentsPkStats()"
+                [gameMode]="store.currentRoomMode()"
+                [status]="store.status()"
+                [targetWins]="store.currentRoomTarget()"
                 [roundFormat]="store.room()?.roundFormat || 'BO3'"
                 [seriesScore]="seriesScore()"
               ></app-game-pk-hud>

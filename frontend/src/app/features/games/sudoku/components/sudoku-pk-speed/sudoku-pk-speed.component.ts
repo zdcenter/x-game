@@ -11,8 +11,6 @@ import { GameRegistryService } from '../../../../../core/services/game-registry.
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
-import { PlayerListContainerComponent } from '../../../../../shared/components/player-list-container/player-list-container.component';
-import { GamePlayerMiniHudComponent } from '../../../../../shared/components/game-player-mini-hud/game-player-mini-hud.component';
 import { GamePkHudComponent } from '../../../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { computed } from '@angular/core';

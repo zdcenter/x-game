@@ -50,15 +50,6 @@
           <div class="flex-1 flex flex-col relative w-full min-h-0">
             <div class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2">
 
-              <!-- Mobile floating HUD (PK only) -->
-              @if (store.currentRoomMode() !== GameMode.Single) {
-                <app-game-player-mini-hud
-                  class="lg:hidden"
-                  [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), score: store.score(), status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
-                  [opponents]="store.opponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), score: opp.score, status: opp.finished ? 'finished' : 'playing' }))">
-                </app-game-player-mini-hud>
-              }
-
               <!-- Single Player Modern Glass Capsule HUD -->
               @if (store.currentRoomMode() === GameMode.Single) {
                 <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
@@ -94,8 +85,11 @@
                 <!-- Top Opponents Panel in PK Mode (Modern Universal GamePkHud) -->
                 <div class="w-full flex-none shrink-0 py-1">
                   <app-game-pk-hud
-                    [myStats]="myPlayerPkStats()"
+                    [myPlayer]="myPlayerPkStats()"
                     [opponents]="opponentsPkStats()"
+                    [gameMode]="store.currentRoomMode()"
+                    [status]="store.status()"
+                    [targetWins]="store.currentRoomTarget()"
                     [roundFormat]="store.room()?.roundFormat || 'BO3'"
                     [seriesScore]="seriesScore()"
                   ></app-game-pk-hud>

@@ -39,7 +39,7 @@ class GlobalErrorHandler implements ErrorHandler {
       }
       return;
     }
-    console.error(error);
+    console.error('[GlobalErrorHandler]', error?.stack || error);
   }
 }
 

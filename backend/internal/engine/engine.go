@@ -79,6 +79,48 @@ func CreateEngine(mode string) (GameEngine, error) {
 	return nil, fmt.Errorf("unknown game mode: %s", mode)
 }
 
+// ResolveEngine finds the best matching game engine for a gameID and requested mode.
+// If the exact gameID_mode is not registered, it intelligently falls back to compatible modes
+// or any registered engine for that game, ensuring rooms can always be initialized smoothly.
+func ResolveEngine(gameID, mode string) (GameEngine, string, error) {
+	// 1. Direct match: gameID_mode
+	exactKey := gameID + "_" + mode
+	if factory, exists := registry[exactKey]; exists {
+		return factory(), mode, nil
+	}
+
+	// 2. Intelligent mode fallback list based on common PK conventions
+	var fallbackModes []string
+	switch mode {
+	case "speed", "battle":
+		fallbackModes = []string{"speed", "battle", "score", "same_score", "steal", "single"}
+	case "score", "same_score":
+		fallbackModes = []string{"score", "same_score", "speed", "battle", "single"}
+	case "steal":
+		fallbackModes = []string{"speed", "score", "battle", "single", "steal"}
+	default:
+		fallbackModes = []string{"speed", "score", "battle", "same_score", "steal", "single"}
+	}
+
+	for _, m := range fallbackModes {
+		candidateKey := gameID + "_" + m
+		if factory, exists := registry[candidateKey]; exists {
+			return factory(), m, nil
+		}
+	}
+
+	// 3. Prefix search: any engine registered for this gameID
+	prefix := gameID + "_"
+	for key, factory := range registry {
+		if len(key) > len(prefix) && key[:len(prefix)] == prefix {
+			actualMode := key[len(prefix):]
+			return factory(), actualMode, nil
+		}
+	}
+
+	return nil, "", fmt.Errorf("no engine registered for game: %s (requested mode: %s)", gameID, mode)
+}
+
 // StartWithCountdown is a shared utility to handle the standard 3-second
 // countdown before a multiplayer game transitions to StatePlaying.
 // It sets the state to starting, broadcasts, waits 3 seconds, sets state to playing,

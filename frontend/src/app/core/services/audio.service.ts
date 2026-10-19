@@ -86,6 +86,7 @@ export class AudioService {
   }
 
   playBgm(url: string) {
+    if (typeof window === 'undefined' || typeof Audio === 'undefined') return;
     this.currentBgmUrl = url;
     if (!this.bgmAudio) {
       this.bgmAudio = new Audio();

@@ -8,6 +8,7 @@ import { WebSocketService } from '../../core/services/websocket.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
 import { GameConfig as RegistryGameConfig, GameRegistryService } from '../../core/services/game-registry.service';
+import { GameMode } from '../../core/models/game.model';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { HttpClient } from '@angular/common/http';
 import { environment as versionEnv } from '../../../environments/version';
@@ -19,6 +20,8 @@ import { ShareService } from '../../core/services/share.service';
 import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
+import { LiveWaitingRoomsComponent } from './components/live-waiting-rooms/live-waiting-rooms.component';
+import { LiveRoomService } from '../../core/services/live-room.service';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
 import { isBrowser, getOrigin } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
@@ -27,7 +30,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent],
+  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
@@ -44,6 +47,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   shareService = inject(ShareService);
   adService = inject(AdService);
   gameRegistry = inject(GameRegistryService);
+  liveRoom = inject(LiveRoomService);
 
   // Statically populate all games from frontend SSOT to prevent SSR sorting flicker.
   games = signal<BackendGameConfig[]>(
@@ -125,10 +129,21 @@ export class LobbyComponent implements OnInit, OnDestroy {
     this.router.navigate(['/', this.i18n.currentLang(), 'games', gameId]);
   }
 
+  hasWaitingRoom(gameId: string): boolean {
+    const myId = this.liveRoom.currentUserId();
+    return this.liveRoom.waitingRooms().some(r => r.game === gameId && r.host !== myId);
+  }
+
   playPkGame(event: Event, gameId: string) {
     event.preventDefault();
     event.stopPropagation();
-    this.goToPkArena(gameId);
+    const myId = this.liveRoom.currentUserId();
+    const waitingRoom = this.liveRoom.waitingRooms().find(r => r.game === gameId && r.host !== myId);
+    if (waitingRoom) {
+      this.liveRoom.quickJoin(waitingRoom);
+    } else {
+      this.goToPkArena(gameId);
+    }
   }
 
   ngOnInit() {
@@ -175,7 +190,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.wsService.disconnectLobby();
+    // Preserve global lobby connection for navbar beacon and challenge notifications
   }
 
   handleGlobalCreateRoom(event: {name: string, gameId: string, mode: string, difficulty: string, password?: string, target?: number}) {
@@ -206,6 +221,50 @@ export class LobbyComponent implements OnInit, OnDestroy {
       case 'idiom': return '📖';
       default: return '🎮';
     }
+  }
+
+  getPkButtonInfo(gameId: string): { icon: string; label: string; gradient: string; shadow: string } {
+    if (gameId === 'gomoku') {
+      return {
+        icon: '♟️',
+        label: this.i18n.t('lobby.pk_btn_duel')() || '经典对弈',
+        gradient: 'var(--gradient-pk-duel)',
+        shadow: 'var(--shadow-pk-duel)'
+      };
+    }
+    if (gameId === 'tetris') {
+      return {
+        icon: '💥',
+        label: this.i18n.t('lobby.pk_btn_battle')() || '攻防对抗',
+        gradient: 'var(--gradient-pk-battle)',
+        shadow: 'var(--shadow-pk-battle)'
+      };
+    }
+    if (gameId === 'idiom') {
+      return {
+        icon: '📖',
+        label: this.i18n.t('lobby.pk_btn_word')() || '接龙对决',
+        gradient: 'var(--gradient-pk-word)',
+        shadow: 'var(--shadow-pk-word)'
+      };
+    }
+    const config = this.gameRegistry.getConfig(gameId);
+    const pkMode = config?.modes?.find(m => m.id !== GameMode.Single);
+    const modeId = pkMode?.id;
+    if (modeId === GameMode.Score || modeId === GameMode.SameScore || ['hexa', 'block', 'drop2048', 'classic2048'].includes(gameId)) {
+      return {
+        icon: '🏆',
+        label: this.i18n.t('lobby.pk_btn_score')() || '抢分对抗',
+        gradient: 'var(--gradient-pk-score)',
+        shadow: 'var(--shadow-pk-score)'
+      };
+    }
+    return {
+      icon: '⚡',
+      label: this.i18n.t('lobby.pk_btn_speed')() || '竞速对决',
+      gradient: 'var(--gradient-pk-speed)',
+      shadow: 'var(--shadow-pk-speed)'
+    };
   }
 
   getGameModes(id: string): string[] {

@@ -47,15 +47,6 @@
             </app-game-waiting-room>
           </div>
         } @else {
-          
-          <!-- Mobile floating HUD (PK only) -->
-          @if (currentRoomMode() !== GameMode.Single) {
-            <app-game-player-mini-hud
-              class="lg:hidden"
-              [myPlayer]="{ playerName: playerId, isHost: playerId === _store.hostId(), stats: [{ icon: '🔄', value: myMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }"
-              [opponents]="opponentId() ? [{ playerName: opponentId()!, isHost: opponentId() === _store.hostId(), stats: [{ icon: '🔄', value: opponentMoves() }], status: status === GameStatus.Finished ? 'finished' : 'playing' }] : []">
-            </app-game-player-mini-hud>
-          }
 
           <!-- Players Info Row -->
           @if (currentRoomMode() === GameMode.Single) {

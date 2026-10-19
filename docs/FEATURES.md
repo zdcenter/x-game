@@ -1,484 +1,67 @@
-# X-Game 核心功能清单
+# 益智游戏PK网 (Puzzle PK) - 核心功能清单
 
-本文档汇总了 X-Game 项目当前已开发实现的所有核心功能模块与技术亮点。
+本文档汇总系统当前实际实现的最新架构体系与核心功能特性。
 
-## 1. 基础架构体系 (Infrastructure)
+---
 
-### 后端技术栈 (Go + Fiber)
-- **高性能框架**：基于 Fiber v3 构建轻量级、超快速的 HTTP 与 WebSocket 服务。
-- **持久化层**：GORM + PostgreSQL 驱动，实现了完善的数据迁移与用户状态落盘。
-- **自动化构建部署**：集成了自动编译脚本，支持在每次 Build 时通过 `ldflags` 全自动注入时间戳作为构建版本号（例如 `v2023.10.23.1234`），并在前端实时展示。
-- **环境变量化**：集成 `joho/godotenv` 支持本地 `.env` 热替换，并预留了 Docker 化与配置中心的支持。
+## 1. 系统技术架构
 
 ### 前端技术栈 (Angular 21 + TailwindCSS v4)
-- **Zoneless 无区化渲染**：全盘采用 Angular 21 最新的 Signals 响应式特性，性能极致优化，告别 `zone.js` 的性能损耗。
-- **无缝切游 (Switch Room Game)**：多人房间结算页面支持房主一键切换游戏，带领全房间玩家瞬间转移至新游戏并保持原状，免除退回大厅重组房间的繁琐步骤。
-- **实时对战表情与嘲讽 (Emoji Broadcast)**：基于 WebSocket 的纯后端无状态广播机制。对局中点击头像即可发送表情或快捷嘲讽短语，对方屏幕瞬间弹出带物理引擎质感的 CSS 飘浮动画，零延迟且与底层单机/联机状态机完全解耦，大幅强化对局临场社交属性。
-- **大一统游戏状态引擎**：构建了统一的 `BaseGameStore` 核心层，强制接管所有 14 款子游戏的联机同步、生命周期轮转（Waiting/Starting/Playing/Finished）与玩家列表管理。各子游戏严格遵循单向数据流，仅需实现核心的纯逻辑 `ILocalEngine`。多局系列赛通用信号（`pkWins` / `isSeriesOver` / `pkScoreLabel`）全部内置于基类，各游戏无需重复实现；系列赛重启时 `_pkStatSubmitted` 自动重置，确保每局战绩独立提交。
-- **统一游戏组件基类（BaseGameComponent）**：`openChangeSettings()`、`navigateToPkArena()`、`handleJoinRoom()` 等 8 个公共方法上移至基类，消除 11 款游戏的重复样板代码；`GameStoreInterface` 接口新增 `pkWins` / `isSeriesOver` / `pkScoreLabel` 三项约束，确保编译时类型安全。`lobbyPanel` 通过 `@ViewChild override` 模式让子类可选复写而不重复声明。
-- **标准化全局游戏布局 (app-game-layout)**：构建了高度封装的 `<app-game-layout>` 视图组件。它以组件投影 (`ng-content`) 接管了全系 18 款游戏的最外层视图层（已全盘完成推箱子 Sokoban、数字连线 Connect、成语益智 Idiom 等最后遗留游戏的现代化架构重塑，彻底终结任何 3 栏“左中右”老式割裂布局）。最新升级为宽屏沉浸聚焦主战场（解除左右侧栏夹攻，棋盘最大宽度扩展至 1400px）；统一了棋盘上方的操作控制台条（难度选择、开房PK、邀请好友、游戏规则）；将联机房间面板重塑为智能呼出抽屉（单机零打扰，联机一键唤出）；全局支持 Space/R 键盘极速重开；并将 SEO 与深度策略指南整合沉淀至棋盘正下方，实现大方、专注、全端自适应且未来一处修改全局生效的现代化内页体验。
-- **现代美学 UI**：结合 TailwindCSS v4 的原子化 CSS 特性，实现了全面现代化、毛玻璃（Glassmorphism）、微动画（Micro-animations）、金色脉冲光晕等具有震撼视觉的高级游戏界面。
-- **自动化版本号**：在前端编译命令中嵌入了自定义 Node 脚本，全自动根据构建时间生成版本号（如 `v2023.10.23.1234`），与后端版本号一并以非侵入式的 UI Overlay 悬浮于全站右下角，供管理员与玩家精准识别系统构建版本。
-- **路由懒加载**：实现了核心游戏大厅（Lobby）与具体游戏页面（Minesweeper）的独立路由控制与分离渲染。
-- **广告商业化架构 (AdSense)**：全局集成了 Google AdSense 体系，提供独立的 `AdsenseComponent`。该组件完美适配了 SPA 单页应用的路由切换生命周期，能自适应各种广告布局格式，实现优雅的商业化变现方案。
-- **游戏元数据 DB 化（运行时覆盖层）**：`gm_game_configs.config`（JSONB）存储完整元数据（icon / multiRound / modes[] / difficulties[]）。`GameRegistryService.loadFromDB()` 通过 `APP_INITIALIZER` 在浏览器端拉取 `GET /api/v1/games/meta` 并覆盖 TS registry；SSR/预渲染期自动降级为 `game-definitions.ts` 静态 fallback，不影响构建。管理员可通过 Admin UI `/admin/games` 直接修改元数据，无需代码部署即时生效。
-- **大厅游戏列表无限滚动**：`GET /api/v1/games` 支持分页（`?page&limit`），返回 `{ games, total, hasMore }`。大厅组件用 `IntersectionObserver` 监听底部 sentinel，滚到底自动加载下一页并追加卡片，首屏默认加载 6 款游戏。
-- **现代化大厅与极速短链路架构 (Modern Lobby & Quick Actions)**：采用沉浸式全宽响应式网格布局，彻底解绑常驻冷启动侧边栏，改为按需抽屉模式与竞技大厅直达；首屏打造“今日挑战 + 双人对战直通 + 随便来一把”三联转化引擎；游戏卡片支持 5 维胶囊筛选（全部/热门/联机/逻辑/拼图）与即时模糊搜索；卡片底端提供“单人试玩 / 实时对战”分流双 CTA，使对战开局链路极度压缩至 1 步直达。
-- **Google AdSense 过审与高权重双向内链闭环 (AdSense & Bi-directional Internal Linking)**：将平台 17 篇深度策略博文与 18 款游戏进行精准双向绑定。每篇博文底端建立专属“实战验证网关”，提供单机试练与实时联机 PK 双 CTA，并展示 3 篇相关深度解析推荐卡片；在各游戏内页棋盘下方 SEO 区末尾嵌入“进阶战术指南”直达卡。既为真实玩家打造“深度攻略学习 → 即刻投入实战”的高粘性闭环，又为 Google AdSense 爬虫构建了极高内容深度、强大 E-E-A-T 信号与高连通度的站内导航网络。
-- **游戏结算成就大面板与社交 PK 邀请舱 (Grand Result Overlay & Social PK Deck)**：重构全局游戏结算弹窗 `<app-game-result-overlay>`。告别过去狭窄单薄、稀疏单调的纵向卡片，升级为最高 680px 的控制台级成就荣誉大屏。集成 3D 浮雕荣誉徽标、动态金色/紫红环境光晕、自适应单项高光胶囊与多维战绩矩阵（用时/步数/得分/评级）、RPG 等级经验进度条（`Lv.X (+50 XP)`）与连续获胜标识。内置社交裂变与联机转化舱（一键复制带参挑战邀请 + 一键直达 PK Arena），主按钮外露 Space/R 快捷键提示。全面剔除底端杂乱的游戏轮播推荐，保持面板极致的专注与清爽；重构遮罩层为全站 CSS 主题自适应变量（`--color-overlay`），无论深浅主题均能完美呈现全屏半透明微光，告别局部黑块割裂与顶部裁切。
-- **全平台棋盘去嵌套与页面合为一体 (Seamless Game Stage)**：全盘清除各子游戏（数织、数独、华容道、2048、桥梁、24点等）历史上残留的多重暗色黑盒与局部滚动条，解除卡片套娃机制，让棋盘直接自然悬浮在现代化的游戏舞台中，呼吸感充足，与整站设计高度融合。
-- **联机等待大厅双翼对决大屏与跨端互通 (PK Waiting Room Grand Battle Arena)**：全面重构 `<app-game-waiting-room>` 联机等候大厅。解除过去在 PC 端限制在 512px 极度狭窄逼仄的小卡片，升级至最高 1024px (`max-w-5xl`) 的电竞级宽屏双翼大厅。左翼为“双人对决擂台 (Combat Arena)”，包含房主与挑战者大尺寸战术舱、动态光环与金属质感 VS 徽标；右翼为“跨端秒连与对局操作台”，集成微信/系统相机扫码直达、专属带参邀请链接复制、房主一键开战与设置切换，彻底消除了按钮杂乱重复的体验缺陷，全端响应式舒适无横向滚动条。
-- **通用电竞级联机对战 HUD 仪表舱 (`app-game-pk-hud`)**：打造高内聚、高复用的全端通用 PK 控制台组件。彻底终结旧版分散卡片在各游戏中右侧产生 >180px 丑陋留白的视觉缺陷。1v1 模式提供对称平衡的双翼对战控制舱（左翼“我方”青蓝流光动态斜纹进度条、等宽大字比分、房主光环与状态胶囊；右翼“对手”玫粉对战渐变槽）；中央集成金属质感 `⚔️ VS` 徽标、实时对战计时器 `⏱️ 00:04`、多局系列赛自动识别（`BO3: 1 - 0`）与自适应动态领先/落后差值舱（`🟢 +25% 领先` / `🔴 -15% 落后` / `⚪ 持平`）；3 人以上房间自动平滑降级为响应式排行榜网格（🥇 🥈 🥉）；移动端自适应为 44px 极速微缩双条 HUD，兼顾各游戏自定义指标（步数、用时、地雷数等）。**已 100% 全量覆盖全平台所有支持联机 PK 的游戏：数织 (Nonogram)、下落2048 (Drop 2048)、经典2048 (Classic 2048)、推箱子 (Sokoban)、经典扫雷 (Minesweeper)、华容道 (Sliding)、俄罗斯方块 (Tetris)、方块消消乐 (Block Puzzle)、六角消除 (Hexa Puzzle)、数桥 (Hashi)、水排序 (Water Sort)、连线拼图 (Connect)、24点 (Math 24 Speed & Steal)、数独 (Sudoku Speed & Steal)、关灯游戏 (Lights Out)**，彻底解除移动端被 `hidden lg:block` 屏蔽对手的问题。
-- **PK 对战抽屉全自动开闭流转机制 (Smart Auto-Closing PK Drawer)**：优化游戏内一键唤起右侧对战抽屉（`GameLobbyPanelComponent`）后的操作链路。玩家在抽屉中点击“加入房间”、“重新进入”或“创建房间”后，系统自动触发 `togglePkDrawer(false)` 并消除全屏毛玻璃遮罩 (`bg-black/50 backdrop-blur-sm`)，彻底杜绝进入房间后等待大厅被右侧抽屉或暗色蒙层遮挡模糊的缺陷，实现一键秒进大厅的无缝平滑体验。
-- **PK 对战全链路仪式感重塑与电竞级复仇结算系统 (Esports PK Ceremony & Rematch Settlement System)**：
-  - **Ready-Go 街机级开局倒计时 (`GameStartingOverlayComponent`)**：重构开局倒计时视觉体系，引入双层顺逆时针青蓝/紫罗兰虚线能量环与秒级扩散高斯脉冲光晕。自研 Web Audio 纯代码合成音效：3-2-1 倒计时阶梯电子脉冲音，0 秒瞬间引爆 140Hz 重低音下潜（Sub-bass Dive）与 C 大调明亮铜管和弦 (`countdown_go`)，搭配 `⚔️ BATTLE START!` 徽章震撼弹入，彻底告别单调数字与白开水开局。
-  - **全屏双侧礼炮级联轰击 (`fireVictoryConfetti`)**：胜负判定解绑单人模式限制，联机 PK 获胜瞬间触发连续 4 波双侧 45° 仰角礼炮喷射，纸屑与星尘全屏狂欢。
-  - **双翼战报台 (PK Duel Summary Deck)**：在结算弹窗中对称渲染玩家与对手真实头像、昵称、👑 胜者皇冠与 WINNER/DEFEAT 标签，顶部动态指示多轮系列赛总分（如 `BO3: 2 - 1`）。
-  - **复仇弹窗与高能 CTA 引导**：败者视角独家呈现高对比度流光复仇按钮 **`⚔️ 发起复仇 (Rematch) [Space / R]`**，胜者呈现黄金烈焰 **`⚡ 再战一局 (Play Again) [Space / R]`**，支持键盘快捷键秒发复仇请求并自动规避输入框打字冲突。全面赋能数织、扫雷、俄罗斯方块、滑动拼图、2048、方块消除、六角消除、推箱子、关灯等全系 PK 游戏。
-- **PWA 离线畅玩体系与移动端手势触觉引擎 (PWA Offline Gaming & Mobile Haptic Architecture)**：
-  - **生产级离线缓存 Service Worker (`sw.js`)**：全盘重构 Service Worker 缓存策略，预缓存应用外壳（App Shell）、核心图标与多语言字典；静态资源（JS/CSS/WebP/Audio）采用 Stale-While-Revalidate，页面路由请求采用 Network-First 配合离线 SPA 降级，彻底支持在断网、飞行模式或极端弱网环境下即刻启动并畅玩任意单机游戏。
-  - **离线战绩队列与联网全自动补提交 (`OfflineSyncService`)**：单人模式战绩提交（`submitSingleStat`）集成离线静默降级与本地持久化队列 (`xgame_offline_stat_queue`)，网络恢复时触发 `online` 监听全自动静默补提交至云端并弹出同步轻量 Toast 提示，保障无网环境下的得分与通关记录永不丢失。
-  - **全局非侵入式离线状态胶囊 (`OfflineBannerComponent`)**：一旦断网即在游戏顶层浮现琥珀色毛玻璃横幅，实时提示“离线畅玩模式”与“已暂存 N 局”徽章，连网时平滑消失。
-  - **PWA 一键安装与 iOS 主屏幕引导**：智能感知 `beforeinstallprompt` 事件，在顶部工具栏常驻快捷安装胶囊；为 iOS Safari 提供交互式分步添加主屏幕向导弹窗。
-  - **移动端手势防误触与四维触觉引擎 (`HapticService`)**：在 2048、滑动拼图、推箱子等游戏棋盘部署 `touch-none select-none`，消除手机屏幕滑动手势中的下拉刷新与页面误滚动；全面落地 `vibrateSwipe` (微滑)、`vibrateSnap` (吸附)、`vibrateCombo` (连击)、`vibrateImpact` (重击) 四维震感，赋予扫雷长按插旗、2048 滑动合并、方块吸附等原生主机般物理咬合质感。
-- **积分挑战型游戏双高分引擎与全网纪录保持者系统 (`GameScoreCapsuleComponent` & `LeaderboardService.getWorldRecord`)**：
-  - 针对规则统一、无尽刷分型益智游戏（**六边形消融 Hexa、方块消融 Block、经典2048 Classic2048、下落2048 Drop2048、俄罗斯方块 Tetris**），彻底摒弃过去仅有单一最高分或刷新归零的缺陷；
-  - 打造高复用通用计分胶囊 `<app-game-score-capsule>`，全端自适应呈现三大指标：⭐ **当前得分 (Score)**、👑 **个人历史最佳 (My Best)**、🏆 **全网最高纪录 (World Record)**；
-  - 全网最高分集成悬浮/点击微气泡，直观查看当前全站第一名纪录保持者昵称；
-  - 彻底修复 `HexaStore` 与 `BlockStore` 本地存储（`localStorage`）与云端统计加载生命周期，确保单机模式即开即读、落子即时落盘、Game Over 即时同步，无论游客还是注册用户最高分永不丢失；
-  - 深度适配 8 种系统语言（中、英、日、韩、西、法、德、葡）与全站 Light/Dark CSS 主题变量。
-- **极简短路径与零阻断体验重塑 (Zero-Friction Fast-Path Revamp)**：
-  - **单机游戏秒级极速重开（0 步阻断）**：
-    - 彻底拔除全平台单机游戏进行中点击“重玩 (Restart)”或按下键盘快捷键（Space / R）时的二次确认弹窗（`game.confirm_restart`）；
-    - 点击重开或按键即毫秒级重置棋盘并开始新局，保障单机益智解谜玩家高频试错与无缝心流；
-    - 彻底拔除水排序（`WaterSort`）及新手指引系统（`InteractiveTutorialService`）中残存的浏览器原生阻塞式 `window.confirm()`，杜绝系统级线程卡顿。
-  - **单人等待房无感秒退**：
-    - 在游戏基类（`BaseGameComponent`）、大厅面板（`GameLobbyPanelComponent`）、PK 大厅（`GamePkLobbyComponent`）与连线游戏（`ConnectComponent`）中智能感知房间实时在席人数；
-    - 当房间内仅有房主一人（未牵涉其他在线玩家）时，点击退出/解散直接 0 步秒退回大厅，不再出现无意义的确认弹窗。
-  - **好友对战邀请：电竞级浮动应战战帖 (Floating Battle Capsule)**：
-    - 彻底淘汰卡死全屏视线与操作的居中模态对话框；
-    - 升级为右上角轻盈的**浮动对决战帖气泡 (`activeInvite`)**，展示发起好友头像、昵称与对战游戏；
-    - 配备 **`⚡ 应战`** 快捷按钮与 12 秒微型呼吸倒计时，单点秒切房间，超时或点关闭自动收拢，绝不打断当前单机对局。
-  - **好友列表行内防误触 (Inline Confirm)**：
-    - 将好友列表中点击“删除好友”的全屏阻塞对话框重构为原地跳动的红色微缩“确认? (3s)”行内轻触按钮，3.5 秒无操作自动恢复原状，实现极简轻便管理。
-- **每日挑战奖励多巴胺庆典与 3.5 秒零阻塞水到渠成体验 (`RewardCelebrationModalComponent` & `DailyQuestsHub`)**：
-  - **水到渠成零机械点击**：彻底移除强制遮挡的“确定领取”按钮。响应极简设计哲学，玩家通过努力通关与挑战，经验与奖励到账本就理所应当；
-  - **3.5 秒黄金多巴胺展示与平滑倒计时**：展示 +XP、+🪙、太阳放射金光（Sunburst Rays）、36 颗五彩火花喷泉与升级彩蛋的同时，底部配备高质感平滑渐变进度条与 `(3s)` 动态倒计时，时间结束全自动存入资产栏并平滑关闭，全程 0 次额外点击；
-  - **随心关闭自由度**：支持点击任意处或轻按键盘（Space / Enter / Esc）秒关，不耽误急切玩家；
-  - **全站弹窗阻断拔除**：将全站残留的原生浏览器 `alert()` 弹窗统一收拢至非阻塞的 `ToastService.success()`；
-  - 提供 **「⚡ 一键全领 (Claim All)」** 快捷流转通道，合并多任务与大宝箱收益单次爆发；
-  - 每日挑战页面集成 **玩家实时资产状态舱 (Live Asset Deck)**，等级进度条、脑力金币 🪙、打卡连胜 🔥 实时跳动到账；
-  - 全面支持 8 国语言翻译（中、英、日、韩、德、法、西、葡）与全站 Light/Dark 主题无缝切换。
-- **全系胜负沉浸式视听与电竞级对决战报系统 (`GameResultOverlayComponent` & `UISoundEngine`)**：
-  - **物理级 Web Audio 声音合成全新重塑**：
-    - **单人胜利 (`victory`)**：升序六音阶魔力晶莹琶音（G4 → C6），双振荡器谐波叠加，终音融合 C3/G3 温暖低频底音与高晶泛音，带来空灵清透的通关成就感；
-    - **联机 PK 完胜 (`pk_victory`)**：160Hz → 48Hz 超重低音冲击（Sub-bass Dive）搭配宏伟铜管三连击，终乐章叠加密集金色钟琴瀑布与 C2 长延音轰鸣，引爆竞技荣耀感；
-    - **单人失败 (`gameover`)**：彻底拔除刺耳粗暴的锯齿波蜂鸣，重塑为温暖舒缓的八音盒/电钢琴下行和弦（经过 850Hz 低通滤波平滑）与微亮高音，给予玩家温润的抚慰与鼓励；
-    - **联机 PK 战败 (`pk_defeat`)**：带通滤波古铜锣重金属冲击 + 164Hz → 110Hz 大提琴滑降战损低吟，并在尾部注入两度有力的“复仇心跳脉冲 (Dum-Dum)”，唤醒战士复仇意志；
-    - `AudioService` 智能适配模式分流（`playWin(isPk)` / `playLose(isPk)`）。
-  - **视觉动态与电竞战报全面跃升**：
-    - **胜利状态**：卡片后方 360° 旋转 16 芒黄金太阳光柱（Sunburst Rays）+ 内部 14 颗散落星辉微粒 + 3D 浮动跳跃奖杯（`animate-float-trophy`）+ 黄金立体投影标题；
-    - **失败状态**：电影级深暗渐晕与玫紫光晕 + 初始回弹弹性战损盾牌（`animate-shield-impact`）+ 励志振奋文案；
-    - **单机“再试一次”极速通道**：优化为“🔄 再试一次 [Space / R]”高能流光翡翠按钮；
-    - **PK 战败“发起复仇”烈焰通道**：部署“⚔️ 发起复仇 [Space / R]”赤红烈焰外发光呼吸脉冲（`animate-revenge-pulse`），极大提升再战转化率；
-    - **对称双翼战报 (PK Duel Summary Deck)**：胜者高光黄金包边 + 皇冠 👑 + `WINNER` 勋章；败者银灰护盾 + `DEFEAT` 标签；中央悬浮 `VS` 徽标与多轮系列赛总分（如 `BO3: 2 - 1`）；
-    - 全面严格遵循 8 国语言翻译（中、英、日、韩、德、法、西、葡）与全站 Light/Dark CSS 主题变量。
+- **Zoneless 无区化响应式**：全面基于 Angular 21 Signals 驱动，彻底移除 `zone.js`，实现毫秒级变更检测与轻量运行。
+- **现代化设计系统**：全站严格基于 CSS 变量定制 Light/Dark 双模主题，杜绝硬编码颜色；采用毛玻璃微拟物与流光动效。
+- **国际化与多语言**：深度适配全球 8 种主流语言（中、英、繁、日、韩、西、法、德），所有文案统一通过 `i18n.service.ts` 动态加载。
+- **全端响应式**：基于 TailwindCSS 响应式前缀（`sm:`, `md:`, `lg:` 等）无缝适配手机、平板与桌面宽屏，杜绝横向滚动条。
+
+### 后端技术栈 (Go + Fiber v3)
+- **高性能 HTTP & WebSocket**：采用 Fiber v3 构建高吞吐服务，长连接接管房间匹配、对战广播与实时对战。
+- **轻量架构设计**：单机模式完全在客户端本地内存运行（零服务端负载）；联机 PK 模式由服务端进行状态同步、仲裁与积分落盘。
+- **数据持久化**：基于 GORM + PostgreSQL，支持用户账户、段位积分、战绩排行榜与游戏元数据动态配置。
 
 ---
 
-## Available Games (核心游戏矩阵)
+## 2. 核心架构与公共组件
 
-- **Minesweeper (经典扫雷)**
-  - Modes: Single Player (首击必空), PK Speed (异盘竞速), PK Steal (同盘抢雷)
-  - 核心功能: **经典 3D 浮雕与深度凹陷视效重塑**：彻底消除旧版孤立卡片缝隙（gap: 0 无缝拼合），未翻开格子呈现经典 3D 凸起斜面（Bevel 浮雕质感）；点击按压时触发即时物理下沉反馈（`:active` 瞬间深度凹陷）；翻开格子呈现细腻的嵌底凹槽（Sunken Inset 深度底板质感）；外围包裹经典 3D 金属下沉托盘边框（`ms-board-plate`），全量遵循全局 CSS 变量完美支持深浅主题无缝切换。
-- **Sudoku (数独)**
-  - Modes: Single Player (4 difficulties: 初级/中级/高级/专业), PK Speed, PK Steal
-  - 核心功能: 毫秒级状态同步、原汁原味的历史撤销与擦除、完美的“重置回初始状态”机制，甚至自动屏蔽用过提示的固定数字。
-- **Sliding Puzzle (数字华容道)**
-  - Modes: Single Player (3x3 to 6x6), PK Speed
-  - 核心功能: **莫兰迪鼠尾草灰绿 (Sage Morandi) 现代极简美学重构**：棋盘重塑为大圆角浅灰沉浸式托盘（`rounded-2xl`），滑块全面应用高级低饱和度莫兰迪卡其灰绿（`#7d836d`），搭配大号纯白高对比度粗体数字；平滑微圆角与均匀空隙布局，触控按压具备轻微微缩弹性反馈；全量基于全局 CSS 变量体系完美支持深浅主题切换。
-- **Hexa Puzzle (六边形消除)**
-  - Modes: Single Player (无尽模式), PK Score
-  - 核心功能: 纯客户端内存无损本地运算，支持 61 轴线六边形蜂窝网格；三维坐标曼哈顿距离精确变换；**极速清脆消融重构 (Snappy Dissolve)**：彻底修复样式隔离与拖沓延时，将消除延迟缩短至 220ms，配合紧凑 12ms 波纹级联与 320ms 状态清理；**殿堂级微晶宝石美学与主题自由切换**：支持 💎 微晶幻彩、👑 琥珀流金（纯净单色）、🌊 深海冰晶三大调色板一键随心秒切；所有六边形搭载 45° 晶莹高光切面折射 (Facet Reflection) 与立体内凹卡槽；**六方位晶钻物理爆碎粒子 (Crystal Shards Blast)**：消除瞬间向 6 轴喷射碎钻星尘；**电影级 Web Audio 合成音效**：42Hz 超重低音轰鸣、清脆宝石爆碎裂响与纯净 D 大调上扬水滴琶音。
-- **Block Puzzle (方块消除)**
-  - Modes: Single Player (经典消除/无尽模式), PK Score
-  - 核心功能: 纯客户端极速本地引擎，支持 8x8、10x10、12x12 自适应网格；**极速消融与多巴胺爆炸 (Snappy 0.22s Dissolve)**：消除超时自 750ms 压减至 320ms，波纹延迟压缩至 12ms；微晶宝石倒角材质与自适应内凹底座；**自由主题调色板一键切换**（微晶幻彩 / 琥珀流金 / 深海冰晶）；轻奢悬浮流光 HUD（金星得分、动态火焰能量条、王冠最佳纪录）；电影级爆裂打击音效（超重低音轰鸣、清脆水晶碎裂与动态爬升音阶）。
-- **Tetris Battle (俄罗斯方块)**
-  - Modes: Single Player (无尽马拉松), PK Attack (异盘乱斗 / 发送垃圾行)
-  - 核心功能: 双翼机甲电竞控制台（HOLD 暂存舱、NEXT 三级预览、LEVEL 刻度表、键位指南）；💎 霓虹水晶 / 👑 皇家琥珀 / 🌊 赛博极冰 三套调色板一键随心换；零延迟瞬切引擎（剔除单元格过渡动画，位移 100% 干净利落零残影，消除外部拖尾遮罩）；远距底部着陆虚影（相距 $\ge 2$ 格优雅提示，贴身 0-1 格彻底隐藏）；550ms 单机复活激光消融光幕与微晶气化升华粒子。
-- **Gomoku (五子棋)**
-  - Modes: Single Player (AI挑战 - Easy/Medium/Hard), PK Classic (经典对战)
-- **Codebreaker (1A2B)**
-- **Drop 2048 (下落合成)**
-  - Modes: Single Player (单机无尽挑战), PK Mode (实时竞技对战)
-  - 核心功能: 双翼电竞街机控制台（左翼 Level 等级进度卡与按键指南、右翼 NEXT & AFTER 双级晶体方块预览舱与连击火焰卡）；顶部极简毛玻璃胶囊 HUD（金星得分、关卡徽章、皇冠纪录）；按键滚动拦截锁与软降/硬降分离机制（`↓/S` 软降步进加速落子、`SPACE` 硬降瞬间直落到底，严格 `preventDefault` 绝不触发浏览器滚动）；中央矩阵纯净化消除文字重叠，原生响应式网格尺寸；移动端专属虚拟方向键与滑动手势全端支持。**智能盘面感知发牌与孤立子死局拯救 (Board-Aware Smart Spawner)**：彻底根治后期高分阶段小数字停止掉落导致卡在底部成为孤立死子（Orphan Tile Deadlock）的死局缺陷，实时分析盘面暴露数字与奇数孤立块并提供 38% 的定向救急生成概率；**小数字动态阶梯淘汰 (Tile Deprecation)**：仅当场上已彻底清除某小数字且最大数字达到阶梯门槛时才正式将其移出牌池，绝不提前淘汰场上现存小数字；**彩虹万能方块 🌈 (Wild Block)**：每 20 步保底或连续 5 步无消除时紧急掉落，落地自适应同化为相邻最大数值引爆多级级联连击消除，配备四色流光粒子与专属 Web Audio 魔幻琶音；**街机级高能连击爽感与阶梯赞赏词 (P0 Combo Juice)**：支持 `GREAT! 🔥`、`AMAZING! ⚡`、`SUPER! 💥`、`UNREAL! 🌟`、`LEGENDARY! 👑` 多级浮空弹幕与三和弦+重低音声浪冲量；**新手极速无感微导引 (P0 Micro-Guide)**：首局自动浮现手势/键位胶囊，首个落子后永久自动隐去；**荣耀战绩海报多维联动 (P2 Viral Achievement Card)**：局末成就卡透传 SCORE、MAX TILE（最大方块）与 LEVEL，支持一键生成战报海报与带参挑战链接。
-- **Classic 2048 (经典 2048)**
-  - Modes: Single Player (单机模式), PK Speed (竞速对决)
-  - 核心功能: 街机级三联 HUD 控制台（SCORE 得分卡 + 👑 BEST 皇冠最高纪录本地持久化 + ⏱️ 用时 & 🔄 步数卡）；动态 `+Score` 浮动微动效与 `c2048-tile-pop` 弹性合并动效；提供 **🪵 原木经典 (Wood Classic)**、**⚡ 微晶霓虹 (Cyber Neon)**、**🧊 极地冰晶 (Glacier Ice)** 三套高质感专属主题，支持胶囊按键一键切换与持久化偏好；键盘方向键/WASD 与移动端触控滑动手势双端适配；合成音效与滑动音效全链路反馈；一键快捷重开。
-- **Sokoban (推箱子)**
-  - Modes: Single Player (单机解谜), PK Speed (竞速对决)
-  - 核心功能: 动态响应式绝对布局、支持点击空地自动 BFS（广度优先搜索）智能寻路，以及无限次完美撤销。
-- **Nonogram (数织)** *(第 15 款游戏)*
-- **Hashi (桥梁谜题)**
-  - Modes: Single Player (单机解谜), PK Speed (竞速对战)
-  - 核心功能: SVG 动态无损矢量渲染引擎，双击切换双桥机制，智能连通性与环路检测算法。深度集成 `bridges-generator` 生成算法，支持初级 (7x7)、中级 (10x10)、高级 (15x15)、专家 (20x20) 四大难度。**视口自适应棋盘缩放 (`boardDimensions`)**：彻底终结大网格局限于 350px 导致数字与圆圈微缩的缺陷，基于视口可用宽高与网格密度动态扩充（15x15 自适应扩展至 640px~720px，单格 48px+，面积倍增），并全量应用全局 CSS 变量（`--color-bg-main`、`--color-bg-card`、`--color-border-card`、`--color-text-main`），移动端与 PC 端无横向滚动条且完美居中。
-  - Modes: Single Player (单机模式), PK Speed (竞速对决)
-  - 核心功能: 纯前端逻辑引擎（单机模式不经过服务器），支持 5×5/10×10/15×15/20×20/25×25 五种网格尺寸。**移动端/PC 全端统一 Pointer Events 触控滑动填色引擎**：彻底重构触控系统，全面杜绝移动端滑动手势被页面原生滚动吞噬；引入 Bresenham 网格线段连续路径插值算法，即使手指高速滑动 3 格或多格也能 100% 连贯填满，绝不漏格；支持批量原子级撤销（一次划线一键完整撤回）与 Haptic 触感反馈，全平台 0ms 零延迟极速响应。自适应多平台棋盘尺寸（CSS Grid + 动态 cellSize 极限小屏适配），游戏结算弹窗与 XP/成就/历史记录全系统对接。
-- **Connect (一笔画连线)** *(第 16 款游戏)*
-  - Modes: Single Player (单机模式), PK Speed (双人竞速对决)
-  - 核心功能: 400道全量题库，SVG 霓虹发光材质渲染管道，支持鼠标/触摸流畅滑动连接配对颜色。**100% 满盘互锁生成算法（零捷径容忍）**：彻底根除端点紧邻与直线捷径，强制路径折转蜿蜒并接入启发式全盘捷径求解器 `hasPartialSolution` 校验，确保任何颜色在非满盘状态下均被相互截断封死，“不填满全盘就绝对连不上”，精准还原 Flow Free 经典解谜张力。**极简纯净点阵画风**：全面消除单元格生硬边框线，改为柔和灰方点，舞台干净纯粹。**实时连线与覆盖率 HUD 仪表舱**：信息栏实时指示连线数与网格覆盖率百分比，满盘自动触发高亮生态绿反馈，未满盘时激活漏填空格呼吸脉冲光晕与引导横幅。**选关大厅 (`ConnectLobbyComponent`) 现代化美学重塑**：彻底淘汰过时的硬编码 `bg-black/20` 与低对比度文字，基于全站全局 CSS 变量实现高对比度难度切换标签、高亮关卡序号、矢量 SVG 评星与深浅色主题无缝自适应切换。
-- **成语益智 (Idiom Quiz)** *(第 14 款游戏)*
-  - 三模式：填空闯关分级学习 + 每日猜词（全球同题 Wordle 风格）+ PK 极速填空（联机对战）
-  - 数据库：2000 条精选成语（来自 pwxcoo/chinese-xinhua），含释义、故事、出处、拼音
-  - **填空闯关分级**：简单 / 中级 / 困难三难度选关，智能推荐当前最适难度（掌握率 <80% 推荐当前级别）；`?difficulty=` 参数过滤加权抽题池
-  - 间隔复习：连续答对 3 次→标记已掌握；14 天未复习→自动重入练习池（艾宾浩斯遗忘曲线）
-  - 每日 Wordle：日期作随机种子稳定出题，六次猜测，两遍着色算法（正确处理重复汉字）
-  - 猜测历史持久化：`gm_user_idiom_daily_guesses` 表保存每次猜词，刷新页面不丢进度
-  - 分享功能：生成 emoji 彩格战绩图，支持 Web Share API + 剪贴板降级
-  - **PK 极速填空**：双方收到同一道填空题，先答对得分；答错自动解锁重填；2 秒后自动出下一题；先得 N 分赢得系列赛；完整等待室 / 倒计时 / 结果覆盖层流程
-
-## Global Features: Single Player (3/4/5 位数难度练习), PK Speed (同屏竞速破译)
-
-## Personal Records & Global Achievements (个人记录与成就系统)
-- **Persistent Local Records**: Registration & Guest Play: Allow players to jump right in or create persistent accounts.
-- System Management: Advanced tools for administrators including maintenance mode and global announcements.
-- **Global Achievements Profile (`/profile`)**: A unified, centralized dashboard displaying all historical personal records.
-- **Game Popularity Tracking**: Each game tracks and displays its visit count (🔥) in real time in the game lobby.
-- **Manual Game Sorting**: Administrators can override popularity sorting by manually assigning a `SortOrder` (priority) to games via the Admin Dashboard. Games are strictly ordered by `SortOrder` (ascending) first, breaking ties with `VisitCount` (descending).
-- **In-Game Display**: Real-time display of the player's personal best inline within the game interface to promote engagement.
-
-### Admin Dashboard
-- User Management: View user lists, toggle active status, and track last login.
-- **Global System Settings (Auto-Save)**: Dynamic configuration system for announcements, ads, maintenance mode, and fake traffic simulator. All toggle switches auto-save on change; text/number inputs auto-save on blur. No manual "Save" button needed.
-- **Graceful Degradation (Multiplayer Kill Switch)**: Admins can instantly disable all multiplayer and matchmaking features to save server resources or perform maintenance. The system gracefully degrades to a pure local single-player experience without taking the site offline. All 13 games' Right Sidebar lobby panels, mobile toggle buttons, and the global lobby panel are hidden via `@if` conditional rendering. Backend WebSocket guard rejects any stale multiplayer requests with `multiplayer_disabled` error code.
-- Real-Time Monitoring: Live graphs and stats of currently active rooms and online players using WebSocket connections.
-- Fake Traffic Simulator: Generates random background rooms and players to create a lively lobby environment. Controllable via the Admin Settings panel.
-- **Responsive Lobby Grid**: The game lobby uses CSS Grid `auto-fill` to dynamically adjust column count based on available width (up to 5 columns on 4K screens). When the multiplayer sidebar is hidden, cards automatically expand to fill the freed space.
-- **游戏元数据管理（Admin Games Settings）**：Admin Dashboard 的 Games 设置弹窗新增 icon emoji 输入框、multiRound 开关、modes JSON 和 difficulties JSON 文本框，管理员可直接编辑并保存至 `gm_game_configs.config`，无需修改代码或重新部署。
-
-## UI/UX Design System (UI/UX 规范)
-
-- **全局状态隔离**：通过依赖注入（DI）与 Signals 双向绑定实现了纯前端状态管理的强隔离。
-- **无缝多语言切换 (I18n)**：`I18nService` 支持中文（zh-CN）与英文（en-US）的瞬时热切换，不刷新页面即刻更新全站文案。
-- **动态主题系统**：`ThemeService` 提供 Light / Dark 等系统级别的主题色轮换，结合 CSS 原生变量（CSS Variables）映射到 Tailwind 工具类中，实现高级的夜间护眼与酷炫竞技模式的流转。
-- **定制化滚动条 (Custom Scrollbar)**：所有包含垂直或水平滚动的容器，必须添加 `custom-scrollbar` 类，以防止浏览器原生白色滚动条破坏暗黑主题的视觉一致性。
-- **SEO 与广告合规的 3 列响应式布局 (3-Column SEO Layout)**：全站 14 款游戏页面均采用 `320px SEO说明 | 居中游戏区 | 320px 联机大厅` 的对称三栏布局。左侧提供丰富的富文本游戏玩法与技巧（极大提升 AdSense 审核与 Google SEO 索引质量），中间为核心游戏区，右侧为多联机大厅。在移动端自动降级为流式单列布局，保证内容呈现完整。并且游戏主界面抛弃死板的锁定高度，全面改用 `min-h` 支持宽屏与大屏设备自然流式滚动。主页大厅 (`/lobby`) 底部同样部署了支持双语切换的千字级高质量 SEO 介绍长文，深度匹配泛益智游戏与多人联机关键词。
+- **顶栏大一统架构 (`app-game-header`)**：
+  消灭独立占行的次级工具栏，将难度胶囊居中展示，两侧集成对战动作与实用小工具，为全站 18 款游戏释放 50px 棋盘垂直空间。
+- **大一统游戏基类 (`BaseGameStore` / `BaseGameComponent`)**：
+  - 强制标准化游戏生命周期（Waiting/Starting/Playing/Finished）与玩家列表契约；
+  - 统一封装开房、入房、换游戏、重玩、多局胜负制（BO3/BO5）逻辑，消除各子游戏样板代码。
+- **全域开房感知与即时应战体系**：
+  - **顶栏对战呼吸灯**：全局 WebSocket 监听，有新开房间时实时触发流光与红黄声波微标，可下拉一键迎战；
+  - **首页等待卡片流**：首页即时展示等待席位与声波动画；
+  - **局内挑战胶囊**：单机游玩时右下角智能滑入轻量化挑战药丸，支持即刻应战或 8 秒自动隐退。
+- **结算成就大面板 (`app-game-result-overlay`)**：
+  控制台级结算面板，集成荣誉勋章、动态经验条、战绩矩阵（用时/步数/分差）与一键复制带参挑战链接。
+- **SEO 与广告生态**：
+  动态 `SeoService` 深度匹配“益智游戏PK网”高权重搜索词；17 篇深度策略博文与 18 款游戏实现双向内链闭环；集成适配 SPA 路由的 Google AdSense 组件。
 
 ---
 
-## 2.5 跨游戏通用功能体系
-- **全局竞技大厅 (Global Arena Lobby)**：在平台首页提供汇总的竞技大厅面板。PC端以侧边栏常驻，移动端以抽屉弹层呼出；玩家能够直观看到所有游戏的活跃房间和在线玩家，并支持跨游戏直接加入房间对战，大大提升对战效率和社区活力。
-- **综合包厢模式 (Party Room Mode)**：为了提供最好的朋友开黑（Party）体验，我们的房间设计不再死板地绑定于某一款游戏。玩家聚在一个房间里后，**房主可以随时更改房间设置，无缝切换到其他游戏或难度**。后端会自动热重载新的游戏引擎，并通过广播带领房间内所有玩家集体、平滑地转场到新的游戏界面，真正实现了“一个房间，玩遍全站”的派对体验。
-- **大厅公屏广播：“发英雄帖” (Global Lobby Broadcast)**：在全局竞技大厅或游戏内房间面板，房主可一键发送英雄帖。大厅顶部会以跑马灯形式滚动系统高亮广播，其他在线玩家点击广播内的链接即可瞬间跨游戏加入对战，极大盘活全局活跃度。同时支持**大厅快捷喊话 (Lobby Quick Phrases)**，玩家可通过大厅右下角下拉框一键发送“谁敢来挑战我”等预设语句（附带房间直达车），彻底告别大厅刷屏广告烦恼。
-- **全页 PK 竞技大厅 (GamePkLobbyComponent)**：点击游戏右上角人群图标，单机模式下直接展开全页 PK 大厅，统管所有游戏房间。顶部导航显示统一的"⚔️ PK 竞技大厅"标题而非单一游戏名称。桌面端两栏布局（左：创建表单，右：活跃房间+在线玩家 Tab）；移动端折叠式 Accordion。新增三大能力：①创建表单内置全游戏选择器（4列 icon 格，切换游戏自动联动 Mode/Difficulty）；②房间列表支持按游戏筛选（chip 过滤条，仅有多种游戏时显示）；③我的房间可通过 ⚙ 按钮触发"换游戏"弹窗实时切换游戏/模式/难度（走 change_game WS 动作）。
-- **阅后即焚文字聊天 (Room Text Chat)**：针对 PK 房间内部特供的**高隐私、零运维成本**的内置聊天室！消息直接在后端经过内存分发广播，前端悬浮显示在左下角，10 秒无焦点自动渐隐消失。无需数据库存储，防止言语暴力溯源，保障纯粹的组局体验。
-- **多局制 PK 系列赛 (Best-of-N)**：创建房间时可指定目标局数（1 / 3 / 5 / 10），先赢 N 局者获得系列赛冠军。玩家 Badge 实时显示 `🏆 当前局/总局`。系列赛结束后自动重置 Wins，支持再来一局开启新系列。已支持游戏：扫雷（速度模式）、滑块拼图、灯谜、密码破译。多局通用逻辑（`pkWins` / `isSeriesOver` / `pkScoreLabel`）已全部内置于 `BaseGameStore`，各游戏无需重复实现；同时修复了系列赛重启时 `_pkStatSubmitted` 未重置导致后续局对战统计不提交的 Bug。
-- **动态竞技房间**：每款游戏内部也有独立大厅。玩家可创建房间、调整难度模式、邀请在线玩家。支持跨设备的双人实时对战和计分同步。
-- **私密好友房 (Private Room Password)**：创建房间时支持设置 4 位纯数字密码保护。大厅中带有锁定图标 🔒 的房间加入时需验证密码。结合包厢模式，密码验证状态在切游戏时会无缝跨路由传递；且房主断网重连可自动免密直连。
-- **全端社交裂变与分享系统 (Social Sharing & Promotion)**：
-  - **原生 Web Share API 集成**：移动端可直接唤起系统级分享（直通微信、推特等社交软件）；PC端则通过自定义的超高颜值 `ShareModal` 弹窗展示。
-  - **动态二维码生成 (QR Code)**：引入 `qrcode` 实时渲染带分享链接的高清二维码，扫描即刻拉起游戏页面。
-  - **房间直达裂变**：在联机房间内点击“分享”，会自动生成带有房间号、模式、房主ID参数的专属邀请链接。朋友点击即可瞬间拉起对应的游戏并直通对战房间。
-  - **动态 SEO 与富文本预览 (Open Graph)**：集成了 `SeoService`，支持按当前游玩的游戏动态更新 `og:image` 与 `og:title/description`。在即时通讯软件发送链接时，会自动带出极其精美的游戏卡片预览，极大地提高转化率。
-  - **OG 封面图**：`public/og-cover.png`（1200×630px）作为所有页面的默认分享图；博客文章页额外注入 BlogPosting JSON-LD 结构化数据，提升 Google 富文本搜索结果展示。
-  - **Sitemap 自动生成**：`scripts/generate-sitemap.js` 自动扫描 `features/games/` 目录与博客索引，生成含 `<lastmod>`、`hreflang`、`x-default` 的 8 语言 sitemap（当前 448 个 URL），同步输出 Angular SSG 用 `routes.txt`。
-  - **全站静态预渲染（448 条路由）**：`app.routes.server.ts` 所有路由统一 `RenderMode.Prerender`，包含博客文章、游戏页、文档页。Googlebot 访问任一 URL 均获得完整 HTML，无 JS 执行需求。
-  - **博客内容中心（静态 JSON 驱动）**：11 篇双语博客文章存储于 `public/assets/blog/{slug}.json`；`blog.service.ts` 读取静态文件（预渲染友好），Admin 面板写入 DB 后通过 `scripts/export-blog.js` 一键导出同步。文章均达到 900+ 英文词 / 1900+ 中文字，满足 AdSense 内容质量要求。
-  - **robots.txt 精细配置**：允许全站爬取，Disallow `/admin/` 路径节省爬取配额；Cloudflare 托管层额外屏蔽 AI 训练爬虫（GPTBot、ClaudeBot 等）。
-  - **AdSense 合规**：隐私政策含 Cookie/广告披露条款及用户退出链接；About 页含联系邮箱（contact@puzzlepk.com）。
-  - **统一法律页体系（/legal/\*）**：privacy / terms / about / **contact** 四类法律与联系页面全部预渲染且进入 sitemap。Contact 页（`legal.contact.*` 八语言 i18n）提供 support@puzzlepk.com 邮箱与 48 小时回复承诺，补齐 AdSense 审核所需的 E-E-A-T 联系信号。
-  - **页脚导航修复（AdSense 合规）**：页脚 About/Privacy/Terms/Contact 及 Cookie 弹窗链接从不可预渲染的 `/pages/*` 统一改为 `/legal/*`（此前 `/pages/*` 对爬虫返回空壳页面，属“低价值内容”拒审主因之一）；边缘函数对存量 `/pages/*` 返回 301 至 `/legal/*`，杜绝爬虫空页与重复内容。
-  - **/docs 攻略中心首页**
-  - **结构化数据合规**：游戏页 WebApplication JSON-LD 移除伪造 AggregateRating（合规红线）；8 语言 inLanguage/og:locale 正确映射（LANG_LOCALES / LANG_OG_LOCALES）；新增 BreadcrumbList 面包屑结构化数据（游戏/攻略/博客/法律页）。
-  - **软 404 修复**：边缘函数仅对 login/register/profile/admin 客户端路由返回 SPA 壳，其余未预渲染路径返回真实 404，杜绝软 404 对爬取质量的损害。
-  - **游戏页→博客内链**：game-layout 内置 RELATED_GUIDES 映射，9 款游戏页展示"阅读完整攻略"入口（八语言 game.read_guide），强化内链传递与内容深度。
-  - **游戏页 SEO 文案全覆盖**：18 款游戏均具备 8 语言 `game.{id}.seo_desc` 富文本（HTML）SEO 版块（桌面端左侧 / 移动端底部展示），其中 connect 补齐全站缺失文案、nonogram 由 75 词扩至 500+ 词；文案覆盖玩法规则、难度等级、制胜技巧与模式介绍，满足 AdSense 内容质量要求。
-  - **E-E-A-T 信号补强**：About 页 8 语言扩至 450-550 词（游戏清单、联系方式、隐私安全章节）；博客文章底部新增作者卡片区块（`blog.author_bio` / `blog.author_more`，8 语言）并链接 About 页；博客内容 11 篇全量多语言化（5 篇补译中），杜绝非英语页面回退英文原文的重复内容问题。：`/docs` 由空壳占位改为真实攻略中心（H1 + 八语言介绍 + 全游戏攻略卡片网格），移除自动跳转，成为可索引常驻页；`/daily` 每日挑战页新增八语言 SEO 介绍段落。
-- **结果页智能推荐 (Smart Game Recommendation)**：每局单机或联机游戏结束后，胜利/失败的 Overlay 面板底部会智能展示一排相关游戏的精美入口卡片。结合 `GameRegistryService` 动态匹配相关游戏，有效提高用户粘性和游戏间引流。
+## 3. 全平台 18 款游戏与对战模式
+
+| 游戏名称 | 游戏标识 | 单机模式 | 联机 PK 模式 | 核心玩法分类 |
+| :--- | :--- | :--- | :--- | :--- |
+| **经典扫雷** | `minesweeper` | 经典排雷 | 🎯 同题竞速对决 (`speed`) | 逻辑推理 |
+| **数独** | `sudoku` | 经典填数 | 🎯 同题竞速对决 (`speed`) | 逻辑推理 |
+| **数织** | `nonogram` | 像素填色 | 🎯 同题竞速对决 (`speed`) | 逻辑推理 |
+| **24点** | `math24` | 扑克速算 | 🎯 同题竞速对决 (`speed`) | 益智速算 |
+| **数字华容道** | `sliding` | 拼图还原 | 🎯 同题竞速对决 (`speed`) | 空间还原 |
+| **汉诺塔** | `towers` | 经典挪盘 | 🎯 同题竞速对决 (`speed`) | 经典解密 |
+| **熄灯游戏** | `lightsout` | 矩阵翻转 | 🎯 同题竞速对决 (`speed`) | 逻辑解密 |
+| **数桥** | `bridges` | 岛屿连线 | 🎯 同题竞速对决 (`speed`) | 拓扑解密 |
+| **六角消除** | `hexa` | 蜂巢置块 | 🏆 存活积分对抗 (`score`) | 空间消除 |
+| **方块对决** | `block` | 网格消除 | 🏆 存活积分对抗 (`score`) | 空间消除 |
+| **经典2048** | `classic2048` | 滑动合成 | 🏆 存活积分对抗 (`score`) | 数字合成 |
+| **下落2048** | `drop2048` | 物理堆叠 | 🏆 存活积分对抗 (`score`) | 物理消除 |
+| **五子棋** | `gomoku` | 人机对弈 | ⚔️ 经典交替对弈 (`battle`) | 棋类对抗 |
+| **俄罗斯方块** | `tetris` | 经典堆叠 | ⚔️ 攻防干扰对抗 (`battle`) | 经典街机 |
+| **单词接龙** | `word` | 词汇串联 | 🎯 竞速/积分对抗 | 语言益智 |
+| **记忆翻牌** | `memory` | 视觉匹配 | 🎯 竞速对决 (`speed`) | 脑力记忆 |
+| **连连看** | `link` | 折线消除 | 🎯 竞速对决 (`speed`) | 视觉消除 |
+| **拼图寻宝** | `puzzle` | 碎片拼接 | 🎯 竞速对决 (`speed`) | 视觉拼图 |
 
 ---
 
-## 3. 真实用户鉴权系统 (User Authentication)
-
-- **JWT 持久化鉴权**：借助 Fiber 的 JWT Token 下发，实现前后端分离的强校验机制，确保游戏数据不可篡改。
-- **Signals 鉴权状态 (AuthStore)**：以 Angular Signals 重构全局鉴权商店 `AuthStore`，监听全局状态自动更新 Navbar 上的玩家昵称与登录入口。
-- **毛玻璃动效表单 (Glassmorphism Forms)**：倾心打造带有高级光晕动效的 Login/Register 极具赛博质感的页面。
-- **强硬隔离的路由守卫 (Auth Guard)**：任何未持有 Token 的匿名访问，都会在前端路由层被强踢回登录页面。
-
-## 4. 后台管理与全栈权限控制 (Admin Dashboard & RBAC)
-
-- **核心权限模型 (RBAC)**：数据库层面扩充了 `Role`（角色）与 `Status`（账号状态），支撑起了整个平台的最高管理权限与封禁隔离机制。
-- **全站立体防线**：
-  - 后端：通过 Fiber 中间件验证 JWT 票据中的 `role` 声明，实现 API 级别的绝对保护。
-  - 前端：依托 Angular 的 `CanActivateFn` 路由守卫阻断任何非法的面板访问尝试。
-- **高颜值管理控制台**：搭载极具科幻质感的响应式仪表盘数据大屏。管理员可一览注册总人数、快速检索玩家信息，并执行一键 `BAN`（封号隔离）等惩戒操作。
-
----
-
-## 5. 多人竞技引擎架构 (Game Engine Architecture)
-
-- **纯正的后端权威模式**：从根本上摒弃了浏览器本地算雷的伪联机机制。前端只作为渲染视图（View层），计算核心全部在 Go 引擎执行，防范任何形式的外挂注入透视作弊。
-- **独立 WebSocket 房间系统 (Room Manager)**：
-  - 基于房间 ID（Room ID）的隔离广播模型。
-  - 用户接入即初始化其游戏状态、记录比分，任何一个人断开与重连都不会导致房间状态损毁。
-  - **严格分离创建与加入**：`CreateRoom` 和 `JoinRoom` 两个独立操作，杜绝了断线重连意外创建幽灵房间的可能。
-  - **房主自动转移**：房主断线 30 秒未重连时，系统自动将房主权限转移给下一个在线玩家，而非解散房间，最大化保护其他玩家的游戏体验。
-  - **踢人冷却机制**：被踢出的玩家需等待 30 秒冷却后才能重新加入同一房间。
-- **三重可靠性保障 (Triple Reliability)**：
-  - **心跳保活 (Ping/Pong)**：后端每 30 秒发送 Ping 帧，90 秒无响应则关闭连接；前端每 25 秒发送应用层心跳，双重检测连接存活。
-  - **实时推送 (WebSocket Push)**：房间变化时通过 `BroadcastLobbyUpdate` 毫秒级推送到所有大厅客户端。
-  - **HTTP 轮询兜底 (Polling Fallback)**：前端每 10 秒通过 `GET /api/v1/rooms` REST 端点拉取房间列表（WS 断开时加速至 3 秒），即使推送丢失也能恢复数据。
-- **智能重连策略 (Exponential Backoff)**：前端 WebSocket 断线重连采用指数退避算法（2s→4s→8s→最大 30s），并严格区分"正常断开"（不重连）和"异常断开"（自动重连），减少服务器压力。
-- **核心游戏调度接口 (`GameEngine` Interface)**：
-  - 标准化 `InitGame`（初始化）、`HandleAction`（处理点击）、`GetState`（拉取状态快照）等生命周期钩子，为未来无限扩增新的益智类游戏铺平了底层架构。
-
----
-
-## 6. 扫雷核心对战功能 (Minesweeper PK Mode)
-
-- **硬核 PK 联机竞速规则**：不再是无脑刷经验或合作通关模式，所有房间内的玩家都在**同一个棋盘**上竞技：
-  - **推理抢雷**：当你确认某个格子是地雷时，迅速切到**插旗（Flag）**模式点下去，服务器验证如果正确，你将**获得 1 分**。
-  - **格子宣誓主权**：成功插旗的格子不仅会变幻边框和动画特效，还会盖上该玩家专属的 ID 名牌！
-- **犯错反噬（硬直惩罚）机制**：
-  - 乱挖到雷，或者插错安全区，不会导致全盘皆输！
-  - 而是引入了 3 秒的**眩晕/冻结 (Freeze Cooldown)** 惩罚。服务器会硬拒你的所有点击操作。这段时间你的对手可以尽情收割积分！
-- **实时积分榜显示 (Scoreboard)**：界面上空实时浮动当前房间内的连接玩家列表，并且只要有分数变化，UI 立刻跳动更新（即连即注册，初入房间即可看到自己 0 分挂榜）。
-- **iOS 风格高阶难度配置**：不仅内建了 7 个维度的渐进难度阶梯（从 初级 到 专家），还通过全屏毛玻璃 Modal 支持了**完全自定义的滑动条调整（Custom Board Size & Mines）**，后端动态计算引擎同步适配。
-- **动感声效服务 (AudioService)**：
-  - **点击探雷**：清脆轻盈的木块声响。
-  - **插旗得分**：急促的确认声效反馈。
-  - **爆炸惩罚**：深沉短促的爆炸声效，增强玩家错误操作的惊险度。
-  - **全盘胜利**：通关时刻宏大的庆祝音效与胜利金光 Overlay 动画双层叠加，营造巨大的爽感反馈。
-
----
-
-## 7. 泛用型大厅与数独框架 (Generic Lobby & Sudoku PK)
-
-- **高度解耦的引擎注册机制 (Factory Registry)**：
-  - `GameEngine` 实现了高度插件化。核心 WebSocket 大厅不再关心具体游玩的是扫雷、数独还是未来的俄罗斯方块。
-  - 新增游戏只需要通过 `engine.Register()` 向框架注册并实现统一的生命周期与广播接口 (`SetBroadcaster`)，即可开箱即用地继承所有的房间、对战和重连机制。
-- **全端参数与标识符标准化 (Unified Identifiers)**：
-  - 前端路由与组件中，对战模式统一抽象为泛用的 `steal`, `speed`, `score`, `battle`。
-  - 后端 Engine Factory 自动通过统一 `gameId` 和 `mode` 反射生成游戏实例。
-- **全端响应式界面与大厅交互 (Responsive Drawer Panel)**：
-  - 各类游戏全面适配桌面与移动端 UI 体验。移动端大厅抽屉（Drawer）不会由于 CSS 冲突自动常驻遮挡游戏区域；关闭逻辑保证精准恢复游戏棋盘视觉，`flex` 布局受抽屉状态（`isMobileSidebarOpen`）严格控制，彻底告别移动端样式穿透带来的操作障碍。
-  - **样式开发强制规范**：开发任何带有 `overflow-y-auto` 或 `overflow-x-auto` 的可滚动容器时，必须附加 `.custom-scrollbar` 全局样式类，保证多主题下的原生滚动条外观一致性。
-- **全局沉浸式交互与桌面大厅侧边栏 (Responsive Lobby Drawer)**：
-  - 移除了仅在移动端显示大厅按钮的限制。所有单机/PK游戏界面的右侧，均强制存在呼出房间信息的统一图标。
-  - 在大屏桌面端（Desktop）处于房间（PK 模式）时，大厅面板自动演化为抽屉式 Overlay 覆盖层（而不是之前的相对布局或强行隐藏），确保玩家游玩过程中可随时浏览、加入新房间。
-- **数独 Steal 模式 (抢夺激战)**：
-  - 多名玩家共用一个棋盘填空，正确填入直接得分锁定，错误填入倒扣分并带来 3 秒冰冻。
-  - 毫秒级的状态帧同步，让原本静态的逻辑推理游戏变成了心跳加速的眼疾手快竞技场。
-- **数独 Speed 模式 (竞速冲刺)**：
-  - 玩家互不干涉在各自的完整克隆棋盘中解同一道题，比拼谁先 100% 正确提交解答。
-
-### 4. 数字华容道 (Sliding Puzzle)
-- **支持模式**：单机模式、PK 竞速模式 (Speed)
-- **难度选择**：初级 (4x4)、中级 (5x5)、高级 (6x6)。
-- **完全同盘洗牌**：竞速模式下，后端保证给全场所有玩家下发相同的初始打乱状态棋盘，确保竞技的公平性。
-- **平滑动画与响应式**：采用 Tailwind 动态计算宽高结合定位过渡，达到极佳的视觉移动反馈。
-
-### 5. 六边形消除 (Hexa Puzzle)
-- **支持模式**：单机模式、同盘抢分模式 (Steal)
-- **消除逻辑**：三向匹配验证算法，单次放置触发连环消除，完美契合六边形网格特性。
-- **动态分数池**：同盘对战中，分数实时广播同步，打造你争我夺的刺激对抗体验。
-- **多语言支持**：完全兼容全站动态多语言引擎热切换。
-
-### 6. 俄罗斯方块异盘乱斗与殿堂级街机 (Tetris Pro Arcade)
-- **支持模式**：单机闯关、异盘乱斗模式 (PK Attack)
-- **双翼电竞街机控制台 (Dual-Wing Arcade Console)**：
-  - PC 端对称布局：左翼呈现 **HOLD 暂存舱**（快捷键 `[C]` / `[Shift]` / 点击交互）、**LEVEL 等级速度仪** 与 **键盘操作指南卡**；右翼呈现 **NEXT 三方块预判队列** 与 **STREAK 连击火焰**；
-  - 移动端：自适应掌机布局，支持单手/双手滑动触控，并配备可选的虚拟触控操作条（◀ ↻ ▼ ▶ ⚡）。
-- **矩阵深渊底座与 3D 微晶宝石 (3D Crystal Jewel Blocks)**：
-  - 全系方块增加 3D 棱光高光晶体倒角（顶部镜面反射条）与深渊凹槽底座；
-  - **纯净沉浸视觉 (Pure Focus View)**：彻底移除下落过程中的底部尾影与虚线呼吸投影，界面极致干净，消除视觉杂乱；
-  - **首创自由调色板切换**：支持在 **💎 霓虹水晶**、**👑 皇家琥珀**、**🌊 赛博极冰** 之间一键秒切并自动持久化。
-- **0.18s 极速激光消行与 4 行 TETRIS 绝杀**：
-  - 满行时触发 180ms 白热激光横扫与爆裂晶屑粒子；打出 4 行消除触发金色闪电爆屏横幅 `⚡ TETRIS! ⚡` 与 Web Audio 电影级四重奏和弦；
-  - 核心战斗机制：玩家每次消除 2 行及以上，即可产生相应的垃圾行 (Garbage Lines) 实时向对手施压！
-- **单机复活 550ms 激光消融升华系统 (Laser Dissolve Rebirth)**：
-  - 单机 Game Over 点击复活时，不再使用漫长杂乱的散装碎片爆炸，而是触发 **激光消融光幕扫描 (Laser Dissolve Beam)**；
-  - 危机堆积方块亮起高能光斑，融化解构为向上漂浮升华的微光光尘粒子 (Dissolve Embers)，伴随定制科技升华音效，未消融方块平稳下沉沉淀，干净利落恢复游玩。
-
-
----
-
-## 8. 多人联机游戏接入规范 (Multiplayer Game Development Specification)
-
-为了保证平台的健壮性，任何未来新增的联机游戏（如俄罗斯方块、五子棋等）**必须**严格遵守以下生命周期与接口适配规范，防止出现状态遗漏或“幽灵房间”等严重 Bug：
-
-- **房间生命周期与解散监听 (Room Dismissal Handling)**：
-  - 后端房间解散时会全局广播 `{"type": "room_dismissed"}`。
-  - **前端硬性要求**：新增游戏组件必须在初始化时（如 `constructor` 中）使用 `effect` 监听 `this.wsService.roomDismissedEvent()`。一旦监听到解散，必须强制弹出 Toast 提示（“房主已解散房间”），并立刻调用 `store.leaveRoom()` 将当前所有非房主玩家强制踢回大厅。绝对禁止遗留任何玩家在已被销毁的房间中卡死。
-- **加入与退出逻辑 (Join & Leave)**：
-  - 同游戏内加入：通过 `GameLobbyPanelComponent` 的 `(joinRoom)` 事件直接调用 `store.joinRoom()`。
-  - **跨服加入 (Cross-Game Join)**：通过全局 `CrossGameJoinService` 实现。大厅面板在检测到目标房间属于不同游戏时，自动调用 `crossGameJoin.setPendingJoin()` 存储房间信息，然后通过 Angular Router 导航到目标游戏路由（不携带 queryParams）。目标游戏组件在 `ngOnInit` 中调用 `crossGameJoin.consumePendingJoin(gameId)` 同步读取并消费待加入信息。此机制彻底避免了 queryParams 的时序竞争和 URL 二次触发问题。
-  - 组件销毁 (`ngOnDestroy`) 或玩家主动点击离开时，必须触发退房逻辑。
-- **新游戏跨服接入模板 (Cross-Game Join Template)**：
-  ```typescript
-  // 在新游戏组件的 ngOnInit 中加入：
-  private crossGameJoin = inject(CrossGameJoinService);
-  ngOnInit() {
-    const pending = this.crossGameJoin.consumePendingJoin('新游戏ID');
-    if (pending) {
-      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host);
-    }
-  }
-  ```
-- **后端引擎标准化 (Engine Registration)**：
-  - 游戏必须在后端的 `engine` 目录新建实现，并且必须通过 `engine.Register("gameId_mode", factory)` 注册。
-  - **强制继承基石引擎**：任何新增对战引擎必须 `embed` (嵌入) `engine.BaseEngine`。这会自动继承 `Mu` 锁、`State`、`Broadcast` 等基础设施，且不再需要重复实现 `GetStatus` 和 `SetBroadcaster`。
-- **前端组件强制继承 (Component Extension)**：
-  - 所有的对战级别主游戏组件必须 `extends BaseGameComponent`。基类不仅完美处理了房间加入、创建、解散等通用逻辑，还会在 `ngOnInit` 阶段自动连接竞技大厅的 WebSocket (`connectLobby()`)，确保右侧面板始终能收到实时的房间与玩家数据更新。子类如果覆盖生命周期函数必须调用 `super.ngOnInit()`。
-- **统一模式命名字典 (Mode Naming Convention)**：
-  - 各个游戏的模式命名强制使用公共常量规范：同盘抢分/抢雷模式统一后缀为 `steal`，异盘竞速模式统一后缀为 `speed`，分数生存模式统一为 `score`，对战互相攻击模式为 `battle`。前端使用通用的 `GameLobbyPanelComponent` 组件即可零代码获得大厅列表、建房弹窗和模式匹配的支持。
-
-### 7. 24点游戏 (Math 24)
-- **支持模式**：单机模式、同盘抢分模式 (Steal)、竞速冲刺模式 (Speed)
-- **硬核对战机制**：
-  - **竞速冲刺 (Speed)**：所有玩家各自独立面对相同的 5 道题，最先全部解完的玩家获胜。
-  - **同盘抢答 (Steal)**：所有玩家面对同一道题。第一个算出的玩家得 1 分，并且全场题目瞬间刷新为下一题。抢得 5 分者获胜。
-  - **错误惩罚 (Freeze)**：对战模式下，如果玩家错误提交，会受到 3 秒的冻结惩罚，并出现冰雪覆盖棋盘的视觉特效，防止无脑穷举。
-- **难度选择**：初级 (简单整数加减乘除)、中级 (需要括号整数)、高级 (常规唯一解)、专业 (分数解)。
-- **智能提示与广告集成**：集成谷歌 AdSense 激励广告（H5 Games Ads API）。当玩家遇到死局或不会解题时，点击“提示”观看广告即可获取回溯算法生成的动态解题步骤。
-- **操作逻辑**：点击卡片选择数字和操作符进行运算，支持撤销和重置功能。
-- **机制同步**：完全接入大厅与通用对战引擎，共享基础房间和状态广播机制。
-
----
-
-## 9. 用户留存系统 (User Retention System)
-
-### 9.1 XP / 等级系统
-- **公式**：`level = floor(sqrt(xp / 100)) + 1`，XP 随对局、胜利、每日挑战自动累积。
-- **奖励机制**：单机对局 +2 XP，单机胜利 +5 XP，PK 对局 +5 XP，PK 胜利 +15 XP，每日挑战 +30 XP；后台可通过 `system_settings` 动态调整。
-- **连续登录奖励**：每日首次触发 `CheckLoginStreak()`，连续登录奖励叠加 XP（可在后台配置）。
-- **前端可视化**：全局 `XpGainBadgeComponent` 在每次获得 XP 时显示向上飘出动画（`+N XP`）；个人资料页展示 XP 进度条与等级徽章。
-- **Admin 管理**：`/admin/xp-config` 页面通过 `PUT /admin/settings/bulk` 批量读写 10 个 XP 奖励参数。
-
-### 9.2 成就系统
-- **35 个内置成就**：分 6 大类别（starter / mastery / streak / playtime / daily / allround），4 个稀有度（common / rare / epic / legendary）。
-- **条件驱动评测**：每次 `SubmitStat` / `puzzle/finish` 触发后端 `CheckAchievements()`，支持 9 种条件类型（首次登录、首胜、连胜、总局数、全游戏挑战等）。
-- **解锁 XP 奖励**：每个成就解锁后自动累加 `xp_reward` 到用户账户。
-- **前端弹窗**：`AchievementUnlockOverlayComponent` 全局队列式展示成就解锁弹窗（稀有度光晕动效）。
-- **Admin 管理**：`/admin/achievements` 支持成就 CRUD、稀有度徽章、一键启用/停用，以及用户成就查看。
-
-### 9.3 全球排行榜与 PK 段位积分
-- **极致聚焦过滤**：彻底剔除传统繁复碎片的“模式（单机/速度/PK）”与“难度（简单/中等/困难）”下拉框；用户只需选择游戏（或全站总榜）与时间周期（全部/本周），零认知负担。
-- **全游戏数据统一聚合 (Unified Game Leaderboard)**：
-  - 后端对每位玩家在各游戏下的全量历史战绩进行自动聚合（`MAX(best_score)`、`MIN(best_time)`、`SUM(play_count)`、`SUM(win_count)`、`MAX(rating)`）；
-  - 玩家无论游玩何种难度或模式，均以个人最佳综合成绩（积分/时间）占据唯一的荣誉排位，彻底解决过去因切换难度导致战绩“空白”的问题。
-- **全量分页与控速 (Pagination & Reach)**：
-  - 采用轻快黄金阅读节奏，每页固定控制最大展示 20 位玩家；
-  - 突破过去 50 人单页截断痛点，支持无限深度分页与绝对排名计算（`offset + index + 1`）；
-  - 底部醒目外显全站上榜玩家总数高亮胶囊与分页栏（如 `共 1,234 位上榜玩家` / `1,234 ranked players`，`第 1 / 5 页` / `Page 1 of 5`），严格遵循 Transloco 多语言插值体系与全端响应式设计，内置组件级防御性正则兜底，彻底杜绝原始标记裸露。
-- **我的排名**：登录后实时展示当前用户在所选榜单的名次（金/银/铜 Medal 展示）。
-- **隐私保护**：guest 用户不参与排行，`role='guest'` 自动过滤。
-
-### 9.4 深度社交与关系链 (Friends System)
-- **好友申请与管理**：支持在排行榜、游戏结算页快捷发送好友请求，提供接收、拒绝机制。
-- **实时状态感知**：依托 WebSocket，当好友上线、下线时，列表状态实时同步更新（绿点亮起）。
-- **一键开黑邀请**：支持玩家在大厅房间内，直接向在线好友发送“游戏邀请”。
-- **独立的好友面板**：右下角常驻悬浮好友入口，包含“在线/离线列表”和“请求列表”。
-- **Admin 管理**：`/admin/leaderboard` 支持管理员查看与删除疑似作弊条目。
-
-### 9.4 每日活跃任务与连胜体系 (Daily Quests & Streak)
-- **全面取代传统今日挑战**：彻底摒弃管理员手动排期、极易断档的旧版“今日一题”模式，全盘升级为全自动化的 3 维动态活跃任务体系，100% 覆盖全系 18 款游戏，零人工维护。
-- **三维日常目标**：
-  - 🎮 **单机热身 (Solo Warmup)**：游玩任意单人游戏（通关/结算即达成，+20 XP，+20 金币）；
-  - ⚔️ **对战初试 (PK Challenger)**：参与任意 1 局实时联机 PK 对战，盘活联机房间匹配，+30 XP，+30 金币；
-  - 👑 **荣耀时刻 (Moment of Glory)**：取得 1 次对战胜利或打破单人纪录，+50 XP，+50 金币。
-- **全清大宝箱与连续打卡 (Daily Grand Chest & Streak 🔥)**：
-  - 当日 3 个任务全达成时点亮全清大宝箱，额外领取 +50 XP、+100 脑力金币并累积连续打卡天数（Streak 🔥 +1）；
-  - 游戏单局结算时后端自动无感推进进度（`solo_play` / `pk_play` / `win_game`）。
-- **多邻国式连胜断签保护 (Streak Freeze 🧊)**：
-  - 彻底终结玩家因偶发断签导致数十天火苗归零退游的痛点；用户默认持有 1 张连胜保护卡（上限 2 张），漏签 1 天登录时自动生效保住连胜火苗；
-- **四阶豪华连胜里程碑路线图 (Streak Milestones Track)**：
-  - 在 `/daily` 直观外显 3天 (赠保护卡+100金币)、7天 (赠称号「坚持不懈」+300金币)、14天 (赠头像框「烈焰之环 🔥」+600金币)、30天 (赠至尊头像框「皇家流金 👑」+「脑力王者」称号+2000金币) 的成长进阶。
-
-### 9.4.1 五维脑力雷达图与 BQ 认知战力评级 (Brain Power Radar)
-- **科学映射 5 大认知维度**：
-  - **逻辑推理 (Logic)**：扫雷、数独、数桥；
-  - **空间感知 (Spatial)**：俄罗斯方块、华容道、推箱子；
-  - **数字计算 (Calculation)**：经典2048、24点速算、下落合成2048；
-  - **专注反应 (Focus & Reflex)**：六角消除、方块消除、一笔画连线；
-  - **策略规划 (Strategy)**：五子棋、水排序、密码破译、成语益智、关灯游戏；
-- **自研原生 SVG 交互雷达图**：
-  - 个人资料页（`/profile`）置顶渲染 5 轴同心多边形多层光晕图谱与 250~1000 分综合 BQ 智力评分；
-  - 配备启智学者、敏锐探求者、益智达人、策略宗师、脑力巅峰 5 大阶梯荣誉段位，成长感与成就感拉满。
-
-### 9.4.2 荣誉装扮中心与脑力金币体系 (Cosmetics Hub & Brain Coins)
-- **免费正向闭环**：对战、单机通关、日常任务与连胜全量产出脑力金币（`brain_coins`），告别单一数值升级的无目标感；
-- **限定动态发光头像框 (`AvatarFrameComponent`)**：
-  - ⚪ 经典圆环、🔥 烈焰之环 (脉冲火焰光晕)、⚡ 赛博霓虹 (旋转发光边框)、👑 皇家流金 (流金皇冠微光)、🌌 银河星轨 (星云自转光环)；
-- **专属身份头衔**：
-  - 「益智学徒」、「极速快手」、「逻辑推演师」、「坚持不懈」、「连胜狂人」、「脑力王者」；
-  - 在个人主页、排行榜、联机等待大厅与 PK 对战 HUD 全域透传展示。
-
-### 9.4.3 好友异步幽灵下战书 (Ghost Challenge Duel)
-- **突破同时在线桎梏**：单人单局结算时一键「⚔️ 向好友下战书」，生成专属幽灵挑战记录（`gm_ghost_challenges`）；
-- **全游戏沉浸式幽灵擂台 HUD**：好友点开战书链接同盘同种子复刻对决，顶层悬浮对手战绩目标，局末自动判定胜负并呈现对比弹窗，实现零成本自然病毒式社交裂变。
-
-### 9.5 对战历史记录
-- **全局记录**：每次 `SubmitStat` / `puzzle/finish` 写入 `gm_match_history`，记录游戏、模式、难度、结果、用时、XP 获得。
-- **时间线展示**：个人资料页「历史」标签展示最近 20 场，含游戏图标、结果徽章（胜/负/完成）、XP 收益。
-- **API**：`GET /api/v1/history?limit=20&gameId=&mode=` 支持按游戏和模式过滤。
-- **PK 对战自动提交**：`BaseGameStore` 构造函数 `effect()` 检测 PK 模式 Playing→Finished 状态迁移，自动调用 `_submitPKStat()` 提交对战统计；子类可 override `extractPKStatPayload()` 提供游戏特定的 score/time 提取逻辑。多局系列赛场景下，`_pkStatSubmitted` 标志在每局结束后（Finished → Waiting）自动重置，确保每局独立计入历史记录而非只记第一局。
-
-### 9.6 新手引导
-- **游戏内嵌步骤引导**：`TutorialOverlayComponent` 分步展示引导卡片（图标 + 标题 + 描述）。
-- **一次性触发**：`TutorialService` 通过 localStorage 记录 `seen_tutorial_[gameId]`，每个用户每款游戏只展示一次。
-- **集成游戏**：扫雷（5步）、数独（4步）、Math 24（4步）、Codebreaker（4步）、WaterSort（4步）、Sokoban（4步）；步骤内容在 `game-definitions.ts` 中集中管理，支持 i18n。
-
-### 9.7 游戏结果增强
-- **破纪录标识**：游戏结算界面展示「New Record」标识（金色横幅），对比历史最佳。
-- **XP 增益展示**：结算界面内联展示本局 XP 收益及升级提示。
-- **`lastStatResult` Signal**：`BaseGameStore` 保存最后一次提交结果，供各游戏结算页读取。
-
-### 9.8 Admin 留存管理后台
-- **成就管理** (`/admin/achievements`)：CRUD、稀有度徽章、启用/停用开关、解锁次数统计。
-- **每日任务自动化监控大盘** (`/admin/daily-challenges`)：彻底取消过去繁琐的人工排期录入表单，升级为实时自动化监控看板；支持透视系统全自动健康状态、今日打卡活跃玩家数、4 大活跃任务达成率明细、发放经验总量与全站连续打卡连胜榜 (Streak Top 10)。
-- **排行榜管理** (`/admin/leaderboard`)：多维过滤 + 条目删除（防作弊）。
-- **XP 配置** (`/admin/xp-config`)：滑动条调整 10 个 XP 参数，实时同步至 `system_settings`。
-
-### 9.9 Cloudflare Pages 生产部署
-
-- **边缘函数**（`functions/[[path]].js`）：语言检测（Accept-Language）→ 根路径 301/302 跳转；显式加载预渲染 `index.html` 避免 Cloudflare 301 trailing-slash 重定向循环；修复 HTTP `Link` 头相对路径（Cloudflare 自动 Early Hints 生成，需改写为绝对路径防 MIME 错误）；`/pages/*` 存量链接 301 重定向至 `/legal/*`。
-- **nginx 反代**（`deploy/nginx/puzzlepk.conf`）：仅代理 `api.puzzlepk.com:8443`，前端由 Cloudflare Pages 全权托管；CORS 头在 OPTIONS if 块内显式声明（含 `x-skip-logout` 自定义头）。
-- **缓存策略**（`public/_headers`）：HTML 页面 `no-store`，JS/CSS chunk 文件 `max-age=31536000 immutable`。
-
-### 9.10 数据库备份与恢复 (`/admin/database`)
-- **表信息面板**：列出所有 23 张 `gm_` 表，实时显示行数与存储大小（`pg_stat_user_tables`）。
-- **备份（ZIP + JSON）**：多选或全选表，一键生成 ZIP 备份包（`manifest.json` + 每表独立 JSON 文件），支持「浏览器直接下载」或「保存到服务器 `BACKUP_DIR`」两种模式；无需 pg_dump，纯 Go 实现。
-- **备份历史**：列出服务器端所有已保存 ZIP，按时间倒序；支持下载、删除及一键跳转至恢复流程。
-- **恢复（事务安全）**：上传 ZIP → 调用 `/backup/inspect` 自动解析 manifest 显示表清单 → 勾选要恢复的表 → 输入 `CONFIRM` → 后端在事务内 DELETE + `json_populate_recordset` 批量 INSERT → Commit 后自动重置各表 sequence；任何步骤失败全量回滚。
-- **安全防护**：文件名 path traversal 校验、表名白名单（仅限已存在的 `gm_` 表）、`AdminProtected()` 中间件双重守卫。
-
----
-
-### 8. 水管分色 (Water Sort Puzzle)
-- **支持模式**：单机模式、竞速对决 (Speed)
-- **后端生成算法**：采用完全动态的**逆向洗牌算法**，实时在内存中由解开的胜利状态向后推演数千次产生死局，100%保证每一次生成的关卡都有解，彻底消灭了静态题库维护成本。
-- **全动态 UI 渲染与 3D 拟真玻璃试管**：不使用现成的图片素材，试管全面重构为 3D 拟真实验室玻璃材质（含环形翻边试管口、纵向高光折射束、曲面半球厚玻璃底与环境接地投影）；内部液体升级为 14 种魔药级多阶深度渐变配色，并模拟了液体圆柱光影与顶层椭圆液面弯月面反射。
-- **倾倒水流物理动效 (Animated Liquid Stream)**：源试管倾斜倒水时，不仅具有平滑的高度与水位沉浮，更在两管之间动态喷涌高光流体水柱与入水撞击波纹，呈现逼真自然的物理倾倒感。
-- **点击交互体验**：移动端触屏友好，摒弃了容易误操作的拖拽，转而采用 Click-Click（点击源试管 -> 点击目标试管）的精准选取逻辑。
-- **Hashi (Bridges)**: Single Player & Multiplayer Speed PK Modes
-
-## 社交与对战系统 (Social & Multiplayer)
-- **快速匹配**: 支持一键将大厅内的玩家自动撮合到相同的游戏与难度房间。
-- **局内表情互动**: 支持玩家在 PK 模式中实时发送气泡表情，增强对战趣味性。
-
-## AdSense 审核合规优化 (AdSense Compliance Optimization)
-- **首页内容优先策略**：首页布局重排为"平台介绍 → 博客/攻略 → SEO 文案 → 游戏列表"，确保 Google 审核员和爬虫优先看到有实质价值的文字内容。
-- **"为什么选择 Puzzle PK"价值主张**：4 大平台特色（脑力训练 / 多人对战 / 寓教于乐 / 8语言），全 8 语言翻译。
-- **合规页面齐全**：About / Contact / Privacy Policy / Terms of Service 四页齐全且预渲染，页脚全局链接可达。
-- **Cookie 同意弹窗**：首次访问弹出 Cookie 同意提示，隐私政策披露 AdSense 与 Google Analytics Cookie 使用。
-- **结构化数据 (JSON-LD)**：WebApplication / HowTo / BlogPosting / BreadcrumbList 结构化标记，无虚构评分。
-- **FAQ Schema 富摘要 (FAQPage JSON-LD)**：所有 18 款游戏页面自动从 `seo_desc` 中提取 FAQ 问答对，注入 `FAQPage` JSON-LD 结构化数据。Google 搜索结果将展示展开式 FAQ 富摘要，占据 3-5 倍屏幕面积，大幅提升点击率 (CTR)。支持中英文多种 FAQ 标签格式（`FAQ`、`常见问题（FAQ）`）自动识别。
-- **全游戏 FAQ 覆盖**：18 款游戏（en + zh）均已配备 5-6 个高搜索量 FAQ 问答（免费性、移动端兼容性、多人模式、策略技巧等），确保 Google 索引每个游戏页面均有丰富的结构化问答内容。
-- **真实 404 页面**：未知路径返回 HTTP 404 状态码而非 SPA 壳，消除软 404 问题。
-- **广告位可控开关**：lobby 广告位支持通过 HTML 注释临时禁用，审核通过后恢复。
-
-## 用户增长与留存 (Growth & Retention)
-- **Wordle 风格文字分享 (TextShareService)**：游戏结束后支持一键复制 emoji 格式的紧凑战绩摘要到剪贴板（如 `🔢 Sudoku | Puzzle PK ⏱ 05:23 ✅ Solved!`），用户可粘贴到 Twitter/微信/群聊实现病毒式传播。按钮带"已复制 ✅"视觉反馈动画。每种游戏有独特的 emoji 模板（扫雷显示地雷数、2048 显示最高方块、俄罗斯方块显示消除行数等）。
-- **游戏结果交叉推荐**：结果弹窗底部展示 6 个推荐游戏卡片，优先使用 `GameConfig.recommendations` 配置的关联游戏，不足部分随机补充，促进用户站内多游戏体验。
-
+## 4. 维护与更新规范
+1. **日常维护轻量化**：普通 UI 微调与 Bug 修复不增加冗长小作文，仅在发布重要功能/架构版本时于 `docs/CHANGELOG.md` 记录精炼要点。
+2. **新增游戏指引**：接入新游戏时严格参考 [docs/HOW_TO_ADD_GAME.md](file:///home/zd/x-game/docs/HOW_TO_ADD_GAME.md)，实现前后端松耦合规范。

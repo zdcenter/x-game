@@ -39,19 +39,8 @@
             </app-game-waiting-room>
           </div>
         } @else {
-          <!-- Mobile floating HUD (PK only) -->
-          @if (currentRoomMode() !== GameMode.Single) {
-            <app-game-player-mini-hud
-              class="lg:hidden"
-              [myPlayer]="{ playerName: playerId, isHost: playerId === store.hostId(), stats: [{ icon: '⏱️', value: elapsedTime() }, { icon: '💣', value: store.remainingMines() }], status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }"
-              [opponents]="currentRoomMode() === GameMode.Speed
-                ? store.speedOpponents().map(opp => ({ playerName: opp.id, isHost: opp.id === store.hostId(), stats: [{ icon: '📊', value: Math.round(opp.progress) + '%' }], status: opp.progress === 100 ? 'finished' : 'playing' }))
-                : getPlayerScores().filter(p => p.id !== playerId).map(p => ({ playerName: p.id, isHost: p.id === store.hostId(), score: p.score, status: store.status() === GameStatus.Finished ? 'finished' : 'playing' }))">
-            </app-game-player-mini-hud>
-          }
-
           <div
-            class="relative flex-grow flex flex-col items-center justify-start min-h-0 overflow-hidden w-full py-2 sm:py-4 gap-2"
+            class="relative flex-grow flex flex-col items-center justify-start min-h-0 overflow-hidden w-full py-1 sm:py-2 gap-1.5"
             [class.animate-gold-pulse]="store.status() === GameStatus.Finished && !isDefeat()"
             [class.animate-red-pulse]="store.status() === GameStatus.Finished && isDefeat()">
 
