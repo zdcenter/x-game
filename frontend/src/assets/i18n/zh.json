@@ -1085,6 +1085,8 @@
   "minesweeper.height": "高度 (9-50)",
   "minesweeper.medium": "中等 (16x16)",
   "minesweeper.mines": "雷数 (10-80%)",
+  "minesweeper.mode_flag": "插旗",
+  "minesweeper.mode_reveal": "翻开",
   "minesweeper.restart": "重新开始",
   "minesweeper.status": "游戏状态",
   "minesweeper.victory": "胜利！",
@@ -1629,5 +1631,9 @@
   "xp.level": "等级",
   "xp.leveled_up": "升级了！",
   "xp.login_streak": "连续登录",
-  "xp.to_next_level": "升级所需"
+  "xp.to_next_level": "升级所需",
+  "game": {
+    "zen_mode": "全屏专注",
+    "exit_zen_mode": "退出全屏"
+  }
 }

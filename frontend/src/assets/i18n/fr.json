@@ -1085,6 +1085,8 @@
   "minesweeper.height": "Hauteur (9-50)",
   "minesweeper.medium": "Moyen (16x16)",
   "minesweeper.mines": "Mines (10-80%)",
+  "minesweeper.mode_flag": "Drapeau",
+  "minesweeper.mode_reveal": "Révéler",
   "minesweeper.restart": "Redémarrer le jeu",
   "minesweeper.status": "Statut",
   "minesweeper.victory": "VICTOIRE",
@@ -1629,5 +1631,9 @@
   "xp.level": "Niveau",
   "xp.leveled_up": "Montez de niveau !",
   "xp.login_streak": "Série de connexions",
-  "xp.to_next_level": "au niveau suivant"
+  "xp.to_next_level": "au niveau suivant",
+  "game": {
+    "zen_mode": "Mode Zen",
+    "exit_zen_mode": "Quitter le plein écran"
+  }
 }

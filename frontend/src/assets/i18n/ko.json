@@ -1085,6 +1085,8 @@
   "minesweeper.height": "높이 (9-50)",
   "minesweeper.medium": "중간 (16x16)",
   "minesweeper.mines": "광산(10-80%)",
+  "minesweeper.mode_flag": "깃발",
+  "minesweeper.mode_reveal": "열기",
   "minesweeper.restart": "게임 재시작",
   "minesweeper.status": "상태",
   "minesweeper.victory": "승리",
@@ -1629,5 +1631,9 @@
   "xp.level": "레벨",
   "xp.leveled_up": "레벨 업!",
   "xp.login_streak": "로그인 연속 기록",
-  "xp.to_next_level": "다음 단계로"
+  "xp.to_next_level": "다음 단계로",
+  "game": {
+    "zen_mode": "집중 모드",
+    "exit_zen_mode": "전체화면 종료"
+  }
 }

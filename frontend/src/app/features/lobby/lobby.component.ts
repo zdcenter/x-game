@@ -49,7 +49,6 @@ export class LobbyComponent implements OnInit, OnDestroy {
   gameRegistry = inject(GameRegistryService);
   liveRoom = inject(LiveRoomService);
 
-  // Statically populate all games from frontend SSOT to prevent SSR sorting flicker.
   games = signal<BackendGameConfig[]>(
     GAME_DEFINITIONS.map(def => ({
       id: def.id, name: def.id, overview: '', rules: '', config: '',
@@ -57,6 +56,9 @@ export class LobbyComponent implements OnInit, OnDestroy {
     }))
   );
   
+  // Loading skeleton state (active on client until games stats are hydrated)
+  isLoading = signal<boolean>(isBrowser());
+
   // Active category filter: 'all' | 'hot' | 'pk' | 'logic' | 'puzzle'
   selectedCategory = signal<'all' | 'hot' | 'pk' | 'logic' | 'puzzle'>('all');
   searchQuery = signal<string>('');
@@ -182,11 +184,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
             return cg;
           });
         });
+        this.isLoading.set(false);
       },
       error: err => {
         console.error('Failed to load game stats:', err);
+        this.isLoading.set(false);
       }
     });
+
+    // Safety fallback: ensure skeleton transitions out within 600ms even on slow networks
+    if (isBrowser()) {
+      setTimeout(() => this.isLoading.set(false), 600);
+    }
   }
 
   ngOnDestroy() {

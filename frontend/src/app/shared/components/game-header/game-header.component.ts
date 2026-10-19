@@ -5,6 +5,7 @@ import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { PwaService } from '../../../core/services/pwa.service';
+import { ZenModeService } from '../../../core/services/zen-mode.service';
 
 @Component({
   selector: 'app-game-header',
@@ -26,6 +27,7 @@ export class GameHeaderComponent implements OnInit {
   @Output() rules = new EventEmitter<void>();
   @Output() titleClick = new EventEmitter<void>();
 
+  zenService = inject(ZenModeService);
   audioService = inject(AudioService);
   hapticService = inject(HapticService);
   pwaService = inject(PwaService);

@@ -17,54 +17,55 @@
     </div>
 
     <!-- Hero Section: Modern & Streamlined -->
-    <section class="flex flex-col items-center text-center pt-2 sm:pt-4 pb-2">
-      <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] shadow-sm mb-3">
+    <!-- Hero Section: Modern & Streamlined (Mobile-Compressed) -->
+    <section class="flex flex-col items-center text-center pt-1 sm:pt-4 pb-1 sm:pb-2">
+      <!-- Badge (Desktop / Tablet only) -->
+      <div class="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] shadow-sm mb-3">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
         <span>{{ i18n.t('lobby.badge_tag')() || '即开即玩 · 极速对决 · 脑力觉醒' }}</span>
       </div>
 
       <!-- Main Headline -->
-      <h1 class="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-3 bg-clip-text text-transparent"
+      <h1 class="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mb-1 sm:mb-3 bg-clip-text text-transparent"
           style="background-image: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
         {{ i18n.t('lobby.title')() }}
       </h1>
 
-      <p class="text-xs sm:text-base opacity-75 max-w-xl mx-auto px-2 mb-6">
+      <p class="hidden sm:block text-xs sm:text-base opacity-75 max-w-xl mx-auto px-2 mb-6">
         {{ i18n.t('lobby.subtitle')() }}
       </p>
 
       <!-- Quick Action Triple Deck (Short-Link Conversion Engine) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 w-full text-left">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 w-full text-left mt-1.5 sm:mt-0">
         
-        <!-- Card 1: Daily Challenge Spotlight -->
-        <div class="w-full">
+        <!-- Card 1: Daily Challenge Spotlight (Full Width row on mobile) -->
+        <div class="col-span-2 md:col-span-1 w-full">
           <app-daily-challenge-banner />
         </div>
 
         <!-- Card 2: ⚔️ Instant PK Arena Action Card -->
         <div (click)="goToPkArena()"
-             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-from)]/40 transition-all duration-300 relative overflow-hidden">
-          <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all pointer-events-none">
+             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-3 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-from)]/40 transition-all duration-300 relative overflow-hidden">
+          <div class="absolute -right-3 -bottom-3 text-5xl sm:text-7xl opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all pointer-events-none">
             ⚔️
           </div>
           <div>
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-from)] flex items-center gap-1">
+            <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
+              <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[var(--color-accent-from)] flex items-center gap-1">
                 <span>⚔️</span> {{ i18n.t('lobby.pk_arena_card_title')() || '双人竞技场' }}
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
                 LIVE PK
               </span>
             </div>
-            <p class="text-xs text-[var(--color-text-secondary)] line-clamp-2">
+            <p class="text-[11px] sm:text-xs text-[var(--color-text-secondary)] line-clamp-2">
               {{ i18n.t('lobby.pk_arena_card_desc')() || '在线真人实时对战，比拼手速与脑力！' }}
             </p>
           </div>
-          <div class="mt-3 flex items-center justify-between">
-            <span class="text-xs font-bold text-[var(--color-accent-from)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+          <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
+            <span class="text-[11px] sm:text-xs font-bold text-[var(--color-accent-from)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {{ i18n.t('lobby.pk_arena_card_cta')() || '进入竞技大厅' }}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </span>
@@ -73,27 +74,27 @@
 
         <!-- Card 3: 🎲 Lucky Pick (Random Game) -->
         <div (click)="playRandomGame()"
-             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-to)]/40 transition-all duration-300 relative overflow-hidden">
-          <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:rotate-12 group-hover:scale-110 group-hover:opacity-20 transition-all pointer-events-none">
+             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-3 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-to)]/40 transition-all duration-300 relative overflow-hidden">
+          <div class="absolute -right-3 -bottom-3 text-5xl sm:text-7xl opacity-10 group-hover:rotate-12 group-hover:scale-110 group-hover:opacity-20 transition-all pointer-events-none">
             🎲
           </div>
           <div>
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-to)] flex items-center gap-1">
+            <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
+              <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[var(--color-accent-to)] flex items-center gap-1">
                 <span>🎲</span> {{ i18n.t('lobby.random_game')() || '随便来一把' }}
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
                 1s START
               </span>
             </div>
-            <p class="text-xs text-[var(--color-text-secondary)] line-clamp-2">
+            <p class="text-[11px] sm:text-xs text-[var(--color-text-secondary)] line-clamp-2">
               {{ i18n.t('lobby.random_game_desc')() || '选择困难？手气不错一秒开局！' }}
             </p>
           </div>
-          <div class="mt-3 flex items-center justify-between">
-            <span class="text-xs font-bold text-[var(--color-accent-to)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+          <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
+            <span class="text-[11px] sm:text-xs font-bold text-[var(--color-accent-to)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {{ i18n.t('lobby.random_cta')() || '🎲 立即开局' }}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </span>
@@ -167,7 +168,39 @@
 
     <!-- Games Grid (Heart of the Platform) -->
     <section>
-      @if (filteredGames().length === 0) {
+      @if (isLoading()) {
+        <!-- Skeleton Screen Grid Matching Exact Card Layout -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
+          @for (item of [1,2,3,4,5,6,7,8,9,10]; track item) {
+            <div class="flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] shadow-sm">
+              <!-- Thumbnail Skeleton (80% Aspect Ratio) -->
+              <div class="w-full relative shrink-0 bg-[var(--color-bg-main)]/60 border-b border-[var(--color-border-card)]" style="padding-top: 80%;">
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <div class="w-20 h-20 rounded-2xl bg-[var(--color-border-card)]/40"></div>
+                </div>
+              </div>
+              <!-- Content Skeleton -->
+              <div class="p-4 flex flex-col flex-grow justify-between gap-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="h-5 w-28 rounded-md bg-[var(--color-border-card)]/60"></div>
+                    <div class="h-4 w-12 rounded-md bg-[var(--color-border-card)]/40"></div>
+                  </div>
+                  <div class="space-y-1.5">
+                    <div class="h-3 w-full rounded bg-[var(--color-border-card)]/30"></div>
+                    <div class="h-3 w-4/5 rounded bg-[var(--color-border-card)]/30"></div>
+                  </div>
+                </div>
+                <!-- Action Buttons Skeleton -->
+                <div class="pt-2 border-t border-[var(--color-border-card)]/50 flex gap-2">
+                  <div class="h-8 flex-1 rounded-xl bg-[var(--color-border-card)]/40"></div>
+                  <div class="h-8 flex-1 rounded-xl bg-[var(--color-border-card)]/50"></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (filteredGames().length === 0) {
         <div class="py-16 flex flex-col items-center justify-center text-center rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
           <span class="text-4xl mb-3">🔍</span>
           <p class="text-sm text-[var(--color-text-muted)] mb-3">

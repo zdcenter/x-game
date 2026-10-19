@@ -1085,6 +1085,8 @@
   "minesweeper.height": "身長 (9-50)",
   "minesweeper.medium": "中 (16x16)",
   "minesweeper.mines": "鉱山（10～80％）",
+  "minesweeper.mode_flag": "旗",
+  "minesweeper.mode_reveal": "掘る",
   "minesweeper.restart": "ゲームを再開する",
   "minesweeper.status": "ステータス",
   "minesweeper.victory": "勝利",
@@ -1629,5 +1631,9 @@
   "xp.level": "レベル",
   "xp.leveled_up": "レベルアップ！",
   "xp.login_streak": "ログイン連続記録",
-  "xp.to_next_level": "次のレベルへ"
+  "xp.to_next_level": "次のレベルへ",
+  "game": {
+    "zen_mode": "全画面集中",
+    "exit_zen_mode": "全画面終了"
+  }
 }

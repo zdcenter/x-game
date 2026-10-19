@@ -1,6 +1,6 @@
 <app-game-layout [isHost]="store.hostId() === store.playerId()"
   [gameId]="'minesweeper'"
-  [title]="i18n.t('app.title')()"
+  [title]="i18n.t('lobby.minesweeper')() || '扫雷'"
   [subtitle]="getSubtitle()"
   icon="💣"
   iconGradientClass="from-rose-500 to-orange-500"
@@ -44,34 +44,34 @@
             [class.animate-gold-pulse]="store.status() === GameStatus.Finished && !isDefeat()"
             [class.animate-red-pulse]="store.status() === GameStatus.Finished && isDefeat()">
 
-          <!-- Single Player Classic Header -->
+          <!-- Single Player Modern HUD Capsule -->
           @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex items-center justify-between px-4 py-3 bg-[var(--color-bg-sub)] rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-[600px] shadow-sm z-10 mx-auto">
+            <div class="flex-none flex items-center justify-between px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-[480px] shadow-sm z-10 mx-auto">
 
               <!-- Mines Remaining -->
               <div class="flex items-center gap-1 sm:gap-2">
-                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Remaining Mines">💣</span>
-                <div class="bg-rose-50 dark:bg-[#050505] border-2 border-rose-200 dark:border-[var(--color-border-card)] rounded flex items-center px-1 sm:px-2 py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 w-16 sm:w-20 justify-center transition-colors duration-300">
-                  <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+                <span class="text-base sm:text-xl opacity-80" title="Remaining Mines">💣</span>
+                <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg flex items-center px-1.5 sm:px-2 py-0.5 h-8 sm:h-9 w-14 sm:w-16 justify-center">
+                  <span class="font-digital text-rose-500 font-bold text-xl sm:text-2xl tracking-widest leading-none">
                     {{ store.remainingMines() | number:'3.0-0' }}
                   </span>
                 </div>
               </div>
 
-              <!-- Smiley Button -->
+              <!-- Smiley Reset Button -->
               <button (click)="changeSingleDifficulty(currentDifficulty())" 
-                      class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 rounded-full flex items-center justify-center border-b-4 border-yellow-600 shadow-sm active:border-b-0 active:translate-y-1 hover:bg-yellow-300 transition-all text-2xl sm:text-3xl select-none relative z-10">
+                      class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-md active:scale-95 transition-all text-xl sm:text-2xl select-none">
                 {{ store.status() === GameStatus.Finished && isDefeat() ? '😵' : (store.status() === GameStatus.Finished && !isDefeat() ? '😎' : '😃') }}
               </button>
 
               <!-- Timer -->
               <div class="flex items-center gap-1 sm:gap-2">
-                <div class="bg-slate-100 dark:bg-[#050505] border-2 border-slate-300 dark:border-[var(--color-border-card)] rounded flex items-center px-1 sm:px-2 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 w-16 sm:w-20 justify-center transition-colors duration-300">
-                  <span class="font-digital text-slate-700 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+                <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg flex items-center px-1.5 sm:px-2 py-0.5 h-8 sm:h-9 w-14 sm:w-16 justify-center">
+                  <span class="font-digital text-cyan-500 font-bold text-xl sm:text-2xl tracking-widest leading-none">
                     {{ Math.min(999, elapsedSeconds()) | number:'3.0-0' }}
                   </span>
                 </div>
-                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Elapsed Time">⏱️</span>
+                <span class="text-base sm:text-xl opacity-80" title="Elapsed Time">⏱️</span>
               </div>
             </div>
           } @else {
@@ -86,6 +86,24 @@
               ></app-game-pk-hud>
             </div>
           }
+
+            <!-- Mobile Touch Mode Switch Capsule (0ms response) -->
+            <div class="flex sm:hidden items-center justify-center gap-1.5 py-0.5 z-20 shrink-0">
+              <div class="flex items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+                <button (click)="mobileActionMode.set('reveal')"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                        [ngClass]="mobileActionMode() === 'reveal' ? 'bg-amber-500 text-white shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
+                  <span>⛏️</span>
+                  <span>{{ i18n.t('minesweeper.mode_reveal')() || '翻开' }}</span>
+                </button>
+                <button (click)="mobileActionMode.set('flag')"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                        [ngClass]="mobileActionMode() === 'flag' ? 'bg-rose-500 text-white shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
+                  <span>🚩</span>
+                  <span>{{ i18n.t('minesweeper.mode_flag')() || '插旗' }}</span>
+                </button>
+              </div>
+            </div>
 
             @if (currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
               <div
@@ -109,20 +127,21 @@
               messageKey="game.frozen_msg">
             </app-game-frozen-overlay>
 
+            <!-- Seamless Game Stage (No nested boxes) -->
             <div #boardContainer
-              class="p-2 sm:p-4 shadow-inner min-h-0 overflow-auto flex shrink justify-center items-center custom-scrollbar rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]">
+              class="w-full flex-1 min-h-0 overflow-auto flex items-center justify-center p-2 sm:p-4 custom-scrollbar select-none">
 
               <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
                 [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
 
                 @if (store.status() !== GameStatus.Waiting || currentRoomMode() === GameMode.Single) {
                   <div #board
-                    class="ms-board-plate inline-flex flex-col relative z-0 origin-center"
+                    class="ms-board-plate inline-flex flex-col relative z-0 origin-center rounded-xl shadow-xl overflow-hidden"
                     [class.opacity-50]="isFrozen()" [class.animate-board-shake]="store.status() === GameStatus.Finished">
                     @for (row of store.board(); track $index) {
                     <div class="flex">
                       @for (cell of row; track cell.x + '-' + cell.y) {
-                        <app-cell [cell]="cell" (reveal)="handleCellReveal(cell)" (flag)="handleCellFlag(cell)" [id]="'ms-cell-' + cell.x + '-' + cell.y"></app-cell>
+                        <app-cell [cell]="cell" [actionMode]="mobileActionMode()" (reveal)="handleCellReveal(cell)" (flag)="handleCellFlag(cell)" [id]="'ms-cell-' + cell.x + '-' + cell.y"></app-cell>
                       }
                     </div>
                     }

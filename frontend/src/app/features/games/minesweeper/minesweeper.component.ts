@@ -59,6 +59,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('medium');
   frozenRemaining = signal(0);
+  mobileActionMode = signal<'reveal' | 'flag'>('reveal');
   
   showCustomDialog = signal(false);
   customW = signal(16);

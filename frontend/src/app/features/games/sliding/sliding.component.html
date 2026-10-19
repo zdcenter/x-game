@@ -75,7 +75,7 @@
 
             <!-- Aspect Square Board -->
             <div
-              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-sliding-board-bg)] rounded-2xl lg:rounded-3xl p-2 sm:p-3 shadow-inner border-2 border-[var(--color-sliding-board-border)] flex-shrink-0 touch-none select-none w-full max-w-[min(100%,65vh,500px)] lg:max-w-[min(100%,70vh,600px)] aspect-square"
+              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-sliding-board-bg)] rounded-2xl lg:rounded-3xl p-2 sm:p-3 shadow-inner border-2 border-[var(--color-sliding-board-border)] flex-shrink-0 touch-none select-none overscroll-contain w-full max-w-[min(100%,65vh,500px)] lg:max-w-[min(100%,70vh,600px)] aspect-square"
                 (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)"
                 style="container-type: inline-size;">
 

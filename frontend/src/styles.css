@@ -79,6 +79,17 @@
     --color-pk-word-text: #ffffff;
   }
 
+  /* Zen Mode (Distraction-Free Fullscreen) */
+  body.zen-mode-active header {
+    display: none !important;
+  }
+  body.zen-mode-active app-footer {
+    display: none !important;
+  }
+  body.zen-mode-active .fixed.bottom-4 {
+    display: none !important;
+  }
+
   .theme-dark {
     --color-bg-main: #1c1c1e;
     --color-text-main: #f2f2f7;

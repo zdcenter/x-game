@@ -13,6 +13,7 @@ import { FooterComponent } from './footer/footer.component';
 import { LayoutService } from '../services/layout.service';
 import { LiveBattleBeaconComponent } from '../../shared/components/live-battle-beacon/live-battle-beacon.component';
 import { LiveRoomService } from '../services/live-room.service';
+import { ZenModeService } from '../services/zen-mode.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -21,9 +22,9 @@ import { LiveRoomService } from '../services/live-room.service';
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
-      
       <!-- Global Navbar -->
-      <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
+      @if (!zenService.isZenMode()) {
+        <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
 
           <!-- Left: Logo + Nav links -->
@@ -155,6 +156,7 @@ import { LiveRoomService } from '../services/live-room.service';
           </div>
         </div>
       </header>
+      }
 
       <!-- Mobile/iPad Navigation Overlay (lg-) -->
       @if (isMobileMenuOpen()) {
@@ -178,15 +180,17 @@ import { LiveRoomService } from '../services/live-room.service';
 
       <!-- Main Content Area -->
       <main #mainScroll class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col" style="overflow-anchor: none;">
-        <div class="flex-1 flex flex-col pb-12 sm:pb-16">
+        <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode()">
           <router-outlet></router-outlet>
         </div>
-        <app-footer class="mt-auto"></app-footer>
+        @if (!zenService.isZenMode()) {
+          <app-footer class="mt-auto"></app-footer>
+        }
         <app-share-modal></app-share-modal>
       </main>
 
       <!-- Global PWA Install Floating Prompt (Trip.com style) -->
-      @if ((pwa.canInstall() || pwa.isIos()) && !pwa.isStandalone() && !pwa.isPromptDismissed()) {
+      @if (!zenService.isZenMode() && (pwa.canInstall() || pwa.isIos()) && !pwa.isStandalone() && !pwa.isPromptDismissed()) {
         <div class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-96 z-[100] transition-all duration-500 ease-out transform translate-y-0 opacity-100 shadow-2xl rounded-xl"
              style="background-color: var(--color-bg-card); border: 1px solid var(--color-border-card)">
           <div class="p-4 flex items-center gap-4">
@@ -287,6 +291,7 @@ import { LiveRoomService } from '../services/live-room.service';
   `
 })
 export class MainLayoutComponent {
+  zenService = inject(ZenModeService);
   i18n = inject(I18nService);
   theme = inject(ThemeService);
   authStore = inject(AuthStore);

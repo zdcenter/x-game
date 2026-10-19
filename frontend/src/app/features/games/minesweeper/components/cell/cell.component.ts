@@ -13,6 +13,7 @@ import { HapticService } from '../../../../../core/services/haptic.service';
 export class CellComponent {
   private haptic = inject(HapticService);
   @Input({ required: true }) cell!: Cell;
+  @Input() actionMode: 'reveal' | 'flag' = 'reveal';
   @Output() reveal = new EventEmitter<void>();
   @Output() flag = new EventEmitter<void>();
 
@@ -46,7 +47,12 @@ export class CellComponent {
 
   onLeftClick(event: MouseEvent) {
     if (event.button === 0) {
-      this.reveal.emit();
+      if (this.actionMode === 'flag') {
+        this.flag.emit();
+        this.haptic.vibrateSnap();
+      } else {
+        this.reveal.emit();
+      }
     }
   }
 
@@ -64,7 +70,7 @@ export class CellComponent {
       this.touchFired = true;
       this.flag.emit();
       this.haptic.vibrateSnap();
-    }, 400); // 400ms for long press
+    }, 400); // 400ms for long press fallback
   }
 
   onTouchMove(event: TouchEvent) {
@@ -82,8 +88,13 @@ export class CellComponent {
     }
     if (!this.touchFired) {
       event.preventDefault(); // Prevent emulated mouse clicks
-      this.reveal.emit();
-      this.haptic.vibrateLight();
+      if (this.actionMode === 'flag') {
+        this.flag.emit();
+        this.haptic.vibrateSnap();
+      } else {
+        this.reveal.emit();
+        this.haptic.vibrateLight();
+      }
     } else {
       event.preventDefault();
     }

@@ -74,6 +74,16 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
               </svg>
             </button>
+            <button (click)="zenService.toggle()"
+                    class="opacity-75 hover:opacity-100 transition-colors p-1 sm:p-1.5 rounded-lg hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] shrink-0"
+                    [title]="zenService.isZenMode() ? (i18n.t('game.exit_zen_mode')() || '退出全屏') : (i18n.t('game.zen_mode')() || '全屏专注')">
+              <svg *ngIf="!zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+              <svg *ngIf="zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m7-5l5 5m0 0v-4m0 4h-4" />
+              </svg>
+            </button>
 
             <!-- PWA Install Button (When installable) -->
             @if (pwaService.canInstall()) {

@@ -17,6 +17,7 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
 import { GhostChallengeService, GhostChallenge } from '../../../core/services/ghost-challenge.service';
 import { OfflineBannerComponent } from '../offline-banner/offline-banner.component';
 import { LiveRoomService } from '../../../core/services/live-room.service';
+import { ZenModeService } from '../../../core/services/zen-mode.service';
 
 @Component({
   selector: 'app-game-layout',
@@ -25,7 +26,9 @@ import { LiveRoomService } from '../../../core/services/live-room.service';
   template: `
 <div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
   <!-- Offline Mode Banner -->
-  <app-offline-banner></app-offline-banner>
+  @if (!zenService.isZenMode()) {
+    <app-offline-banner></app-offline-banner>
+  }
 
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="gameId" [isOpen]="showRules" (closed)="rulesClosed.emit()"></app-game-rules-modal>
@@ -162,48 +165,48 @@ import { LiveRoomService } from '../../../core/services/live-room.service';
   </main>
 
   <!-- In-depth Strategy & SEO Section (Moved Gracefully Below Arena) -->
-  <section class="w-full max-w-[1200px] mx-auto px-3 sm:px-6 mt-6 sm:mt-10 pb-12">
-    <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 shadow-sm">
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-card)]">
-        <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">
-          <span>{{ i18n.t('game.strategy_guide_title')() || '🧠 深度解谜策略与游戏说明' }}</span>
-        </h2>
+  @if (!zenService.isZenMode()) {
+    <section class="w-full max-w-[1200px] mx-auto px-3 sm:px-6 mt-6 sm:mt-10 pb-12">
+      <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-card)]">
+          <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">
+            <span>{{ i18n.t('game.strategy_guide_title')() || '🧠 深度解谜策略与游戏说明' }}</span>
+          </h2>
+          @if (relatedGuideSlug) {
+            <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)]/20 transition-all">
+              📖 {{ i18n.t('game.read_guide')() }}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          }
+        </div>
+        <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
+             [innerHTML]="i18n.t(computedSeoDescKey)()">
+        </div>
+
         @if (relatedGuideSlug) {
-          <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)]/20 transition-all">
-            📖 {{ i18n.t('game.read_guide')() }}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          <div class="mt-6 pt-5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[var(--color-bg-main)]">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner">📚</span>
+              <div>
+                <div class="text-xs font-bold text-[var(--color-accent-from)]">{{ i18n.t('game.guide_callout_tag')() }}</div>
+                <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-main)] mt-0.5">{{ i18n.t('game.guide_callout_title')() }}</div>
+              </div>
+            </div>
+            <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+               class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all shrink-0">
+              📖 {{ i18n.t('game.read_full_guide')() }}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </div>
         }
       </div>
-      <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
-           [innerHTML]="i18n.t(computedSeoDescKey)()">
-      </div>
-
-      @if (relatedGuideSlug) {
-        <div class="mt-6 pt-5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[var(--color-bg-main)]">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner">📚</span>
-            <div>
-              <div class="text-xs font-bold text-[var(--color-accent-from)]">{{ i18n.t('game.guide_callout_tag')() }}</div>
-              <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-main)] mt-0.5">{{ i18n.t('game.guide_callout_title')() }}</div>
-            </div>
-          </div>
-          <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all shrink-0">
-            📖 {{ i18n.t('game.read_full_guide')() }}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
-        </div>
-      }
-    </div>
-  </section>
-
-
+    </section>
+  }
 
   <app-floating-emoji></app-floating-emoji>
   
@@ -214,6 +217,7 @@ import { LiveRoomService } from '../../../core/services/live-room.service';
 })
 export class GameLayoutComponent implements OnInit, OnChanges {
   settingsService = inject(SettingsService);
+  zenService = inject(ZenModeService);
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
   authStore = inject(AuthStore);
