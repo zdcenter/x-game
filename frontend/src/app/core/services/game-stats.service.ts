@@ -2,8 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 import { OfflineSyncService } from './offline-sync.service';
+import { CoinService } from './coin.service';
+import { XpService } from './xp.service';
 
 export interface UserGameStat {
   ID: number;
@@ -63,6 +65,8 @@ export interface SubmitStatResponse {
 export class GameStatsService {
   private http = inject(HttpClient);
   private offlineSync = inject(OfflineSyncService);
+  private coinService = inject(CoinService);
+  private xpService = inject(XpService);
   private apiUrl = environment.apiUrl;
 
   getStats(gameId: string): Observable<UserGameStat[]> {
@@ -80,6 +84,17 @@ export class GameStatsService {
     }
 
     return this.http.post<SubmitStatResponse>(`${this.apiUrl}/stats/${gameId}`, payload).pipe(
+      tap(res => {
+        if (res.brain_coins !== undefined) {
+          this.coinService.setCoins(res.brain_coins);
+        }
+        if (res.coins_earned && res.coins_earned > 0) {
+          this.coinService.showCoinGain(res.coins_earned);
+        }
+        if (res.xp_result?.xp_earned) {
+          this.xpService.showXpGain(res.xp_result.xp_earned);
+        }
+      }),
       catchError(err => {
         // Fallback for offline/timeout/unreachable: queue locally
         return of(this.offlineSync.queueStat(gameId, payload));

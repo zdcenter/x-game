@@ -10,7 +10,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   template: `
     <div class="relative group z-20 flex items-center">
       <!-- Visual Display Capsule -->
-      <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm group-hover:border-amber-500/60 group-hover:shadow-md transition-all backdrop-blur-md pointer-events-none select-none max-w-[105px] xs:max-w-[125px] sm:max-w-none">
+      <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm group-hover:border-amber-500/60 group-hover:shadow-md transition-all backdrop-blur-md pointer-events-none select-none max-w-[105px] xs:max-w-[125px] sm:max-w-[180px] xl:max-w-none">
         <span class="text-xs sm:text-sm shrink-0">🎯</span>
         <span class="truncate sm:hidden text-[11px] font-bold">{{ currentLabelShort }}</span>
         <span class="truncate hidden sm:inline">{{ currentLabelFull }}</span>

@@ -28,6 +28,14 @@ export class CoinService {
 
   readonly coins = computed(() => this.authStore.currentUser()?.brain_coins ?? 0);
   readonly isAuthenticated = computed(() => this.authStore.isAuthenticated());
+  readonly pendingCoinGain = signal<{ amount: number } | null>(null);
+
+  showCoinGain(amount: number): void {
+    if (amount <= 0) return;
+    this.pendingCoinGain.set({ amount });
+    // Dismiss at 2.7s (slightly after XP 2.3s so player sees both clearly)
+    setTimeout(() => this.pendingCoinGain.set(null), 2700);
+  }
 
   canAfford(cost: number): boolean {
     return this.isAuthenticated() && this.coins() >= cost;

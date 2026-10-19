@@ -28,13 +28,13 @@
           </div>
         </div>
         
-        <!-- Center block: True Dead Center on md+, flexible on mobile -->
-        <div class="flex items-center justify-center z-20 shrink-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+        <!-- Center block: True Dead Center on xl+, flexible on mobile & tablet to prevent overlap -->
+        <div class="empty:hidden flex items-center justify-center z-20 shrink-0 mx-auto xl:absolute xl:left-1/2 xl:top-1/2 xl:-translate-x-1/2 xl:-translate-y-1/2 xl:mx-0">
           <ng-content select="[header-center]"></ng-content>
         </div>
         
         <!-- Right block: Actions & Utilities -->
-        <div class="flex items-center justify-end gap-1 sm:gap-2 z-10 shrink-0 ml-auto">
+        <div class="flex items-center justify-end gap-1 sm:gap-2 z-10 shrink-0 xl:ml-auto">
           <ng-content select="[header-right]"></ng-content>
 
           <!-- User Brain Coins Balance (Click to open Coin Economy Guide) -->

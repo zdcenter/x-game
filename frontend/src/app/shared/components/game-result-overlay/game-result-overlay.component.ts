@@ -107,6 +107,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
 
   /** Optional: pass result from submitSingleStat() response to show XP & new-record badge */
   @Input() xpResult?: XPResult | null;
+  @Input() coinsEarned?: number;
   @Input() isNewRecord?: boolean;
   /** Game-specific extras for Wordle-style text share card (e.g. { mines: 99, hints: 0 }) */
   @Input() textShareExtras?: Record<string, any>;
@@ -130,6 +131,17 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
     if (b <= 0) return 0;
     if (this.bountyPrize > 0) return this.bountyPrize - b;
     return Math.floor(b * 0.8);
+  }
+
+  get effectiveCoinsEarned(): number {
+    if (this.coinsEarned !== undefined && this.coinsEarned !== null) {
+      return this.coinsEarned;
+    }
+    if (this.status !== GameResult.Win) return 0;
+    if (this.isPkMatch) {
+      return this.effectiveBountyCoins > 0 ? (25 + this.bountyNetReward) : 25;
+    }
+    return 10;
   }
 
   textCopied = signal(false);

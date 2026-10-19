@@ -94,6 +94,8 @@ export class LoginComponent {
     const returnUrl = this.route.snapshot.queryParams['returnUrl'];
     if (returnUrl) {
       this.router.navigateByUrl(returnUrl);
+    } else if (this.authStore.isAdmin()) {
+      this.router.navigate(['/', this.i18n.currentLang(), 'admin']);
     } else {
       this.router.navigate(['/', this.i18n.currentLang(), 'lobby']);
     }

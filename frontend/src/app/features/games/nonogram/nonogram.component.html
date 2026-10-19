@@ -208,6 +208,7 @@
               [pkSeriesScore]="seriesScore()"
               [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
               [xpResult]="store.lastStatResult()?.xp_result"
+              [coinsEarned]="store.lastStatResult()?.coins_earned"
               [isNewRecord]="store.lastStatResult()?.isNewRecord"
               [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
               [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"

@@ -31,23 +31,23 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
 
           <!-- Left: Logo + Nav links -->
-          <div class="flex items-center gap-1 sm:gap-5 min-w-0">
+          <div class="flex items-center gap-1 sm:gap-3 xl:gap-5 min-w-0">
             <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="flex items-center cursor-pointer group shrink-0">
               <span class="text-xl sm:text-2xl lg:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
                     style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 Puzzle PK
               </span>
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               🏆 {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'daily']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📅 {{ i18n.t('daily.title')() || 'Daily' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📖 {{ i18n.t('nav.docs')() || 'Docs' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📝 {{ i18n.t('nav.blog')() || 'Blog' }}
             </a>
           </div>
@@ -112,7 +112,7 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
                       style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                   {{ (authStore.currentUser()?.username || '?')[0].toUpperCase() }}
                 </span>
-                <span class="hidden md:block text-sm font-bold max-w-[110px] truncate" style="color: var(--color-accent-from)">
+                <span class="hidden md:block text-sm font-bold max-w-[80px] lg:max-w-[110px] truncate" style="color: var(--color-accent-from)">
                   {{ authStore.currentUser()?.username }}
                 </span>
               </a>
@@ -142,7 +142,7 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                <span class="hidden sm:inline">{{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}</span>
+                <span class="hidden xl:inline">{{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}</span>
               </button>
 
             } @else {
@@ -153,9 +153,9 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
               </a>
             }
 
-            <!-- Mobile Menu Toggle (lg-) -->
+            <!-- Mobile Menu Toggle (xl-) -->
             <button (click)="isMobileMenuOpen.set(!isMobileMenuOpen())"
-                    class="lg:hidden p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+                    class="xl:hidden p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 @if (isMobileMenuOpen()) {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -169,9 +169,9 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
       </header>
       }
 
-      <!-- Mobile/iPad Navigation Overlay (lg-) -->
+      <!-- Mobile/iPad Navigation Overlay (xl-) -->
       @if (isMobileMenuOpen()) {
-        <div class="fixed inset-0 top-[3.5rem] sm:top-[4rem] z-40 bg-[var(--color-bg-main)] overflow-y-auto lg:hidden animate-fade-in-down border-b border-[var(--color-border-card)] pb-6 shadow-xl" (click)="isMobileMenuOpen.set(false)">
+        <div class="fixed inset-0 top-[3.5rem] sm:top-[4rem] z-40 bg-[var(--color-bg-main)] overflow-y-auto xl:hidden animate-fade-in-down border-b border-[var(--color-border-card)] pb-6 shadow-xl" (click)="isMobileMenuOpen.set(false)">
           <nav class="px-4 pt-4 pb-6 space-y-2 max-w-2xl mx-auto">
             <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
@@ -357,6 +357,7 @@ export class MainLayoutComponent {
       filter(event => event instanceof NavigationEnd),
       takeUntilDestroyed()
     ).subscribe(() => {
+      this.isMobileMenuOpen.set(false);
       this.resetScroll();
       this.liveRoom.ensureLobbyConnected();
     });

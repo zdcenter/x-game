@@ -374,7 +374,9 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
         score: this.store.localScore(),
         time: this.timeSeconds,
         won: true
-      }).subscribe();
+      }).subscribe(res => {
+        this.store.lastStatResult.set(res);
+      });
     }
   }
 

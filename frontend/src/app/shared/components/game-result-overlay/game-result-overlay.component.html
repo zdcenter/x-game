@@ -157,10 +157,10 @@
               </span>
             </div>
             <div class="flex items-center gap-1.5">
-              @if (status === GameResult.Win && authStore.isAuthenticated()) {
+              @if (status === GameResult.Win && authStore.isAuthenticated() && effectiveCoinsEarned > 0) {
                 <span class="font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm">
                   <span>🪙</span>
-                  <span>+{{ isPkMatch ? (effectiveBountyCoins > 0 ? (25 + bountyNetReward) : 25) : 10 }}</span>
+                  <span>+{{ effectiveCoinsEarned }}</span>
                 </span>
               }
               @if (status === GameResult.Lose && isPkMatch && effectiveBountyCoins > 0 && authStore.isAuthenticated()) {

@@ -126,6 +126,10 @@ func makeFinishHandler(gameID string, repo PuzzleRepo) fiber.Handler {
 		// Award XP (puzzle games are always single-player style, treat as single win)
 		xpResult := service.AddXP(*userID, service.XPSingleWin)
 
+		// Award Brain Coins based on difficulty
+		coinsEarned := service.CalcRewardCoins(false, req.Difficulty, true)
+		currentCoins, _ := service.AddCoins(*userID, coinsEarned)
+
 		// Record match history
 		service.RecordMatch(*userID, gameID, mode, req.Difficulty, true, req.Stars, req.TimeSpent, service.XPSingleWin)
 
@@ -138,6 +142,8 @@ func makeFinishHandler(gameID string, repo PuzzleRepo) fiber.Handler {
 			"status":           "ok",
 			"isNewRecord":      isNewRecord,
 			"xp_result":        xpResult,
+			"coins_earned":     coinsEarned,
+			"brain_coins":      currentCoins,
 			"new_achievements": newAchievements,
 		})
 	}

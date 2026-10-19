@@ -86,9 +86,15 @@ func FinishDailyChallenge(c fiber.Ctx) error {
 		IsDaily: true,
 	})
 
+	// Award Brain Coins for daily challenge
+	coinsEarned := service.CalcRewardCoins(false, "medium", true)
+	currentCoins, _ := service.AddCoins(userID, coinsEarned)
+
 	return c.JSON(fiber.Map{
 		"status":           "ok",
 		"xp_result":        xpResult,
+		"coins_earned":     coinsEarned,
+		"brain_coins":      currentCoins,
 		"new_achievements": newAchievements,
 		"completion":       completion,
 	})

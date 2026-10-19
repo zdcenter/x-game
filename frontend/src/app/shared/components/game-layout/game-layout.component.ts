@@ -73,24 +73,24 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                   </span>
-                  <span class="hidden sm:inline">⚡ {{ i18n.t('lobby.quick_join')() }}</span>
-                  <span class="sm:hidden">⚡ 迎战</span>
+                  <span class="hidden xl:inline">⚡ {{ i18n.t('lobby.quick_join')() }}</span>
+                  <span class="xl:hidden">⚡ {{ i18n.currentLang() === 'zh' ? '迎战' : 'Join' }}</span>
                 </button>
               } @else {
                 <button (click)="quickCreatePkRoom()"
                         class="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm active:scale-95 group shrink-0"
                         [title]="i18n.t('game.quick_pk')() || '开房PK'">
                   <span class="group-hover:scale-110 transition-transform">⚔️</span>
-                  <span class="hidden md:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
-                  <span class="md:hidden text-[11px]">PK</span>
+                  <span class="hidden xl:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
+                  <span class="xl:hidden text-[11px]">PK</span>
                 </button>
               }
               <button (click)="openFriendList()"
-                      class="hidden sm:flex px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold items-center gap-1 shadow-sm active:scale-95 group"
+                      class="hidden sm:flex px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold items-center gap-1 shadow-sm active:scale-95 group shrink-0"
                       [title]="i18n.t('game.invite_friend_pk')() || '邀请好友PK'">
                 <span class="group-hover:scale-110 transition-transform">👥</span>
-                <span class="hidden md:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
-                <span class="md:hidden text-[11px]">邀请</span>
+                <span class="hidden xl:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
+                <span class="xl:hidden text-[11px]">{{ i18n.t('game.invite')() || '邀请' }}</span>
               </button>
             }
 

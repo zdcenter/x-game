@@ -232,6 +232,8 @@ export class SokobanStore extends BaseGameStore {
       difficulty: this.currentDifficulty()
     }).subscribe(res => {
       this.lastStatResult.set(res);
+      if (res?.brain_coins !== undefined) this.coinService.setCoins(res.brain_coins);
+      if (res?.coins_earned) this.coinService.showCoinGain(res.coins_earned);
       if (res?.xp_result?.xp_earned) this.xpService.showXpGain(res.xp_result.xp_earned);
       if (res?.new_achievements?.length) this.achievementService.handleNewAchievements(res.new_achievements);
     });

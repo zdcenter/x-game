@@ -385,8 +385,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }).pipe(
       tap(res => {
         this.lastStatResult.set(res);
-        if (res.xp_result?.xp_earned) {
-          this.xpService.showXpGain(res.xp_result.xp_earned);
+        if (res.brain_coins !== undefined) {
+          this.coinService.setCoins(res.brain_coins);
         }
         if (res.new_achievements?.length) {
           this.achievementService.handleNewAchievements(res.new_achievements);
@@ -424,12 +424,6 @@ export abstract class BaseGameStore implements GameStoreInterface {
         this.lastStatResult.set(res);
         if (res.brain_coins !== undefined) {
           this.coinService.setCoins(res.brain_coins);
-        }
-        if (res.coins_earned && res.coins_earned > 0) {
-          this.coinService.awardCoinsLocally(res.coins_earned);
-        }
-        if (res.xp_result?.xp_earned) {
-          this.xpService.showXpGain(res.xp_result.xp_earned);
         }
         if (res.new_achievements?.length) {
           this.achievementService.handleNewAchievements(res.new_achievements);
