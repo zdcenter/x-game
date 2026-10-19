@@ -19,12 +19,14 @@ import { ShareService } from '../../core/services/share.service';
 import { ShareImageService, ProfileCardData } from '../../core/services/share-image.service';
 import { getOrigin, isBrowser } from '../../core/utils/browser.util';
 
+import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
+
 type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, LevelBadgeComponent, AvatarFrameComponent, BrainRadarComponent],
+  imports: [CommonModule, RouterLink, LevelBadgeComponent, AvatarFrameComponent, BrainRadarComponent, CoinIconComponent],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] p-4 md:p-8">
       <div class="max-w-5xl mx-auto flex flex-col gap-6">
@@ -64,8 +66,8 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
               </div>
 
               <!-- Brain Coins -->
-              <div class="flex items-center gap-1 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
-                <span class="text-sm">🪙</span>
+              <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+                <app-coin-icon size="xs" />
                 <span class="font-black text-sm text-yellow-500 font-mono">{{ authStore.currentUser()?.brain_coins ?? 0 }}</span>
                 <span class="text-[10px] text-[var(--color-text-muted)] font-bold">{{ i18n.t('shop.coins_balance')() }}</span>
               </div>
@@ -227,8 +229,8 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
             <!-- Balance Card -->
             <div class="bg-gradient-to-r from-[var(--color-bg-card)] to-[var(--color-bg-main)] rounded-2xl border border-[var(--color-border-card)] p-5 flex items-center justify-between flex-wrap gap-4 shadow-lg">
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-2xl shadow-inner">
-                  🪙
+                <div class="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center shadow-inner">
+                  <app-coin-icon size="lg" />
                 </div>
                 <div>
                   <h3 class="font-black text-lg text-[var(--color-text-main)]">{{ i18n.t('shop.coins_balance')() }}</h3>
@@ -268,8 +270,13 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
                     </div>
 
                     <div class="flex items-center justify-between pt-2 border-t border-[var(--color-border-card)]">
-                      <span class="text-xs font-mono font-bold text-yellow-500">
-                        {{ item.price === 0 ? '免费' : ('🪙 ' + item.price) }}
+                      <span class="text-xs font-mono font-bold text-yellow-500 flex items-center gap-1">
+                        @if (item.price === 0) {
+                          <span>免费</span>
+                        } @else {
+                          <app-coin-icon size="xs" />
+                          <span>{{ item.price }}</span>
+                        }
                       </span>
                       @if (item.equipped) {
                         <button disabled class="px-3 py-1 rounded-xl bg-green-500/20 text-green-400 font-bold text-xs border border-green-500/30">
@@ -321,8 +328,13 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
                     </div>
 
                     <div class="flex items-center justify-between pt-2 border-t border-[var(--color-border-card)]">
-                      <span class="text-xs font-mono font-bold text-yellow-500">
-                        {{ item.price === 0 ? '免费' : ('🪙 ' + item.price) }}
+                      <span class="text-xs font-mono font-bold text-yellow-500 flex items-center gap-1">
+                        @if (item.price === 0) {
+                          <span>免费</span>
+                        } @else {
+                          <app-coin-icon size="xs" />
+                          <span>{{ item.price }}</span>
+                        }
                       </span>
                       @if (item.equipped) {
                         <button disabled class="px-3 py-1 rounded-xl bg-green-500/20 text-green-400 font-bold text-xs border border-green-500/30">

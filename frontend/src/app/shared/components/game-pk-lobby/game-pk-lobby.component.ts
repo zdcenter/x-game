@@ -17,6 +17,7 @@ import { GameHeaderComponent } from '../game-header/game-header.component';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { CoinService } from '../../../core/services/coin.service';
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -40,7 +41,7 @@ export interface PkJoinRoomEvent {
 @Component({
   selector: 'app-game-pk-lobby',
   standalone: true,
-  imports: [CommonModule, DatePipe, GameHeaderComponent],
+  imports: [CommonModule, DatePipe, GameHeaderComponent, CoinIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-pk-lobby.component.html',
   host: { class: 'flex flex-col flex-1 min-h-0 w-full' },

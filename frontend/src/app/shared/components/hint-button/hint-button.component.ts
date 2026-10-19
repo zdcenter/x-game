@@ -4,11 +4,12 @@ import { AdService } from '../../../core/services/ad.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 @Component({
   selector: 'app-hint-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoinIconComponent],
   template: `
     @if (layout === 'minesweeper') {
       <div class="flex flex-col items-center">
@@ -145,7 +146,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
         <span class="group-hover:scale-110 transition-transform relative inline-flex items-center justify-center {{ textClass || '' }}">
           💡
           @if (hasCoinsForHint()) {
-            <span class="absolute -top-1 -right-2 text-[9px] font-black text-amber-400">🪙</span>
+            <span class="absolute -top-1 -right-2">
+              <app-coin-icon size="xs" />
+            </span>
           }
         </span>
       }
@@ -167,7 +170,7 @@ export class HintButtonComponent {
 
   readonly hintLabel = computed(() => {
     if (this.hasCoinsForHint()) {
-      return (this.i18n.t('game.hint_title')() || '提示') + ` (-${this.costHint()}🪙)`;
+      return (this.i18n.t('game.hint_title')() || '提示') + ` (-${this.costHint()})`;
     }
     return this.i18n.t('game.hint_ad_btn')();
   });

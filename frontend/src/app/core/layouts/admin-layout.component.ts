@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { AuthStore } from '../auth/auth.store';
 import { I18nService, SUPPORTED_LANGS } from '../i18n/i18n.service';
 import { ThemeService } from '../theme/theme.service';
+import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, CoinIconComponent],
   template: `
     <div class="h-[100dvh] overflow-hidden w-full flex bg-[var(--color-bg-main)] text-[var(--color-text-main)] font-sans">
       
@@ -70,7 +71,7 @@ import { ThemeService } from '../theme/theme.service';
             <span>{{ i18n.t('admin.menu.leaderboard')() }}</span>
           </a>
           <a routerLink="/admin/xp-config" routerLinkActive="bg-green-500/20 text-green-400 border-green-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>🪙</span>
+            <app-coin-icon size="sm" />
             <span>{{ i18n.t('admin.menu.xp_config')() }}</span>
           </a>
 

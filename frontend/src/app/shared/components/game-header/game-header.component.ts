@@ -9,11 +9,12 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinGuideModalComponent } from '../coin-guide-modal/coin-guide-modal.component';
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule, CoinGuideModalComponent],
+  imports: [CommonModule, CoinGuideModalComponent, CoinIconComponent],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {

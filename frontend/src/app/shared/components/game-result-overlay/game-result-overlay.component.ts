@@ -17,12 +17,13 @@ import { GhostChallengeService } from '../../../core/services/ghost-challenge.se
 import { CoinService } from '../../../core/services/coin.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-game-result-overlay',
   standalone: true,
-  imports: [CommonModule, AdsenseComponent],
+  imports: [CommonModule, AdsenseComponent, CoinIconComponent],
   templateUrl: './game-result-overlay.component.html',
   styles: [`
     :host {

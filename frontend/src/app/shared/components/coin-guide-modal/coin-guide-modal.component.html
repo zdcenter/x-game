@@ -9,8 +9,8 @@
       <!-- Header Banner -->
       <div class="relative px-5 py-4 sm:px-6 sm:py-5 border-b border-[var(--color-border-card)] bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl shadow-inner shrink-0">
-            🪙
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shadow-inner shrink-0">
+            <app-coin-icon size="lg" />
           </div>
           <div>
             <h2 class="text-base sm:text-lg font-black text-[var(--color-text-main)] flex items-center gap-2">
@@ -36,8 +36,8 @@
         <span class="text-xs font-bold text-[var(--color-text-muted)] flex items-center gap-1.5">
           <span>{{ i18n.t('game.coins_balance')() }}</span>
         </span>
-        <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 font-black text-amber-400 font-mono text-sm">
-          <span>🪙</span>
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 font-black text-amber-400 font-mono text-sm shadow-sm">
+          <app-coin-icon size="sm" />
           <span>{{ coinService.coins() }}</span>
         </div>
       </div>
@@ -82,23 +82,38 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex flex-col justify-between">
                 <span class="text-[11px] font-bold text-emerald-400">{{ i18n.t('coins.diff_easy')() }}</span>
-                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1">+{{ settingsService.coinEconomy().soloEasy }} 🪙</span>
+                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1 flex items-center gap-1">
+                  <span>+{{ settingsService.coinEconomy().soloEasy }}</span>
+                  <app-coin-icon size="xs" />
+                </span>
               </div>
               <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex flex-col justify-between">
                 <span class="text-[11px] font-bold text-blue-400">{{ i18n.t('coins.diff_medium')() }}</span>
-                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1">+{{ settingsService.coinEconomy().soloMedium }} 🪙</span>
+                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1 flex items-center gap-1">
+                  <span>+{{ settingsService.coinEconomy().soloMedium }}</span>
+                  <app-coin-icon size="xs" />
+                </span>
               </div>
               <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex flex-col justify-between">
                 <span class="text-[11px] font-bold text-amber-400">{{ i18n.t('coins.diff_hard')() }}</span>
-                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1">+{{ settingsService.coinEconomy().soloHard }} 🪙</span>
+                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1 flex items-center gap-1">
+                  <span>+{{ settingsService.coinEconomy().soloHard }}</span>
+                  <app-coin-icon size="xs" />
+                </span>
               </div>
               <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex flex-col justify-between">
                 <span class="text-[11px] font-bold text-purple-400">{{ i18n.t('coins.diff_expert')() }}</span>
-                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1">+{{ settingsService.coinEconomy().soloExpert }} 🪙</span>
+                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1 flex items-center gap-1">
+                  <span>+{{ settingsService.coinEconomy().soloExpert }}</span>
+                  <app-coin-icon size="xs" />
+                </span>
               </div>
               <div class="col-span-2 sm:col-span-1 p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex flex-col justify-between">
                 <span class="text-[11px] font-bold text-rose-400">{{ i18n.t('coins.diff_master')() }}</span>
-                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1">+{{ settingsService.coinEconomy().soloMaster }} 🪙</span>
+                <span class="text-base font-black font-mono text-[var(--color-text-main)] mt-1 flex items-center gap-1">
+                  <span>+{{ settingsService.coinEconomy().soloMaster }}</span>
+                  <app-coin-icon size="xs" />
+                </span>
               </div>
             </div>
 
@@ -119,7 +134,10 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between">
                 <h4 class="text-xs font-bold text-[var(--color-text-main)]">{{ i18n.t('coins.earn_pk_title')() }}</h4>
-                <span class="font-black font-mono text-xs text-amber-400">+{{ settingsService.coinEconomy().pkWin }} 🪙</span>
+                <span class="font-black font-mono text-xs text-amber-400 flex items-center gap-1">
+                  <span>+{{ settingsService.coinEconomy().pkWin }}</span>
+                  <app-coin-icon size="xs" />
+                </span>
               </div>
               <p class="text-[11px] text-[var(--color-text-muted)] mt-1 leading-relaxed">
                 {{ i18n.t('coins.earn_pk_desc', { coins: settingsService.coinEconomy().pkWin })() }}
@@ -150,7 +168,10 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
                   <h4 class="text-xs font-bold text-[var(--color-text-main)]">{{ i18n.t('coins.spend_hint_title')() }}</h4>
-                  <span class="font-black font-mono text-xs text-amber-400">-{{ settingsService.coinEconomy().costHint }} 🪙</span>
+                  <span class="font-black font-mono text-xs text-amber-400 flex items-center gap-1">
+                    <span>-{{ settingsService.coinEconomy().costHint }}</span>
+                    <app-coin-icon size="xs" />
+                  </span>
                 </div>
                 <p class="text-[11px] text-[var(--color-text-muted)] mt-1 leading-relaxed">
                   {{ i18n.t('coins.spend_hint_desc')() }}
@@ -166,7 +187,10 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
                   <h4 class="text-xs font-bold text-[var(--color-text-main)]">{{ i18n.t('coins.spend_revive_title')() }}</h4>
-                  <span class="font-black font-mono text-xs text-amber-400">-{{ settingsService.coinEconomy().costRevive }} 🪙</span>
+                  <span class="font-black font-mono text-xs text-amber-400 flex items-center gap-1">
+                    <span>-{{ settingsService.coinEconomy().costRevive }}</span>
+                    <app-coin-icon size="xs" />
+                  </span>
                 </div>
                 <p class="text-[11px] text-[var(--color-text-muted)] mt-1 leading-relaxed">
                   {{ i18n.t('coins.spend_revive_desc')() }}
@@ -182,7 +206,10 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
                   <h4 class="text-xs font-bold text-[var(--color-text-main)]">{{ i18n.t('coins.spend_freeze_title')() }}</h4>
-                  <span class="font-black font-mono text-xs text-amber-400">-{{ settingsService.coinEconomy().costFreeze }} 🪙</span>
+                  <span class="font-black font-mono text-xs text-amber-400 flex items-center gap-1">
+                    <span>-{{ settingsService.coinEconomy().costFreeze }}</span>
+                    <app-coin-icon size="xs" />
+                  </span>
                 </div>
                 <p class="text-[11px] text-[var(--color-text-muted)] mt-1 leading-relaxed">
                   {{ i18n.t('coins.spend_freeze_desc')() }}

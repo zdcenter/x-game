@@ -4,26 +4,28 @@
   <!-- ══════ Header — PK 大厅统一导航 ══════ -->
   <div class="shrink-0">
     <app-game-header [title]="t('game.pk_lobby_title')" [subtitle]="t('game.pk_lobby_subtitle')"
-      [iconGradientClass]="'from-rose-500 to-violet-600'" [titleGradientClass]="'from-rose-400 to-violet-400'"
+      [iconGradientClass]="'from-rose-500 to-violet-600'" [titleGradientClass]="'from-rose-500 to-violet-600 dark:from-rose-400 dark:to-violet-400'"
       [shadowClass]="'shadow-violet-500/20'"
-      [headerBgClass]="'bg-gradient-to-r from-rose-900/20 to-violet-900/20 px-4 md:px-8 pb-2 mb-0'"
+      [headerBgClass]="'bg-[var(--color-bg-card)] dark:bg-gradient-to-r dark:from-rose-950/30 dark:to-violet-950/30 px-3 sm:px-5 md:px-6 py-1.5 sm:py-2 mb-0 border-b border-[var(--color-border-card)]'"
       (back)="back.emit()">
 
       <!-- 大厅图标 ⚔️ -->
       <span game-icon class="text-2xl sm:text-3xl leading-none select-none">⚔️</span>
 
       <ng-container header-right>
-        <div class="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
-            <span class="font-bold text-violet-400">{{ totalActiveRooms() }}</span>
-            <span class="hidden sm:inline opacity-70">{{ t('game.active_rooms_count') }}</span>
+        <div class="flex items-center gap-2 text-xs">
+          <!-- 活跃房间 Badge -->
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 shadow-xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-violet-600 dark:bg-violet-400 animate-pulse"></span>
+            <span class="font-mono font-black text-violet-700 dark:text-violet-300">{{ totalActiveRooms() }}</span>
+            <span class="text-[11px] font-bold text-[var(--color-text-secondary)] hidden sm:inline">{{ t('game.active_rooms_count') }}</span>
           </div>
-          <span class="opacity-30">·</span>
-          <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="font-bold text-emerald-400">{{ totalOnline() }}</span>
-            <span class="hidden sm:inline opacity-70">{{ t('game.online') }}</span>
+
+          <!-- 在线玩家 Badge -->
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 shadow-xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:emerald-400 animate-pulse"></span>
+            <span class="font-mono font-black text-emerald-700 dark:text-emerald-300">{{ totalOnline() }}</span>
+            <span class="text-[11px] font-bold text-[var(--color-text-secondary)] hidden sm:inline">{{ t('game.online') }}</span>
           </div>
         </div>
       </ng-container>
@@ -281,7 +283,8 @@
       }
       @if (room.bountyCoins && room.bountyCoins > 0) {
         <span class="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/15 border border-amber-500/40 text-amber-400 shrink-0 shadow-sm animate-pulse">
-          🪙 {{ t('game.bounty_badge') }}: {{ room.bountyCoins }}
+          <app-coin-icon size="xs" />
+          <span>{{ t('game.bounty_badge') }}: {{ room.bountyCoins }}</span>
         </span>
       }
       <span
@@ -530,8 +533,14 @@
       <!-- 悬赏擂台设置 -->
       <div>
         <div class="flex items-center justify-between mb-1">
-          <label class="block text-[10px] font-bold opacity-60 uppercase tracking-wider">🪙 {{ t('game.bounty_label') }}</label>
-          <span class="text-[10px] text-amber-400 font-bold">🪙 {{ coinService.coins() }}</span>
+          <label class="flex items-center gap-1 text-[10px] font-bold opacity-60 uppercase tracking-wider">
+            <app-coin-icon size="xs" />
+            <span>{{ t('game.bounty_label') }}</span>
+          </label>
+          <span class="text-[10px] text-amber-400 font-bold inline-flex items-center gap-1">
+            <app-coin-icon size="xs" />
+            <span>{{ coinService.coins() }}</span>
+          </span>
         </div>
         <p class="text-[9px] text-[var(--color-text-muted)] mb-1.5">{{ t('game.bounty_desc') }}</p>
         <div class="grid grid-cols-4 gap-1.5">

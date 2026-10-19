@@ -7,6 +7,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { GameMode } from '../../../core/models/game.model';
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 export interface EditRoomConfig {
   gameId: string;
@@ -19,7 +20,7 @@ export interface EditRoomConfig {
 @Component({
   selector: 'app-edit-room-overlay',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoinIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './edit-room-overlay.component.html',
 })

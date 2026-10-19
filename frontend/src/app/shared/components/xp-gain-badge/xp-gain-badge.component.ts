@@ -4,10 +4,12 @@ import { XpService } from '../../../core/services/xp.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+
 @Component({
   selector: 'app-xp-gain-badge',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoinIconComponent],
   styles: [`
     @keyframes floatUpXP {
       0%   { opacity: 0; transform: translateY(16px) scale(0.9); }
@@ -43,7 +45,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
         <div class="coin-float flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-sm sm:text-base
                     bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500
                     text-slate-950 shadow-xl shadow-amber-500/40 border border-yellow-200/60 ring-1 ring-amber-300/50 backdrop-blur-md">
-          <span class="text-base sm:text-lg">🪙</span>
+          <app-coin-icon size="md" />
           <span>+{{ coinGain.amount }} {{ i18n.t('game.coins')() || '脑力币' }}</span>
         </div>
       }

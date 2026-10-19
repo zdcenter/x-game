@@ -159,13 +159,13 @@
             <div class="flex items-center gap-1.5">
               @if (status === GameResult.Win && authStore.isAuthenticated() && effectiveCoinsEarned > 0) {
                 <span class="font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm">
-                  <span>🪙</span>
+                  <app-coin-icon size="xs" />
                   <span>+{{ effectiveCoinsEarned }}</span>
                 </span>
               }
               @if (status === GameResult.Lose && isPkMatch && effectiveBountyCoins > 0 && authStore.isAuthenticated()) {
                 <span class="font-black text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm">
-                  <span>🪙</span>
+                  <app-coin-icon size="xs" />
                   <span>-{{ effectiveBountyCoins }}</span>
                 </span>
               }
@@ -192,9 +192,9 @@
               </span>
               <span class="font-mono font-black" [class.text-amber-300]="status === GameResult.Win" [class.text-rose-400]="status !== GameResult.Win">
                 @if (status === GameResult.Win) {
-                  +{{ bountyNetReward }} 🪙 ({{ i18n.t('game.bounty_win_pot')() }})
+                  <span class="inline-flex items-center gap-1">+{{ bountyNetReward }} <app-coin-icon size="xs" /> ({{ i18n.t('game.bounty_win_pot')() }})</span>
                 } @else {
-                  -{{ effectiveBountyCoins }} 🪙
+                  <span class="inline-flex items-center gap-1">-{{ effectiveBountyCoins }} <app-coin-icon size="xs" /></span>
                 }
               </span>
             </div>

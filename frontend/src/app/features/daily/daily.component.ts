@@ -8,11 +8,12 @@ import { AuthStore } from '../../core/auth/auth.store';
 import { AudioService } from '../../core/services/audio.service';
 import { ToastService } from '../../core/services/toast.service';
 import { RewardCelebrationModalComponent, RewardCelebrationData } from '../../shared/components/reward-celebration-modal/reward-celebration-modal.component';
+import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 
 @Component({
   selector: 'app-daily',
   standalone: true,
-  imports: [CommonModule, RouterLink, RewardCelebrationModalComponent],
+  imports: [CommonModule, RouterLink, RewardCelebrationModalComponent, CoinIconComponent],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] p-4 md:p-8">
       <div class="max-w-4xl mx-auto flex flex-col gap-6">
@@ -69,7 +70,7 @@ import { RewardCelebrationModalComponent, RewardCelebrationData } from '../../sh
               <!-- Brain Coins -->
               <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-sm"
                    title="我的脑力金币">
-                <span class="text-lg">🪙</span>
+                <app-coin-icon size="md" />
                 <div class="flex flex-col">
                   <span class="text-[9px] font-bold text-amber-500 uppercase leading-none">脑力金币</span>
                   <span class="font-black font-mono text-sm sm:text-base text-amber-600 dark:text-amber-300 leading-tight">
@@ -150,8 +151,11 @@ import { RewardCelebrationModalComponent, RewardCelebrationData } from '../../sh
                     <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-from)] truncate">
                       {{ i18n.t('quests.daily_chest')() || '全清大宝箱' }}
                     </span>
-                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 whitespace-nowrap">
-                      +{{ d.chest.xp_amount }} XP / +100 🪙
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 whitespace-nowrap inline-flex items-center gap-1">
+                      <span>+{{ d.chest.xp_amount }} XP</span>
+                      <span>/</span>
+                      <span>+100</span>
+                      <app-coin-icon size="xs" />
                     </span>
                   </div>
                   <p class="text-[11px] text-[var(--color-text-muted)] truncate">
@@ -270,8 +274,9 @@ import { RewardCelebrationModalComponent, RewardCelebrationData } from '../../sh
                       <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)]">
                         +{{ q.xp_amount }} XP
                       </span>
-                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-500">
-                        +{{ q.coins || 20 }} 🪙
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/10 text-yellow-500 inline-flex items-center gap-1">
+                        <span>+{{ q.coins || 20 }}</span>
+                        <app-coin-icon size="xs" />
                       </span>
                     </div>
                     <p class="text-xs text-[var(--color-text-muted)] line-clamp-1">

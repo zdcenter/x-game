@@ -5,10 +5,12 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+
 @Component({
   selector: 'app-coin-guide-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoinIconComponent],
   templateUrl: './coin-guide-modal.component.html',
   styles: [`
     :host {

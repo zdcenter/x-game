@@ -17,11 +17,12 @@ import { ZenModeService } from '../services/zen-mode.service';
 import { CoinService } from '../services/coin.service';
 import { CoinGuideService } from '../services/coin-guide.service';
 import { CoinGuideModalComponent } from '../../shared/components/coin-guide-modal/coin-guide-modal.component';
+import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, LiveBattleBeaconComponent, CoinGuideModalComponent],
+  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, LiveBattleBeaconComponent, CoinGuideModalComponent, CoinIconComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
@@ -98,10 +99,10 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
 
               <!-- Coins Pill (Click to open Coin Economy Guide) -->
               <button (click)="coinGuideService.open()"
-                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-amber-400 font-black text-xs shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 dark:bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 dark:border-amber-500/25 text-amber-700 dark:text-amber-300 font-black text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
                       [title]="i18n.t('game.coins_balance')() + ': ' + coinService.coins() + ' (' + (i18n.t('coins.guide_title')() || '规则指南') + ')'">
-                <span>🪙</span>
-                <span class="font-mono">{{ coinService.coins() }}</span>
+                <app-coin-icon size="sm" />
+                <span class="font-mono font-black">{{ coinService.coins() }}</span>
               </button>
 
               <!-- Avatar + username → profile link -->

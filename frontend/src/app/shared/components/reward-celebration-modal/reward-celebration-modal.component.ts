@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
 
+import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+
 export interface RewardCelebrationData {
   title?: string;
   subtitle?: string;
@@ -19,7 +21,7 @@ export interface RewardCelebrationData {
 @Component({
   selector: 'app-reward-celebration-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoinIconComponent],
   styles: [`
     @keyframes spinSlow {
       0% { transform: rotate(0deg); }
@@ -150,8 +152,9 @@ export interface RewardCelebrationData {
             <!-- 脑力金币奖励卡 -->
             @if ((data?.coins || 0) > 0) {
               <div class="flex flex-col items-center justify-center p-2.5 rounded-2xl bg-gradient-to-b from-amber-500/10 to-amber-500/5 border border-amber-500/20 shadow-sm transition-transform hover:scale-105">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 flex items-center gap-1">
-                  <span>🪙</span> 金币
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 flex items-center gap-1.5">
+                  <app-coin-icon size="xs" />
+                  <span>{{ i18n.t('game.coins')() || '金币' }}</span>
                 </span>
                 <span class="text-xl sm:text-2xl font-black font-mono text-amber-600 dark:text-amber-300 mt-0.5 tabular-nums">
                   +{{ displayCoins() }}
@@ -191,7 +194,7 @@ export interface RewardCelebrationData {
   `
 })
 export class RewardCelebrationModalComponent implements OnInit, OnDestroy {
-  private i18n = inject(I18nService);
+  protected i18n = inject(I18nService);
   private audio = inject(AudioService);
 
   @Input() data: RewardCelebrationData | null = null;

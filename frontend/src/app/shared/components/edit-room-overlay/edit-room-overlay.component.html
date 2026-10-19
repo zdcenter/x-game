@@ -161,7 +161,10 @@
 
           <!-- 悬赏擂台设置 -->
           <div>
-            <label class="block text-xs font-bold opacity-70 uppercase tracking-wider mb-1">🪙 {{ t('game.bounty_label') }}</label>
+            <label class="flex items-center gap-1.5 text-xs font-bold opacity-70 uppercase tracking-wider mb-1">
+              <app-coin-icon size="xs" />
+              <span>{{ t('game.bounty_label') }}</span>
+            </label>
             <p class="text-[10px] opacity-50 mb-2">{{ t('game.bounty_desc') }}</p>
             <div class="grid grid-cols-4 gap-2">
               @for (b of bountyOptions; track b) {
