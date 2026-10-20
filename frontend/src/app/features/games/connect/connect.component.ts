@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -311,6 +311,21 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
 
   onHintApplied() {
     this.store.applyHint();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (this.view() !== 'play') return;
+    if (event.key.toLowerCase() === 'r' && this.store.currentRoomMode() === GameMode.Single) {
+      this.onRestart();
+      event.preventDefault();
+      return;
+    }
+    if (event.key.toLowerCase() === 'h' && this.store.currentRoomMode() === GameMode.Single) {
+      this.onHintApplied();
+      event.preventDefault();
+      return;
+    }
   }
 
   onOverlayClose() {

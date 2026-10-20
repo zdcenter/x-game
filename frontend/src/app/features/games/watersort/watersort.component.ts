@@ -1,6 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { storageGet, storageSet } from '../../../core/utils/browser.util';
-import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef, computed, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -529,6 +529,15 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     this.selectedTubeIndex = null;
     this.pouringState = null;
     this._store.restartGame();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key.toLowerCase() === 'r' && this.currentRoomMode() === GameMode.Single) {
+      this.playAgain();
+      event.preventDefault();
+      return;
+    }
   }
 
 

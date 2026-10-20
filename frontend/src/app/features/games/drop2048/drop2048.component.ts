@@ -295,6 +295,12 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
+    if ((event.code === 'KeyR' || event.key.toLowerCase() === 'r') && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.startGame();
+      event.preventDefault();
+      return;
+    }
+
     if (this.store.status() !== GameStatus.Playing) return;
 
     const isLeft = event.code === 'ArrowLeft' || event.key === 'ArrowLeft' || event.code === 'KeyA' || event.key === 'a' || event.key === 'A';

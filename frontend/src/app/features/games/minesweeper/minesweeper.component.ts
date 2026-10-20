@@ -1,6 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
 import { storageGet, storageSet } from '../../../core/utils/browser.util';
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -60,6 +60,23 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   currentDifficulty = signal<string>('medium');
   frozenRemaining = signal(0);
   mobileActionMode = signal<'reveal' | 'flag'>('reveal');
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    // Quick restart with R in single-player mode
+    if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.metaKey) {
+      if (this.currentRoomMode() === GameMode.Single) {
+        this.changeSingleDifficulty(this.currentDifficulty());
+        event.preventDefault();
+        return;
+      }
+    }
+    // Space or F key to toggle action mode between reveal and flag
+    if (event.key === ' ' || event.key === 'f' || event.key === 'F') {
+      this.mobileActionMode.update(m => m === 'reveal' ? 'flag' : 'reveal');
+      event.preventDefault();
+    }
+  }
   
   showCustomDialog = signal(false);
   customW = signal(16);

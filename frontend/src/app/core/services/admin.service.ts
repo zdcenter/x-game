@@ -8,6 +8,9 @@ import { AuthStore } from '../auth/auth.store';
 
 export interface UsersResponse {
   users: User[];
+  total?: number;
+  page?: number;
+  page_size?: number;
   error?: string;
 }
 
@@ -25,8 +28,23 @@ export class AdminService {
   private authStore = inject(AuthStore);
   private readonly baseUrl = environment.apiUrl + '/admin';
 
-  getUsers(): Observable<UsersResponse> {
-    return this.http.get<UsersResponse>(`${this.baseUrl}/users`);
+  getUsers(
+    page: number = 1,
+    pageSize: number = 15,
+    search: string = '',
+    sortBy: string = 'created_at',
+    order: 'asc' | 'desc' = 'desc'
+  ): Observable<UsersResponse> {
+    const params: any = {
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+      sortBy,
+      order
+    };
+    if (search && search.trim()) {
+      params.search = search.trim();
+    }
+    return this.http.get<UsersResponse>(`${this.baseUrl}/users`, { params });
   }
 
   toggleUserStatus(userId: number, newStatus: 'active' | 'banned'): Observable<{message: string}> {

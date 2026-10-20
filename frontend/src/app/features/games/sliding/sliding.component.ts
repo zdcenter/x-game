@@ -1,6 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
 import { isBrowser } from '../../../core/utils/browser.util';
-import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef } from '@angular/core';
+import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -131,6 +131,49 @@ export class SlidingComponent extends BaseGameComponent {
     const idx = board.emptyIdx;
     return { row: Math.floor(idx / size), col: idx % size, size };
   });
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    // Quick restart with R in single player
+    if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.metaKey) {
+      if (this.currentRoomMode() === GameMode.Single) {
+        this.store.startGame();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    if (this.store.status() !== GameStatus.Playing) return;
+
+    // Arrow keys & WASD to slide adjacent tile into empty space
+    const empty = this.emptyCell();
+    if (!empty) return;
+
+    let targetRow = empty.row;
+    let targetCol = empty.col;
+
+    // Pressing ArrowUp / W slides the tile BELOW the empty space UP into it
+    // Pressing ArrowDown / S slides the tile ABOVE the empty space DOWN into it
+    if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') {
+      targetRow = empty.row + 1;
+    } else if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') {
+      targetRow = empty.row - 1;
+    } else if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+      targetCol = empty.col + 1;
+    } else if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+      targetCol = empty.col - 1;
+    } else {
+      return;
+    }
+
+    if (targetRow >= 0 && targetRow < empty.size && targetCol >= 0 && targetCol < empty.size) {
+      const tile = this.tiles().find(t => t.row === targetRow && t.col === targetCol);
+      if (tile) {
+        this.onTileClick(tile);
+        event.preventDefault();
+      }
+    }
+  }
 
   readonly formattedElapsedTime = computed(() => {
     return this.formatTime(this.getElapsedMs(this.store.globalStartAt()));

@@ -1,4 +1,4 @@
-import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, ElementRef, OnInit, OnDestroy, signal, effect, untracked } from '@angular/core';
+import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, ElementRef, OnInit, OnDestroy, signal, effect, untracked, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
@@ -714,6 +714,42 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   handleRestart() {
     this.store.playAgain();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    const key = event.key.toLowerCase();
+    
+    // Quick restart in single player
+    if (key === 'r' && this.store.currentRoomMode() === GameMode.Single) {
+      this.handleRestart();
+      event.preventDefault();
+      return;
+    }
+
+    // Undo
+    if (key === 'z') {
+      if (this.store.history().length > 0 && this.store.currentRoomMode() !== GameMode.Steal) {
+        this.store.undo();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Toggle Draw Mode (Fill vs Cross)
+    if (key === 'x' || event.code === 'Space') {
+      const nextMode = this.store.drawMode() === 'fill' ? 'cross' : 'fill';
+      this.store.setDrawMode(nextMode);
+      event.preventDefault();
+      return;
+    }
+
+    // Hint
+    if (key === 'h' && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.useHint();
+      event.preventDefault();
+      return;
+    }
   }
 
   override handleDismissRoom() {

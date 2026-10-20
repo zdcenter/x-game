@@ -5,14 +5,18 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
+  host: {
+    class: 'block min-h-screen w-full'
+  },
   template: `
-    <div class="flex-grow flex items-center justify-center p-8 transition-colors duration-300">
-      <div class="w-full max-w-md backdrop-blur-xl border rounded-3xl p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 relative overflow-hidden"
+    <div class="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 transition-colors duration-300 bg-[var(--color-bg-main)]">
+      <div class="w-full max-w-md backdrop-blur-xl border rounded-3xl p-6 sm:p-10 shadow-[0_0_50px_rgba(0,0,0,0.15)] dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 relative overflow-hidden my-auto"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
            
         <div class="absolute -top-20 -left-20 w-40 h-40 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -52,22 +56,10 @@ import { I18nService } from '../../core/i18n/i18n.service';
             </div>
 
             <button type="submit" [disabled]="isLoading()"
-                    class="w-full py-4 mt-8 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-teal-500/30 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="w-full py-4 mt-8 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-teal-500/30 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
               {{ isLoading() ? i18n.t('auth.register.submitting')() : i18n.t('auth.register.submit')() }}
             </button>
           </form>
-
-          <div class="mt-6 flex items-center justify-between">
-            <span class="border-b w-1/5 border-[var(--color-border-card)]"></span>
-            <span class="text-xs text-center text-slate-500 uppercase font-semibold">Or</span>
-            <span class="border-b w-1/5 border-[var(--color-border-card)]"></span>
-          </div>
-
-          <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
-                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            {{ i18n.t('auth.play_as_guest')() }}
-          </button>
 
           <div class="mt-8 text-center text-slate-400 text-sm">
             {{ i18n.t('auth.register.has_account')() }}
@@ -84,6 +76,7 @@ export class RegisterComponent {
   router = inject(Router);
   route = inject(ActivatedRoute);
   i18n = inject(I18nService);
+  toastService = inject(ToastService);
 
   username = '';
   password = '';
@@ -113,36 +106,19 @@ export class RegisterComponent {
     this.errorMsg.set('');
 
     this.authService.register(this.username, this.password).subscribe({
-      next: () => {
-        this.isLoading.set(false);
-        // Automatically redirect to login page after successful registration, preserving returnUrl
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-        this.router.navigate(['/', this.i18n.currentLang(), 'login'], {
-          queryParams: returnUrl ? { returnUrl } : undefined
-        });
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMsg.set(err.error?.error || 'Registration failed');
-      }
-    });
-  }
-
-  onGuestLogin() {
-    this.isLoading.set(true);
-    this.errorMsg.set('');
-
-    this.authService.guestLogin().subscribe({
       next: (res) => {
         this.isLoading.set(false);
         if (res.token && res.user) {
           this.authStore.setCredentials(res.token, res.user);
-          this.redirectAfterAuth();
         }
+        this.toastService.show(this.i18n.t('auth.register.success')(), 'success');
+        this.redirectAfterAuth();
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMsg.set(err.error?.error || 'Guest login failed');
+        const msg = err.error?.error || this.i18n.t('auth.register.failed')();
+        this.errorMsg.set(msg);
+        this.toastService.show(msg, 'error');
       }
     });
   }

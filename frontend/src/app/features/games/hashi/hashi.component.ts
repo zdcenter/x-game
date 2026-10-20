@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, HostListener } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -395,5 +395,21 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
         this.view.set('lobby');
       }
     });
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (this.view() !== 'play') return;
+    const key = event.key.toLowerCase();
+    if (key === 'r' && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.startSinglePlayer(this.store.currentPuzzleId(), this.store.currentPuzzleContent(), this.store.currentDifficulty(), this.store.localLevelIndex());
+      event.preventDefault();
+      return;
+    }
+    if (key === 'h' && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.applyHint();
+      event.preventDefault();
+      return;
+    }
   }
 }

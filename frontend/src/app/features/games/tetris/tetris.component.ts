@@ -125,7 +125,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     return this.authStore.currentUser()?.username || this.authStore.guestId;
   }
 
-  isShaking = signal(false);
   showLevelUp = signal(false);
   levelUpNum = signal(0);
   showTetrisBanner = signal(false);
@@ -165,14 +164,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.store.leaveRoom();
         this.roomLifecycle.clearReconnectInfo();
       },
-    });
-
-    effect(() => {
-      const trigger = this.store.shakeTrigger();
-      if (trigger > 0) {
-        this.isShaking.set(false);
-        setTimeout(() => { this.isShaking.set(true); setTimeout(() => this.isShaking.set(false), 420); }, 0);
-      }
     });
 
     effect(() => {
@@ -246,6 +237,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
+    if (event.code === 'KeyR' && this.currentRoomMode() === GameMode.Single) {
+      this.store.startGame();
+      event.preventDefault();
+      return;
+    }
+
     if (this.store.status() !== GameStatus.Playing) return;
     
     switch (event.code) {

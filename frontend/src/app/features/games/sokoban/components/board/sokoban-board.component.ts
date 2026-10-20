@@ -597,8 +597,13 @@ export class SokobanBoardComponent {
         break;
       case 'z':
       case 'Z':
-        if (event.ctrlKey || event.metaKey) {
-          this.store.undo();
+        this.store.undo();
+        event.preventDefault();
+        break;
+      case 'r':
+      case 'R':
+        if (!event.ctrlKey && !event.metaKey) {
+          this.store.restart();
           event.preventDefault();
         }
         break;

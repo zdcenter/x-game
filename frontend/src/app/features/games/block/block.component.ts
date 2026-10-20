@@ -485,4 +485,13 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     this.draggedIndex = -1;
     this.previewShadow.set(null);
   }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key.toLowerCase() === 'r' && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.startGame();
+      event.preventDefault();
+      return;
+    }
+  }
 }

@@ -1,6 +1,10 @@
 package rest
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
@@ -12,13 +16,80 @@ type ToggleStatusRequest struct {
 }
 
 func GetUsers(c fiber.Ctx) error {
+	page, _ := strconv.Atoi(c.Query("page", "1"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ := strconv.Atoi(c.Query("pageSize", "15"))
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 15
+	}
+	search := strings.TrimSpace(c.Query("search", ""))
+	sortBy := strings.ToLower(strings.TrimSpace(c.Query("sortBy", "created_at")))
+	order := strings.ToUpper(strings.TrimSpace(c.Query("order", "DESC")))
+	if order != "ASC" && order != "DESC" {
+		order = "DESC"
+	}
+
+	validSortFields := map[string]string{
+		"brain_coins": "brain_coins",
+		"xp":          "xp",
+		"level":       "level",
+		"created_at":  "created_at",
+		"username":    "username",
+		"id":          "id",
+	}
+
+	sortField, ok := validSortFields[sortBy]
+	if !ok {
+		sortField = "created_at"
+	}
+
 	var users []domain.User
-	result := db.DB.Select("id", "username", "role", "status", "created_at").Find(&users)
+	var total int64
+
+	countQuery := db.DB.Model(&domain.User{})
+	listQuery := db.DB.Model(&domain.User{})
+
+	if search != "" {
+		pattern := "%" + search + "%"
+		if idVal, err := strconv.ParseInt(search, 10, 64); err == nil && idVal > 0 {
+			countQuery = countQuery.Where("username ILIKE ? OR id = ?", pattern, idVal)
+			listQuery = listQuery.Where("username ILIKE ? OR id = ?", pattern, idVal)
+		} else {
+			countQuery = countQuery.Where("username ILIKE ?", pattern)
+			listQuery = listQuery.Where("username ILIKE ?", pattern)
+		}
+	}
+
+	if err := countQuery.Count(&total).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to count users"})
+	}
+
+	orderClause := fmt.Sprintf("%s %s", sortField, order)
+	if sortField != "id" {
+		orderClause += ", id DESC"
+	}
+
+	offset := (page - 1) * pageSize
+	result := listQuery.Select("id", "username", "avatar", "role", "status", "xp", "level", "brain_coins", "created_at").
+		Order(orderClause).
+		Offset(offset).
+		Limit(pageSize).
+		Find(&users)
+
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch users"})
 	}
 
-	return c.JSON(fiber.Map{"users": users})
+	return c.JSON(fiber.Map{
+		"users":      users,
+		"total":      total,
+		"page":       page,
+		"page_size":  pageSize,
+		"sort_by":    sortField,
+		"sort_order": order,
+	})
 }
 
 func ToggleUserStatus(c fiber.Ctx) error {

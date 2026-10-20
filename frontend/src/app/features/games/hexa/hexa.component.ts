@@ -515,4 +515,13 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     }
     return color;
   }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key.toLowerCase() === 'r' && this.currentRoomMode() === GameMode.Single) {
+      this.store.startGame();
+      event.preventDefault();
+      return;
+    }
+  }
 }

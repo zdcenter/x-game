@@ -8,7 +8,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    @if (pwa.hasUpdate()) {
+    @if (pwa.hasUpdate() && pwa.isStandalone()) {
       <div class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-[94%] sm:w-auto sm:min-w-[380px] max-w-[480px] animate-slide-up-prompt select-none">
         <div class="relative overflow-hidden p-3 sm:p-4 rounded-2xl bg-slate-900/90 dark:bg-black/90 backdrop-blur-xl border border-amber-500/40 shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_20px_rgba(245,158,11,0.25)] flex items-center justify-between gap-3 text-white">
           

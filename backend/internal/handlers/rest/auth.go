@@ -54,7 +54,23 @@ func Register(c fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create user, might already exist"})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "User registered successfully", "user": user})
+	// Create JWT token for instant post-registration authentication
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"role":    user.Role,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+	})
+
+	t, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "User registered successfully",
+		"token":   t,
+		"user":    user,
+	})
 }
 
 func Login(c fiber.Ctx) error {

@@ -52,13 +52,23 @@
           @if (currentRoomMode() === GameMode.Single) {
             <!-- Modern Responsive Style for Single Player -->
             <div class="flex-none py-1.5 mb-1 w-full shrink-0">
-              <div class="w-full flex justify-center items-center px-4">
+              <div class="w-full flex justify-center items-center gap-3 px-4">
                 <div class="flex items-center gap-2.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs rounded-2xl px-6 py-2 transition-all">
                   <span class="text-xs uppercase tracking-wider text-[var(--color-text-secondary)] font-bold flex items-center gap-1.5">
                     <span>🔄</span> {{ i18n.t('game.moves')() || '移动步数' }}
                   </span>
                   <span class="text-xl sm:text-2xl font-black text-[var(--color-accent-from)] font-mono">{{ myMoves() }}</span>
                 </div>
+
+                <!-- Instant Restart Button -->
+                <button (click)="playAgain()"
+                        class="p-2 sm:px-3 sm:py-2 rounded-2xl bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer group"
+                        [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+                  <span class="text-base group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                  <span class="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden sm:inline">
+                    {{ i18n.t('game.restart')() || '重开' }}
+                  </span>
+                </button>
               </div>
             </div>
           } @else {

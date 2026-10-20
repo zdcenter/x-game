@@ -67,6 +67,16 @@
                     </div>
                   }
 
+                  <!-- Instant Restart Button -->
+                  <button (click)="store.startGame()"
+                          class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-cyan-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1 cursor-pointer"
+                          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+                    <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                    <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
+                      {{ i18n.t('game.restart')() || '重开' }}
+                    </span>
+                  </button>
+
                   <!-- Palette Switcher Button -->
                   <button (click)="store.cycleColorTheme()"
                           class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-amber-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1"
@@ -229,8 +239,7 @@
               <div class="relative flex-shrink-0 touch-none h-full min-h-[460px] max-h-[720px] flex flex-col items-center justify-center" style="aspect-ratio: 1/2;">
                 
                 <!-- Arcade Matrix Frame -->
-                <div class="w-full h-full bg-slate-900/90 rounded-2xl border-4 border-slate-700/80 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.15)] p-1.5 sm:p-2 relative backdrop-blur-xl overflow-hidden"
-                     [class.tetris-shake]="isShaking()">
+                <div class="w-full h-full bg-slate-900/90 rounded-2xl border-4 border-slate-700/80 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(99,102,241,0.15)] p-1.5 sm:p-2 relative backdrop-blur-xl overflow-hidden">
                   
                   <!-- Top Neon Accent Line -->
                   <div class="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-75"></div>

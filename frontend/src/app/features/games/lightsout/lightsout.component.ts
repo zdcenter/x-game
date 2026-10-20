@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -288,6 +288,20 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
           return;
         }
       }
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key.toLowerCase() === 'r' && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.startGame();
+      event.preventDefault();
+      return;
+    }
+    if (event.key.toLowerCase() === 'h' && this.store.currentRoomMode() === GameMode.Single) {
+      this.applyHint();
+      event.preventDefault();
+      return;
     }
   }
 }

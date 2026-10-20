@@ -284,6 +284,24 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
+    // R to quickly restart in single player
+    if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.metaKey) {
+      if (this.store.currentRoomMode() === GameMode.Single) {
+        this.store.startGame();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Z to undo
+    if ((event.key === 'z' || event.key === 'Z') && !event.shiftKey) {
+      if (this.store.currentRoomMode() === GameMode.Single) {
+        this.store.undo();
+        event.preventDefault();
+        return;
+      }
+    }
+
     if (this.store.status() !== GameStatus.Playing) return;
     
     switch (event.key) {

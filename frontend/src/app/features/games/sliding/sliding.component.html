@@ -44,8 +44,12 @@
                 </div>
               </div>
 
-              <!-- Smiley Button / Center Area (Optional, keeping it empty for balance or we can add a restart button) -->
-              <div></div>
+              <!-- Smiley Reset Button (0ms instant restart like Minesweeper) -->
+              <button (click)="store.startGame()"
+                      class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-md active:scale-95 transition-all text-xl sm:text-2xl select-none cursor-pointer"
+                      [title]="t('game.restart')() || 'Restart'">
+                {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+              </button>
 
               <!-- Timer -->
               <div class="flex items-center gap-1 sm:gap-2">

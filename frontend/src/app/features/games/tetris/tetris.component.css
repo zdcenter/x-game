@@ -1,14 +1,3 @@
-/* Main Tetris Arena Shake Animation */
-@keyframes tetris-shake {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  12%  { transform: translate3d(-5px, 3px, 0) rotate(-0.5deg); }
-  25%  { transform: translate3d(5px, -3px, 0) rotate(0.5deg); }
-  37%  { transform: translate3d(-3px, 2px, 0); }
-  50%  { transform: translate3d(3px, -2px, 0); }
-  62%  { transform: translate3d(-2px, 1px, 0); }
-  75%  { transform: translate3d(2px, -1px, 0); }
-}
-.tetris-shake { animation: tetris-shake 0.38s cubic-bezier(.36,.07,.19,.97); }
 
 /* Level Up Badge Pop */
 @keyframes level-up-pop {

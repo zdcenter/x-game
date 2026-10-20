@@ -78,6 +78,16 @@
                           <span>x{{ store.comboCount() + 1 }}</span>
                         </div>
                       }
+
+                      <!-- Instant Restart Button -->
+                      <button (click)="store.startGame()"
+                              class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-cyan-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1 cursor-pointer"
+                              [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+                        <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                        <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
+                          {{ i18n.t('game.restart')() || '重开' }}
+                        </span>
+                      </button>
                     </div>
                   </app-game-score-capsule>
                 </div>

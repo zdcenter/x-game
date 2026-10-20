@@ -23,6 +23,7 @@ export interface User {
   equipped_title?: string;
   unlocked_frames?: string;
   unlocked_titles?: string;
+  created_at?: string;
 }
 
 @Injectable({

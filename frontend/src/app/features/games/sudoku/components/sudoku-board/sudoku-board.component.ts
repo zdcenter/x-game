@@ -61,23 +61,42 @@ export class SudokuBoardComponent {
   handleKeyboardEvent(event: KeyboardEvent) {
     if (this.store.isFinished()) return;
 
-    if (event.key >= '1' && event.key <= '9') {
-      this.store.inputNumber(parseInt(event.key, 10));
-    } else if (event.key === 'Backspace' || event.key === 'Delete') {
+    const key = event.key;
+    const lowerKey = key.toLowerCase();
+
+    // Hotkey: Z for undo
+    if (lowerKey === 'z') {
+      if (this.store.canUndo()) {
+        this.store.undo();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Hotkey: R for clear / reset current board
+    if (lowerKey === 'r') {
+      this.store.clearBoard();
+      event.preventDefault();
+      return;
+    }
+
+    if (key >= '1' && key <= '9') {
+      this.store.inputNumber(parseInt(key, 10));
+    } else if (key === 'Backspace' || key === 'Delete') {
       this.store.erase();
-    } else if (event.key === ' ' || event.key.toLowerCase() === 'n') {
+    } else if (key === ' ' || lowerKey === 'n') {
       this.store.togglePencilMode();
       event.preventDefault();
     }
     
-    // Navigation arrows
+    // Navigation arrows & WASD
     const sel = this.store.selectedCell();
     if (sel) {
       let {r, c} = sel;
-      if (event.key === 'ArrowUp') r = (r - 1 + 9) % 9;
-      if (event.key === 'ArrowDown') r = (r + 1) % 9;
-      if (event.key === 'ArrowLeft') c = (c - 1 + 9) % 9;
-      if (event.key === 'ArrowRight') c = (c + 1) % 9;
+      if (key === 'ArrowUp' || lowerKey === 'w') r = (r - 1 + 9) % 9;
+      if (key === 'ArrowDown' || lowerKey === 's') r = (r + 1) % 9;
+      if (key === 'ArrowLeft' || lowerKey === 'a') c = (c - 1 + 9) % 9;
+      if (key === 'ArrowRight' || lowerKey === 'd') c = (c + 1) % 9;
       
       if (r !== sel.r || c !== sel.c) {
         this.store.selectCell(r, c);

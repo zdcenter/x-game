@@ -61,8 +61,15 @@
             <span>{{ i18n.t('game.coverage')() || '覆盖率' }}: {{ store.coveragePercent() }}%</span>
           </div>
 
-          <!-- Timer -->
-          <span class="text-[var(--color-text-main)] font-mono font-bold">⏱️ {{ formatTime(store.timeSpent()) }}</span>
+          <!-- Timer & Quick Restart -->
+          <div class="flex items-center gap-2">
+            <span class="text-[var(--color-text-main)] font-mono font-bold">⏱️ {{ formatTime(store.timeSpent()) }}</span>
+            <button (click)="onRestart()"
+                    class="p-1 rounded-lg bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs hover:scale-105 active:scale-95 transition-all text-xs cursor-pointer group"
+                    [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+              <span class="group-hover:rotate-180 transition-transform duration-300 inline-block">🔄</span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 // X-Game Production PWA Service Worker
-const CACHE_NAME = 'xgame-offline-v2026.10.20.1019';
+const CACHE_NAME = 'xgame-offline-v2026.10.20.1241';
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -59,8 +59,16 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // 1. Bypass non-GET, WebSockets, chrome extensions, etc.
-  if (req.method !== 'GET' || !url.protocol.startsWith('http') || url.pathname.startsWith('/ws/')) {
+  // 1. Bypass non-GET, WebSockets, chrome extensions, vite HMR, dev localhost, etc.
+  if (
+    req.method !== 'GET' ||
+    !url.protocol.startsWith('http') ||
+    url.pathname.startsWith('/ws/') ||
+    url.pathname.startsWith('/@vite') ||
+    url.pathname.startsWith('/@fs') ||
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1'
+  ) {
     return;
   }
 

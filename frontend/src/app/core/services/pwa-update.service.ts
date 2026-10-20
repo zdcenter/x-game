@@ -98,9 +98,26 @@ export class PwaUpdateService {
     }
   }
 
+  /**
+   * Checks whether the app is currently running in standalone PWA mode
+   * (e.g. installed to desktop or mobile home screen).
+   */
+  isStandalone(): boolean {
+    if (!this.isBrowser) return false;
+    return (
+      (navigator as any).standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches
+    );
+  }
+
   private onWorkerWaiting(worker: ServiceWorker) {
     console.log('[PWA] New version is waiting to activate');
-    this.hasUpdate.set(true);
+    // Only prompt user if running as an installed standalone PWA app
+    if (this.isStandalone()) {
+      this.hasUpdate.set(true);
+    }
   }
 
   /**
@@ -136,7 +153,11 @@ export class PwaUpdateService {
         if (data.version && data.version !== environment.version) {
           console.log(`[PWA] Remote version ${data.version} detected (current: ${environment.version})`);
           this.newVersion.set(data.version);
-          this.hasUpdate.set(true);
+          // Only prompt user if running in installed standalone PWA mode.
+          // Regular web browser sessions update quietly in the background without intrusive banners.
+          if (this.isStandalone()) {
+            this.hasUpdate.set(true);
+          }
         }
       }
     } catch (err) {

@@ -10,9 +10,12 @@ import { I18nService } from '../../core/i18n/i18n.service';
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
+  host: {
+    class: 'block min-h-screen w-full'
+  },
   template: `
-    <div class="flex-grow flex items-center justify-center p-8 transition-colors duration-300">
-      <div class="w-full max-w-md backdrop-blur-xl border rounded-3xl p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 relative overflow-hidden"
+    <div class="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 transition-colors duration-300 bg-[var(--color-bg-main)]">
+      <div class="w-full max-w-md backdrop-blur-xl border rounded-3xl p-6 sm:p-10 shadow-[0_0_50px_rgba(0,0,0,0.15)] dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300 relative overflow-hidden my-auto"
            style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
            
         <div class="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -56,18 +59,6 @@ import { I18nService } from '../../core/i18n/i18n.service';
               {{ isLoading() ? i18n.t('auth.login.submitting')() : i18n.t('auth.login.submit')() }}
             </button>
           </form>
-
-          <div class="mt-6 flex items-center justify-between">
-            <span class="border-b w-1/5 border-[var(--color-border-card)]"></span>
-            <span class="text-xs text-center text-slate-500 uppercase font-semibold">Or</span>
-            <span class="border-b w-1/5 border-[var(--color-border-card)]"></span>
-          </div>
-
-          <button type="button" (click)="onGuestLogin()" [disabled]="isLoading()"
-                  class="w-full py-4 mt-6 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] font-bold rounded-xl shadow-sm hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-70"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            {{ i18n.t('auth.play_as_guest')() }}
-          </button>
 
           <div class="mt-8 text-center text-slate-400 text-sm">
             {{ i18n.t('auth.login.no_account')() }}
@@ -121,25 +112,6 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading.set(false);
         this.errorMsg.set(err.error?.error || 'Login failed');
-      }
-    });
-  }
-
-  onGuestLogin() {
-    this.isLoading.set(true);
-    this.errorMsg.set('');
-
-    this.authService.guestLogin().subscribe({
-      next: (res) => {
-        this.isLoading.set(false);
-        if (res.token && res.user) {
-          this.authStore.setCredentials(res.token, res.user);
-          this.redirectAfterAuth();
-        }
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        this.errorMsg.set(err.error?.error || 'Guest login failed');
       }
     });
   }

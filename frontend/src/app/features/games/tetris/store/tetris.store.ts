@@ -163,11 +163,9 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       this.engine.initGame({
         mode: GameMode.Single,
         onSound: (s, lines, combo) => this.audio.playTetris(s, lines, combo),
-        onHardDrop: () => this.shakeTrigger.update(n => n + 1),
         onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
         onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
         onTetris: () => { this.tetrisTrigger.update(n => n + 1); },
-        onShake: () => { this.shakeTrigger.update(n => n + 1); this.updateSignals(); },
       });
       this.updateSignals();
     } else {
@@ -214,7 +212,6 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       onSyncState: () => {
         this.syncState();
       },
-      onHardDrop: () => this.shakeTrigger.update(n => n + 1),
       onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
       onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
       onTetris: () => { this.tetrisTrigger.update(n => n + 1); },
