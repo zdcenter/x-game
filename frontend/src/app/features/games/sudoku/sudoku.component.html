@@ -39,12 +39,12 @@
         <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
       } @else {
         <!-- PLAY VIEW -->
-        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
+        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
           @if (store.currentRoomMode() !== GameMode.Single) {
             <app-sudoku-pk-speed (openLobby)="navigateToPkArena()"></app-sudoku-pk-speed>
           } @else {
             <!-- Single Player -->
-            <div class="flex-none flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-visible relative w-full justify-start">
+            <div class="flex-none flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-visible relative w-full justify-center my-auto">
               <div class="flex-none flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-center md:justify-center content-center md:content-center items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto mt-4">
                 <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-360px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === GameMode.Single">
                   <app-sudoku-board class="w-full"></app-sudoku-board>
@@ -66,6 +66,7 @@
                   [xpResult]="store.lastStatResult()?.xp_result"
                   [isNewRecord]="store.lastStatResult()?.isNewRecord"
                   [showNextLevel]="true"
+                  [showLeave]="true"
                   (leave)="store.view.set('lobby')"
                   (nextLevel)="playNextLevel()"
                   class="absolute inset-0 z-50"

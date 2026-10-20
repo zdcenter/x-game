@@ -153,55 +153,78 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   
 
-  // Calculate board layout dynamically to fit in screen
-  // A typical cell is 20-30px. Max hints could be half the width.
-  readonly maxHintsCount = computed(() => Math.ceil(this.store.width() / 2));
-  
   readonly hideLeftPanel = computed(() => this.store.width() > 15);
 
   readonly cellSize = computed(() => {
-     const w = this.store.width();
-     const h = this.store.height();
-     const maxH = this.maxHintsCount();
-     // Hint area uses CSS 'auto' — estimate as ~80% of maxH cell-equivalents to prevent overflow
-     const hintEq = Math.max(2.5, maxH * 0.8);
-     const totalCols = w + hintEq;
-     const totalRows = h + hintEq;
+    const w = this.store.width();
+    const h = this.store.height();
+    const vw = this.windowSize.size().w;
+    const vh = this.windowSize.size().h;
 
-     const vw = this.windowSize.size().w;
-     const vh = this.windowSize.size().h;
-     const hideLeft = this.hideLeftPanel();
+    // Actual max hint length per row and column
+    const rowHints: number[][] = (this.store.rowHints() as any) || [];
+    const colHints: number[][] = (this.store.colHints() as any) || [];
+    const maxRowHints = rowHints.length > 0 ? Math.max(...rowHints.map((r: number[]) => r.length), 1) : 1;
+    const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
 
-     let availW: number;
-     if (vw >= 1536) {
-       // 2xl: left(360) + right(360) + gaps(80) + padding(48)
-       availW = hideLeft ? vw - 360 - 100 : vw - 360 - 360 - 128;
-     } else if (vw >= 1280) {
-       // xl: left(280) + right(300) + gaps(80) + padding(48)
-       availW = hideLeft ? vw - 300 - 100 : vw - 280 - 300 - 128;
-     } else if (vw >= 1024) {
-       // lg: NO left panel, right(260) + gaps(48) + padding(32)
-       availW = vw - 260 - 80;
-     } else {
-       // mobile/tablet: full width minus card+page padding (reduced to ensure no overflow)
-       availW = vw - 60;
-     }
+    // Dynamic hint area equivalents in cell units (matching actual font and padding in CSS)
+    const rowHintEq = Math.max(1.8, maxRowHints * 0.42 + 0.4);
+    const colHintEq = Math.max(1.8, maxColHints * 0.46 + 0.4);
 
-     // Height: header(~80px), draw toggle(~70px)
-     const availH = vh - 150;
+    const totalCols = w + rowHintEq;
+    const totalRows = h + colHintEq;
 
-     const sizeW = Math.floor(availW / totalCols);
-     
-     let finalSize = sizeW;
-     // For normal grids, constrain by height to fit everything in screen without scrolling.
-     // For large grids (focus mode), relax vertical constraint to maximize width and allow vertical scroll.
-     if (!hideLeft) {
-       const sizeH = Math.floor(availH / totalRows);
-       finalSize = Math.min(sizeW, sizeH);
-     }
+    // Available width inside the game stage card (max-w 1400px, no side panels)
+    let containerPadding = 32;
+    if (vw >= 1024) {
+      containerPadding = 72;
+    } else if (vw >= 640) {
+      containerPadding = 56; // Tablet portrait / landscape
+    }
 
-     // Use the constraint, minimum 20px, maximum 120px
-     return Math.max(20, Math.min(finalSize, 120));
+    const maxContainerW = Math.min(vw, 1400);
+    const availW = Math.max(280, maxContainerW - containerPadding);
+
+    // Available vertical height in viewport:
+    // Header + Subheader + Toolbar + Card margins ≈ 210px
+    const availH = Math.max(300, vh - 210);
+
+    const sizeW = Math.floor(availW / totalCols);
+    const sizeH = Math.floor(availH / totalRows);
+
+    let calculatedSize: number;
+    if (vw >= 640) {
+      // On tablet and desktop, fit both width and height to give comfortable margins
+      calculatedSize = Math.min(sizeW, sizeH);
+    } else {
+      // On narrow mobile devices, allow horizontal scroll if needed for dense grids
+      calculatedSize = Math.max(19, sizeW);
+    }
+
+    // Adaptive min/max cell bounds per grid density to guarantee high readability & touch ergonomics
+    let minSize = 19;
+    let maxSize = 72;
+
+    if (vw >= 640) {
+      if (w >= 25) {
+        minSize = 23;
+        maxSize = 36;
+      } else if (w >= 20) {
+        minSize = 27;
+        maxSize = 44;
+      } else if (w >= 15) {
+        minSize = 32;
+        maxSize = 52;
+      } else if (w >= 10) {
+        minSize = 42;
+        maxSize = 62;
+      } else {
+        minSize = 52;
+        maxSize = 76;
+      }
+    }
+
+    return Math.max(minSize, Math.min(calculatedSize, maxSize));
   });
 
   @ViewChild('cellsGrid') cellsGridRef?: ElementRef<HTMLElement>;

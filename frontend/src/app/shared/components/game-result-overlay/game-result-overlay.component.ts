@@ -102,7 +102,14 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() disableAudio: boolean = false;
   @Input() showRestart = false;
   @Input() showDismiss = false;
-  @Input() showLeave = false;
+  @Input() showLeave?: boolean;
+
+  get canShowLeave(): boolean {
+    if (this.showLeave !== undefined) {
+      return this.showLeave;
+    }
+    return !this.showDismiss;
+  }
   @Input() enableChangeRoomGame = false;
   @Input() showRevive = false;
 
@@ -373,7 +380,14 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   }
 
   handleLeave() {
-    this.adService.tryShowInterstitial(() => this.leave.emit());
+    this.adService.tryShowInterstitial(() => {
+      if (this.leave.observed) {
+        this.leave.emit();
+      } else {
+        const lang = this.i18n.currentLang();
+        this.router.navigate(['/', lang, 'lobby']);
+      }
+    });
   }
 
   handleRestart() {

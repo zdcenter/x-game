@@ -53,7 +53,7 @@
             <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
           }
 
-          <div class="flex-grow flex flex-col items-center justify-start p-1 sm:p-2 w-full h-full relative">
+          <div class="flex-grow flex flex-col items-center justify-center my-auto p-1 sm:p-2 w-full relative">
 
             <!-- Players Info Row -->
             @if (store.currentRoomMode() === GameMode.Single) {
@@ -227,7 +227,7 @@
             [xpResult]="store.lastStatResult()?.xp_result"
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="true"
-            [showLeave]="store.currentRoomMode() !== GameMode.Single"
+            [showLeave]="true"
             (rematch)="handleRematch()"
             (restart)="store.restartGame()"
             (leave)="goBack()"

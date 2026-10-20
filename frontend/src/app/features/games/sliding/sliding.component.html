@@ -26,13 +26,13 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2">
+<div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
 
           @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
 
           <!-- Single Player Classic Header -->
           @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex items-center justify-between px-4 py-3 bg-[var(--color-bg-sub)] rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-[400px] shadow-sm mx-auto mb-2 z-10">
+            <div class="flex-none flex items-center justify-between px-4 py-3 bg-[var(--color-bg-sub)] rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full shadow-sm mx-auto mb-2 z-10" [style.max-width]="boardSizePx()">
               
               <!-- Moves -->
               <div class="flex items-center gap-1 sm:gap-2">
@@ -75,7 +75,9 @@
 
             <!-- Aspect Square Board -->
             <div
-              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-sliding-board-bg)] rounded-2xl lg:rounded-3xl p-2 sm:p-3 shadow-inner border-2 border-[var(--color-sliding-board-border)] flex-shrink-0 touch-none select-none overscroll-contain w-full max-w-[min(100%,65vh,500px)] lg:max-w-[min(100%,70vh,600px)] aspect-square"
+              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-sliding-board-bg)] rounded-2xl lg:rounded-3xl p-2 sm:p-3 shadow-inner border-2 border-[var(--color-sliding-board-border)] flex-shrink-0 touch-none select-none overscroll-contain aspect-square"
+              [style.width]="boardSizePx()"
+              [style.height]="boardSizePx()"
                 (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)"
                 style="container-type: inline-size;">
 
@@ -105,7 +107,7 @@
           
           <!-- Single Player Actions -->
           @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex justify-center items-center gap-4 py-2 w-full max-w-[400px] mx-auto relative z-10 shrink-0 mt-2">
+            <div class="flex-none flex justify-center items-center gap-4 py-2 w-full mx-auto relative z-10 shrink-0 mt-2" [style.max-width]="boardSizePx()">
 
               <app-game-toolbar
                 [layoutStyle]="'compact'"

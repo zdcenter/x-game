@@ -23,6 +23,7 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
+import { WindowSizeService } from '../../../core/services/window-size.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
@@ -68,6 +69,34 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   showLobby = signal(true);
   showRules = signal(false);
   showOverlay = signal(false);
+
+  private windowSize = inject(WindowSizeService);
+
+  readonly boardDimPx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    const board = this.store.myBoard();
+    const rows = board?.length || 8;
+    const cols = board?.[0]?.length || 8;
+    const maxGrid = Math.max(rows, cols);
+    const isPk = this.store.currentRoomMode() !== GameMode.Single;
+
+    const chromeH = isPk
+      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
+      : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
+    const availH = Math.max(260, vh - chromeH);
+
+    const padW = vw < 640 ? 32 : vw < 1024 ? 56 : 80;
+    const availW = Math.max(260, Math.min(vw - padW, 1400));
+
+    let maxDim = 520;
+    if (maxGrid >= 14) maxDim = 740;
+    else if (maxGrid >= 12) maxDim = 700;
+    else if (maxGrid >= 10) maxDim = 640;
+    else if (maxGrid >= 8) maxDim = 580;
+
+    const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
+    return `${dim}px`;
+  });
 
   predefinedDifficulties = this.gameRegistry.getConfig('sokoban')?.difficulties || [];
 

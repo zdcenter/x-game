@@ -32,7 +32,7 @@
           (levelSelect)="startLevel($event)">
         </app-hashi-lobby>
       } @else {
-        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
+        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
           
           @if (store.localStatus() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
             <app-game-waiting-room class="w-full h-full flex"

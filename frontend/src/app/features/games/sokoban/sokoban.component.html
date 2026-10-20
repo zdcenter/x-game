@@ -27,7 +27,7 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  <div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2">
+  <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
     @if (showLobby()) {
       <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-[500px]"
                          (openLobby)="navigateToPkArena()"
@@ -42,7 +42,7 @@
       @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
         @if (store.currentRoomMode() === GameMode.Single) {
           <!-- Single Player Unified HUD Bar: 关卡大厅 + 移动步数 + 游戏用时 (单行对齐棋盘宽度) -->
-          <div class="w-full max-w-[520px] flex items-center justify-between px-1 mb-2 shrink-0 relative z-10">
+          <div class="w-full flex items-center justify-between px-1 mb-2 shrink-0 relative z-10" [style.max-width]="boardDimPx()">
             <!-- Left: 选关大厅快捷按钮 -->
             <button (click)="showLobby.set(true)" 
                     class="px-2.5 sm:px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group"
@@ -93,7 +93,7 @@
         <div class="relative flex-none flex flex-col lg:flex-row items-center justify-center min-h-0 overflow-hidden w-full py-2 px-2 z-10 gap-8">
           <div class="flex flex-col items-center justify-center shrink-0">
             <div class="relative flex items-center justify-center shrink-0"
-               style="width: min(88vw, calc(100vh - 320px), 540px); height: min(88vw, calc(100vh - 320px), 540px);">
+               [style.width]="boardDimPx()" [style.height]="boardDimPx()">
               <app-sokoban-board class="w-full h-full"></app-sokoban-board>
             </div>
           </div>
@@ -107,7 +107,7 @@
         </div>
 
         <!-- Action Toolbar -->
-        <div class="w-full max-w-[520px] mt-2">
+        <div class="w-full mt-2" [style.max-width]="boardDimPx()">
           <app-game-toolbar
             [layoutStyle]="'compact'"
             [showBack]="true"

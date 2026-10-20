@@ -51,14 +51,37 @@ export class SlidingComponent extends BaseGameComponent {
   private toastService = inject(ToastService);
   private gameRegistry = inject(GameRegistryService);
   private haptic = inject(HapticService);
+  private windowSize = inject(WindowSizeService);
+
+  readonly boardSizePx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    const size = this.store.myBoard()?.size || 4;
+    
+    const isPk = this.currentRoomMode() !== GameMode.Single;
+    const chromeH = isPk
+      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
+      : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
+    const availH = Math.max(260, vh - chromeH);
+
+    const padW = vw < 640 ? 32 : vw < 1024 ? 56 : 80;
+    const availW = Math.max(260, Math.min(vw - padW, 1400));
+
+    let maxDim = 440;
+    if (size >= 8) maxDim = 740;
+    else if (size >= 7) maxDim = 700;
+    else if (size >= 6) maxDim = 640;
+    else if (size >= 5) maxDim = 580;
+    else if (size >= 4) maxDim = 500;
+
+    const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
+    return `${dim}px`;
+  });
 
   showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
   showOverlay = signal<boolean>(false);
   hintTarget = signal<number | null>(null);
   Math = Math;
-
-  // boardSizePx is removed, handled by CSS flex/aspect-ratio now
 
   get difficulties() {
     return this.gameRegistry.getConfig('sliding')?.difficulties || [];

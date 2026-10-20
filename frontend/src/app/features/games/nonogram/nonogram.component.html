@@ -27,7 +27,7 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-start">
+<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-center my-auto">
 
 
           @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
@@ -55,10 +55,10 @@
             }
 
             <!-- Main Board (Seamless & Integrated) -->
-            <div class="flex-1 min-h-0 overflow-x-auto flex flex-col items-center p-2 sm:p-4 w-full"
+            <div class="flex-1 min-h-0 overflow-x-auto flex flex-col items-center justify-center p-1 sm:p-2.5 md:p-3 w-full"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
-              <div class="flex flex-col items-center mx-auto mt-2">
+              <div class="flex flex-col items-center mx-auto my-auto">
                 <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
                      [style.--cell-size.px]="cellSize()"
@@ -122,7 +122,7 @@
               </div>
 
               <!-- Toolbar (Sudoku Style) -->
-              <div class="mt-6 flex justify-center gap-1.5 md:gap-3 w-full max-w-[500px]" *ngIf="store.status() !== GameStatus.Waiting">
+              <div class="mt-3 sm:mt-4 md:mt-5 flex justify-center gap-1.5 md:gap-3 w-full max-w-[500px]" *ngIf="store.status() !== GameStatus.Waiting">
                 
                 @if (store.currentRoomMode() === GameMode.Single) {
                   <app-game-toolbar

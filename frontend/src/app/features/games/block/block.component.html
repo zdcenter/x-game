@@ -104,7 +104,7 @@
           }
 
           <!-- Board Area (Scrollable if needed) -->
-          <div class="w-full flex-grow flex flex-col items-center justify-start py-2 lg:py-4 min-h-0 overflow-y-auto custom-scrollbar">
+          <div class="w-full flex-grow flex flex-col items-center justify-center my-auto py-2 lg:py-4 min-h-0 overflow-y-auto custom-scrollbar">
             <!-- 彻底抛弃 Flexbox 自动推算，使用物理级绝对尺寸 -->
             <div class="relative flex items-center justify-center shrink-0 mb-4"
                  [class.block-shake]="isShaking()"
@@ -233,11 +233,11 @@
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="store.currentRoomMode() === GameMode.Single || (store.status() === GameStatus.Finished && store.hostId() === playerId)"
             [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Finished && store.hostId() === playerId"
-            [showLeave]="store.currentRoomMode() !== GameMode.Single"
+            [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
             (rematch)="handleRematch()"
             (restart)="store.currentRoomMode() === GameMode.Single ? store.startGame() : store.restartGame()"
             (dismiss)="store.dismissRoom()"
-            (leave)="store.leaveRoom()"
+            (leave)="goBack()"
         [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
         (changeRoomGame)="store.changeRoomGame($event)">
           </app-game-result-overlay>

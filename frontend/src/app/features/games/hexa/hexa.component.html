@@ -285,6 +285,7 @@
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="currentRoomMode() === GameMode.Single || (store.status() === GameStatus.Finished && store.hostId() === playerId)"
             [showDismiss]="currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Finished && store.hostId() === playerId"
+            [showLeave]="currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
             (rematch)="handleRematch()"
             (restart)="store.restartGame()"
             (dismiss)="dismissRoom()"

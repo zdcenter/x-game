@@ -10,6 +10,7 @@ import { ConnectBoardComponent } from './components/connect-board.component';
 import { ConnectLobbyComponent } from './components/connect-lobby.component';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { WindowSizeService } from '../../../core/services/window-size.service';
 
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -76,6 +77,32 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   view = this.store.view;
   showOverlay = signal(false);  showRules = signal(false);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
+
+  private windowSize = inject(WindowSizeService);
+
+  readonly boardWidthPx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    const engine = this.store.localEngine();
+    const w = engine?.width || 8;
+    const isPk = this.store.currentRoomMode() !== GameMode.Single;
+    
+    const chromeH = isPk
+      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
+      : (vw < 640 ? 210 : vw < 1024 ? 230 : 250);
+    const availH = Math.max(260, vh - chromeH);
+
+    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
+    const availW = Math.max(260, Math.min(vw - padW, 1400));
+
+    let maxDim = 520;
+    if (w >= 14) maxDim = 760;
+    else if (w >= 12) maxDim = 720;
+    else if (w >= 10) maxDim = 660;
+    else if (w >= 8) maxDim = 580;
+
+    const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
+    return `${dim}px`;
+  });
 
   get playerId(): string {
     return this.authStore.currentUser()?.username || this.authStore.guestId;
