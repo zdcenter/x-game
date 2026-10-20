@@ -1,5 +1,5 @@
 <button 
-  class="ms-cell-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-base sm:text-lg font-black select-none focus:outline-none relative"
+  class="ms-cell-btn flex items-center justify-center font-black select-none focus:outline-none relative"
   [ngClass]="cellClass"
   (click)="onLeftClick($event)"
   (contextmenu)="onRightClick($event)"
@@ -13,9 +13,9 @@
       <span class="pointer-events-none select-none font-mono font-black leading-none drop-shadow-xs" [ngStyle]="{ 'color': neighborColor }">{{ cell.neighbors }}</span>
     }
   } @else if (cell.state === CellState.Exploded) {
-    <span class="animate-bounce pointer-events-none select-none text-base">💣</span>
+    <span class="animate-bounce pointer-events-none select-none leading-none">💣</span>
   } @else if (cell.state === CellState.Flagged) {
-    <span class="drop-shadow-md z-10 pointer-events-none select-none text-base">🚩</span>
+    <span class="drop-shadow-md z-10 pointer-events-none select-none leading-none">🚩</span>
     @if (cell.owner) {
        <div class="absolute inset-0 bg-green-500/20 animate-pulse pointer-events-none"></div>
        <span class="absolute -bottom-0.5 right-0.5 text-[9px] font-mono leading-none text-green-300 z-20 pointer-events-none" style="text-shadow: 0 1px 2px black;">

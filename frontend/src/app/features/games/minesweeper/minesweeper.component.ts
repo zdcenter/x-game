@@ -21,7 +21,6 @@ import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mod
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
@@ -34,7 +33,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, DragDropModule, GameStartingOverlayComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameStartingOverlayComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -60,6 +59,60 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   currentDifficulty = signal<string>('medium');
   frozenRemaining = signal(0);
   mobileActionMode = signal<'reveal' | 'flag'>('reveal');
+
+  // Dynamic cell sizing & smooth zoom
+  cellSize = signal<number>(34);
+  readonly minCellSize = 22;
+  readonly maxCellSize = 52;
+  readonly defaultCellSize = 34;
+
+  zoomIn() {
+    this.cellSize.update(size => Math.min(this.maxCellSize, size + 4));
+  }
+
+  zoomOut() {
+    this.cellSize.update(size => Math.max(this.minCellSize, size - 4));
+  }
+
+  resetZoom() {
+    this.cellSize.set(this.defaultCellSize);
+  }
+
+  // Two-finger pinch-to-zoom tracking
+  private initialPinchDistance = 0;
+  private initialPinchCellSize = 34;
+
+  onContainerTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      const t1 = event.touches[0];
+      const t2 = event.touches[1];
+      this.initialPinchDistance = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      this.initialPinchCellSize = this.cellSize();
+    }
+  }
+
+  onContainerTouchMove(event: TouchEvent) {
+    if (event.touches.length === 2 && this.initialPinchDistance > 0) {
+      const t1 = event.touches[0];
+      const t2 = event.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const scale = dist / this.initialPinchDistance;
+      const targetSize = Math.round(this.initialPinchCellSize * scale);
+      const clampedSize = Math.max(this.minCellSize, Math.min(this.maxCellSize, targetSize));
+      if (clampedSize !== this.cellSize()) {
+        this.cellSize.set(clampedSize);
+      }
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+    }
+  }
+
+  onContainerTouchEnd(event: TouchEvent) {
+    if (event.touches.length < 2) {
+      this.initialPinchDistance = 0;
+    }
+  }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
@@ -450,7 +503,17 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentDifficulty.set(diff);
     storageSet('minesweeper_single_diff', diff);
     this.currentRoomMode.set(GameMode.Single);
-    this.store.startLocalGame(width, height, mines, diff);  }
+    this.store.startLocalGame(width, height, mines, diff);
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    if (width <= 9) {
+      this.cellSize.set(isMobile ? 38 : 42);
+    } else if (width <= 16) {
+      this.cellSize.set(isMobile ? 32 : 36);
+    } else {
+      this.cellSize.set(isMobile ? 26 : 30);
+    }
+  }
   getDifficultyText(difficulty: string): string {
     const d = this.predefinedDifficulties.find((x: any) => x.id === difficulty);
     return d ? `${this.i18n.t(d.labelKey as any)()} (${d.desc})` : difficulty;

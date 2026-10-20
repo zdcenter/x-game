@@ -7,6 +7,19 @@
 ## [v3.2.1] - 2026-10-20
 
 ### 移动端顶栏与对战大厅全景体验深度优化
+- **经典扫雷移动端触控交互重构与缩放平移体系落地 (Minesweeper Mobile Touch, Pan & Dynamic Zoom System)**：
+  - **触控争夺与画面抖动根治 (CDK Drag Conflict Removal)**：
+    - 彻底移除扫雷棋盘外层的 `@angular/cdk/drag-drop` (`cdkDrag`) 包装。原实现中 `cdkDrag` 的 CSS `transform: translate3d` 与外层容器的浏览器原生平移滚动发生激烈冲突，导致移动端滑动时坐标双重累加、棋盘疯狂抖动（Jittering）与落点严重错位（Misalignment）；
+    - 改造为纯净的高性能硬件加速容器滚动（`-webkit-overflow-scrolling: touch`、`overscroll-contain`、`touch-action: pan-x pan-y pinch-zoom`），并结合 `m-auto min-w-fit` 弹性居中方案，初级小棋盘自动全向居中，高难度大棋盘（如 30x16 困难与 30x24 大师）顺畅全向滑动，杜绝 flex 居中时的边缘裁切缺陷；
+  - **触控点击判定与长按插旗防抖优化 (Touch Precision & Gesture Slop)**：
+    - 将单格触控的移动容差由极苛刻的 `8px` 提升至符合人体工程学的 `16px`，杜绝指腹轻微按压变形被误判为平移拖拽而导致点击失效（"没有用、没有效果"）；
+    - 增加多指触控（`touches.length > 1`）即时取消判定，双指手势绝不触发任何误翻开或误插旗；
+    - 彻底重构触控生命周期与状态重置，触控结束即时清理所有锁定标志，根除因滑动惯性或拖拽残留导致的“要等四五秒才能点击”的假死锁问题；
+  - **移动端多级网格缩放与双指捏合缩放支持 (Responsive Cell Sizing & Pinch-to-Zoom)**：
+    - 引入基于 CSS 变量 `--ms-cell-size` 的响应式动态缩放体系（22px ~ 52px），避免 CSS transform 矩阵缩放导致的子像素点击偏移与锯齿模糊；
+    - 在顶部操作栏新增优雅的紧凑型缩放胶囊（`[-] 100% [+]`），并适配 8 国多语言与明暗主题；
+    - 棋盘容器内置流畅的原生双指捏合缩放（Pinch-to-Zoom）手势监听，支持毫秒级平滑无级放大缩小；
+    - 单机难度切换时根据屏幕宽度与棋盘行列智能预设黄金初始尺寸（简单 38px/42px、中等 32px/36px、困难 26px/30px），开箱即享最佳视界。
 - **管理后台与在线用户真实客户端 IP 穿透与 Nginx 反向代理配置修复 (Real Client IP Proxy Trust & Nginx Forwarding)**：
   - **Go 后端反向代理信任激活**：在 `cmd/api/main.go` 中为 Fiber v3 实例配置 `TrustProxy: true`、`TrustProxyConfig: { Loopback: true, Private: true }` 与 `ProxyHeader: fiber.HeaderXForwardedFor`，解决 Fiber 默认不信任反向代理头而直接返回 TCP 远端地址（`127.0.0.1`）的问题；
   - **WebSocket 多级 IP 解析与 CDN 回退机制**：在 `internal/handlers/ws/handler.go` 中封装 `getClientIP` 解析器，依次按 `c.IP()` $\to$ `CF-Connecting-IP` (Cloudflare) $\to$ `X-Real-IP` (Nginx) $\to$ `X-Forwarded-For` 多重兜底，确保在本地测试、云原生集群、以及开启 CDN 场景下均能稳定获取访客真实公网 IP；

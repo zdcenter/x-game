@@ -87,9 +87,10 @@
             </div>
           }
 
-            <!-- Mobile Touch Mode Switch Capsule (0ms response) -->
-            <div class="flex sm:hidden items-center justify-center gap-1.5 py-0.5 z-20 shrink-0">
-              <div class="flex items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+            <!-- Action Mode & Zoom Controls (Responsive Capsule) -->
+            <div class="flex items-center justify-center gap-2 py-0.5 z-20 shrink-0 flex-wrap">
+              <!-- Mobile Touch Mode Switch Capsule (0ms response) -->
+              <div class="flex sm:hidden items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
                 <button (click)="mobileActionMode.set('reveal')"
                         class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
                         [ngClass]="mobileActionMode() === 'reveal' ? 'bg-amber-500 text-white shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
@@ -101,6 +102,25 @@
                         [ngClass]="mobileActionMode() === 'flag' ? 'bg-rose-500 text-white shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
                   <span>🚩</span>
                   <span>{{ i18n.t('minesweeper.mode_flag')() || '插旗' }}</span>
+                </button>
+              </div>
+
+              <!-- Board Zoom Controls (Responsive) -->
+              <div class="flex items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs text-xs font-bold">
+                <button (click)="zoomOut()" [disabled]="cellSize() <= minCellSize"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                        [title]="i18n.t('minesweeper.zoom_out')()">
+                  −
+                </button>
+                <button (click)="resetZoom()"
+                        class="px-2 h-7 rounded-lg flex items-center justify-center font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 transition-all"
+                        [title]="i18n.t('minesweeper.zoom_reset')()">
+                  {{ cellSize() }}px
+                </button>
+                <button (click)="zoomIn()" [disabled]="cellSize() >= maxCellSize"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                        [title]="i18n.t('minesweeper.zoom_in')()">
+                  +
                 </button>
               </div>
             </div>
@@ -129,14 +149,18 @@
 
             <!-- Seamless Game Stage (No nested boxes) -->
             <div #boardContainer
-              class="w-full flex-1 min-h-0 overflow-auto flex items-center justify-center p-2 sm:p-4 custom-scrollbar select-none">
+              class="w-full flex-1 min-h-0 overflow-auto flex p-2 sm:p-4 custom-scrollbar select-none overscroll-contain"
+              style="-webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom;"
+              (touchstart)="onContainerTouchStart($event)"
+              (touchmove)="onContainerTouchMove($event)"
+              (touchend)="onContainerTouchEnd($event)">
 
-              <div cdkDrag class="cursor-grab active:cursor-grabbing will-change-transform relative z-10"
-                [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting">
-
+              <div class="m-auto min-w-fit flex flex-col items-center">
                 @if (store.status() !== GameStatus.Waiting || currentRoomMode() === GameMode.Single) {
                   <div #board
                     class="ms-board-plate inline-flex flex-col relative z-0 origin-center rounded-xl shadow-xl overflow-hidden"
+                    [style.--ms-cell-size.px]="cellSize()"
+                    [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting"
                     [class.opacity-50]="isFrozen()" [class.animate-board-shake]="store.status() === GameStatus.Finished">
                     @for (row of store.board(); track $index) {
                     <div class="flex">

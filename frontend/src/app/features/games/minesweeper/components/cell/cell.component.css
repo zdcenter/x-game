@@ -7,14 +7,21 @@
   border-radius: 0;
   margin: 0;
   padding: 0;
+  width: var(--ms-cell-size, 32px);
+  height: var(--ms-cell-size, 32px);
+  font-size: calc(var(--ms-cell-size, 32px) * 0.52);
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
   cursor: pointer;
   outline: none;
-  transition: none;
+  transition: width 0.1s ease-out, height 0.1s ease-out;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+.ms-cell-btn > span {
+  font-size: calc(var(--ms-cell-size, 32px) * 0.55);
 }
 
 /* === 未翻开格子：经典 3D 浮雕凸起方块 === */

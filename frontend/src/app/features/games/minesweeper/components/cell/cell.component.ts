@@ -66,12 +66,19 @@ export class CellComponent {
     this.flag.emit();
   }
 
-  private touchTimeout: any;
+  private touchTimeout: any = null;
   private touchFired = false;
   private touchStartX = 0;
   private touchStartY = 0;
+  private isMultiTouch = false;
 
   onTouchStart(event: TouchEvent) {
+    if (event.touches.length > 1) {
+      this.cancelTouch();
+      this.isMultiTouch = true;
+      return;
+    }
+    this.isMultiTouch = false;
     this.touchFired = false;
     if (event.touches.length > 0) {
       this.touchStartX = event.touches[0].clientX;
@@ -81,29 +88,35 @@ export class CellComponent {
       this.touchFired = true;
       this.flag.emit();
       this.haptic.vibrateSnap();
-    }, 360); // 360ms for smooth, responsive long press
+    }, 350);
   }
 
   onTouchMove(event: TouchEvent) {
+    if (event.touches.length > 1 || this.isMultiTouch) {
+      this.cancelTouch();
+      return;
+    }
     if (event.touches.length > 0) {
       const dx = Math.abs(event.touches[0].clientX - this.touchStartX);
       const dy = Math.abs(event.touches[0].clientY - this.touchStartY);
-      if (dx > 8 || dy > 8) {
-        if (this.touchTimeout) {
-          clearTimeout(this.touchTimeout);
-          this.touchTimeout = null;
-        }
+      if (dx > 16 || dy > 16) {
+        this.cancelTouch();
         this.touchFired = true; // User is scrolling/panning the board
       }
     }
   }
 
   onTouchEnd(event: TouchEvent) {
-    if (this.touchTimeout) {
-      clearTimeout(this.touchTimeout);
-      this.touchTimeout = null;
+    const hadTimeout = !!this.touchTimeout;
+    this.cancelTouch();
+
+    if (this.isMultiTouch) {
+      this.isMultiTouch = false;
+      this.touchFired = false;
+      return;
     }
-    if (!this.touchFired) {
+
+    if (!this.touchFired && hadTimeout) {
       event.preventDefault(); // Prevent emulated mouse clicks
       if (this.actionMode === 'flag') {
         this.flag.emit();
@@ -114,12 +127,17 @@ export class CellComponent {
           this.haptic.vibrateLight();
         }
       }
-    } else {
-      event.preventDefault();
     }
+    this.touchFired = false;
   }
 
   onTouchCancel(event: TouchEvent) {
+    this.cancelTouch();
+    this.touchFired = false;
+    this.isMultiTouch = false;
+  }
+
+  private cancelTouch() {
     if (this.touchTimeout) {
       clearTimeout(this.touchTimeout);
       this.touchTimeout = null;
