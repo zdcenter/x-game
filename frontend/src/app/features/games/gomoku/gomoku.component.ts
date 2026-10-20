@@ -1,5 +1,5 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
+import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../core/services/settings.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,12 +18,13 @@ import { GameService } from '../../../core/services/game.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
+import { WindowSizeService } from '../../../core/services/window-size.service';
+import { GomokuAI, GomokuColor } from './store/gomoku-ai';
 
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameResultOverlayComponent,  GameWaitingRoomComponent,   GameStartingOverlayComponent, GameLayoutComponent],
+  imports: [CommonModule, GameResultOverlayComponent, GameWaitingRoomComponent, GameStartingOverlayComponent, GameLayoutComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']
@@ -37,7 +38,8 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   authStore = inject(AuthStore);
   override store = inject(GomokuStore);
   audio = inject(AudioService);
-  
+  private windowSize = inject(WindowSizeService);
+
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
 
@@ -78,6 +80,20 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
 
   showRules = signal(false);
   showResultOverlay = signal(false);
+  hintMove = signal<[number, number] | null>(null);
+
+  // Responsive Board Size Calculation (optimized for tablets/iPad Pro up to 880px)
+  readonly boardSizePx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    // vertical chrome = header + vs hud + paddings
+    const chromeH = vw < 640 ? 170 : vw < 1024 ? 195 : 210;
+    const availH = Math.max(300, vh - chromeH);
+    const padW = vw < 640 ? 20 : vw < 1024 ? 40 : 64;
+    const availW = Math.max(300, vw - padW);
+    // Square board up to 880px
+    const size = Math.round(Math.min(availW, availH, 880));
+    return `${Math.max(300, size)}px`;
+  });
 
   // Computed state
   board = this.store.board;
@@ -87,6 +103,32 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   myPlayerId = this.store.playerId;
   lastMove = computed(() => this.store.lastMove());
   isSpectator = this.store.isSpectator;
+
+  // Move counter
+  readonly moveCount = computed(() => {
+    const b = this.board();
+    let count = 0;
+    for (let r = 0; r < 15; r++) {
+      for (let c = 0; c < 15; c++) {
+        if (b[r][c] !== 0) count++;
+      }
+    }
+    return count;
+  });
+
+  readonly moveCountText = computed(() => {
+    return this.i18n.t('gomoku.move_count', { count: this.moveCount() })();
+  });
+
+  // Opponent name for HUD
+  readonly opponentName = computed(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      return 'AI ' + this.i18n.t('game.bot')();
+    }
+    const players = this.mappedPlayers;
+    const opponent = players.find(p => p.id !== this.myPlayerId());
+    return opponent?.nickname || opponent?.username || opponent?.id || this.i18n.t('game.opponent')();
+  });
   
   // Room state
   currentRoomMode = signal<string>(GameMode.Single);
@@ -183,10 +225,48 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onCellClick(y: number, x: number) {
+    if (this.hintMove()) {
+      this.hintMove.set(null);
+    }
     this.store.makeMove(y, x);
   }
 
+  getHint() {
+    if (!this.isMyTurn || this.gameStatus() !== GameStatus.Playing) return;
+    const currentBoard = this.board();
+    const myCol = this.myColor as GomokuColor;
+    const ai = new GomokuAI(myCol, GameDifficulty.Medium);
+    const best = ai.getBestMove(currentBoard);
+    if (best && best[0] >= 0 && best[1] >= 0) {
+      this.hintMove.set(best);
+      this.audio.playClick();
+      // Auto-clear after 6s
+      setTimeout(() => {
+        if (this.hintMove() === best) {
+          this.hintMove.set(null);
+        }
+      }, 6000);
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(e: KeyboardEvent) {
+    if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+    if (e.key === 'r' || e.key === 'R') {
+      if (this.currentRoomMode() === GameMode.Single) {
+        e.preventDefault();
+        this.onRestart();
+      }
+    } else if (e.key === 'h' || e.key === 'H') {
+      if (this.currentRoomMode() === GameMode.Single) {
+        e.preventDefault();
+        this.getHint();
+      }
+    }
+  }
+
   onRestart() {
+    this.hintMove.set(null);
     this.store.startGame();
   }
 

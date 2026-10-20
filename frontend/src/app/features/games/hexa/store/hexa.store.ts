@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal, effect } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { HexaEngine, HexPiece, HexCell, HexCoord, HexaActionType, HexaState } from './hexa-engine';
 import { AudioService } from '../../../../core/services/audio.service';
-import { storageGet, storageSet } from '../../../../core/utils/browser.util';
+import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
 @Injectable()
@@ -228,6 +228,7 @@ export class HexaStore extends BaseGameStore {
       if (this.currentRoomMode() !== GameMode.Single) {
         this.ws.send({ action: C2SAction.GameOver, score: this.score() });
       } else {
+        storageRemove('hexa_single_save');
         if (this.auth.isAuthenticated()) {
           this.submitSingleStat({ score: this.score(), won: false }).subscribe();
         }
@@ -271,6 +272,7 @@ export class HexaStore extends BaseGameStore {
   }
 
   override restartGame() {
+    storageRemove('hexa_single_save');
     if (this.currentRoomMode() === GameMode.Single) {
       this.startSinglePlayer();
       this.loadBestScore();
@@ -279,22 +281,40 @@ export class HexaStore extends BaseGameStore {
     }
   }
 
+  override leaveRoom() {
+    if (this.currentRoomMode() === GameMode.Single && this.gameOver()) {
+      storageRemove('hexa_single_save');
+    }
+    super.leaveRoom();
+  }
+
   // Single Player
   private startSinglePlayer() {
+    storageRemove('hexa_single_save');
     this.engine.initGame(); // Uses Math.random
     this.updateSignals();
   }
 
   private saveSinglePlayer() {
+    if (this.gameOver()) {
+      storageRemove('hexa_single_save');
+      return;
+    }
     storageSet('hexa_single_save', JSON.stringify(this.engine.getState()));
   }
 
-  loadSinglePlayer() {
+  loadSinglePlayer(): boolean {
     const saved = storageGet('hexa_single_save');
     if (saved) {
       try {
         const data = JSON.parse(saved) as HexaState;
+        // Never restore a game that is already in game over / defeat state
+        if (data.gameOver) {
+          storageRemove('hexa_single_save');
+          return false;
+        }
         if (!data.availablePieces || data.availablePieces.length === 0 || !data.availablePieces[0]) {
+          storageRemove('hexa_single_save');
           throw new Error('Save data corrupted: missing available pieces');
         }
         this.engine.handleAction({
@@ -304,12 +324,13 @@ export class HexaStore extends BaseGameStore {
           combo: data.combo,
           pieces: data.availablePieces,
           piecesPlaced: data.piecesPlaced || 0,
-          gameOver: data.gameOver || false
+          gameOver: false
         });
         this.updateSignals();
         return true;
       } catch (e) {
         console.error("Failed to load hexa state", e);
+        storageRemove('hexa_single_save');
       }
     }
     return false;

@@ -2,7 +2,7 @@ import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/ga
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { AudioService } from '../../../../core/services/audio.service';
-import { storageGet, storageSet } from '../../../../core/utils/browser.util';
+import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
 import { Drop2048Engine, Drop2048ActionType, DropBlock, ComboText, DROP2048_ROWS, DROP2048_COLS } from './drop2048-engine';
 export type { DropBlock, ComboText };
 import { C2SAction } from '../../../../core/models/websocket.model';
@@ -80,6 +80,10 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     // Auto-save for single player
     effect(() => {
       if (this.currentRoomMode() === GameMode.Single) {
+        if (this.isDead() || this.localStatus() === GameStatus.Finished) {
+          storageRemove('drop2048_save');
+          return;
+        }
         const state = {
           board: this.board(),
           activeBlock: this.activeBlock(),
@@ -141,13 +145,17 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
       if (saved) {
         try {
           const state = JSON.parse(saved);
-          if (state.localStatus === GameStatus.Playing) {
+          if (state.isDead || state.localStatus !== GameStatus.Playing) {
+            storageRemove('drop2048_save');
+          } else {
             this.engine.loadState(state);
             this.localStatus.set(GameStatus.Playing);
             this.updateSignals();
             return;
           }
-        } catch (e) {}
+        } catch (e) {
+          storageRemove('drop2048_save');
+        }
       }
       
       this.localStatus.set(GameStatus.Playing);
@@ -177,6 +185,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   }
 
   override restartGame() {
+    storageRemove('drop2048_save');
     if (this.currentRoomMode() === GameMode.Single) {
       this.resetLocalState();
       this.startGame();
@@ -188,6 +197,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   private onGameOver() {
     this.localStatus.set(GameStatus.Finished);
     this.isDead.set(true);
+    storageRemove('drop2048_save');
     if (this.currentRoomMode() === GameMode.Single) {
       if (this.auth.isAuthenticated()) {
         this.submitSingleStat({ score: this.localScore() }).subscribe(res => {

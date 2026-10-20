@@ -50,73 +50,145 @@
         }
 
         @if (currentRoomMode() === GameMode.Single || gameStatus() !== GameStatus.Waiting) {
-          <!-- Main Game Area -->
-          <main class="flex-none w-full mx-auto px-2 md:px-4 flex items-center justify-center my-auto pt-4 pb-4 md:pb-8 min-h-0 overflow-y-auto lg:overflow-hidden">
-            <!-- Board Area -->
-            <div class="relative shrink-0 shadow-2xl rounded-sm p-4 sm:p-6" style="background: url('/assets/wood-texture.jpg') center/cover, #d4a373;">
+          <!-- Main Game Area with Centered Responsive Layout -->
+          <main class="flex-1 w-full mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-auto py-2 sm:py-3 min-h-0 overflow-y-auto lg:overflow-hidden select-none">
+            
+            <!-- Battle Status HUD Bar (Matches board width) -->
+            <div class="w-full flex items-center justify-between gap-2 px-3 py-2 sm:py-2.5 mb-2 sm:mb-3 rounded-2xl bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] shadow-sm transition-all"
+                 [style.max-width]="boardSizePx()">
               
-              <!-- Player Status Overlay -->
-              <div class="absolute top-2 left-2 flex flex-col items-center gap-1 z-20 opacity-70 pointer-events-none drop-shadow-md transition-opacity hover:opacity-20">
-                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-md relative"
-                     [ngClass]="isSpectator() ? 'bg-[var(--color-bg-main)] text-xl border border-[var(--color-border-card)]' : (myColor === 1 ? 'bg-gradient-to-b from-gray-700 to-black shadow-[2px_2px_4px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-white to-gray-200 shadow-[2px_2px_4px_rgba(0,0,0,0.3)]')">
-                  @if (isSpectator()) {
-                    <span class="text-xs">👁️</span>
+              <!-- Player 1: Black Stone -->
+              <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all duration-300"
+                   [ngClass]="currentTurnColor === 1 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-80'">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full stone-black flex items-center justify-center shrink-0 relative">
+                  @if (myColor === 1 && !isSpectator()) {
+                    <span class="text-[10px] text-amber-400 font-black">★</span>
                   }
                 </div>
-                <span class="font-bold text-[10px] text-black/90 font-mono tracking-widest px-2 py-0.5 rounded-md bg-white/40 backdrop-blur-sm border border-black/10">
-                  {{ isSpectator() ? (i18n.t('game.spectating')() || 'Spectating') : i18n.t(myColor === 1 ? 'gomoku.you_are_black' : 'gomoku.you_are_white')() }}
-                </span>
+                <div class="flex flex-col min-w-0">
+                  <div class="flex items-center gap-1">
+                    <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate max-w-[80px] sm:max-w-[120px]">
+                      {{ myColor === 1 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
+                    </span>
+                    <span class="text-[10px] px-1 py-0.2 rounded bg-black/40 text-gray-200 font-bold border border-white/10 shrink-0">
+                      {{ i18n.t('gomoku.you_are_black')() }}
+                    </span>
+                  </div>
+                  @if (currentTurnColor === 1 && gameStatus() === GameStatus.Playing) {
+                    <span class="text-[10px] font-bold text-amber-500 animate-pulse leading-none mt-0.5">
+                      {{ myColor === 1 ? i18n.t('gomoku.turn.yours')() : (currentRoomMode() === GameMode.Single ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
+                    </span>
+                  }
+                </div>
               </div>
 
-              <!-- Turn Indicator -->
-              @if (gameStatus() === GameStatus.Playing) {
-                <div class="absolute bottom-2 right-2 flex items-center gap-2 z-20 pointer-events-none drop-shadow-md bg-white/40 backdrop-blur-sm border border-black/10 px-3 py-1.5 rounded-md transition-all duration-300">
-                  <div class="w-3.5 h-3.5 rounded-full shadow-[1px_1px_2px_rgba(0,0,0,0.4)]"
-                       [ngClass]="currentTurnColor === 1 ? 'bg-gradient-to-b from-gray-700 to-black' : 'bg-gradient-to-b from-white to-gray-200'"></div>
-                  <span class="font-bold text-xs text-black/90 tracking-wide font-mono">
-                    {{ turnText }}
+              <!-- Center: Move count & Action controls -->
+              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <!-- Move Count Badge -->
+                <div class="px-2.5 py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-center shadow-inner">
+                  <span class="font-mono font-bold text-xs sm:text-sm text-[var(--color-text-secondary)]">
+                    {{ moveCountText() }}
                   </span>
                 </div>
-              }
 
-              <!-- Grid lines -->
-              <div class="absolute inset-4 sm:inset-6 border-2 border-black/40"></div>
+                <!-- Single Player Hint Button (H) -->
+                @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing) {
+                  <button type="button" (click)="getHint()" [disabled]="!isMyTurn"
+                          class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-black text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer"
+                          [title]="i18n.t('gomoku.hint')() + ' (H)'">
+                    <span>💡</span>
+                    <span class="hidden sm:inline">{{ i18n.t('gomoku.hint')() }}</span>
+                  </button>
+
+                  <button type="button" (click)="onRestart()"
+                          class="p-1.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] transition-all active:scale-95 cursor-pointer"
+                          [title]="i18n.t('gomoku.restart')() + ' (R)'">
+                    <span class="text-xs">🔄</span>
+                  </button>
+                }
+              </div>
+
+              <!-- Player 2: White Stone -->
+              <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all duration-300"
+                   [ngClass]="currentTurnColor === 2 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-80'">
+                <div class="flex flex-col items-end min-w-0">
+                  <div class="flex items-center gap-1">
+                    <span class="text-[10px] px-1 py-0.2 rounded bg-white text-gray-800 font-bold border border-black/10 shrink-0">
+                      {{ i18n.t('gomoku.you_are_white')() }}
+                    </span>
+                    <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate max-w-[80px] sm:max-w-[120px]">
+                      {{ myColor === 2 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
+                    </span>
+                  </div>
+                  @if (currentTurnColor === 2 && gameStatus() === GameStatus.Playing) {
+                    <span class="text-[10px] font-bold text-amber-500 animate-pulse leading-none mt-0.5">
+                      {{ myColor === 2 ? i18n.t('gomoku.turn.yours')() : (currentRoomMode() === GameMode.Single ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
+                    </span>
+                  }
+                </div>
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full stone-white flex items-center justify-center shrink-0 relative">
+                  @if (myColor === 2 && !isSpectator()) {
+                    <span class="text-[10px] text-amber-600 font-black">★</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Authentic Luxury Wood Board Area with Dynamic Viewport Size -->
+            <div class="relative shrink-0 shadow-[0_24px_60px_rgba(0,0,0,0.5),0_6px_16px_rgba(0,0,0,0.25)] rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-6 transition-all duration-300 border-4 border-[#8B5A2B]/40"
+                 [style.width]="boardSizePx()"
+                 [style.height]="boardSizePx()"
+                 style="background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.12), transparent 70%), url('/assets/wood-texture.jpg') center/cover, #d4a373;">
               
-              <!-- The Gomoku Grid -->
-              <div class="grid grid-cols-[repeat(15,_minmax(0,_1fr))] grid-rows-[repeat(15,_minmax(0,_1fr))] w-[96vw] sm:w-[85vw] md:w-[75vw] lg:w-[600px] xl:w-[700px] max-w-[calc(100vh-200px)] aspect-square gap-0 relative">
+              <!-- Double Fine Outer Board Frame -->
+              <div class="absolute inset-2 sm:inset-3 border border-black/25 rounded-xl pointer-events-none"></div>
+              <div class="absolute inset-3 sm:inset-5 border-2 border-black/45 pointer-events-none"></div>
+
+              <!-- The 15x15 Gomoku Grid -->
+              <div class="grid grid-cols-[repeat(15,_minmax(0,_1fr))] grid-rows-[repeat(15,_minmax(0,_1fr))] w-full h-full relative select-none">
                 @for (row of board(); track $index; let y = $index) {
                   @for (cell of row; track $index; let x = $index) {
                     <div class="relative flex items-center justify-center cursor-pointer group"
                          (click)="onCellClick(y, x)">
                          
-                      <!-- Horizontal and vertical lines -->
+                      <!-- Horizontal and vertical grid lines -->
                       <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
-                        <div class="w-full h-[1.5px] bg-black/40"></div>
-                        <div class="h-full w-[1.5px] bg-black/40 absolute"></div>
+                        <div class="w-full h-[1.5px] bg-black/45"></div>
+                        <div class="h-full w-[1.5px] bg-black/45 absolute"></div>
                       </div>
 
-                      <!-- 5 dots for visual reference -->
+                      <!-- 9 Star Points (Tengen & Star Positions: (3,3), (3,7), (3,11), (7,3), (7,7), (7,11), (11,3), (11,7), (11,11)) -->
                       @if ((x===3||x===11||x===7) && (y===3||y===11||y===7)) {
-                        <div class="absolute w-2 h-2 bg-black/70 rounded-full pointer-events-none z-0"></div>
+                        <div class="absolute w-2 h-2 sm:w-2.5 sm:h-2.5 bg-black/85 rounded-full pointer-events-none z-0 shadow-sm"></div>
                       }
 
-                      <!-- The Piece -->
+                      <!-- Stone Piece Rendering -->
                       @if (cell !== 0) {
-                        <div class="w-[85%] h-[85%] rounded-full shadow-md relative transition-transform duration-200 flex items-center justify-center"
+                        <div class="w-[86%] h-[86%] rounded-full relative transition-all duration-200 flex items-center justify-center animate-stone-drop"
                              [ngClass]="[
-                               cell === 1 ? 'bg-gradient-to-b from-gray-700 to-black shadow-[2px_2px_4px_rgba(0,0,0,0.5)]' : '',
-                               cell === 2 ? 'bg-gradient-to-b from-white to-gray-200 shadow-[2px_2px_4px_rgba(0,0,0,0.3)]' : '',
-                               isWinningPiece(y, x) ? 'z-20 ring-4 ring-yellow-400 animate-[pulse_1.5s_ease-in-out_infinite] shadow-[0_0_15px_rgba(250,204,21,0.8)] scale-110' : 'z-10'
+                               cell === 1 ? 'stone-black' : 'stone-white',
+                               isWinningPiece(y, x) ? 'z-30 animate-winning-glow ring-4 ring-amber-400' : 'z-10'
                              ]">
-                             @if (lastMove() && lastMove()![0] === y && lastMove()![1] === x) {
-                                <div class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_2px_rgba(0,0,0,0.8)]"></div>
-                             }
+                          
+                          <!-- Last Move Indicator: High-Visibility Sonar Wave + Red Target Dot -->
+                          @if (lastMove() && lastMove()![0] === y && lastMove()![1] === x) {
+                            <div class="absolute -inset-1 rounded-full border-2 border-amber-400 pointer-events-none animate-sonar-ripple z-20"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)] border border-white/80 z-20"></div>
+                          }
                         </div>
                       } @else {
-                        <!-- Hover Preview -->
+                        <!-- AI Recommendation Hint Marker -->
+                        @if (hintMove() && hintMove()![0] === y && hintMove()![1] === x) {
+                          <div class="w-[82%] h-[82%] rounded-full border-2 border-amber-400 bg-amber-400/30 animate-hint-pulse z-20 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.8)] pointer-events-none">
+                            <span class="text-xs">💡</span>
+                          </div>
+                        }
+
+                        <!-- Hover Placement Preview & Crosshair Aid -->
                         @if (isMyTurn && gameStatus() === GameStatus.Playing) {
-                          <div class="w-[85%] h-[85%] rounded-full relative z-10 opacity-0 group-hover:opacity-50 transition-opacity duration-150"
-                               [ngClass]="myColor === 1 ? 'bg-black' : 'bg-white'">
+                          <div class="w-[82%] h-[82%] rounded-full relative z-10 opacity-0 group-hover:opacity-60 transition-opacity duration-150 shadow-md flex items-center justify-center pointer-events-none"
+                               [ngClass]="myColor === 1 ? 'stone-black' : 'stone-white'">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></div>
                           </div>
                         }
                       }

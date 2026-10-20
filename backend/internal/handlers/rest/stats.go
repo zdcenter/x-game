@@ -147,8 +147,8 @@ func SubmitStat(c fiber.Ctx) error {
 			// Loser forfeits their staked bounty coins
 			coinsEarned = -req.BountyCoins
 		}
-	} else if req.Won {
-		coinsEarned = service.CalcRewardCoins(isPK, req.Difficulty, true)
+	} else {
+		coinsEarned = service.CalcRewardCoins(isPK, req.Difficulty, req.Won)
 	}
 	currentCoins, _ := service.AddCoins(userID, coinsEarned)
 

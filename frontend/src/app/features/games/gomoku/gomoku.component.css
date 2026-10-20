@@ -1,1 +1,80 @@
-/* Gomoku specific styles */
+/* Gomoku Specific Styles & Micro-animations */
+
+@keyframes stoneDrop {
+  0% {
+    transform: scale(0.6) translateY(-8px);
+    opacity: 0.8;
+  }
+  60% {
+    transform: scale(1.08) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-stone-drop {
+  animation: stoneDrop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes sonarRipple {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0.15;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.animate-sonar-ripple {
+  animation: sonarRipple 1.8s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes hintPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 20px 6px rgba(245, 158, 11, 0.5);
+  }
+}
+
+.animate-hint-pulse {
+  animation: hintPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes winningGlow {
+  0%, 100% {
+    transform: scale(1.05);
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.8), 0 0 30px rgba(245, 158, 11, 0.5);
+  }
+  50% {
+    transform: scale(1.16);
+    box-shadow: 0 0 28px rgba(251, 191, 36, 1), 0 0 45px rgba(245, 158, 11, 0.8);
+  }
+}
+
+.animate-winning-glow {
+  animation: winningGlow 1.2s ease-in-out infinite;
+}
+
+/* Jade / Obsidian Stone Gradients */
+.stone-black {
+  background: radial-gradient(circle at 35% 30%, #52525b 0%, #27272a 45%, #09090b 100%);
+  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.stone-white {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f4f4f5 55%, #d4d4d8 100%);
+  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+}

@@ -2,20 +2,117 @@ package service
 
 import (
 	"math"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
 )
 
-// XP rewards per event type
+// XP default rewards per event type
 const (
-	XPSinglePlay     = 2
+	DefaultXPSinglePlay     = 0
+	DefaultXPSingleWin      = 5
+	DefaultXPSingleDefeat   = 0
+	DefaultXPPKPlay         = 0
+	DefaultXPPKWin          = 15
+	DefaultXPDailyChallenge = 30
+	DefaultXPPKDefeat       = 0
+
+	// Legacy exported constants for compatibility
+	XPSinglePlay     = 0
 	XPSingleWin      = 5
-	XPPKPlay         = 5
+	XPPKPlay         = 0
 	XPPKWin          = 15
 	XPDailyChallenge = 30
 )
+
+// Setting keys in database
+const (
+	KeyXPSingleWin     = "xp.single_win"
+	KeyXPSingleDefeat  = "xp.single_defeat"
+	KeyXPPKWin         = "xp.pk_win"
+	KeyXPPKDefeat      = "xp.pk_defeat"
+	KeyXPDailyComplete = "xp.daily_complete"
+	KeyXPSinglePlay    = "xp.single_play"
+	KeyXPPKPlay        = "xp.pk_play"
+)
+
+// AllXPKeys lists all XP configuration keys
+var AllXPKeys = []string{
+	KeyXPSingleWin,
+	KeyXPSingleDefeat,
+	KeyXPPKWin,
+	KeyXPPKDefeat,
+	KeyXPDailyComplete,
+	KeyXPSinglePlay,
+	KeyXPPKPlay,
+}
+
+type XPConfig struct {
+	SingleWin     int `json:"single_win"`
+	SingleDefeat  int `json:"single_defeat"`
+	PKWin         int `json:"pk_win"`
+	PKDefeat      int `json:"pk_defeat"`
+	DailyComplete int `json:"daily_complete"`
+}
+
+// GetXPConfig retrieves current XP settings from database with fallbacks
+func GetXPConfig() XPConfig {
+	cfg := XPConfig{
+		SingleWin:     DefaultXPSingleWin,
+		SingleDefeat:  DefaultXPSingleDefeat,
+		PKWin:         DefaultXPPKWin,
+		PKDefeat:      DefaultXPPKDefeat,
+		DailyComplete: DefaultXPDailyChallenge,
+	}
+
+	var settings []domain.SystemSetting
+	if err := db.DB.Where("key IN ?", AllXPKeys).Find(&settings).Error; err != nil {
+		return cfg
+	}
+
+	for _, s := range settings {
+		val, err := strconv.Atoi(strings.TrimSpace(s.Value))
+		if err != nil || val < 0 {
+			continue
+		}
+		switch s.Key {
+		case KeyXPSingleWin:
+			cfg.SingleWin = val
+		case KeyXPSingleDefeat:
+			cfg.SingleDefeat = val
+		case KeyXPPKWin:
+			cfg.PKWin = val
+		case KeyXPPKDefeat:
+			cfg.PKDefeat = val
+		case KeyXPDailyComplete:
+			cfg.DailyComplete = val
+		}
+	}
+	return cfg
+}
+
+// SeedXPSettings ensures default XP settings exist in the database
+func SeedXPSettings() {
+	defaults := map[string]string{
+		KeyXPSingleWin:     strconv.Itoa(DefaultXPSingleWin),
+		KeyXPSingleDefeat:  strconv.Itoa(DefaultXPSingleDefeat),
+		KeyXPPKWin:         strconv.Itoa(DefaultXPPKWin),
+		KeyXPPKDefeat:      strconv.Itoa(DefaultXPPKDefeat),
+		KeyXPDailyComplete: strconv.Itoa(DefaultXPDailyChallenge),
+		KeyXPSinglePlay:    strconv.Itoa(DefaultXPSinglePlay),
+		KeyXPPKPlay:        strconv.Itoa(DefaultXPPKPlay),
+	}
+
+	for k, v := range defaults {
+		var existing domain.SystemSetting
+		if err := db.DB.Where("key = ?", k).First(&existing).Error; err != nil {
+			db.DB.Create(&domain.SystemSetting{Key: k, Value: v})
+		}
+	}
+}
 
 // LoginStreakXP: bonus XP per consecutive login day (index = day-1, capped at last value)
 var loginStreakXP = []int{3, 3, 3, 3, 3, 3, 20, 10, 10, 10, 10, 10, 10, 20, 10, 10, 10, 10, 10, 10, 20, 10, 10, 10, 10, 10, 10, 20, 10, 50}
@@ -69,19 +166,19 @@ func AddXP(userID uint, amount int) XPResult {
 	}
 }
 
-// CalcEventXP returns the XP amount for a game event.
-// isPK: whether this is a multiplayer mode (speed/steal/score/battle).
+// CalcEventXP returns the dynamic XP amount for a game event based on mode and win status.
 func CalcEventXP(isPK, won bool) int {
+	cfg := GetXPConfig()
 	if isPK {
 		if won {
-			return XPPKWin
+			return cfg.PKWin
 		}
-		return XPPKPlay
+		return cfg.PKDefeat
 	}
 	if won {
-		return XPSingleWin
+		return cfg.SingleWin
 	}
-	return XPSinglePlay
+	return cfg.SingleDefeat
 }
 
 // IsPKMode returns true for multiplayer game modes.

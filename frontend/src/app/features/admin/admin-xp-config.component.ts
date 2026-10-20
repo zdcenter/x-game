@@ -16,12 +16,14 @@ interface ConfigItem {
 }
 
 const DEFAULT_COIN_SETTINGS: ConfigItem[] = [
-  { key: 'coins.solo_easy',   value: '2',  label: '单机简单通关', description: '单机简单难度通关奖励脑力币', unit: '🪙', category: 'reward' },
-  { key: 'coins.solo_medium', value: '5',  label: '单机中等通关', description: '单机中等难度通关奖励脑力币', unit: '🪙', category: 'reward' },
-  { key: 'coins.solo_hard',   value: '10', label: '单机困难通关', description: '单机困难难度通关奖励脑力币', unit: '🪙', category: 'reward' },
-  { key: 'coins.solo_expert', value: '18', label: '单机专家通关', description: '单机专家难度通关奖励脑力币', unit: '🪙', category: 'reward' },
-  { key: 'coins.solo_master', value: '25', label: '单机大师通关', description: '单机大师难度通关奖励脑力币', unit: '🪙', category: 'reward' },
-  { key: 'coins.pk_win',      value: '5',  label: '真人 PK 获胜', description: '真人实时对战/排位获胜奖励脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.solo_easy',   value: '2',  label: '单机简单通关', description: '单机简单难度通关胜利奖励脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.solo_medium', value: '5',  label: '单机中等通关', description: '单机中等难度通关胜利奖励脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.solo_hard',   value: '10', label: '单机困难通关', description: '单机困难难度通关胜利奖励脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.solo_expert', value: '18', label: '单机专家通关', description: '单机专家难度通关胜利奖励脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.solo_master', value: '25', label: '单机大师通关', description: '单机大师难度通关胜利奖励脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.solo_defeat', value: '0',  label: '单机闯关失败', description: '单机模式挑战失败奖励脑力币 (通常为 0)', unit: '🪙', category: 'reward' },
+  { key: 'coins.pk_win',      value: '5',  label: '真人 PK 获胜', description: '真人实时对战/排位获胜奖励基础脑力币', unit: '🪙', category: 'reward' },
+  { key: 'coins.pk_defeat',   value: '0',  label: '真人 PK 失败', description: '真人实时对战/排位失败奖励基础脑力币 (通常为 0)', unit: '🪙', category: 'reward' },
   { key: 'coins.cost_hint',   value: '20', label: '免广告提示单价', description: '单机解题免看广告秒出提示消耗', unit: '🪙', category: 'cost' },
   { key: 'coins.cost_revive', value: '50', label: '免广告复活单价', description: '单机失误免看广告当局复活消耗', unit: '🪙', category: 'cost' },
   { key: 'coins.cost_freeze',    value: '100', label: '连胜冷冻卡单价', description: '商城购买防断签/连胜冷冻保护卡消耗', unit: '🪙', category: 'cost' },
@@ -30,16 +32,16 @@ const DEFAULT_COIN_SETTINGS: ConfigItem[] = [
 ];
 
 const DEFAULT_XP_SETTINGS: ConfigItem[] = [
-  { key: 'xp.single_play',   value: '2',  label: 'Single Play',   description: 'XP awarded for completing any single-player game', unit: 'XP' },
-  { key: 'xp.single_win',    value: '5',  label: 'Single Win',    description: 'XP awarded for winning a single-player game', unit: 'XP' },
-  { key: 'xp.pk_play',       value: '5',  label: 'PK Play',       description: 'XP awarded for participating in any PK match', unit: 'XP' },
-  { key: 'xp.pk_win',        value: '15', label: 'PK Win',        description: 'XP awarded for winning a PK match', unit: 'XP' },
-  { key: 'xp.daily_complete',value: '30', label: 'Daily Challenge','description': 'XP awarded for completing the daily challenge', unit: 'XP' },
-  { key: 'xp.streak_day1',   value: '3',  label: 'Login Streak D1','description': 'Login streak bonus — Day 1', unit: 'XP' },
-  { key: 'xp.streak_day3',   value: '5',  label: 'Login Streak D3','description': 'Login streak bonus — Day 3', unit: 'XP' },
-  { key: 'xp.streak_day7',   value: '10', label: 'Login Streak D7','description': 'Login streak bonus — Day 7', unit: 'XP' },
-  { key: 'xp.streak_day14',  value: '20', label: 'Login Streak D14','description': 'Login streak bonus — Day 14', unit: 'XP' },
-  { key: 'xp.streak_day30',  value: '50', label: 'Login Streak D30','description': 'Login streak bonus — Day 30+', unit: 'XP' },
+  { key: 'xp.single_win',    value: '5',  label: '单机通关胜利', description: '单机模式通关胜利时奖励的经验值', unit: 'XP' },
+  { key: 'xp.single_defeat', value: '0',  label: '单机闯关失败', description: '单机模式挑战失败时获得的经验值 (设为 0 则不奖励经验)', unit: 'XP' },
+  { key: 'xp.pk_win',        value: '15', label: '真人 PK 获胜',  description: '真人实时对战/排位挑战获胜时奖励的经验值', unit: 'XP' },
+  { key: 'xp.pk_defeat',     value: '0',  label: '真人 PK 失败',  description: '真人实时对战/排位挑战失败时获得的经验值 (设为 0 则不奖励经验)', unit: 'XP' },
+  { key: 'xp.daily_complete',value: '30', label: '每日挑战奖励', description: '每日挑战完成时奖励的经验值', unit: 'XP' },
+  { key: 'xp.streak_day1',   value: '3',  label: '连续登录第 1 天', description: '连续登录签到奖励 — 第 1 天', unit: 'XP' },
+  { key: 'xp.streak_day3',   value: '5',  label: '连续登录第 3 天', description: '连续登录签到奖励 — 第 3 天', unit: 'XP' },
+  { key: 'xp.streak_day7',   value: '10', label: '连续登录第 7 天', description: '连续登录签到奖励 — 第 7 天', unit: 'XP' },
+  { key: 'xp.streak_day14',  value: '20', label: '连续登录第 14 天', description: '连续登录签到奖励 — 第 14 天', unit: 'XP' },
+  { key: 'xp.streak_day30',  value: '50', label: '连续登录 30+ 天', description: '连续登录签到奖励 — 第 30+ 天', unit: 'XP' },
 ];
 
 @Component({
@@ -115,7 +117,7 @@ const DEFAULT_XP_SETTINGS: ConfigItem[] = [
                 <div>
                   <h3 class="font-black text-sm text-[var(--color-text-main)]">实时配置驱动机制 (Live Config-driven)</h3>
                   <p class="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
-                    所有数值修改保存后即刻持久化到数据库 <code>system_settings</code>。前台客户端在局内提示按钮、复活弹窗、战报结算及「脑力币规则手册」中将自动读取最新定价与产出，无需重构或重新发版。
+                    所有数值修改保存后即刻持久化到数据库 <code>system_settings</code>。包括单机/PK通关与失败时的脑力币发放、道具单价及规则，前后台均自动联动生效。
                   </p>
                 </div>
               </div>
@@ -132,10 +134,10 @@ const DEFAULT_XP_SETTINGS: ConfigItem[] = [
                   <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] p-4 flex flex-col justify-between gap-3 shadow-sm hover:border-amber-500/40 transition-colors">
                     <div>
                       <div class="flex items-center justify-between">
-                        <span class="font-bold text-sm text-[var(--color-text-main)]">{{ s.label }}</span>
+                        <span class="font-bold text-sm text-[var(--color-text-main)]">{{ getLabel(s) }}</span>
                         <span class="text-[10px] font-mono text-[var(--color-text-muted)]">{{ s.key }}</span>
                       </div>
-                      <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ s.description }}</p>
+                      <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ getDesc(s) }}</p>
                     </div>
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border-card)]/50">
                       <input [(ngModel)]="s.value" type="number" min="0" max="9999"
@@ -158,10 +160,10 @@ const DEFAULT_XP_SETTINGS: ConfigItem[] = [
                   <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] p-4 flex flex-col justify-between gap-3 shadow-sm hover:border-amber-500/40 transition-colors">
                     <div>
                       <div class="flex items-center justify-between">
-                        <span class="font-bold text-sm text-[var(--color-text-main)]">{{ s.label }}</span>
+                        <span class="font-bold text-sm text-[var(--color-text-main)]">{{ getLabel(s) }}</span>
                         <span class="text-[10px] font-mono text-[var(--color-text-muted)]">{{ s.key }}</span>
                       </div>
-                      <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ s.description }}</p>
+                      <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ getDesc(s) }}</p>
                     </div>
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border-card)]/50">
                       <input [(ngModel)]="s.value" type="number" min="0" max="9999"
@@ -197,8 +199,8 @@ const DEFAULT_XP_SETTINGS: ConfigItem[] = [
               @for (s of xpSettings(); track s.key) {
                 <div class="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] p-4 flex items-center gap-4 shadow-sm">
                   <div class="flex-1 min-w-0">
-                    <p class="font-bold text-sm text-[var(--color-text-main)]">{{ s.label }}</p>
-                    <p class="text-xs text-[var(--color-text-muted)] mt-0.5">{{ s.description }}</p>
+                    <p class="font-bold text-sm text-[var(--color-text-main)]">{{ getLabel(s) }}</p>
+                    <p class="text-xs text-[var(--color-text-muted)] mt-0.5">{{ getDesc(s) }}</p>
                     <p class="text-[10px] font-mono text-[var(--color-text-muted)] mt-1">{{ s.key }}</p>
                   </div>
                   <div class="flex items-center gap-2">
@@ -231,6 +233,18 @@ export class AdminXpConfigComponent implements OnInit {
 
   coinRewards = () => this.coinSettings().filter(s => s.category === 'reward');
   coinCostsAndRules = () => this.coinSettings().filter(s => s.category !== 'reward');
+
+  getLabel(s: ConfigItem): string {
+    const key = 'admin.config.' + s.key.replace('.', '_') + '.label';
+    const t = this.i18n.t(key)();
+    return t && t !== key ? t : s.label;
+  }
+
+  getDesc(s: ConfigItem): string {
+    const key = 'admin.config.' + s.key.replace('.', '_') + '.desc';
+    const t = this.i18n.t(key)();
+    return t && t !== key ? t : s.description;
+  }
 
   ngOnInit(): void {
     this.isLoading.set(true);

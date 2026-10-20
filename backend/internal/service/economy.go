@@ -15,7 +15,9 @@ const (
 	DefaultSoloHardCoins   = 10
 	DefaultSoloExpertCoins = 18
 	DefaultSoloMasterCoins = 25
+	DefaultSoloDefeatCoins = 0
 	DefaultPKWinCoins      = 5
+	DefaultPKDefeatCoins   = 0
 	DefaultCostHint        = 20
 	DefaultCostRevive      = 50
 	DefaultCostFreeze      = 100
@@ -30,7 +32,9 @@ const (
 	KeyCoinsSoloHard      = "coins.solo_hard"
 	KeyCoinsSoloExpert    = "coins.solo_expert"
 	KeyCoinsSoloMaster    = "coins.solo_master"
+	KeyCoinsSoloDefeat    = "coins.solo_defeat"
 	KeyCoinsPKWin         = "coins.pk_win"
+	KeyCoinsPKDefeat      = "coins.pk_defeat"
 	KeyCoinsCostHint      = "coins.cost_hint"
 	KeyCoinsCostRevive    = "coins.cost_revive"
 	KeyCoinsCostFreeze    = "coins.cost_freeze"
@@ -45,7 +49,9 @@ var AllEconomyKeys = []string{
 	KeyCoinsSoloHard,
 	KeyCoinsSoloExpert,
 	KeyCoinsSoloMaster,
+	KeyCoinsSoloDefeat,
 	KeyCoinsPKWin,
+	KeyCoinsPKDefeat,
 	KeyCoinsCostHint,
 	KeyCoinsCostRevive,
 	KeyCoinsCostFreeze,
@@ -59,7 +65,9 @@ type EconomyConfig struct {
 	SoloHardCoins   int `json:"solo_hard_coins"`
 	SoloExpertCoins int `json:"solo_expert_coins"`
 	SoloMasterCoins int `json:"solo_master_coins"`
+	SoloDefeatCoins int `json:"solo_defeat_coins"`
 	PKWinCoins      int `json:"pk_win_coins"`
+	PKDefeatCoins   int `json:"pk_defeat_coins"`
 	CostHint        int `json:"cost_hint"`
 	CostRevive      int `json:"cost_revive"`
 	CostFreeze      int `json:"cost_freeze"`
@@ -75,7 +83,9 @@ func GetEconomyConfig() EconomyConfig {
 		SoloHardCoins:   DefaultSoloHardCoins,
 		SoloExpertCoins: DefaultSoloExpertCoins,
 		SoloMasterCoins: DefaultSoloMasterCoins,
+		SoloDefeatCoins: DefaultSoloDefeatCoins,
 		PKWinCoins:      DefaultPKWinCoins,
+		PKDefeatCoins:   DefaultPKDefeatCoins,
 		CostHint:        DefaultCostHint,
 		CostRevive:      DefaultCostRevive,
 		CostFreeze:      DefaultCostFreeze,
@@ -104,8 +114,12 @@ func GetEconomyConfig() EconomyConfig {
 			cfg.SoloExpertCoins = val
 		case KeyCoinsSoloMaster:
 			cfg.SoloMasterCoins = val
+		case KeyCoinsSoloDefeat:
+			cfg.SoloDefeatCoins = val
 		case KeyCoinsPKWin:
 			cfg.PKWinCoins = val
+		case KeyCoinsPKDefeat:
+			cfg.PKDefeatCoins = val
 		case KeyCoinsCostHint:
 			cfg.CostHint = val
 		case KeyCoinsCostRevive:
@@ -122,12 +136,15 @@ func GetEconomyConfig() EconomyConfig {
 	return cfg
 }
 
-// CalcRewardCoins calculates coins earned for a game win based on mode and difficulty
+// CalcRewardCoins calculates coins earned for a game result based on mode, difficulty and win status
 func CalcRewardCoins(isPK bool, difficulty string, won bool) int {
-	if !won {
-		return 0
-	}
 	cfg := GetEconomyConfig()
+	if !won {
+		if isPK {
+			return cfg.PKDefeatCoins
+		}
+		return cfg.SoloDefeatCoins
+	}
 	if isPK {
 		return cfg.PKWinCoins
 	}
@@ -167,13 +184,15 @@ func GetActionCoinCost(action string) int {
 // SeedEconomySettings ensures default economy settings exist in the database
 func SeedEconomySettings() {
 	defaults := map[string]string{
-		KeyCoinsSoloEasy:   strconv.Itoa(DefaultSoloEasyCoins),
-		KeyCoinsSoloMedium: strconv.Itoa(DefaultSoloMediumCoins),
-		KeyCoinsSoloHard:   strconv.Itoa(DefaultSoloHardCoins),
-		KeyCoinsSoloExpert: strconv.Itoa(DefaultSoloExpertCoins),
-		KeyCoinsSoloMaster: strconv.Itoa(DefaultSoloMasterCoins),
-		KeyCoinsPKWin:      strconv.Itoa(DefaultPKWinCoins),
-		KeyCoinsCostHint:   strconv.Itoa(DefaultCostHint),
+		KeyCoinsSoloEasy:      strconv.Itoa(DefaultSoloEasyCoins),
+		KeyCoinsSoloMedium:    strconv.Itoa(DefaultSoloMediumCoins),
+		KeyCoinsSoloHard:      strconv.Itoa(DefaultSoloHardCoins),
+		KeyCoinsSoloExpert:    strconv.Itoa(DefaultSoloExpertCoins),
+		KeyCoinsSoloMaster:    strconv.Itoa(DefaultSoloMasterCoins),
+		KeyCoinsSoloDefeat:    strconv.Itoa(DefaultSoloDefeatCoins),
+		KeyCoinsPKWin:         strconv.Itoa(DefaultPKWinCoins),
+		KeyCoinsPKDefeat:      strconv.Itoa(DefaultPKDefeatCoins),
+		KeyCoinsCostHint:      strconv.Itoa(DefaultCostHint),
 		KeyCoinsCostRevive:    strconv.Itoa(DefaultCostRevive),
 		KeyCoinsCostFreeze:    strconv.Itoa(DefaultCostFreeze),
 		KeyCoinsDailyCap:      strconv.Itoa(DefaultDailyCap),

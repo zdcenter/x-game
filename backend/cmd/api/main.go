@@ -45,6 +45,7 @@ func main() {
 	// Initialize database
 	db.InitPostgres()
 	service.SeedEconomySettings()
+	service.SeedXPSettings()
 
 	// Start traffic simulator for fake players/rooms
 	simulator.Start()
