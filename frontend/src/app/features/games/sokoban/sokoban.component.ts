@@ -85,14 +85,14 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
     const availH = Math.max(260, vh - chromeH);
 
-    const padW = vw < 640 ? 32 : vw < 1024 ? 56 : 80;
+    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
-    let maxDim = 520;
-    if (maxGrid >= 14) maxDim = 740;
-    else if (maxGrid >= 12) maxDim = 700;
-    else if (maxGrid >= 10) maxDim = 640;
-    else if (maxGrid >= 8) maxDim = 580;
+    // Dynamic max board dimension:
+    // Mobile: up to 440px
+    // Tablet (iPad): up to 720px (allows sokoban warehouse to be large and clear)
+    // Desktop: up to 760px
+    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 720 : 760);
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;

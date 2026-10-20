@@ -77,23 +77,13 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   constructor() {
     super();
 
-    // Auto-save for single player
+    // Auto-save for single player using BaseGameStore engine
     effect(() => {
       if (this.currentRoomMode() === GameMode.Single) {
-        if (this.isDead() || this.localStatus() === GameStatus.Finished) {
-          storageRemove('drop2048_save');
-          return;
-        }
-        const state = {
-          board: this.board(),
-          activeBlock: this.activeBlock(),
-          nextVal: this.nextVal(),
-          nextVal2: this.nextVal2(),
-          localScore: this.localScore(),
-          isDead: this.isDead(),
-          localStatus: this.localStatus()
-        };
-        storageSet('drop2048_save', JSON.stringify(state));
+        this.board();
+        this.activeBlock();
+        this.localScore();
+        this.saveSinglePlayerProgress();
       }
     });
 
@@ -141,21 +131,8 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
 
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
-      const saved = storageGet('drop2048_save');
-      if (saved) {
-        try {
-          const state = JSON.parse(saved);
-          if (state.isDead || state.localStatus !== GameStatus.Playing) {
-            storageRemove('drop2048_save');
-          } else {
-            this.engine.loadState(state);
-            this.localStatus.set(GameStatus.Playing);
-            this.updateSignals();
-            return;
-          }
-        } catch (e) {
-          storageRemove('drop2048_save');
-        }
+      if (this.loadSinglePlayerProgress()) {
+        return;
       }
       
       this.localStatus.set(GameStatus.Playing);
@@ -185,19 +162,49 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   }
 
   override restartGame() {
-    storageRemove('drop2048_save');
+    super.restartGame();
     if (this.currentRoomMode() === GameMode.Single) {
       this.resetLocalState();
       this.startGame();
-    } else {
-      super.restartGame();
     }
+  }
+
+  // ── 接入 BaseGameStore 统一单机断点续玩与终局安全清理引擎 ──────────────────
+  protected override enableSinglePlayerSave = true;
+
+  protected override getSinglePlayerSaveKey(): string {
+    return 'drop2048_save';
+  }
+
+  protected override getSinglePlayerSaveData(): any {
+    if (this.isDead() || this.localStatus() === GameStatus.Finished) {
+      return null;
+    }
+    return {
+      board: this.board(),
+      activeBlock: this.activeBlock(),
+      nextVal: this.nextVal(),
+      nextVal2: this.nextVal2(),
+      localScore: this.localScore(),
+      isDead: this.isDead(),
+      localStatus: this.localStatus()
+    };
+  }
+
+  protected override restoreSinglePlayerSaveData(data: any): boolean {
+    if (data.isDead || data.localStatus !== GameStatus.Playing) {
+      return false;
+    }
+    this.engine.loadState(data);
+    this.localStatus.set(GameStatus.Playing);
+    this.updateSignals();
+    return true;
   }
 
   private onGameOver() {
     this.localStatus.set(GameStatus.Finished);
     this.isDead.set(true);
-    storageRemove('drop2048_save');
+    this.clearSinglePlayerSave();
     if (this.currentRoomMode() === GameMode.Single) {
       if (this.auth.isAuthenticated()) {
         this.submitSingleStat({ score: this.localScore() }).subscribe(res => {

@@ -362,6 +362,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
 
     this.audioService.initAudio(); // fire-and-forget
+    this.audioService.playBlock('pickup');
 
     // Prevent default to avoid scrolling on touch devices
     if (event.cancelable) {
@@ -478,6 +479,8 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       const { row, col } = this.previewShadow()!;
       this.store.placeShape(this.draggedIndex, row, col);
       this.haptic.vibrateSnap();
+    } else {
+      this.audioService.playBlock('error');
     }
 
     this.isDragging = false;

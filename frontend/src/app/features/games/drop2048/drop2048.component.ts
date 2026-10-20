@@ -26,6 +26,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
+import { WindowSizeService } from '../../../core/services/window-size.service';
 
 @Component({
   selector: 'app-drop2048',
@@ -281,12 +282,35 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     this.store.reviveGame();
   }
 
+  private windowSize = inject(WindowSizeService);
   Math = Math;
 
   cellSize = computed(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 380) return 54;
-    if (typeof window !== 'undefined' && window.innerWidth < 640) return 58;
-    return 64;
+    const { w: vw, h: vh } = this.windowSize.size();
+    const isSingle = this.store.currentRoomMode() === GameMode.Single;
+    
+    // Chrome height (header, score capsule, toolbar, padding)
+    const chromeH = isSingle
+      ? (vw < 640 ? 190 : vw < 1024 ? 220 : 240)
+      : (vw < 640 ? 250 : vw < 1024 ? 270 : 290);
+    const availH = Math.max(300, vh - chromeH);
+
+    // Left and right wings on tablet/desktop: ~220px to 280px total
+    const wingsW = vw < 768 ? 0 : (vw < 1024 ? 240 : 280);
+    const padW = vw < 640 ? 24 : 48;
+    const availW = Math.max(260, vw - wingsW - padW);
+
+    // Each row = cellSize + gap(3), 7 rows + padding(12)
+    const maxCellH = Math.floor((availH - 30) / 7);
+    // 5 columns + padding(12) + gap(12)
+    const maxCellW = Math.floor((availW - 24) / 5);
+
+    const fitCell = Math.min(maxCellH, maxCellW);
+
+    if (vw < 380) return Math.min(54, fitCell);
+    if (vw < 640) return Math.min(60, fitCell);
+    // On tablet / desktop: scale up to 102px so it fills the screen height!
+    return Math.max(58, Math.min(fitCell, 102));
   });
 
   getBlockStyle(val: number): Record<string, string> {

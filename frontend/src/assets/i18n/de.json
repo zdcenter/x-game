@@ -1658,7 +1658,8 @@
   "xp.to_next_level": "auf die nächste Ebene",
   "game": {
     "zen_mode": "Zen-Modus",
-    "exit_zen_mode": "Vollbild beenden"
+    "exit_zen_mode": "Vollbild beenden",
+    "zen_mode_tip": "Immersiver Fokus aktiv (zum Umschalten tippen)"
   },
   "auth_modal.pk_title": "Echtzeit-Duelle freischalten",
   "auth_modal.pk_subtitle": "Melde dich kostenlos an, um Ranglisten-Funktionen freizuschalten",

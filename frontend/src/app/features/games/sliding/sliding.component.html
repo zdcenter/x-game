@@ -91,8 +91,8 @@
                 <div class="absolute p-1 sm:p-1.5 transition-transform duration-200 ease-out top-0 left-0" [style.width]="(100 / tile.size) + '%'"
                   [style.height]="(100 / tile.size) + '%'" [style.transform]="'translate(' + (tile.col * 100) + '%, ' + (tile.row * 100) + '%)'">
                   <button (click)="onTileClick(tile)" [disabled]="store.status() !== GameStatus.Playing"
-                    class="w-full h-full rounded-lg sm:rounded-xl flex items-center justify-center font-bold tracking-tight transition-all duration-150 select-none focus:outline-none"
-                    [style.font-size]="'calc(100cqi / ' + tile.size + ' * 0.45)'"
+                    class="w-full h-full rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center font-black font-mono tracking-tight transition-all duration-150 select-none focus:outline-none drop-shadow-xs"
+                    [style.font-size]="'calc(100cqi / ' + tile.size + ' * 0.48)'"
                     [ngClass]="{
                         'bg-[var(--color-sliding-tile-bg)] hover:bg-[var(--color-sliding-tile-hover)] active:bg-[var(--color-sliding-tile-active)] text-[var(--color-sliding-tile-text)] shadow-sm active:scale-[0.98]': hintTarget() !== tile.val,
                         'bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse active:scale-[0.98]': hintTarget() === tile.val,

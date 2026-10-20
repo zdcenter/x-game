@@ -1672,7 +1672,8 @@
   "xp.to_next_level": "to next level",
   "game": {
     "zen_mode": "Zen Mode",
-    "exit_zen_mode": "Exit Fullscreen"
+    "exit_zen_mode": "Exit Fullscreen",
+    "zen_mode_tip": "Immersive focus active (tap to toggle)"
   },
   "auth_modal.pk_title": "Unlock Real-time Battles",
   "auth_modal.pk_subtitle": "Log in or register for free to unlock ranked competitive features",

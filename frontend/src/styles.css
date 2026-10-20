@@ -79,7 +79,14 @@
     --color-pk-word-text: #ffffff;
   }
 
-  /* Zen Mode (Distraction-Free Fullscreen) */
+  /* Zen Mode (Distraction-Free Fullscreen & Touch Shield) */
+  body.zen-mode-active {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
   body.zen-mode-active header {
     display: none !important;
   }

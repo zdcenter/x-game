@@ -53,6 +53,7 @@ export class BlockStore extends BaseGameStore {
     const cur = this.colorTheme();
     const next = cur === 'crystal' ? 'gold' : (cur === 'gold' ? 'ocean' : 'crystal');
     this.setColorTheme(next);
+    this.audio.playClick();
   }
 
   localStatus = signal<GameStatusType | string>(GameStatus.Waiting);
@@ -140,16 +141,13 @@ export class BlockStore extends BaseGameStore {
       }
     });
 
-    // Auto-save for single player
+    // Auto-save for single player using BaseGameStore engine
     effect(() => {
       if (this.currentRoomMode() === GameMode.Single && this.localStatus() === GameStatus.Playing) {
-        const save = {
-          score: this.localScore(),
-          board: this.localBoard(),
-          hand: this.localHand(),
-          size: this.boardSize()
-        };
-        storageSet('block_save', JSON.stringify(save));
+        this.localScore();
+        this.localBoard();
+        this.localHand();
+        this.saveSinglePlayerProgress();
       }
     });
   }
@@ -193,14 +191,13 @@ export class BlockStore extends BaseGameStore {
     }
   }
 
-  private startLocalGame(seed?: number) {
-    this.engine.initGame({
-      mode: GameMode.Single,
+  private ensureEngineConfigured(mode: string = this.currentRoomMode()) {
+    this.engine.configure({
+      mode,
       difficulty: this.currentDifficulty(),
-      seed,
-      onSound: (sound) => {
+      onSound: (sound, combo) => {
         if (sound === 'clear') {
-          const count = Math.max(this.clearTrigger(), this._pendingClearRows.length + this._pendingClearCols.length, 1);
+          const count = combo || Math.max(this.clearTrigger(), this._pendingClearRows.length + this._pendingClearCols.length, 1);
           this.audio.playBlock('clear', count);
         } else {
           this.audio.playBlock(sound);
@@ -215,32 +212,26 @@ export class BlockStore extends BaseGameStore {
         if (c >= 2) this.shakeTrigger.update(n => n + 1);
       }
     });
+  }
+
+  private startLocalGame(seed?: number) {
+    this.ensureEngineConfigured(GameMode.Single);
+    this.engine.initGame({
+      mode: GameMode.Single,
+      difficulty: this.currentDifficulty(),
+      seed
+    });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
     this.saveSinglePlayerProgress();
   }
 
   private onGlobalStart(seed?: number) {
+    this.ensureEngineConfigured(this.currentRoomMode());
     this.engine.initGame({
       mode: this.currentRoomMode(),
       difficulty: this.currentDifficulty(),
-      seed,
-      onSound: (sound) => {
-        if (sound === 'clear') {
-          const count = Math.max(this.clearTrigger(), this._pendingClearRows.length + this._pendingClearCols.length, 1);
-          this.audio.playBlock('clear', count);
-        } else {
-          this.audio.playBlock(sound);
-        }
-      },
-      onSyncState: () => this.syncState(),
-      onLinesClear: (c, rows, cols) => {
-        this._pendingClearRows = rows;
-        this._pendingClearCols = cols;
-        this.clearTrigger.set(c);
-        setTimeout(() => this.clearTrigger.set(0), 1100);
-        if (c >= 2) this.shakeTrigger.update(n => n + 1);
-      }
+      seed
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
@@ -323,6 +314,7 @@ export class BlockStore extends BaseGameStore {
 
   private onGameOver() {
     this.localStatus.set(GameStatus.Finished);
+    this.audio.playBlock('gameover');
     if (this.currentRoomMode() !== GameMode.Single) {
       this.ws.send({
         action: C2SAction.GameOver,
@@ -334,7 +326,7 @@ export class BlockStore extends BaseGameStore {
         this.bestScore.set(this.localScore());
         storageSet('block_best_score', this.localScore().toString());
       }
-      storageRemove('block_save');
+      this.clearSinglePlayerSave();
       this.submitSingleStat({ score: this.localScore(), won: false }).subscribe(res => {
         if (res && res.isNewRecord) {
           this.bestScore.set(this.localScore());
@@ -355,33 +347,37 @@ export class BlockStore extends BaseGameStore {
     }
   }
 
-  private saveSinglePlayerProgress() {
-    if (this.currentRoomMode() !== GameMode.Single || this.isDead()) return;
-    const save = {
+  // ── 接入 BaseGameStore 统一单机断点续玩与终局安全清理引擎 ──────────────────
+  protected override enableSinglePlayerSave = true;
+
+  protected override getSinglePlayerSaveKey(): string {
+    return 'block_save';
+  }
+
+  protected override getSinglePlayerSaveData(): any {
+    if (this.isDead() || this.localStatus() !== GameStatus.Playing) return null;
+    return {
       score: this.localScore(),
       board: this.localBoard(),
       hand: this.localHand(),
       size: this.boardSize()
     };
-    storageSet('block_save', JSON.stringify(save));
   }
 
-  private loadSinglePlayerProgress() {
-    const saveStr = storageGet('block_save');
-    if (saveStr) {
-      try {
-        const save = JSON.parse(saveStr);
-        if (save.size === this.boardSize()) {
-          this.engine.loadState(save);
-          this.localStatus.set(GameStatus.Playing);
-          this.updateSignals();
-          return;
-        }
-      } catch (e) {}
+  protected override restoreSinglePlayerSaveData(save: any): boolean {
+    if (save.size !== this.boardSize()) return false;
+    this.ensureEngineConfigured(GameMode.Single);
+    this.engine.loadState(save);
+    this.localStatus.set(GameStatus.Playing);
+    this.updateSignals();
+    return true;
+  }
+
+  override loadSinglePlayerProgress(): boolean {
+    const ok = super.loadSinglePlayerProgress();
+    if (!ok) {
+      this.startLocalGame();
     }
-    // Only auto-start if there's no saved game? Wait, original logic called startLocalGame().
-    // If not auto-starting, just leave it as waiting.
-    // Original logic: this.startLocalGame();
-    this.startLocalGame();
+    return ok;
   }
 }

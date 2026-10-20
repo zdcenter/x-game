@@ -1,8 +1,17 @@
 # Node
 node_modules/
 
-# Go
-backend/backend
+# Go binaries & build artifacts
+backend/api
+backend/api_bin
+backend/main
+backend/server
+backend/tmp_*
+backend/x-game-api
+backend/bin/
+backend/build/
+backend/tmp/
+backend/*.log
 *.exe
 *.exe~
 *.dll
@@ -10,6 +19,17 @@ backend/backend
 *.dylib
 *.test
 *.out
+*.bin
+
+# Databases & local stores
+*.sqlite
+*.db
+
+# Backups & temp
+*.bak
+*.old
+*.tmp
+*~
 
 # Go workspace
 go.work
@@ -25,7 +45,6 @@ frontend/out-tsc/
 .vscode/
 .DS_Store
 Thumbs.db
-
 
 deploy/*
 !deploy/nginx/

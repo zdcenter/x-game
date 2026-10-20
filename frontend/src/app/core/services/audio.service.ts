@@ -7,7 +7,7 @@ import { playGomokuSound } from './audio/gomoku.sound';
 import { playDrop2048Sound } from './audio/drop2048.sound';
 import { playTetrisSound } from './audio/tetris.sound';
 import { playMath24Sound } from './audio/math24.sound';
-import { playBlockSound } from './audio/block.sound';
+import { playBlockSound, BlockSoundType } from './audio/block.sound';
 import { playSudokuSound } from './audio/sudoku.sound';
 import { playPuzzleSound } from './audio/puzzle.sound';
 import { playIdiomSound } from './audio/idiom.sound';
@@ -224,7 +224,7 @@ export class AudioService {
   }
 
   // --- Block/Hexa Sounds ---
-  async playBlock(name: 'place' | 'clear' | 'error', combo: number = 0) {
+  async playBlock(name: BlockSoundType, combo: number = 0) {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {

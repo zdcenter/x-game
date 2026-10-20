@@ -13,6 +13,8 @@
   cursor: pointer;
   outline: none;
   transition: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* === 未翻开格子：经典 3D 浮雕凸起方块 === */
@@ -26,20 +28,22 @@
   border-bottom-color: var(--color-ms-bevel-dark);
 }
 
-.ms-cell-unrevealed:hover {
-  background-color: var(--color-ms-cell-hover);
-}
+/* PC 端鼠标操作：悬停与左键点击瞬间深度凹陷 (触屏端不触发 :active，避免长按插旗时方块下凹又弹起) */
+@media (hover: hover) and (pointer: fine) {
+  .ms-cell-unrevealed:not(.ms-cell-flagged):hover {
+    background-color: var(--color-ms-cell-hover);
+  }
 
-/* 点下去的时候：瞬间深度凹陷 (Sunken Active Effect) */
-.ms-cell-unrevealed:active {
-  background-color: var(--color-ms-cell-active);
-  border-width: 2px;
-  border-top-color: var(--color-ms-bevel-dark);
-  border-left-color: var(--color-ms-bevel-dark);
-  border-right-color: var(--color-ms-bevel-light);
-  border-bottom-color: var(--color-ms-bevel-light);
-  box-shadow: inset 1.5px 1.5px 3px var(--color-ms-sunken-shadow);
-  transform: translate(0.5px, 0.5px);
+  .ms-cell-unrevealed:not(.ms-cell-flagged):active {
+    background-color: var(--color-ms-cell-active);
+    border-width: 2px;
+    border-top-color: var(--color-ms-bevel-dark);
+    border-left-color: var(--color-ms-bevel-dark);
+    border-right-color: var(--color-ms-bevel-light);
+    border-bottom-color: var(--color-ms-bevel-light);
+    box-shadow: inset 1.5px 1.5px 3px var(--color-ms-sunken-shadow);
+    transform: translate(0.5px, 0.5px);
+  }
 }
 
 /* === 已翻开格子：凹下去的平盘质感 (Sunken Inset Plate) === */

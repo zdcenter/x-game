@@ -27,6 +27,7 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
+import { WindowSizeService } from '../../../core/services/window-size.service';
 
 
 @Component({
@@ -112,7 +113,36 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   i18n = inject(I18nService);
   private floatingText = inject(FloatingTextService);
   private gameRegistry = inject(GameRegistryService);
+  private windowSize = inject(WindowSizeService);
   Math = Math;
+
+  readonly boardHeightPx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    
+    // Chrome height:
+    // Mobile (<768px): Header + mobile hold/next bar + ScoreCapsule + Virtual Controller (~310px)
+    // Tablet (768-1024px): Header + ScoreCapsule + Stage margins (~200px)
+    // Desktop (>=1024px): Header + ScoreCapsule + Stage margins (~220px)
+    const chromeH = vw < 768 ? 310 : (vw < 1024 ? 200 : 220);
+    const availH = Math.max(380, vh - chromeH);
+
+    // Left and right wings on tablet/desktop:
+    // w-32 lg:w-40 on both sides + gap (~260px to 320px)
+    const wingsW = vw < 768 ? 0 : (vw < 1024 ? 260 : 320);
+    const availW = Math.max(240, vw - wingsW - 32);
+    // Board has 1:2 aspect ratio, so board width = height / 2.
+    // The maximum height allowed by available width is availW * 2.
+    const maxHByW = Math.floor(availW * 2);
+
+    // Max height limits:
+    // Mobile: up to 520px
+    // Tablet (iPad): up to 860px (gives 430px width in 1:2 aspect ratio, filling tablet majestically!)
+    // Desktop: up to 880px
+    const maxH = vw < 768 ? 520 : (vw < 1024 ? 860 : 880);
+
+    const targetH = Math.max(380, Math.min(availH, maxH, maxHByW));
+    return `${targetH}px`;
+  });
 
   readonly COLS = TETRIS_COLS;
   readonly ROWS = TETRIS_ROWS;

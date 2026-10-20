@@ -78,10 +78,20 @@ export class ZenModeService {
   }
 
   /**
-   * Sets the user's zen mode preference and optionally requests/exits native fullscreen.
+   * Helper to detect touch-enabled devices (phones, tablets, iPads)
+   */
+  isTouchDevice(): boolean {
+    if (!isBrowser()) return false;
+    return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  }
+
+  /**
+   * Sets the user's zen mode preference and optionally requests/exits native fullscreen on desktop.
+   * On touch devices (tablets/phones), we deliberately do NOT invoke browser native requestFullscreen(),
+   * because it triggers the intrusive "向下轻扫即可退出全屏" system prompt and edge swipe interference.
+   * Instead, CSS In-App Fullscreen provides seamless 100dvh immersion with zero browser popups!
    */
   setPreference(active: boolean, userInitiated = false): void {
-    console.log('[ZenMode] Setting zen preference to:', active, 'userInitiated:', userInitiated);
     this.zenPreference.set(active);
 
     if (!isBrowser()) return;
@@ -91,18 +101,20 @@ export class ZenModeService {
     } catch {}
 
     if (userInitiated) {
-      if (active) {
-        // Attempt native fullscreen if supported (desktop / android browsers)
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-          document.documentElement.requestFullscreen()
-            .then(() => { this.hadNativeFullscreen = true; })
-            .catch(() => { this.hadNativeFullscreen = false; });
+      // Only request browser native fullscreen on non-touch desktop devices
+      if (!this.isTouchDevice()) {
+        if (active) {
+          if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+            document.documentElement.requestFullscreen()
+              .then(() => { this.hadNativeFullscreen = true; })
+              .catch(() => { this.hadNativeFullscreen = false; });
+          }
+        } else {
+          if (document.exitFullscreen && document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+          this.hadNativeFullscreen = false;
         }
-      } else {
-        if (document.exitFullscreen && document.fullscreenElement) {
-          document.exitFullscreen().catch(() => {});
-        }
-        this.hadNativeFullscreen = false;
       }
     }
   }
@@ -116,11 +128,17 @@ export class ZenModeService {
   }
 
   private loadPreference(): boolean {
-    if (!isBrowser()) return false;
+    if (!isBrowser()) return true;
     try {
-      return localStorage.getItem(ZenModeService.STORAGE_KEY) === 'true';
+      const stored = localStorage.getItem(ZenModeService.STORAGE_KEY);
+      if (stored !== null) {
+        return stored === 'true';
+      }
+      // Default: In-app zen mode is active by default in all games,
+      // giving players a clean, spacious arena without top nav distractions.
+      return true;
     } catch {
-      return false;
+      return true;
     }
   }
 }

@@ -239,20 +239,16 @@ export class NonogramStore extends BaseGameStore {
       }
     });
 
-    // Save state and difficulty preference to local storage
+    // Save state and difficulty preference to local storage using BaseGameStore engine
     effect(() => {
-      const state = this.localState();
       const mode = this.currentRoomMode();
       const diff = this.currentDifficulty();
       
       if (mode === GameMode.Single && diff && typeof localStorage !== 'undefined') {
         localStorage.setItem('nonogram_difficulty', diff as string);
       }
-      if (mode === GameMode.Single && state && state.status !== GameStatus.Finished) {
-        localStorage.setItem('nonogram_saved_game', JSON.stringify({ state, difficulty: diff }));
-      } else if (state?.status === GameStatus.Finished) {
-        localStorage.removeItem('nonogram_saved_game');
-      }
+      this.localState();
+      this.saveSinglePlayerProgress();
     });
   }
 
@@ -535,16 +531,8 @@ export class NonogramStore extends BaseGameStore {
     }
 
     if (!forceNew) {
-      const saved = localStorage.getItem('nonogram_saved_game');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.state && parsed.state.status === GameStatus.Playing) {
-            this.currentDifficulty.set(parsed.difficulty || difficulty);
-            this.localState.set(parsed.state);
-            return;
-          }
-        } catch(e) {}
+      if (this.loadSinglePlayerProgress()) {
+        return;
       }
     }
 
@@ -568,5 +556,27 @@ export class NonogramStore extends BaseGameStore {
       startAt: Date.now()
     });
     this.history.set([]);
+  }
+
+  // ── 接入 BaseGameStore 统一单机断点续玩与终局安全清理引擎 ──────────────────
+  protected override enableSinglePlayerSave = true;
+
+  protected override getSinglePlayerSaveKey(): string {
+    return 'nonogram_saved_game';
+  }
+
+  protected override getSinglePlayerSaveData(): any {
+    const state = this.localState();
+    if (!state || state.status !== GameStatus.Playing) return null;
+    return { state, difficulty: this.currentDifficulty() };
+  }
+
+  protected override restoreSinglePlayerSaveData(parsed: any): boolean {
+    if (!parsed || !parsed.state || parsed.state.status !== GameStatus.Playing) return false;
+    if (parsed.difficulty) {
+      this.currentDifficulty.set(parsed.difficulty);
+    }
+    this.localState.set(parsed.state);
+    return true;
   }
 }

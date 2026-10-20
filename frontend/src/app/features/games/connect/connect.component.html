@@ -119,8 +119,9 @@
       </div>
 
       <!-- Board Container -->
-      <div class="w-full mx-auto flex items-center justify-center" [style.width]="boardWidthPx()" [style.max-width]="boardWidthPx()">
+      <div class="w-full mx-auto flex items-center justify-center shrink-0" [style.width]="boardWidthPx()" [style.height]="boardWidthPx()" [style.max-width]="boardWidthPx()">
         <app-connect-board 
+          class="w-full h-full block"
           *ngIf="store.localEngine()"
           [engine]="store.localEngine()!"
           [disabled]="store.status() !== GameStatus.Playing"

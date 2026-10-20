@@ -19,6 +19,7 @@ import { AudioService } from '../../../core/services/audio.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { WindowSizeService } from '../../../core/services/window-size.service';
+import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GomokuAI, GomokuColor } from './store/gomoku-ai';
 
 @Component({
@@ -82,18 +83,14 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   showResultOverlay = signal(false);
   hintMove = signal<[number, number] | null>(null);
 
-  // Responsive Board Size Calculation (optimized for tablets/iPad Pro up to 880px)
-  readonly boardSizePx = computed(() => {
-    const { w: vw, h: vh } = this.windowSize.size();
-    // vertical chrome = header + vs hud + paddings
-    const chromeH = vw < 640 ? 170 : vw < 1024 ? 195 : 210;
-    const availH = Math.max(300, vh - chromeH);
-    const padW = vw < 640 ? 20 : vw < 1024 ? 40 : 64;
-    const availW = Math.max(300, vw - padW);
-    // Square board up to 880px
-    const size = Math.round(Math.min(availW, availH, 880));
-    return `${Math.max(300, size)}px`;
-  });
+  // Responsive Board Size Calculation (standardized via boardSizePx utility)
+  readonly boardSizePx = boardSizePx(
+    this.windowSize,
+    { mobile: 170, tablet: 195, pc: 210 },
+    880,
+    300,
+    { mobile: 20, tablet: 40, pc: 64 },
+  );
 
   // Computed state
   board = this.store.board;

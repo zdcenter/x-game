@@ -10,7 +10,8 @@ import { ConnectEngine, Position } from '../connect-engine';
     'class': 'block w-full'
   },
   template: `
-    <div class="relative w-full aspect-square max-w-full select-none rounded-2xl bg-[var(--color-bg-card)] border-2 border-b-[8px] border-r-[4px] border-[var(--color-border-card)] shadow-[0_8px_20px_var(--color-cell-shadow)] p-2 sm:p-4"
+    <div class="relative w-full h-full max-w-full max-h-full select-none rounded-2xl sm:rounded-3xl bg-[var(--color-bg-card)] border-2 border-[var(--color-border-card)] shadow-[0_8px_20px_var(--color-cell-shadow)] p-3 sm:p-4 box-border flex flex-col justify-center items-center overflow-hidden"
+         style="container-type: inline-size;"
          (mousedown)="onPointerDown($event)"
          (touchstart)="onPointerDown($event)"
          (mousemove)="onPointerMove($event)"
@@ -20,7 +21,7 @@ import { ConnectEngine, Position } from '../connect-engine';
          (mouseleave)="onPointerUp()"
          (touchcancel)="onPointerUp()">
 
-      <div class="relative w-full h-full" #boardContainer>
+      <div class="relative w-full h-full flex-1 min-h-0 flex items-center justify-center" #boardContainer>
 
       <!-- Grid Background -->
       <div class="grid w-full h-full"
@@ -31,12 +32,12 @@ import { ConnectEngine, Position } from '../connect-engine';
                class="relative flex items-center justify-center transition-colors">
             
             <!-- Block (Wall) -->
-            <div *ngIf="engine.isBlock(r, c)" class="w-[90%] h-[90%] bg-slate-700 rounded-lg z-20 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center">
+            <div *ngIf="engine.isBlock(r, c)" class="w-[84%] aspect-square bg-slate-700 rounded-lg z-20 shadow-[inset_0_4px_8px_rgba(0,0,0,0.4)] flex items-center justify-center">
             </div>
 
             <!-- Grey Square (Dot) for spots without endpoints or pipes -->
             <div *ngIf="!engine.isEndpoint(r, c) && !engine.isBlock(r, c) && engine.grid[r][c] === 0" 
-                 class="w-[38%] h-[38%] bg-[#a3a3a3] dark:bg-[#737373] rounded-[3px] z-0"></div>
+                 class="w-[30%] aspect-square bg-[#a3a3a3] dark:bg-[#737373] rounded-[3px] z-0"></div>
 
             <!-- Unfilled cell pulse when all flows are connected but coverage < 100% -->
             <div *ngIf="highlightUnfilled && engine.grid[r][c] === 0 && !engine.isEndpoint(r, c) && !engine.isBlock(r, c)"
@@ -46,14 +47,14 @@ import { ConnectEngine, Position } from '../connect-engine';
 
             <!-- Endpoint Dot -->
             <div *ngIf="engine.isEndpoint(r, c)" 
-                 class="w-[88%] h-[88%] rounded-full z-10 flex items-center justify-center relative shadow-[inset_0_-4px_6px_rgba(0,0,0,0.3),_0_4px_8px_rgba(0,0,0,0.2)]"
+                 class="w-[80%] aspect-square rounded-full z-10 flex items-center justify-center relative shadow-[inset_0_-2px_4px_rgba(0,0,0,0.3),_0_2px_5px_rgba(0,0,0,0.15)]"
                  [style.backgroundColor]="getColorHex(engine.getColorAt(r, c)!)">
               
               <!-- Subtle top highlight for 3D effect -->
               <div class="absolute inset-0 rounded-full bg-gradient-to-b from-white/30 to-transparent pointer-events-none"></div>
 
               <span class="text-white font-black leading-none select-none pointer-events-none drop-shadow-md z-20"
-                    [ngClass]="engine.height >= 12 ? 'text-sm sm:text-base md:text-lg lg:text-xl' : (engine.height >= 10 ? 'text-base sm:text-lg md:text-xl lg:text-2xl' : (engine.height >= 7 ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl' : 'text-xl sm:text-2xl md:text-3xl lg:text-4xl'))">
+                    [style.font-size]="'calc(100cqi / ' + engine.width + ' * 0.42)'">
                 {{ engine.getColorAt(r, c) }}
               </span>
             </div>

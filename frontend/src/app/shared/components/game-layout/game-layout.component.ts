@@ -25,7 +25,8 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent],
   template: `
-<div class="flex min-h-[calc(100dvh-64px)] w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]">
+<div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]"
+     [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-[calc(100dvh-64px)]'">
   <!-- Offline Mode Banner -->
   @if (!zenService.isZenMode()) {
     <app-offline-banner></app-offline-banner>
@@ -155,7 +156,7 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
     }
 
     <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
-    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 min-h-[320px] sm:min-h-[420px] relative">
+    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 min-h-[320px] sm:min-h-[420px] relative touch-none overscroll-none">
       <!-- Project custom game components here -->
       <ng-content></ng-content>
     </div>

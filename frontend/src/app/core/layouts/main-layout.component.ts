@@ -191,7 +191,11 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
       }
 
       <!-- Main Content Area -->
-      <main #mainScroll class="flex-1 block overflow-y-auto overflow-x-hidden custom-scrollbar relative min-h-0 flex flex-col" style="overflow-anchor: none;">
+      <main #mainScroll
+            class="flex-1 block custom-scrollbar relative min-h-0 flex flex-col"
+            [class.overflow-y-auto]="!zenService.isZenMode()"
+            [class.overflow-hidden]="zenService.isZenMode()"
+            style="overflow-anchor: none;">
         <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode()">
           <router-outlet></router-outlet>
         </div>

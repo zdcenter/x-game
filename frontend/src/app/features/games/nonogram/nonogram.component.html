@@ -55,10 +55,10 @@
             }
 
             <!-- Main Board (Seamless & Integrated) -->
-            <div class="flex-1 min-h-0 overflow-x-auto flex flex-col items-center justify-center p-1 sm:p-2.5 md:p-3 w-full"
+            <div class="flex-1 min-h-0 overflow-auto flex flex-col items-stretch p-1 sm:p-2.5 md:p-3 w-full"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
                  
-              <div class="flex flex-col items-center mx-auto my-auto">
+              <div class="min-w-fit flex flex-col items-center m-auto">
                 <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
                      [style.--cell-size.px]="cellSize()"
@@ -72,20 +72,20 @@
                 <div class="col-hints"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let col of store.colHints(); let x = index" 
-                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-[var(--color-text-main)] font-bold"
+                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-[var(--color-text-main)] font-black select-none"
                        [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
                        [class.no-border-r]="x === store.width() - 1">
-                    <div *ngFor="let hint of col">{{ hint }}</div>
+                    <span *ngFor="let hint of col" class="font-mono font-black leading-none drop-shadow-xs py-0.5">{{ hint }}</span>
                   </div>
                 </div>
 
                 <div class="row-hints"
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
-                       class="row-hint-item flex justify-end items-center pr-2 text-[var(--color-text-main)] font-bold"
+                       class="row-hint-item flex justify-end items-center pr-2 sm:pr-2.5 text-[var(--color-text-main)] font-black select-none"
                        [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
                        [class.no-border-b]="y === store.height() - 1">
-                    <div *ngFor="let hint of row; let last = last" [class.mr-1]="!last">{{ hint }}</div>
+                    <span *ngFor="let hint of row; let last = last" class="font-mono font-black leading-none drop-shadow-xs" [class.mr-1]="!last" [class.sm:mr-1.5]="!last">{{ hint }}</span>
                   </div>
                 </div>
 

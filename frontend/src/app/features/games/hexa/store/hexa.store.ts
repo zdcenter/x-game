@@ -248,7 +248,7 @@ export class HexaStore extends BaseGameStore {
         this.bestScore.set(this.score());
         storageSet('hexa_best_score', this.score().toString());
       }
-      this.saveSinglePlayer();
+      this.saveSinglePlayerProgress();
     }
   }
 
@@ -272,67 +272,50 @@ export class HexaStore extends BaseGameStore {
   }
 
   override restartGame() {
-    storageRemove('hexa_single_save');
+    super.restartGame();
     if (this.currentRoomMode() === GameMode.Single) {
       this.startSinglePlayer();
       this.loadBestScore();
-    } else {
-      super.restartGame();
     }
-  }
-
-  override leaveRoom() {
-    if (this.currentRoomMode() === GameMode.Single && this.gameOver()) {
-      storageRemove('hexa_single_save');
-    }
-    super.leaveRoom();
   }
 
   // Single Player
   private startSinglePlayer() {
-    storageRemove('hexa_single_save');
+    this.clearSinglePlayerSave();
     this.engine.initGame(); // Uses Math.random
     this.updateSignals();
   }
 
-  private saveSinglePlayer() {
-    if (this.gameOver()) {
-      storageRemove('hexa_single_save');
-      return;
+  // ── 接入 BaseGameStore 统一单机断点续玩与终局安全清理引擎 ──────────────────
+  protected override enableSinglePlayerSave = true;
+
+  protected override getSinglePlayerSaveKey(): string {
+    return 'hexa_single_save';
+  }
+
+  protected override getSinglePlayerSaveData(): any {
+    if (this.gameOver()) return null;
+    return this.engine.getState();
+  }
+
+  protected override restoreSinglePlayerSaveData(data: any): boolean {
+    if (!data.availablePieces || data.availablePieces.length === 0 || !data.availablePieces[0]) {
+      return false;
     }
-    storageSet('hexa_single_save', JSON.stringify(this.engine.getState()));
+    this.engine.handleAction({
+      type: HexaActionType.LoadState,
+      cells: data.cells,
+      score: data.score,
+      combo: data.combo,
+      pieces: data.availablePieces,
+      piecesPlaced: data.piecesPlaced || 0,
+      gameOver: false
+    });
+    this.updateSignals();
+    return true;
   }
 
   loadSinglePlayer(): boolean {
-    const saved = storageGet('hexa_single_save');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved) as HexaState;
-        // Never restore a game that is already in game over / defeat state
-        if (data.gameOver) {
-          storageRemove('hexa_single_save');
-          return false;
-        }
-        if (!data.availablePieces || data.availablePieces.length === 0 || !data.availablePieces[0]) {
-          storageRemove('hexa_single_save');
-          throw new Error('Save data corrupted: missing available pieces');
-        }
-        this.engine.handleAction({
-          type: HexaActionType.LoadState,
-          cells: data.cells,
-          score: data.score,
-          combo: data.combo,
-          pieces: data.availablePieces,
-          piecesPlaced: data.piecesPlaced || 0,
-          gameOver: false
-        });
-        this.updateSignals();
-        return true;
-      } catch (e) {
-        console.error("Failed to load hexa state", e);
-        storageRemove('hexa_single_save');
-      }
-    }
-    return false;
+    return this.loadSinglePlayerProgress();
   }
 }

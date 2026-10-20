@@ -158,8 +158,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   readonly cellSize = computed(() => {
     const w = this.store.width();
     const h = this.store.height();
-    const vw = this.windowSize.size().w;
-    const vh = this.windowSize.size().h;
+    const { w: vw, h: vh } = this.windowSize.size();
 
     // Actual max hint length per row and column
     const rowHints: number[][] = (this.store.rowHints() as any) || [];
@@ -168,60 +167,64 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
 
     // Dynamic hint area equivalents in cell units (matching actual font and padding in CSS)
-    const rowHintEq = Math.max(1.8, maxRowHints * 0.42 + 0.4);
-    const colHintEq = Math.max(1.8, maxColHints * 0.46 + 0.4);
+    // Row hints are horizontally arranged numbers with gaps: allow ~0.62 cell units per hint number
+    const rowHintEq = Math.max(1.8, maxRowHints * 0.62 + 0.6);
+    // Col hints are vertically arranged numbers: allow ~0.55 cell units per hint number
+    const colHintEq = Math.max(1.8, maxColHints * 0.55 + 0.6);
 
     const totalCols = w + rowHintEq;
     const totalRows = h + colHintEq;
 
-    // Available width inside the game stage card (max-w 1400px, no side panels)
-    let containerPadding = 32;
-    if (vw >= 1024) {
-      containerPadding = 72;
-    } else if (vw >= 640) {
-      containerPadding = 56; // Tablet portrait / landscape
-    }
+    // Available width for the board container:
+    // Real cumulative padding of outer layout (GameLayout) and board wrappers:
+    // Mobile (<640px): Layout px-2 (16px) + Stage p-1 (8px) + Board p-1 (8px) = 32px
+    // Tablet (640-1024px): Layout px-4 (32px) + Stage p-2.5 (20px) + Board p-2.5 (20px) = 72px + safety margin = 80px
+    // Desktop (>=1024px): Layout px-6 (48px) + Stage p-2.5 (20px) + Board p-3 (24px) = 92px + safety margin = 100px
+    const padW = vw < 640 ? 32 : (vw < 1024 ? 80 : 100);
+    const maxBoardW = vw >= 1024 ? 960 : (vw >= 640 ? 840 : vw - padW);
+    const availW = Math.max(260, Math.min(vw - padW, maxBoardW));
 
-    const maxContainerW = Math.min(vw, 1400);
-    const availW = Math.max(280, maxContainerW - containerPadding);
-
-    // Available vertical height in viewport:
-    // Header + Subheader + Toolbar + Card margins ≈ 210px
-    const availH = Math.max(300, vh - 210);
+    // Available height in viewport:
+    // Header (~56px) + Stage padding + Toolbar (~52px) + Bottom margin (~20px)
+    // PK HUD adds ~48px if multiplayer
+    const isSingle = this.store.currentRoomMode() === GameMode.Single;
+    const chromeH = isSingle
+      ? (vw < 640 ? 150 : (vw < 1024 ? 175 : 185))
+      : (vw < 640 ? 195 : (vw < 1024 ? 225 : 240));
+    const availH = Math.max(260, vh - chromeH);
 
     const sizeW = Math.floor(availW / totalCols);
     const sizeH = Math.floor(availH / totalRows);
 
     let calculatedSize: number;
     if (vw >= 640) {
-      // On tablet and desktop, fit both width and height to give comfortable margins
+      // Tablet and Desktop: fit both width and height gracefully to keep within viewport
       calculatedSize = Math.min(sizeW, sizeH);
     } else {
-      // On narrow mobile devices, allow horizontal scroll if needed for dense grids
-      calculatedSize = Math.max(19, sizeW);
+      // Mobile: if grid is small (5x5, 10x10), fit to screen; if large, base primarily on width with minSize
+      calculatedSize = w <= 10 ? Math.min(sizeW, sizeH) : sizeW;
     }
 
-    // Adaptive min/max cell bounds per grid density to guarantee high readability & touch ergonomics
-    let minSize = 19;
-    let maxSize = 72;
+    // Adaptive min/max bounds based on grid difficulty to give rich, immersive board sizes
+    let minSize = 20;
+    let maxSize = 112;
 
-    if (vw >= 640) {
-      if (w >= 25) {
-        minSize = 23;
-        maxSize = 36;
-      } else if (w >= 20) {
-        minSize = 27;
-        maxSize = 44;
-      } else if (w >= 15) {
-        minSize = 32;
-        maxSize = 52;
-      } else if (w >= 10) {
-        minSize = 42;
-        maxSize = 62;
-      } else {
-        minSize = 52;
-        maxSize = 76;
-      }
+    if (w >= 25) {
+      minSize = 20;
+      maxSize = 36;
+    } else if (w >= 20) {
+      minSize = 22;
+      maxSize = 42;
+    } else if (w >= 15) {
+      minSize = 24;
+      maxSize = 52;
+    } else if (w >= 10) {
+      minSize = vw < 640 ? 28 : 34;
+      maxSize = 84;
+    } else {
+      // 5x5 Easy: allows up to 112px on iPad / PC so it fills the screen majestically!
+      minSize = vw < 640 ? 46 : 60;
+      maxSize = 112;
     }
 
     return Math.max(minSize, Math.min(calculatedSize, maxSize));

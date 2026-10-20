@@ -37,6 +37,9 @@
         <div class="flex items-center justify-end gap-1 sm:gap-2 z-10 shrink-0 xl:ml-auto">
           <ng-content select="[header-right]"></ng-content>
 
+          <!-- Live PK Battle Beacon (Realtime room radar in game header) -->
+          <app-live-battle-beacon></app-live-battle-beacon>
+
           <!-- User Brain Coins Balance (Click to open Coin Economy Guide) -->
           @if (coinService.isAuthenticated()) {
             <button (click)="coinGuideService.open()"
@@ -84,16 +87,31 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
               </svg>
             </button>
-            <button (click)="zenService.toggle()"
-                    class="p-1 sm:p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shrink-0"
-                    [title]="zenService.isZenMode() ? (i18n.t('game.exit_zen_mode')() || '退出全屏') : (i18n.t('game.zen_mode')() || '全屏专注')">
-              <svg *ngIf="!zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
-              <svg *ngIf="zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m7-5l5 5m0 0v-4m0 4h-4" />
-              </svg>
-            </button>
+            <!-- Zen Mode Toggle with Gentle First-Time Discovery Hint Tooltip -->
+            <div class="relative flex items-center">
+              <button (click)="toggleZen()"
+                      class="p-1 sm:p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shrink-0"
+                      [title]="zenService.isZenMode() ? (i18n.t('game.exit_zen_mode')() || '退出全屏') : (i18n.t('game.zen_mode')() || '全屏专注')">
+                <svg *ngIf="!zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                <svg *ngIf="zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m7-5l5 5m0 0v-4m0 4h-4" />
+                </svg>
+              </button>
+
+              @if (showZenHint()) {
+                <div class="absolute right-0 top-full mt-2 z-50 animate-fade-in cursor-pointer whitespace-nowrap"
+                     (click)="dismissZenHint()">
+                  <div class="px-2.5 py-1.5 rounded-xl shadow-2xl text-[11px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center gap-1.5">
+                    <span class="text-amber-500">💡</span>
+                    <span>{{ i18n.t('game.zen_mode_tip')() }}</span>
+                  </div>
+                  <!-- Arrow -->
+                  <div class="w-2 h-2 rotate-45 bg-[var(--color-bg-card)] border-t border-l border-[var(--color-border-card)] absolute -top-1 right-2.5"></div>
+                </div>
+              }
+            </div>
 
             <!-- PWA Install Button (When installable) -->
             @if (pwaService.canInstall()) {

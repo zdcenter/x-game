@@ -27,6 +27,9 @@ export class CellComponent {
     if (this.cell.state === CellState.Exploded) {
       return 'ms-cell-exploded';
     }
+    if (this.cell.state === CellState.Flagged) {
+      return 'ms-cell-unrevealed ms-cell-flagged';
+    }
     return 'ms-cell-unrevealed';
   }
 
@@ -51,7 +54,9 @@ export class CellComponent {
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else {
-        this.reveal.emit();
+        if (this.cell.state !== CellState.Flagged) {
+          this.reveal.emit();
+        }
       }
     }
   }
@@ -63,22 +68,34 @@ export class CellComponent {
 
   private touchTimeout: any;
   private touchFired = false;
+  private touchStartX = 0;
+  private touchStartY = 0;
 
   onTouchStart(event: TouchEvent) {
     this.touchFired = false;
+    if (event.touches.length > 0) {
+      this.touchStartX = event.touches[0].clientX;
+      this.touchStartY = event.touches[0].clientY;
+    }
     this.touchTimeout = setTimeout(() => {
       this.touchFired = true;
       this.flag.emit();
       this.haptic.vibrateSnap();
-    }, 400); // 400ms for long press fallback
+    }, 360); // 360ms for smooth, responsive long press
   }
 
   onTouchMove(event: TouchEvent) {
-    if (this.touchTimeout) {
-      clearTimeout(this.touchTimeout);
-      this.touchTimeout = null;
+    if (event.touches.length > 0) {
+      const dx = Math.abs(event.touches[0].clientX - this.touchStartX);
+      const dy = Math.abs(event.touches[0].clientY - this.touchStartY);
+      if (dx > 8 || dy > 8) {
+        if (this.touchTimeout) {
+          clearTimeout(this.touchTimeout);
+          this.touchTimeout = null;
+        }
+        this.touchFired = true; // User is scrolling/panning the board
+      }
     }
-    this.touchFired = true; // Prevent tap action if user is scrolling
   }
 
   onTouchEnd(event: TouchEvent) {
@@ -92,8 +109,10 @@ export class CellComponent {
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else {
-        this.reveal.emit();
-        this.haptic.vibrateLight();
+        if (this.cell.state !== CellState.Flagged) {
+          this.reveal.emit();
+          this.haptic.vibrateLight();
+        }
       }
     } else {
       event.preventDefault();

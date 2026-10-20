@@ -1672,7 +1672,8 @@
   "xp.to_next_level": "升级所需",
   "game": {
     "zen_mode": "全屏专注",
-    "exit_zen_mode": "退出全屏"
+    "exit_zen_mode": "退出全屏",
+    "zen_mode_tip": "已开启防误触专注模式（可随时切换）"
   },
   "auth_modal.pk_title": "开启真人实时对战",
   "auth_modal.pk_subtitle": "登录或免费注册账号，即可解锁排位竞技专属特权",

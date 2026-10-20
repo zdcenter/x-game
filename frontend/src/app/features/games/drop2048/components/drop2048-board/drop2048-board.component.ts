@@ -45,7 +45,8 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
              [style.width.px]="cellSize"
              [style.height.px]="cellSize"
              [style.transform]="'translate(' + colPx(activeBlock.c) + 'px,' + rowPx(activeBlock.r) + 'px)'">
-          <div class="w-full h-full flex items-center justify-center font-black text-white text-3xl block-3d select-none"
+          <div class="w-full h-full flex items-center justify-center font-black text-white block-3d select-none"
+               [style.font-size.px]="math.round(cellSize * 0.42)"
                [ngStyle]="getBlockStyle(activeBlock.val)">
              {{ activeBlock.val === 0 ? '🌈' : activeBlock.val }}
           </div>
@@ -58,7 +59,8 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
              [style.width.px]="cellSize"
              [style.height.px]="cellSize"
              [style.transform]="'translate(' + colPx(block.c) + 'px,' + rowPx(block.r) + 'px)'">
-          <div class="w-full h-full flex items-center justify-center font-black text-white text-3xl block-3d select-none"
+          <div class="w-full h-full flex items-center justify-center font-black text-white block-3d select-none"
+               [style.font-size.px]="math.round(cellSize * 0.42)"
                [ngStyle]="getBlockStyle(block.val)">
              {{ block.val === 0 ? '🌈' : block.val }}
              <div *ngIf="block.isLanding"

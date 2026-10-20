@@ -25,7 +25,7 @@ export interface BlockEngineConfig {
   mode?: GameModeType | string;
   seed?: number; // TBD: Use seed for multiplayer hand sync
   difficulty?: string;
-  onSound?: (sound: 'place' | 'clear' | 'error') => void;
+  onSound?: (sound: 'place' | 'clear' | 'error', combo?: number) => void;
   onSyncState?: () => void;
   onLinesClear?: (count: number, rows: number[], cols: number[]) => void;
 }
@@ -41,11 +41,17 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
   
   private config?: BlockEngineConfig;
 
+  configure(config: Partial<BlockEngineConfig>): void {
+    this.config = { ...this.config, ...config };
+  }
+
   initGame(config?: BlockEngineConfig): void {
-    this.config = config;
+    if (config) {
+      this.configure(config);
+    }
     
     // Set board size based on difficulty
-    const diff = config?.difficulty || GameDifficulty.Medium;
+    const diff = this.config?.difficulty || config?.difficulty || GameDifficulty.Medium;
     this.boardSize = diff === GameDifficulty.Easy ? 8 : (diff === GameDifficulty.Hard ? 12 : 10);
     
     this.board = this.createEmptyBoard(this.boardSize);
@@ -55,7 +61,10 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
     this.status = GameStatus.Playing;
   }
 
-  loadState(state: any): void {
+  loadState(state: any, config?: Partial<BlockEngineConfig>): void {
+    if (config) {
+      this.configure(config);
+    }
     if (!state) return;
     this.boardSize = state.size || 10;
     this.board = state.board || this.createEmptyBoard(this.boardSize);
@@ -163,10 +172,16 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
     if (linesCleared > 0) {
       // Exponential doubling
       points += 20 * Math.pow(2, linesCleared - 1);
-      if (this.config?.onSound) this.config.onSound('clear');
-      this.config?.onLinesClear?.(linesCleared, rowsToClear, colsToClear);
+      if (this.config?.onLinesClear) {
+        this.config.onLinesClear(linesCleared, rowsToClear, colsToClear);
+      }
+      if (this.config?.onSound) {
+        this.config.onSound('clear', linesCleared);
+      }
     } else {
-      if (this.config?.onSound) this.config.onSound('place');
+      if (this.config?.onSound) {
+        this.config.onSound('place');
+      }
     }
 
     this.score += points;

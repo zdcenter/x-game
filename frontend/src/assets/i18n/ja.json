@@ -1658,7 +1658,8 @@
   "xp.to_next_level": "次のレベルへ",
   "game": {
     "zen_mode": "全画面集中",
-    "exit_zen_mode": "全画面終了"
+    "exit_zen_mode": "全画面終了",
+    "zen_mode_tip": "集中没入モード有効中（タップで切替）"
   },
   "auth_modal.pk_title": "リアルタイム対戦を解放",
   "auth_modal.pk_subtitle": "無料登録またはログインして、ランクマッチ限定機能をアンロック",

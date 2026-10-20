@@ -1,0 +1,26 @@
+# Compiled binaries
+api
+api_bin
+main
+server
+tmp_*
+x-game-api
+bin/
+build/
+*.bin
+*.exe
+*.test
+*.out
+
+# Databases & logs
+*.db
+*.sqlite
+*.log
+backend.log
+tmp/
+
+# Backups & temp
+*.bak
+*.old
+*.tmp
+*~

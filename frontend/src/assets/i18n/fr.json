@@ -1658,7 +1658,8 @@
   "xp.to_next_level": "au niveau suivant",
   "game": {
     "zen_mode": "Mode Zen",
-    "exit_zen_mode": "Quitter le plein écran"
+    "exit_zen_mode": "Quitter le plein écran",
+    "zen_mode_tip": "Mode immersion actif (appuyez pour basculer)"
   },
   "auth_modal.pk_title": "Débloquer les Combats en Temps Réel",
   "auth_modal.pk_subtitle": "Connectez-vous ou inscrivez-vous gratuitement pour débloquer les modes classés",

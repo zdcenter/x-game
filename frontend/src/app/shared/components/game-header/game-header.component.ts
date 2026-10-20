@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AudioService } from '../../../core/services/audio.service';
@@ -10,11 +10,13 @@ import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinGuideModalComponent } from '../coin-guide-modal/coin-guide-modal.component';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+import { LiveBattleBeaconComponent } from '../live-battle-beacon/live-battle-beacon.component';
+import { isBrowser } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule, CoinGuideModalComponent, CoinIconComponent],
+  imports: [CommonModule, CoinGuideModalComponent, CoinIconComponent, LiveBattleBeaconComponent],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {
@@ -40,6 +42,8 @@ export class GameHeaderComponent implements OnInit {
   i18n = inject(I18nService);
   router = inject(Router);
 
+  readonly showZenHint = signal<boolean>(false);
+
   ngOnInit() {
     if (!this.gameId) {
       const match = this.router.url.match(/\/games\/([^?\/]+)/);
@@ -47,7 +51,31 @@ export class GameHeaderComponent implements OnInit {
         this.gameId = match[1];
       }
     }
+
+    if (isBrowser()) {
+      const seen = localStorage.getItem('zen_hint_seen_v1');
+      if (!seen) {
+        this.showZenHint.set(true);
+        setTimeout(() => {
+          this.dismissZenHint();
+        }, 4000);
+      }
+    }
   }
 
+  toggleZen(): void {
+    this.dismissZenHint();
+    this.zenService.toggle();
+  }
 
+  dismissZenHint(): void {
+    if (this.showZenHint()) {
+      this.showZenHint.set(false);
+      if (isBrowser()) {
+        try {
+          localStorage.setItem('zen_hint_seen_v1', 'true');
+        } catch {}
+      }
+    }
+  }
 }

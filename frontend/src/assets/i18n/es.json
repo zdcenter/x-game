@@ -1658,7 +1658,8 @@
   "xp.to_next_level": "al siguiente nivel",
   "game": {
     "zen_mode": "Modo Zen",
-    "exit_zen_mode": "Salir de pantalla completa"
+    "exit_zen_mode": "Salir de pantalla completa",
+    "zen_mode_tip": "Modo inmersivo activo (toca para cambiar)"
   },
   "auth_modal.pk_title": "Desbloquea Batallas en Tiempo Real",
   "auth_modal.pk_subtitle": "Inicia sesión o regístrate gratis para desbloquear funciones competitivas",

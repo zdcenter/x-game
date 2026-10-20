@@ -12,6 +12,7 @@ import { AchievementService } from '../services/achievement.service';
 import { AudioService } from '../services/audio.service';
 import { LayoutService } from '../services/layout.service';
 import { CoinService } from '../services/coin.service';
+import { storageGet, storageSet, storageRemove } from '../utils/browser.util';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
@@ -83,6 +84,15 @@ export abstract class BaseGameStore implements GameStoreInterface {
       const cur = this.status();
       if (cur === GameStatus.Starting || cur === GameStatus.Playing) {
         untracked(() => this.layoutService.scrollToTop());
+      }
+    });
+
+    // 自动接管单机终局安全清理：当任何单机游戏进入 Finished 状态时，100% 自动抹除本地存档
+    effect(() => {
+      if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single) {
+        if (this.isFinished()) {
+          untracked(() => this.clearSinglePlayerSave());
+        }
       }
     });
   }
@@ -288,6 +298,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   leaveRoom() {
+    if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single && this.isFinished()) {
+      this.clearSinglePlayerSave();
+    }
     if (this.currentRoomMode() !== GameMode.Single) {
       this.ws.send({ type: C2SAction.LeaveRoom });
     }
@@ -308,6 +321,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   restartGame() {
+    if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single) {
+      this.clearSinglePlayerSave();
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       this.onSinglePlayerRestart();
       return;
@@ -431,5 +447,99 @@ export abstract class BaseGameStore implements GameStoreInterface {
       },
       error: () => {}
     });
+  }
+
+  // ── 单机断点续玩与终局清理统一生命周期 ──────────────────────────────────────────
+  /**
+   * 是否开启单机断点续玩保存（子类声明为 true 即可接入统一引擎）。
+   * 默认为 false，子类按需开启。
+   */
+  protected enableSinglePlayerSave = false;
+
+  /**
+   * 获取单机存档的 localStorage 键名。
+   * 默认规则: `${this.gameId}_single_save`
+   */
+  protected getSinglePlayerSaveKey(): string {
+    return `${this.gameId}_single_save`;
+  }
+
+  /**
+   * 获取当前单机盘面待序列化的数据对象。
+   * 子类若开启 enableSinglePlayerSave，需 override 此方法返回当前盘面状态。
+   * 返回 null 时将不执行保存。
+   */
+  protected getSinglePlayerSaveData(): any {
+    return null;
+  }
+
+  /**
+   * 恢复单机盘面数据。
+   * 子类若开启 enableSinglePlayerSave，需 override 此方法恢复盘面状态。
+   * @param data 反序列化后的存档数据
+   * @returns boolean 是否恢复成功（返回 false 表示存档损坏或无需恢复，将自动清理并开启新局）
+   */
+  protected restoreSinglePlayerSaveData(data: any): boolean {
+    return false;
+  }
+
+  /**
+   * 主动执行单机进度保存。
+   * 包含自动防卫：若当前游戏已处于 Finished/GameOver 状态，严禁写入，改为清除存档。
+   */
+  public saveSinglePlayerProgress(): void {
+    if (!this.enableSinglePlayerSave || this.currentRoomMode() !== GameMode.Single) {
+      return;
+    }
+    if (this.isFinished()) {
+      this.clearSinglePlayerSave();
+      return;
+    }
+    const data = this.getSinglePlayerSaveData();
+    if (!data) return;
+    try {
+      storageSet(this.getSinglePlayerSaveKey(), JSON.stringify(data));
+    } catch (e) {
+      console.warn(`[BaseGameStore] Failed to save single player progress for ${this.gameId}`, e);
+    }
+  }
+
+  /**
+   * 主动加载单机进度。
+   * 若存档不存在、损坏或属于已死亡/已完成局，自动清理并返回 false。
+   */
+  public loadSinglePlayerProgress(): boolean {
+    if (!this.enableSinglePlayerSave || this.currentRoomMode() !== GameMode.Single) {
+      return false;
+    }
+    const key = this.getSinglePlayerSaveKey();
+    const raw = storageGet(key);
+    if (!raw) return false;
+
+    try {
+      const data = JSON.parse(raw);
+      // 通用安全守卫：如果存档被标记为已结束/已死亡，自动抹除并拒绝加载
+      if (data?.gameOver || data?.isDead || data?.finished || data?.status === GameStatus.Finished) {
+        this.clearSinglePlayerSave();
+        return false;
+      }
+      const success = this.restoreSinglePlayerSaveData(data);
+      if (!success) {
+        this.clearSinglePlayerSave();
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.warn(`[BaseGameStore] Corrupted single player save for ${this.gameId}, clearing`, e);
+      this.clearSinglePlayerSave();
+      return false;
+    }
+  }
+
+  /**
+   * 物理清除本游戏的单机存档。
+   */
+  public clearSinglePlayerSave(): void {
+    storageRemove(this.getSinglePlayerSaveKey());
   }
 }

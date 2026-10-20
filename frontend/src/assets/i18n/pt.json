@@ -1658,7 +1658,8 @@
   "xp.to_next_level": "para o próximo nível",
   "game": {
     "zen_mode": "Modo Zen",
-    "exit_zen_mode": "Sair da tela cheia"
+    "exit_zen_mode": "Sair da tela cheia",
+    "zen_mode_tip": "Modo imersivo ativo (toque para alternar)"
   },
   "auth_modal.pk_title": "Desbloquear Batalhas em Tempo Real",
   "auth_modal.pk_subtitle": "Faça login ou registre-se gratuitamente para desbloquear recursos ranqueados",

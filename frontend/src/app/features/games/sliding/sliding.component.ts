@@ -63,15 +63,18 @@ export class SlidingComponent extends BaseGameComponent {
       : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
     const availH = Math.max(260, vh - chromeH);
 
-    const padW = vw < 640 ? 32 : vw < 1024 ? 56 : 80;
+    // Padding inside layout:
+    // Mobile (<640): ~24px
+    // Tablet (640-1024): ~48px
+    // Desktop (>=1024): ~64px
+    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
-    let maxDim = 440;
-    if (size >= 8) maxDim = 740;
-    else if (size >= 7) maxDim = 700;
-    else if (size >= 6) maxDim = 640;
-    else if (size >= 5) maxDim = 580;
-    else if (size >= 4) maxDim = 500;
+    // Dynamic max board dimension:
+    // Mobile: up to 440px
+    // Tablet (iPad): up to 720px (allows tiles and board to be large, immersive and easy to operate without vast empty side space)
+    // Desktop: up to 760px
+    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 720 : 760);
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
