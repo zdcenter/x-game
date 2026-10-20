@@ -686,6 +686,8 @@
   "game.in_progress": "진행 중",
   "game.invite": "초대하다",
   "game.invite_btn": "친구 초대",
+  "game.invite_duel_title": "{{name}}님이 대결을 신청했습니다!",
+  "game.accept_duel": "응전",
   "game.invite_friend_pk": "친구 초대",
   "game.invite_game": "초대하다",
   "game.invite_message": "저는 Puzzle PK에서 [game]을 하고 있어요! 제 방 [room]에 와서 같이 플레이해요!\n직접 참여하려면 링크를 클릭하세요:\n[url]",

@@ -45,10 +45,18 @@ export class ToastService {
   }
 
   dismissInvite() {
-    if (this.inviteTimer) clearTimeout(this.inviteTimer);
+    if (this.inviteTimer) {
+      clearTimeout(this.inviteTimer);
+      this.inviteTimer = undefined;
+    }
     const curr = this.activeInvite();
-    if (curr?.onDismiss) curr.onDismiss();
+    if (!curr) return;
     this.activeInvite.set(null);
+    try {
+      curr.onDismiss?.();
+    } catch (e) {
+      console.error('Error in invite onDismiss callback:', e);
+    }
   }
 
   show(message: string, type: 'success' | 'error' | 'info' = 'info') {

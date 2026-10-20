@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ToastService } from '../../services/toast.service';
+import { ToastService, GameInviteBanner } from '../../services/toast.service';
+import { I18nService } from '../../i18n/i18n.service';
 @Component({
   selector: 'app-ui-overlay',
   standalone: true,
@@ -8,19 +9,21 @@ import { ToastService } from '../../services/toast.service';
   template: `
     <!-- Non-blocking Floating Battle Challenge Capsule -->
     @if (toastService.activeInvite(); as invite) {
-      <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-[99999] max-w-sm w-[calc(100vw-32px)] sm:w-auto bg-[var(--color-bg-card)] border-2 border-amber-400/80 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md">
+      <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-[100000] max-w-sm w-[calc(100vw-32px)] sm:w-auto bg-[var(--color-bg-card)] border-2 border-amber-400/80 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md pointer-events-auto">
         <div class="flex items-center gap-2.5 min-w-0">
           <span class="text-2xl animate-bounce shrink-0">⚔️</span>
           <div class="min-w-0">
-            <p class="text-xs font-black text-[var(--color-text-main)] truncate">{{ invite.senderName }} 邀请你对决！</p>
+            <p class="text-xs font-black text-[var(--color-text-main)] truncate">
+              {{ i18n.t('game.invite_duel_title', { name: invite.senderName })() || (invite.senderName + ' 邀请你对决！') }}
+            </p>
             <p class="text-[11px] text-[var(--color-text-muted)] truncate">{{ invite.gameTitle }}</p>
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <button (click)="invite.onAccept()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
-            ⚡ 应战
+          <button (click)="acceptInvite(invite)" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+            ⚡ {{ i18n.t('game.accept_duel')() || '应战' }}
           </button>
-          <button (click)="invite.onDismiss()" class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] text-sm transition-colors cursor-pointer" title="关闭">
+          <button (click)="dismissInvite()" class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] text-sm transition-colors cursor-pointer" [title]="i18n.t('game.close')() || '关闭'">
             ✕
           </button>
         </div>
@@ -84,6 +87,22 @@ import { ToastService } from '../../services/toast.service';
 })
 export class UiOverlayComponent {
   toastService = inject(ToastService);
+  i18n = inject(I18nService);
+
+  acceptInvite(invite: GameInviteBanner) {
+    this.toastService.dismissInvite();
+    if (invite?.onAccept) {
+      try {
+        invite.onAccept();
+      } catch (e) {
+        console.error('Error accepting duel invite:', e);
+      }
+    }
+  }
+
+  dismissInvite() {
+    this.toastService.dismissInvite();
+  }
 
   acceptConfirm(dialog: any) {
     dialog.onConfirm();

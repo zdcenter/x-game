@@ -686,6 +686,8 @@
   "game.in_progress": "En cours",
   "game.invite": "Invité",
   "game.invite_btn": "Inviter des amis",
+  "game.invite_duel_title": "{{name}} vous a défié en duel !",
+  "game.accept_duel": "Accepter",
   "game.invite_friend_pk": "Inviter un ami",
   "game.invite_game": "Invité",
   "game.invite_message": "Je joue à [game] sur Puzzle PK ! Venez rejoindre ma salle [room] et jouons ensemble !\nCliquez sur le lien pour rejoindre directement :\n[url]",

@@ -287,14 +287,15 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     const roomId = config.name || `gomoku-${Date.now()}`;
     const host = this.myPlayerId();
     const diff = config.difficulty || 'medium';
-    this.joinRoom(roomId, config.mode, diff, host);
+    this.joinRoom(roomId, config.mode, diff, host, config.target ?? 1);
     this.isMobileSidebarOpen.set(false);
   }
 
   override handleJoinRoom(room: any) {
     if (room.password) this.wsService.setPendingPassword(room.password);
     const diff = room.difficulty || 'medium';
-    this.joinRoom(room.roomId, room.mode, diff, room.host);
+    const roomId = room.roomId || room.id;
+    this.joinRoom(roomId, room.mode, diff, room.host, room.target ?? 1);
     this.isMobileSidebarOpen.set(false);
   }
 

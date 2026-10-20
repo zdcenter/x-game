@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gofiber/contrib/v3/websocket"
@@ -180,7 +181,7 @@ func Register(router fiber.Router) {
 			ID:          fmt.Sprintf("%s-%d", playerID, time.Now().UnixNano()),
 			PlayerID:    playerID,
 			Username:    username,
-			IP:          c.IP(),
+			IP:          getClientIP(c),
 			ConnectedAt: time.Now().Unix(),
 			Conn:        c,
 			Status:      "idle",
@@ -284,4 +285,32 @@ func Register(router fiber.Router) {
 
 		close(pingDone)
 	}))
+}
+
+// getClientIP extracts the real client IP address from WebSocket connection,
+// supporting Fiber's trusted proxy parser, Cloudflare (CF-Connecting-IP), and Nginx headers (X-Real-IP / X-Forwarded-For).
+func getClientIP(c *websocket.Conn) string {
+	ip := c.IP()
+	if ip != "" && ip != "127.0.0.1" && ip != "::1" {
+		return ip
+	}
+	if cf := c.Headers("CF-Connecting-IP"); cf != "" {
+		return strings.TrimSpace(cf)
+	}
+	if xrip := c.Headers("X-Real-IP"); xrip != "" && xrip != "127.0.0.1" && xrip != "::1" {
+		return strings.TrimSpace(xrip)
+	}
+	if xff := c.Headers("X-Forwarded-For"); xff != "" {
+		parts := strings.Split(xff, ",")
+		if len(parts) > 0 {
+			first := strings.TrimSpace(parts[0])
+			if first != "" && first != "127.0.0.1" && first != "::1" {
+				return first
+			}
+		}
+	}
+	if ip != "" {
+		return ip
+	}
+	return "127.0.0.1"
 }

@@ -7,6 +7,18 @@
 ## [v3.2.1] - 2026-10-20
 
 ### 移动端顶栏与对战大厅全景体验深度优化
+- **管理后台与在线用户真实客户端 IP 穿透与 Nginx 反向代理配置修复 (Real Client IP Proxy Trust & Nginx Forwarding)**：
+  - **Go 后端反向代理信任激活**：在 `cmd/api/main.go` 中为 Fiber v3 实例配置 `TrustProxy: true`、`TrustProxyConfig: { Loopback: true, Private: true }` 与 `ProxyHeader: fiber.HeaderXForwardedFor`，解决 Fiber 默认不信任反向代理头而直接返回 TCP 远端地址（`127.0.0.1`）的问题；
+  - **WebSocket 多级 IP 解析与 CDN 回退机制**：在 `internal/handlers/ws/handler.go` 中封装 `getClientIP` 解析器，依次按 `c.IP()` $\to$ `CF-Connecting-IP` (Cloudflare) $\to$ `X-Real-IP` (Nginx) $\to$ `X-Forwarded-For` 多重兜底，确保在本地测试、云原生集群、以及开启 CDN 场景下均能稳定获取访客真实公网 IP；
+  - **Nginx 反代配置规范化 (`deploy/nginx/puzzlepk.conf`)**：补齐 `CF-Connecting-IP` 透传及 Cloudflare 节点网段 `set_real_ip_from` 与 `real_ip_header` 配置，根治管理后台在线用户列表中全部显示 `127.0.0.1` 的问题。
+- **好友对决邀请胶囊点击失效与递归锁死根治 (Friend Duel Challenge Banner Fix & Infinite Recursion Prevention)**：
+  - **死递归根除**：排查并彻底根治点击「⚡ 应战」与「✕ 关闭」时触发的无限递归调用崩溃（`RangeError: Maximum call stack size exceeded`）。在 `ToastService.dismissInvite()` 中调整状态清理次序，执行 `this.activeInvite.set(null)` 前置与安全守卫，杜绝回调函数二次调用 `dismissInvite()` 形成的调用环；并在 `UiOverlayComponent` 中封装 `acceptInvite` 与 `dismissInvite` 独立防腐方法；
+  - **局内迎战直连与多游戏路由流转优化**：优化 `FriendService` 中跨游戏加入逻辑，在玩家已在目标游戏页面或局中时，通过 `BaseGameComponent` 的 `crossGameJoin` 响应式 Signal 机制实现原地无感切换与自动进房；五子棋（Gomoku）补齐 `handleJoinRoom` 与 `handleCreateRoom` 重写逻辑并支持 `room.id` / `room.roomId` 多态映射，切入联机对局时自动重置本地单机 AI 引擎；
+  - **交互层级与多语言规范化**：将对决胶囊提升至 `z-[100000]` 并显式声明 `pointer-events-auto`，杜绝任何全屏遮罩层的穿透拦截；并将「邀请你对决！」、「应战」、「关闭」全面接入 8 国多语言翻译字典（`game.invite_duel_title`、`game.accept_duel`、`game.close`），杜绝模板硬编码。
+- **新游戏接入规范全面重构与现代化体系落地 (`HOW_TO_ADD_GAME.md`)**：
+  - 彻底清理陈旧过时的文档内容（如废弃的 python 脚本、过时的本地手写路由等），全面重写为适应 v3.2+ 架构的**权威新增游戏开发指南**；
+  - 提炼核心架构哲学与开发红线（单机前端算、联机后端算，后端基于 `BaseEngine`，前端继承 `BaseGameStore` + `BaseGameComponent`）；
+  - 规范化 7 步接入流：从 Go 后端引擎 `init()` 与 `go generate` 自动依赖注入，到 Angular 21 Zoneless Signals 状态层、黄金组件模板、`GAME_DEFINITIONS` 自动路由装配、多语言和静态资产的全景落地模版。
 - **移动端顶栏空间极大释放与头像/退出收纳 (Mobile Topbar Spacing & Drawer Integration)**：
   - 小屏设备（`< sm`）将用户头像、用户名及退出登录按钮收纳至折叠汉堡抽屉菜单（`isMobileMenuOpen`），并在抽屉顶部展示精美的新增用户卡片（头像、用户名、身份标签及一键退出/登录）；
   - 顶栏仅保留 Logo、对战雷达胶囊、金币药丸与汉堡按钮，释放 120px+ 关键横向宽度，彻底消除窄屏下站点 Logo 与对战雷达胶囊的挤压重叠。

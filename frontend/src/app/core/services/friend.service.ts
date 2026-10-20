@@ -121,7 +121,6 @@ export class FriendService {
         gameTitle,
         room,
         onAccept: () => {
-          this.toastService.dismissInvite();
           this.crossGameJoin.setPendingJoin({
             game: room.game,
             roomId: room.id,
@@ -131,18 +130,15 @@ export class FriendService {
             password: room.password || '' // Auto-join with the password from the invite
           });
 
-          const lang = this.router.url.split('/')[1] || 'zh';
+          const lang = this.i18n.currentLang() || 'zh';
           const targetUrl = `/${lang}/games/${room.game}`;
-          if (this.router.url === targetUrl) {
-            this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
-              this.router.navigate([targetUrl]);
-            });
-          } else {
+          const currentPath = this.router.url.split('?')[0];
+          if (currentPath !== targetUrl) {
             this.router.navigate([targetUrl]);
           }
         },
         onDismiss: () => {
-          this.toastService.dismissInvite();
+          // Handled cleanly by toastService.dismissInvite()
         }
       });
     });

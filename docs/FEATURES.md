@@ -21,6 +21,16 @@
 
 ## 2. 核心架构与公共组件
 
+- **真实客户端 IP 透传与多级代理安全识别 (`cmd/api/main.go` & `ws/handler.go`)**：
+  - **Fiber v3 代理信任配置**：激活 `TrustProxy: true` 与 `TrustProxyConfig`（信任 `Loopback` 与 `Private` 网段），设置 `ProxyHeader: X-Forwarded-For` 与 `EnableIPValidation: true`，防止反向代理下客户端真实 IP 被直接覆盖为 `127.0.0.1`；
+  - **WebSocket 多级穿透解析**：实现 `getClientIP` 算法，自适应串联 `c.IP()`、Cloudflare 头部 `CF-Connecting-IP`、Nginx 头部 `X-Real-IP` 以及 `X-Forwarded-For`，保证后台管理（在线用户、实时监控、安全审计）精准追踪用户真实来源；
+- **全局好友对决即时应战系统 (`UiOverlayComponent` & `ToastService` & `FriendService`)**：
+  - **防递归死锁与即时交互保障**：通过 `ToastService.dismissInvite()` 的前置状态置空守卫与 `UiOverlayComponent` 的独立调用封装，彻底根除了点击「⚡ 应战」与「✕ 关闭」时触发的无限递归 RangeError 崩溃；
+  - **多游戏/同游戏智能响应式路由接管**：通过 `CrossGameJoinService` 与 `BaseGameComponent` 的深度生命周期集成，支持在任何单机/联机游戏进行中接收挑战时原地无感切换至目标房间，无缝支持跨端与跨游戏跳转；五子棋（Gomoku）与全游戏深度适配 `handleJoinRoom` 与 `room.roomId / room.id` 映射；
+  - **无死角交互层级与全球化多语言**：对决卡片固定于顶层 `z-[100000]`，显式开启 `pointer-events-auto`，并完整支持全球 8 种语言动态切换，严格遵循设计系统 CSS 全局主题变量。
+- **新增游戏标准化架构与开发指南 (`HOW_TO_ADD_GAME.md`)**：
+  - 构建端到端高内聚、低耦合的新游戏接入标准；通过组合 `BaseEngine` (Go) 与继承 `BaseGameStore` + `BaseGameComponent` (Angular 21)，消除了所有样板代码与房间生命周期繁琐逻辑；
+  - 路由、SEO、管理后台统计、多语言与多局制胜负判定（BO3/BO5 Target）实现纯配置驱动，保证后续新游戏开发具备极致的复用度与工程健壮性。
 - **移动端顶栏空间释放与实时对战雷达体验 (`MainLayoutComponent` & `LiveBattleBeaconComponent`)**：
   - **移动端顶栏空间释放与用户抽屉收纳**：在小屏设备（`< sm`）将用户头像、用户名及退出登录按钮智能收纳至折叠汉堡抽屉菜单（`isMobileMenuOpen`），并在抽屉顶部展示精美的新增用户卡片（头像、用户名、身份标签及一键退出/登录）；顶栏仅保留 Logo、对战雷达胶囊、金币药丸与汉堡按钮，释放 120px+ 关键横向宽度，彻底消除窄屏下站点 Logo 与对战雷达胶囊的挤压重叠；
   - **翡翠绿活力对战雷达 (Vibrant Emerald Live Battle Beacon)**：将对战雷达胶囊的雷达脉冲光环（Radar Ping Wave）与徽章配色由琥珀橙升级为充满生机与高可见度的翡翠绿（Emerald/Green），更清晰地传达“当前有活跃对战房间等待加入”的实时在线感；

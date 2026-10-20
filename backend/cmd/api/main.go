@@ -31,8 +31,16 @@ func main() {
 		log.Println("R2 not initialized:", err)
 	}
 
-	// Initialize Fiber app
-	app := fiber.New()
+	// Initialize Fiber app with trusted proxy configuration
+	app := fiber.New(fiber.Config{
+		TrustProxy: true,
+		TrustProxyConfig: fiber.TrustProxyConfig{
+			Loopback: true, // 信任 127.0.0.1, ::1 (本地 Nginx 反向代理)
+			Private:  true, // 信任内网私有 IP (Docker、K8s、容器内网等)
+		},
+		ProxyHeader:        fiber.HeaderXForwardedFor,
+		EnableIPValidation: true,
+	})
 
 	// Use middleware
 	app.Use(logger.New())

@@ -686,6 +686,8 @@
   "game.in_progress": "進行中",
   "game.invite": "招待する",
   "game.invite_btn": "友達を招待",
+  "game.invite_duel_title": "{{name}} が対決を申し込んできました！",
+  "game.accept_duel": "応戦",
   "game.invite_friend_pk": "友達を招待",
   "game.invite_game": "招待する",
   "game.invite_message": "私はPuzzle PKで[game]をプレイしています！ぜひ私のルーム[room]に参加して、一緒に遊びましょう！\nリンクをクリックして直接参加してください：\n[url]",

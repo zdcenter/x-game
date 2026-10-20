@@ -161,6 +161,9 @@ export class GomokuStore extends BaseGameStore {
     super.joinRoom(roomId, mode, difficulty, hostId, target);
     if (mode === GameMode.Single) {
       this.startGame();
+    } else {
+      this.localEngine.set(null);
+      this.tick.set(this.tick() + 1);
     }
   }
 

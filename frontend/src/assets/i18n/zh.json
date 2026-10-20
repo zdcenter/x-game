@@ -697,6 +697,8 @@
   "game.in_progress": "进行中",
   "game.invite": "邀请",
   "game.invite_btn": "邀请好友",
+  "game.invite_duel_title": "{{name}} 邀请你对决！",
+  "game.accept_duel": "应战",
   "game.invite_friend_pk": "邀请好友PK",
   "game.invite_game": "邀请对战",
   "game.invite_message": "我正在 Puzzle PK 玩【[game]】，快来加入我的房间 [room] 一起PK吧！\n点击下方链接直接进入房间：\n[url]",

@@ -686,6 +686,8 @@
   "game.in_progress": "In Bearbeitung",
   "game.invite": "Einladen",
   "game.invite_btn": "Freunde einladen",
+  "game.invite_duel_title": "{{name}} hat dich zu einem Duell herausgefordert!",
+  "game.accept_duel": "Annehmen",
   "game.invite_friend_pk": "Freund einladen",
   "game.invite_game": "Einladen",
   "game.invite_message": "Ich spiele [game] auf Puzzle PK! Komm in meinen Raum [room] und lass uns zusammen spielen!\nKlicke auf den Link, um direkt beizutreten:\n[url]",
