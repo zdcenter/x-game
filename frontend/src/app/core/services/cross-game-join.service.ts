@@ -39,7 +39,7 @@ export interface PendingJoin {
   providedIn: 'root'
 })
 export class CrossGameJoinService {
-  private pendingJoin = signal<PendingJoin | null>(null);
+  readonly pendingJoin = signal<PendingJoin | null>(null);
 
   /**
    * Set pending join info before navigating to a different game route.

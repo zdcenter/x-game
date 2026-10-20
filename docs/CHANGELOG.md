@@ -6,7 +6,27 @@
 
 ## [v3.2.1] - 2026-10-20
 
-### PWA 更新体验与管理后台用户管理深度升级
+### 移动端顶栏与对战大厅全景体验深度优化
+- **移动端顶栏空间极大释放与头像/退出收纳 (Mobile Topbar Spacing & Drawer Integration)**：
+  - 小屏设备（`< sm`）将用户头像、用户名及退出登录按钮收纳至折叠汉堡抽屉菜单（`isMobileMenuOpen`），并在抽屉顶部展示精美的新增用户卡片（头像、用户名、身份标签及一键退出/登录）；
+  - 顶栏仅保留 Logo、对战雷达胶囊、金币药丸与汉堡按钮，释放 120px+ 关键横向宽度，彻底消除窄屏下站点 Logo 与对战雷达胶囊的挤压重叠。
+- **对战雷达胶囊切换为高活力翡翠绿 (Vibrant Emerald Live Battle Beacon)**：
+  - 将 `LiveBattleBeaconComponent` 的雷达脉冲光环（Radar Ping Wave）与徽章配色由琥珀橙升级为充满生机与高可见度的翡翠绿（Emerald/Green），更清晰地传达“当前有活跃对战房间等待加入”的实时在线感。
+- **PK 等候大厅移动端触控滑动解锁与紧凑化布局 (PK Waiting Room Mobile Touch Scrolling & Compact Layout)**：
+  - **触控锁死修复**：在 `GameLayoutComponent` 中将舞台容器原有的硬编码 `touch-none` 改进为条件化：在等候大厅状态（`status === GameStatus.Waiting`）下动态启用 `touch-pan-y` 与 `overflow-y-auto`，彻底解决手机端在等候大厅时因触控拦截导致无法上下滑动、底部按钮被裁切无法操作的难题；
+  - **移动端元素紧凑化**：等候大厅卡片与玩家对战槽位（Pods）在移动端由 `min-h-[220px]` 精简至 `min-h-[140px]`，头像与 VS 图标尺寸自适应缩小，右侧二维码卡片边距紧凑化，确保开始对战、准备、退出按钮在手机视口内完整可见或轻松滑动触达。
+- **积分对决中途淘汰提前离场与观战机制 (Early Defeat Graceful Exit & Spectating in Score PK Matches)**：
+  - 针对六边形消融（Hexa）、经典2048、方块拼图（Block）、下落2048、俄罗斯方块等积分 PK 游戏，当一名玩家提前因无法落子而淘汰、对手仍在进行游戏时：
+    - 在结算覆盖层中提供极其显眼的 **「🚪 退出对局 (去玩其他游戏)」** 按钮，无需枯等对手结束即可即时优雅离开房间返回大厅游玩其他游戏；
+    - 提供 **「👁️ 观战对手 (等待结算)」** 选项：点击后结算面板自动最小化收起为顶部悬浮吸顶胶囊（Floating Spectator Pill），完全不遮挡棋盘，玩家可实时观赏对手的走子和得分，并随时可通过吸顶胶囊恢复结算或一键退出；
+    - 彻底修复当房主先被淘汰时因 `showLeave` 逻辑缺失导致被卡死在等待界面的死锁问题。
+- **移动端顶栏对战胶囊防重叠排版与弹窗全屏防截断修复 (Mobile Navbar & Beacon Popover Optimization)**：
+  - **移动端顶栏空间释放与重叠修复**：小屏设备（`< sm`）将主题切换和语言下拉从顶部密集控制区收纳至汉堡抽屉菜单（`isMobileMenuOpen`），释放 80px+ 关键宽度，彻底杜绝 `Puzzle PK` 站点 Logo 与对战雷达胶囊互相挤压重叠的视觉 Bug；
+  - **对战卡片浮层居中与防左侧截断**：将 `LiveBattleBeaconComponent` 展开面板在移动端重构为 `fixed left-3 right-3 top-14`，彻底解决原有 `absolute right-0` 在窄屏下导致卡片左半部分超出视口截断 200px+ 的严重排版 Bug，房间标题、房主、难度与「立即迎战」按钮 100% 居中完整可见；
+  - **局内迎战点击穿透与同游戏直连修复**：
+    - `GameHeaderComponent` 头部右侧控制区提升至 `z-30 relative`，中央标题区设为 `z-10`，根治移动端中央区域不可见透明边距覆盖右侧导致“房间状态点不了”的层级拦截；
+    - 将 `GameLayoutComponent` 顶栏外层卡片的 `overflow-hidden` 调整为 `overflow-visible`，彻底防止弹窗和气泡被父级容器无情切除；
+    - 局内「⚡ 迎战」按钮改由 `onQuickJoinTargetRoom` 经由 `joinRoom.emit` 直接原地加入房间，避免旧逻辑走路由刷新导致的断连失效；配合 `BaseGameComponent` 的响应式 `effect` 监听，实现同款游戏房间秒级原地直连。
 - **移动端/平板专注沉浸与触控防误触手势终极重构 (Immersive In-App Zen Mode & Touch Containment)**：
   - **彻底告别系统级全屏弹窗**：触控设备（iPadOS、iOS Safari、Android 平板/手机）上彻底停用 `requestFullscreen()` 原生接口，改为纯净 CSS 应用内沉浸全屏 (`100dvh` + 智能隐藏主站顶栏与页脚)；从根本上根除系统级“向下轻扫即可退出全屏”烦人弹窗，且屏幕边缘划动不再被系统拦截拉出地址栏；
   - **全景手势锁定与防页面滚动抖动**：

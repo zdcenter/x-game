@@ -252,6 +252,7 @@
             [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
             [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
             [showLeave]="true"
+            [isWaitingOthers]="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Finished"
             [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
             (rematch)="handleRematch()"
             (restart)="store.restartGame()"

@@ -1,4 +1,4 @@
-<div class="flex-grow flex items-center justify-center p-2 sm:p-4 lg:p-6 h-full w-full min-h-0">
+<div class="flex-grow flex items-center justify-center p-1 sm:p-4 lg:p-6 h-full w-full min-h-0 touch-pan-y">
   <div class="bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl shadow-2xl border border-[var(--color-border-card)] w-full max-w-4xl xl:max-w-5xl flex flex-col relative overflow-hidden min-h-0 transition-all animate-scale-in">
 
     <!-- Ambient Decorative Background Glows -->
@@ -8,18 +8,18 @@
     <div class="relative z-10 flex flex-col h-full overflow-hidden min-h-0">
 
       <!-- ── Room Header Bar ── -->
-      <div class="shrink-0 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4 border-b border-[var(--color-border-card)] flex flex-wrap items-center justify-between gap-3">
+      <div class="shrink-0 px-3 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-3 border-b border-[var(--color-border-card)] flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         <!-- Left: Game Info & Live Status -->
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center shadow-inner shrink-0 transition-transform hover:scale-105">
-            <img [src]="'/assets/games/icons/' + gameId + '.svg?v=2'" class="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-sm" alt="Game Icon">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center shadow-inner shrink-0 transition-transform hover:scale-105">
+            <img [src]="'/assets/games/icons/' + gameId + '.svg?v=2'" class="w-6 h-6 sm:w-10 sm:h-10 object-contain drop-shadow-sm" alt="Game Icon">
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-base sm:text-xl font-black text-[var(--color-text-main)] leading-tight tracking-tight">
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <h2 class="text-sm sm:text-xl font-black text-[var(--color-text-main)] leading-tight tracking-tight">
                 {{ i18n.t('lobby.' + gameId)() }}
               </h2>
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">
+              <span class="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span>{{ i18n.t('game.waiting_room')() }}</span>
               </span>
@@ -32,23 +32,23 @@
 
         <!-- Right: Mode / Difficulty / Win-target / Room ID Capsules -->
         <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap ml-auto">
-          <span class="text-xs font-bold px-3 py-1.5 rounded-xl bg-[var(--color-accent-from)]/15 border border-[var(--color-accent-from)]/30 text-[var(--color-accent-from)] shadow-sm">
+          <span class="text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[var(--color-accent-from)]/15 border border-[var(--color-accent-from)]/30 text-[var(--color-accent-from)] shadow-sm">
             {{ getModeName(mode) }}
           </span>
           @if (difficulty) {
-            <span class="text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-400 shadow-sm">
+            <span class="text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-400 shadow-sm">
               {{ difficulty }}
             </span>
           }
           @if (mode !== GameMode.Single && target() > 0) {
-            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-400/15 border border-yellow-400/30 shadow-sm shrink-0">
+            <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-yellow-400/15 border border-yellow-400/30 shadow-sm shrink-0">
               <span class="text-xs">🏆</span>
               <span class="text-xs font-black text-yellow-400">×{{ target() }}</span>
             </div>
           }
           <!-- Room ID Copy Button -->
           <button (click)="copyRoomId()"
-                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-xs font-mono font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all active:scale-95 shadow-sm group"
+                  class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-xs font-mono font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all active:scale-95 shadow-sm group"
                   title="Click to copy Room ID">
             <span class="opacity-60 text-[10px]">#</span>
             <span>{{ roomId }}</span>
@@ -60,15 +60,15 @@
       </div>
 
       <!-- ── Main Battle Deck (Dual-Wing on Desktop) ── -->
-      <div class="flex-grow overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div class="flex-grow overflow-y-auto custom-scrollbar p-2.5 sm:p-6 lg:p-8 touch-pan-y">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
 
           <!-- ═════ LEFT WING: Duel Stage (Player vs Player) ═════ -->
-          <div class="lg:col-span-7 flex flex-col justify-between gap-4">
+          <div class="lg:col-span-7 flex flex-col justify-between gap-3 sm:gap-4">
             
-            <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center justify-between mb-0.5 sm:mb-1">
               <div class="flex items-center gap-2">
-                <span class="text-base sm:text-lg font-black text-[var(--color-text-main)]">
+                <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)]">
                   ⚔️ {{ i18n.t('game.battle_arena_seats')() }}
                 </span>
                 <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-muted)]">
@@ -78,54 +78,54 @@
             </div>
 
             <!-- Duel Combat Pods -->
-            <div class="relative flex flex-row items-stretch justify-between gap-3 sm:gap-4 w-full my-auto py-2">
+            <div class="relative flex flex-row items-stretch justify-between gap-2.5 sm:gap-4 w-full my-auto py-1 sm:py-2">
               
               <!-- Center VS Badge -->
               <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
-                <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[2px] shadow-[0_0_25px_rgba(245,158,11,0.6)] animate-pulse">
+                <div class="w-8 h-8 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[2px] shadow-[0_0_25px_rgba(245,158,11,0.6)] animate-pulse">
                   <div class="w-full h-full bg-[var(--color-bg-card)] rounded-full flex items-center justify-center border border-amber-300/40">
-                    <span class="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-orange-500 text-base sm:text-xl drop-shadow-sm">VS</span>
+                    <span class="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-orange-500 text-xs sm:text-xl drop-shadow-sm">VS</span>
                   </div>
                 </div>
               </div>
 
               <!-- ── Player 1 (Host) Pod ── -->
               @if (sortedPlayers.length > 0) {
-                <div class="relative flex-1 flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 shadow-md min-h-[220px]"
+                <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 shadow-md min-h-[140px] sm:min-h-[220px]"
                      [class.border-emerald-500]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId"
                      [class.bg-emerald-500/5]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId"
                      [class.shadow-[0_0_20px_rgba(16,185,129,0.15)]]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId">
                   
                   <!-- Host Crown Badge -->
                   @if (sortedPlayers[0].id === hostId) {
-                    <span class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md z-10">
+                    <span class="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] sm:text-[10px] font-black px-2 py-0.5 sm:px-2.5 rounded-full shadow-md z-10">
                       👑 {{ i18n.t('game.host')() }}
                     </span>
                   }
 
                   <!-- Host Avatar -->
-                  <div class="relative mt-2 mb-3">
-                    <div class="w-18 h-18 sm:w-22 sm:h-22 rounded-full flex items-center justify-center text-white font-black text-2xl sm:text-3xl shadow-xl border-4 border-[var(--color-bg-card)] transition-transform hover:scale-105"
+                  <div class="relative mt-1 sm:mt-2 mb-2 sm:mb-3">
+                    <div class="w-13 h-13 sm:w-22 sm:h-22 rounded-full flex items-center justify-center text-white font-black text-xl sm:text-3xl shadow-xl border-2 sm:border-4 border-[var(--color-bg-card)] transition-transform hover:scale-105"
                          style="background: linear-gradient(135deg, #3b82f6, #8b5cf6)">
                       {{ sortedPlayers[0].id?.charAt(0)?.toUpperCase() }}
                     </div>
                     <!-- Ready Mark -->
-                    <div class="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-lg flex items-center justify-center text-white text-sm font-black animate-scale-in">
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-lg flex items-center justify-center text-white text-xs sm:text-sm font-black animate-scale-in">
                       ✓
                     </div>
                   </div>
 
-                  <span class="font-black text-sm sm:text-base text-[var(--color-text-main)] truncate max-w-[140px] sm:max-w-[180px] text-center drop-shadow-sm">
+                  <span class="font-black text-xs sm:text-base text-[var(--color-text-main)] truncate max-w-[110px] sm:max-w-[180px] text-center drop-shadow-sm">
                     {{ sortedPlayers[0].id }}
                   </span>
 
-                  <span class="mt-1 text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                  <span class="mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     <span>{{ i18n.t('game.host_ready')() }}</span>
                   </span>
 
                   @if (sortedPlayers[0].id !== currentUserId && !isFriend(sortedPlayers[0].id)) {
-                    <button (click)="addFriend(sortedPlayers[0].id)" class="mt-2 text-[10px] bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-3 py-1 rounded-full shadow-sm flex items-center justify-center gap-1 active:scale-95 transition-all">
+                    <button (click)="addFriend(sortedPlayers[0].id)" class="mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-sm flex items-center justify-center gap-1 active:scale-95 transition-all">
                       <span>+</span>
                       <span>{{ i18n.t('game.add')() || 'Add' }}</span>
                     </button>
@@ -136,7 +136,7 @@
               <!-- ── Player 2 (Challenger) Pod ── -->
               @if (sortedPlayers.length > 1) {
                 <!-- Challenger Joined -->
-                <div class="relative flex-1 flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 shadow-md min-h-[220px]"
+                <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 shadow-md min-h-[140px] sm:min-h-[220px]"
                      [class.border-emerald-500]="readyPlayers[sortedPlayers[1].id]"
                      [class.bg-emerald-500/5]="readyPlayers[sortedPlayers[1].id]"
                      [class.shadow-[0_0_20px_rgba(16,185,129,0.15)]]="readyPlayers[sortedPlayers[1].id]"
@@ -146,32 +146,32 @@
                   <!-- Kick Button (Host Only) -->
                   @if (currentUserId === hostId && sortedPlayers[1].id !== hostId) {
                     <button (click)="kick.emit(sortedPlayers[1].id)"
-                            class="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all text-xs font-bold z-10 active:scale-95"
+                            class="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all text-xs font-bold z-10 active:scale-95"
                             title="Kick Player">
                       ✕
                     </button>
                   }
 
                   <!-- Challenger Avatar -->
-                  <div class="relative mt-2 mb-3">
-                    <div class="w-18 h-18 sm:w-22 sm:h-22 rounded-full flex items-center justify-center text-white font-black text-2xl sm:text-3xl shadow-xl border-4 border-[var(--color-bg-card)] transition-transform hover:scale-105"
+                  <div class="relative mt-1 sm:mt-2 mb-2 sm:mb-3">
+                    <div class="w-13 h-13 sm:w-22 sm:h-22 rounded-full flex items-center justify-center text-white font-black text-xl sm:text-3xl shadow-xl border-2 sm:border-4 border-[var(--color-bg-card)] transition-transform hover:scale-105"
                          style="background: linear-gradient(135deg, #f43f5e, #f97316)">
                       {{ sortedPlayers[1].id?.charAt(0)?.toUpperCase() }}
                     </div>
                     @if (readyPlayers[sortedPlayers[1].id]) {
-                      <div class="absolute -bottom-1 -left-1 w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-lg flex items-center justify-center text-white text-sm font-black animate-scale-in">✓</div>
+                      <div class="absolute -bottom-1 -left-1 w-5 h-5 sm:w-8 sm:h-8 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-lg flex items-center justify-center text-white text-xs sm:text-sm font-black animate-scale-in">✓</div>
                     } @else {
-                      <div class="absolute -bottom-1 -left-1 w-7 h-7 rounded-full bg-amber-500/20 border-2 border-[var(--color-bg-card)] flex items-center justify-center">
-                        <div class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></div>
+                      <div class="absolute -bottom-1 -left-1 w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-amber-500/20 border-2 border-[var(--color-bg-card)] flex items-center justify-center">
+                        <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
                       </div>
                     }
                   </div>
 
-                  <span class="font-black text-sm sm:text-base text-[var(--color-text-main)] truncate max-w-[140px] sm:max-w-[180px] text-center drop-shadow-sm">
+                  <span class="font-black text-xs sm:text-base text-[var(--color-text-main)] truncate max-w-[110px] sm:max-w-[180px] text-center drop-shadow-sm">
                     {{ sortedPlayers[1].id }}
                   </span>
 
-                  <span class="mt-1 text-[11px] font-black uppercase tracking-wider flex items-center gap-1"
+                  <span class="mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1"
                         [class.text-emerald-400]="readyPlayers[sortedPlayers[1].id]"
                         [class.text-amber-400]="!readyPlayers[sortedPlayers[1].id]">
                     <span class="w-1.5 h-1.5 rounded-full"
@@ -240,12 +240,12 @@
           </div>
 
           <!-- ═════ RIGHT WING: Gateway & Controls ═════ -->
-          <div class="lg:col-span-5 flex flex-col justify-between gap-4 bg-[var(--color-bg-main)]/60 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[var(--color-border-card)] shadow-inner">
+          <div class="lg:col-span-5 flex flex-col justify-between gap-3 sm:gap-4 bg-[var(--color-bg-main)]/60 rounded-2xl sm:rounded-3xl p-3 sm:p-6 border border-[var(--color-border-card)] shadow-inner">
             
             <!-- Quick Invite Card with QR Code -->
             @if (mode !== GameMode.Single) {
               <div>
-                <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center justify-between mb-2 sm:mb-3">
                   <span class="text-xs font-black uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-1.5">
                     <span>📡</span>
                     <span>{{ i18n.t('share.invite_pk')() }}</span>
@@ -255,10 +255,10 @@
                   </span>
                 </div>
 
-                <div class="flex items-center gap-4 bg-[var(--color-bg-card)] p-3 sm:p-4 rounded-2xl border border-[var(--color-border-card)] shadow-sm">
+                <div class="flex items-center gap-3 sm:gap-4 bg-[var(--color-bg-card)] p-2.5 sm:p-4 rounded-2xl border border-[var(--color-border-card)] shadow-sm">
                   @if (qrCodeUrl()) {
                     <div class="shrink-0 flex flex-col items-center">
-                      <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white p-1.5 rounded-xl shadow-inner border border-slate-200">
+                      <div class="w-14 h-14 sm:w-24 sm:h-24 bg-white p-1 rounded-xl shadow-inner border border-slate-200">
                         <img [src]="qrCodeUrl()" alt="QR Code" class="w-full h-full object-cover">
                       </div>
                       <span class="text-[9px] font-bold text-[var(--color-text-muted)] mt-1">
@@ -268,7 +268,7 @@
                   }
 
                   <div class="flex-1 min-w-0 flex flex-col justify-center">
-                    <p class="text-xs text-[var(--color-text-secondary)] mb-2.5 leading-snug">
+                    <p class="text-xs text-[var(--color-text-secondary)] mb-2 sm:mb-2.5 leading-snug">
                       {{ i18n.t('game.scan_mobile_play')() }}
                     </p>
                     <button (click)="copyInviteLink()"

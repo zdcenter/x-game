@@ -37,7 +37,7 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
 
   <!-- Top Game Header Bar -->
   <div class="w-full max-w-[1600px] mx-auto pt-1 sm:pt-1.5 px-2 sm:px-4 lg:px-6 z-40 sticky top-0 pb-1">
-    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-sm overflow-hidden" style="background-color: var(--color-bg-card);">
+    <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-sm overflow-visible" style="background-color: var(--color-bg-card);">
       <app-game-header (titleClick)="titleClick.emit()"
         [title]="title"
         [subtitle]="subtitle"
@@ -67,8 +67,8 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
 
             @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
               @if (waitingRoomForThisGame(); as targetRoom) {
-                <button (click)="liveRoom.quickJoin(targetRoom)"
-                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0"
+                <button (click)="onQuickJoinTargetRoom(targetRoom)"
+                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0 cursor-pointer pointer-events-auto"
                         [attr.title]="i18n.t('lobby.quick_join')()">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -156,7 +156,11 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
     }
 
     <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
-    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 min-h-[320px] sm:min-h-[420px] relative touch-none overscroll-none">
+    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 min-h-[320px] sm:min-h-[420px] relative"
+         [class.touch-none]="status !== GameStatus.Waiting"
+         [class.overscroll-none]="status !== GameStatus.Waiting"
+         [class.touch-pan-y]="status === GameStatus.Waiting"
+         [class.overflow-y-auto]="status === GameStatus.Waiting">
       <!-- Project custom game components here -->
       <ng-content></ng-content>
     </div>
@@ -347,6 +351,19 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   handleJoinRoomFromLobby(event: any) {
     this.togglePkDrawer(false);
     this.joinRoom.emit(event);
+  }
+
+  onQuickJoinTargetRoom(targetRoom: any) {
+    if (!this.authStore.isAuthenticated()) {
+      this.authModal.open({ returnUrl: this.router.url });
+      return;
+    }
+    this.joinRoom.emit({
+      roomId: targetRoom.id,
+      mode: targetRoom.mode,
+      difficulty: targetRoom.difficulty,
+      host: targetRoom.host
+    });
   }
 
   handleCreateRoomFromLobby(event: any) {

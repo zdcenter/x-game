@@ -1,5 +1,5 @@
 import { GameResult, GameResultType } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, signal, computed, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, OnChanges, SimpleChanges, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
@@ -68,7 +68,7 @@ import confetti from 'canvas-confetti';
     }
   `]
 })
-export class GameResultOverlayComponent implements OnInit, OnDestroy {
+export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges {
   i18n = inject(I18nService);
   audio = inject(AudioService);
   private router = inject(Router);
@@ -103,12 +103,32 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy {
   @Input() showRestart = false;
   @Input() showDismiss = false;
   @Input() showLeave?: boolean;
+  @Input() isWaitingOthers = false;
+
+  isTemporarilyDismissed = signal(false);
+
+  spectateOpponent() {
+    this.isTemporarilyDismissed.set(true);
+  }
+
+  reopenOverlay() {
+    this.isTemporarilyDismissed.set(false);
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['isWaitingOthers'] && !this.isWaitingOthers) {
+      this.isTemporarilyDismissed.set(false);
+      this.playEffect();
+      this.animateStats();
+    }
+  }
 
   get canShowLeave(): boolean {
+    if (this.isWaitingOthers) return true;
     if (this.showLeave !== undefined) {
       return this.showLeave;
     }
-    return !this.showDismiss;
+    return true;
   }
   @Input() enableChangeRoomGame = false;
   @Input() showRevive = false;

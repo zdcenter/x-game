@@ -135,14 +135,11 @@ export class LiveRoomService {
     this.toast.show(`${this.i18n.t('lobby.quick_join')()}: ${gameTitle}`, 'info');
 
     const targetUrl = `/${lang}/games/${room.game}`;
-    if (this.router.url === targetUrl) {
-      // If already on the same game page, reload component
-      this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
-        this.router.navigate([targetUrl]);
-      });
-    } else {
-      this.router.navigate([targetUrl]);
+    if (this.router.url.startsWith(targetUrl)) {
+      // If already on the target game page, the reactive crossGameJoin effect directly handles room joining
+      return;
     }
+    this.router.navigate([targetUrl]);
   }
 
   // --- Aesthetic Helpers & Labels ---

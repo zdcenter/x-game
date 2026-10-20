@@ -1,3 +1,22 @@
+@if (isTemporarilyDismissed()) {
+  <!-- Floating Live Spectator Pill (Minimalist top banner allowing spectator view & immediate exit) -->
+  <div class="fixed top-14 sm:top-16 left-1/2 -translate-x-1/2 z-[110] px-3.5 sm:px-4 py-2 rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-xl border border-[var(--color-border-card)] shadow-2xl flex items-center gap-2.5 sm:gap-3.5 animate-fade-in-down max-w-[92vw]">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+      <span class="text-xs font-bold text-[var(--color-text-main)] truncate max-w-[130px] sm:max-w-none">
+        {{ i18n.t('game.waiting_for_others')() }}
+      </span>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button (click)="reopenOverlay()" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-amber-400 border border-[var(--color-border-card)] active:scale-95 transition-all shadow-sm">
+        {{ i18n.t('game.view_result')() }}
+      </button>
+      <button (click)="handleLeave()" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-500/15 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30 active:scale-95 transition-all shadow-sm">
+        🚪 {{ i18n.t('game.leave')() }}
+      </button>
+    </div>
+  </div>
+} @else {
 <div class="fixed inset-0 z-[100] flex flex-col items-center justify-center backdrop-blur-md p-3 sm:p-6 bg-[var(--color-overlay)] overflow-y-auto animate-fade-in custom-scrollbar">
   <div class="m-auto w-full max-w-xl sm:max-w-2xl flex flex-col items-center py-4 relative">
 
@@ -439,8 +458,19 @@
 
         <!-- Primary Action: PK Rematch OR Next Level / Solo Restart -->
         @if (isPkMatch) {
-          <!-- PK Rematch / Play Again Action -->
-          @if (status === GameResult.Lose) {
+          @if (isWaitingOthers) {
+            <!-- Defeated early in duel: Allow immediate exit without locking player -->
+            <button (click)="handleLeave()"
+              class="w-full py-3.5 sm:py-4 rounded-2xl font-black text-base sm:text-lg bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white shadow-xl shadow-rose-600/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
+              <span>🚪</span>
+              <span>{{ i18n.t('game.leave_and_play_other')() }}</span>
+            </button>
+            <button (click)="spectateOpponent()"
+              class="w-full py-2.5 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-amber-400 transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-sm">
+              <span>👁️</span>
+              <span>{{ i18n.t('game.spectate_opponent')() }}</span>
+            </button>
+          } @else if (status === GameResult.Lose) {
             <!-- Defeat: Passionate High-Voltage Revenge Button -->
             <button (click)="handleRematch()"
               class="w-full py-3.5 sm:py-4 rounded-2xl font-black text-base sm:text-lg bg-gradient-to-r from-amber-500 via-rose-600 to-purple-600 hover:from-amber-400 hover:via-rose-500 hover:to-purple-500 text-white shadow-xl shadow-rose-600/30 animate-revenge-pulse hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group cursor-pointer">
@@ -535,3 +565,4 @@
 
   </div>
 </div>
+}

@@ -11,14 +11,14 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   template: `
     @if (live.hasWaitingRooms()) {
       <div class="relative">
-        <!-- Glowing Pulse Badge Button -->
-        <button (click)="live.toggleBeacon()"
-                class="relative flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-black transition-all duration-300 shadow-sm active:scale-95 group border border-amber-500/30 hover:border-amber-400 bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-amber-500/10 text-amber-500 hover:text-amber-400"
+        <!-- Glowing Pulse Badge Button (Green Radar) -->
+        <button (click)="$event.stopPropagation(); live.toggleBeacon()"
+                class="relative flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full text-xs font-black transition-all duration-300 shadow-sm active:scale-95 group border border-emerald-500/40 hover:border-emerald-400 bg-gradient-to-r from-emerald-500/15 via-teal-500/20 to-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 shrink-0"
                 [attr.title]="i18n.t('lobby.live_battle_tooltip')()">
-          <!-- Ping Radar Wave -->
+          <!-- Ping Radar Wave (Green Pulse) -->
           <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
 
           <!-- Sword Icon & Counter -->
@@ -33,15 +33,16 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           <!-- Backdrop click outside -->
           <div class="fixed inset-0 z-[110]" (click)="live.toggleBeacon(false)"></div>
 
-          <div class="absolute right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 mt-2 w-[calc(100vw-1.5rem)] sm:w-80 max-w-sm rounded-2xl shadow-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-xl z-[120] animate-fade-in-down overflow-hidden">
+          <div class="fixed left-3 right-3 top-14 sm:absolute sm:top-full sm:mt-2 sm:right-0 sm:left-auto sm:w-80 max-w-sm rounded-2xl shadow-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-xl z-[120] animate-fade-in-down overflow-hidden"
+               (click)="$event.stopPropagation()">
             <!-- Header -->
             <div class="p-3 border-b border-[var(--color-border-card)] flex items-center justify-between bg-[var(--color-bg-main)]/50">
               <div class="flex items-center gap-1.5">
-                <span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="text-xs font-bold text-[var(--color-text-main)]">
                   {{ i18n.t('lobby.live_waiting_title')() }}
                 </span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-500">
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                   {{ live.waitingCount() }}
                 </span>
               </div>

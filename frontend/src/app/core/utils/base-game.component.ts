@@ -67,44 +67,49 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     // Deep link check for PK invites (browser-only: uses setTimeout + router navigate)
     if (isBrowser()) {
       if (gameId) {
-        const pendingCross = this.crossGameJoin.consumePendingJoin(gameId);
-        if (pendingCross) {
-          setTimeout(() => {
-            if (pendingCross.action === 'create') {
-              this.handleCreateRoom({
-                name: pendingCross.roomId || '',
-                mode: pendingCross.mode,
-                difficulty: pendingCross.difficulty,
-                password: pendingCross.password,
-                target: pendingCross.target,
-                bountyCoins: pendingCross.bountyCoins
-              });
+        effect(() => {
+          const currentPending = this.crossGameJoin.pendingJoin();
+          if (currentPending && currentPending.game === gameId) {
+            const pendingCross = this.crossGameJoin.consumePendingJoin(gameId);
+            if (pendingCross) {
+              setTimeout(() => {
+                if (pendingCross.action === 'create') {
+                  this.handleCreateRoom({
+                    name: pendingCross.roomId || '',
+                    mode: pendingCross.mode,
+                    difficulty: pendingCross.difficulty,
+                    password: pendingCross.password,
+                    target: pendingCross.target,
+                    bountyCoins: pendingCross.bountyCoins
+                  });
 
-              if (pendingCross.inviteUsernames && pendingCross.inviteUsernames.length > 0) {
-                const usernames = pendingCross.inviteUsernames;
-                const eff = effect(() => {
-                  const newRoomId = this.store.roomId();
-                  const rawState = this.wsService.gameState();
-                  if (newRoomId && this.wsService.isConnected() && rawState) {
-                    usernames.forEach(username => {
-                      this.wsService.sendLobbyAction('friend_invite', { targetId: username, roomId: newRoomId });
-                    });
-                    eff.destroy();
+                  if (pendingCross.inviteUsernames && pendingCross.inviteUsernames.length > 0) {
+                    const usernames = pendingCross.inviteUsernames;
+                    const eff = effect(() => {
+                      const newRoomId = this.store.roomId();
+                      const rawState = this.wsService.gameState();
+                      if (newRoomId && this.wsService.isConnected() && rawState) {
+                        usernames.forEach(username => {
+                          this.wsService.sendLobbyAction('friend_invite', { targetId: username, roomId: newRoomId });
+                        });
+                        eff.destroy();
+                      }
+                    }, { injector: this._injector, manualCleanup: true });
                   }
-                }, { injector: this._injector, manualCleanup: true });
-              }
-            } else {
-              this.handleJoinRoom({
-                roomId: pendingCross.roomId,
-                mode: pendingCross.mode,
-                difficulty: pendingCross.difficulty,
-                host: pendingCross.host,
-                password: pendingCross.password,
-                bountyCoins: pendingCross.bountyCoins
-              });
+                } else {
+                  this.handleJoinRoom({
+                    roomId: pendingCross.roomId,
+                    mode: pendingCross.mode,
+                    difficulty: pendingCross.difficulty,
+                    host: pendingCross.host,
+                    password: pendingCross.password,
+                    bountyCoins: pendingCross.bountyCoins
+                  });
+                }
+              }, 50);
             }
-          }, 100);
-        }
+          }
+        }, { injector: this._injector });
       }
 
       const q = this._baseRoute.snapshot.queryParams;

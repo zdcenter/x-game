@@ -345,6 +345,7 @@
             [isNewRecord]="store.lastStatResult()?.isNewRecord"
             [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
             [showLeave]="true"
+            [isWaitingOthers]="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Finished"
             [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
             [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
             (rematch)="handleRematch()"

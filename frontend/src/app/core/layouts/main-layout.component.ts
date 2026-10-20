@@ -61,13 +61,13 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
 
             <!-- Theme Toggle -->
             <button (click)="theme.cycleTheme()"
-                    class="p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]"
+                    class="hidden sm:flex p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]"
                     title="Toggle Theme">
               <span class="text-lg leading-none block">{{ theme.currentTheme() === 'dark' ? '☀️' : '🌙' }}</span>
             </button>
 
             <!-- Language Dropdown -->
-            <div class="relative">
+            <div class="relative hidden sm:block">
               <button (click)="isLangMenuOpen.set(!isLangMenuOpen())"
                       class="p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]"
                       title="Select Language">
@@ -92,7 +92,7 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
             </div>
 
             <!-- Divider -->
-            <div class="w-px h-6 mx-1" style="background-color: var(--color-border-card)"></div>
+            <div class="hidden sm:block w-px h-6 mx-1" style="background-color: var(--color-border-card)"></div>
 
             <!-- Authenticated -->
             @if (authStore.isAuthenticated()) {
@@ -105,9 +105,9 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
                 <span class="font-mono font-black">{{ coinService.coins() }}</span>
               </button>
 
-              <!-- Avatar + username → profile link -->
+              <!-- Avatar + username → profile link (hidden on < sm to prevent header overflow) -->
               <a [routerLink]="['/', i18n.currentLang(), 'profile']"
-                 class="flex items-center gap-2 px-1.5 py-1 rounded-lg transition-colors hover:bg-[var(--color-bg-main)]"
+                 class="hidden sm:flex items-center gap-2 px-1.5 py-1 rounded-lg transition-colors hover:bg-[var(--color-bg-main)]"
                  [title]="authStore.currentUser()?.username">
                 <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
                       style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
@@ -136,9 +136,9 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
                 </span>
               }
 
-              <!-- Logout -->
+              <!-- Logout (hidden on < sm, moved to mobile drawer) -->
               <button (click)="logout()"
-                      class="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-500/10 border border-[var(--color-border-card)] hover:border-red-500/30"
+                      class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-500/10 border border-[var(--color-border-card)] hover:border-red-500/30"
                       [title]="authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')()">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -148,7 +148,7 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
 
             } @else {
               <a [routerLink]="['/', i18n.currentLang(), 'login']"
-                 class="px-3 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border"
+                 class="hidden sm:inline-block px-3 py-1.5 text-sm font-bold rounded-lg transition-all hover:scale-105 border"
                  style="background-color: var(--color-bg-main); border-color: var(--color-border-card); color: var(--color-text-main)">
                 {{ i18n.t('nav.signin')() }}
               </a>
@@ -174,6 +174,41 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
       @if (isMobileMenuOpen()) {
         <div class="fixed inset-0 top-[3.5rem] sm:top-[4rem] z-40 bg-[var(--color-bg-main)] overflow-y-auto xl:hidden animate-fade-in-down border-b border-[var(--color-border-card)] pb-6 shadow-xl" (click)="isMobileMenuOpen.set(false)">
           <nav class="px-4 pt-4 pb-6 space-y-2 max-w-2xl mx-auto">
+            <!-- Mobile User Profile & Auth Deck (< sm) -->
+            @if (authStore.currentUser()) {
+              <div class="sm:hidden mb-3 p-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm flex items-center justify-between gap-3" (click)="$event.stopPropagation()">
+                <a [routerLink]="['/', i18n.currentLang(), 'profile']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-10 h-10 rounded-full flex items-center justify-center text-base font-black text-white shrink-0 shadow-md"
+                        style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                    {{ (authStore.currentUser()?.username || '?')[0].toUpperCase() }}
+                  </span>
+                  <div class="min-w-0">
+                    <div class="text-sm font-bold truncate text-[var(--color-text-main)]">
+                      {{ authStore.currentUser()?.username }}
+                    </div>
+                    <div class="text-[11px] text-[var(--color-text-muted)] font-medium">
+                      {{ authStore.currentUser()?.role === 'guest' ? i18n.t('nav.guest')() : (i18n.t('user.profile')() || '个人主页') }}
+                    </div>
+                  </div>
+                </a>
+                <button (click)="logout(); isMobileMenuOpen.set(false)"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 active:scale-95 transition-all shrink-0">
+                  {{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}
+                </button>
+              </div>
+            } @else {
+              <div class="sm:hidden mb-3 p-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm flex items-center justify-between gap-2" (click)="$event.stopPropagation()">
+                <a [routerLink]="['/', i18n.currentLang(), 'login']" (click)="isMobileMenuOpen.set(false)"
+                   class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-sm">
+                  {{ i18n.t('nav.signin')() }}
+                </a>
+                <a [routerLink]="['/', i18n.currentLang(), 'register']" (click)="isMobileMenuOpen.set(false)"
+                   class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)]">
+                  {{ i18n.t('nav.register')() || '注册' }}
+                </a>
+              </div>
+            }
+
             <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
@@ -186,6 +221,35 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
             <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">📝</span> {{ i18n.t('nav.blog')() || 'Blog' }}
             </a>
+
+            <!-- Mobile Quick Settings: Theme & Language (sm-) -->
+            <div class="pt-4 mt-2 border-t border-[var(--color-border-card)] flex items-center justify-between gap-3 sm:hidden" (click)="$event.stopPropagation()">
+              <button (click)="theme.cycleTheme()"
+                      class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] font-bold text-sm text-[var(--color-text-main)] shadow-sm active:scale-95 transition-all">
+                <span>{{ theme.currentTheme() === 'dark' ? '☀️' : '🌙' }}</span>
+                <span>{{ theme.currentTheme() === 'dark' ? (i18n.currentLang() === 'zh' ? '浅色模式' : 'Light') : (i18n.currentLang() === 'zh' ? '深色模式' : 'Dark') }}</span>
+              </button>
+              
+              <div class="relative flex-1">
+                <button (click)="isLangMenuOpen.set(!isLangMenuOpen())"
+                        class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] font-bold text-sm text-[var(--color-text-main)] shadow-sm active:scale-95 transition-all">
+                  <span>{{ currentLangFlag() }}</span>
+                  <span>{{ i18n.currentLang().toUpperCase() }}</span>
+                </button>
+                @if (isLangMenuOpen()) {
+                  <div class="absolute left-0 bottom-full mb-2 w-full rounded-xl shadow-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] py-2 z-[100] max-h-56 overflow-y-auto">
+                    @for (lang of supportedLangs; track lang.code) {
+                      <button (click)="i18n.setLang(lang.code); isLangMenuOpen.set(false); isMobileMenuOpen.set(false)" 
+                              class="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] flex items-center gap-3"
+                              [class.text-emerald-400]="i18n.currentLang() === lang.code">
+                        <span>{{ lang.flag }}</span>
+                        <span>{{ lang.name }}</span>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
           </nav>
         </div>
       }
