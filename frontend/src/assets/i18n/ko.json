@@ -1703,5 +1703,10 @@
   "game.revive_coins_action": "{{coins}} 코인으로 부활",
   "common.confirm": "확인",
   "common.close": "닫기",
-  "coins.spend_shop_tag": "상점 정가"
+  "coins.spend_shop_tag": "상점 정가",
+  "pwa.update_title": "새 버전 출시",
+  "pwa.update_desc": "새로운 버전이 준비되었습니다. 클릭하여 지금 업데이트하세요.",
+  "pwa.update_btn": "지금 업데이트",
+  "pwa.updating": "업데이트 중...",
+  "pwa.dismiss": "나중에"
 }

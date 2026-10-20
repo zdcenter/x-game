@@ -20,6 +20,7 @@ import { getSearch, getHref, buildUrl } from './core/utils/browser.util';
 import { InlineTranslocoLoader } from './core/i18n/transloco-loader';
 import { LangUrlSerializer } from './core/i18n/lang-url-serializer';
 import { SUPPORTED_LANGS } from './core/i18n/i18n.service';
+import { PwaUpdateService } from './core/services/pwa-update.service';
 
 class GlobalErrorHandler implements ErrorHandler {
   handleError(error: any): void {
@@ -48,15 +49,12 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' }), withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([ssrNoopInterceptor, authInterceptor]), withFetch()),
-    // Register PWA Service Worker for offline play and asset caching
+    // Initialize PWA Update & Service Worker management
     {
       provide: APP_INITIALIZER,
-      useFactory: () => () => {
-        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.warn('[PWA] Service Worker registration failed:', err);
-          });
-        }
+      useFactory: () => {
+        const pwa = inject(PwaUpdateService);
+        return () => {};
       },
       multi: true,
     },

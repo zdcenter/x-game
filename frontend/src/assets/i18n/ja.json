@@ -1703,5 +1703,10 @@
   "game.revive_coins_action": "{{coins}} コインで復活",
   "common.confirm": "了解しました",
   "common.close": "閉じる",
-  "coins.spend_shop_tag": "ショップ価格"
+  "coins.spend_shop_tag": "ショップ価格",
+  "pwa.update_title": "新しいバージョンがあります",
+  "pwa.update_desc": "新バージョンが利用可能です。クリックして今すぐ更新してください。",
+  "pwa.update_btn": "今すぐ更新",
+  "pwa.updating": "更新中...",
+  "pwa.dismiss": "後で"
 }

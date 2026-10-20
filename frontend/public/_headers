@@ -5,6 +5,10 @@
 /ngsw-worker.js
   Cache-Control: no-store, must-revalidate
 
+# Version metadata — never cache so PWA version checks are always live
+/version.json
+  Cache-Control: no-cache, no-store, must-revalidate
+
 # HTML pages — never cache so browsers always get fresh chunk references after deployment
 /index.html
   Cache-Control: no-store, must-revalidate

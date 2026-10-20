@@ -7,6 +7,12 @@
 ## [v3.2.0] - 2026-10-19
 
 ### 核心重构与品牌升级
+- **Cloudflare Pages 与手机桌面 PWA 即时更新体系 (`PwaUpdateService` & `PwaUpdatePromptComponent`)**：
+  - **根本解决桌面 Web App 缓存滞后**：针对用户将网页“添加到手机桌面”（Standalone PWA）后，由于 Service Worker 静态强缓存和手机系统后台进程休眠快照导致前端部署后数天无法刷新的痛点，打造闭环即时更新检测体系；
+  - **构建版本自动化打标 (`generate-version.js`)**：每次构建自动将时间戳版本注入 `version.ts`、输出 `public/version.json`，并动态替换 `public/sw.js` 中的 `CACHE_NAME`（通过脚本字节物理变动强制 Cloudflare CDN 与客户端浏览器触发 SW 更新周期）；
+  - **Cloudflare Pages 边缘防缓存标头保障 (`_headers` & `functions/[[path]].js`)**：对 `/version.json` 与 `/sw.js` 强制注入 `Cache-Control: no-cache, no-store, must-revalidate`，确保边缘节点与浏览器永远抓取最新版本；
+  - **手机切屏自检与前台唤醒 (`PwaUpdateService`)**：监听 `visibilitychange` 事件，每当用户从手机桌面点击图标切回应用时秒级触发线上版本比对，同时配合 3 分钟轮询与 SW 状态监听；
+  - **全局微拟物更新胶囊 (`PwaUpdatePromptComponent`)**：检测到新版本时在底部弹出毛玻璃流光胶囊（“🚀 发现新版本！点击立即更新”），点击后向 SW 发送 `SKIP_WAITING`、清空过期 CacheStorage 并无缝硬重载，8 种语言 100% 国际化适配。
 - **多难度动态棋盘平板自适应与全屏专注模式全局垂直居中**：
   - **全屏专注 (Zen Mode) 全局垂直居中校正**：排查并彻底解决各子游戏（数织 Nonogram、点灯逻辑 Lights Out、数字华容道 Sliding Puzzle、连连看 Connect、推箱子 Sokoban、数独 Sudoku、扫雷 Minesweeper、2048、方块消除 Block、五子棋 Gomoku、数桥 Hashi）外层包裹容器误用 `justify-start` 导致专注模式隐藏顶栏时棋盘向上挤压偏移的痛点，统一重构为与六边形消除 (`Hexa`) 完全一致的 `justify-center my-auto` 弹性模型，无论在常规模式还是全屏沉浸专注模式下，游戏卡片与棋盘始终保持屏幕视口绝对纵向居中；
   - **点灯逻辑 (`LightsOutComponent`)**：重构原本固定的 420px 棋盘容器为 `boardSizePx` 动态计算属性，3x3 (420px) 到 8x8 (740px) 随难度平滑扩展，在平板端（768px~834px）高阶关卡充分利用屏幕宽度，彻底消除两侧宽大空白；

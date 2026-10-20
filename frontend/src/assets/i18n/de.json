@@ -1703,5 +1703,10 @@
   "game.revive_coins_action": "Wiederbeleben mit {{coins}} Münzen",
   "common.confirm": "Verstanden",
   "common.close": "Schließen",
-  "coins.spend_shop_tag": "Shop-Preise"
+  "coins.spend_shop_tag": "Shop-Preise",
+  "pwa.update_title": "Neue Version verfügbar",
+  "pwa.update_desc": "Ein neues Update ist bereit. Jetzt klicken zum Aktualisieren.",
+  "pwa.update_btn": "Jetzt aktualisieren",
+  "pwa.updating": "Aktualisierung...",
+  "pwa.dismiss": "Später"
 }

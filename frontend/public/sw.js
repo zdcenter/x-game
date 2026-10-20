@@ -1,5 +1,5 @@
 // X-Game Production PWA Service Worker
-const CACHE_NAME = 'xgame-offline-v1';
+const CACHE_NAME = 'xgame-offline-v2026.10.20.1019';
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -25,6 +25,12 @@ self.addEventListener('install', (event) => {
   );
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
@@ -33,12 +39,19 @@ self.addEventListener('activate', (event) => {
         Promise.all(
           keys.map((k) => {
             if (k !== CACHE_NAME) {
+              console.log('[SW] Deleting old cache:', k);
               return caches.delete(k);
             }
           })
         )
       )
-    ])
+    ]).then(() => {
+      return self.clients.matchAll({ type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_ACTIVATED', version: CACHE_NAME });
+        });
+      });
+    })
   );
 });
 
@@ -51,8 +64,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Bypass dynamic user authentication & admin actions
-  if (url.pathname.startsWith('/api/v1/auth') || url.pathname.startsWith('/api/v1/admin')) {
+  // 2. Bypass dynamic user authentication, admin actions & version.json live checks
+  if (
+    url.pathname.startsWith('/api/v1/auth') ||
+    url.pathname.startsWith('/api/v1/admin') ||
+    url.pathname === '/version.json'
+  ) {
     return;
   }
 

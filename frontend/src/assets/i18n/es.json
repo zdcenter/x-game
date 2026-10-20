@@ -1703,5 +1703,10 @@
   "game.revive_coins_action": "Revivir con {{coins}} Monedas",
   "common.confirm": "Entendido",
   "common.close": "Cerrar",
-  "coins.spend_shop_tag": "Precios de Tienda"
+  "coins.spend_shop_tag": "Precios de Tienda",
+  "pwa.update_title": "Nueva versión disponible",
+  "pwa.update_desc": "Hay una nueva versión lista. Haz clic para actualizar ahora.",
+  "pwa.update_btn": "Actualizar",
+  "pwa.updating": "Actualizando...",
+  "pwa.dismiss": "Más tarde"
 }

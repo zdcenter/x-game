@@ -57,6 +57,12 @@
   - **大厅顶栏智能常驻保全**：基于当前路由与用户偏好计算 (`computed(() => this.isGameRoute() && this.zenPreference())`)，游戏内开启专注模式后返回大厅，全局 Logo、货币余额、排行榜与导航栏 100% 正常显示；
   - **游戏内专注偏好记忆自动恢复**：用户开启专注偏好后持久化存入 `localStorage`，重新进入任意游戏自动激活全屏专注沉浸状态，免去重复操作；
   - **跨设备原生全屏联动**：支持 Esc 键与离开游戏时自动平滑退回原生全屏。
+- **Cloudflare Pages 与手机桌面 PWA 即时更新体系 (`PwaUpdateService` & `PwaUpdatePromptComponent`)**：
+  - **端到端解决 Standalone PWA 更新迟缓**：针对手机将网页“添加到桌面”后因 Service Worker 静态强缓存和后台进程快照导致代码更新无法刷新的问题，打造自动化即时更新机制；
+  - **构建版本自动化打标**：每次 `npm run build` 自动生成包含时间戳的 `version.ts` 与 `public/version.json`，并自动更新 `public/sw.js` 中的 `CACHE_NAME`，使部署脚本产生物理字节差异以触发 SW 检查；
+  - **Cloudflare Pages 边缘防缓存标头**：通过 `_headers` 与 `functions/[[path]].js` 统一为 `/version.json` 与 `/sw.js` 注入 `no-cache, no-store, must-revalidate`；
+  - **手机切屏自检与前台唤醒**：监听 `visibilitychange` 事件，用户从桌面再次点开应用时秒级轮询线上版本；
+  - **全局微拟物更新胶囊**：检测到新版本时在界面底部弹出高饱和度暗夜毛玻璃流光胶囊（“🚀 发现新版本！点击立即更新”），支持一键清空旧缓存并无缝硬重载，全站 8 种语言 100% 国际化适配。
 - **大厅移动端压缩与骨架屏 (`LobbyComponent`)**：
   移动端 Hero 标题精简、入口卡片采用双列栅格紧凑排版，首屏直接释放 180px 高度；内置与卡片网格严格对齐的脉冲骨架屏，解决数据水合抖动。
 - **渐进式阶梯转化体系 (`AuthModalService` & `AuthModalOverlayComponent`)**：

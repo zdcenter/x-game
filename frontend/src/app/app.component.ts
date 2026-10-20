@@ -18,6 +18,7 @@ import { FloatingTextOverlayComponent } from './shared/components/floating-text-
 import { FriendListComponent } from './shared/components/friend-list/friend-list.component';
 import { InGameChallengeBannerComponent } from './shared/components/in-game-challenge-banner/in-game-challenge-banner.component';
 import { AuthModalOverlayComponent } from './shared/components/auth-modal-overlay/auth-modal-overlay.component';
+import { PwaUpdatePromptComponent } from './shared/components/pwa-update-prompt/pwa-update-prompt.component';
 
 @Component({
   selector: 'app-root',
@@ -33,7 +34,8 @@ import { AuthModalOverlayComponent } from './shared/components/auth-modal-overla
     FloatingTextOverlayComponent,
     FriendListComponent,
     InGameChallengeBannerComponent,
-    AuthModalOverlayComponent
+    AuthModalOverlayComponent,
+    PwaUpdatePromptComponent
   ],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
@@ -59,6 +61,7 @@ import { AuthModalOverlayComponent } from './shared/components/auth-modal-overla
       <app-friend-list></app-friend-list>
       <app-in-game-challenge-banner></app-in-game-challenge-banner>
       <app-auth-modal-overlay></app-auth-modal-overlay>
+      <app-pwa-update-prompt></app-pwa-update-prompt>
     }
   `
 })

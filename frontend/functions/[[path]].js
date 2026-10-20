@@ -25,6 +25,12 @@ export async function onRequest(context) {
         return new Response('Not Found', { status: 404 });
       }
       
+      if (pathname === '/version.json' || pathname === '/sw.js') {
+        const headers = new Headers(response.headers);
+        headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return new Response(response.body, { status: response.status, headers });
+      }
+
       return response;
     }
 
