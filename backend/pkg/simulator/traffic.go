@@ -172,7 +172,7 @@ func refreshFakeData() {
 	// 3. Generate fake real-time activity events (10-15 activities)
 	numActivities := rand.Intn(6) + 10
 	newActivities := make([]map[string]interface{}, 0, numActivities)
-	actTypes := []string{"playing", "playing", "record", "room_created"}
+	actTypes := []string{"playing", "game_win", "game_win", "game_lose", "record", "room_created"}
 	nowMs := time.Now().UnixMilli()
 
 	for i := 0; i < numActivities; i++ {
@@ -184,7 +184,7 @@ func refreshFakeData() {
 		score := 0
 		timeTaken := 0
 
-		if actType == "record" {
+		if actType == "record" || actType == "game_win" {
 			if game == "minesweeper" || game == "sliding" {
 				timeTaken = rand.Intn(45) + 15
 			} else {

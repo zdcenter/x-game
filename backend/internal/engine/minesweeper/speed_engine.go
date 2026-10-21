@@ -271,6 +271,12 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 
 	cell := board.Cells[action.Y][action.X]
 
+	if action.Type == "flag" && cell.State == CellFlagged {
+		cell.State = CellHidden
+		e.Broadcast()
+		return e.State, nil
+	}
+
 	if cell.State != CellHidden {
 		return e.State, errors.New("cell already processed")
 	}

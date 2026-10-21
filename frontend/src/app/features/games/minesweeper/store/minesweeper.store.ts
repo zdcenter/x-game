@@ -252,6 +252,13 @@ export class MinesweeperStore extends BaseGameStore {
           if (isWin) {
             const timeSec = engine.startAt > 0 ? Math.round((Date.now() - engine.startAt) / 1000) : 0;
             this.submitSingleStat({ time: timeSec, won: true }).subscribe();
+          } else {
+            this.liveActivity.reportGameResult(
+              'minesweeper',
+              false,
+              GameMode.Single,
+              this.currentDifficulty() as string
+            );
           }
         }
       }

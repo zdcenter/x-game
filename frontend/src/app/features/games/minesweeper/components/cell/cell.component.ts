@@ -50,13 +50,15 @@ export class CellComponent {
 
   onLeftClick(event: MouseEvent) {
     if (event.button === 0) {
-      if (this.actionMode === 'flag') {
+      if (this.cell.state === CellState.Flagged) {
+        // Safe unflag: clicking a flagged cell with left click removes the flag without revealing!
+        this.flag.emit();
+        this.haptic.vibrateSnap();
+      } else if (this.actionMode === 'flag') {
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else {
-        if (this.cell.state !== CellState.Flagged) {
-          this.reveal.emit();
-        }
+        this.reveal.emit();
       }
     }
   }
@@ -116,16 +118,26 @@ export class CellComponent {
       return;
     }
 
-    if (!this.touchFired && hadTimeout) {
-      event.preventDefault(); // Prevent emulated mouse clicks
-      if (this.actionMode === 'flag') {
+    // Always prevent synthetic mouse clicks on touch devices to avoid
+    // synthetic click revealing a cell right after unflagging it
+    event.preventDefault();
+
+    if (this.touchFired) {
+      this.touchFired = false;
+      return;
+    }
+
+    if (hadTimeout) {
+      if (this.cell.state === CellState.Flagged) {
+        // Safe unflag: tapping a flagged cell toggles the flag off safely!
+        this.flag.emit();
+        this.haptic.vibrateSnap();
+      } else if (this.actionMode === 'flag') {
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else {
-        if (this.cell.state !== CellState.Flagged) {
-          this.reveal.emit();
-          this.haptic.vibrateLight();
-        }
+        this.reveal.emit();
+        this.haptic.vibrateLight();
       }
     }
     this.touchFired = false;

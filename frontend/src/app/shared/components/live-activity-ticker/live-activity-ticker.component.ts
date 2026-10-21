@@ -187,6 +187,32 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
       case 'milestone': {
         return act.text || `${this.i18n.t('activity.milestone_default')() || '在'} ${gameName} ${this.i18n.t('activity.achieved_record')() || '刷新了个人最佳！'}`;
       }
+      case 'game_win': {
+        const isPk = act.mode && act.mode !== 'single';
+        if (isPk) {
+          const tpl = this.i18n.t('activity.action_win_pk')() || '在 {game} PK 对决中力克对手，斩获胜利！';
+          return replaceParams(tpl, { game: gameName });
+        }
+        if (act.timeTaken && act.timeTaken > 0) {
+          const tpl = this.i18n.t('activity.action_win_time')() || '在 {game} {diff} 成功通关！用时 {time}s';
+          return replaceParams(tpl, { game: gameName, diff: diffName ? `· ${diffName}` : '', time: act.timeTaken });
+        }
+        if (act.score && act.score > 0) {
+          const tpl = this.i18n.t('activity.action_win_score')() || '在 {game} {diff} 成功通关！斩获 {score} 分';
+          return replaceParams(tpl, { game: gameName, diff: diffName ? `· ${diffName}` : '', score: act.score.toLocaleString() });
+        }
+        const tpl = this.i18n.t('activity.action_win')() || '在 {game} {diff} 成功通关！';
+        return replaceParams(tpl, { game: gameName, diff: diffName ? `· ${diffName}` : '' });
+      }
+      case 'game_lose': {
+        const isPk = act.mode && act.mode !== 'single';
+        if (isPk) {
+          const tpl = this.i18n.t('activity.action_lose_pk')() || '在 {game} PK 对决中惜败，正蓄力复仇！';
+          return replaceParams(tpl, { game: gameName });
+        }
+        const tpl = this.i18n.t('activity.action_lose')() || '在 {game} {diff} 遗憾失误，正在重整旗鼓！';
+        return replaceParams(tpl, { game: gameName, diff: diffName ? `· ${diffName}` : '' });
+      }
       default:
         return `${this.i18n.t('activity.action_playing_simple')() || '正在游玩'} ${gameName}`;
     }
@@ -254,6 +280,8 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
 
   getActivityBadgeIcon(type: string): string {
     switch (type) {
+      case 'game_win': return '🎉';
+      case 'game_lose': return '💥';
       case 'playing': return '🎮';
       case 'record': return '🏆';
       case 'room_created': return '⚔️';
@@ -264,6 +292,18 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
 
   getActivityTypeTag(type: string): { label: string; icon: string; css: string } {
     switch (type) {
+      case 'game_win':
+        return {
+          label: this.i18n.t('activity.tag_win')() || '通关胜利',
+          icon: '🎉',
+          css: 'bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border-emerald-500/30'
+        };
+      case 'game_lose':
+        return {
+          label: this.i18n.t('activity.tag_lose')() || '挑战失败',
+          icon: '💥',
+          css: 'bg-rose-500/15 text-rose-500 dark:text-rose-400 border-rose-500/30'
+        };
       case 'record':
         return {
           label: this.i18n.t('activity.tag_record')() || '破纪录',

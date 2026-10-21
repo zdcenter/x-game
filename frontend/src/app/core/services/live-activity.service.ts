@@ -68,6 +68,44 @@ export class LiveActivityService {
   }
 
   /**
+   * Report game victory or defeat result to the global live activity feed
+   */
+  reportGameResult(
+    gameId: string,
+    won: boolean,
+    mode: string = 'single',
+    diff?: string,
+    score?: number,
+    timeTaken?: number,
+    text?: string
+  ): void {
+    if (!gameId) return;
+
+    // Debounce duplicate reports for the same game within 4 seconds
+    const key = `${gameId}_result_${mode}`;
+    const now = Date.now();
+    const last = this.lastReportedTime.get(key) || 0;
+    if (now - last < 4000) return;
+    this.lastReportedTime.set(key, now);
+
+    const user = this.auth.currentUser();
+    const username = user?.username || this.auth.guestId;
+    const avatar = user?.avatar || '';
+
+    this.ws.sendLobbyAction('report_activity', {
+      activityType: won ? 'game_win' : 'game_lose',
+      gameId,
+      mode: mode || 'single',
+      diff: diff || '',
+      score: score || 0,
+      timeTaken: timeTaken || 0,
+      avatar,
+      username,
+      text: text || '',
+    });
+  }
+
+  /**
    * Report game milestone achievement (e.g. synthesize 2048, clear 20 lines)
    */
   reportMilestone(gameId: string, milestoneText: string): void {

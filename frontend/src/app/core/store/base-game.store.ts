@@ -12,6 +12,7 @@ import { AchievementService } from '../services/achievement.service';
 import { AudioService } from '../services/audio.service';
 import { LayoutService } from '../services/layout.service';
 import { CoinService } from '../services/coin.service';
+import { LiveActivityService } from '../services/live-activity.service';
 import { storageGet, storageSet, storageRemove } from '../utils/browser.util';
 
 @Injectable()
@@ -24,6 +25,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly coinService = inject(CoinService);
   protected readonly achievementService = inject(AchievementService);
   protected readonly layoutService = inject(LayoutService);
+  protected readonly liveActivity = inject(LiveActivityService);
 
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
@@ -393,12 +395,24 @@ export abstract class BaseGameStore implements GameStoreInterface {
    */
   protected submitSingleStat(payload: { score?: number; time?: number; won?: boolean } = {}): Observable<SubmitStatResponse> {
     this.lastStatResult.set(null);
+    const won = payload.won ?? true;
+
+    // Report game completion to 全服动态
+    this.liveActivity.reportGameResult(
+      this.gameId,
+      won,
+      GameMode.Single,
+      this.currentDifficulty() as string,
+      payload.score,
+      payload.time
+    );
+
     return this.stats.submitStat(this.gameId, {
       mode: GameMode.Single,
       difficulty: this.currentDifficulty() as string,
       score: payload.score ?? 0,
       time:  payload.time  ?? 0,
-      won:   payload.won   ?? true,
+      won,
     }).pipe(
       tap(res => {
         this.lastStatResult.set(res);
@@ -429,6 +443,17 @@ export abstract class BaseGameStore implements GameStoreInterface {
     const won = this.winners().includes(this.playerId());
     const { score, time } = this.extractPKStatPayload();
     const bounty = this.bountyCoins();
+
+    // Report PK game outcome to 全服动态
+    this.liveActivity.reportGameResult(
+      this.gameId,
+      won,
+      this.currentRoomMode() as string,
+      this.currentDifficulty() as string,
+      score,
+      time
+    );
+
     this.stats.submitStat(this.gameId, {
       mode:         this.currentRoomMode() as string,
       difficulty:   this.currentDifficulty() as string,

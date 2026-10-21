@@ -173,6 +173,19 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 
 	cell := e.Board.Cells[action.Y][action.X]
 
+	if action.Type == "flag" && cell.State == CellFlagged {
+		if e.Mode == string(domain.ModeSingle) || cell.Owner == playerID {
+			cell.State = CellHidden
+			if cell.Owner == playerID && e.Scores[playerID] > 0 {
+				e.Scores[playerID]--
+			}
+			cell.Owner = ""
+			e.Broadcast()
+			return e.State, nil
+		}
+		return e.State, errors.New("cannot unflag opponent's flag")
+	}
+
 	if cell.State != CellHidden {
 		return e.State, errors.New("cell already processed")
 	}

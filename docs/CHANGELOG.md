@@ -2,6 +2,20 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.4] - 2026-10-21
+
+### 扫雷取消标旗防误踩炸雷修复与全服动态游戏胜负战报同步 (Minesweeper Unflagging Safety & Global Activity Win/Loss Integration)
+- **扫雷取消插旗误触点开雷区缺陷根除 (Minesweeper Flag Safe Toggle Bugfix)**：
+  - **移动端长按取消插旗后误触发开雷彻底解决**：排查并彻底根治在触摸屏上长按插旗单元格取消标旗时，`touchend` 触发后由于 `this.touchFired` 标志位未能阻止浏览器默认行为，导致浏览器在 300ms 后补发合成 `click` 事件、误将已被解除标记的格子以 `reveal`（翻开）方式点击并触发雷区爆炸失败的致命缺陷；
+  - **PC 端与移动端直接点击已插旗格子安全取消**：在 `onLeftClick` 与 `onTouchEnd` 中加入状态防护，当玩家点击处于 `Flagged` 状态的格子时，统一安全切换插旗状态（取消标旗并伴随触觉微震），绝不触发翻开操作；
+  - **联机 PK 服务端 `SpeedEngine` 插旗校验同步支持取消**：修复后端在收到已插旗格子的 `flag` 动作时误报 `cell already processed` 的问题，允许在对战模式下正常取消插旗并同步棋盘状态。
+- **全服即时动态（全服动态）新增游戏通关胜利与挑战失败战报 (Live Activity Game Win/Loss Broadcast)**：
+  - **胜负全服即时播报**：无论是单机闯关还是多人 PK 对战，在玩家达成通关胜利（`game_win`）或遗憾失误失败（`game_lose`）时，实时将战报发布至全服即时动态跑马灯（`LiveActivityTicker`）；
+  - **专属视觉标签与高光图标**：通关胜利专属呈现 `🎉` 图标与“通关胜利”徽章，展示所用时间（秒）或得分；挑战失败专属呈现 `💥` 图标与“挑战失败”徽章；
+  - **全链路防刷屏与多重防重保护**：`LiveActivityService` 增加 4 秒防重节流与同局唯一性校验，确保战报精准投递；
+  - **冷启动与拟真交通发生器全面适配**：后端拟真交通模拟器同步接入 `game_win` 与 `game_lose` 动态事件，保证离线与冷启动大厅动态真实感；
+  - **全球 8 国语言全面适配**：所有胜负动态徽章与动态描述文本均已提取至 8 种语言字典，无任何硬编码。
+
 ---
 
 ## [v3.2.3] - 2026-10-21

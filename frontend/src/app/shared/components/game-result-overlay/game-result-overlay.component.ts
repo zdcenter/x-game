@@ -18,6 +18,7 @@ import { CoinService } from '../../../core/services/coin.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+import { LiveActivityService } from '../../../core/services/live-activity.service';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -82,6 +83,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   coinService = inject(CoinService);
   settingsService = inject(SettingsService);
   private wsService = inject(WebSocketService);
+  private liveActivityService = inject(LiveActivityService);
 
   readonly costRevive = computed(() => this.settingsService.coinEconomy().costRevive);
   readonly canAffordRevive = computed(() => this.coinService.canAfford(this.costRevive()));
@@ -233,6 +235,11 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
     const isWin = this.status === GameResult.Win;
     if (this.currentGameId) {
       this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));
+      this.liveActivityService.reportGameResult(
+        this.currentGameId,
+        isWin,
+        this.isPkMatch ? 'pk' : 'single'
+      );
     }
     if (isWin) {
       const generated = Array.from({ length: 14 }, (_, i) => ({
