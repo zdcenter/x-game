@@ -38,8 +38,10 @@ export class BlockStore extends BaseGameStore {
   shakeTrigger = signal<number>(0);
   clearingCells = signal<string[]>([]);
   clearingSet = computed(() => new Set(this.clearingCells()));
+  clearingRows = signal<number[]>([]);
+  clearingCols = signal<number[]>([]);
   private clearTimerId: any = null;
-  lastScoreGain = signal<{ score: number; lines: number; ts: number } | null>(null);
+  lastScoreGain = signal<{ score: number; lines: number; combo?: number; isAllClear?: boolean; ts: number } | null>(null);
 
   // Visual Theme: 'crystal' (Harmonious Multi-Gem) | 'gold' (Royal Amber Gold) | 'ocean' (Deep Ocean Ice)
   colorTheme = signal<'crystal' | 'gold' | 'ocean'>((storageGet('block_theme') as any) || 'crystal');
@@ -264,14 +266,21 @@ export class BlockStore extends BaseGameStore {
         }
       });
       this.clearingCells.set(keys);
+      this.clearingRows.set([...this._pendingClearRows]);
+      this.clearingCols.set([...this._pendingClearCols]);
       if (this.clearTimerId) clearTimeout(this.clearTimerId);
       this.clearTimerId = setTimeout(() => {
         this.clearingCells.set([]);
+        this.clearingRows.set([]);
+        this.clearingCols.set([]);
         this.clearTimerId = null;
       }, 320); // 320ms 极速利落清理，绝不让方块卡住发呆！
+      const isAllClear = this.engine.board.every(row => row.every(cell => cell === 0));
       this.lastScoreGain.set({
         score: gained,
         lines: this._pendingClearRows.length + this._pendingClearCols.length,
+        combo: this.engine.combo,
+        isAllClear,
         ts: Date.now()
       });
     }

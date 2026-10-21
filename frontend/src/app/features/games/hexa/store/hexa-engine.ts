@@ -143,7 +143,7 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
     return true;
   }
 
-  private executePlacePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number): { linesCleared: number } | null {
+  private executePlacePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number): { linesCleared: number; isAllClear?: boolean } | null {
     if (this.gameOver || this.status !== GameStatus.Playing) return null;
     if (!this.canPlacePiece(piece, origin)) return null;
 
@@ -161,7 +161,7 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
       }
     }
 
-    this.score += piece.shape.length; // points for placing
+    this.score += piece.shape.length * 5; // points for placing (5 pts per hex cell)
     this.piecesPlaced++;
 
     // Check for cleared lines
@@ -180,10 +180,10 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
     }
 
     this.lastLinesCleared = cleared.lines;
-    return { linesCleared: cleared.lines };
+    return { linesCleared: cleared.lines, isAllClear: cleared.isAllClear };
   }
 
-  private checkAndClearLines(): { lines: number } {
+  private checkAndClearLines(): { lines: number; isAllClear: boolean } {
     const toClear = new Set<string>();
     let lines = 0;
 
@@ -206,15 +206,33 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
       }
     });
 
+    let isAllClear = false;
+
     if (lines > 0) {
       this.combo++;
-      // Score formula: (lines * 10) * combo
-      this.score += (lines * 10) * this.combo;
+      // Super-linear multiline exponential scaling:
+      // 1 line = 100, 2 lines = 350 (3.5x), 3 lines = 900 (9x), 4 lines = 2000 (20x), 5+ = 3500+
+      const lineBaseScores = [0, 100, 350, 900, 2000, 3500];
+      const basePoints = lines < lineBaseScores.length
+        ? lineBaseScores[lines]
+        : 3500 + (lines - 5) * 2000;
+
+      // Combo multiplier: Combo 1: 1.0x, Combo 2: 1.5x, Combo 3: 2.0x, Combo 4: 2.5x, Combo 5+: 3.0x+
+      const comboMult = 1 + (this.combo - 1) * 0.5;
+      let clearScore = Math.round(basePoints * comboMult);
+
+      // Check board wipe (All clear / Board clear)
+      isAllClear = Array.from(this.cells.values()).every(c => !c.filled);
+      if (isAllClear) {
+        clearScore += 1500; // Perfect clear bonus!
+      }
+
+      this.score += clearScore;
     } else {
       this.combo = 0;
     }
 
-    return { lines };
+    return { lines, isAllClear };
   }
 
   private getLineCells(axis: 'q' | 'r' | 's', value: number): HexCell[] {

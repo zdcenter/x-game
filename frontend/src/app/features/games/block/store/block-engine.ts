@@ -35,6 +35,7 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
   board: number[][] = [];
   hand: (BlockShape | null)[] = [null, null, null];
   score: number = 0;
+  combo: number = 0;
   isDead: boolean = false;
   
   status: GameStatusType = GameStatus.Waiting;
@@ -57,6 +58,7 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
     this.board = this.createEmptyBoard(this.boardSize);
     this.hand = getRandomShapes(3);
     this.score = 0;
+    this.combo = 0;
     this.isDead = false;
     this.status = GameStatus.Playing;
   }
@@ -168,10 +170,28 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
     const linesCleared = rowsToClear.length + colsToClear.length;
 
     // Calculate score
-    let points = blocksPlaced; // 1 point per block
+    let points = blocksPlaced * 2; // 2 points per placed block
     if (linesCleared > 0) {
-      // Exponential doubling
-      points += 20 * Math.pow(2, linesCleared - 1);
+      this.combo++;
+      // Super-linear multiline exponential scaling:
+      // 1 line/col = 100, 2 lines = 360 (3.6x), 3 lines = 800 (8x), 4 lines = 1600 (16x), 5+ = 3000+
+      const lineBaseScores = [0, 100, 360, 800, 1600, 3000];
+      const basePoints = linesCleared < lineBaseScores.length
+        ? lineBaseScores[linesCleared]
+        : 3000 + (linesCleared - 5) * 1500;
+
+      // Combo multiplier: Combo 1: 1.0x, Combo 2: 1.5x, Combo 3: 2.0x, Combo 4: 2.5x, Combo 5+: 3.0x+
+      const comboMult = 1 + (this.combo - 1) * 0.5;
+      let clearScore = Math.round(basePoints * comboMult);
+
+      // Check board wipe (All clear / Board clear)
+      const isBoardClear = this.board.every(row => row.every(cell => cell === 0));
+      if (isBoardClear) {
+        clearScore += 1500; // Perfect clear bonus!
+      }
+
+      points += clearScore;
+
       if (this.config?.onLinesClear) {
         this.config.onLinesClear(linesCleared, rowsToClear, colsToClear);
       }
@@ -179,6 +199,7 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
         this.config.onSound('clear', linesCleared);
       }
     } else {
+      this.combo = 0;
       if (this.config?.onSound) {
         this.config.onSound('place');
       }

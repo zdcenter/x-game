@@ -57,15 +57,15 @@
             <!-- Main Board (Seamless & Integrated) -->
             <div class="flex-1 min-h-0 overflow-auto flex flex-col items-stretch p-1 sm:p-2.5 md:p-3 w-full"
                  [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
-                 
-              <div class="min-w-fit flex flex-col items-center m-auto">
+                             <div class="min-w-fit flex flex-col items-center m-auto">
                 <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
+                     (mouseleave)="handleMouseLeave()"
                      [style.--cell-size.px]="cellSize()"
-                   [style.--grid-width]="store.width()"
-                   [style.--grid-height]="store.height()"
-                   [style.grid-template-columns]="'max-content max-content'"
-                   [style.grid-template-rows]="'max-content max-content'">
+                     [style.--grid-width]="store.width()"
+                     [style.--grid-height]="store.height()"
+                     [style.grid-template-columns]="'max-content max-content'"
+                     [style.grid-template-rows]="'max-content max-content'">
                 
                 <div class="top-left"></div>
 
@@ -74,8 +74,13 @@
                   <div *ngFor="let col of store.colHints(); let x = index" 
                        class="col-hint-item flex flex-col justify-end items-center pb-1 text-[var(--color-text-main)] font-black select-none"
                        [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
-                       [class.no-border-r]="x === store.width() - 1">
-                    <span *ngFor="let hint of col" class="font-mono font-black leading-none drop-shadow-xs py-0.5">{{ hint }}</span>
+                       [class.no-border-r]="x === store.width() - 1"
+                       [class.col-focused]="hoverCol() === x"
+                       [class.col-completed]="store.completedCols()[x]">
+                    <span *ngFor="let hint of col" 
+                          class="font-mono font-black leading-none py-0.5"
+                          [class.line-through]="store.completedCols()[x]"
+                          [class.opacity-35]="store.completedCols()[x]">{{ hint }}</span>
                   </div>
                 </div>
 
@@ -84,8 +89,15 @@
                   <div *ngFor="let row of store.rowHints(); let y = index" 
                        class="row-hint-item flex justify-end items-center pr-2 sm:pr-2.5 text-[var(--color-text-main)] font-black select-none"
                        [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
-                       [class.no-border-b]="y === store.height() - 1">
-                    <span *ngFor="let hint of row; let last = last" class="font-mono font-black leading-none drop-shadow-xs" [class.mr-1]="!last" [class.sm:mr-1.5]="!last">{{ hint }}</span>
+                       [class.no-border-b]="y === store.height() - 1"
+                       [class.row-focused]="hoverRow() === y"
+                       [class.row-completed]="store.completedRows()[y]">
+                    <span *ngFor="let hint of row; let last = last" 
+                          class="font-mono font-black leading-none" 
+                          [class.mr-1]="!last" 
+                          [class.sm:mr-1.5]="!last"
+                          [class.line-through]="store.completedRows()[y]"
+                          [class.opacity-35]="store.completedRows()[y]">{{ hint }}</span>
                   </div>
                 </div>
 
@@ -103,7 +115,7 @@
                      (touchcancel)="handleTouchFallbackEnd()">
                   <ng-container *ngFor="let row of store.grid(); let y = index">
                     <div *ngFor="let cell of row; let x = index" 
-                         class="cell cursor-pointer flex items-center justify-center transition-colors"
+                         class="cell cursor-pointer flex items-center justify-center relative overflow-hidden"
                          [attr.data-x]="x"
                          [attr.data-y]="y"
                          [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
@@ -111,18 +123,32 @@
                          [class.no-border-r]="x === store.width() - 1"
                          [class.no-border-b]="y === store.height() - 1"
                          [class.bg-[var(--color-text-main)]]="cell === 1"
-                         [class.bg-transparent]="cell === 0"
-                         [class.hover:bg-[var(--color-bg-main)]]="cell === 0"
+                         [class.cell-crosshair-row]="hoverRow() === y && cell !== 1"
+                         [class.cell-crosshair-col]="hoverCol() === x && cell !== 1"
+                         [class.cell-crosshair-center]="hoverRow() === y && hoverCol() === x && cell !== 1"
                          (contextmenu)="onContextMenu($event)">
                       
-                      <div *ngIf="cell === 2" class="text-rose-500 font-bold pointer-events-none select-none" [style.font-size.px]="cellSize() * 0.7">✕</div>
+                      <!-- Crossed 2 -->
+                      <div *ngIf="cell === 2" class="text-rose-500 dark:text-rose-400 font-bold pointer-events-none select-none flex items-center justify-center" [style.font-size.px]="cellSize() * 0.72">✕</div>
                     </div>
                   </ng-container>
                 </div>
               </div>
 
+              <!-- Clues progress summary pill -->
+              <div class="mt-2 text-[11px] font-semibold text-[var(--color-text-secondary)] flex items-center justify-center gap-3">
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>{{ completedRowsCount() }}/{{ store.height() }} {{ t('nonogram.rows_completed')() || '行完成' }}</span>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>{{ completedColsCount() }}/{{ store.width() }} {{ t('nonogram.cols_completed')() || '列完成' }}</span>
+                </span>
+              </div>
+
               <!-- Toolbar (Sudoku Style) -->
-              <div class="mt-3 sm:mt-4 md:mt-5 flex justify-center gap-1.5 md:gap-3 w-full max-w-[500px]" *ngIf="store.status() !== GameStatus.Waiting">
+              <div class="mt-2.5 sm:mt-3 md:mt-4 flex justify-center gap-1.5 md:gap-3 w-full max-w-[500px]" *ngIf="store.status() !== GameStatus.Waiting">
                 
                 @if (store.currentRoomMode() === GameMode.Single) {
                   <app-game-toolbar
@@ -160,35 +186,39 @@
 
                 <button 
                   (click)="store.setDrawMode('fill')"
-                  class="flex-1 flex flex-col items-center justify-start p-1.5 md:p-3 rounded-xl border transition-all active:scale-95"
+                  class="flex-1 flex flex-col items-center justify-start p-1.5 md:p-3 rounded-xl border transition-all active:scale-95 shadow-xs"
                   [class.bg-[var(--color-accent-from)]]="store.drawMode() === 'fill'"
                   [class.border-[var(--color-accent-from)]]="store.drawMode() === 'fill'"
                   [class.text-white]="store.drawMode() === 'fill'"
+                  [class.ring-2]="store.drawMode() === 'fill'"
+                  [class.ring-indigo-400/40]="store.drawMode() === 'fill'"
                   [class.bg-[var(--color-bg-card)]]="store.drawMode() !== 'fill'"
                   [class.border-[var(--color-border-card)]]="store.drawMode() !== 'fill'"
                   [class.text-[var(--color-text-main)]]="store.drawMode() !== 'fill'"
                   [class.hover:bg-[var(--color-bg-main)]]="store.drawMode() !== 'fill'">
                   <span class="text-base md:text-xl mb-0.5 md:mb-1 drop-shadow-md">⬛</span>
-                  <span class="text-[10px] md:text-xs font-semibold">{{ t('tutorial.nonogram.fill')() }}</span>
+                  <span class="text-[10px] md:text-xs font-bold">{{ t('tutorial.nonogram.fill')() }}</span>
                 </button>
 
                 <button 
                   (click)="store.setDrawMode('cross')"
-                  class="flex-1 flex flex-col items-center justify-start p-1.5 md:p-3 rounded-xl border transition-all active:scale-95"
+                  class="flex-1 flex flex-col items-center justify-start p-1.5 md:p-3 rounded-xl border transition-all active:scale-95 shadow-xs"
                   [class.bg-rose-500]="store.drawMode() === 'cross'"
                   [class.border-rose-500]="store.drawMode() === 'cross'"
                   [class.text-white]="store.drawMode() === 'cross'"
+                  [class.ring-2]="store.drawMode() === 'cross'"
+                  [class.ring-rose-400/40]="store.drawMode() === 'cross'"
                   [class.bg-[var(--color-bg-card)]]="store.drawMode() !== 'cross'"
                   [class.border-[var(--color-border-card)]]="store.drawMode() !== 'cross'"
                   [class.text-[var(--color-text-main)]]="store.drawMode() !== 'cross'"
                   [class.hover:bg-[var(--color-bg-main)]]="store.drawMode() !== 'cross'">
                   <span class="text-base md:text-xl mb-0.5 md:mb-1 drop-shadow-md">❌</span>
-                  <span class="text-[10px] md:text-xs font-semibold">{{ t('tutorial.nonogram.cross')() }}</span>
+                  <span class="text-[10px] md:text-xs font-bold">{{ t('tutorial.nonogram.cross')() }}</span>
                 </button>
               </div>
             </div>
-            </div>
-          }
+          </div>
+        }
 
           <!-- Starting Overlay -->
           @if (store.status() === GameStatus.Starting) {

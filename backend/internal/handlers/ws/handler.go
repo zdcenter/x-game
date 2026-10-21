@@ -221,6 +221,53 @@ func Register(router fiber.Router) {
 						action["senderName"] = username
 						action["timestamp"] = time.Now().UnixMilli()
 						wsManager.Lobby.BroadcastMessage(action)
+					} else if action["type"] == "report_activity" {
+						gameID, _ := action["gameId"].(string)
+						actType, _ := action["activityType"].(string)
+						if actType == "" {
+							actType = "playing"
+						}
+						mode, _ := action["mode"].(string)
+						diff, _ := action["diff"].(string)
+						text, _ := action["text"].(string)
+						avatar, _ := action["avatar"].(string)
+						score := 0
+						if s, ok := action["score"].(float64); ok {
+							score = int(s)
+						}
+						timeTaken := 0
+						if t, ok := action["timeTaken"].(float64); ok {
+							timeTaken = int(t)
+						}
+						act := wsManager.LobbyActivity{
+							ID:        fmt.Sprintf("act_%d", time.Now().UnixNano()),
+							Type:      actType,
+							PlayerID:  playerID,
+							Username:  username,
+							Avatar:    avatar,
+							GameID:    gameID,
+							Mode:      mode,
+							Diff:      diff,
+							Score:     score,
+							TimeTaken: timeTaken,
+							Text:      text,
+							Timestamp: time.Now().UnixMilli(),
+						}
+						wsManager.Lobby.AddActivity(act)
+						if actType == "playing" {
+							wsManager.Lobby.UpdatePlayerGameStatus(playerID, "playing", gameID, mode, diff, "", "")
+						} else if actType == "idle" {
+							wsManager.Lobby.UpdatePlayerGameStatus(playerID, "idle", "", "", "", "", "")
+						}
+					} else if action["type"] == "cheer" {
+						targetID, _ := action["targetId"].(string)
+						gameID, _ := action["gameId"].(string)
+						action["senderId"] = playerID
+						action["senderName"] = username
+						action["targetId"] = targetID
+						action["gameId"] = gameID
+						action["timestamp"] = time.Now().UnixMilli()
+						wsManager.Lobby.BroadcastMessage(action)
 					} else if action["type"] == "match" {
 						gameID, _ := action["gameId"].(string)
 						mode, _ := action["mode"].(string)

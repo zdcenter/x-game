@@ -12,6 +12,7 @@ import { GameLayoutComponent } from '../../shared/components/game-layout/game-la
 import { CrossGameJoinService } from '../services/cross-game-join.service';
 import { ToastService } from '../services/toast.service';
 import { I18nService } from '../i18n/i18n.service';
+import { LiveActivityService } from '../services/live-activity.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -31,6 +32,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected crossGameJoin = inject(CrossGameJoinService);
   protected baseToastService = inject(ToastService);
   protected i18nBase = inject(I18nService);
+  protected liveActivityService = inject(LiveActivityService);
   private _injector = inject(Injector);
 
   isMobileSidebarOpen = signal<boolean>(false);
@@ -62,6 +64,27 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       this.gameService.visitGame(gameId).subscribe({
         error: err => console.error('Failed to update visit count', err)
       });
+
+      if (isBrowser()) {
+        setTimeout(() => {
+          if (this.store && this.store.currentRoomMode() === GameMode.Single) {
+            const storeAny = this.store as any;
+            const diff = typeof storeAny.currentDifficulty === 'function'
+              ? storeAny.currentDifficulty()
+              : (typeof storeAny.difficulty === 'function' ? storeAny.difficulty() : (storeAny.difficulty || 'medium'));
+            this.liveActivityService.reportPlaying(gameId, diff);
+          }
+        }, 600);
+
+        // Listen for cheers sent from lobby players
+        effect(() => {
+          const cheer = this.wsService.cheerReceivedEvent();
+          if (cheer && cheer.gameId === gameId) {
+            const cheerTpl = this.i18nBase.t('activity.cheer_toast')() || '🎉 玩家 {sender} 为你加油喝彩！';
+            this.baseToastService.show(cheerTpl.replace('{sender}', cheer.senderName), 'success');
+          }
+        }, { injector: this._injector });
+      }
     }
 
     // Deep link check for PK invites (browser-only: uses setTimeout + router navigate)
@@ -181,8 +204,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   goBack() {
     if (this.store.roomId()) {
       if (this.store.hostId() === this.playerId) {
-        this.dismissRoom();
-        return;
+        if (this.store.status() === GameStatus.Finished) {
+          this.store.dismissRoom();
+        } else {
+          this.dismissRoom();
+          return;
+        }
       } else {
         this.store.leaveRoom();
       }
@@ -224,10 +251,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   dismissRoom() {
-    // If only host is in the room (or empty), dismiss immediately without confirmation!
+    // If game is finished or only host is in the room (or empty), dismiss immediately without confirmation!
     const storeAny = this.store as any;
-    const players = typeof storeAny.players === 'function' ? storeAny.players() : (typeof storeAny.playerList === 'function' ? storeAny.playerList() : []);
-    if (!players || players.length <= 1) {
+    const players = typeof storeAny.roomPlayers === 'function' ? storeAny.roomPlayers() :
+                    (typeof storeAny.players === 'function' ? storeAny.players() :
+                    (typeof storeAny.playersList === 'function' ? storeAny.playersList() : []));
+    if (this.store.status() === GameStatus.Finished || !players || players.length <= 1) {
       this.store.dismissRoom();
       this.baseToastService.show(this.i18nBase.t('game.dismiss_success')(), 'success');
       this.navigateToLobby();
@@ -248,8 +277,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   protected navigateToLobby(): void {
-    // Preserve lang prefix: URL is /zh/... or /en/...
-    const lang = this._baseRouter.url.split('/')[1] || 'zh';
+    // Preserve lang prefix: robustly fallback to i18n service or URL inspection
+    const lang = this.i18nBase?.currentLang?.() || (this._baseRouter.url.startsWith('/en') ? 'en' : 'zh');
     this._baseRouter.navigate(['/', lang, 'lobby']);
   }
 

@@ -365,6 +365,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
   dismissRoom() {
     this.ws.send({ type: C2SAction.DismissRoom });
+    this.leaveRoom();
   }
 
   ready() {

@@ -14,8 +14,9 @@ var (
 	Enabled bool = true
 
 	mu          sync.RWMutex
-	fakePlayers []map[string]interface{}
-	fakeRooms   []map[string]interface{}
+	fakePlayers    []map[string]interface{}
+	fakeRooms      []map[string]interface{}
+	fakeActivities []map[string]interface{}
 
 	games = []string{"minesweeper", "sudoku", "sliding", "hexa", "tetris", "gomoku", "codebreaker", "watersort", "drop2048", "math24", "sokoban"}
 	modes = []string{"pk_speed", "pk_steal"}
@@ -84,6 +85,16 @@ func GetFakeRooms() []map[string]interface{} {
 	return fakeRooms
 }
 
+// GetFakeActivities returns a slice of fake real-time activity events
+func GetFakeActivities() []map[string]interface{} {
+	mu.RLock()
+	defer mu.RUnlock()
+	if !Enabled {
+		return nil
+	}
+	return fakeActivities
+}
+
 func ForceRefresh() {
 	refreshFakeData()
 }
@@ -97,15 +108,28 @@ func refreshFakeData() {
 	newPlayers := make([]map[string]interface{}, 0, numPlayers)
 	for i := 0; i < numPlayers; i++ {
 		idStr := fmt.Sprintf("Guest_%04x", rand.Intn(0xFFFF))
-		newPlayers = append(newPlayers, map[string]interface{}{
+		p := map[string]interface{}{
 			"id":       idStr,
 			"username": idStr,
-			"status":   "idle", // fake players are mostly idle or playing
-		})
-	}
-	// Mark some as playing
-	for i := 0; i < numPlayers/3; i++ {
-		newPlayers[i]["status"] = "playing"
+			"status":   "idle",
+		}
+
+		// 45% playing single-player, 25% in PK match, 30% idle
+		r := rand.Intn(100)
+		if r < 45 {
+			p["status"] = "playing"
+			p["game"] = games[rand.Intn(len(games))]
+			p["diff"] = diffs[rand.Intn(len(diffs))]
+			p["mode"] = "single"
+		} else if r < 70 {
+			p["status"] = "pk"
+			p["game"] = games[rand.Intn(len(games))]
+			p["diff"] = diffs[rand.Intn(len(diffs))]
+			p["mode"] = "pk"
+			p["opponent"] = fmt.Sprintf("Guest_%04x", rand.Intn(0xFFFF))
+		}
+
+		newPlayers = append(newPlayers, p)
 	}
 	fakePlayers = newPlayers
 
@@ -144,4 +168,42 @@ func refreshFakeData() {
 		})
 	}
 	fakeRooms = newRooms
+
+	// 3. Generate fake real-time activity events (10-15 activities)
+	numActivities := rand.Intn(6) + 10
+	newActivities := make([]map[string]interface{}, 0, numActivities)
+	actTypes := []string{"playing", "playing", "record", "room_created"}
+	nowMs := time.Now().UnixMilli()
+
+	for i := 0; i < numActivities; i++ {
+		player := newPlayers[rand.Intn(len(newPlayers))]
+		game := games[rand.Intn(len(games))]
+		actType := actTypes[rand.Intn(len(actTypes))]
+		diff := diffs[rand.Intn(len(diffs))]
+		pastSeconds := rand.Intn(600) + 10 // within last 10 minutes
+		score := 0
+		timeTaken := 0
+
+		if actType == "record" {
+			if game == "minesweeper" || game == "sliding" {
+				timeTaken = rand.Intn(45) + 15
+			} else {
+				score = (rand.Intn(50) + 10) * 500
+			}
+		}
+
+		newActivities = append(newActivities, map[string]interface{}{
+			"id":        fmt.Sprintf("act_sim_%d_%d", nowMs, i),
+			"type":      actType,
+			"playerId":  player["id"],
+			"username":  player["username"],
+			"gameId":    game,
+			"diff":      diff,
+			"mode":      "single",
+			"score":     score,
+			"timeTaken": timeTaken,
+			"timestamp": nowMs - int64(pastSeconds*1000),
+		})
+	}
+	fakeActivities = newActivities
 }

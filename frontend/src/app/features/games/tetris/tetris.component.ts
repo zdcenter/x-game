@@ -135,14 +135,18 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     const maxHByW = Math.floor(availW * 2);
 
     // Max height limits:
-    // Mobile: up to 520px
-    // Tablet (iPad): up to 860px (gives 430px width in 1:2 aspect ratio, filling tablet majestically!)
-    // Desktop: up to 880px
-    const maxH = vw < 768 ? 520 : (vw < 1024 ? 860 : 880);
+    // Mobile: up to 500px
+    // Tablet (iPad 768-1024px): up to 600px (so board width is 300px, leaving plenty of space for wings!)
+    // Desktop: up to 740px
+    const maxH = vw < 768 ? 500 : (vw < 1024 ? 600 : 740);
 
-    const targetH = Math.max(380, Math.min(availH, maxH, maxHByW));
+    const targetH = Math.max(360, Math.min(availH, maxH, maxHByW));
     return `${targetH}px`;
   });
+
+  getRemainingBufferSeconds(): string {
+    return this.store.bufferSecondsLeft();
+  }
 
   readonly COLS = TETRIS_COLS;
   readonly ROWS = TETRIS_ROWS;
@@ -180,8 +184,12 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       }
 
       if (status === GameStatus.Finished) {
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
+        if (this.currentRoomMode() === GameMode.Single) {
+          const timer = setTimeout(() => this.showOverlay.set(true), 1000);
+          onCleanup(() => clearTimeout(timer));
+        } else {
+          this.showOverlay.set(true);
+        }
       } else {
         this.showOverlay.set(false);
       }
@@ -218,6 +226,35 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         }
       }
     });
+
+    // Battle PK Attack FX
+    effect(() => {
+      const atk = this.store.attackLaser();
+      if (atk && this.boardArea) {
+        const rect = this.boardArea.nativeElement.getBoundingClientRect();
+        this.floatingText.show(`🚀 ATTACK +${atk.lines} LINES!`, rect.left + rect.width / 2, rect.top + rect.height * 0.35, { size: 'lg', color: '#f43f5e' });
+      }
+    });
+
+    // Battle PK Counter Defense FX
+    effect(() => {
+      const cnt = this.store.counterNotice();
+      if (cnt && this.boardArea) {
+        const rect = this.boardArea.nativeElement.getBoundingClientRect();
+        this.floatingText.show(`🛡️ COUNTER -${cnt.lines} BLOCKED!`, rect.left + rect.width / 2, rect.top + rect.height * 0.45, { size: 'lg', color: '#10b981' });
+      }
+    });
+
+    // Battle PK Incoming Alert FX
+    effect(() => {
+      const inc = this.store.incomingNotice();
+      if (inc && this.boardArea) {
+        const rect = this.boardArea.nativeElement.getBoundingClientRect();
+        const alertTitle = this.i18n.t('tetris.incoming_alert')() || 'INCOMING ATTACK';
+        const linesText = this.i18n.t('tetris.lines')() || 'LINES';
+        this.floatingText.show(`⚠️ ${alertTitle}: +${inc.lines} ${linesText} (2.5s)!`, rect.left + rect.width / 2, rect.top + rect.height * 0.22, { size: 'lg', color: '#f43f5e' });
+      }
+    });
   }
 
   override ngOnInit() {
@@ -242,6 +279,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.store.leaveRoom();
+  }
+
+  override goBack() {
+    this.roomLifecycle?.clearReconnectInfo();
+    super.goBack();
   }
 
   override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
@@ -529,5 +571,14 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       }
     }
     return stats;
+  }
+
+  isOpponentCritical(matrix: number[][]): boolean {
+    if (!matrix || matrix.length === 0) return false;
+    // Check if blocks have stacked up into danger territory (rows 0 to 5 out of 20)
+    for (let r = 0; r < Math.min(6, matrix.length); r++) {
+      if (matrix[r]?.some(c => c !== 0)) return true;
+    }
+    return false;
   }
 }

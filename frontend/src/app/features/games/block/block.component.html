@@ -148,7 +148,7 @@
                        [style.height.px]="p.size"
                        [style.--tx]="p.tx + 'px'"
                        [style.--ty]="p.ty + 'px'"
-                       style="box-shadow: 0 0 6px currentColor;">
+                       style="box-shadow: 0 0 10px currentColor, 0 0 20px #ffffff;">
                   </div>
                 }
               </div>
@@ -156,7 +156,7 @@
               <div class="w-full h-full relative flex items-center justify-center bg-[var(--color-bg-card)] p-1 sm:p-2 rounded-xl shadow-2xl border border-[var(--color-border-card)] touch-none select-none overflow-hidden"
                    [ngClass]="'block-theme-' + store.colorTheme()">
                 <div #boardElement
-                     class="grid gap-1 block-board p-1 rounded-lg w-full h-full"
+                     class="grid gap-1 block-board p-1 rounded-lg w-full h-full relative"
                      [style.gridTemplateColumns]="'repeat(' + store.boardSize() + ', minmax(0, 1fr))'">
 
                   <!-- Cells -->
@@ -167,6 +167,24 @@
                            [style.--clear-delay]="store.clearingSet().has(rIndex + '-' + cIndex) ? (((rIndex + cIndex) * 12) + 'ms') : '0ms'">
                       </div>
                     }
+                  }
+
+                  <!-- Horizontal Laser Sweeps for Cleared Rows -->
+                  @for (r of store.clearingRows(); track r) {
+                    <div class="absolute left-1 right-1 pointer-events-none z-30"
+                         [style.top]="'calc(4px + (' + r + ' * ((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ' + 4px)))'"
+                         [style.height]="'calc((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ')'">
+                      <div class="w-full h-full block-laser-beam-h"></div>
+                    </div>
+                  }
+
+                  <!-- Vertical Laser Sweeps for Cleared Columns -->
+                  @for (c of store.clearingCols(); track c) {
+                    <div class="absolute top-1 bottom-1 pointer-events-none z-30"
+                         [style.left]="'calc(4px + (' + c + ' * ((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ' + 4px)))'"
+                         [style.width]="'calc((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ')'">
+                      <div class="w-full h-full block-laser-beam-v"></div>
+                    </div>
                   }
 
                   <!-- Preview Shadow -->

@@ -33,7 +33,7 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   localScore = signal<number>(0);
   isDead = signal<boolean>(false);
   combos = signal<ComboText[]>([]);
-  particles = signal<{ id: string, x: number, y: number, color: string, size: number }[]>([]);
+  particles = signal<{ id: string, x: number, y: number, color: string, size: number, tx?: number, ty?: number }[]>([]);
   bestScore = signal<number>(parseInt(storageGet('drop2048_best') || '0', 10));
   ghostRow = signal<number>(-1);
   comboCount = signal<number>(0);

@@ -21,6 +21,7 @@ import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { LiveWaitingRoomsComponent } from './components/live-waiting-rooms/live-waiting-rooms.component';
+import { LiveActivityTickerComponent } from '../../shared/components/live-activity-ticker/live-activity-ticker.component';
 import { LiveRoomService } from '../../core/services/live-room.service';
 import { AuthModalService } from '../../core/services/auth-modal.service';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
@@ -31,7 +32,7 @@ const PAGE_SIZE = 8;
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent],
+  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent, LiveActivityTickerComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })

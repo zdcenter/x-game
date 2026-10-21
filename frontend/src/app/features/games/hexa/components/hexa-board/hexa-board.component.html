@@ -30,15 +30,15 @@
         </polygon>
       </g>
 
-      <!-- 3. Burst Shockwave Ring: 消除瞬间向外辐射的光波 -->
+      <!-- 3. Burst Shockwave Ring: 消除瞬间向外辐射的高能光波 -->
       <circle
         *ngIf="isClearing(cell)"
         [attr.cx]="hexCenter(cell.q, cell.r).x"
         [attr.cy]="hexCenter(cell.q, cell.r).y"
         r="3"
         fill="none"
-        stroke="rgba(255,255,255,0.95)"
-        stroke-width="2.5"
+        stroke="rgba(255,255,255,0.98)"
+        stroke-width="3"
         class="hexa-cell-burst"
         [style.--clear-delay]="getClearDelay(cell)">
       </circle>
@@ -47,7 +47,7 @@
       <g *ngIf="isClearing(cell)" [style.--clear-delay]="getClearDelay(cell)" class="hexa-shards-emitter">
         <polygon
           *ngFor="let ang of shardAngles"
-          points="-1.2,-1.2 0,-3.2 1.2,-1.2 0,0.8"
+          points="-1.4,-1.4 0,-3.8 1.4,-1.4 0,1"
           fill="white"
           class="hexa-shard-spark"
           [attr.transform]="'translate(' + hexCenter(cell.q, cell.r).x + ',' + hexCenter(cell.q, cell.r).y + ') rotate(' + ang + ')'">
@@ -59,13 +59,32 @@
         *ngIf="isClearing(cell)"
         [attr.points]="hexPoints(cell.q, cell.r)"
         [attr.fill]="clearingColor(cell)"
-        stroke="rgba(255,255,255,0.98)"
-        stroke-width="2.2"
+        stroke="rgba(255,255,255,1)"
+        stroke-width="2.5"
         stroke-linejoin="round"
         class="hexa-cell-clearing"
         [style.transform-origin]="hexCenter(cell.q, cell.r).x + 'px ' + hexCenter(cell.q, cell.r).y + 'px'"
         [style.--clear-delay]="getClearDelay(cell)">
       </polygon>
+
+      <!-- 6. Incandescent White Flash Core: 纯白高光耀斑暴击 -->
+      <polygon
+        *ngIf="isClearing(cell)"
+        [attr.points]="hexPoints(cell.q, cell.r)"
+        fill="#ffffff"
+        class="hexa-white-flash"
+        [style.transform-origin]="hexCenter(cell.q, cell.r).x + 'px ' + hexCenter(cell.q, cell.r).y + 'px'"
+        [style.--clear-delay]="getClearDelay(cell)">
+      </polygon>
+
+      <!-- 7. Radiant Star Flare Cross Glint: 核心十字星芒 -->
+      <g *ngIf="isClearing(cell)"
+         [style.--clear-delay]="getClearDelay(cell)"
+         class="hexa-star-glint"
+         [attr.transform]="'translate(' + hexCenter(cell.q, cell.r).x + ',' + hexCenter(cell.q, cell.r).y + ')'">
+        <path d="M -9,0 L 9,0 M 0,-9 L 0,9" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+        <circle cx="0" cy="0" r="2.2" fill="#ffffff" />
+      </g>
     </g>
     
     <!-- Hover Preview -->

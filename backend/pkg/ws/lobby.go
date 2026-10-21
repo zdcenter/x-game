@@ -22,7 +22,12 @@ type LobbyPlayer struct {
 	IP          string
 	ConnectedAt int64
 	Conn        *websocket.Conn
-	Status      string // "idle", "playing", "spectating"
+	Status      string // "idle", "playing", "pk", "spectating"
+	Game        string // e.g. "minesweeper", "tetris", etc.
+	Mode        string // "single", "pk"
+	Diff        string // "easy", "medium", "hard", "expert"
+	Opponent    string // opponent username if playing PK
+	RoomID      string // room ID if in room
 	mu          sync.Mutex
 }
 
@@ -34,14 +39,32 @@ func (p *LobbyPlayer) WriteMessage(messageType int, data []byte) error {
 	return p.Conn.WriteMessage(messageType, data)
 }
 
-// GlobalLobby manages all online players and available rooms
+// LobbyActivity represents a real-time event across the gaming network
+type LobbyActivity struct {
+	ID        string `json:"id"`
+	Type      string `json:"type"` // "playing", "record", "room_created", "milestone"
+	PlayerID  string `json:"playerId"`
+	Username  string `json:"username"`
+	Avatar    string `json:"avatar,omitempty"`
+	GameID    string `json:"gameId"`
+	Mode      string `json:"mode,omitempty"`
+	Diff      string `json:"diff,omitempty"`
+	Score     int    `json:"score,omitempty"`
+	TimeTaken int    `json:"timeTaken,omitempty"`
+	Text      string `json:"text,omitempty"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+// GlobalLobby manages all online players, activities, and available rooms
 type GlobalLobby struct {
-	Players map[string]*LobbyPlayer
-	mu      sync.RWMutex
+	Players    map[string]*LobbyPlayer
+	Activities []LobbyActivity
+	mu         sync.RWMutex
 }
 
 var Lobby = &GlobalLobby{
-	Players: make(map[string]*LobbyPlayer),
+	Players:    make(map[string]*LobbyPlayer),
+	Activities: make([]LobbyActivity, 0),
 }
 
 // AddPlayer adds a player to the lobby and immediately sends them the current state
@@ -171,6 +194,40 @@ func (l *GlobalLobby) SendInviteToPlayer(senderID, senderName, targetID string, 
 	}
 }
 
+// UpdatePlayerGameStatus updates the current status and game metadata of a player
+func (l *GlobalLobby) UpdatePlayerGameStatus(playerID, status, game, mode, diff, opponent, roomID string) {
+	l.mu.Lock()
+	var actualPlayerID string
+	if p, exists := l.Players[playerID]; exists {
+		p.Status = status
+		p.Game = game
+		p.Mode = mode
+		p.Diff = diff
+		p.Opponent = opponent
+		p.RoomID = roomID
+		actualPlayerID = p.PlayerID
+	} else {
+		for _, p := range l.Players {
+			if p.PlayerID == playerID || p.Username == playerID {
+				p.Status = status
+				p.Game = game
+				p.Mode = mode
+				p.Diff = diff
+				p.Opponent = opponent
+				p.RoomID = roomID
+				actualPlayerID = p.PlayerID
+				break
+			}
+		}
+	}
+	l.mu.Unlock()
+	l.BroadcastLobbyUpdate()
+
+	if actualPlayerID != "" {
+		l.NotifyFriendsOfStatusChange(actualPlayerID, status)
+	}
+}
+
 // buildLobbyPayload constructs the lobby_update JSON payload (no locks held)
 func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 	// Snapshot players
@@ -181,6 +238,11 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 			"id":       p.PlayerID,
 			"username": p.Username,
 			"status":   p.Status,
+			"game":     p.Game,
+			"mode":     p.Mode,
+			"diff":     p.Diff,
+			"opponent": p.Opponent,
+			"roomId":   p.RoomID,
 		})
 	}
 	l.mu.RUnlock()
@@ -213,10 +275,68 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 	}
 
 	return json.Marshal(map[string]interface{}{
-		"type":    "lobby_update",
-		"players": players,
-		"rooms":   activeRooms,
+		"type":       "lobby_update",
+		"players":    players,
+		"rooms":      activeRooms,
+		"activities": l.GetRecentActivities(),
 	})
+}
+
+// AddActivity adds a new real-time activity and broadcasts it to all connected players
+func (l *GlobalLobby) AddActivity(act LobbyActivity) {
+	if act.ID == "" {
+		act.ID = fmt.Sprintf("act_%d", time.Now().UnixNano())
+	}
+	if act.Timestamp == 0 {
+		act.Timestamp = time.Now().UnixMilli()
+	}
+
+	l.mu.Lock()
+	l.Activities = append([]LobbyActivity{act}, l.Activities...)
+	if len(l.Activities) > 30 {
+		l.Activities = l.Activities[:30]
+	}
+	l.mu.Unlock()
+
+	// Broadcast live activity event to all connected lobby players
+	l.BroadcastMessage(map[string]interface{}{
+		"type":     "activity_broadcast",
+		"activity": act,
+	})
+}
+
+// GetRecentActivities returns recent activities, falling back to simulated data if low
+func (l *GlobalLobby) GetRecentActivities() []map[string]interface{} {
+	l.mu.RLock()
+	var result []map[string]interface{}
+	for _, act := range l.Activities {
+		result = append(result, map[string]interface{}{
+			"id":        act.ID,
+			"type":      act.Type,
+			"playerId":  act.PlayerID,
+			"username":  act.Username,
+			"avatar":    act.Avatar,
+			"gameId":    act.GameID,
+			"mode":      act.Mode,
+			"diff":      act.Diff,
+			"score":     act.Score,
+			"timeTaken": act.TimeTaken,
+			"text":      act.Text,
+			"timestamp": act.Timestamp,
+		})
+	}
+	l.mu.RUnlock()
+
+	// Supplement with simulated activities if there are too few activities
+	if len(result) < 5 {
+		if simActs := simulator.GetFakeActivities(); len(simActs) > 0 {
+			result = append(result, simActs...)
+		}
+	}
+	if len(result) > 25 {
+		result = result[:25]
+	}
+	return result
 }
 
 // SendLobbyStateTo sends the current lobby state to a single player

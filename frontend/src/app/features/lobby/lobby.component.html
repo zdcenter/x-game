@@ -1,8 +1,11 @@
 <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] flex flex-col items-center">
 
   <!-- Main Container -->
-  <main class="w-full max-w-[1600px] px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8">
+  <main class="w-full max-w-[1600px] px-3 sm:px-6 lg:px-8 py-2 sm:py-4 flex flex-col gap-3 sm:gap-4">
     
+    <!-- ══════ Live Community Activity Ticker & Carousel (全服即时动态轮播) ══════ -->
+    <app-live-activity-ticker class="w-full shrink-0"></app-live-activity-ticker>
+
     <!-- Global Announcement Marquee -->
     <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-2.5 sm:p-3 flex items-center shadow-sm relative overflow-hidden transition-all"
          [class.hidden]="activeAnnouncements().length === 0">
@@ -16,50 +19,35 @@
       </div>
     </div>
 
-    <!-- Hero Section: Modern & Streamlined -->
-    <!-- Hero Section: Modern & Streamlined (Mobile-Compressed) -->
-    <section class="flex flex-col items-center text-center pt-1 sm:pt-4 pb-1 sm:pb-2">
-      <!-- Badge (Desktop / Tablet only) -->
-      <div class="hidden sm:inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] shadow-sm mb-3">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span>{{ i18n.t('lobby.badge_tag')() || '即开即玩 · 极速对决 · 脑力觉醒' }}</span>
-      </div>
+    <!-- Semantic SEO Headline (Screen Reader & Search Engines) -->
+    <h1 class="sr-only">{{ i18n.t('lobby.title')() }} - {{ i18n.t('lobby.subtitle')() }}</h1>
 
-      <!-- Main Headline -->
-      <h1 class="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mb-1 sm:mb-3 bg-clip-text text-transparent"
-          style="background-image: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
-        {{ i18n.t('lobby.title')() }}
-      </h1>
-
-      <p class="hidden sm:block text-xs sm:text-base opacity-75 max-w-xl mx-auto px-2 mb-6">
-        {{ i18n.t('lobby.subtitle')() }}
-      </p>
-
-      <!-- Quick Action Triple Deck (Short-Link Conversion Engine) -->
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 w-full text-left mt-1.5 sm:mt-0">
+    <!-- Quick Action Triple Deck (Short-Link Conversion Engine) -->
+    <section class="w-full">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4 w-full text-left items-stretch">
         
         <!-- Card 1: Daily Challenge Spotlight (Full Width row on mobile) -->
-        <div class="col-span-2 md:col-span-1 w-full">
-          <app-daily-challenge-banner />
+        <div class="col-span-2 md:col-span-1 w-full h-full">
+          <app-daily-challenge-banner class="h-full block" />
         </div>
 
         <!-- Card 2: ⚔️ Instant PK Arena Action Card -->
         <div (click)="goToPkArena()"
-             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-3 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-from)]/40 transition-all duration-300 relative overflow-hidden">
+             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-3 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-from)]/40 transition-all duration-300 relative overflow-hidden h-full">
           <div class="absolute -right-3 -bottom-3 text-5xl sm:text-7xl opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all pointer-events-none">
             ⚔️
           </div>
           <div>
             <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
               <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[var(--color-accent-from)] flex items-center gap-1">
-                <span>⚔️</span> {{ i18n.t('lobby.pk_arena_card_title')() || '双人竞技场' }}
+                <span>⚔️</span> {{ i18n.t('lobby.pk_arena_card_title')() || '多人竞技场' }}
               </span>
               <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
                 LIVE PK
               </span>
             </div>
             <p class="text-[11px] sm:text-xs text-[var(--color-text-secondary)] line-clamp-2">
-              {{ i18n.t('lobby.pk_arena_card_desc')() || '在线真人实时对战，比拼手速与脑力！' }}
+              {{ i18n.t('lobby.pk_arena_card_desc')() || '在线多人与亲子实时对决，比拼手速与脑力！' }}
             </p>
           </div>
           <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
@@ -74,7 +62,7 @@
 
         <!-- Card 3: 🎲 Lucky Pick (Random Game) -->
         <div (click)="playRandomGame()"
-             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-3 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-to)]/40 transition-all duration-300 relative overflow-hidden">
+             class="group cursor-pointer rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] p-3 sm:p-4 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-[var(--color-accent-to)]/40 transition-all duration-300 relative overflow-hidden h-full">
           <div class="absolute -right-3 -bottom-3 text-5xl sm:text-7xl opacity-10 group-hover:rotate-12 group-hover:scale-110 group-hover:opacity-20 transition-all pointer-events-none">
             🎲
           </div>

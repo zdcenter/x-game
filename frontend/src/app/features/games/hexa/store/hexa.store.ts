@@ -24,7 +24,7 @@ export class HexaStore extends BaseGameStore {
   bestScore = signal<number>(0);
   comboTrigger = signal<number>(0);
   shakeTrigger = signal<number>(0);
-  lastScoreGain = signal<{ score: number; combo: number; lines: number; ts: number } | null>(null);
+  lastScoreGain = signal<{ score: number; combo: number; lines: number; isAllClear?: boolean; ts: number } | null>(null);
   clearingCells = signal<Map<string, string>>(new Map());
   private clearTimerId: any = null;
   fillPct = computed(() => this.cells().filter(c => c.filled).length / 61);
@@ -206,7 +206,8 @@ export class HexaStore extends BaseGameStore {
     const linesCount = linesCleared ? (this.engine.lastLinesCleared || 1) : 0;
     const scoreGained = this.score() - prevScore;
     if (scoreGained > 0) {
-      this.lastScoreGain.set({ score: scoreGained, combo: linesCleared ? newCombo : 0, lines: linesCount, ts: Date.now() });
+      const isAllClear = Array.from(this.engine.cells.values()).every(c => !c.filled);
+      this.lastScoreGain.set({ score: scoreGained, combo: linesCleared ? newCombo : 0, lines: linesCount, isAllClear, ts: Date.now() });
     }
 
     if (linesCleared) {

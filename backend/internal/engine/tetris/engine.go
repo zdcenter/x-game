@@ -17,10 +17,21 @@ func (e *PKAttackEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
+	target := 1
+	if opts, ok := options.(map[string]interface{}); ok {
+		if t, ok := opts["target"].(int); ok && t > 0 {
+			target = t
+		} else if tf, ok := opts["target"].(float64); ok && tf > 0 {
+			target = int(tf)
+		}
+	}
+
 	e.state = &GameState{
 		Players: make(map[string]*PlayerInfo),
 		Seed:    time.Now().UnixMilli(),
 		Winners: []string{},
+		Target:  target,
+		Wins:    make(map[string]int),
 	}
 	e.State = engine.StateWaiting
 	return nil
@@ -39,6 +50,9 @@ func (e *PKAttackEngine) AddPlayer(playerID string) {
 			Matrix:          [][]int{},
 			Finished:        false,
 		}
+		if _, hasWins := e.state.Wins[playerID]; !hasWins {
+			e.state.Wins[playerID] = 0
+		}
 		e.Broadcast()
 	}
 }
@@ -49,7 +63,14 @@ func (e *PKAttackEngine) RemovePlayer(playerID string) {
 
 	if e.State == engine.StateWaiting {
 		delete(e.state.Players, playerID)
+		delete(e.state.Wins, playerID)
 		e.Broadcast()
+	} else if e.State == engine.StatePlaying {
+		if p, ok := e.state.Players[playerID]; ok {
+			p.Finished = true
+			e.checkGameEnd()
+			e.Broadcast()
+		}
 	}
 }
 
@@ -91,7 +112,23 @@ func (e *PKAttackEngine) HandleAction(playerID string, actionType string, payloa
 		return e.State, nil
 	}
 
-	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
+	if (actionType == string(domain.ActionRestartGame) || act.Action == string(domain.ActionRestartGame)) && e.State == engine.StateFinished {
+		// Reset Wins only when someone has won the series (reached target)
+		seriesOver := false
+		if e.state.Target > 0 {
+			for _, w := range e.state.Wins {
+				if w >= e.state.Target {
+					seriesOver = true
+					break
+				}
+			}
+		}
+		if seriesOver {
+			for p := range e.state.Wins {
+				e.state.Wins[p] = 0
+			}
+		}
+
 		e.State = engine.StateWaiting
 		e.state.Winners = []string{}
 		for _, p := range e.state.Players {
@@ -155,8 +192,50 @@ func (e *PKAttackEngine) GetState() interface{} {
 }
 
 func (e *PKAttackEngine) checkGameEnd() {
-	allFinished := true
+	totalPlayers := len(e.state.Players)
 
+	// If 2 or more players, any time only 1 player remains alive, they immediately win by KO!
+	if totalPlayers >= 2 {
+		var alive []string
+		for id, p := range e.state.Players {
+			if !p.Finished {
+				alive = append(alive, id)
+			}
+		}
+
+		if len(alive) == 1 {
+			e.State = engine.StateFinished
+			e.state.Winners = alive
+			for _, w := range alive {
+				e.state.Wins[w]++
+			}
+			return
+		} else if len(alive) == 0 {
+			// All died, compare scores
+			e.State = engine.StateFinished
+			maxScore := -1
+			for _, p := range e.state.Players {
+				if p.Score > maxScore {
+					maxScore = p.Score
+				}
+			}
+			var winners []string
+			for id, p := range e.state.Players {
+				if p.Score == maxScore && maxScore >= 0 {
+					winners = append(winners, id)
+				}
+			}
+			e.state.Winners = winners
+			for _, w := range winners {
+				e.state.Wins[w]++
+			}
+			return
+		}
+		return
+	}
+
+	// 1 player room / solo practice
+	allFinished := true
 	for _, p := range e.state.Players {
 		if !p.Finished {
 			allFinished = false
@@ -166,23 +245,14 @@ func (e *PKAttackEngine) checkGameEnd() {
 
 	if allFinished {
 		e.State = engine.StateFinished
-
-		// Find max score
-		maxScore := -1
-		for _, p := range e.state.Players {
-			if p.Score > maxScore {
-				maxScore = p.Score
-			}
-		}
-
-		// Collect winners
 		var winners []string
-		for id, p := range e.state.Players {
-			if p.Score == maxScore && maxScore >= 0 {
-				winners = append(winners, id)
-			}
+		for id := range e.state.Players {
+			winners = append(winners, id)
 		}
 		e.state.Winners = winners
+		for _, w := range winners {
+			e.state.Wins[w]++
+		}
 	}
 }
 

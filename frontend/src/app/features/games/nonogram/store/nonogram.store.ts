@@ -64,6 +64,35 @@ export class NonogramStore extends BaseGameStore {
     return (this.rawState() as any)?.col_hints || [];
   });
 
+  /** Track which rows are currently fulfilled according to row hints */
+  readonly completedRows = computed<boolean[]>(() => {
+    const g = this.grid();
+    const hints = this.rowHints() as number[][];
+    if (!g || !hints || g.length === 0 || hints.length === 0) return [];
+    return hints.map((expected: number[], y: number) => {
+      const row = g[y];
+      if (!row) return false;
+      const current = NonogramEngine.getLineHints(row.map((c: CellState) => c === 1 ? 1 : 0));
+      return current.length === expected.length && current.every((v: number, i: number) => v === expected[i]);
+    });
+  });
+
+  /** Track which columns are currently fulfilled according to col hints */
+  readonly completedCols = computed<boolean[]>(() => {
+    const g = this.grid();
+    const hints = this.colHints() as number[][];
+    const h = this.height();
+    if (!g || !hints || g.length === 0 || hints.length === 0) return [];
+    return hints.map((expected: number[], x: number) => {
+      const col: number[] = [];
+      for (let y = 0; y < h; y++) {
+        col.push(g[y]?.[x] === 1 ? 1 : 0);
+      }
+      const current = NonogramEngine.getLineHints(col);
+      return current.length === expected.length && current.every((v: number, i: number) => v === expected[i]);
+    });
+  });
+
   // Current board grid
   readonly grid = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localState()?.grid || [];

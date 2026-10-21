@@ -400,14 +400,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   }
 
   handleLeave() {
-    this.adService.tryShowInterstitial(() => {
-      if (this.leave.observed) {
-        this.leave.emit();
-      } else {
-        const lang = this.i18n.currentLang();
-        this.router.navigate(['/', lang, 'lobby']);
-      }
-    });
+    if (this.leave.observed) {
+      this.leave.emit();
+    } else {
+      const lang = this.i18n.currentLang();
+      this.router.navigate(['/', lang, 'lobby']);
+    }
   }
 
   handleRestart() {

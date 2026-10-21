@@ -126,9 +126,17 @@
                 </div>
               </button>
 
-              <!-- Mobile Level Badge -->
-              <div class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 font-mono font-black text-xs">
-                LV.{{ store.level() }}
+              <!-- Mobile Level / Combat Danger Badge -->
+              <div class="flex items-center gap-1.5">
+                <div class="px-2.5 sm:px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 font-mono font-black text-xs">
+                  LV.{{ store.level() }}
+                </div>
+                @if (currentRoomMode() !== GameMode.Single && store.pendingGarbage() > 0) {
+                  <div class="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/50 text-rose-500 font-mono font-black text-xs animate-pulse flex items-center gap-1">
+                    <span>⚠️</span>
+                    <span>+{{ store.pendingGarbage() }}</span>
+                  </div>
+                }
               </div>
 
               <!-- Mobile Next Indicator -->
@@ -155,15 +163,15 @@
                  (touchend)="onTouchEnd($event)">
               
               <!-- LEFT WING CONSOLE (Desktop / Tablet) -->
-              <div class="hidden md:flex flex-col gap-3 lg:gap-4 self-center mt-2 items-end w-32 lg:w-40 shrink-0">
+              <div class="hidden md:flex flex-col gap-2.5 sm:gap-3 self-center mt-2 items-end w-24 sm:w-28 lg:w-32 shrink-0">
                 
                 <!-- HOLD Chamber -->
                 <div (click)="store.hold()"
                      [class.cursor-pointer]="store.canHold()"
                      [class.opacity-60]="!store.canHold()"
-                     class="tetris-wing-card p-3 rounded-2xl flex flex-col items-center w-full group relative overflow-hidden select-none"
+                     class="tetris-wing-card p-2.5 rounded-2xl flex flex-col items-center w-full group relative overflow-hidden select-none"
                      title="Press C or click to Hold">
-                  <div class="flex items-center justify-between w-full mb-2">
+                  <div class="flex items-center justify-between w-full mb-1.5">
                     <span class="text-[10px] lg:text-xs font-black uppercase tracking-wider text-indigo-500 dark:text-indigo-400">
                       {{ i18n.t('tetris.hold')() }}
                     </span>
@@ -173,12 +181,12 @@
                   </div>
 
                   <!-- Hold Piece Display Chamber -->
-                  <div class="flex items-center justify-center w-full aspect-square max-w-[80px] rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] p-2">
+                  <div class="flex items-center justify-center w-full aspect-square max-w-[68px] sm:max-w-[76px] rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] p-1.5">
                     @if (store.holdPiece()) {
                       <div class="grid gap-1" [style.gridTemplateColumns]="'repeat(' + getShapeArray(store.holdPiece()!).length + ', minmax(0, 1fr))'">
                         @for (row of getShapeArray(store.holdPiece()!); track $index) {
                           @for (cell of row; track $index) {
-                            <div class="w-3 lg:w-4 h-3 lg:h-4 rounded-[2px] shadow-sm relative tetris-solid-cell"
+                            <div class="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 rounded-[2px] shadow-sm relative tetris-solid-cell"
                                  [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"
                                  [class.opacity-0]="!cell">
                             </div>
@@ -192,11 +200,11 @@
                 </div>
 
                 <!-- Level & Speed Panel -->
-                <div class="tetris-wing-card p-3 rounded-2xl flex flex-col items-center w-full">
-                  <span class="text-[10px] lg:text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none mb-1.5">
+                <div class="tetris-wing-card p-2.5 rounded-2xl flex flex-col items-center w-full">
+                  <span class="text-[10px] lg:text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none mb-1">
                     {{ i18n.t('tetris.level')() }}
                   </span>
-                  <span class="font-black font-mono text-2xl lg:text-4xl text-amber-500 leading-none drop-shadow-sm mb-2">
+                  <span class="font-black font-mono text-xl sm:text-2xl lg:text-3xl text-amber-500 leading-none drop-shadow-sm mb-1.5">
                     {{ store.level() }}
                   </span>
                   <!-- Mini Progress / Speed Indicator -->
@@ -206,34 +214,40 @@
                   </div>
                 </div>
 
-                <!-- Quick Controls Guide Card (PC) -->
-                <div class="tetris-wing-card p-2.5 lg:p-3 rounded-2xl flex flex-col w-full text-[10px] lg:text-[11px] text-[var(--color-text-muted)] gap-1.5">
-                  <span class="font-bold uppercase tracking-wider text-[var(--color-text-main)] border-b border-[var(--color-border-card)] pb-1 mb-0.5">
-                    {{ i18n.t('tetris.controls')() }}
-                  </span>
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[var(--color-text-main)] font-semibold">← →</span>
-                    <span>{{ i18n.t('tetris.controls_move')() }}</span>
+              </div>
+
+              <!-- TACTICAL GARBAGE ALERT METER (PK BATTLE ONLY) -->
+              @if (currentRoomMode() !== GameMode.Single) {
+                <div class="hidden sm:flex flex-col items-center justify-end h-full py-1 shrink-0 select-none z-20"
+                     [style.height]="boardHeightPx()"
+                     [title]="i18n.t('tetris.garbage_warning')()">
+                  <!-- Warning Badge Top -->
+                  <div class="mb-1.5 flex flex-col items-center" [class.animate-bounce]="store.pendingGarbage() > 0">
+                    <span class="text-xs sm:text-sm font-black" [class.text-rose-500]="store.pendingGarbage() > 0" [class.text-[var(--color-text-muted)]]="store.pendingGarbage() === 0">
+                      {{ store.pendingGarbage() > 0 ? '⚠️' : '🛡️' }}
+                    </span>
+                    <span class="text-[10px] font-mono font-black"
+                          [class.text-rose-500]="store.pendingGarbage() > 0"
+                          [class.text-[var(--color-text-muted)]]="store.pendingGarbage() === 0">
+                      {{ store.pendingGarbage() }}
+                    </span>
                   </div>
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[var(--color-text-main)] font-semibold">↑ / Z</span>
-                    <span>{{ i18n.t('tetris.controls_rotate')() }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[var(--color-text-main)] font-semibold">↓</span>
-                    <span>{{ i18n.t('tetris.controls_soft_drop')() }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[var(--color-text-main)] font-semibold">SPACE</span>
-                    <span>{{ i18n.t('tetris.controls_hard_drop')() }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="font-mono text-[var(--color-text-main)] font-semibold">C</span>
-                    <span>{{ i18n.t('tetris.controls_hold')() }}</span>
+
+                  <!-- 20-Segment Vertical Threat Bar -->
+                  <div class="w-3 sm:w-3.5 flex-1 bg-black/40 rounded-full border border-slate-700/60 p-[2px] flex flex-col-reverse gap-[1.5px] overflow-hidden"
+                       [class.garbage-meter-active]="store.pendingGarbage() > 0">
+                    @for (segment of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track segment) {
+                      <div class="w-full h-full rounded-[1px] transition-all duration-200"
+                           [class.bg-rose-500]="segment <= store.pendingGarbage() && segment > 6"
+                           [class.bg-amber-400]="segment <= store.pendingGarbage() && segment <= 6"
+                           [class.shadow-[0_0_6px_#f43f5e]]="segment <= store.pendingGarbage() && segment > 6"
+                           [class.shadow-[0_0_4px_#fbbf24]]="segment <= store.pendingGarbage() && segment <= 6"
+                           [class.bg-white/5]="segment > store.pendingGarbage()">
+                      </div>
+                    }
                   </div>
                 </div>
-
-              </div>
+              }
 
               <!-- CENTER: MAIN MATRIX BOARD -->
               <div class="relative flex-shrink-0 touch-none flex flex-col items-center justify-center"
@@ -263,6 +277,31 @@
                       }
                     }
                   </div>
+
+                  <!-- Tactical Incoming Threat Alert Capsule (2.5s Buffer Countdown, floating top, does NOT cover cells) -->
+                  @if (store.pendingGarbage() > 0 && +getRemainingBufferSeconds() > 0) {
+                    <div class="absolute top-2 inset-x-2 z-30 pointer-events-none flex justify-center">
+                      <div class="px-2.5 sm:px-3 py-1 rounded-xl bg-slate-950/90 border border-rose-500/80 shadow-[0_4px_16px_rgba(244,63,94,0.45)] backdrop-blur-md flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold text-white animate-pulse">
+                        <span class="flex h-2 w-2 relative">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                        </span>
+                        <span class="text-rose-400 tracking-wide font-black whitespace-nowrap">
+                          ⚠️ {{ i18n.t('tetris.incoming_alert')() }}: +{{ store.pendingGarbage() }} {{ i18n.t('tetris.lines')() }}
+                        </span>
+                        <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-amber-300 font-mono font-black border border-rose-500/40 whitespace-nowrap">
+                          {{ getRemainingBufferSeconds() }}s {{ i18n.t('tetris.buffer_prep')() }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Attack Laser Wave Overlay -->
+                  @if (store.attackLaser()) {
+                    <div class="absolute inset-0 z-[50] pointer-events-none flex items-center justify-center">
+                      <div class="attack-laser-anim w-full h-12 bg-gradient-to-r from-transparent via-rose-500/40 to-transparent blur-sm"></div>
+                    </div>
+                  }
 
                   <!-- Revive Dissolve Laser Scan Beam -->
                   @if (store.isDissolving()) {
@@ -308,12 +347,12 @@
                 </div>
               </div>
 
-              <!-- RIGHT WING CONSOLE (Desktop / Tablet) -->
-              <div class="hidden md:flex flex-col gap-3 lg:gap-4 self-center mt-2 items-start w-32 lg:w-40 shrink-0">
+              <!-- RIGHT WING CONSOLE (Desktop / Tablet) - INTEGRATED COMBAT HUB -->
+              <div class="hidden md:flex flex-col gap-2.5 sm:gap-3 self-center mt-2 items-center w-28 sm:w-32 lg:w-36 shrink-0">
                 
                 <!-- NEXT Queue Chamber -->
-                <div class="tetris-wing-card p-3 rounded-2xl flex flex-col items-center w-full select-none">
-                  <div class="flex items-center justify-between w-full mb-2">
+                <div class="tetris-wing-card p-2 sm:p-2.5 rounded-2xl flex flex-col items-center w-full select-none">
+                  <div class="flex items-center justify-between w-full mb-1">
                     <span class="text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-500 dark:text-cyan-400">
                       {{ i18n.t('tetris.next')() }}
                     </span>
@@ -321,11 +360,11 @@
 
                   <!-- Primary Next Piece -->
                   @for (nextType of store.nextPieces().slice(0, 1); track $index) {
-                    <div class="flex items-center justify-center w-full aspect-square max-w-[80px] rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] p-2 mb-2">
+                    <div class="flex items-center justify-center w-full aspect-square max-w-[64px] sm:max-w-[72px] rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] p-1.5 mb-1.5">
                       <div class="grid gap-1" [style.gridTemplateColumns]="'repeat(' + getShapeArray(nextType).length + ', minmax(0, 1fr))'">
                         @for (row of getShapeArray(nextType); track $index) {
                           @for (cell of row; track $index) {
-                            <div class="w-3 lg:w-4 h-3 lg:h-4 rounded-[2px] shadow-sm relative tetris-solid-cell"
+                            <div class="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 rounded-[1.5px] shadow-sm relative tetris-solid-cell"
                                  [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"
                                  [class.opacity-0]="!cell">
                             </div>
@@ -335,10 +374,10 @@
                     </div>
                   }
 
-                  <!-- Secondary Next Queue (2 items preview) -->
-                  <div class="flex flex-col gap-2 w-full pt-1 border-t border-[var(--color-border-card)]">
+                  <!-- Secondary Next Queue (2 items compact preview) -->
+                  <div class="flex items-center justify-center gap-1.5 w-full pt-1 border-t border-[var(--color-border-card)]">
                     @for (nextType of store.nextPieces().slice(1, 3); track $index) {
-                      <div class="flex items-center justify-center w-full h-8 rounded-lg bg-[var(--color-bg-sub)]/50 border border-[var(--color-border-card)]/60">
+                      <div class="flex items-center justify-center flex-1 h-6 rounded bg-[var(--color-bg-sub)]/50 border border-[var(--color-border-card)]/60">
                         <div class="grid gap-[1px]" [style.gridTemplateColumns]="'repeat(' + getShapeArray(nextType).length + ', minmax(0, 1fr))'">
                           @for (row of getShapeArray(nextType); track $index) {
                             @for (cell of row; track $index) {
@@ -352,44 +391,65 @@
                 </div>
 
                 <!-- Stats / Streak Card -->
-                <div class="tetris-wing-card p-3 rounded-2xl flex flex-col items-center w-full">
-                  <span class="text-[10px] lg:text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none mb-1">
+                <div class="tetris-wing-card p-2 sm:p-2.5 rounded-2xl flex items-center justify-between w-full px-3">
+                  <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none">
                     {{ i18n.t('tetris.streak')() }}
                   </span>
                   <div class="flex items-center gap-1">
-                    <span class="text-amber-500 font-black text-xl lg:text-2xl font-mono">
+                    <span class="text-amber-500 font-black text-sm sm:text-base font-mono">
                       {{ store.comboTrigger() }}
                     </span>
                     <span class="text-xs text-amber-500">🔥</span>
                   </div>
                 </div>
 
-              </div>
-
-              <!-- Opponents (PK Mode Extra Right Column) -->
-              @if (currentRoomMode() !== GameMode.Single) {
-                <div class="flex flex-col gap-2 lg:gap-3 w-20 sm:w-24 lg:w-32 shrink-0 self-center overflow-y-auto custom-scrollbar" style="max-height: min(calc(100dvh - 260px), 720px);">
+                <!-- OPPONENT MATRIX CARD (INTEGRATED DIRECTLY IN RIGHT WING FOR CLEAN 3-COLUMN TABLET LAYOUT) -->
+                @if (currentRoomMode() !== GameMode.Single) {
                   @for (opp of store.opponents(); track opp.id) {
-                    <div class="bg-[var(--color-bg-card)] backdrop-blur-sm rounded-xl p-2 lg:p-3 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full">
-                      <div class="flex flex-col w-full text-center mb-1">
-                        <div class="text-[9px] lg:text-xs font-bold text-[var(--color-text-main)] truncate w-full" [title]="opp.id">
-                          {{ opp.id === store.hostId() ? '👑 ' : '' }}{{ opp.id }}
-                          @if (opp.finished) { <span class="text-red-500">💀</span> }
+                    <div class="bg-[var(--color-bg-card)] backdrop-blur-sm rounded-2xl p-2 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full transition-all relative overflow-hidden"
+                         [class.opponent-critical-card]="isOpponentCritical(opp.matrix)"
+                         [class.border-rose-500]="isOpponentCritical(opp.matrix)">
+                      
+                      <!-- Critical Top-Out Danger Alert Header -->
+                      @if (isOpponentCritical(opp.matrix) && !opp.finished) {
+                        <div class="w-full bg-rose-500 text-white text-[8px] sm:text-[9px] font-black uppercase text-center py-0.5 rounded tracking-wider animate-pulse">
+                          ⚠️ CRITICAL
+                        </div>
+                      }
+
+                      <div class="flex flex-col w-full text-center">
+                        <div class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-main)] truncate w-full flex items-center justify-center gap-0.5" [title]="opp.id">
+                          @if (opp.id === store.hostId()) { <span class="text-amber-400 text-[10px]">👑</span> }
+                          <span class="truncate">{{ opp.id }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[8px] sm:text-[9px] font-mono text-[var(--color-text-muted)] px-1">
+                          <span>{{ opp.lines }}L</span>
+                          <span class="text-amber-500 font-bold">{{ opp.score }}</span>
                         </div>
                       </div>
-                      <div class="w-full relative" style="aspect-ratio: 1/2;">
-                        <div class="absolute inset-0 grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[1px] bg-[var(--color-bg-main)] rounded p-[1px] lg:p-[2px] w-full h-full border border-[var(--color-border-card)]">
+
+                      <div class="w-full relative rounded overflow-hidden" style="aspect-ratio: 1/2; max-height: 140px;">
+                        <div class="absolute inset-0 grid grid-cols-10 grid-rows-[repeat(20,1fr)] gap-[0.5px] bg-[var(--color-bg-main)] rounded p-[1px] w-full h-full border border-[var(--color-border-card)]">
                           @for (row of opp.matrix; track $index) {
                             @for (cell of row; track $index) {
-                              <div class="w-full h-full rounded-[1px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
+                              <div class="w-full h-full rounded-[0.5px]" [style.backgroundColor]="cell ? getPieceColor(cell) : 'transparent'"></div>
                             }
                           }
                         </div>
+
+                        <!-- Opponent K.O. Defeated Overlay -->
+                        @if (opp.finished) {
+                          <div class="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center text-center p-1 rounded z-10">
+                            <span class="text-base sm:text-lg">💀</span>
+                            <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest">K.O.</span>
+                          </div>
+                        }
                       </div>
                     </div>
                   }
-                </div>
-              }
+                }
+
+              </div>
 
             </div>
 
@@ -455,7 +515,7 @@
           ></app-game-spectating-overlay>
         }
 
-        @if (store.status() === GameStatus.Finished && showOverlay()) {
+        @if (store.status() === GameStatus.Finished && (showOverlay() || store.currentRoomMode() !== GameMode.Single)) {
           <app-game-result-overlay
             currentGameId="tetris"
             [status]="store.winners().includes(playerId) ? 'win' : 'lose'"

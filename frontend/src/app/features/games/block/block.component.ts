@@ -56,12 +56,12 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
     }
     .block-score-float { animation: block-score-float 1.2s ease-out forwards; }
 
-    /* Spark particles — enhanced with glow trail */
+    /* Spark particles — enhanced with incandescent glow trail */
     .block-spark { animation: block-spark 0.85s cubic-bezier(0.1, 1, 0.3, 1) forwards; }
     @keyframes block-spark {
-      0%   { transform: translate(0, 0) scale(1.5); opacity: 1; filter: blur(0px); }
-      50%  { opacity: 0.8; filter: blur(0.5px); }
-      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; filter: blur(2px); }
+      0%   { transform: translate(0, 0) scale(1.8); opacity: 1; filter: blur(0px) brightness(2.5); }
+      40%  { opacity: 1; filter: blur(0.5px) brightness(1.8); }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; filter: blur(1.5px) brightness(1); }
     }
   `]
 })
@@ -204,14 +204,20 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       const gain = this.store.lastScoreGain();
       if (!gain) return;
 
-      const tier: 1 | 2 | 3 = gain.lines >= 4 ? 3 : gain.lines >= 2 ? 2 : 1;
+      const tier: 1 | 2 | 3 = (gain.isAllClear || gain.lines >= 4 || (gain.combo && gain.combo >= 3)) ? 3 : gain.lines >= 2 ? 2 : 1;
       let text = `✨ CLEAR! +${gain.score}`;
-      if (gain.lines >= 4) {
+      if (gain.isAllClear) {
+        text = `🌟 PERFECT BOARD CLEAR! +${gain.score}`;
+      } else if (gain.lines >= 5) {
+        text = `👑 UNBELIEVABLE! +${gain.score}`;
+      } else if (gain.lines === 4) {
         text = `👑 BLOCK MASTER! +${gain.score}`;
       } else if (gain.lines === 3) {
         text = `💥 TRIPLE CRUSH! +${gain.score}`;
       } else if (gain.lines === 2) {
         text = `⚡ DOUBLE CLEAR! +${gain.score}`;
+      } else if (gain.combo && gain.combo > 1) {
+        text = `🔥 COMBO ×${gain.combo}  +${gain.score}`;
       }
 
       const item = { id: gain.ts, text, tier, xPct: 35 + Math.random() * 30 };

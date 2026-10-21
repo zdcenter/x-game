@@ -232,6 +232,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   @ViewChild('cellsGrid') cellsGridRef?: ElementRef<HTMLElement>;
 
+  /** Crosshair highlighting */
+  hoverRow = signal<number | null>(null);
+  hoverCol = signal<number | null>(null);
+
+  readonly completedRowsCount = computed(() => this.store.completedRows().filter(v => v).length);
+  readonly completedColsCount = computed(() => this.store.completedCols().filter(v => v).length);
+
   private isDragging = false;
   private activePointerId: number | null = null;
   private currentBatchId: number = 0;
@@ -239,9 +246,9 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   private lastCoord: { x: number; y: number } | null = null;
   private startCoord: { x: number; y: number } | null = null;
   private startPointerPos: { x: number; y: number } | null = null;
+  private dragAxis: 'none' | 'x' | 'y' = 'none';
   private longPressTimer: any = null;
   private isLongPressTriggered = false;
-  private hasPaintedStartCell = false;
   private pointerHandled = false;
 
   private clearLongPressTimer() {
@@ -345,108 +352,91 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.startCoord = coord;
     this.lastCoord = coord;
     this.startPointerPos = { x: event.clientX, y: event.clientY };
+    this.dragAxis = 'none';
     this.isLongPressTriggered = false;
-    this.hasPaintedStartCell = false;
+
+    // Crosshair reference tracking
+    this.hoverRow.set(coord.y);
+    this.hoverCol.set(coord.x);
 
     const isRightClick = event.button === 2;
     const isTouch = event.pointerType === 'touch' || event.pointerType === 'pen';
 
-    if (isRightClick) {
-      // Right-click: immediate cross
-      this.dragTargetState = this.store.determineNextState(coord.x, coord.y, true, 'cross');
-      this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
-      this.hasPaintedStartCell = true;
-      this.haptic.vibrateLight();
-      return;
-    }
+    // ⚡ 0ms Instant Response: Paint start cell immediately without any latency!
+    this.dragTargetState = this.store.determineNextState(coord.x, coord.y, isRightClick);
+    this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
 
+    // Gentle long-press (360ms) to toggle alternate mode on mobile if kept still
     if (isTouch) {
-      // Touch: start long-press timer (300ms) to toggle cross (❌) if user holds still
-      this.dragTargetState = -1;
       this.longPressTimer = setTimeout(() => {
         if (this.isDragging && !this.isLongPressTriggered && this.startCoord) {
           this.isLongPressTriggered = true;
-          // Long-press activated: mark as cross (❌)
-          this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, true, 'cross');
-          this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-          this.hasPaintedStartCell = true;
-          this.haptic.vibrateMedium();
+          const currentCell = this.store.grid()[this.startCoord.y]?.[this.startCoord.x];
+          // Cycle: 1 -> 2 -> 0
+          const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 0 : 2);
+          this.dragTargetState = altState;
+          this.store.setCellsBatch([this.startCoord], altState as any, this.currentBatchId);
         }
-      }, 300);
-    } else {
-      // Desktop mouse left-click: apply immediately
-      this.dragTargetState = this.store.determineNextState(coord.x, coord.y, false);
-      this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
-      this.hasPaintedStartCell = true;
-      this.haptic.vibrateLight();
+      }, 360);
     }
   }
 
   handlePointerMove(event: PointerEvent) {
+    const rawCoord = this.getCoordFromClient(event.clientX, event.clientY);
+    if (rawCoord) {
+      this.hoverRow.set(rawCoord.y);
+      this.hoverCol.set(rawCoord.x);
+    }
+
     if (!this.isDragging) return;
     if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
 
     if (event.cancelable) event.preventDefault();
 
-    // Check if moved significantly (> 8px) before long press triggered
-    if (this.startPointerPos && !this.isLongPressTriggered) {
-      const dist = Math.hypot(event.clientX - this.startPointerPos.x, event.clientY - this.startPointerPos.y);
-      if (dist > 8) {
+    // Determine linear drag lock (horizontal vs vertical) once moved > 6px
+    if (this.startPointerPos && this.dragAxis === 'none') {
+      const dx = event.clientX - this.startPointerPos.x;
+      const dy = event.clientY - this.startPointerPos.y;
+      if (Math.hypot(dx, dy) > 6) {
         this.clearLongPressTimer();
-        // If start cell was deferred, apply default draw mode to start cell now
-        if (!this.hasPaintedStartCell && this.startCoord) {
-          this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
-          this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-          this.hasPaintedStartCell = true;
-          this.haptic.vibrateLight();
-        }
+        this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
       }
     }
 
-    const coord = this.getCoordFromClient(event.clientX, event.clientY);
-    if (!coord) return;
+    if (!rawCoord || !this.startCoord) return;
 
-    // Moving to another cell also cancels long press
-    if (this.startCoord && (coord.x !== this.startCoord.x || coord.y !== this.startCoord.y)) {
-      this.clearLongPressTimer();
-      if (!this.hasPaintedStartCell && this.startCoord) {
-        this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
-        this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-        this.hasPaintedStartCell = true;
-        this.haptic.vibrateLight();
-      }
+    // Linear axis clamping: keep dragging strictly on the same row or column!
+    let targetX = rawCoord.x;
+    let targetY = rawCoord.y;
+    if (this.dragAxis === 'x') {
+      targetY = this.startCoord.y;
+    } else if (this.dragAxis === 'y') {
+      targetX = this.startCoord.x;
     }
+
+    const clampedCoord = { x: targetX, y: targetY };
+    this.hoverRow.set(clampedCoord.y);
+    this.hoverCol.set(clampedCoord.x);
 
     if (this.lastCoord) {
-      if (this.lastCoord.x === coord.x && this.lastCoord.y === coord.y) {
+      if (this.lastCoord.x === clampedCoord.x && this.lastCoord.y === clampedCoord.y) {
         return;
       }
-      const lineCells = this.getLineCells(this.lastCoord.x, this.lastCoord.y, coord.x, coord.y);
+      const lineCells = this.getLineCells(this.lastCoord.x, this.lastCoord.y, clampedCoord.x, clampedCoord.y);
       if (lineCells.length > 0 && this.dragTargetState !== -1) {
         this.store.setCellsBatch(lineCells, this.dragTargetState as any, this.currentBatchId);
-        this.haptic.vibrateLight();
       }
     } else {
       if (this.dragTargetState !== -1) {
-        this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
-        this.haptic.vibrateLight();
+        this.store.setCellsBatch([clampedCoord], this.dragTargetState as any, this.currentBatchId);
       }
     }
 
-    this.lastCoord = coord;
+    this.lastCoord = clampedCoord;
   }
 
   handlePointerUp(event: PointerEvent) {
     if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
-
-    // If released before long-press triggered and hasn't moved (short tap)
-    if (this.longPressTimer && !this.isLongPressTriggered && !this.hasPaintedStartCell && this.startCoord) {
-      this.clearLongPressTimer();
-      this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
-      this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-      this.haptic.vibrateLight();
-    }
-
     this.clearLongPressTimer();
     this.endDrag(event);
   }
@@ -455,6 +445,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     if (this.activePointerId !== null && event.pointerId !== this.activePointerId) return;
     this.clearLongPressTimer();
     this.endDrag(event);
+  }
+
+  handleMouseLeave() {
+    if (!this.isDragging) {
+      this.hoverRow.set(null);
+      this.hoverCol.set(null);
+    }
   }
 
   private endDrag(event?: PointerEvent) {
@@ -469,8 +466,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.lastCoord = null;
     this.startCoord = null;
     this.startPointerPos = null;
+    this.dragAxis = 'none';
     this.isLongPressTriggered = false;
-    this.hasPaintedStartCell = false;
     this.dragTargetState = -1;
   }
 
@@ -490,19 +487,25 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.startCoord = coord;
     this.lastCoord = coord;
     this.startPointerPos = { x: touch.clientX, y: touch.clientY };
+    this.dragAxis = 'none';
     this.isLongPressTriggered = false;
-    this.hasPaintedStartCell = false;
-    this.dragTargetState = -1;
+
+    this.hoverRow.set(coord.y);
+    this.hoverCol.set(coord.x);
+
+    // 0ms instant response on touch
+    this.dragTargetState = this.store.determineNextState(coord.x, coord.y, false);
+    this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
 
     this.longPressTimer = setTimeout(() => {
       if (this.isDragging && !this.isLongPressTriggered && this.startCoord) {
         this.isLongPressTriggered = true;
-        this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, true, 'cross');
-        this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-        this.hasPaintedStartCell = true;
-        this.haptic.vibrateMedium();
+        const currentCell = this.store.grid()[this.startCoord.y]?.[this.startCoord.x];
+        const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 0 : 2);
+        this.dragTargetState = altState;
+        this.store.setCellsBatch([this.startCoord], altState as any, this.currentBatchId);
       }
-    }, 300);
+    }, 360);
   }
 
   handleTouchFallbackMove(event: TouchEvent) {
@@ -510,58 +513,46 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     if (event.cancelable) event.preventDefault();
 
     const touch = event.touches[0];
-    if (this.startPointerPos && !this.isLongPressTriggered) {
-      const dist = Math.hypot(touch.clientX - this.startPointerPos.x, touch.clientY - this.startPointerPos.y);
-      if (dist > 8) {
+    if (this.startPointerPos && this.dragAxis === 'none') {
+      const dx = touch.clientX - this.startPointerPos.x;
+      const dy = touch.clientY - this.startPointerPos.y;
+      if (Math.hypot(dx, dy) > 6) {
         this.clearLongPressTimer();
-        if (!this.hasPaintedStartCell && this.startCoord) {
-          this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
-          this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-          this.hasPaintedStartCell = true;
-          this.haptic.vibrateLight();
-        }
+        this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
       }
     }
 
-    const coord = this.getCoordFromClient(touch.clientX, touch.clientY);
-    if (!coord) return;
+    const rawCoord = this.getCoordFromClient(touch.clientX, touch.clientY);
+    if (!rawCoord || !this.startCoord) return;
 
-    if (this.startCoord && (coord.x !== this.startCoord.x || coord.y !== this.startCoord.y)) {
-      this.clearLongPressTimer();
-      if (!this.hasPaintedStartCell && this.startCoord) {
-        this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
-        this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-        this.hasPaintedStartCell = true;
-        this.haptic.vibrateLight();
-      }
-    }
+    let targetX = rawCoord.x;
+    let targetY = rawCoord.y;
+    if (this.dragAxis === 'x') targetY = this.startCoord.y;
+    else if (this.dragAxis === 'y') targetX = this.startCoord.x;
+
+    const clampedCoord = { x: targetX, y: targetY };
+    this.hoverRow.set(clampedCoord.y);
+    this.hoverCol.set(clampedCoord.x);
 
     if (this.lastCoord) {
-      if (this.lastCoord.x === coord.x && this.lastCoord.y === coord.y) return;
-      const lineCells = this.getLineCells(this.lastCoord.x, this.lastCoord.y, coord.x, coord.y);
+      if (this.lastCoord.x === clampedCoord.x && this.lastCoord.y === clampedCoord.y) return;
+      const lineCells = this.getLineCells(this.lastCoord.x, this.lastCoord.y, clampedCoord.x, clampedCoord.y);
       if (lineCells.length > 0 && this.dragTargetState !== -1) {
         this.store.setCellsBatch(lineCells, this.dragTargetState as any, this.currentBatchId);
-        this.haptic.vibrateLight();
       }
     }
-    this.lastCoord = coord;
+    this.lastCoord = clampedCoord;
   }
 
   handleTouchFallbackEnd() {
     if (this.pointerHandled) return;
-    if (this.longPressTimer && !this.isLongPressTriggered && !this.hasPaintedStartCell && this.startCoord) {
-      this.clearLongPressTimer();
-      this.dragTargetState = this.store.determineNextState(this.startCoord.x, this.startCoord.y, false);
-      this.store.setCellsBatch([this.startCoord], this.dragTargetState as any, this.currentBatchId);
-      this.haptic.vibrateLight();
-    }
     this.clearLongPressTimer();
     this.isDragging = false;
     this.lastCoord = null;
     this.startCoord = null;
     this.startPointerPos = null;
+    this.dragAxis = 'none';
     this.isLongPressTriggered = false;
-    this.hasPaintedStartCell = false;
     this.dragTargetState = -1;
   }
 

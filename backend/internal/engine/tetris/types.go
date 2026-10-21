@@ -15,6 +15,8 @@ type GameState struct {
 	Seed          int64                  `json:"seed"`
 	GlobalStartAt int64                  `json:"globalStartAt"`
 	Winners       []string               `json:"winners"`
+	Target        int                    `json:"target"`
+	Wins          map[string]int         `json:"wins"`
 }
 
 type ActionPayload struct {

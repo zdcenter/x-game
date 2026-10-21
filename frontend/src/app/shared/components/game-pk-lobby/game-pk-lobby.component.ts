@@ -18,6 +18,9 @@ import { EditRoomService } from '../../../core/services/edit-room.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+import { LiveActivityTickerComponent } from '../live-activity-ticker/live-activity-ticker.component';
+import { LiveActivityService } from '../../../core/services/live-activity.service';
+import confetti from 'canvas-confetti';
 
 export interface PkCreateRoomEvent {
   name: string;
@@ -41,7 +44,7 @@ export interface PkJoinRoomEvent {
 @Component({
   selector: 'app-game-pk-lobby',
   standalone: true,
-  imports: [CommonModule, DatePipe, GameHeaderComponent, CoinIconComponent],
+  imports: [CommonModule, DatePipe, GameHeaderComponent, CoinIconComponent, LiveActivityTickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-pk-lobby.component.html',
   host: { class: 'flex flex-col flex-1 min-h-0 w-full' },
@@ -62,6 +65,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private editRoomSvc = inject(EditRoomService);
   friendService       = inject(FriendService);
   readonly coinService = inject(CoinService);
+  private activityService = inject(LiveActivityService);
 
   isFriend(username: string): boolean {
     if (username === this.playerId()) return true;
@@ -354,19 +358,38 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   diffLabel(diffId: string, gameId?: string): string {
+    if (!diffId) return '';
+    let clean = diffId.trim();
+    if (clean.startsWith('game.difficulty_')) clean = clean.replace('game.difficulty_', '');
+    if (clean.startsWith('game.diff_')) clean = clean.replace('game.diff_', '');
+
     if (gameId) {
       const cfg = this.reg.getConfig(gameId);
-      const diff = cfg?.difficulties.find(d => d.id === diffId);
+      const diff = cfg?.difficulties.find(d => d.id === clean || d.id === diffId);
       if (diff) {
         const label = diff.labelKey ? this.t(diff.labelKey) : diff.id;
         const desc = diff.descKey ? this.t(diff.descKey) : diff.desc;
-        return desc ? `${label} (${desc})` : label;
+        const safeLabel = (label && label !== diff.labelKey) ? label : (diff.desc || clean);
+        return desc && desc !== diff.descKey ? `${safeLabel} (${desc})` : safeLabel;
       }
     }
-    if (diffId === GameDifficulty.Easy)   return this.t('game.diff_easy');
-    if (diffId === GameDifficulty.Medium) return this.t('game.diff_medium');
-    if (diffId === GameDifficulty.Hard)   return this.t('game.diff_hard');
-    return diffId;
+    const dKey = `game.diff_${clean}`;
+    const dVal = this.t(dKey);
+    if (dVal && dVal !== dKey) return dVal;
+
+    switch (clean.toLowerCase()) {
+      case 'easy':
+      case 'beginner': return this.t('game.diff_easy') || '简单';
+      case 'medium':
+      case 'normal':
+      case 'intermediate': return this.t('game.diff_medium') || '中等';
+      case 'hard':
+      case 'advanced': return this.t('game.diff_hard') || '困难';
+      case 'expert': return this.t('game.diff_expert') || '专家';
+      case 'master': return this.t('game.diff_master') || '大师';
+      default:
+        return clean.includes('.') ? (clean.split('.').pop() || clean) : clean;
+    }
   }
 
   decodeName(name: string, max = 14): string {
@@ -388,5 +411,60 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     } else {
       this.onConfirmCreate();
     }
+  }
+
+  getPlayerStatusText(player: any): string {
+    const gameName = player.game ? this.gameLabel(player.game) : '';
+    const diffName = player.diff ? this.diffLabel(player.diff, player.game) : '';
+    if (player.status === 'pk') {
+      const tpl = this.t('game.player_status_pk') || '正在与【{opponent}】激战 {game}';
+      return tpl.replace('{opponent}', player.opponent || '对手').replace('{game}', gameName || 'PK');
+    }
+    if (player.status === 'playing') {
+      const tpl = this.t('game.player_status_playing') || '正在挑战 {game} {diff}';
+      return tpl.replace('{game}', gameName || '益智游戏').replace('{diff}', diffName ? `· ${diffName}` : '');
+    }
+    return this.t('game.player_status_idle') || '空闲中 · 随时可迎战';
+  }
+
+  invitePlayer(player: any) {
+    const gameId = player.game || this.createGameId() || this.gameId || 'tetris';
+    const roomName = `duel-${Date.now().toString(36).slice(-4)}`;
+    this.cross.setPendingJoin({
+      game: gameId,
+      roomId: roomName,
+      mode: 'pk_speed',
+      difficulty: player.diff || 'medium',
+      host: this.playerId(),
+      action: 'create',
+      inviteUsernames: [player.username]
+    });
+    const lang = this.router.url.split('/')[1] || 'zh';
+    this.router.navigate([`/${lang}/games/${gameId}`]);
+    this.toast.show(
+      (this.t('activity.challenge_created') || '已创建对决房间，正在进入并邀请 {user}...').replace('{user}', player.username),
+      'success'
+    );
+  }
+
+  playSameGame(player: any) {
+    if (!player.game) return;
+    const lang = this.router.url.split('/')[1] || 'zh';
+    this.router.navigate([`/${lang}/games/${player.game}`]);
+  }
+
+  spectatePlayer(player: any) {
+    if (player.roomId) {
+      this.onJoinRoom(player.roomId, player.game, player.mode || 'pk', player.diff || 'medium', player.username);
+    } else if (player.game) {
+      this.playSameGame(player);
+    }
+  }
+
+  cheerPlayer(player: any) {
+    this.activityService.sendCheer(player.username, player.game || 'lobby');
+    confetti({ particleCount: 35, spread: 55, origin: { y: 0.7 } });
+    const cheerSentTpl = this.t('activity.cheer_sent') || '🎉 已为玩家【{user}】送出喝彩！';
+    this.toast.show(cheerSentTpl.replace('{user}', player.username), 'success');
   }
 }

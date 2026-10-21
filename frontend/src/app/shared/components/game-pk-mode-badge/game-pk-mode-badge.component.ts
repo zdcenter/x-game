@@ -42,9 +42,33 @@ export class GamePkModeBadgeComponent {
   diffLabel = computed(() => {
     const d = this.diffSignal();
     if (!d) return '';
+    let clean = d.trim();
+    if (clean.startsWith('game.difficulty_')) clean = clean.replace('game.difficulty_', '');
+    if (clean.startsWith('game.diff_')) clean = clean.replace('game.diff_', '');
+
     const conf = this.registry.getConfig(this.gameId);
-    const diffObj = conf?.difficulties.find(x => x.id === d);
-    return diffObj?.labelKey ? this.i18n.t(diffObj.labelKey as any)() : d;
+    const diffObj = conf?.difficulties.find(x => x.id === clean || x.id === d);
+    if (diffObj?.labelKey) {
+      const val = this.i18n.t(diffObj.labelKey as any)();
+      if (val && val !== diffObj.labelKey) return val;
+    }
+    const dKey = `game.diff_${clean}`;
+    const dVal = this.i18n.t(dKey)();
+    if (dVal && dVal !== dKey) return dVal;
+
+    switch (clean.toLowerCase()) {
+      case 'easy':
+      case 'beginner': return this.i18n.t('game.diff_easy')() || '简单';
+      case 'medium':
+      case 'normal':
+      case 'intermediate': return this.i18n.t('game.diff_medium')() || '中等';
+      case 'hard':
+      case 'advanced': return this.i18n.t('game.diff_hard')() || '困难';
+      case 'expert': return this.i18n.t('game.diff_expert')() || '专家';
+      case 'master': return this.i18n.t('game.diff_master')() || '大师';
+      default:
+        return clean.includes('.') ? (clean.split('.').pop() || clean) : clean;
+    }
   });
 
   diffDesc = computed(() => {

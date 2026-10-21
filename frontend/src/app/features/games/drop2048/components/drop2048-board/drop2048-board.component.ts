@@ -19,8 +19,8 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
       <!-- Inner visual layer: this one shakes, but click overlay is NOT inside it -->
       <div class="absolute inset-0" [class.board-shake]="isShaking()">
 
-        <!-- Top Neon Accent Line -->
-        <div class="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-75 z-20"></div>
+        <!-- Top Ambient Accent Line -->
+        <div class="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-amber-400/25 to-transparent opacity-60 z-20"></div>
 
         <!-- Column guide lines -->
         <div class="absolute inset-0 pointer-events-none z-0 flex" [style.padding.px]="padding" [style.gap.px]="gap">
@@ -41,12 +41,12 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
 
         <!-- Active Block -->
         <div *ngIf="activeBlock"
-             class="absolute transition-transform duration-100 ease-out z-20 shadow-[0_0_24px_rgba(255,255,255,0.55)]"
+             class="absolute transition-transform duration-100 ease-out z-20 shadow-[0_8px_16px_rgba(0,0,0,0.35)]"
              [style.width.px]="cellSize"
              [style.height.px]="cellSize"
              [style.transform]="'translate(' + colPx(activeBlock.c) + 'px,' + rowPx(activeBlock.r) + 'px)'">
           <div class="w-full h-full flex items-center justify-center font-black text-white block-3d select-none"
-               [style.font-size.px]="math.round(cellSize * 0.42)"
+               [style.font-size.px]="getBlockFontSize(activeBlock.val)"
                [ngStyle]="getBlockStyle(activeBlock.val)">
              {{ activeBlock.val === 0 ? '🌈' : activeBlock.val }}
           </div>
@@ -59,12 +59,26 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
              [style.width.px]="cellSize"
              [style.height.px]="cellSize"
              [style.transform]="'translate(' + colPx(block.c) + 'px,' + rowPx(block.r) + 'px)'">
-          <div class="w-full h-full flex items-center justify-center font-black text-white block-3d select-none"
-               [style.font-size.px]="math.round(cellSize * 0.42)"
+          <div class="w-full h-full flex items-center justify-center font-black text-white block-3d select-none relative"
+               [style.font-size.px]="getBlockFontSize(block.val)"
                [ngStyle]="getBlockStyle(block.val)">
              {{ block.val === 0 ? '🌈' : block.val }}
              <div *ngIf="block.isLanding"
                   class="absolute inset-0 rounded-xl landing-ring pointer-events-none"></div>
+
+             <!-- Merge Incandescent White Flash Burst -->
+             <div *ngIf="block.isMerging"
+                  class="absolute inset-0 rounded-xl merge-flash-white pointer-events-none z-30"></div>
+
+             <!-- Merge Expanding Radiant Shockwave Ring -->
+             <div *ngIf="block.isMerging"
+                  class="absolute inset-0 rounded-xl merge-shockwave-ring pointer-events-none z-20"></div>
+
+             <!-- Merge Diamond Sparkle Starburst -->
+             <div *ngIf="block.isMerging"
+                  class="absolute inset-0 flex items-center justify-center pointer-events-none z-40 merge-sparkle-center">
+               <span class="text-white text-2xl font-black drop-shadow-[0_0_12px_#ffffff]">✦</span>
+             </div>
           </div>
         </div>
 
@@ -133,8 +147,13 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
     .block-3d {
       border-radius: 12px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-      font-size: clamp(14px, 2.2vmin, 28px);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.04em;
+      overflow: hidden;
+      max-width: 100%;
+      white-space: nowrap;
+      line-height: 1;
+      padding: 0 2px;
+      box-sizing: border-box;
     }
 
     @keyframes rainbow-pulse {
@@ -142,14 +161,38 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
       50% { filter: hue-rotate(180deg) brightness(1.2); transform: scale(1.04); }
     }
 
-    /* Merge burst */
+    /* Merge burst — Intense dazzling incandescent flash & shockwave */
     @keyframes merge-pop {
-      0%   { transform: scale(1);    filter: brightness(1); }
-      25%  { transform: scale(1.42); filter: brightness(1.9) saturate(1.6); }
-      65%  { transform: scale(0.92); filter: brightness(1.1); }
+      0%   { transform: scale(0.92); filter: brightness(1); }
+      18%  { transform: scale(1.28); filter: brightness(3.2) contrast(1.4) drop-shadow(0 0 18px #ffffff) drop-shadow(0 0 32px rgba(251,191,36,0.9)); }
+      45%  { transform: scale(0.95); filter: brightness(1.3); }
+      75%  { transform: scale(1.04); filter: brightness(1.05); }
       100% { transform: scale(1);    filter: brightness(1); }
     }
-    .merge-pop { animation: merge-pop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    .merge-pop { animation: merge-pop 0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    /* Merge white flash burst overlay */
+    @keyframes merge-flash-white {
+      0%   { opacity: 1; transform: scale(1.05); background-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 25px #ffffff, 0 0 45px rgba(255,255,255,0.8); }
+      35%  { opacity: 0.8; transform: scale(1.15); background-color: rgba(255, 255, 255, 0.7); }
+      100% { opacity: 0; transform: scale(1.25); background-color: rgba(255, 255, 255, 0); }
+    }
+    .merge-flash-white { animation: merge-flash-white 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Merge expanding shockwave ring */
+    @keyframes merge-shockwave-ring {
+      0%   { box-shadow: 0 0 0 0px rgba(255, 255, 255, 1), 0 0 16px 4px rgba(255, 255, 255, 0.9); opacity: 1; }
+      100% { box-shadow: 0 0 0 32px rgba(255, 255, 255, 0), 0 0 28px 8px rgba(255, 255, 255, 0); opacity: 0; }
+    }
+    .merge-shockwave-ring { animation: merge-shockwave-ring 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Merge diamond sparkle center */
+    @keyframes merge-sparkle-center {
+      0%   { transform: scale(0.2) rotate(0deg); opacity: 0; }
+      25%  { transform: scale(1.4) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 10px #ffffff); }
+      100% { transform: scale(0.1) rotate(90deg); opacity: 0; }
+    }
+    .merge-sparkle-center { animation: merge-sparkle-center 0.35s ease-out forwards; }
 
     /* Score float-up */
     @keyframes float-up {
@@ -160,9 +203,9 @@ import { getDrop2048BlockStyle } from '../../store/drop2048-engine';
     .float-up { animation: float-up 1s ease-out forwards; }
 
     @keyframes combo-praise-pop {
-      0%   { transform: scale(0.6); filter: brightness(1.5); }
-      40%  { transform: scale(1.25); filter: brightness(2) drop-shadow(0 0 12px rgba(251,191,36,0.8)); }
-      100% { transform: scale(1); filter: brightness(1); }
+      0%   { transform: scale(0.7); opacity: 0.8; }
+      40%  { transform: scale(1.15); filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4)); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
     }
     .combo-praise-pop { animation: combo-praise-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
@@ -307,6 +350,16 @@ export class Drop2048BoardComponent {
 
   getBlockStyle(val: number): Record<string, string> {
     return getDrop2048BlockStyle(val);
+  }
+
+  getBlockFontSize(val: number): number {
+    if (val === 0) return Math.round(this.cellSize * 0.44); // 🌈 emoji
+    const digits = val.toString().length;
+    if (digits <= 2) return Math.round(this.cellSize * 0.40);       // 2 ~ 64
+    if (digits === 3) return Math.round(this.cellSize * 0.31);       // 128 ~ 512
+    if (digits === 4) return Math.round(this.cellSize * 0.22);       // 1024 ~ 8192
+    if (digits === 5) return Math.round(this.cellSize * 0.175);      // 16384 ~ 65536
+    return Math.round(this.cellSize * 0.15);                         // 131072+
   }
 
   dismissGuide() {

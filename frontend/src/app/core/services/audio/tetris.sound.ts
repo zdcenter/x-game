@@ -3,11 +3,79 @@ import { createOsc, createGain, createNoise, createLpf, createBpf } from './audi
 export function playTetrisSound(
   audioCtx: AudioContext,
   out: AudioNode,
-  name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris' | 'dissolve',
+  name: 'move' | 'rotate' | 'land' | 'clear' | 'hold' | 'hardDrop' | 'tetris' | 'dissolve' | 'attack' | 'garbage' | 'counter' | 'warning',
   linesCount = 1,
   combo = 0
 ) {
   const t = audioCtx.currentTime;
+
+  if (name === 'warning') {
+    // 敌袭预警提示 —— 清晰急促的战术警报双音 (880Hz -> 1175Hz)
+    [880, 1174.66].forEach((freq, idx) => {
+      const o = createOsc(audioCtx, 'sine', freq);
+      const og = createGain(audioCtx, 0.22);
+      const dt = t + idx * 0.08;
+      og.gain.setValueAtTime(0.22, dt);
+      og.gain.exponentialRampToValueAtTime(0.001, dt + 0.12);
+      o.connect(og); og.connect(out);
+      o.start(dt); o.stop(dt + 0.14);
+    });
+    return;
+  }
+
+  if (name === 'attack') {
+    // 进攻攻击波 —— 锐利激光穿透 + 低音冲击飞掷
+    const o = createOsc(audioCtx, 'sawtooth', 880);
+    o.frequency.exponentialRampToValueAtTime(220, t + 0.22);
+    const g = createGain(audioCtx, 0.35);
+    g.gain.setValueAtTime(0.35, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    o.connect(g); g.connect(out);
+    o.start(t); o.stop(t + 0.26);
+
+    const sub = createOsc(audioCtx, 'sine', 150);
+    sub.frequency.exponentialRampToValueAtTime(45, t + 0.2);
+    const sg = createGain(audioCtx, 0.4);
+    sg.gain.setValueAtTime(0.4, t);
+    sg.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    sub.connect(sg); sg.connect(out);
+    sub.start(t); sub.stop(t + 0.24);
+    return;
+  }
+
+  if (name === 'counter') {
+    // 护盾格挡反制 —— 高频双金属撞击与清脆格挡消散
+    [1046.5, 1567.98, 2093.0].forEach((freq, idx) => {
+      const o = createOsc(audioCtx, 'triangle', freq);
+      const og = createGain(audioCtx, 0.25);
+      const dt = t + idx * 0.03;
+      og.gain.setValueAtTime(0.25, dt);
+      og.gain.exponentialRampToValueAtTime(0.001, dt + 0.25);
+      o.connect(og); og.connect(out);
+      o.start(dt); o.stop(dt + 0.28);
+    });
+    return;
+  }
+
+  if (name === 'garbage') {
+    // 垃圾行升起 —— 沉重机械齿轮推进与地壳抬升低频震颤
+    const n = createNoise(audioCtx, 0.3);
+    const lp = createLpf(audioCtx, 280);
+    const ng = createGain(audioCtx, 0.5);
+    ng.gain.setValueAtTime(0.5, t);
+    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    n.connect(lp); lp.connect(ng); ng.connect(out);
+    n.start(t); n.stop(t + 0.32);
+
+    const sub = createOsc(audioCtx, 'sine', 75);
+    sub.frequency.exponentialRampToValueAtTime(35, t + 0.35);
+    const sg = createGain(audioCtx, 0.55);
+    sg.gain.setValueAtTime(0.55, t);
+    sg.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+    sub.connect(sg); sg.connect(out);
+    sub.start(t); sub.stop(t + 0.4);
+    return;
+  }
 
   if (name === 'dissolve') {
     // 复活消融 —— 高能激光扫掠 + 粒子升华空灵向上泛音

@@ -7,6 +7,7 @@ import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
 import { S2CEvent, WSErrorCode, WsQueryParam } from '../models/websocket.model';
 import { createWebSocket, isBrowser } from '../utils/browser.util';
+import { LobbyActivity } from '../models/activity.model';
 
 export interface WSMessage {
   type: string;
@@ -58,6 +59,8 @@ export class WebSocketService {
   readonly onlinePlayers = signal<any[]>([]);
   readonly activeRooms = signal<any[]>([]);
   readonly broadcastMessages = signal<any[]>([]);
+  readonly lobbyActivities = signal<LobbyActivity[]>([]);
+  readonly cheerReceivedEvent = signal<{senderName: string, gameId: string} | null>(null);
 
   // Triggered when the websocket disconnects unexpectedly
   readonly unexpectedDisconnectEvent = signal<number>(0);
@@ -284,6 +287,20 @@ export class WebSocketService {
       if (msg.type === 'lobby_update') {
         this.onlinePlayers.set(msg.players || []);
         this.activeRooms.set(msg.rooms || []);
+        if (msg.activities && Array.isArray(msg.activities)) {
+          this.lobbyActivities.set(msg.activities);
+        }
+      } else if (msg.type === 'activity_broadcast') {
+        if (msg.activity) {
+          this.lobbyActivities.update(acts => {
+            const filtered = acts.filter(a => a.id !== msg.activity.id);
+            return [msg.activity, ...filtered].slice(0, 30);
+          });
+        }
+      } else if (msg.type === 'cheer') {
+        if (msg.targetId === playerId || msg.targetId === username) {
+          this.cheerReceivedEvent.set({ senderName: msg.senderName, gameId: msg.gameId });
+        }
       } else if (msg.type === 'broadcast') {
         this.broadcastMessages.update(msgs => {
           const newMsgs = [msg, ...msgs];

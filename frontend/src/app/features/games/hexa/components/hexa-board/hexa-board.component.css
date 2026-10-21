@@ -2,25 +2,43 @@
    Hexa Board Styles & High-Performance Clearing Effects
    ═══════════════════════════════════════════════════════ */
 
+@keyframes hexa-white-flash {
+  0% {
+    opacity: 1;
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 10px #ffffff) drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
+  }
+  30% {
+    opacity: 0.95;
+    transform: scale(1.28);
+    filter: drop-shadow(0 0 14px #ffffff);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+    filter: drop-shadow(0 0 0px transparent);
+  }
+}
+
 @keyframes hexa-pop-dissolve {
   0% {
     transform: scale(1);
-    filter: brightness(1.2) drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+    filter: brightness(2) drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
     opacity: 1;
   }
   22% {
-    transform: scale(1.26);
-    filter: brightness(2.8) saturate(1.8) drop-shadow(0 0 10px rgba(255, 255, 255, 1));
+    transform: scale(1.36);
+    filter: brightness(4.5) saturate(2.2) drop-shadow(0 0 20px rgba(255, 255, 255, 1));
     opacity: 1;
   }
-  65% {
+  60% {
     transform: scale(0.65);
-    filter: brightness(2) drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+    filter: brightness(2.5) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
     opacity: 0.85;
   }
   100% {
     transform: scale(0);
-    filter: brightness(3.2) drop-shadow(0 0 0px transparent);
+    filter: brightness(3.5);
     opacity: 0;
   }
 }
@@ -29,29 +47,63 @@
   0% {
     r: 3;
     opacity: 1;
-    stroke-width: 2.5;
+    stroke-width: 3.5;
+    stroke: #ffffff;
+    filter: drop-shadow(0 0 8px #ffffff);
   }
-  40% {
-    opacity: 0.85;
-    stroke-width: 1.8;
+  35% {
+    opacity: 0.9;
+    stroke-width: 2.4;
+    stroke: #ffffff;
   }
   100% {
-    r: 18;
+    r: 25;
     opacity: 0;
     stroke-width: 0.4;
+    stroke: rgba(255, 255, 255, 0);
   }
+}
+
+@keyframes hexa-star-glint {
+  0% {
+    transform: scale(0.1) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.5) rotate(45deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px #ffffff);
+  }
+  100% {
+    transform: scale(0.1) rotate(90deg);
+    opacity: 0;
+  }
+}
+
+.hexa-white-flash {
+  will-change: transform, opacity, filter;
+  animation: hexa-white-flash 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--clear-delay, 0ms);
+  pointer-events: none;
+}
+
+.hexa-star-glint {
+  will-change: transform, opacity;
+  animation: hexa-star-glint 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--clear-delay, 0ms);
+  pointer-events: none;
 }
 
 .hexa-cell-clearing {
   will-change: transform, opacity, filter;
-  animation: hexa-pop-dissolve 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: hexa-pop-dissolve 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: var(--clear-delay, 0ms);
   pointer-events: none;
 }
 
 .hexa-cell-burst {
   will-change: r, opacity, stroke-width;
-  animation: hexa-burst-ring 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: hexa-burst-ring 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: var(--clear-delay, 0ms);
   pointer-events: none;
 }

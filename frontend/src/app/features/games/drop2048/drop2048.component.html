@@ -118,15 +118,17 @@
                 <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm">
                   <div class="flex items-center gap-1.5">
                     <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase">{{ i18n.t('drop2048.next')() }}</span>
-                    <div class="w-6 h-6 rounded flex items-center justify-center font-black text-white text-[11px] shadow-sm select-none"
-                         [ngStyle]="getBlockStyle(store.nextVal())">
+                    <div class="w-6 h-6 rounded flex items-center justify-center font-black text-white shadow-sm select-none px-0.5 overflow-hidden whitespace-nowrap leading-none"
+                         [ngStyle]="getBlockStyle(store.nextVal())"
+                         [style.font-size.px]="getPreviewFontSize(store.nextVal(), 24)">
                       {{ store.nextVal() === 0 ? '🌈' : store.nextVal() }}
                     </div>
                   </div>
                   <div class="flex items-center gap-1.5 pl-1.5 border-l border-[var(--color-border-card)]">
                     <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase">{{ i18n.t('drop2048.after')() }}</span>
-                    <div class="w-5 h-5 rounded flex items-center justify-center font-black text-white text-[9px] shadow-sm opacity-80 select-none"
-                         [ngStyle]="getBlockStyle(store.nextVal2())">
+                    <div class="w-5 h-5 rounded flex items-center justify-center font-black text-white shadow-sm opacity-80 select-none px-0.5 overflow-hidden whitespace-nowrap leading-none"
+                         [ngStyle]="getBlockStyle(store.nextVal2())"
+                         [style.font-size.px]="getPreviewFontSize(store.nextVal2(), 20)">
                       {{ store.nextVal2() === 0 ? '🌈' : store.nextVal2() }}
                     </div>
                   </div>
@@ -240,8 +242,9 @@
 
                     <!-- Primary Next Tile -->
                     <div class="flex items-center justify-center w-full aspect-square max-w-[80px] rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] p-2 mb-2">
-                      <div class="w-14 h-14 rounded-xl flex items-center justify-center font-black text-white text-2xl shadow-lg select-none"
-                           [ngStyle]="getBlockStyle(store.nextVal())">
+                      <div class="w-14 h-14 rounded-xl flex items-center justify-center font-black text-white shadow-lg select-none px-1 overflow-hidden whitespace-nowrap leading-none"
+                           [ngStyle]="getBlockStyle(store.nextVal())"
+                           [style.font-size.px]="getPreviewFontSize(store.nextVal(), 56)">
                         {{ store.nextVal() === 0 ? '🌈' : store.nextVal() }}
                       </div>
                     </div>
@@ -251,8 +254,9 @@
                       <span class="text-[9px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
                         {{ i18n.t('drop2048.after')() }}
                       </span>
-                      <div class="w-9 h-9 rounded-lg flex items-center justify-center font-black text-white text-sm shadow-md opacity-80 select-none"
-                           [ngStyle]="getBlockStyle(store.nextVal2())">
+                      <div class="w-9 h-9 rounded-lg flex items-center justify-center font-black text-white shadow-md opacity-80 select-none px-0.5 overflow-hidden whitespace-nowrap leading-none"
+                           [ngStyle]="getBlockStyle(store.nextVal2())"
+                           [style.font-size.px]="getPreviewFontSize(store.nextVal2(), 36)">
                         {{ store.nextVal2() === 0 ? '🌈' : store.nextVal2() }}
                       </div>
                     </div>

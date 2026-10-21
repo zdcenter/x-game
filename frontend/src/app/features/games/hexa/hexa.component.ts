@@ -203,7 +203,13 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       let text = `✨ CLEAR! +${gain.score}`;
       let tier: 1 | 2 = 1;
 
-      if (lines >= 3 || gain.combo >= 4) {
+      if (gain.isAllClear) {
+        text = `🌟 PERFECT BOARD CLEAR! +${gain.score}`;
+        tier = 2;
+      } else if (lines >= 4) {
+        text = `👑 MEGA CLEAR! +${gain.score}`;
+        tier = 2;
+      } else if (lines === 3) {
         text = `💥 TRIPLE CRUSH! +${gain.score}`;
         tier = 2;
       } else if (lines === 2) {

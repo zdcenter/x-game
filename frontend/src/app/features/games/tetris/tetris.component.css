@@ -147,3 +147,56 @@
   pointer-events: none;
 }
 
+/* Combat Garbage Alert Meter */
+@keyframes garbage-warning-pulse {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.4), inset 0 0 4px rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.8), inset 0 0 8px rgba(239, 68, 68, 0.6);
+    border-color: rgba(248, 113, 113, 1);
+  }
+}
+.garbage-meter-active {
+  animation: garbage-warning-pulse 0.8s ease-in-out infinite;
+}
+
+/* Combat Attack Laser Wave Animation */
+@keyframes attack-laser-fly {
+  0% {
+    opacity: 0;
+    transform: translateX(-40px) scaleX(0.2);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(0) scaleX(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(120px) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(200px) scaleX(0.5);
+  }
+}
+.attack-laser-anim {
+  animation: attack-laser-fly 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Opponent Danger Critical Glow */
+@keyframes critical-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.85);
+    border-color: rgba(248, 113, 113, 1);
+  }
+}
+.opponent-critical-card {
+  animation: critical-pulse 0.6s ease-in-out infinite;
+}
+

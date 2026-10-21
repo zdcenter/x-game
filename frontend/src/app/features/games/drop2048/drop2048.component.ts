@@ -317,6 +317,16 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     return getDrop2048BlockStyle(val);
   }
 
+  getPreviewFontSize(val: number, sizePx: number): number {
+    if (val === 0) return Math.round(sizePx * 0.45);
+    const len = val.toString().length;
+    if (len <= 2) return Math.round(sizePx * 0.40);
+    if (len === 3) return Math.round(sizePx * 0.31);
+    if (len === 4) return Math.round(sizePx * 0.22);
+    if (len === 5) return Math.round(sizePx * 0.175);
+    return Math.round(sizePx * 0.15);
+  }
+
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
     if ((event.code === 'KeyR' || event.key.toLowerCase() === 'r') && this.store.currentRoomMode() === GameMode.Single) {

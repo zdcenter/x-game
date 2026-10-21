@@ -1,5 +1,5 @@
 import { GameMode, GameModeType, GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
+import { Injectable, computed, inject, signal, effect, untracked, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { AudioService } from '../../../../core/services/audio.service';
 import { getEmptyGrid, Piece, Tetromino, TetrisColorTheme } from '../models/tetris.model';
@@ -48,6 +48,16 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
   isDissolving = signal<boolean>(false);
   dissolvingRows = signal<number[]>([]);
 
+  // Battle PK Combat Signals
+  pendingGarbage = signal<number>(0);
+  garbageLockUntil = signal<number>(0);
+  bufferSecondsLeft = signal<string>('0.0');
+  attackLaser = signal<{ lines: number; id: number } | null>(null);
+  counterNotice = signal<{ lines: number; id: number } | null>(null);
+  incomingNotice = signal<{ lines: number; id: number } | null>(null);
+
+  private lastReceivedGarbageTotal = 0;
+
   // Color Theme Signal with persistence
   colorTheme = signal<TetrisColorTheme>(
     (storageGet('tetris_color_theme') as TetrisColorTheme) || 'crystal'
@@ -87,10 +97,14 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       if (this.currentRoomMode() !== GameMode.Single) {
         if (st?.status === GameStatus.Playing) { // PLAYING
           if (this.status() === GameStatus.Playing && !this.isDead()) {
-            // Apply garbage
-            const me = st.players[this.playerId()];
-            if (me && me.garbageReceived > 0) {
-              this.engine.handleAction({ type: TetrisActionType.ApplyGarbage, amount: me.garbageReceived });
+            // Queue incoming garbage into tactical warning meter instead of abrupt insertion
+            const me = st.players?.[this.playerId()];
+            if (me && me.garbageReceived > this.lastReceivedGarbageTotal) {
+              const incoming = me.garbageReceived - this.lastReceivedGarbageTotal;
+              this.lastReceivedGarbageTotal = me.garbageReceived;
+              this.engine.handleAction({ type: TetrisActionType.QueueGarbage, amount: incoming });
+              this.incomingNotice.set({ lines: incoming, id: Date.now() });
+              setTimeout(() => this.incomingNotice.set(null), 2500);
               this.updateSignals();
             }
           }
@@ -98,19 +112,31 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       }
     });
 
-    // Handle game start/stop based on status change
+    // Handle game start/stop strictly based on SERVER status changes (prevents local state death from triggering auto-restart)
+    let prevServerStatus: string | undefined = undefined;
     effect(() => {
       const st = this.rawState();
       if (this.currentRoomMode() !== GameMode.Single) {
-        if (st?.status === GameStatus.Playing) {
-          if (!this.engine.isDead && this.engine.status !== GameStatus.Playing) {
-            this.onGlobalStart();
+        const curStatus = st?.status;
+        if (curStatus !== prevServerStatus) {
+          if (curStatus === GameStatus.Playing) {
+            untracked(() => {
+              this.onGlobalStart();
+            });
+          } else if (curStatus === GameStatus.Finished) {
+            untracked(() => {
+              this.engine.stop();
+              this.localStatus.set(GameStatus.Finished);
+            });
+          } else if (curStatus === GameStatus.Starting || curStatus === GameStatus.Waiting) {
+            untracked(() => {
+              this.isDead.set(false);
+              this.engine.isDead = false;
+              this.engine.stop();
+              this.localStatus.set(curStatus);
+            });
           }
-        } else if (st?.status === GameStatus.Finished) {
-          this.engine.stop();
-        } else if (st?.status === GameStatus.Starting || st?.status === GameStatus.Waiting) {
-          this.isDead.set(false);
-          this.engine.isDead = false;
+          prevServerStatus = curStatus;
         }
       }
     });
@@ -208,6 +234,18 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       onSound: (s, lines, combo) => this.audio.playTetris(s, lines, combo),
       onGarbageSent: (lines) => {
         this.ws.send({ action: C2SAction.Attack, lines });
+        this.attackLaser.set({ lines, id: Date.now() });
+        setTimeout(() => this.attackLaser.set(null), 1000);
+      },
+      onCounter: (lines) => {
+        this.counterNotice.set({ lines, id: Date.now() });
+        setTimeout(() => this.counterNotice.set(null), 1200);
+      },
+      onGarbageWarning: (pending) => {
+        this.pendingGarbage.set(pending);
+      },
+      onGarbageRise: (lines) => {
+        this.shakeTrigger.update(n => n + 1);
       },
       onSyncState: () => {
         this.syncState();
@@ -215,6 +253,7 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
       onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); },
       onCombo: (c) => { this.comboTrigger.set(c); setTimeout(() => this.comboTrigger.set(0), 1100); },
       onTetris: () => { this.tetrisTrigger.update(n => n + 1); },
+      onGameOver: () => { this.onGameOver(); },
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
@@ -231,6 +270,13 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.hasRevived.set(false);
     this.particles.set([]);
     this.clearingRows.set([]);
+    this.pendingGarbage.set(0);
+    this.garbageLockUntil.set(0);
+    this.bufferSecondsLeft.set('0.0');
+    this.attackLaser.set(null);
+    this.counterNotice.set(null);
+    this.incomingNotice.set(null);
+    this.lastReceivedGarbageTotal = 0;
   }
 
   private syncState() {
@@ -258,6 +304,15 @@ export class TetrisStore extends BaseGameStore implements OnDestroy {
     this.clearingRows.set(state.clearingRows || []);
     this.isDissolving.set(state.isDissolving || false);
     this.dissolvingRows.set(state.dissolvingRows || []);
+    this.pendingGarbage.set(state.pendingGarbage || 0);
+    this.garbageLockUntil.set(state.garbageLockUntil || 0);
+    
+    const lockUntil = state.garbageLockUntil || 0;
+    if (lockUntil > Date.now()) {
+      this.bufferSecondsLeft.set(((lockUntil - Date.now()) / 1000).toFixed(1));
+    } else {
+      this.bufferSecondsLeft.set('0.0');
+    }
     
     if (this.currentRoomMode() === GameMode.Single && state.score > this.bestScore()) {
       this.bestScore.set(state.score);
