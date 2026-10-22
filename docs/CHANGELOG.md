@@ -2,6 +2,23 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.5] - 2026-10-23
+
+### iPad / 平板 PWA 切后台恢复视口冻结与棋盘异常缩小根治 (iPad PWA Background Resume & Viewport Calibration Fix)
+- **iPadOS PWA 切后台再切回导致棋盘异常缩小致命缺陷根治 (Viewport Shrinking on Resume Bugfix)**：
+  - **核心病因破案**：在 iPadOS PWA（Standalone 全屏模式）下，用户切回桌面或呼出多任务管理时，WebKit 内部截取缩略图快照时向全局派发了瞬态的缩小尺寸（被误判为手机视口 `<640px`）；当用户从桌面再次点开应用切回前台时，系统画面恢复了全屏，但 WebKit **不会向 window 自动派发 resize 事件**，导致全局响应式尺寸 Signal 长期滞留在缩小的快照数值中，数字华容道（从 720px 缩为 366px）、2048、俄罗斯方块等棋盘严重缩小居中；
+  - **切后台伪事件过滤与防污染**：`WindowSizeService` 在监听全局 `resize` 及 `visualViewport.resize` 时增加 `document.hidden` 判定，若应用处于后台隐藏状态，坚决丢弃快照产生的瞬态错误尺寸，防止污染全局单例；
+  - **多重系统级生命周期监听与阶梯式重绘刷新**：
+    - 新增 `visibilitychange`（从后台切回前台 `document.visibilityState === 'visible'`）、`pageshow`（bfcache 恢复）、`focus`（窗口重获焦点）、`orientationchange`（屏幕横竖旋转）及 `visualViewport.resize` 多重监听；
+    - 针对 iOS 切回前台存在的 200~300ms 系统缩放展开动效，引入阶梯式延时校准机制（立即、50ms、150ms、300ms、500ms），并在尺寸变动时触发强制 DOM 重排（`document.body.offsetHeight`）与派发标准全局 `resize` 事件；
+- **进退游戏路由导航尺寸主动纠偏 (Route Navigation & BaseGameComponent Auto-Calibration)**：
+  - **路由切换主动校准**：`WindowSizeService` 深度订阅 Angular 路由 `NavigationEnd` 事件，用户在游戏、大厅与首页之间任意进退跳转时，100% 自动重新测量并刷新最新视口几何尺寸；
+  - **游戏生命周期前置保护**：在所有游戏基类 `BaseGameComponent.ngOnInit()` 中注入并触发 `scheduleMultiRefresh()`，确保无论是冷启动、热启动还是中途进入任意游戏，棋盘首帧渲染始终准确契合平板大屏；
+- **经典 2048 平板大屏自适应视觉拓展 (Classic 2048 Responsive Tablet Viewport)**：
+  - 破除单一固定 `max-w-[460px]` 约束，针对平板与宽屏拓展至 `sm:max-w-[540px] md:max-w-[580px]`，棋盘、顶部 HUD 卡片组与底部工具栏同步舒展，与数字华容道等保持一致的高品质沉浸式大屏视觉体验。
+
+---
+
 ## [v3.2.4] - 2026-10-21
 
 ### 扫雷取消标旗防误踩炸雷修复与全服动态游戏胜负战报同步 (Minesweeper Unflagging Safety & Global Activity Win/Loss Integration)

@@ -53,7 +53,7 @@
             
             <!-- TOP HUD & INFO BAR -->
             @if (store.currentRoomMode() === GameMode.Single) {
-              <div class="flex-none w-full max-w-[460px] mx-auto flex flex-col gap-2.5">
+              <div class="flex-none w-full max-w-[460px] sm:max-w-[540px] md:max-w-[580px] mx-auto flex flex-col gap-2.5">
                 <!-- Theme Switcher & Reset Quick Bar -->
                 <div class="flex items-center justify-between w-full px-0.5">
                   <!-- Theme Pill Selector -->
@@ -161,7 +161,7 @@
             }
 
             <!-- Game Board -->
-            <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-all duration-300 w-full max-w-[460px] aspect-square mx-auto touch-none select-none"
+            <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-all duration-300 w-full max-w-[460px] sm:max-w-[540px] md:max-w-[580px] aspect-square mx-auto touch-none select-none"
                  [attr.data-theme]="currentTheme()"
                  [class.animate-shake]="store.shakeTrigger() > 0">
               <!-- Grid background -->
@@ -212,7 +212,7 @@
               </div>
               
               @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="w-full max-w-[450px] z-10 shrink-0">
+                <div class="w-full max-w-[450px] sm:max-w-[540px] md:max-w-[580px] mx-auto z-10 shrink-0">
                   <app-game-toolbar
                     [layoutStyle]="'compact'"
                     [showRestart]="true"

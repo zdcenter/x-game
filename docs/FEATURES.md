@@ -10,7 +10,7 @@
 - **Zoneless 无区化响应式**：全面基于 Angular 21 Signals 驱动，彻底移除 `zone.js`，实现毫秒级变更检测与轻量运行。
 - **现代化设计系统**：全站严格基于 CSS 变量定制 Light/Dark 双模主题，杜绝硬编码颜色；采用毛玻璃微拟物与流光动效。
 - **国际化与多语言**：深度适配全球 8 种主流语言（中、英、繁、日、韩、西、法、德），所有文案统一通过 `i18n.service.ts` 动态加载。
-- **全端响应式**：基于 TailwindCSS 响应式前缀（`sm:`, `md:`, `lg:` 等）无缝适配手机、平板与桌面宽屏，杜绝横向滚动条。
+- **全端响应式与动态视口校准 (`WindowSizeService`)**：基于 TailwindCSS 响应式前缀（`sm:`, `md:`, `lg:` 等）无缝适配手机、平板与桌面宽屏；内置自愈型视口监听引擎，专门解决 iPadOS / iOS PWA（Standalone 模式）切到后台再切回导致的 WebKit 视口冻结与棋盘缩小异常，通过 `document.hidden` 后台快照过滤、`visibilitychange` / `pageshow` / `focus` 阶梯式多重重排校准、以及路由导航自动纠偏，确保棋盘尺寸始终 100% 契合设备真实规格。
 
 ### 后端技术栈 (Go + Fiber v3)
 - **高性能 HTTP & WebSocket**：采用 Fiber v3 构建高吞吐服务，长连接接管房间匹配、对战广播与实时对战。

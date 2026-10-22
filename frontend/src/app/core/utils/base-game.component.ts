@@ -13,6 +13,7 @@ import { CrossGameJoinService } from '../services/cross-game-join.service';
 import { ToastService } from '../services/toast.service';
 import { I18nService } from '../i18n/i18n.service';
 import { LiveActivityService } from '../services/live-activity.service';
+import { WindowSizeService } from '../services/window-size.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -33,6 +34,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   protected baseToastService = inject(ToastService);
   protected i18nBase = inject(I18nService);
   protected liveActivityService = inject(LiveActivityService);
+  protected windowSizeService = inject(WindowSizeService);
   private _injector = inject(Injector);
 
   isMobileSidebarOpen = signal<boolean>(false);
@@ -53,6 +55,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    */
   ngOnInit(): void {
     this.wsService.connectLobby(this.playerId, this.playerId);
+    this.windowSizeService.scheduleMultiRefresh();
 
     // Extract gameId from URL (e.g. /zh/games/sudoku -> sudoku)
     // URL has lang prefix: ['', 'zh', 'games', 'gameId']
