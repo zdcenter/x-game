@@ -9,7 +9,8 @@ import { HapticService } from '../../../../../core/services/haptic.service';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cell.component.html',
-  styleUrl: './cell.component.css'})
+  styleUrl: './cell.component.css'
+})
 export class CellComponent {
   private haptic = inject(HapticService);
   @Input({ required: true }) cell!: Cell;
@@ -48,10 +49,20 @@ export class CellComponent {
     return colors[this.cell.neighbors] || 'var(--color-text-main)';
   }
 
+  // 记录最近一次触控交互的时间戳，用于彻底阻断移动端/PWA上浏览器合成的幽灵点击（Ghost Click）
+  private lastTouchTime = 0;
+
   onLeftClick(event: MouseEvent) {
+    // 关键防御 1：如果是触屏操作触发的合成 click，直接丢弃，防止长按插旗后放手瞬间被当成新点击拔旗
+    if (Date.now() - this.lastTouchTime < 500) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (event.button === 0) {
       if (this.cell.state === CellState.Flagged) {
-        // Safe unflag: clicking a flagged cell with left click removes the flag without revealing!
+        // Safe unflag: clicking a flagged cell with mouse removes the flag without revealing!
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else if (this.actionMode === 'flag') {
@@ -65,35 +76,48 @@ export class CellComponent {
 
   onRightClick(event: MouseEvent) {
     event.preventDefault();
+    // 关键防御 2：阻止触屏长按后系统派发的模拟 contextmenu 事件再次触发插旗/拔旗
+    if (Date.now() - this.lastTouchTime < 500) {
+      event.stopPropagation();
+      return;
+    }
     this.flag.emit();
   }
 
   private touchTimeout: any = null;
-  private touchFired = false;
+  private isLongPressTriggered = false;
   private touchStartX = 0;
   private touchStartY = 0;
   private isMultiTouch = false;
 
   onTouchStart(event: TouchEvent) {
+    this.lastTouchTime = Date.now();
+    this.cancelTouch();
+    this.isLongPressTriggered = false;
+
     if (event.touches.length > 1) {
-      this.cancelTouch();
       this.isMultiTouch = true;
       return;
     }
     this.isMultiTouch = false;
-    this.touchFired = false;
+
     if (event.touches.length > 0) {
       this.touchStartX = event.touches[0].clientX;
       this.touchStartY = event.touches[0].clientY;
     }
+
+    // 320ms 长按判定：长按达到阈值时触发插旗
     this.touchTimeout = setTimeout(() => {
-      this.touchFired = true;
+      this.isLongPressTriggered = true;
+      this.lastTouchTime = Date.now();
+      this.cancelTouch();
       this.flag.emit();
       this.haptic.vibrateSnap();
-    }, 350);
+    }, 320);
   }
 
   onTouchMove(event: TouchEvent) {
+    this.lastTouchTime = Date.now();
     if (event.touches.length > 1 || this.isMultiTouch) {
       this.cancelTouch();
       return;
@@ -101,51 +125,65 @@ export class CellComponent {
     if (event.touches.length > 0) {
       const dx = Math.abs(event.touches[0].clientX - this.touchStartX);
       const dy = Math.abs(event.touches[0].clientY - this.touchStartY);
-      if (dx > 16 || dy > 16) {
+      // 滑动距离超过 14px 判定为玩家在拖拽/滚动棋盘，取消长按
+      if (dx > 14 || dy > 14) {
         this.cancelTouch();
-        this.touchFired = true; // User is scrolling/panning the board
+        this.isLongPressTriggered = false;
       }
     }
   }
 
   onTouchEnd(event: TouchEvent) {
-    const hadTimeout = !!this.touchTimeout;
+    this.lastTouchTime = Date.now();
+
+    // 强行阻断浏览器派发合成鼠标事件
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
+    const wasLongPress = this.isLongPressTriggered;
+    const hasPendingTimeout = !!this.touchTimeout;
     this.cancelTouch();
 
     if (this.isMultiTouch) {
       this.isMultiTouch = false;
-      this.touchFired = false;
+      this.isLongPressTriggered = false;
       return;
     }
 
-    // Always prevent synthetic mouse clicks on touch devices to avoid
-    // synthetic click revealing a cell right after unflagging it
-    event.preventDefault();
-
-    if (this.touchFired) {
-      this.touchFired = false;
+    // 关键防御 3：如果刚才已经长按插上旗了，用户放开手指（touchend）时绝对不要做任何动作！
+    if (wasLongPress) {
+      this.isLongPressTriggered = false;
       return;
     }
 
-    if (hadTimeout) {
+    // 只有在未触发长按、且在定时器未过期时抬手，才算作短按点击（Tap）
+    if (hasPendingTimeout) {
       if (this.cell.state === CellState.Flagged) {
-        // Safe unflag: tapping a flagged cell toggles the flag off safely!
+        // 短按已插旗格子：安全取消插旗
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else if (this.actionMode === 'flag') {
+        // 插旗模式下短按未翻开格子：插旗
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else {
+        // 翻开模式下短按：翻开格子
         this.reveal.emit();
         this.haptic.vibrateLight();
       }
     }
-    this.touchFired = false;
+
+    this.isLongPressTriggered = false;
   }
 
   onTouchCancel(event: TouchEvent) {
+    this.lastTouchTime = Date.now();
     this.cancelTouch();
-    this.touchFired = false;
+    // 延迟重置长按标记，防止 iOS PWA 在 touchcancel 紧跟着补发的 click 事件穿透
+    setTimeout(() => {
+      this.isLongPressTriggered = false;
+    }, 400);
     this.isMultiTouch = false;
   }
 

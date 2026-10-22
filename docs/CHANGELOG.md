@@ -14,8 +14,14 @@
 - **进退游戏路由导航尺寸主动纠偏 (Route Navigation & BaseGameComponent Auto-Calibration)**：
   - **路由切换主动校准**：`WindowSizeService` 深度订阅 Angular 路由 `NavigationEnd` 事件，用户在游戏、大厅与首页之间任意进退跳转时，100% 自动重新测量并刷新最新视口几何尺寸；
   - **游戏生命周期前置保护**：在所有游戏基类 `BaseGameComponent.ngOnInit()` 中注入并触发 `scheduleMultiRefresh()`，确保无论是冷启动、热启动还是中途进入任意游戏，棋盘首帧渲染始终准确契合平板大屏；
-- **经典 2048 平板大屏自适应视觉拓展 (Classic 2048 Responsive Tablet Viewport)**：
-  - 破除单一固定 `max-w-[460px]` 约束，针对平板与宽屏拓展至 `sm:max-w-[540px] md:max-w-[580px]`，棋盘、顶部 HUD 卡片组与底部工具栏同步舒展，与数字华容道等保持一致的高品质沉浸式大屏视觉体验。
+- **扫雷 PWA 模式长按插旗放手后红旗消失缺陷彻底根除 (Minesweeper PWA Long-Press Ghost Click Bugfix)**：
+  - **核心机制破案**：在 iPad / 移动端 PWA（Standalone 全屏模式）下，玩家长按格子 320ms 成功打上红旗后，手指抬起时 WebKit 仍会合成派发带延迟的 `click`（MouseEvent）或 `contextmenu` 事件；原先代码未对触屏产生的合成幽灵点击进行彻底阻断，导致该点击事件再次命中“点击已标旗格子安全取消”逻辑，造成“按下去看见旗子、手一松旗子又被拔掉消失”的致命交互缺陷；
+  - **三重立体化触控隔离防御**：
+    1. **触屏幽灵点击物理阻断**：记录触屏交互时间戳（`lastTouchTime`），任何触控后 500ms 内到达的合成 `click` 或模拟 `contextmenu` 事件一律丢弃拦截，绝不误触；
+    2. **长按状态精确锁定**：引入 `isLongPressTriggered` 严格状态机，长按插旗完成后，放手（`touchend`）绝对静默返回，绝不执行短按判定；
+    3. **TouchCancel 状态延时复位**：针对 iOS PWA 长按后偶发的系统级 `touchcancel` 进行 400ms 延迟复位，杜绝状态提前置空导致的事件穿透。
+- **全站 18 款游戏触控模型安全普查 (Comprehensive Touch Model Audit across 18 Games)**：
+  - 全站 18 款游戏中仅扫雷采用了“长按插旗与短按安全取消”的双态手势设计，其他游戏（如数织 Nonogram 采用全统一 PointerEvent 拖拽捕获、俄罗斯方块与下落 2048 采用手势向量滑动 Swipe 等）不存在该触控穿透问题。
 
 ---
 
