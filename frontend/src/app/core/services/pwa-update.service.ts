@@ -1,5 +1,7 @@
 import { Injectable, inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/version';
 
 export interface VersionInfo {
@@ -12,6 +14,7 @@ export interface VersionInfo {
 })
 export class PwaUpdateService {
   private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   readonly hasUpdate = signal<boolean>(false);
@@ -21,6 +24,7 @@ export class PwaUpdateService {
 
   private registration: ServiceWorkerRegistration | null = null;
   private checkTimer: any = null;
+  private lastCheckTime = 0;
 
   constructor() {
     if (this.isBrowser) {
@@ -29,32 +33,62 @@ export class PwaUpdateService {
   }
 
   private init() {
-    // 1. Register Service Worker & attach lifecycle listeners
+    // 1. 注册 Service Worker 并绑定生命周期监听
     this.initServiceWorker();
 
-    // 2. Initial live check after page load settles (3s delay)
+    // 2. 页面就绪 2 秒后执行初次版本探测
     setTimeout(() => {
       this.checkForUpdate();
-    }, 3000);
+    }, 2000);
 
-    // 3. Mobile PWA foreground resume listener (Critical for "添加到桌面" standalone apps)
+    // 3. 移动端/iPad PWA 前台恢复多重监听（从桌面切回、切任务切回）
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        this.checkForUpdate();
+        this.triggerForegroundResumeCheck();
       }
     });
+    window.addEventListener('pageshow', () => {
+      this.triggerForegroundResumeCheck();
+    });
+    window.addEventListener('focus', () => {
+      this.triggerForegroundResumeCheck();
+    });
 
-    // 4. Network online event listener
+    // 4. 网络上线事件（如断网重连、Wi-Fi 重新唤醒）
     window.addEventListener('online', () => {
       this.checkForUpdate();
     });
 
-    // 5. Periodic polling (every 3 minutes)
+    // 5. 路由切换时自动检查（解决玩家在游戏与大厅之间来回切换时自动发现新版本）
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => {
+        // 10 秒防抖，避免频繁切页面产生无效请求
+        if (Date.now() - this.lastCheckTime > 10000) {
+          this.checkForUpdate();
+        }
+      });
+
+    // 6. 周期性心跳探测（前台可见状态下每 90 秒探测一次）
     this.checkTimer = setInterval(() => {
-      if (document.visibilityState === 'visible') {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         this.checkForUpdate();
       }
-    }, 3 * 60 * 1000);
+    }, 90 * 1000);
+  }
+
+  /**
+   * 切回前台阶梯检查：
+   * 移动端从后台恢复时，Wi-Fi/蜂窝网络通常需要 500~1500ms 重新完成握手。
+   * 立即检查 1 次，并在 1.5 秒网络稳定后重试 1 次，确保 100% 成功拿到最新版本。
+   */
+  private triggerForegroundResumeCheck(): void {
+    this.checkForUpdate();
+    setTimeout(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        this.checkForUpdate();
+      }
+    }, 1500);
   }
 
   private async initServiceWorker() {
@@ -64,30 +98,29 @@ export class PwaUpdateService {
       this.registration = await navigator.serviceWorker.register('/sw.js');
       console.log('[PWA] Service Worker registered, scope:', this.registration.scope);
 
-      // Check if a service worker is already waiting to activate
+      // 检查是否有已经就绪等待激活的 Service Worker
       if (this.registration.waiting) {
         this.onWorkerWaiting(this.registration.waiting);
       }
 
-      // Listen for newly installed service worker
+      // 监听新 Service Worker 发现事件
       this.registration.addEventListener('updatefound', () => {
         const installingWorker = this.registration?.installing;
         if (!installingWorker) return;
 
         installingWorker.addEventListener('statechange', () => {
           if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version installed in background and waiting!
             this.onWorkerWaiting(installingWorker);
           }
         });
       });
 
-      // Listen for controllerchange (when new SW claims clients)
+      // 监听 controller 变更
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         console.log('[PWA] Controller changed to new version');
       });
 
-      // Listen for message events from sw.js
+      // 监听 SW 发送的消息
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'SW_ACTIVATED') {
           console.log('[PWA] New SW activated with version:', event.data.version);
@@ -99,8 +132,7 @@ export class PwaUpdateService {
   }
 
   /**
-   * Checks whether the app is currently running in standalone PWA mode
-   * (e.g. installed to desktop or mobile home screen).
+   * 检测当前是否运行在独立的 PWA 模式（桌面快捷方式或主屏幕应用）
    */
   isStandalone(): boolean {
     if (!this.isBrowser) return false;
@@ -114,20 +146,17 @@ export class PwaUpdateService {
 
   private onWorkerWaiting(worker: ServiceWorker) {
     console.log('[PWA] New version is waiting to activate');
-    // Only prompt user if running as an installed standalone PWA app
-    if (this.isStandalone()) {
-      this.hasUpdate.set(true);
-    }
+    this.hasUpdate.set(true);
   }
 
   /**
-   * Proactively queries /version.json with cache-busting timestamp
-   * and triggers registration.update() on Cloudflare Pages.
+   * 主动查询 /version.json（带时间戳穿透缓存）并触发 SW 字节对比
    */
   async checkForUpdate(): Promise<void> {
     if (!this.isBrowser) return;
+    this.lastCheckTime = Date.now();
 
-    // A. Kick Service Worker to check byte-diff on sw.js
+    // A. 通知 Service Worker 检测 sw.js 字节是否有变动
     if (this.registration) {
       try {
         await this.registration.update();
@@ -136,7 +165,7 @@ export class PwaUpdateService {
       }
     }
 
-    // B. Live check /version.json
+    // B. 直连探测 /version.json 最新构建元数据
     try {
       const timestamp = Date.now();
       const res = await fetch(`/version.json?_t=${timestamp}`, {
@@ -153,11 +182,7 @@ export class PwaUpdateService {
         if (data.version && data.version !== environment.version) {
           console.log(`[PWA] Remote version ${data.version} detected (current: ${environment.version})`);
           this.newVersion.set(data.version);
-          // Only prompt user if running in installed standalone PWA mode.
-          // Regular web browser sessions update quietly in the background without intrusive banners.
-          if (this.isStandalone()) {
-            this.hasUpdate.set(true);
-          }
+          this.hasUpdate.set(true);
         }
       }
     } catch (err) {
@@ -166,10 +191,10 @@ export class PwaUpdateService {
   }
 
   /**
-   * Applies the update immediately:
-   * 1. Posts SKIP_WAITING to waiting SW
-   * 2. Clears stale CacheStorage caches
-   * 3. Performs a hard reload
+   * 立即应用更新：
+   * 1. 向 waiting 中的 SW 发送 SKIP_WAITING
+   * 2. 清理陈旧 CacheStorage 缓存
+   * 3. 强制重载刷新页面
    */
   async applyUpdate(): Promise<void> {
     if (!this.isBrowser) return;
@@ -177,12 +202,12 @@ export class PwaUpdateService {
     this.isUpdating.set(true);
 
     try {
-      // 1. Tell waiting service worker to skip waiting
+      // 1. 通知 waiting 中的 Service Worker 立即接管
       if (this.registration?.waiting) {
         this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
 
-      // 2. Clear all local CacheStorage caches
+      // 2. 清空所有旧的本地 CacheStorage
       if ('caches' in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map((name) => caches.delete(name)));
@@ -191,7 +216,7 @@ export class PwaUpdateService {
       console.warn('[PWA] Cache purge error before reload:', err);
     }
 
-    // Small delay to ensure SW message is processed before reload
+    // 稍作延时确保 SW 消息处理完毕后重载
     setTimeout(() => {
       window.location.reload();
     }, 150);
