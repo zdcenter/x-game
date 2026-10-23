@@ -1750,6 +1750,7 @@
   "coins.spend_shop_tag": "ショップ価格",
   "pwa.update_title": "新しいバージョンがあります",
   "pwa.update_desc": "新バージョンが利用可能です。クリックして今すぐ更新してください。",
+  "pwa.update_desc_with_version": "新バージョン {{version}} の準備ができました。クリックして今すぐ更新。",
   "pwa.update_btn": "今すぐ更新",
   "pwa.updating": "更新中...",
   "pwa.dismiss": "後で",

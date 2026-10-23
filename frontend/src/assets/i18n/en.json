@@ -1767,6 +1767,7 @@
   "coins.spend_shop_tag": "Shop Pricing",
   "pwa.update_title": "New Version Available",
   "pwa.update_desc": "A new version is ready. Click to update now.",
+  "pwa.update_desc_with_version": "Version {{version}} is ready. Click to update now.",
   "pwa.update_btn": "Update Now",
   "pwa.updating": "Updating...",
   "pwa.dismiss": "Later",

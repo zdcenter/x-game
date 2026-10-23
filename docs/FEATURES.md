@@ -172,7 +172,7 @@
   - **构建版本自动化打标**：每次 `npm run build` 自动生成包含时间戳的 `version.ts` 与 `public/version.json`，并自动更新 `public/sw.js` 中的 `CACHE_NAME`，使部署脚本产生物理字节差异以触发 SW 检查；
   - **Cloudflare Pages 边缘防缓存标头**：通过 `_headers` 与 `functions/[[path]].js` 统一为 `/version.json` 与 `/sw.js` 注入 `no-cache, no-store, must-revalidate`；
   - **手机切屏自检与前台唤醒**：监听 `visibilitychange` 事件，用户从桌面再次点开应用时秒级轮询线上版本；
-  - **全局微拟物更新胶囊**：检测到新版本时在界面底部弹出高饱和度暗夜毛玻璃流光胶囊（“🚀 发现新版本！点击立即更新”），支持一键清空旧缓存并无缝硬重载，全站 8 种语言 100% 国际化适配。
+  - **全局微拟物更新胶囊与全端居中适配**：检测到新版本时在界面底部弹出自适应居中的毛玻璃流光胶囊；外层采用 Flex 全宽弹性居中容器配合 `safe-area-inset-bottom`，杜绝传统 `translate` 在移动端引发的左侧偏移截断；不仅在标题旁高亮呈现版本 Badge，更在更新描述内动态注入带精确构建时间戳的最新版本号（如：`新版本 v2026.10.23.0821 已就绪，点击立即更新`）；全站 8 种语言 100% 国际化适配并严格遵守全局 Light/Dark 主题变量规范。
 - **大厅移动端压缩与骨架屏 (`LobbyComponent`)**：
   移动端 Hero 标题精简、入口卡片采用双列栅格紧凑排版，首屏直接释放 180px 高度；内置与卡片网格严格对齐的脉冲骨架屏，解决数据水合抖动。
 - **渐进式阶梯转化体系 (`AuthModalService` & `AuthModalOverlayComponent`)**：

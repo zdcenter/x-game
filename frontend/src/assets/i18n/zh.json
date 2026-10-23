@@ -1767,6 +1767,7 @@
   "coins.spend_shop_tag": "商城明码标价",
   "pwa.update_title": "发现新版本",
   "pwa.update_desc": "已有全新版本，点击立即应用",
+  "pwa.update_desc_with_version": "新版本 {{version}} 已就绪，点击立即更新",
   "pwa.update_btn": "立即更新",
   "pwa.updating": "更新中...",
   "pwa.dismiss": "稍后",

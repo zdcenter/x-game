@@ -1750,6 +1750,7 @@
   "coins.spend_shop_tag": "상점 정가",
   "pwa.update_title": "새 버전 출시",
   "pwa.update_desc": "새로운 버전이 준비되었습니다. 클릭하여 지금 업데이트하세요.",
+  "pwa.update_desc_with_version": "새 버전 {{version}}이 준비되었습니다. 클릭하여 지금 업데이트하세요.",
   "pwa.update_btn": "지금 업데이트",
   "pwa.updating": "업데이트 중...",
   "pwa.dismiss": "나중에",

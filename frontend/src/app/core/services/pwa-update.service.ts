@@ -144,9 +144,40 @@ export class PwaUpdateService {
     );
   }
 
-  private onWorkerWaiting(worker: ServiceWorker) {
+  private async onWorkerWaiting(worker: ServiceWorker) {
     console.log('[PWA] New version is waiting to activate');
     this.hasUpdate.set(true);
+    // 立即拉取远程 version.json 填充 newVersion，确保提示卡片能即时展示版本号
+    await this.fetchRemoteVersion();
+  }
+
+  /**
+   * 拉取远程最新版本号元数据
+   */
+  async fetchRemoteVersion(): Promise<string | null> {
+    if (!this.isBrowser) return null;
+    try {
+      const timestamp = Date.now();
+      const res = await fetch(`/version.json?_t=${timestamp}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      if (res.ok) {
+        const data: VersionInfo = await res.json();
+        if (data.version) {
+          this.newVersion.set(data.version);
+          return data.version;
+        }
+      }
+    } catch (err) {
+      console.debug('[PWA] fetchRemoteVersion error:', err);
+    }
+    return null;
   }
 
   /**
@@ -166,27 +197,10 @@ export class PwaUpdateService {
     }
 
     // B. 直连探测 /version.json 最新构建元数据
-    try {
-      const timestamp = Date.now();
-      const res = await fetch(`/version.json?_t=${timestamp}`, {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-
-      if (res.ok) {
-        const data: VersionInfo = await res.json();
-        if (data.version && data.version !== environment.version) {
-          console.log(`[PWA] Remote version ${data.version} detected (current: ${environment.version})`);
-          this.newVersion.set(data.version);
-          this.hasUpdate.set(true);
-        }
-      }
-    } catch (err) {
-      console.debug('[PWA] Version check fetch error:', err);
+    const remoteVersion = await this.fetchRemoteVersion();
+    if (remoteVersion && remoteVersion !== environment.version) {
+      console.log(`[PWA] Remote version ${remoteVersion} detected (current: ${environment.version})`);
+      this.hasUpdate.set(true);
     }
   }
 

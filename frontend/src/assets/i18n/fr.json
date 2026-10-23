@@ -1750,6 +1750,7 @@
   "coins.spend_shop_tag": "Tarifs Boutique",
   "pwa.update_title": "Nouvelle version disponible",
   "pwa.update_desc": "Une nouvelle mise à jour est prête. Cliquez pour mettre à jour.",
+  "pwa.update_desc_with_version": "La version {{version}} est prête. Cliquez pour mettre à jour.",
   "pwa.update_btn": "Mettre à jour",
   "pwa.updating": "Mise à jour...",
   "pwa.dismiss": "Plus tard",
