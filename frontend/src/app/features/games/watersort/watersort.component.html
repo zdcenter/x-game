@@ -27,7 +27,7 @@
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 @if (currentRoomMode() !== GameMode.Single && status === GameStatus.Waiting) {
-          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
+          <div class="flex-1 min-h-0 overflow-y-auto p-2 lg:p-4 w-full" style="touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
             <app-game-waiting-room
               [gameId]="'watersort'"
               [mode]="currentRoomMode()"

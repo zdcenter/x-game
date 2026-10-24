@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -65,6 +65,62 @@ export class LobbyComponent implements OnInit, OnDestroy {
   // Active category filter: 'all' | 'hot' | 'pk' | 'logic' | 'puzzle'
   selectedCategory = signal<'all' | 'hot' | 'pk' | 'logic' | 'puzzle'>('all');
   searchQuery = signal<string>('');
+  isQuickSwitcherOpen = signal<boolean>(false);
+
+  allQuickGames = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const lang = this.i18n.currentLang();
+    return GAME_DEFINITIONS.map(def => {
+      const title = this.getGameTitle(def.id);
+      const emoji = def.iconEmoji || this.getGameEmoji(def.id);
+      const isPk = this.hasMultiplayer(def.id);
+      return {
+        id: def.id,
+        title,
+        emoji,
+        route: ['/', lang, 'games', def.id],
+        isPk
+      };
+    }).filter(g => {
+      if (!q) return true;
+      return g.title.toLowerCase().includes(q) || g.id.toLowerCase().includes(q);
+    });
+  });
+
+  toggleQuickSwitcher(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isQuickSwitcherOpen.update(v => !v);
+  }
+
+  openQuickSwitcher() {
+    this.isQuickSwitcherOpen.set(true);
+  }
+
+  closeQuickSwitcher() {
+    this.isQuickSwitcherOpen.set(false);
+  }
+
+  selectQuickGame(game: { route: string[] }) {
+    this.closeQuickSwitcher();
+    this.router.navigate(game.route);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapePress() {
+    if (this.isQuickSwitcherOpen()) {
+      this.closeQuickSwitcher();
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (this.isQuickSwitcherOpen() && !target.closest('.quick-switcher-container') && !target.closest('.quick-switcher-modal')) {
+      this.closeQuickSwitcher();
+    }
+  }
 
   activeAnnouncements = signal<Announcement[]>([]);
   isGlobalLobbyOpen = signal(false);

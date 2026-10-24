@@ -1,65 +1,66 @@
-<div class="flex-1 flex flex-col lg:flex-row p-2 lg:p-6 gap-4 lg:gap-6 w-full h-full overflow-y-auto lg:overflow-hidden custom-scrollbar min-h-0">
-  <!-- LEFT: Level Grid -->
-  <div class="flex-1 flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0 min-h-0">
-  <!-- Header Tabs -->
-  <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
-    @for (diff of difficulties; track diff.id) {
-      <button 
-        (click)="selectDifficulty(diff.id)"
-        class="flex-1 py-4 text-center font-bold text-[10px] sm:text-xs md:text-sm lg:text-lg transition-all border-b-2"
-        [class.text-orange-400]="activeTab() === diff.id"
-        [class.border-orange-400]="activeTab() === diff.id"
-        [class.text-[var(--color-text-muted)]]="activeTab() !== diff.id"
-        [class.border-transparent]="activeTab() !== diff.id"
-        [class.hover:text-[var(--color-text-main)]]="activeTab() !== diff.id">
-        {{ i18n.t($any(diff.labelKey))() }}
-      </button>
-    }
-  </div>
+<div class="flex-1 flex flex-col p-1 sm:p-2 lg:p-4 w-full h-full min-w-0 min-h-0">
+  <!-- Level Grid Card -->
+  <div class="flex-1 flex flex-col w-full h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] min-w-0 min-h-0 overflow-hidden">
+    <!-- Header Tabs -->
+    <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)] shrink-0">
+      @for (diff of difficulties; track diff.id) {
+        <button 
+          (click)="selectDifficulty(diff.id)"
+          class="flex-1 py-3 sm:py-4 text-center font-bold text-xs sm:text-base lg:text-lg transition-all border-b-2"
+          [class.text-orange-400]="activeTab() === diff.id"
+          [class.border-orange-400]="activeTab() === diff.id"
+          [class.text-[var(--color-text-muted)]]="activeTab() !== diff.id"
+          [class.border-transparent]="activeTab() !== diff.id"
+          [class.hover:text-[var(--color-text-main)]]="activeTab() !== diff.id">
+          {{ i18n.t($any(diff.labelKey))() }}
+        </button>
+      }
+    </div>
 
-  <!-- Level Grid -->
-  <div class="flex items-center justify-between px-6 pt-4 pb-2">
-    <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-      {{ i18n.t('game.total_levels')() }}: {{ levels().length }}
-    </span>
-  </div>
-  <div class="flex-1 px-6 pb-6 overflow-y-auto custom-scrollbar min-h-0">
-    @if (loading()) {
-      <div class="flex justify-center items-center h-full">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-      </div>
-    } @else {
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        @for (level of levels(); track level.id; let i = $index) {
-          <button 
-            (click)="playLevel(level)"
-            class="flex flex-col items-center p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-orange-400 hover:shadow-[0_0_15px_rgba(251,146,60,0.3)] transition-all group relative overflow-hidden"
-          >
-            <!-- Status indicator -->
-            @if (level.progress && level.progress.status === GameStatus.Finished) {
-              <div class="absolute top-0 right-0 w-8 h-8 bg-green-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
-              <div class="absolute top-1 right-1 flex items-center justify-center">
-                <span class="text-green-500 text-lg leading-none">⭐</span>
-              </div>
-            } @else if (level.progress && level.progress.status === GameStatus.Playing) {
-              <div class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
-              <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-            }
-            
-            <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-orange-500 transition-colors mb-2 whitespace-nowrap">
-              {{ i18n.t('game.level')() }} {{ level.level_num | number:'1.0-0' }}
-            </span>
-            
-            @if (level.progress && level.progress.status === GameStatus.Playing) {
-              <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.in_progress')() }}</span>
-            } @else if (level.progress && level.progress.status === GameStatus.Finished) {
-              <span class="text-[10px] text-green-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.finished')() }}</span>
-            } @else {
-              <span class="text-[10px] text-[var(--color-text-muted)] font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.unplayed')() }}</span>
-            }
-          </button>
-        }
-      </div>
-    }
+    <!-- Level Grid Header -->
+    <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-1 shrink-0">
+      <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+        {{ i18n.t('game.total_levels')() }}: {{ levels().length }}
+      </span>
+    </div>
+    <div class="flex-1 px-3 sm:px-6 pb-12 sm:pb-6 overflow-y-auto custom-scrollbar min-h-0" style="touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
+      @if (loading()) {
+        <div class="flex justify-center items-center h-full">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          @for (level of levels(); track level.id; let i = $index) {
+            <button 
+              (click)="playLevel(level)"
+              class="flex flex-col items-center p-3 sm:p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-orange-400 hover:shadow-[0_0_15px_rgba(251,146,60,0.3)] transition-all group relative overflow-hidden"
+            >
+              <!-- Status indicator -->
+              @if (level.progress && level.progress.status === GameStatus.Finished) {
+                <div class="absolute top-0 right-0 w-8 h-8 bg-green-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
+                <div class="absolute top-1 right-1 flex items-center justify-center">
+                  <span class="text-green-500 text-lg leading-none">⭐</span>
+                </div>
+              } @else if (level.progress && level.progress.status === GameStatus.Playing) {
+                <div class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
+                <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+              }
+              
+              <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-orange-500 transition-colors mb-2 whitespace-nowrap">
+                {{ i18n.t('game.level')() }} {{ level.level_num | number:'1.0-0' }}
+              </span>
+              
+              @if (level.progress && level.progress.status === GameStatus.Playing) {
+                <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.in_progress')() }}</span>
+              } @else if (level.progress && level.progress.status === GameStatus.Finished) {
+                <span class="text-[10px] text-green-500 font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.finished')() }}</span>
+              } @else {
+                <span class="text-[10px] text-[var(--color-text-muted)] font-bold mt-2 uppercase tracking-wider text-center" >{{ i18n.t('game.unplayed')() }}</span>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
   </div>
 </div>

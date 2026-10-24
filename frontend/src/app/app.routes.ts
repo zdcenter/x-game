@@ -131,6 +131,7 @@ const langChildren: Routes = [
       { path: 'idioms', loadComponent: () => import('./features/admin/admin-idiom.component').then(m => m.AdminIdiomComponent) },
       { path: 'distribute', loadComponent: () => import('./features/admin/admin-distribute.component').then(m => m.AdminDistributeComponent) },
       { path: 'articles', loadComponent: () => import('./features/admin/admin-articles.component').then(m => m.AdminArticlesComponent) },
+      { path: 'feedbacks', loadComponent: () => import('./features/admin/admin-feedback.component').then(m => m.AdminFeedbackComponent) },
       { path: 'database', loadComponent: () => import('./features/admin/admin-database.component').then(m => m.AdminDatabaseComponent) }
     ]
   },

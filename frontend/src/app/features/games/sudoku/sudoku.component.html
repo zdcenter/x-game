@@ -24,10 +24,11 @@
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
+  [isLobby]="view() === 'lobby'"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 @if (view() === 'lobby') {
-        <app-sudoku-lobby class="flex-grow flex flex-col w-full h-full min-h-[600px]"
+        <app-sudoku-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
           (levelSelect)="startLevel($event)"
           (openLobby)="navigateToPkArena()">
         </app-sudoku-lobby>

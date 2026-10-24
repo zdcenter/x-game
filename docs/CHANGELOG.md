@@ -2,6 +2,116 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.9] - 2026-10-24
+
+### 24点等选关大厅棋盘坍塌挤压修复与全局多语言词条补齐 (Math 24 Lobby Compression Fix & i18n Completion)
+- **选关大厅（24点、数独等）棋盘区域高度挤压坍塌彻底修复 (Game Stage Collapse Fix in Lobby View)**：
+  - **问题现象根治**：彻底解决用户进入 24 点选关时，由于棋盘舞台被严重挤压成一条细线、只能看到底部攻略文章的阻断性布局缺陷；
+  - **病因定位**：
+    1. 选关大厅模式（`isLobby`）下，父容器此前设置了固定高度 `h-[calc(100dvh-64px)] max-h-[calc(100dvh-64px)] overflow-hidden`；
+    2. 舞台下方同时存在几百像素的“深度解谜策略与游戏说明”SEO 攻略板块，在 Flex 弹性布局下，拥有 `min-h-0` 的主舞台区域被强制挤压至极限，导致棋盘和关卡选择网格不可见；
+  - **优雅重构布局**：
+    - `GameLayoutComponent` 外层容器解除死锁，恢复 `min-h-[calc(100dvh-64px)]`，消除视口强行截断；
+    - Stage 舞台容器在 `isLobby` 模式下赋予坚固充足的响应式保障尺寸（`min-h-[520px] sm:min-h-[620px] lg:min-h-[680px] h-[72vh] max-h-[840px]`）；
+    - 确保 24 点、数独、连线等选关大厅在手机、平板与桌面端均能完整大气展开，内部滚动丝滑流畅，同时页面向下划动可自然阅读完整的游戏攻略。
+- **24点棋盘文字与运算符号视觉尺寸全量放大 (Math 24 Board Numbers & Operators Enlargement)**：
+  - **用户痛点解决**：彻底消除手机与小屏设备下 24 点棋盘中扑克数字与 `+ - × ÷` 运算符号偏小、字号仅占卡片不到三分之一的问题；
+  - **视觉系统升级**：
+    - 单张数字卡片个位数（`num < 10`）由原 `text-3xl`（30px）大幅跃升至 `text-5xl sm:text-6xl md:text-7xl font-black`（48px~72px），呈现像专业积木/大字牌般扎实饱满的触控视觉；
+    - 两位数提升至 `text-3xl sm:text-4xl md:text-5xl font-black`；
+    - 4 个运算符号（`+ - × ÷`）字号由 `text-xl` 升级至 `text-3xl sm:text-4xl md:text-5xl font-black`，中央 Goal 目标卡片数字升级为 `text-3xl sm:text-4xl md:text-5xl`，等式预览胶囊同步加宽放大，整体排版醒目大气、防误触体验大幅提升。
+- **全平台底部操作栏「提示」按钮纯净极简重构 (Toolbar Hint Button Label Clean Streamlining)**：
+  - **文案极简化**：遵照用户指示，彻底移除冗余的“线索”和内联消耗数字“(-20)”，不再显示臃肿的“提示线索 (-20)”；
+  - **两字标准对称**：按钮文字精简为纯粹优雅的“提示”（多语言自动映射为 "Hint", "ヒント" 等），与底栏【上一关】、【撤销】、【重来】、【下一关】严格保持对齐规范；
+  - **金币悬停保持与免广告角标**：💡 图标右上角微型金币角标与悬停/长按提示（`-20 脑力币 (免广告提示)`）完整保留，功能逻辑丝毫不减。
+- **全局多语言词条补齐 (`user.profile` / `game.hint`)**：
+  - 修复访问用户主页时控制台报警 `Missing translation for 'user.profile'` 的缺失；
+  - 在全球 8 种语言字典（zh, en, ja, ko, es, de, fr, pt）中全量补充规范翻译（中文：“个人主页”、英文：“Profile”；`game.hint` 为“提示” / “Hint”）。
+
+---
+
+## [v3.2.8] - 2026-10-24
+
+### 选关大厅手势滑动死锁彻底根除与首页大厅 18 款游戏快速直达（PC下拉/移动端四方弹窗） (Lobby Selection Touch Unlock & Quick Game Switcher)
+- **选关大厅（数独、24点、数桥、推箱子、连线）多层嵌套滚动阻断与高度坍塌彻底破除 (Multi-Game Level Selection Lobby Gesture & Height Lock Fix)**：
+  - **核心痛点根治**：彻底解决移动端触控屏/手机用户反馈“数独、24点等选关大厅滑不动、只能看到前面几关”的阻断性缺陷；
+  - **根本病因清算**：
+    1. `GameLayoutComponent` 最外层为 `min-h-[calc(100dvh-64px)]` 无界约束，导致子容器 `h-full` 退化为 `auto`，内层网格容器无法正确计算 `scrollHeight`；
+    2. Stage 舞台容器与子组件内部网格同时声明 `overflow-y-auto`，触发 WebKit 经典双重滚动冲突锁死；
+    3. Lobby 组件内部存在多层嵌套的 `overflow-hidden`，在 iOS/Android 触摸手势链上传递时将滑动手势截杀，导致滚动条不出现且内容被硬件裁剪；
+  - **全链路视口与触控链路重构**：
+    - `GameLayoutComponent` 在 `isLobby` 模式下设置明确有界的 `h-[calc(100dvh-64px)] max-h-[calc(100dvh-64px)] overflow-hidden`，并将 Stage 舞台容器设为 `overflow-hidden min-h-0`，将单一垂直滚动权完全下放给关卡网格；
+    - 全面改造 `math24-lobby`、`sudoku-lobby`、`sokoban-lobby`、`hashi-lobby`、`connect-lobby`：移除阻断性 `overflow-hidden`，顶栏分类 Tabs 和统计栏标记 `shrink-0`，关卡网格容器注入 `touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;`，并预留 `pb-12 sm:pb-6` 安全内边距，关卡及翻页控制条在任何设备上均可丝滑上下滚动。
+- **首页大厅 18 款游戏快速直达与搜索下拉/移动端四方弹窗 (Lobby Quick Game Switcher & Mobile Square Modal)**：
+  - **解决用户痛点**：针对“游戏太多（18款）、在首页从上往下滑动选游戏很慢”的痛点，将现有搜索工具栏重构为**快速直达与游戏切换中枢**；
+  - **PC / 宽屏下拉面板 (Desktop Dropdown)**：
+    - 搜索框右侧增设【🎯 快速直达 ▾】交互胶囊；
+    - 聚焦或点击时在搜索栏下方优雅浮现毛玻璃下拉面板（440px 宽度，双列紧凑文字徽章 + Emoji 图标 + PK 标签）；
+    - 支持即时模糊搜索过滤，点击任意游戏一秒进局，支持 ESC 或点击外部自动收起；
+  - **移动端 / 平板四方形居中弹窗 (Mobile/Tablet Square Dialog)**：
+    - 针对触屏操作习惯，特别定制居中四方形弹出模态卡片（带高斯模糊背景与大热区 ✕ 关闭按钮）；
+    - 弹窗内集成即时过滤框与友好提示；
+    - 18 款游戏以高对比度、大触控面积的四方文字按钮紧凑呈现，大拇指单手轻触即可秒切游戏，彻底消除首页长屏滚动的繁复操作；
+  - **多语言与设计系统规范**：
+    - 全球 8 国语言字典（zh, en, ja, ko, es, de, fr, pt）同步新增直达标题与提示词条；
+    - 严格遵循全局 CSS 变量（`--color-bg-card`, `--color-bg-main`, `--color-text-main` 等），完美适配 Light/Dark 双模主题与全端响应式。
+
+---
+
+## [v3.2.7] - 2026-10-24
+
+### 游戏局内操作工具栏轻量化、右下角悬浮互动体系与全链路 Bug 反馈监控闭环 (Toolbar Decoupling, Bottom-Right Floating Hub & Feedback Lifecycle)
+- **游戏局内操作工具栏轻量化与业务互动解耦 (Game Toolbar Operational Focus & Decoupling)**：
+  - **核心痛点解决**：彻底剥离混杂在 `GameToolbarComponent` 核心操作栏内部的【分享战绩】按钮，将其默认收起并移出局内操作队列；
+  - **操作空间释放**：腾出 20% 以上横向宝贵空间，使手机竖屏与小屏设备下的【撤销】、【重开】、【提示】、【上一关】、【下一关】核心解谜按钮面积更充裕，彻底杜绝误触。
+- **全平台 18 款游戏右下角悬浮辅助互动体系落地 (Game Stage Bottom-Right Floating Utility Action Hub)**：
+  - **极简毛玻璃微拟物浮动组**：在全局舞台容器 `GameLayoutComponent` 右下角统一部署微型辅助互动栏（`[ 📢 分享推荐 | 🐞 建议与Bug ]`），所有游戏全局统一生效，零重复逻辑侵入；
+  - **全端安全区自适应**：采用 `fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-2.5 sm:right-4 z-40`，精准避让 iOS/Android 底部手势指示条与棋盘核心操作区；平时保持 80% 半透明静默不抢占棋盘视觉焦点，hover/active 时呈现高光微动效；
+  - **📢 分享推荐**：一键调用 `ShareService`，动态带入当前游戏名称、标题、玩法介绍及专属链接，无缝唤起系统海报分享与二维码扫码；
+  - **🐞 建议与Bug 反馈**：一键唤起全端响应式 `FeedbackModalComponent` 反馈弹窗。
+- **全端玩家反馈与 Bug 监控全链路闭环 (Player Feedback & Bug Monitoring Lifecycle)**：
+  - **智能环境感知**：弹窗自动捕获当前游戏（如 `Math 24`）、当前关卡/难度、设备分辨率、系统 UA 与 PWA 运行模式，玩家无需手动填写繁杂背景；
+  - **极简结构化表单**：支持 Bug 报告、体验建议、题目有误、其它等分类标签选择，支持字数限制与选填联系方式（激励玩家找茬奖励脑力币）；
+  - **后端高可用存储与管理中心闭环**：
+    - 后端数据模型 `domain.Feedback` 自动迁移落盘；
+    - 公共提交接口 `POST /api/v1/feedback`（支持游客及已登录用户提交并自动关联账号）；
+    - 管理后台 `/admin/feedbacks`（`AdminFeedbackComponent`）全景监控看板，支持按游戏、类型、处理状态多维筛选，支持标记已解决与删除维护。
+- **全局好友社交入口由右下角移至全站顶栏导航 (Global Friends Entry Migration to Top Navbar)**：
+  - **遮挡根因破案**：`FriendListComponent` 原先在用户登录后在页面右下角强行渲染了一个 `fixed right-4 bottom-4 w-12 h-12` 蓝色悬浮球（`z-50`），直接与游戏舞台右下角的【反馈建议】和【分享推荐】发生严重层叠遮挡；
+  - **右下角彻底解放**：移除写死在右下角的大圆球浮动按钮，右下角完全交给游戏局内辅助交互，彻底消灭视觉重叠与误触；
+  - **全站顶栏优雅归宿**：在全站顶部导航栏（`MainLayoutComponent`）脑力币旁增设【👥 好友】快捷胶囊（集成待处理好友请求红点角标），移动端折叠抽屉同步收纳；在游戏局内由 `GameHeader` 的【👥 邀请好友PK】直接唤起好友侧滑面板，体验统一连贯。
+- **严格遵循多语言与设计系统规范**：
+  - 新增词条完整同步全球 8 国语言字典（中、英、日、韩、西、德、法、葡）；
+  - 严格采用全局 CSS 变量，确保 Light/Dark 双模主题与全端响应式流畅自适应。
+
+---
+
+## [v3.2.6] - 2026-10-24
+
+### 移动端与 PWA 选关大厅手势滚动解冻与 24点 移动端体验 & PK 联机对战重构 (Lobby PWA Touch Scroll & Math24 Mobile & PK Overhaul)
+- **多游戏选关大厅移动端 / PWA 模式手势与滚轮冻结缺陷根除 (Lobby PWA Touch Gesture & Scroll Fix)**：
+  - **核心根因破案**：`GameLayoutComponent` 对除 `Waiting` 外的所有状态默认施加了 `touch-none` (`touch-action: none`) 与 `overscroll-none`；在 iOS/Android 触摸屏及 PWA（Standalone 独立窗口模式）下，祖先节点的 `touch-action: none` 会彻底压制所有子元素的纵向手势滑动手势；子组件即使声明 `overflow-y-auto` 也会被完全拦截，导致数独、24点、推箱子等选关大厅无法通过手指或鼠标滚轮滑动关卡列表。此外，部分大厅写死了 `min-h-[500px]` 或 `min-h-[600px]`，在小屏下强制顶爆容器却无法滚动；
+  - **GameLayout 舞台容器滚动体系重构**：
+    - `GameLayoutComponent` 新增 `@Input({ transform: booleanAttribute }) isLobby: boolean = false;` 及 `allowScroll: boolean = false;` 接口；
+    - 在选关大厅或允许滚动状态下，动态解绑 `touch-none`，注入 `touch-pan-y`、`overscroll-contain`、`overflow-y-auto`、`h-full` 和 `min-h-0`；
+  - **全选关大厅组件解绑与触控滚屏增强**：
+    - 数独 (`sudoku`)、桥牌/数桥 (`hashi`)、推箱子 (`sokoban`)、连连看 (`connect`)、水排序 (`watersort`)、24点 (`math24`) 等所有关卡列表大厅全部传入 `[isLobby]` 状态并解除死板的最小高度限制；
+    - 统一为滚动容器配置 `touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;`，确保在任何移动设备和 PWA 模式下手指顺畅滑动、平滑阻尼与零横向抖动。
+- **24点 (Math24) PK 联机卡死空白与选关大厅等待音效误触发根治 (Math24 PK Room & Sound Isolation Bugfix)**：
+  - **核心缺陷定位**：`math24.component.html` 遗漏了 `@else if (view() === 'room')` 模板分支，却在单机选关大厅 `@if (view() === 'lobby')` 分支中错误包含了 `<app-game-waiting-room>` 组件。这导致玩家一进单机大厅，等待房间组件即被实例化并在 `ngOnInit` 中触发组队等待音效 `waiter_pk.mp3`；而玩家在 PK 模式下创建或加入房间后（`view = 'room'`），因缺少匹配模板直接落入空白区域，导致界面卡死无法进入对局；
+  - **等待房间与选关大厅彻底隔离**：
+    - 将 `<app-game-waiting-room>` 彻底移至独立的 `@else if (view() === 'room')` 作用域，彻底根除进选关大厅误播音效问题；
+    - PK 房间创建与加入后完整渲染房主、对手准备、轮数难度设置及开战功能；
+    - `math24.component.ts` 的 `goBack()` 增强，在离开房间或对局时完整执行 `leaveRoom()` 与 `clearReconnectInfo()`，杜绝脏状态残留。
+- **24点 (Math24) 移动端界面大小适配与操作交互全面重构 (Math24 Mobile Board & Interaction Overhaul)**：
+  - **棋盘尺寸与视口自适应**：重构棋盘外层容器为 `max-w-[min(94vw,380px,calc(100dvh-200px))] sm:max-w-[400px]`，在手机全屏、PWA 模式与桌面端均能获得饱满且呼吸感充足的视口比例，杜绝纵向压缩；
+  - **数字动态自适应字号**：新增 `getCardFontSize(val)`，根据数字位数动态调整字号（单两位数大字号、三位数及以上优雅平滑降级），彻底解决运算过程中大数值数字撑破卡片、换行溢出的问题；
+  - **触控与操作手感升级**：优化数字卡片与运算符按钮的触控面积与边框细腻度，增加操作提示小标（`game.math24_tap_hint`）；优化点击弹性缩放（`active:scale-95`）与高亮光晕；
+  - **单机与 PK 差异化操作栏**：在单机模式下提供完整的【撤销】、【重置】、【提示】和【换一题】工具栏；在 PK 模式下自动隐藏单机关卡和换题提示，仅保留【撤销】与【重置】，确保对决的公平性与紧凑性；
+  - **多语言与多主题严格适配**：文案 100% 提取至 8 种语言字典（`zh`, `en`, `ja`, `ko`, `es`, `de`, `fr`, `pt`），无任何硬编码样式，严格使用 CSS 主题变量。
+
+---
+
 ## [v3.2.5] - 2026-10-23
 
 ### iPad / 平板 PWA 切后台恢复视口冻结与棋盘异常缩小根治 (iPad PWA Background Resume & Viewport Calibration Fix)

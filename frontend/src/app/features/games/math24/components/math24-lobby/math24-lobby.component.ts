@@ -22,6 +22,7 @@ interface LevelResponse {
   selector: 'app-math24-lobby',
   standalone: true,
   imports: [CommonModule],
+  host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   templateUrl: './math24-lobby.component.html'
 })
 export class Math24LobbyComponent implements OnInit {

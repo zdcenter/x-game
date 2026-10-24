@@ -25,11 +25,12 @@
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
+  [isLobby]="view() === 'lobby'"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
   <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
     <ng-container *ngIf="view() === 'lobby'">
-      <app-connect-lobby class="flex-grow flex flex-col w-full h-full min-h-[500px]"
+      <app-connect-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
         (startLevel)="startLevel($event)">
       </app-connect-lobby>
     </ng-container>

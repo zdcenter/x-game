@@ -66,6 +66,12 @@ export class I18nService {
     });
   }
 
+  hasKey(key: string): boolean {
+    const lang = this.currentLang();
+    const translations = this.transloco.getTranslation(lang);
+    return !!(translations && translations[key]);
+  }
+
   setLang(lang: Lang) {
     if (this.currentLang() === lang) return;
     const currentUrl = this.router.url;

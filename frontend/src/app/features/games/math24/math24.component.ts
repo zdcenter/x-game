@@ -209,8 +209,14 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       super.goBack();
     } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
       this.view.set('lobby');
+    } else if (this.view() === 'room') {
+      this.store.leaveRoom();
+      this.roomLifecycle.clearReconnectInfo();
+      this.view.set('lobby');
     } else {
-      super.goBack();
+      this.store.leaveRoom();
+      this.roomLifecycle.clearReconnectInfo();
+      this.view.set('lobby');
     }
   }
 

@@ -140,6 +140,9 @@ func main() {
 	quests.Get("/today", middleware.OptionalProtected(), rest.GetDailyQuests)
 	quests.Post("/claim", middleware.Protected(), rest.ClaimDailyQuest)
 
+	// Feedback & Bug Reporting (public with optional auth)
+	v1.Post("/feedback", middleware.OptionalProtected(), rest.SubmitFeedback)
+
 	// Stats routes (Protected)
 	stats := v1.Group("/stats")
 	stats.Use(middleware.Protected())
@@ -272,6 +275,11 @@ func main() {
 
 	admin.Get("/simulator", rest.GetSimulatorStatus)
 	admin.Put("/simulator", rest.ToggleSimulator)
+
+	// Feedback management
+	admin.Get("/feedbacks", rest.AdminListFeedbacks)
+	admin.Put("/feedbacks/:id", rest.AdminUpdateFeedback)
+	admin.Delete("/feedbacks/:id", rest.AdminDeleteFeedback)
 
 	// Database management
 	admin.Get("/db/tables", rest.AdminDBTables)

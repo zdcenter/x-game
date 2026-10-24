@@ -56,7 +56,7 @@
 
         <!-- Time ago badge -->
         <span class="text-[10px] sm:text-xs font-mono text-[var(--color-text-muted)] shrink-0 ml-auto hidden md:inline-block opacity-80">
-          {{ formatTime(currentActivity()!.timestamp) }}
+          {{ currentActivityTime() }}
         </span>
 
         <!-- Tap / Action Hint Button -->
@@ -128,7 +128,7 @@
           {{ getActivityText(selectedActivity()!) }}
         </p>
         <span class="text-[10px] text-[var(--color-text-muted)] font-mono mt-0.5">
-          {{ formatTime(selectedActivity()!.timestamp) }}
+          {{ selectedActivityTime() }}
         </span>
       </div>
 

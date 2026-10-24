@@ -10,15 +10,15 @@ import { ConnectStore } from '../connect.store';
   imports: [CommonModule],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   template: `
-    <div class="flex-1 flex flex-col p-2 lg:p-6 w-full h-full min-h-0">
-      <div class="flex-1 flex flex-col h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] overflow-hidden min-w-0 min-h-0">
+    <div class="flex-1 flex flex-col p-1 sm:p-2 lg:p-4 w-full h-full min-w-0 min-h-0">
+      <div class="flex-1 flex flex-col w-full h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] min-w-0 min-h-0 overflow-hidden">
       
       <!-- Header Tabs -->
-      <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
+      <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)] shrink-0">
         @for (diff of difficulties; track diff.id) {
           <button 
             (click)="selectDifficulty(diff.id)"
-            class="flex-1 py-4 text-center font-bold text-lg transition-all border-b-2"
+            class="flex-1 py-3 sm:py-4 text-center font-bold text-xs sm:text-base lg:text-lg transition-all border-b-2"
             [class.text-[var(--color-accent-from)]]="store.currentDifficulty() === diff.id"
             [class.border-[var(--color-accent-from)]]="store.currentDifficulty() === diff.id"
             [class.text-[var(--color-text-muted)]]="store.currentDifficulty() !== diff.id"
@@ -30,20 +30,20 @@ import { ConnectStore } from '../connect.store';
       </div>
 
       <!-- Level Grid Header -->
-      <div class="flex items-center justify-between px-6 pt-4 pb-2">
+      <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-1 shrink-0">
         <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
           {{ i18n.t('game.total_levels')() }}: {{ store.levelsList().length }}
         </span>
       </div>
 
       <!-- Level Grid Body -->
-      <div class="flex-1 px-6 pb-6 overflow-y-auto custom-scrollbar min-h-0">
+      <div class="flex-1 px-3 sm:px-6 pb-12 sm:pb-6 overflow-y-auto custom-scrollbar min-h-0" style="touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
         @if (store.levelsList().length === 0) {
           <div class="flex justify-center items-center h-full">
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-accent-from)]"></div>
           </div>
         } @else {
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             @for (level of store.levelsList(); track level.id; let i = $index) {
               <button 
                 (click)="startLevel.emit(level.id)"

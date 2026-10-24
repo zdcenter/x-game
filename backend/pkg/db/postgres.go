@@ -80,6 +80,8 @@ func InitPostgres() {
 		&domain.Friendship{},
 		// Ghost Challenge & Async Duel
 		&domain.GhostChallenge{},
+		// Player Feedback & Bug Reporting
+		&domain.Feedback{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)

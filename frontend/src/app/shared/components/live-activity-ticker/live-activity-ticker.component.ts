@@ -41,6 +41,18 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
     return list[idx];
   });
 
+  readonly currentActivityTime = computed(() => {
+    const act = this.currentActivity();
+    if (!act) return '';
+    return this.activityService.formatTimeAgo(act.timestamp);
+  });
+
+  readonly selectedActivityTime = computed(() => {
+    const act = this.selectedActivity();
+    if (!act) return '';
+    return this.activityService.formatTimeAgo(act.timestamp);
+  });
+
   ngOnInit(): void {
     this.startAutoCycle();
   }
@@ -229,53 +241,49 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
     let clean = diff.trim();
     if (clean.startsWith('game.difficulty_')) clean = clean.replace('game.difficulty_', '');
     if (clean.startsWith('game.diff_')) clean = clean.replace('game.diff_', '');
+    if (gameId && clean.startsWith(`${gameId}_`)) clean = clean.replace(`${gameId}_`, '');
 
-    // 1. Check game-specific difficulty key (e.g. game.diff_sudoku_easy)
-    if (gameId) {
-      const gKey = `game.diff_${gameId}_${clean}`;
-      const gVal = this.i18n.t(gKey)();
-      if (gVal && gVal !== gKey) return gVal;
-    }
+    const lower = clean.toLowerCase();
 
-    // 2. Check standard diff key (game.diff_easy, game.diff_medium, etc.)
-    const dKey = `game.diff_${clean}`;
-    const dVal = this.i18n.t(dKey)();
-    if (dVal && dVal !== dKey) return dVal;
-
-    // 3. Check difficulty key (game.difficulty_easy, etc.)
-    const diffKey = `game.difficulty_${clean}`;
-    const diffVal = this.i18n.t(diffKey)();
-    if (diffVal && diffVal !== diffKey) return diffVal;
-
-    // 4. Fallback via dictionary with localized fallbacks
-    switch (clean.toLowerCase()) {
+    // 1. 标准通用难度优先直达（避免盲猜特化 key 导致 Transloco 丢失警告）
+    switch (lower) {
       case 'easy':
-      case 'beginner': {
-        const tr = this.i18n.t('game.diff_easy')();
-        return (tr && tr !== 'game.diff_easy') ? tr : '简单';
-      }
+      case 'beginner':
+        return this.i18n.t('game.diff_easy')();
       case 'medium':
       case 'normal':
-      case 'intermediate': {
-        const tr = this.i18n.t('game.diff_medium')();
-        return (tr && tr !== 'game.diff_medium') ? tr : '中等';
-      }
+      case 'intermediate':
+        return this.i18n.t('game.diff_medium')();
       case 'hard':
-      case 'advanced': {
-        const tr = this.i18n.t('game.diff_hard')();
-        return (tr && tr !== 'game.diff_hard') ? tr : '困难';
-      }
-      case 'expert': {
-        const tr = this.i18n.t('game.diff_expert')();
-        return (tr && tr !== 'game.diff_expert') ? tr : '专家';
-      }
-      case 'master': {
-        const tr = this.i18n.t('game.diff_master')();
-        return (tr && tr !== 'game.diff_master') ? tr : '大师';
-      }
-      default:
-        return clean.includes('.') ? (clean.split('.').pop() || clean) : clean;
+      case 'advanced':
+        return this.i18n.t('game.diff_hard')();
+      case 'expert':
+        return this.i18n.t('game.diff_expert')();
+      case 'master':
+        return this.i18n.t('game.diff_master')();
     }
+
+    // 2. 检查游戏特化 key（安全检查当前字典是否存在）
+    if (gameId) {
+      const gKey = `game.diff_${gameId}_${clean}`;
+      if (this.i18n.hasKey(gKey)) {
+        return this.i18n.t(gKey)();
+      }
+    }
+
+    // 3. 检查通用 diff key
+    const dKey = `game.diff_${clean}`;
+    if (this.i18n.hasKey(dKey)) {
+      return this.i18n.t(dKey)();
+    }
+
+    // 4. 检查 difficulty key
+    const diffKey = `game.difficulty_${clean}`;
+    if (this.i18n.hasKey(diffKey)) {
+      return this.i18n.t(diffKey)();
+    }
+
+    return clean.includes('.') ? (clean.split('.').pop() || clean) : clean;
   }
 
   getActivityBadgeIcon(type: string): string {

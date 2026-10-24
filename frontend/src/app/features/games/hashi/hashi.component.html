@@ -25,10 +25,11 @@
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
+  [isLobby]="view() === 'lobby' && store.currentRoomMode() === GameMode.Single"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 @if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
-        <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-[600px]"
+        <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
           (levelSelect)="startLevel($event)">
         </app-hashi-lobby>
       } @else {

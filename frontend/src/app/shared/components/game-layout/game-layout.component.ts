@@ -19,11 +19,15 @@ import { GhostChallengeService, GhostChallenge } from '../../../core/services/gh
 import { OfflineBannerComponent } from '../offline-banner/offline-banner.component';
 import { LiveRoomService } from '../../../core/services/live-room.service';
 import { ZenModeService } from '../../../core/services/zen-mode.service';
+import { FeedbackModalComponent } from '../feedback-modal/feedback-modal.component';
+import { FeedbackService } from '../../../core/services/feedback.service';
+import { ShareService } from '../../../core/services/share.service';
+import { getOrigin } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent, FeedbackModalComponent],
   template: `
 <div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]"
      [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-[calc(100dvh-64px)]'">
@@ -122,7 +126,8 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
   </div>
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
-  <main class="flex-grow flex flex-col items-center w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-1 sm:py-2">
+  <main class="flex-grow flex flex-col w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-1 sm:py-2 min-h-0"
+        [class.items-center]="!isLobby">
     
     <!-- Guest Playing in PK Room Badge (Unranked play) -->
     @if (currentRoomId && !authStore.isAuthenticated()) {
@@ -156,11 +161,16 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
     }
 
     <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
-    <div class="w-full flex-grow flex flex-col items-center justify-center border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 min-h-[320px] sm:min-h-[420px] relative"
-         [class.touch-none]="status !== GameStatus.Waiting"
-         [class.overscroll-none]="status !== GameStatus.Waiting"
-         [class.touch-pan-y]="status === GameStatus.Waiting"
-         [class.overflow-y-auto]="status === GameStatus.Waiting">
+    <div class="w-full flex-grow flex flex-col border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 relative"
+         [ngClass]="{
+           'min-h-[320px] sm:min-h-[420px] items-center justify-center': !isLobby,
+           'min-h-[520px] sm:min-h-[620px] lg:min-h-[680px] h-[72vh] max-h-[840px] items-stretch justify-start overflow-hidden': isLobby,
+           'touch-none overscroll-none': !isLobby && !allowScroll && status !== GameStatus.Waiting,
+           'touch-pan-y': isLobby || allowScroll || status === GameStatus.Waiting,
+           'overflow-y-auto h-full min-h-0': !isLobby && (allowScroll || status === GameStatus.Waiting)
+         }"
+         [style.overscroll-behavior]="(isLobby || allowScroll || status === GameStatus.Waiting) ? 'contain' : 'none'"
+         [style.touch-action]="(isLobby || allowScroll || status === GameStatus.Waiting) ? 'pan-y' : 'none'">
       <!-- Project custom game components here -->
       <ng-content></ng-content>
     </div>
@@ -226,6 +236,33 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
   
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
   <ng-content select="[game-overlay]"></ng-content>
+
+  <!-- Floating Utility Actions (Bottom-Right: Share & Bug/Feedback) -->
+  <aside class="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-2.5 sm:right-4 z-40 flex flex-col gap-2 items-center pointer-events-auto"
+         aria-label="Game auxiliary actions">
+    <!-- Share / Recommend Game Button -->
+    <button type="button"
+            (click)="onShareGame()"
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--color-bg-card)]/80 hover:bg-[var(--color-bg-card)] backdrop-blur-md border border-[var(--color-border-card)] text-sky-500 hover:text-sky-400 shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center opacity-85 hover:opacity-100 group cursor-pointer"
+            [attr.title]="i18n.t('share.tooltip')() || '分享游戏 / 推荐本站'">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-4.5 sm:w-4.5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+      </svg>
+      <span class="sr-only">{{ i18n.t('share.tooltip')() || '分享游戏' }}</span>
+    </button>
+
+    <!-- Feedback / Bug Report Button -->
+    <button type="button"
+            (click)="onOpenFeedback()"
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--color-bg-card)]/80 hover:bg-[var(--color-bg-card)] backdrop-blur-md border border-[var(--color-border-card)] text-amber-500 hover:text-amber-400 shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center opacity-85 hover:opacity-100 group cursor-pointer"
+            [attr.title]="i18n.t('feedback.tooltip')() || '意见建议与 Bug 反馈'">
+      <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">🐞</span>
+      <span class="sr-only">{{ i18n.t('feedback.tooltip')() || '意见反馈' }}</span>
+    </button>
+  </aside>
+
+  <!-- Player Feedback Modal Dialog -->
+  <app-feedback-modal></app-feedback-modal>
 </div>
   `
 })
@@ -243,6 +280,28 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   liveRoom = inject(LiveRoomService);
   private route = inject(ActivatedRoute);
   private ghostChallengeService = inject(GhostChallengeService);
+  feedbackService = inject(FeedbackService);
+  shareService = inject(ShareService);
+
+  onShareGame() {
+    const url = `${getOrigin()}/games/${this.gameId || ''}`;
+    const title = this.title || this.gameId || 'X-Game';
+    const descKey = `lobby.${this.gameId}.desc`;
+    const desc = this.i18n.t(descKey)() || '';
+    this.shareService.share({
+      title: `${title} - ${this.i18n.t('app.title')()}`,
+      text: `${this.i18n.t('share.game_invite')() || 'Play this awesome game with me!'} ${title}\n${desc}`,
+      url
+    });
+  }
+
+  onOpenFeedback() {
+    this.feedbackService.open({
+      gameId: this.gameId,
+      gameTitle: this.title || this.gameId,
+      level: this.currentDifficulty ? `${this.currentDifficulty}` : undefined
+    });
+  }
 
   readonly waitingRoomForThisGame = computed(() => {
     const myId = this.liveRoom.currentUserId();
@@ -294,6 +353,8 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   @Input() showMobileSidebar: boolean = false;
   @Input() hideLeftPanel: boolean = false;
   @Input({ transform: booleanAttribute }) hideDefaultDifficulty: boolean = false;
+  @Input({ transform: booleanAttribute }) isLobby: boolean = false;
+  @Input({ transform: booleanAttribute }) allowScroll: boolean = false;
   
   @Input() seoDescKey?: string;
 

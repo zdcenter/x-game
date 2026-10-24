@@ -18,6 +18,7 @@ import { CoinService } from '../services/coin.service';
 import { CoinGuideService } from '../services/coin-guide.service';
 import { CoinGuideModalComponent } from '../../shared/components/coin-guide-modal/coin-guide-modal.component';
 import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
+import { FriendService } from '../services/friend.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -103,6 +104,19 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
                       [title]="i18n.t('game.coins_balance')() + ': ' + coinService.coins() + ' (' + (i18n.t('coins.guide_title')() || '规则指南') + ')'">
                 <app-coin-icon size="sm" />
                 <span class="font-mono font-black">{{ coinService.coins() }}</span>
+              </button>
+
+              <!-- Friends Pill (Clean Navbar Entry) -->
+              <button (click)="friendService.togglePanel()"
+                      class="relative flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-500 dark:text-blue-400 font-bold text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                      [title]="i18n.t('game.friends')() || '好友'">
+                <span class="text-sm">👥</span>
+                <span class="hidden md:inline font-bold text-xs">{{ i18n.t('game.friends')() || '好友' }}</span>
+                @if (pendingFriendRequests() > 0) {
+                  <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center border border-white">
+                    {{ pendingFriendRequests() }}
+                  </span>
+                }
               </button>
 
               <!-- Avatar + username → profile link (hidden on < sm to prevent header overflow) -->
@@ -209,6 +223,18 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
               </div>
             }
 
+            @if (authStore.isAuthenticated()) {
+              <button (click)="friendService.togglePanel(true); isMobileMenuOpen.set(false)"
+                      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors text-left cursor-pointer">
+                <span class="text-2xl">👥</span>
+                <span>{{ i18n.t('game.friends')() || '好友列表' }}</span>
+                @if (pendingFriendRequests() > 0) {
+                  <span class="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                    {{ pendingFriendRequests() }}
+                  </span>
+                }
+              </button>
+            }
             <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-2xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
@@ -383,6 +409,11 @@ export class MainLayoutComponent {
   liveRoom = inject(LiveRoomService);
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
+  friendService = inject(FriendService);
+
+  pendingFriendRequests = computed(() => {
+    return this.friendService.friends().filter(f => f.status === 'pending_received').length;
+  });
 
   isSettingsOpen = signal(false);
   isMobileMenuOpen = signal(false);

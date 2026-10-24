@@ -170,7 +170,7 @@ export class HintButtonComponent {
 
   readonly hintLabel = computed(() => {
     if (this.hasCoinsForHint()) {
-      return (this.i18n.t('game.hint_title')() || '提示') + ` (-${this.costHint()})`;
+      return this.i18n.t('game.hint')();
     }
     return this.i18n.t('game.hint_ad_btn')();
   });

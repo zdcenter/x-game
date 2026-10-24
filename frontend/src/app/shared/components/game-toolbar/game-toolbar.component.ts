@@ -25,7 +25,7 @@ export class GameToolbarComponent {
   @Input() showUndo: boolean = false;
   @Input() showHint: boolean = true;
   @Input() showBack: boolean = false;
-  @Input() showShare: boolean = true;
+  @Input() showShare: boolean = false;
   
   @Input() gameId?: string;
   

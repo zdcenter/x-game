@@ -25,11 +25,12 @@
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
+  [isLobby]="showLobby()"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
   <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
     @if (showLobby()) {
-      <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-[500px]"
+      <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
                          (openLobby)="navigateToPkArena()"
                          (levelSelect)="onLevelSelect($event)">
       </app-sokoban-lobby>

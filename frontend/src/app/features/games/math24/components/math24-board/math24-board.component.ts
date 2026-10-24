@@ -6,47 +6,50 @@ import { AdService } from '../../../../../core/services/ad.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { Math24Solver } from '../../utils/math24-solver';
 import { GameToolbarComponent } from '../../../../../shared/components/game-toolbar/game-toolbar.component';
+import { GameMode } from '../../../../../core/models/game.model';
 
 @Component({
   selector: 'app-math24-board',
   standalone: true,
   imports: [CommonModule, GameToolbarComponent],
   template: `
-    <div class="flex flex-col items-center justify-center w-full max-w-[min(90vw,400px,calc(100vh-320px))] mx-auto h-full gap-2 sm:gap-3 py-1 sm:py-2">
+    <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,440px,calc(100dvh-180px))] sm:max-w-[460px] mx-auto h-full gap-2 sm:gap-3 py-1 select-none">
       
-      <!-- Level Badge -->
-      <div class="flex justify-center w-full px-2 mb-2">
-        <div class="px-5 py-1.5 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-sm sm:text-base font-black text-blue-400">
-          {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
+      <!-- Level Badge (Single Player only) -->
+      @if (store.currentRoomMode() === GameMode.Single) {
+        <div class="flex justify-center w-full px-2">
+          <div class="px-4 py-1 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs text-xs sm:text-sm font-black text-blue-400">
+            {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
+          </div>
         </div>
-      </div>
+      }
 
       <!-- 3x3 Grid Board -->
-      <div class="grid grid-cols-3 grid-rows-3 gap-3 sm:gap-4 w-full aspect-square relative select-none"
+      <div class="grid grid-cols-3 grid-rows-3 gap-2.5 sm:gap-4 w-full aspect-square relative select-none"
            [class.animate-shake]="store.isShaking()">
         
         <!-- Freeze Overlay -->
         @if (freezeRemaining() > 0) {
-          <div class="absolute inset-0 z-50 bg-blue-900/40 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-blue-400/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
-            <span class="text-6xl sm:text-8xl animate-pulse drop-shadow-lg">❄️</span>
-            <div class="mt-4 text-2xl font-black text-white tracking-widest">{{ freezeRemaining() }}s</div>
-            <div class="text-sm font-bold text-blue-200 mt-2 uppercase">{{ i18n.t('game.frozen')() }}</div>
+          <div class="absolute inset-0 z-50 bg-blue-900/50 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center border border-blue-400/50 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+            <span class="text-5xl sm:text-7xl animate-pulse drop-shadow-lg">❄️</span>
+            <div class="mt-2 text-xl sm:text-2xl font-black text-white tracking-widest">{{ freezeRemaining() }}s</div>
+            <div class="text-xs font-bold text-blue-200 mt-1 uppercase">{{ i18n.t('game.frozen')() }}</div>
           </div>
         }
 
         <!-- Hint Overlay -->
         @if (hintSolution()) {
-          <div class="absolute inset-0 z-[60] bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 border-2 border-orange-500/50 shadow-[0_0_50px_rgba(249,115,22,0.2)] animate-scale-in">
-            <div class="text-5xl sm:text-6xl mb-4 animate-bounce drop-shadow-lg">💡</div>
-            <div class="text-sm font-bold text-orange-500 uppercase tracking-widest mb-2">{{ i18n.t('game.hint_title')() }}</div>
-            <div class="w-full max-w-[280px] bg-[var(--color-bg-main)] px-4 sm:px-6 py-4 rounded-xl border border-[var(--color-border-card)] shadow-inner mb-8 flex flex-col gap-2">
+          <div class="absolute inset-0 z-[60] bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-4 sm:p-6 border-2 border-orange-500/50 shadow-[0_0_50px_rgba(249,115,22,0.2)] animate-scale-in">
+            <div class="text-4xl sm:text-5xl mb-3 animate-bounce drop-shadow-lg">💡</div>
+            <div class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2">{{ i18n.t('game.hint_title')() }}</div>
+            <div class="w-full max-w-[260px] bg-[var(--color-bg-main)] px-4 py-3 rounded-xl border border-[var(--color-border-card)] shadow-inner mb-4 flex flex-col gap-1.5">
               @for (step of hintSolution(); track $index) {
-                <div class="text-2xl sm:text-3xl font-black font-mono text-[var(--color-text-main)] text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
+                <div class="text-lg sm:text-2xl font-black font-mono text-[var(--color-text-main)] text-center w-full whitespace-nowrap overflow-hidden text-ellipsis">
                   {{ step }}
                 </div>
               }
             </div>
-            <button class="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all text-sm sm:text-base w-full max-w-[200px]"
+            <button class="px-6 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-bold shadow-md hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm w-full max-w-[180px]"
                     (click)="hintSolution.set(null)">
               {{ i18n.t('game.close')() }}
             </button>
@@ -68,9 +71,10 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
         <div class="w-full h-full">
           <ng-container *ngTemplateOutlet="opTpl; context: { op: '*' }"></ng-container>
         </div>
-        <div class="w-full h-full flex items-center justify-center p-2 sm:p-4">
-          <div class="w-full h-full rounded-full bg-[var(--color-border-card)] flex items-center justify-center shadow-inner text-4xl sm:text-5xl font-black text-[var(--color-text-main)] opacity-30">
-            24
+        <div class="w-full h-full flex items-center justify-center p-0.5 sm:p-1">
+          <div class="w-full h-full rounded-2xl bg-[var(--color-bg-main)]/80 border border-[var(--color-border-card)]/50 flex flex-col items-center justify-center shadow-inner relative overflow-hidden group">
+            <span class="text-3xl sm:text-4xl md:text-5xl font-black text-[var(--color-accent-from)] font-mono tracking-tight">24</span>
+            <span class="text-[10px] sm:text-xs uppercase tracking-widest text-[var(--color-text-muted)] font-bold">Goal</span>
           </div>
         </div>
         <div class="w-full h-full">
@@ -91,51 +95,82 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
       </div>
 
       <!-- Equation Builder Preview -->
-      <div class="h-8 text-xl sm:text-2xl font-mono text-[var(--color-text-muted)] font-bold mt-2">
-        {{ getPreviewText() }}
+      <div class="h-9 sm:h-10 flex items-center justify-center px-4 sm:px-5 py-1 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]/70 shadow-xs min-w-[120px] transition-all">
+        @if (getPreviewText()) {
+          <span class="text-base sm:text-lg font-mono text-blue-400 font-black animate-fade-in">
+            {{ getPreviewText() }}
+          </span>
+        } @else {
+          <span class="text-xs sm:text-sm text-[var(--color-text-muted)] font-medium">
+            {{ i18n.t('game.math24_tap_hint')() || '点击卡片和符号' }}
+          </span>
+        }
       </div>
 
       <!-- Controls -->
-      <div class="w-full mt-4">
-        <app-game-toolbar
-          [layoutStyle]="'compact'"
-          [showPrev]="true"
-          [showNext]="true"
-          [showRestart]="true"
-          [showUndo]="false"
-          [showHint]="true"
-          [disablePrev]="store.localLevelIndex() <= 0"
-          hintLayout="toolbar-compact"
-          (prevLevel)="store.loadPrevLevel()"
-          (nextLevel)="store.loadNextLevel()"
-          (undo)="undo()"
-          (restart)="reset()"
-          (hintApplied)="applyHint()"
-        ></app-game-toolbar>
+      <div class="w-full mt-1 sm:mt-3">
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <app-game-toolbar
+            [layoutStyle]="'compact'"
+            [showPrev]="true"
+            [showNext]="true"
+            [showRestart]="true"
+            [showUndo]="true"
+            [showHint]="true"
+            [disablePrev]="store.localLevelIndex() <= 0"
+            hintLayout="toolbar-compact"
+            (prevLevel)="store.loadPrevLevel()"
+            (nextLevel)="store.loadNextLevel()"
+            (undo)="undo()"
+            (restart)="reset()"
+            (hintApplied)="applyHint()"
+          ></app-game-toolbar>
+        } @else {
+          <!-- PK Mode: Clean Undo & Reset Actions -->
+          <div class="flex items-center justify-center gap-3 w-full max-w-[280px] mx-auto">
+            <button (click)="undo()"
+                    [disabled]="store.currentBoardHistory().length <= 1"
+                    class="flex-1 py-2 px-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer">
+              <span>↩️</span>
+              <span>{{ i18n.t('game.undo')() || '撤销' }}</span>
+            </button>
+            <button (click)="reset()"
+                    [disabled]="store.currentBoardHistory().length <= 1"
+                    class="flex-1 py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer">
+              <span>🔄</span>
+              <span>{{ i18n.t('game.reset')() || '重置' }}</span>
+            </button>
+          </div>
+        }
       </div>
 
       <!-- Templates -->
       <ng-template #cardTpl let-card="card">
         <div *ngIf="card"
-             class="w-full h-full bg-[var(--color-bg-card)] border-4 rounded-2xl shadow-lg flex items-center justify-center cursor-pointer transition-transform hover:scale-[1.02] active:scale-95"
+             class="w-full h-full bg-[var(--color-bg-card)] border-2 sm:border-3 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-md flex items-center justify-center cursor-pointer transition-all duration-200 select-none active:scale-95 hover:scale-[1.02]"
              [ngClass]="{
-               'border-blue-500 bg-blue-900/30 shadow-blue-500/50': selectedCard?.id === card.id,
-               'border-[var(--color-border-card)]': selectedCard?.id !== card.id
+               'border-blue-500 bg-blue-500/15 ring-2 sm:ring-4 ring-blue-500/30 shadow-blue-500/40 -translate-y-0.5': selectedCard?.id === card.id,
+               'border-[var(--color-border-card)] hover:border-[var(--color-border-thick)]': selectedCard?.id !== card.id
              }"
              (click)="selectCard(card)">
-          <span class="text-5xl sm:text-6xl font-black font-mono text-[var(--color-text-main)]">{{ card.value }}</span>
+          <span class="font-black font-mono text-[var(--color-text-main)] tracking-tight"
+                [ngClass]="getCardFontSize(card.value)">
+            {{ card.value }}
+          </span>
         </div>
       </ng-template>
 
       <ng-template #opTpl let-op="op">
-        <div class="w-full h-full p-2 sm:p-3">
-          <button class="w-full h-full rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-bold transition-all border-4 shadow-sm active:scale-95"
+        <div class="w-full h-full p-0.5 sm:p-1">
+          <button class="w-full h-full rounded-xl sm:rounded-2xl flex items-center justify-center font-black transition-all duration-200 border-2 sm:border-3 shadow-xs active:scale-90 cursor-pointer"
                   [ngClass]="{
-                    'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/50 scale-105': selectedOp === op,
-                    'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)]': selectedOp !== op
+                    'bg-blue-600 border-blue-400 text-white shadow-md shadow-blue-500/40 scale-105 ring-2 ring-blue-400/50': selectedOp === op,
+                    'bg-[var(--color-bg-main)] border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] hover:border-[var(--color-border-thick)]': selectedOp !== op
                   }"
                   (click)="selectOp(op)">
-            {{ op === '*' ? '×' : (op === '/' ? '÷' : op) }}
+            <span class="text-3xl sm:text-4xl md:text-5xl font-black leading-none">
+              {{ op === '*' ? '×' : (op === '/' ? '÷' : op) }}
+            </span>
           </button>
         </div>
       </ng-template>
@@ -144,10 +179,18 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
   `
 })
 export class Math24BoardComponent {
+  GameMode = GameMode;
   store = inject(Math24Store);
   i18n = inject(I18nService);
   adService = inject(AdService);
   toastService = inject(ToastService);
+
+  getCardFontSize(val: number): string {
+    const num = Math.abs(val);
+    if (num < 10) return 'text-5xl sm:text-6xl md:text-7xl';
+    if (num < 100) return 'text-3xl sm:text-4xl md:text-5xl';
+    return 'text-xl sm:text-2xl md:text-3xl';
+  }
 
   operators: Operator[] = ['+', '-', '*', '/'];
   
