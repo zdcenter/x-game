@@ -1826,5 +1826,6 @@
   "lobby.quick_select_hint": "Toca cualquier juego para entrar sin desplazarte",
   "lobby.quick_no_results": "No se encontraron juegos coincidentes",
   "user.profile": "Perfil",
-  "game.hint": "Pista"
+  "game.hint": "Pista",
+  "game.host_controlled": "Configurado por el anfitrión"
 }

@@ -1826,5 +1826,6 @@
   "lobby.quick_select_hint": "Toque para entrar direto sem precisar rolar",
   "lobby.quick_no_results": "Nenhum jogo correspondente encontrado",
   "user.profile": "Perfil",
-  "game.hint": "Dica"
+  "game.hint": "Dica",
+  "game.host_controlled": "Definido pelo anfitrião"
 }

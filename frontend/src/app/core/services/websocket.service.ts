@@ -201,16 +201,13 @@ export class WebSocketService {
           host: msg.host || ''
         });
         
-        console.log('Room changed game:', msg.game);
+        console.log('Room changed game/settings:', msg.game, msg.difficulty);
         const lang = this.router.url.split('/')[1] || 'zh';
         const targetUrl = `/${lang}/games/${msg.game}`;
         const currentUrlBase = this.router.url.split('?')[0].replace(/\/$/, '');
 
-        if (currentUrlBase === targetUrl) {
-          this.router.navigateByUrl(`/${lang}`, { skipLocationChange: true }).then(() => {
-            this.router.navigate([targetUrl]);
-          });
-        } else {
+        // 仅在跨不同游戏切换时才触发路由跳转；同一游戏内切换难度无需重载路由！
+        if (currentUrlBase !== targetUrl) {
           this.router.navigate([targetUrl]);
         }
       } else if (msg.type === 'game' && msg.event === S2CEvent.EmojiBroadcast) {

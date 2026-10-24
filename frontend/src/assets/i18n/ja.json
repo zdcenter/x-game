@@ -1826,5 +1826,6 @@
   "lobby.quick_select_hint": "スクロール不要、タップですぐにゲームへ移動",
   "lobby.quick_no_results": "一致するゲームが見つかりません",
   "user.profile": "マイページ",
-  "game.hint": "ヒント"
+  "game.hint": "ヒント",
+  "game.host_controlled": "ホスト設定"
 }

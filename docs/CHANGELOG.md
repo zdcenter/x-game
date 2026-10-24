@@ -2,6 +2,29 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.10] - 2026-10-24
+
+### 全局顶栏排版防错乱净化与 PK 等候大厅房主难度单选胶囊条 (Navbar Anti-Overlap & Waiting Room Segmented Difficulty Switcher)
+- **全局导航栏排版错乱根治与视觉冗余清理 (Global Navbar Clean-up & Beacon Decoupling)**：
+  - **核心痛点消除**：彻底解决 PC 宽屏/普通屏幕下，全局导航栏中 `[⚔️ 1 等待挑战 ▾]` 按钮右漂覆盖、压在“📝 开发博客”文字上的严重排版错乱缺陷；
+  - **职责清晰划分**：
+    - 鉴于每个游戏的棋盘顶部 Header（`game-header`）自身已完整配备 `[🟢 ⚔️ 等待挑战 ▾]` 与 `[⚡ 立即迎战]` 模块，全局导航栏不再重复渲染该按钮；
+    - 彻底杜绝进入游戏后上下相隔不到 50px 重复出现两个“等待挑战”的视觉冗余，顶栏左右布局恢复舒展从容，全分辨率下 0 文字重叠。
+- **PK 等候大厅房主专属难度快速单选条 (Waiting Room Host-Exclusive Segmented Radio Difficulty Selector)**：
+  - **核心体验痛点根除**：过去在 PK 等候大厅中，房主想更换游戏难度必须打开复杂庞大的设置弹窗，操作繁琐不直观；
+  - **单选药丸组通栏高光直选**：
+    - 在等候大厅卡片顶部增设通栏「🎯 游戏难度」切换条；
+    - **房主视角**：直观呈现当前游戏支持的所有难度单选胶囊（`[● 简单]  [中等]  [困难]  [专家]`），带发光高亮选中态；房主单手轻点任意难度即秒级切换；
+    - **访客视角**：实时显示当前生效难度及只读标记（`🔒 难度 (房主设定)`）；
+  - **全链路全服实时广播与无缝重载**：
+    - 房主切换难度后，前端 WebSocket 瞬间发送 `change_game` 并触发本地 `difficultyChange` 事件与轻量 Toast 提示；
+    - 后端 `manager.go` 在 `BroadcastStateLocked` 消息载荷中同步广播最新 `difficulty`、`game` 与 `mode`；
+    - 前端 `WebSocketService` 优化：针对同游戏内切难度消除无谓的路由重载刷新，保持等候房间平滑不断连；房间内所有玩家（包括加入的对手）难度徽章实时联动变更。
+- **多语言字典全量同步 (`game.host_controlled`)**：
+  - 全球 8 种语言字典（zh, en, ja, ko, es, de, fr, pt）同步注入 `"game.host_controlled"` 规范词条。
+
+---
+
 ## [v3.2.9] - 2026-10-24
 
 ### 24点等选关大厅棋盘坍塌挤压修复与全局多语言词条补齐 (Math 24 Lobby Compression Fix & i18n Completion)

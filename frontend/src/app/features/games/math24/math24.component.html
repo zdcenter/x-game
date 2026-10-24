@@ -51,7 +51,8 @@
         (changeSettings)="openChangeSettings()"
         (kick)="store.kickPlayer($event)"
         (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()">
+        (cancelReady)="store.cancelReady()"
+        (difficultyChange)="store.currentDifficulty.set($event)">
       </app-game-waiting-room>
     </div>
   } @else {

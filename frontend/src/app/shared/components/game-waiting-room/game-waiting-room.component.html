@@ -35,9 +35,9 @@
           <span class="text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[var(--color-accent-from)]/15 border border-[var(--color-accent-from)]/30 text-[var(--color-accent-from)] shadow-sm">
             {{ getModeName(mode) }}
           </span>
-          @if (difficulty) {
+          @if (difficulty && availableDifficulties().length <= 1) {
             <span class="text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-400/15 border border-amber-400/30 text-amber-400 shadow-sm">
-              {{ difficulty }}
+              {{ getDifficultyLabel(difficulty) }}
             </span>
           }
           @if (mode !== GameMode.Single && target() > 0) {
@@ -58,6 +58,41 @@
           </button>
         </div>
       </div>
+
+      <!-- ── Host Quick Difficulty Switcher (Segmented Radio Group) ── -->
+      @if (availableDifficulties().length > 1) {
+        <div class="shrink-0 px-3 sm:px-6 lg:px-8 py-2 bg-[var(--color-bg-main)]/70 border-b border-[var(--color-border-card)] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in">
+          <div class="flex items-center gap-1.5 font-bold text-xs text-[var(--color-text-secondary)]">
+            <span class="text-sm">🎯</span>
+            <span>{{ i18n.t('game.difficulty')() || '游戏难度' }}:</span>
+          </div>
+
+          <!-- If Host: Interactive Segmented Radio Pills -->
+          @if (currentUserId === hostId) {
+            <div class="flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs flex-wrap">
+              @for (diff of availableDifficulties(); track diff.id) {
+                <button (click)="changeDifficulty(diff.id)"
+                        type="button"
+                        class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                        [ngClass]="diff.id === difficulty 
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25 ring-1 ring-amber-400/40 font-black' 
+                          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]'">
+                  @if (diff.id === difficulty) {
+                    <span class="text-[9px]">●</span>
+                  }
+                  <span>{{ getDifficultyLabel(diff.id) }}</span>
+                </button>
+              }
+            </div>
+          } @else {
+            <!-- If Guest: Informative Read-only Badge -->
+            <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-amber-400/30 text-amber-500 font-bold text-xs shadow-xs">
+              <span>🔒 {{ getDifficultyLabel(difficulty) }}</span>
+              <span class="text-[10px] text-[var(--color-text-muted)] font-normal">({{ i18n.t('game.host_controlled')() || '房主设定' }})</span>
+            </div>
+          }
+        </div>
+      }
 
       <!-- ── Main Battle Deck (Dual-Wing on Desktop) ── -->
       <div class="flex-grow overflow-y-auto custom-scrollbar p-2.5 sm:p-6 lg:p-8 touch-pan-y">

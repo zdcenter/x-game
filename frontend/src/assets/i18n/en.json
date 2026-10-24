@@ -1857,5 +1857,6 @@
   "feedback.content_too_short": "Description is too short (minimum 3 characters)",
   "feedback.submit_failed": "Failed to submit feedback. Please try again.",
   "user.profile": "Profile",
-  "game.hint": "Hint"
+  "game.hint": "Hint",
+  "game.host_controlled": "Host Controlled"
 }

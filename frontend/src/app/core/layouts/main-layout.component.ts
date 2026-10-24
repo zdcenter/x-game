@@ -11,7 +11,6 @@ import { ShareModalComponent } from '../../shared/components/share-modal/share-m
 import { FooterComponent } from './footer/footer.component';
 
 import { LayoutService } from '../services/layout.service';
-import { LiveBattleBeaconComponent } from '../../shared/components/live-battle-beacon/live-battle-beacon.component';
 import { LiveRoomService } from '../services/live-room.service';
 import { ZenModeService } from '../services/zen-mode.service';
 import { CoinService } from '../services/coin.service';
@@ -23,7 +22,7 @@ import { FriendService } from '../services/friend.service';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, LiveBattleBeaconComponent, CoinGuideModalComponent, CoinIconComponent],
+  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
@@ -56,9 +55,6 @@ import { FriendService } from '../services/friend.service';
 
           <!-- Right: Controls -->
           <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-
-            <!-- Live PK Battle Beacon -->
-            <app-live-battle-beacon></app-live-battle-beacon>
 
             <!-- Theme Toggle -->
             <button (click)="theme.cycleTheme()"

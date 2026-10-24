@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, signal, input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -8,6 +8,7 @@ import { getHref } from '../../../core/utils/browser.util';
 import { AudioService } from '../../../core/services/audio.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
 import * as QRCode from 'qrcode';
 
 @Component({
@@ -26,6 +27,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   audioService = inject(AudioService);
   friendService = inject(FriendService);
   toast = inject(ToastService);
+  private ws = inject(WebSocketService);
 
   @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;
@@ -43,10 +45,44 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   @Output() kick = new EventEmitter<string>();
   @Output() ready = new EventEmitter<void>();
   @Output() cancelReady = new EventEmitter<void>();
+  @Output() difficultyChange = new EventEmitter<string>();
 
   shareService = inject(ShareService);
 
   qrCodeUrl = signal<string>('');
+
+  availableDifficulties = computed(() => {
+    const cfg = this.gameRegistry.getConfig(this.gameId);
+    return cfg?.difficulties || [];
+  });
+
+  changeDifficulty(newDiff: string) {
+    if (this.currentUserId !== this.hostId || this.difficulty === newDiff) return;
+    this.audioService.playClick();
+    this.difficulty = newDiff;
+    this.difficultyChange.emit(newDiff);
+    this.ws.send({
+      type: 'change_game',
+      roomId: this.roomId,
+      game: this.gameId,
+      mode: this.mode,
+      difficulty: newDiff,
+      target: this.target(),
+      bountyCoins: 0
+    });
+    const label = this.getDifficultyLabel(newDiff);
+    this.toast.show((this.i18n.t('game.difficulty')() || '难度') + `: ${label} ✓`, 'success');
+  }
+
+  getDifficultyLabel(diffId: string): string {
+    if (!diffId) return '';
+    const key = this.gameRegistry.getDifficultyLabel(this.gameId, diffId);
+    if (key) {
+      const trans = this.i18n.t(key)();
+      if (trans) return trans;
+    }
+    return diffId;
+  }
 
   get sortedPlayers() {
     if (!this.players) return [];

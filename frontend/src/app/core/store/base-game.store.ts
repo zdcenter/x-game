@@ -37,12 +37,15 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly audioService = inject(AudioService);
 
   constructor() {
-    // Sync target from WS game state so currentRoomTarget is always up-to-date
-    // for both room creators (set in joinRoom) and joiners (set when state arrives).
+    // Sync target & difficulty from WS game state so they are always up-to-date
+    // for both room creators and joiners/guests.
     effect(() => {
-      const t = (this.ws.gameState() as any)?.target;
-      if (t > 0) {
-        untracked(() => this.currentRoomTarget.set(t));
+      const gs = this.ws.gameState() as any;
+      if (gs?.target > 0) {
+        untracked(() => this.currentRoomTarget.set(gs.target));
+      }
+      if (gs?.difficulty) {
+        untracked(() => this.currentDifficulty.set(gs.difficulty));
       }
     });
 

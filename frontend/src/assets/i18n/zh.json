@@ -1857,5 +1857,6 @@
   "feedback.content_too_short": "内容太短，请至少输入 3 个字",
   "feedback.submit_failed": "提交失败，请重试",
   "user.profile": "个人主页",
-  "game.hint": "提示"
+  "game.hint": "提示",
+  "game.host_controlled": "房主设定"
 }

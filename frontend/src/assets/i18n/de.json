@@ -1826,5 +1826,6 @@
   "lobby.quick_select_hint": "Tippen zum Sofortstart ohne langes Scrollen",
   "lobby.quick_no_results": "Keine passenden Spiele gefunden",
   "user.profile": "Profil",
-  "game.hint": "Hinweis"
+  "game.hint": "Hinweis",
+  "game.host_controlled": "Vom Host festgelegt"
 }

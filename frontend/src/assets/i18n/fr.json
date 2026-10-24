@@ -1826,5 +1826,6 @@
   "lobby.quick_select_hint": "Appuyez pour lancer directement sans faire défiler",
   "lobby.quick_no_results": "Aucun jeu correspondant trouvé",
   "user.profile": "Profil",
-  "game.hint": "Indice"
+  "game.hint": "Indice",
+  "game.host_controlled": "Défini par l'hôte"
 }

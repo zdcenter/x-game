@@ -805,6 +805,9 @@ func (r *Room) BroadcastStateLocked() {
 		"readyPlayers": readyPlayers,
 		"players":      playersList,
 		"bountyCoins":  r.BountyCoins,
+		"difficulty":   r.Difficulty,
+		"game":         r.Game,
+		"mode":         r.Mode,
 	})
 	if err != nil {
 		log.Printf("Failed to marshal state: %v", err)

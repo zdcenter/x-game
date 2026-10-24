@@ -1826,5 +1826,6 @@
   "lobby.quick_select_hint": "스크롤 없이 클릭 한 번으로 바로 이동",
   "lobby.quick_no_results": "일치하는 게임이 없습니다",
   "user.profile": "프로필",
-  "game.hint": "힌트"
+  "game.hint": "힌트",
+  "game.host_controlled": "방장 설정"
 }
