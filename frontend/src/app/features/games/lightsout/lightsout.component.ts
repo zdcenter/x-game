@@ -183,7 +183,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinRoom('single_room', GameMode.Single, GameDifficulty.Medium);
+      this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium);
     }
   }
 

@@ -100,6 +100,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   closeQuickSwitcher() {
     this.isQuickSwitcherOpen.set(false);
+    this.searchQuery.set('');
   }
 
   selectQuickGame(game: { route: string[] }) {

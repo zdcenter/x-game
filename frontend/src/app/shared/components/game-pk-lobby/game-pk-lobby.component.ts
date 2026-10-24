@@ -17,6 +17,7 @@ import { GameHeaderComponent } from '../game-header/game-header.component';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 import { LiveActivityTickerComponent } from '../live-activity-ticker/live-activity-ticker.component';
 import { LiveActivityService } from '../../../core/services/live-activity.service';
@@ -44,7 +45,7 @@ export interface PkJoinRoomEvent {
 @Component({
   selector: 'app-game-pk-lobby',
   standalone: true,
-  imports: [CommonModule, DatePipe, GameHeaderComponent, CoinIconComponent, LiveActivityTickerComponent],
+  imports: [CommonModule, GameHeaderComponent, CoinIconComponent, LiveActivityTickerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-pk-lobby.component.html',
   host: { class: 'flex flex-col flex-1 min-h-0 w-full' },
@@ -65,6 +66,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   private editRoomSvc = inject(EditRoomService);
   friendService       = inject(FriendService);
   readonly coinService = inject(CoinService);
+  readonly coinGuideService = inject(CoinGuideService);
   private activityService = inject(LiveActivityService);
 
   isFriend(username: string): boolean {
@@ -100,6 +102,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   // Create form — step wizard
   createStep     = signal<'game' | 'settings'>('game'); // 步骤：选游戏 or 填设置
+  createModalOpen = signal(false); // Quick Create Modal (Zero-scroll architecture)
+  mobileStep     = signal<'game' | 'settings'>('game');
   createGameId   = signal('');
   roomName       = signal('');
   roomMode       = signal('');
@@ -109,6 +113,29 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   roomBounty     = signal(0);
   readonly pkTargetOptions = [1, 3, 5, 10];
   readonly bountyOptions = [0, 50, 100, 200];
+
+  readonly isBountyInsufficient = computed(() => {
+    const bounty = this.roomBounty();
+    return bounty > 0 && this.coinService.coins() < bounty;
+  });
+
+  readonly bountyShortage = computed(() => {
+    const bounty = this.roomBounty();
+    const current = this.coinService.coins();
+    return bounty > current ? bounty - current : 0;
+  });
+
+  selectBounty(b: number) {
+    this.roomBounty.set(b);
+    if (b > 0 && this.coinService.coins() < b) {
+      const shortage = b - this.coinService.coins();
+      const msg = this.t('game.bounty_insufficient_inline')
+        .replace('{current}', this.coinService.coins().toString())
+        .replace('{needed}', shortage.toString())
+        .replace('{cost}', b.toString());
+      this.toast.show(msg, 'info');
+    }
+  }
 
   // Room list filter
   roomGameFilter = signal('');   // '' = all games
@@ -196,6 +223,27 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     this.roomName.set(`${this.playerId()}-${suffix}`);
     this.roomPassword.set('');
     this.roomTarget.set(1);
+    if (this.gameId) {
+      this.openCreateModal(this.gameId);
+    }
+  }
+
+  openCreateModal(gameId?: string) {
+    if (gameId) {
+      this.selectCreateGame(gameId);
+      this.mobileStep.set('settings');
+    } else {
+      if (!this.createGameId()) {
+        const defaultGame = this.allGames()[0]?.id || 'minesweeper';
+        this.selectCreateGame(defaultGame);
+      }
+      this.mobileStep.set('game');
+    }
+    this.createModalOpen.set(true);
+  }
+
+  closeCreateModal() {
+    this.createModalOpen.set(false);
   }
 
   selectCreateGame(id: string) {
@@ -209,15 +257,15 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   pickGameAndNext(id: string) {
     this.selectCreateGame(id);
+    this.mobileStep.set('settings');
   }
 
-  // 方案C: 同款创建
+  // 同款创建
   createSameKind(room: any) {
     this.selectCreateGame(room.game);
     this.roomMode.set(room.mode);
     this.roomDifficulty.set(room.difficulty);
-    this.createStep.set('settings');
-    this.formOpen.set(true); // 移动端展开表单
+    this.openCreateModal(room.game);
   }
 
   updateInput(sig: ReturnType<typeof signal<string>>, event: Event, maxLen = 100, numbersOnly = false) {
@@ -230,6 +278,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   onConfirmCreate() {
+    this.closeCreateModal();
     let mode = this.roomMode();
     if (!mode) {
       const m = this.availableModes();

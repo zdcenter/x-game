@@ -40,7 +40,7 @@ import { getOrigin } from '../../../core/utils/browser.util';
   <app-game-rules-modal [gameId]="gameId" [isOpen]="showRules" (closed)="rulesClosed.emit()"></app-game-rules-modal>
 
   <!-- Top Game Header Bar -->
-  <div class="w-full max-w-[1600px] mx-auto pt-1 sm:pt-1.5 px-2 sm:px-4 lg:px-6 z-40 sticky top-0 pb-1">
+  <div class="w-full max-w-[1600px] mx-auto pt-1 sm:pt-1.5 px-3 sm:px-6 lg:px-8 z-40 sticky top-0 pb-1">
     <div class="w-full backdrop-blur-xl border border-[var(--color-border-card)] rounded-2xl lg:rounded-3xl shadow-sm overflow-visible" style="background-color: var(--color-bg-card);">
       <app-game-header (titleClick)="titleClick.emit()"
         [title]="title"
@@ -72,31 +72,22 @@ import { getOrigin } from '../../../core/utils/browser.util';
             @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
               @if (waitingRoomForThisGame(); as targetRoom) {
                 <button (click)="onQuickJoinTargetRoom(targetRoom)"
-                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0 cursor-pointer pointer-events-auto"
+                        class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0 cursor-pointer pointer-events-auto"
                         [attr.title]="i18n.t('lobby.quick_join')()">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                   </span>
-                  <span class="hidden xl:inline">⚡ {{ i18n.t('lobby.quick_join')() }}</span>
-                  <span class="xl:hidden">⚡ {{ i18n.currentLang() === 'zh' ? '迎战' : 'Join' }}</span>
+                  <span>⚡ {{ i18n.t('lobby.quick_join')() || '迎战' }}</span>
                 </button>
               } @else {
                 <button (click)="quickCreatePkRoom()"
-                        class="px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-0.5 sm:gap-1 shadow-sm active:scale-95 group shrink-0"
-                        [title]="i18n.t('game.quick_pk')() || '开房PK'">
+                        class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group shrink-0 cursor-pointer"
+                        [title]="i18n.t('game.quick_pk')() || '联机对战'">
                   <span class="group-hover:scale-110 transition-transform">⚔️</span>
-                  <span class="hidden xl:inline">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
-                  <span class="xl:hidden text-[11px]">PK</span>
+                  <span>{{ i18n.t('game.quick_pk')() || '联机对战' }}</span>
                 </button>
               }
-              <button (click)="openFriendList()"
-                      class="hidden sm:flex px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold items-center gap-1 shadow-sm active:scale-95 group shrink-0"
-                      [title]="i18n.t('game.invite_friend_pk')() || '邀请好友PK'">
-                <span class="group-hover:scale-110 transition-transform">👥</span>
-                <span class="hidden xl:inline">{{ i18n.t('game.invite_friend_pk')() || '邀请好友PK' }}</span>
-                <span class="xl:hidden text-[11px]">{{ i18n.t('game.invite')() || '邀请' }}</span>
-              </button>
             }
 
             @if (showPlayAgainBtn) {
@@ -126,7 +117,7 @@ import { getOrigin } from '../../../core/utils/browser.util';
   </div>
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
-  <main class="flex-grow flex flex-col w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-1 sm:py-2 min-h-0"
+  <main class="flex-grow flex flex-col w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-1 sm:py-2 min-h-0"
         [class.items-center]="!isLobby">
     
     <!-- Guest Playing in PK Room Badge (Unranked play) -->
@@ -190,7 +181,7 @@ import { getOrigin } from '../../../core/utils/browser.util';
 
   <!-- In-depth Strategy & SEO Section (Moved Gracefully Below Arena) -->
   @if (!zenService.isZenMode()) {
-    <section class="w-full max-w-[1200px] mx-auto px-3 sm:px-6 mt-6 sm:mt-10 pb-12">
+    <section class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 mt-6 sm:mt-10 pb-12">
       <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 shadow-sm">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-card)]">
           <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">

@@ -15,6 +15,7 @@ export interface LeaderboardEntry {
   is_current_user: boolean;
   xp?: number;
   level?: number;
+  brain_coins?: number;
 }
 
 export interface LeaderboardResponse {

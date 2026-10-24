@@ -225,6 +225,7 @@ export class Math24Store extends BaseGameStore {
   private checkMultiplayerWin(finalCard: Math24Card) {
     if (Math.abs(finalCard.value - 24) < 0.0001) {
       this.audio.playMath24('correct');
+      this.haptic.vibrateSuccess();
       this.ws.send({
         type: 'action',
         action: C2SAction.Solve,
@@ -264,6 +265,7 @@ export class Math24Store extends BaseGameStore {
       puzzle: puzzle,
       onWin: () => {
         this.audio.playMath24('correct');
+        this.haptic.vibrateSuccess();
         this.stopTimer();
         this.submitSinglePlayerStats();
         this.tick.set(this.tick() + 1);
@@ -276,6 +278,7 @@ export class Math24Store extends BaseGameStore {
       },
       onFlip: () => {
         this.audio.playMath24('flip');
+        this.haptic.vibrateLight();
         this.tick.set(this.tick() + 1);
       }
     });

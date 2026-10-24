@@ -263,8 +263,8 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      if (!this.currentRoomId() || this.currentRoomId() === 'local') {
-        this.store.joinRoom('local', GameMode.Single, GameDifficulty.Medium, this.playerId);
+      if (!this.currentRoomId()) {
+        this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium, this.playerId);
       }
     }  }
 
@@ -322,7 +322,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   changeSingleDifficulty(diff: string) {
-    this.store.joinRoom('local', GameMode.Single, diff, this.playerId);
+    this.store.joinRoom('', GameMode.Single, diff, this.playerId);
   }
 
   get isWin(): boolean {

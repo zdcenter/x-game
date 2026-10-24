@@ -272,7 +272,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinRoom('local', GameMode.Single, 'normal', '');
+      this.store.joinRoom('', GameMode.Single, 'normal', '');
     }
   }
 

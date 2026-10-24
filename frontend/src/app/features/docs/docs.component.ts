@@ -25,171 +25,177 @@ interface TocItem {
   standalone: true,
   imports: [CommonModule, RouterLink, GameStepPlayerComponent, SlidingTutorialComponent, SokobanTutorialComponent],
   template: `
-    <div class="flex h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] overflow-hidden">
+    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-4 sm:py-8">
       
       <!-- Mobile Sidebar Overlay -->
       @if (isMobileMenuOpen()) {
         <div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="isMobileMenuOpen.set(false)"></div>
       }
 
-      <!-- Left Sidebar (Navigation) -->
-      <aside class="fixed inset-y-0 left-0 pt-16 lg:pt-0 lg:static z-50 w-64 h-full bg-[var(--color-bg-card)] border-r border-[var(--color-border-card)] transform transition-transform duration-300 ease-in-out lg:translate-x-0"
-             [class.-translate-x-full]="!isMobileMenuOpen()"
-             [class.translate-x-0]="isMobileMenuOpen()">
-        <div class="h-full overflow-y-auto py-4 px-3 flex flex-col gap-1 custom-scrollbar">
-          <div class="px-3 pb-4 mb-2 border-b border-[var(--color-border-card)] flex items-center justify-between">
-            <h2 class="text-lg font-bold text-[var(--color-text-primary)]">
-              {{ i18n.t('docs.title')() || 'Game Tutorials' }}
-            </h2>
-            <button class="lg:hidden p-1 text-[var(--color-text-muted)]" (click)="isMobileMenuOpen.set(false)">✕</button>
-          </div>
-          
-          @for (game of games(); track game.id; let idx = $index) {
-            <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
-               (click)="isMobileMenuOpen.set(false)"
-               class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-3"
-               [class.bg-[var(--color-bg-main)]]="currentGameId() === game.id"
-               [class.text-[var(--color-accent-from)]]="currentGameId() === game.id"
-               [class.text-[var(--color-text-secondary)]]="currentGameId() !== game.id"
-               [class.hover:bg-[var(--color-border-card)]]="currentGameId() !== game.id">
-               <span class="w-6 h-6 rounded bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-xs opacity-70">
-                 {{ idx + 1 }}
-               </span>
-               <span class="truncate">{{ getGameTitle(game.id) }}</span>
-            </a>
-          }
-        </div>
-      </aside>
-
-      <!-- Main Content -->
-      <main class="flex-1 h-full overflow-y-auto custom-scrollbar relative bg-[var(--color-bg-main)] scroll-smooth" #scrollContainer>
-        <!-- Mobile Header (Hamburger) -->
-        <div class="lg:hidden sticky top-0 z-30 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] px-4 py-3 flex items-center gap-3">
-          <button (click)="isMobileMenuOpen.set(true)" class="p-1 text-[var(--color-text-primary)]">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <span class="font-bold text-[var(--color-text-primary)] truncate">{{ currentGame() ? getGameTitle(currentGame()!.id) : 'Tutorials' }}</span>
-        </div>
-
-        <div class="max-w-5xl mx-auto px-4 sm:px-8 py-8 lg:py-12 flex flex-col xl:flex-row gap-12">
-          
-          <!-- Article Content -->
-          <article class="flex-1 min-w-0">
-            @if (currentGame()) {
-              <div class="mb-8 border-b border-[var(--color-border-card)] pb-6">
-                <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text mb-4"
-                    style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                  {{ getGameTitle(currentGame()!.id) }}
-                </h1>
-                <p class="text-[var(--color-text-secondary)] text-lg">
-                  {{ getGameDesc(currentGame()!.id) }}
-                </p>
-              </div>
-
-              <!-- Advanced Interactive Tutorial for Sliding Puzzle -->
-              @if (currentGameId() === 'sliding') {
-                <div class="mt-12 mb-8">
-                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sliding_advanced_tutorial')() || '进阶攻略演示：快速复原秘籍' }}</h2>
-                  <div class="relative w-full max-w-md mx-auto">
-                    <app-sliding-tutorial [inline]="true"></app-sliding-tutorial>
-                  </div>
-                </div>
-              }
-
-              <!-- Advanced Interactive Tutorial for Sokoban -->
-              @if (currentGameId() === 'sokoban') {
-                <div class="mt-12 mb-8">
-                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sokoban_advanced_tutorial')() || '推箱子真实演示' }}</h2>
-                  <div class="relative w-full max-w-md mx-auto">
-                    <app-sokoban-tutorial [inline]="true"></app-sokoban-tutorial>
-                  </div>
-                </div>
-              } @else if (hasDemoConfig(currentGameId()) && currentGameId() !== 'sliding') {
-                <!-- Standard Game Step Player for other games -->
-                <div class="mt-12 mb-8">
-                  <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="visual-guide">{{ i18n.t('docs.visual_guide')() || '图文教程' }}</h2>
-                  <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
-                </div>
-              }
-
-              <div class="prose prose-invert prose-lg max-w-none
-                          [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:scroll-mt-20
-                          [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:scroll-mt-20
-                          [&_p]:text-[var(--color-text-secondary)] [&_p]:mb-4 [&_p]:leading-relaxed
-                          [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-6 [&_ul]:text-[var(--color-text-secondary)] [&_li]:mb-2
-                          [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-6 [&_ol]:text-[var(--color-text-secondary)] [&_li]:mb-2
-                          [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold
-                          [&_code]:bg-[var(--color-bg-card)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:border [&_code]:border-[var(--color-border-card)]
-                          [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--color-accent-from)] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--color-text-muted)]"
-                   [innerHTML]="parsedContent()">
-              </div>
-              
-              <!-- CTA Button Section -->
-              <div class="mt-16 mb-8 pt-10 border-t border-[var(--color-border-card)] text-center">
-                <h3 class="text-2xl font-bold mb-6 text-[var(--color-text-primary)]">
-                  {{ i18n.t('blog.cta_title')() || '准备好挑战您的大脑了吗？' }}
-                </h3>
-                <a [routerLink]="['/', i18n.currentLang(), 'games', currentGameId()]" 
-                   class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95">
-                  {{ i18n.t('blog.cta_btn')() || '立即畅玩益智游戏' }}
-                </a>
-              </div>
-            } @else {
-              <!-- Docs index hub — real SEO content instead of an empty shell -->
-              <div class="mb-10 border-b border-[var(--color-border-card)] pb-8">
-                <h1 class="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text mb-4"
-                    style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                  {{ i18n.t('docs.index_title')() || 'Game Guides & Tutorials' }}
-                </h1>
-                <p class="text-[var(--color-text-secondary)] text-lg leading-relaxed">
-                  {{ i18n.t('docs.index_intro')() || 'Master every puzzle on Puzzle PK with our complete game guides — rules, controls, advanced strategies and step-by-step visual tutorials.' }}
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                @for (game of games(); track game.id) {
-                  <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
-                     class="block p-5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:border-[var(--color-accent-from)] transition-colors">
-                    <h2 class="text-lg font-bold text-[var(--color-text-primary)] mb-2">{{ getGameTitle(game.id) }}</h2>
-                    <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ getGameCardDesc(game.id) }}</p>
-                  </a>
-                }
-              </div>
-            }
-          </article>
-
-          <!-- Right Sidebar (Table of Contents) -->
-          @if (toc().length > 0) {
-            <aside class="hidden xl:block w-64 shrink-0">
-              <div class="sticky top-8">
-                <h4 class="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-4">
-                  {{ i18n.t('docs.toc')() || 'On this page' }}
-                </h4>
-                <ul class="space-y-2 text-sm border-l border-[var(--color-border-card)]">
-                  @for (item of toc(); track item.id) {
-                    <li>
-                      <a [href]="'#'+item.id" 
-                         (click)="scrollToId($event, item.id)"
-                         class="block py-1 hover:text-[var(--color-accent-from)] transition-colors text-[var(--color-text-secondary)]"
-                         [ngClass]="{'pl-4': item.level === 2, 'pl-8 text-xs': item.level === 3}">
-                        {{ item.text }}
-                      </a>
-                    </li>
-                  }
-                </ul>
-              </div>
-            </aside>
-          }
-
-        </div>
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-6 items-start relative">
         
-        <div class="px-4 sm:px-8 max-w-5xl mx-auto">
-          
-        </div>
-      </main>
+        <!-- Left Sidebar (Navigation) -->
+        <aside class="fixed inset-y-0 left-0 pt-16 z-50 w-72 bg-[var(--color-bg-card)] border-r border-[var(--color-border-card)] transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:pt-0 lg:z-auto lg:w-64 lg:shrink-0 lg:rounded-2xl lg:border lg:border-[var(--color-border-card)] lg:shadow-sm lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] flex flex-col overflow-hidden"
+               [class.-translate-x-full]="!isMobileMenuOpen()"
+               [class.translate-x-0]="isMobileMenuOpen()">
+          <div class="h-full overflow-y-auto py-4 px-3 flex flex-col gap-1 custom-scrollbar">
+            <div class="px-3 pb-3 mb-2 border-b border-[var(--color-border-card)] flex items-center justify-between">
+              <h2 class="text-base font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                <span>📚</span>
+                <span>{{ i18n.t('docs.title')() || '游戏教程' }}</span>
+              </h2>
+              <button class="lg:hidden p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] cursor-pointer" (click)="isMobileMenuOpen.set(false)">✕</button>
+            </div>
+            
+            @for (game of games(); track game.id; let idx = $index) {
+              <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
+                 (click)="isMobileMenuOpen.set(false)"
+                 class="px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2.5"
+                 [class.bg-[var(--color-accent-from)]/10]="currentGameId() === game.id"
+                 [class.text-[var(--color-accent-from)]]="currentGameId() === game.id"
+                 [class.border]="currentGameId() === game.id"
+                 [class.border-[var(--color-accent-from)]/30]="currentGameId() === game.id"
+                 [class.text-[var(--color-text-secondary)]]="currentGameId() !== game.id"
+                 [class.hover:bg-[var(--color-bg-main)]]="currentGameId() !== game.id"
+                 [class.hover:text-[var(--color-text-main)]]="currentGameId() !== game.id">
+                 <span class="w-6 h-6 rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-xs opacity-75 font-mono">
+                   {{ idx + 1 }}
+                 </span>
+                 <span class="truncate">{{ getGameTitle(game.id) }}</span>
+              </a>
+            }
+          </div>
+        </aside>
 
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm relative">
+          <!-- Mobile Header (Hamburger) -->
+          <div class="lg:hidden mb-6 pb-4 border-b border-[var(--color-border-card)] flex items-center justify-between">
+            <button (click)="isMobileMenuOpen.set(true)" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-sm font-bold text-[var(--color-text-primary)] cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span>{{ i18n.t('docs.title')() || '全部教程目录' }}</span>
+            </button>
+            <span class="text-xs font-bold text-[var(--color-text-muted)] truncate max-w-[180px]">
+              {{ currentGame() ? getGameTitle(currentGame()!.id) : '' }}
+            </span>
+          </div>
+
+          <div class="flex flex-col xl:flex-row gap-8 lg:gap-12">
+            
+            <!-- Article Content -->
+            <article class="flex-1 min-w-0">
+              @if (currentGame()) {
+                <div class="mb-8 border-b border-[var(--color-border-card)] pb-6">
+                  <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text mb-4"
+                      style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                    {{ getGameTitle(currentGame()!.id) }}
+                  </h1>
+                  <p class="text-[var(--color-text-secondary)] text-base sm:text-lg">
+                    {{ getGameDesc(currentGame()!.id) }}
+                  </p>
+                </div>
+
+                <!-- Advanced Interactive Tutorial for Sliding Puzzle -->
+                @if (currentGameId() === 'sliding') {
+                  <div class="mt-8 mb-8">
+                    <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sliding_advanced_tutorial')() || '进阶攻略演示：快速复原秘籍' }}</h2>
+                    <div class="relative w-full max-w-md mx-auto">
+                      <app-sliding-tutorial [inline]="true"></app-sliding-tutorial>
+                    </div>
+                  </div>
+                }
+
+                <!-- Advanced Interactive Tutorial for Sokoban -->
+                @if (currentGameId() === 'sokoban') {
+                  <div class="mt-8 mb-8">
+                    <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sokoban_advanced_tutorial')() || '推箱子真实演示' }}</h2>
+                    <div class="relative w-full max-w-md mx-auto">
+                      <app-sokoban-tutorial [inline]="true"></app-sokoban-tutorial>
+                    </div>
+                  </div>
+                } @else if (hasDemoConfig(currentGameId()) && currentGameId() !== 'sliding') {
+                  <!-- Standard Game Step Player for other games -->
+                  <div class="mt-8 mb-8">
+                    <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="visual-guide">{{ i18n.t('docs.visual_guide')() || '图文教程' }}</h2>
+                    <app-game-step-player [config]="getDemoConfig(currentGameId())"></app-game-step-player>
+                  </div>
+                }
+
+                <div class="prose prose-invert prose-lg max-w-none
+                            [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:scroll-mt-20
+                            [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:scroll-mt-20
+                            [&_p]:text-[var(--color-text-secondary)] [&_p]:mb-4 [&_p]:leading-relaxed
+                            [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-6 [&_ul]:text-[var(--color-text-secondary)] [&_li]:mb-2
+                            [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-6 [&_ol]:text-[var(--color-text-secondary)] [&_li]:mb-2
+                            [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold
+                            [&_code]:bg-[var(--color-bg-card)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:border [&_code]:border-[var(--color-border-card)]
+                            [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--color-accent-from)] [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--color-text-muted)]"
+                     [innerHTML]="parsedContent()">
+                </div>
+                
+                <!-- CTA Button Section -->
+                <div class="mt-16 mb-4 pt-10 border-t border-[var(--color-border-card)] text-center">
+                  <h3 class="text-2xl font-bold mb-6 text-[var(--color-text-primary)]">
+                    {{ i18n.t('blog.cta_title')() || '准备好挑战您的大脑了吗？' }}
+                  </h3>
+                  <a [routerLink]="['/', i18n.currentLang(), 'games', currentGameId()]" 
+                     class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                    {{ i18n.t('blog.cta_btn')() || '立即畅玩益智游戏' }}
+                  </a>
+                </div>
+              } @else {
+                <!-- Docs index hub — real SEO content instead of an empty shell -->
+                <div class="mb-10 border-b border-[var(--color-border-card)] pb-8">
+                  <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text mb-4"
+                      style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                    {{ i18n.t('docs.index_title')() || 'Game Guides & Tutorials' }}
+                  </h1>
+                  <p class="text-[var(--color-text-secondary)] text-base sm:text-lg leading-relaxed">
+                    {{ i18n.t('docs.index_intro')() || 'Master every puzzle on Puzzle PK with our complete game guides — rules, controls, advanced strategies and step-by-step visual tutorials.' }}
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  @for (game of games(); track game.id) {
+                    <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
+                       class="block p-5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-from)] transition-colors">
+                      <h2 class="text-lg font-bold text-[var(--color-text-primary)] mb-2">{{ getGameTitle(game.id) }}</h2>
+                      <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ getGameCardDesc(game.id) }}</p>
+                    </a>
+                  }
+                </div>
+              }
+            </article>
+
+            <!-- Right Sidebar (Table of Contents) -->
+            @if (toc().length > 0) {
+              <aside class="hidden xl:block w-64 shrink-0">
+                <div class="sticky top-24">
+                  <h4 class="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-4">
+                    {{ i18n.t('docs.toc')() || 'On this page' }}
+                  </h4>
+                  <ul class="space-y-2 text-sm border-l border-[var(--color-border-card)]">
+                    @for (item of toc(); track item.id) {
+                      <li>
+                        <a [href]="'#'+item.id" 
+                           (click)="scrollToId($event, item.id)"
+                           class="block py-1 hover:text-[var(--color-accent-from)] transition-colors text-[var(--color-text-secondary)] cursor-pointer"
+                           [ngClass]="{'pl-4': item.level === 2, 'pl-8 text-xs': item.level === 3}">
+                          {{ item.text }}
+                        </a>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </aside>
+            }
+
+          </div>
+        </main>
+
+      </div>
     </div>
   `
 })
@@ -358,19 +364,20 @@ export class DocsComponent {
     this.parsedContent.set(this.sanitizer.bypassSecurityTrustHtml(htmlWithIds));
 
     // Reset scroll
-    if (this.scrollContainer?.nativeElement) {
-      this.scrollContainer.nativeElement.scrollTop = 0;
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const mainContainer = document.querySelector('main.overflow-y-auto');
+      if (mainContainer) {
+        mainContainer.scrollTop = 0;
+      }
     }
   }
 
   scrollToId(event: Event, id: string) {
     event.preventDefault();
     const el = document.getElementById(id);
-    if (el && this.scrollContainer?.nativeElement) {
-      // Calculate position relative to container
-      const container = this.scrollContainer.nativeElement;
-      const topPos = el.offsetTop - 20; // 20px padding
-      container.scrollTo({ top: topPos, behavior: 'smooth' });
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 }

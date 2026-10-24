@@ -161,44 +161,81 @@
 
           <!-- 悬赏擂台设置 -->
           <div>
-            <label class="flex items-center gap-1.5 text-xs font-bold opacity-70 uppercase tracking-wider mb-1">
-              <app-coin-icon size="xs" />
-              <span>{{ t('game.bounty_label') }}</span>
-            </label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="flex items-center gap-1.5 text-xs font-bold opacity-70 uppercase tracking-wider">
+                <app-coin-icon size="xs" />
+                <span>{{ t('game.bounty_label') }}</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-amber-400 font-bold inline-flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                  <app-coin-icon size="xs" />
+                  <span>{{ coinService.coins() }}</span>
+                </span>
+                <button type="button" (click)="coinGuideService.open()" class="text-[10px] text-amber-400 hover:text-amber-300 font-medium underline cursor-pointer">
+                  {{ t('game.get_coins') || '获取' }}
+                </button>
+              </div>
+            </div>
             <p class="text-[10px] opacity-50 mb-2">{{ t('game.bounty_desc') }}</p>
             <div class="grid grid-cols-4 gap-2">
               @for (b of bountyOptions; track b) {
-                <button (click)="editBounty.set(b)"
-                        class="py-2.5 rounded-xl border font-black text-xs transition-all text-center flex flex-col items-center justify-center gap-0.5"
-                        [class.bg-gradient-to-r]="editBounty() === b && b > 0"
-                        [class.from-amber-500]="editBounty() === b && b > 0"
-                        [class.to-yellow-500]="editBounty() === b && b > 0"
-                        [class.text-slate-900]="editBounty() === b && b > 0"
-                        [class.border-amber-400]="editBounty() === b && b > 0"
+                @let isLacking = b > 0 && coinService.coins() < b;
+                <button (click)="selectBounty(b)"
+                        class="py-2.5 rounded-xl border font-black text-xs transition-all text-center flex flex-col items-center justify-center gap-0.5 cursor-pointer relative"
+                        [class.bg-gradient-to-r]="editBounty() === b && b > 0 && !isLacking"
+                        [class.from-amber-500]="editBounty() === b && b > 0 && !isLacking"
+                        [class.to-yellow-500]="editBounty() === b && b > 0 && !isLacking"
+                        [class.text-slate-900]="editBounty() === b && b > 0 && !isLacking"
+                        [class.border-amber-400]="editBounty() === b && b > 0 && !isLacking"
+                        [class.bg-amber-500/20]="editBounty() === b && b > 0 && isLacking"
+                        [class.border-amber-500]="editBounty() === b && b > 0 && isLacking"
+                        [class.text-amber-400]="editBounty() === b && b > 0 && isLacking"
                         [class.bg-[var(--color-accent-to)]]="editBounty() === b && b === 0"
                         [class.text-[var(--color-bg-main)]]="editBounty() === b && b === 0"
                         [class.border-[var(--color-accent-to)]]="editBounty() === b && b === 0"
                         [class.bg-[var(--color-bg-card)]]="editBounty() !== b"
                         [class.border-[var(--color-border-card)]]="editBounty() !== b"
-                        [class.text-[var(--color-text-main)]]="editBounty() !== b">
+                        [class.text-[var(--color-text-main)]]="editBounty() !== b"
+                        [class.opacity-60]="editBounty() !== b && isLacking">
                   <span>{{ b === 0 ? t('game.bounty_free') : b }}</span>
-                  @if (b > 0) {
+                  @if (isLacking) {
+                    <span class="text-[9px] font-semibold text-rose-400 mt-0.5 scale-95">
+                      {{ t('game.bounty_short_diff').replace('{needed}', (b - coinService.coins()).toString()) }}
+                    </span>
+                  } @else if (b > 0) {
                     <span class="text-[9px] font-normal opacity-80">{{ t('game.bounty_coins_unit') }}</span>
                   }
                 </button>
               }
             </div>
+
+            <!-- 友好内联对比提醒条 -->
+            @if (isBountyInsufficient()) {
+              <div class="mt-2 px-2.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs animate-fade-in gap-1.5">
+                <div class="flex items-center gap-1.5 text-amber-400 font-medium">
+                  <span class="text-sm shrink-0">⚠️</span>
+                  <span class="leading-snug">{{ t('game.bounty_insufficient_inline').replace('{current}', coinService.coins().toString()).replace('{needed}', bountyShortage().toString()).replace('{cost}', editBounty().toString()) }}</span>
+                </div>
+                <button type="button" (click)="coinGuideService.open()" class="text-[10px] underline text-amber-300 hover:text-amber-200 font-bold shrink-0 ml-1 cursor-pointer">
+                  {{ t('game.get_coins') || '获取脑力币' }}
+                </button>
+              </div>
+            }
           </div>
 
           <!-- 操作按钮 -->
           <div class="flex gap-3 pt-2">
             <button (click)="step.set('game')"
-                    class="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] transition-all text-sm font-bold shrink-0">
+                    class="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] transition-all text-sm font-bold shrink-0 cursor-pointer">
               ← {{ t('game.change') || '换游戏' }}
             </button>
-            <button (click)="onConfirm()"
-                    class="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:brightness-110 active:scale-95 transition-all">
-              ✓ {{ t('game.update') }}
+            <button (click)="onConfirm()" [disabled]="isBountyInsufficient()"
+                    class="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+              @if (isBountyInsufficient()) {
+                {{ t('game.bounty_btn_insufficient').replace('{cost}', editBounty().toString()).replace('{current}', coinService.coins().toString()) }}
+              } @else {
+                ✓ {{ t('game.update') }}
+              }
             </button>
           </div>
         }

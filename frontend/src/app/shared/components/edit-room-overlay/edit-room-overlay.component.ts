@@ -7,6 +7,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { GameMode } from '../../../core/models/game.model';
+import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 export interface EditRoomConfig {
@@ -28,6 +31,9 @@ export class EditRoomOverlayComponent implements OnChanges {
   private i18n     = inject(I18nService);
   private reg      = inject(GameRegistryService);
   private settings = inject(SettingsService);
+  readonly coinService = inject(CoinService);
+  readonly coinGuideService = inject(CoinGuideService);
+  private toast    = inject(ToastService);
 
   @Input() isOpen      = false;
   @Input() gameId      = '';
@@ -46,6 +52,29 @@ export class EditRoomOverlayComponent implements OnChanges {
   editTarget     = signal(1);
   editBounty     = signal(0);
   readonly bountyOptions = [0, 50, 100, 200];
+
+  readonly isBountyInsufficient = computed(() => {
+    const bounty = this.editBounty();
+    return bounty > 0 && this.coinService.coins() < bounty;
+  });
+
+  readonly bountyShortage = computed(() => {
+    const bounty = this.editBounty();
+    const current = this.coinService.coins();
+    return bounty > current ? bounty - current : 0;
+  });
+
+  selectBounty(b: number) {
+    this.editBounty.set(b);
+    if (b > 0 && this.coinService.coins() < b) {
+      const shortage = b - this.coinService.coins();
+      const msg = this.t('game.bounty_insufficient_inline')
+        .replace('{current}', this.coinService.coins().toString())
+        .replace('{needed}', shortage.toString())
+        .replace('{cost}', b.toString());
+      this.toast.show(msg, 'info');
+    }
+  }
 
   allGames = computed(() => this.reg.getAllConfigs());
 

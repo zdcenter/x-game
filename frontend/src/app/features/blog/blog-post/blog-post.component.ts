@@ -39,158 +39,202 @@ const BLOG_TO_GAME_MAP: Record<string, BlogGameDef> = {
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-5xl mx-auto">
-        <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="inline-flex items-center text-sm font-medium text-blue-400 hover:text-blue-300 mb-8 transition-colors">
-          <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          {{ i18n.t('blog.back_to_blog')() }}
-        </a>
+    <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 sm:py-10">
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
+        
+        <!-- Breadcrumb & Back Header Bar (Aligned with 1600px grid) -->
+        <div class="flex items-center justify-between gap-4 mb-6 sm:mb-8">
+          <a [routerLink]="['/', i18n.currentLang(), 'blog']"
+             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-xs sm:text-sm font-bold text-[var(--color-text-main)] hover:border-emerald-500/50 hover:text-emerald-400 shadow-xs hover:shadow-md transition-all active:scale-95 group">
+            <svg class="w-4 h-4 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>{{ i18n.t('blog.back_to_blog')() }}</span>
+          </a>
+
+          @if (displayMeta()?.title) {
+            <span class="text-xs text-[var(--color-text-muted)] font-medium truncate max-w-xs sm:max-w-md hidden md:inline-block">
+              {{ displayMeta()?.title }}
+            </span>
+          }
+        </div>
 
         @if (loading()) {
-          <div class="flex justify-center py-20">
-            <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <div class="flex justify-center py-24">
+            <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         } @else if (error()) {
-          <div class="text-center py-20 text-red-400">
-            <h2 class="text-2xl font-bold mb-2">{{ i18n.t('blog.not_found_title')() }}</h2>
-            <p>{{ i18n.t('blog.not_found_desc')() }}</p>
+          <div class="text-center py-24 text-red-400 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-3xl p-10 max-w-2xl mx-auto shadow-xl">
+            <h2 class="text-2xl font-black mb-2">{{ i18n.t('blog.not_found_title')() }}</h2>
+            <p class="text-sm text-[var(--color-text-secondary)]">{{ i18n.t('blog.not_found_desc')() }}</p>
           </div>
         } @else {
-          <article class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 sm:p-10 shadow-xl max-w-4xl mx-auto">
-            <header class="mb-10 border-b border-[var(--color-border-card)] pb-8">
-              <div class="flex flex-wrap gap-2 mb-4">
-                @for (tag of displayMeta()?.tags; track tag) {
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400">
-                    {{ tag }}
-                  </span>
-                }
-              </div>
-              <h1 class="text-3xl sm:text-4xl font-black mb-6 leading-tight text-[var(--color-text-main)]">
-                {{ displayMeta()?.title }}
-              </h1>
-              <div class="flex items-center text-sm text-[var(--color-text-secondary)] gap-4">
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                  {{ displayMeta()?.author }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                  {{ rawMeta()?.date }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  {{ displayMeta()?.readTime }}
-                </span>
-              </div>
-            </header>
-
-            <div class="prose prose-invert prose-emerald max-w-none" [innerHTML]="contentHtml()">
-            </div>
-
-            <!-- Author / Team bio — E-E-A-T signal -->
-            <div class="mt-10 p-6 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
-              <div class="flex items-start gap-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-lg font-black shrink-0 text-white shadow-md">
-                  PK
-                </div>
-                <div>
-                  <h3 class="font-bold text-[var(--color-text-main)] mb-1">{{ displayMeta()?.author }}</h3>
-                  <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ i18n.t('blog.author_bio')() }}</p>
-                  <a [routerLink]="['/', i18n.currentLang(), 'legal', 'about']" class="inline-block mt-3 text-sm font-semibold text-[var(--color-accent-from)] hover:underline">
-                    {{ i18n.t('blog.author_more')() }}
-                  </a>
-                </div>
-              </div>
-            </div>
+          <!-- Modern Full-Width 1600px Two-Column Architecture -->
+          <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
             
-            <!-- Interactive Practice & Battle Arena Gateway (Bi-directional Linking) -->
-            @if (relatedGame(); as game) {
-              <div class="mt-10 p-6 sm:p-8 rounded-2xl border border-[var(--color-border-card)] bg-gradient-to-br from-[var(--color-bg-card)] via-[var(--color-bg-card)] to-[var(--color-bg-main)] shadow-xl relative overflow-hidden">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
-                  <div class="flex items-center gap-4">
-                    <div class="text-4xl sm:text-5xl shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center shadow-inner">
+            <!-- Left Main Column: Full-Breadth Article Card -->
+            <main class="flex-1 min-w-0 w-full">
+              <article class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-3xl p-6 sm:p-10 lg:p-12 shadow-xl relative overflow-hidden">
+                
+                <!-- Article Header -->
+                <header class="border-b border-[var(--color-border-card)] pb-8 mb-8 sm:mb-10">
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    @for (tag of displayMeta()?.tags; track tag) {
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {{ tag }}
+                      </span>
+                    }
+                  </div>
+                  
+                  <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-6 leading-tight text-[var(--color-text-main)] tracking-tight">
+                    {{ displayMeta()?.title }}
+                  </h1>
+
+                  <div class="flex flex-wrap items-center text-xs sm:text-sm text-[var(--color-text-secondary)] gap-4 sm:gap-6">
+                    <span class="flex items-center gap-1.5 font-semibold text-[var(--color-text-main)]">
+                      <div class="w-5 h-5 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-[10px] font-black">
+                        PK
+                      </div>
+                      {{ displayMeta()?.author }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                      {{ rawMeta()?.date }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <svg class="w-4 h-4 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      {{ displayMeta()?.readTime }}
+                    </span>
+                  </div>
+                </header>
+
+                <!-- Markdown Rendered Prose Body -->
+                <div class="prose prose-invert prose-emerald max-w-none text-base sm:text-lg leading-relaxed" [innerHTML]="contentHtml()">
+                </div>
+
+                <!-- Author / Team Bio (E-E-A-T Quality Signal) -->
+                <div class="mt-12 p-6 sm:p-8 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]">
+                  <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-lg font-black shrink-0 text-white shadow-md">
+                      PK
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-base text-[var(--color-text-main)] mb-1">{{ displayMeta()?.author }}</h3>
+                      <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">{{ i18n.t('blog.author_bio')() }}</p>
+                      <a [routerLink]="['/', i18n.currentLang(), 'legal', 'about']" class="inline-block mt-3 text-xs sm:text-sm font-bold text-[var(--color-accent-from)] hover:underline">
+                        {{ i18n.t('blog.author_more')() }}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Related Masterclasses (Horizontal Shelf on Main Card) -->
+                @if (recommendedPosts().length > 0) {
+                  <div class="mt-12 pt-10 border-t border-[var(--color-border-card)]">
+                    <div class="mb-6">
+                      <h3 class="text-xl font-black text-[var(--color-text-main)] flex items-center gap-2">
+                        <span>📖</span>
+                        <span>{{ i18n.t('blog.related_guides_title')() }}</span>
+                      </h3>
+                      <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mt-1">
+                        {{ i18n.t('blog.related_guides_subtitle')() }}
+                      </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                      @for (post of recommendedPosts(); track post.id) {
+                        @let pMeta = getPostDisplayMeta(post);
+                        <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]"
+                           class="group flex flex-col justify-between p-5 rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-emerald-500/40 hover:bg-[var(--color-bg-card)] transition-all shadow-sm hover:shadow-md">
+                          <div>
+                            <div class="flex items-center gap-2 mb-2">
+                              @if (pMeta?.tags?.[0]; as firstTag) {
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                  {{ firstTag }}
+                                </span>
+                              }
+                              <span class="text-[10px] text-[var(--color-text-secondary)] font-mono">{{ pMeta?.readTime }}</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-[var(--color-text-main)] group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                              {{ pMeta?.title }}
+                            </h4>
+                          </div>
+                          <div class="mt-4 flex items-center text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition-transform">
+                            <span>{{ i18n.t('game.read_guide')() }}</span>
+                            <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                          </div>
+                        </a>
+                      }
+                    </div>
+                  </div>
+                }
+
+              </article>
+            </main>
+
+            <!-- Right Column: Sticky Esports Practice & Quick Action Sidebar -->
+            <aside class="w-full lg:w-80 xl:w-96 shrink-0 lg:sticky lg:top-20 space-y-6">
+              
+              <!-- Card 1: Interactive Practice & Battle Arena Gateway -->
+              @if (relatedGame(); as game) {
+                <div class="p-6 rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-[var(--color-bg-card)] to-[var(--color-bg-main)] shadow-xl relative overflow-hidden">
+                  <div class="flex items-center gap-3.5 mb-4">
+                    <div class="text-4xl shrink-0 w-14 h-14 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center shadow-inner">
                       {{ game.icon }}
                     </div>
                     <div>
-                      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wide mb-1.5">
+                      <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wide">
                         <span>🎯</span>
                         <span>{{ i18n.t('blog.interactive_practice_badge')() }}</span>
                       </div>
-                      <h3 class="text-xl sm:text-2xl font-black text-[var(--color-text-main)]">
+                      <h3 class="text-lg font-black text-[var(--color-text-main)] mt-1">
                         {{ i18n.t(game.nameKey)() }}
                       </h3>
-                      <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mt-1 max-w-md leading-relaxed">
-                        {{ i18n.t('blog.interactive_practice_desc')() }}
-                      </p>
                     </div>
                   </div>
 
+                  <p class="text-xs text-[var(--color-text-secondary)] mb-5 leading-relaxed">
+                    {{ i18n.t('blog.interactive_practice_desc')() }}
+                  </p>
+
                   <!-- Action Buttons: Solo & PK -->
-                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">
+                  <div class="flex flex-col gap-2.5">
                     <a [routerLink]="game.id === 'lobby' ? ['/', i18n.currentLang(), 'lobby'] : ['/', i18n.currentLang(), 'games', game.id]"
-                       class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all">
+                       class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 active:scale-95 transition-all">
                       <span>🕹️</span>
                       <span>{{ i18n.t('blog.cta_play_solo')() }}</span>
                     </a>
                     @if (game.id !== 'lobby') {
                       <a [routerLink]="['/', i18n.currentLang(), 'pk-arena']"
                          [queryParams]="{ game: game.id }"
-                         class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-[var(--color-bg-main)] border border-violet-500/40 text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/60 shadow-md shadow-violet-500/10 hover:scale-[1.02] active:scale-95 transition-all">
+                         class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] border border-violet-500/40 text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 hover:border-violet-500/60 shadow-sm active:scale-95 transition-all">
                         <span>⚔️</span>
                         <span>{{ i18n.t('blog.cta_play_pk')() }}</span>
                       </a>
                     }
                   </div>
                 </div>
-              </div>
-            }
+              }
 
-            <!-- Recommended Strategy Masterclasses (AdSense Navigation & Internal Linking) -->
-            @if (recommendedPosts().length > 0) {
-              <div class="mt-12 pt-8 border-t border-[var(--color-border-card)]">
-                <div class="mb-6">
-                  <h3 class="text-xl font-black text-[var(--color-text-main)] flex items-center gap-2">
-                    <span>📖</span>
-                    <span>{{ i18n.t('blog.related_guides_title')() }}</span>
-                  </h3>
-                  <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mt-1">
-                    {{ i18n.t('blog.related_guides_subtitle')() }}
-                  </p>
+              <!-- Card 2: Community & Global Leaderboards -->
+              <div class="p-6 rounded-3xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] shadow-xl">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-xl">🏆</span>
+                  <h4 class="font-black text-sm text-[var(--color-text-main)]">{{ i18n.t('nav.leaderboard')() }}</h4>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  @for (post of recommendedPosts(); track post.id) {
-                    @let pMeta = getPostDisplayMeta(post);
-                    <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]"
-                       class="group flex flex-col justify-between p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-emerald-500/40 hover:bg-[var(--color-bg-card)] transition-all shadow-sm hover:shadow-md">
-                      <div>
-                        <div class="flex items-center gap-2 mb-2">
-                          @if (pMeta?.tags?.[0]; as firstTag) {
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                              {{ firstTag }}
-                            </span>
-                          }
-                          <span class="text-[10px] text-[var(--color-text-secondary)]">{{ pMeta?.readTime }}</span>
-                        </div>
-                        <h4 class="text-sm font-bold text-[var(--color-text-main)] group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
-                          {{ pMeta?.title }}
-                        </h4>
-                      </div>
-                      <div class="mt-4 flex items-center text-xs font-semibold text-emerald-400 group-hover:translate-x-1 transition-transform">
-                        <span>{{ i18n.t('game.read_guide')() }}</span>
-                        <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                      </div>
-                    </a>
-                  }
-                </div>
+                <p class="text-xs text-[var(--color-text-secondary)] leading-relaxed mb-4">
+                  挑战脑力纪录，赢取每日任务脑力币与段位排位！
+                </p>
+                <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']"
+                   class="inline-flex items-center justify-center w-full py-2 px-3 rounded-xl border border-[var(--color-border-card)] hover:border-emerald-500/40 text-xs font-bold text-[var(--color-text-main)] hover:text-emerald-400 bg-[var(--color-bg-main)] transition-colors">
+                  <span>查看全球榜单 →</span>
+                </a>
               </div>
-            }
-          </article>
+
+            </aside>
+
+          </div>
         }
-      </div>
-
-      <div class="px-4 sm:px-8 max-w-5xl mx-auto w-full mt-16">
-        
       </div>
     </div>
   `,

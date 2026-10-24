@@ -13,6 +13,38 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.82; }
+}
+
+@keyframes glowPulseLoss {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.15), inset 0 0 12px rgba(244, 63, 94, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(244, 63, 94, 0.28), inset 0 0 18px rgba(244, 63, 94, 0.1);
+  }
+}
+
+@keyframes glowPulseWin {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.18), inset 0 0 12px rgba(16, 185, 129, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(16, 185, 129, 0.32), inset 0 0 18px rgba(16, 185, 129, 0.12);
+  }
+}
+
+@keyframes glowPulseRecord {
+  0%, 100% {
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.2), inset 0 0 14px rgba(245, 158, 11, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(245, 158, 11, 0.35), inset 0 0 20px rgba(245, 158, 11, 0.14);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -20,3 +52,16 @@
 .animate-scale-up {
   animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+.ticker-glow-loss {
+  animation: glowPulseLoss 3s ease-in-out infinite;
+}
+
+.ticker-glow-win {
+  animation: glowPulseWin 3s ease-in-out infinite;
+}
+
+.ticker-glow-record {
+  animation: glowPulseRecord 3s ease-in-out infinite;
+}
+

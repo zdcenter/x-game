@@ -28,8 +28,8 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
   standalone: true,
   imports: [CommonModule, RouterLink, LevelBadgeComponent, AvatarFrameComponent, BrainRadarComponent, CoinIconComponent],
   template: `
-    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] p-4 md:p-8">
-      <div class="max-w-5xl mx-auto flex flex-col gap-6">
+    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] py-4 md:py-8">
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex flex-col gap-6">
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 border-b border-[var(--color-border-card)] pb-6">

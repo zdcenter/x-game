@@ -9,7 +9,7 @@ import { I18nService } from '../../i18n/i18n.service';
   imports: [CommonModule, RouterLink],
   template: `
     <footer class="w-full mt-auto border-t py-12 transition-colors duration-300 relative z-10" style="background-color: var(--color-bg-main); border-color: var(--color-border-card)">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           
           <!-- Brand & Intro -->

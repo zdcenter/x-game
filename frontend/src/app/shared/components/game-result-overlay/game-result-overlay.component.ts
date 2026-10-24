@@ -19,6 +19,7 @@ import { SettingsService } from '../../../core/services/settings.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 import { LiveActivityService } from '../../../core/services/live-activity.service';
+import { HapticService } from '../../../core/services/haptic.service';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -72,6 +73,7 @@ import confetti from 'canvas-confetti';
 export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges {
   i18n = inject(I18nService);
   audio = inject(AudioService);
+  haptic = inject(HapticService);
   private router = inject(Router);
   private gameRegistry = inject(GameRegistryService);
   adService = inject(AdService);
@@ -220,6 +222,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   }
 
   handleRematch() {
+    this.haptic.vibrateLight();
     this.adService.tryShowInterstitial(() => {
       if (this.rematch.observed) {
         this.rematch.emit();
@@ -242,6 +245,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       );
     }
     if (isWin) {
+      this.haptic.vibrateSuccess();
       const generated = Array.from({ length: 14 }, (_, i) => ({
         id: i,
         x: 6 + Math.random() * 88,
@@ -257,6 +261,8 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       } else {
         this.fireConfetti();
       }
+    } else if (this.status === GameResult.Lose) {
+      this.haptic.vibrateError();
     }
     this.animateStats();
   }
@@ -416,10 +422,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   }
 
   handleRestart() {
+    this.haptic.vibrateLight();
     this.adService.tryShowInterstitial(() => this.restart.emit());
   }
 
   handleNextLevel() {
+    this.haptic.vibrateLight();
     this.adService.tryShowInterstitial(() => this.nextLevel.emit());
   }
 

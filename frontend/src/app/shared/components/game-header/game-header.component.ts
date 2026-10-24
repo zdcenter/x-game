@@ -10,13 +10,12 @@ import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinGuideModalComponent } from '../coin-guide-modal/coin-guide-modal.component';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
-import { LiveBattleBeaconComponent } from '../live-battle-beacon/live-battle-beacon.component';
 import { isBrowser } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule, CoinGuideModalComponent, CoinIconComponent, LiveBattleBeaconComponent],
+  imports: [CommonModule, CoinGuideModalComponent, CoinIconComponent],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {
@@ -43,6 +42,7 @@ export class GameHeaderComponent implements OnInit {
   router = inject(Router);
 
   readonly showZenHint = signal<boolean>(false);
+  readonly isToolsMenuOpen = signal<boolean>(false);
 
   ngOnInit() {
     if (!this.gameId) {
@@ -61,6 +61,14 @@ export class GameHeaderComponent implements OnInit {
         }, 4000);
       }
     }
+  }
+
+  toggleToolsMenu(): void {
+    this.isToolsMenuOpen.update(v => !v);
+  }
+
+  closeToolsMenu(): void {
+    this.isToolsMenuOpen.set(false);
   }
 
   toggleZen(): void {

@@ -29,7 +29,7 @@ import { FriendService } from '../services/friend.service';
       <!-- Global Navbar -->
       @if (!zenService.isZenMode()) {
         <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+        <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
 
           <!-- Left: Logo + Nav links -->
           <div class="flex items-center gap-1 sm:gap-3 xl:gap-5 min-w-0">

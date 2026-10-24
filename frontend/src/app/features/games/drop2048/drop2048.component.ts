@@ -214,7 +214,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
         this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
       } else {
         this.view.set('play');
-        this.store.joinRoom('single_room', GameMode.Single, GameDifficulty.Medium);
+        this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium);
       }
     } else {
       // Create a single-player room without auto-starting
@@ -229,7 +229,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   onJoinSinglePlayer(diff: any) {
     this.view.set('play');
-    this.store.joinRoom('single_room', GameMode.Single, diff);
+    this.store.joinRoom('', GameMode.Single, diff);
   }
 
   joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string, target: number = 1) {

@@ -24,16 +24,16 @@ import { AuthStore } from '../../../core/auth/auth.store';
         <div>
           <!-- Header row -->
           <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
-            <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-500 flex items-center gap-1">
+            <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-emerald-500 flex items-center gap-1.5">
               <span>🎯</span> {{ i18n.t('quests.title')() || '每日任务' }}
             </span>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1.5">
               @if (data()!.streak > 0) {
-                <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
                   🔥 {{ data()!.streak }}天
                 </span>
               }
-              <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold"
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold"
                     [class]="data()!.all_completed ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'">
                 {{ data()!.all_completed ? '✓' : (data()!.completed_count + '/' + data()!.total_count) }}
               </span>
@@ -41,7 +41,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
           </div>
 
           <!-- Description line-clamp-2 (no horizontal truncation!) -->
-          <p class="text-[11px] sm:text-xs text-[var(--color-text-secondary)] line-clamp-2">
+          <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
             @if (data()!.all_completed) {
               <span class="text-emerald-500 font-semibold">🎉 今日挑战已全部达成！积分徽章已入账</span>
             } @else {
@@ -58,13 +58,13 @@ import { AuthStore } from '../../../core/auth/auth.store';
 
         <!-- Footer CTA -->
         <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
-          <span class="text-[11px] sm:text-xs font-bold text-emerald-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+          <span class="text-xs sm:text-sm font-bold text-emerald-500 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
             {{ data()!.all_completed ? (i18n.t('quests.claim')() || '查看成就') : (i18n.t('quests.banner_action')() || '去完成挑战') }}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </span>
-          <span class="text-[10px] font-mono text-[var(--color-text-muted)] opacity-75">
+          <span class="text-[11px] sm:text-xs font-mono font-medium text-[var(--color-text-muted)] opacity-75">
             {{ countdown() }}
           </span>
         </div>

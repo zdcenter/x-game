@@ -155,8 +155,8 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       }
     } else {
       const savedDiff = storageGet('watersort_single_diff') || 'easy';
-      const uniqueLocalRoom = 'local_' + this.myId;
-      this._store.joinRoom(uniqueLocalRoom, GameMode.Single, savedDiff, this.myId);    }
+      this._store.joinRoom('', GameMode.Single, savedDiff, this.myId);
+    }
   }
   override ngOnDestroy() {
     super.ngOnDestroy();
@@ -181,9 +181,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     storageSet('watersort_single_diff', diff);
     this._store.leaveRoom();
     setTimeout(() => {
-      const uniqueLocalRoom = 'local_' + this.myId + '_' + Date.now();
-      this.wsService.setPendingAction('create');
-      this._store.joinRoom(uniqueLocalRoom, GameMode.Single, diff, this.myId);
+      this._store.joinRoom('', GameMode.Single, diff, this.myId);
     }, 100);
   }
 

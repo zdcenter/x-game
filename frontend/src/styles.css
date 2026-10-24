@@ -5,6 +5,19 @@
 @import 'driver.js/dist/driver.css';
 
 @layer base {
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Source Han Sans CN", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* 等宽排版工具类，确保游戏计时器、计分器、排名数字不变形、不晃动 */
+  .font-tabular, [data-tabular] {
+    font-variant-numeric: tabular-nums;
+  }
+
   :root {
     /* Default: Light theme — clean, classic, comfortable */
     --color-bg-main: #f8fafc; /* slate-50 */

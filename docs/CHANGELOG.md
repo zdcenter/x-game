@@ -2,7 +2,130 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.16] - 2026-10-24
+
+### 全平台现代字体系统规划与全端响应式字阶升级 (Modern Typography System & Responsive Hierarchy Upgrade)
+- **字体基础架构升级 (`styles.css`)**：
+  - **高质量跨平台现代系统字体栈**：引入原生高性能字体栈（`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei UI", sans-serif`），无缝兼容 macOS、iOS、Windows、Android 及 Linux 各操作系统；
+  - **抗锯齿与排版渲染优化**：在全局开启 `-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;`，彻底消除字体边缘毛刺与发虚现象；
+  - **等宽数字与计分排版工具类**：新增 `.font-tabular` / `font-variant-numeric: tabular-nums`，确保倒计时、计分器与排名在数字变动时完全不晃动、不偏位。
+- **首页视觉层级与字号加大一号 (`lobby.component.html`)**：
+  - **核心游戏卡片全面升级**：卡片标题升级为 `text-base sm:text-lg md:text-xl font-extrabold tracking-tight`，游戏名吸睛夺目；卡片描述升级为 `text-xs sm:text-[13.5px] leading-relaxed`，彻底消除 1600px 大屏下小字紧缩发灰的问题；【开始游戏】与【PK】按钮尺寸由 `text-xs py-1.5` 提档至 `text-xs sm:text-sm py-2`，更饱满更具点击欲望；
+  - **金刚区行动卡片协调提档**：多人竞技场、随便来一把及每日任务三张卡片标题升级为 `text-xs sm:text-sm font-extrabold`，副标题及 CTA 链接升级为 `text-xs sm:text-sm`，与大尺寸插画图标构成黄金视觉比例；
+  - **分类筛选药丸与快速直达**：按钮内边距与字号微调更舒展（`px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold`）；公告栏跑马灯升级为 `text-xs sm:text-sm md:text-base`。
+- **游戏通用头部字阶升级 (`game-header.component.html`)**：
+  - 游戏页内头部主标题升级为 `text-sm sm:text-base md:text-lg lg:text-xl font-black`，副标题升级为 `text-xs sm:text-sm`，全站界面更显高级大气。
+
+## [v3.2.15] - 2026-10-24
+
+### 擂台悬赏脑力币智能前置对比与友好即时提醒体系 (Bounty Balance Pre-Comparison & Friendly Inline Warning System)
+- **核心痛点消除**：
+  - 此前玩家创建/修改悬赏房间时，系统仅在点击最终提交按钮时才进行余额校验并弹出错误 Toast，玩家在选择 50/100/200 等高于当前持有的金额（如仅有 61 币）时没有任何前置对比和友好指引，人性化体验不足；
+- **全链路智能对比与即时反馈架构 (`GamePkLobbyComponent` & `EditRoomOverlayComponent`)**：
+  - **选项档位直观差额标记**：当某个悬赏档位大于玩家当前持有脑力币时（如 61 < 100），药丸按钮自动呈现弱化透光态并直观标红显示差额（如 `差 39` / `-39`），金额对比一目了然；
+  - **点击即时轻量友好提示**：当玩家点击高于当前持有的悬赏档位时，立即弹出即时温和 Toast 提醒（`脑力币不足：当前持有 {current} 币，还差 {needed} 币`），无需等待提交才报错；
+  - **内联对比警示横幅 (Inline Warning Banner)**：悬赏选项组下方无缝展开琥珀色警示条，清晰呈现差额提醒，并配备【获取脑力币】快捷按钮一键直达全局获取攻略弹窗；
+  - **主创建按钮智能响应守卫**：当选中的悬赏大于当前余额时，底部大按钮自动进入禁用保护态，文字动态变为 `脑力币不足 (需 {cost} 币 / 持有 {current})`，从源头杜绝误操作。
+- **8 种主流语言多语言字典全量同步**：
+  - 新增 `game.bounty_insufficient_inline`、`game.bounty_btn_insufficient`、`game.bounty_short_diff` 等官方翻译，严格保证多语言无硬编码。
+
+## [v3.2.14] - 2026-10-24
+
+### 补齐多语言字典缺漏与单机游戏退出“误解散房间”体验 Bug 根治 (I18n Completion & Single Player Room Dissolve Bug Fix)
+- **多语言完整性补齐**：
+  - 补充 `nav.leaderboard`（全球排行榜 / Leaderboard / リーダーボード / 리더보드 / Clasificación / Classement / Bestenliste / Classificação）至全部 8 种官方支持语言字典，彻底消除博客详情页等侧边栏缺少翻译提示。
+- **单机游戏退出误弹“房间已成功解散”提示深度根治 (准则5 严密执行)**：
+  - **核心痛点定位**：此前部分单机游戏（如 Drop2048、俄罗斯方块 Tetris、点灯 LightsOut、彩色水排序 WaterSort、方块拼图 Block）在单机初始化时误将 `'single_room'` 或 `'local'` 写入了 `roomId`，且基类 `BaseGameComponent.goBack()` 未校验单机模式，导致单机玩家点击顶部导航返回时误判为房主解散对战房间，触发 `dismissRoom()` 并在右上角盲目弹出“房间已成功解散”Toast；
+  - **基类双重严防**：在 `BaseGameComponent` 的 `goBack()`、`dismissRoom()` 及 `handleDismissRoom()` 中注入强制模式守卫 `this.store.currentRoomMode() !== GameMode.Single`，严格保证单机模式退出时仅触发本地内存清理（`leaveRoom()`），100% 绝不向 WebSocket 发送解散指令，更绝不展示“房间已成功解散”提示；
+  - **单机伪房间号全域清零**：全面清理各游戏（Drop2048、Tetris、LightsOut、WaterSort、Block、Hashi 等）在单机模式下伪造的本地 roomId，统一归零为空字符串 `''`，完全杜绝房间状态污染。
+
+## [v3.2.13] - 2026-10-24
+
+### PK 竞技大厅全宽电竞大盘重构与沉浸式零滚动极速建房弹窗体系 (PK Arena Full-Width Grid & Zero-Scroll Quick Create Modal)
+- **核心痛点消除**：
+  - 此前左侧栏死板占据 400px 宽度，将 18 款游戏、模式、难度、多局目标、悬赏脑力币、密码与创建按钮垂直堆砌成长达 1200px 的长条，玩家建房必须死命向下滚动滚轮才能看到配置与创建按钮；
+  - 右侧 75% 面积被空旷的大卡片浪费，空间利用严重失衡；移动端 60vh 抽屉在有限视口内滚动操作极不方便。
+- **大厅主体 1600px 满屏电竞大盘架构 (Full-Width Arena Grid & Hero Action Hub)**：
+  - **彻底移除臃肿长条侧栏**：大厅主体彻底告别单调分割，舒展贯通 1600px 统一宽幅；
+  - **顶层大厅行动中枢 (Hero Action Bar)**：部署 Tab 胶囊切换（`[🎮 活跃房间]` / `[👥 在线玩家]`）与游戏快捷过滤药丸组，右侧直接集成【⚡ 快速匹配】与高光主力按钮【➕ 创建新房间】；
+  - **宽屏卡片多列网格**：活跃房间以多列网格卡片（`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4`）舒展呈现，包含游戏大图标、房间名、模式/难度/悬赏金币标签与【⚔️ 立即加入】；无房间时展示精致电竞空态大卡片，中央直接配备【➕ 创建房间】和【⚡ 快速匹配】；
+  - **在线玩家多列网格**：在线玩家列表同步升级为 3 列全宽卡片，带实时对战状态、邀战、同款与喝彩。
+- **沉浸式双栏一体化极速建房弹窗 (Quick Create Modal · 100% 零滚动)**：
+  - 点击【➕ 创建新房间】瞬间呼出双栏居中模态卡片（`w-full max-w-4xl`），高度严格契合标准屏幕视口，**100% 首屏展示，根本不需要滚动鼠标一次滚轮**：
+    - **左栏（40% 宽度，约 350px）**：18 款游戏 3 列紧凑卡片网格，包含游戏微型图标、名称、高光发光边框与右上角 `✓` 选中标识；
+    - **右栏（60% 宽度，约 480px）**：当前选中游戏高光胶囊、难度横向单选药丸组、模式单选胶囊、多局目标组、悬赏脑力币组、公开/私密 PIN 输入框、最底部全宽超大电竞高光按钮【✚ 立即创建房间并迎战】，支持回车键一秒创建！
+- **移动端底部悬浮操作栏 (Mobile Sticky Bottom Action Bar)**：
+  - 手机端屏幕底部常驻毛玻璃浮动条【⚡ 快速匹配】与【➕ 创建房间】，单手大拇指轻触即可快速开房或秒配，操作极其舒适便捷。
+
+## [v3.2.12] - 2026-10-24
+
+### 博客详情页（Blog Post）全面拉齐全局 1600px 标准与两栏现代知识库架构重构 (Blog Post Universal 1600px Standard & 2-Column Knowledge Layout)
+- **核心痛点消除**：
+  - 此前博客列表页等全站核心模块均已统一至 1600px 巨幕容器，但博客详情页（`BlogPostComponent`）内部硬编码 `max-w-4xl`（仅 896px），导致文章被缩在屏幕正中央，顶部返回按钮贴在 1600px 极左边缘，视觉两端脱节、与全局导航栏严重错位；
+- **两栏现代知识库架构落地 (Modern 2-Column Knowledge Architecture)**：
+  - **全局对齐规范拉齐**：外层严格统一为 `w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`，顶部返回导航与下方主体两端完美对齐；
+  - **左侧主文大卡片（`flex-1 min-w-0`）**：采用圆角 `rounded-3xl` 大卡片，正文排版舒展大气（`prose prose-invert prose-emerald max-w-none text-base sm:text-lg`），大幅改善大屏阅读视野与舒适度，包含标签流、大标题、作者团队 E-E-A-T 专栏介绍及底部精选攻略全宽网格；
+  - **右侧智能吸顶侧边栏（`w-full lg:w-80 xl:w-96 shrink-0 lg:sticky lg:top-20`）**：部署【🎯 关联游戏即刻实战与 PK 对决】互动卡片，带游戏大图标与【🕹️ 单人试玩】/【⚔️ 发起 PK 对战】双高光转化按钮，以及【🏆 全球排行榜直达】卡片，实现 1600px 版心从左到右完全铺满对齐；
+  - **全端响应式**：移动端小屏自动流畅折叠为垂直单栏，右侧实战卡片自然沉降在文章底部，零横向滚动条；完全使用全局 CSS 变量支持 Light/Dark 双模。
+- **静态法律与关于页面同步舒展 (`LegalComponent` / `StaticPageComponent`)**：
+  - 将主阅读卡片从狭窄的 `max-w-4xl` 升级为舒展大气的 `max-w-5xl`，全站所有子页面宽度体验高度统一。
+
+## [v3.2.11] - 2026-10-24
+
+### 首页全服动态（Live Activity Ticker）失败/成功状态主题化、高光特效与 1600px 宽屏排版居中重构 (Live Activity Ticker Win/Loss Dynamic Themes & Centered Esports Layout)
+- **核心痛点与用户诉求**：
+  - 此前全服动态栏各类型事件视觉均采用单一的默认绿色，无法直观区分战局的胜败悲喜，缺乏电竞战报的紧张吸引力；
+  - 在 1600px 宽屏下，战报文字紧贴左侧玩家名，时间与按钮紧贴最右，导致中间留有足足 800~1000px 的大片空白，视觉十分空旷脱节。
+- **状态驱动的动态主题与光辉特效 (State-Driven Ambient Themes & Glow Effects)**：
+  - **失败战报 (`game_lose`)**：全栏框框与背景切换为警示暗红绯光氛围，外框动态挂载 `border-rose-500/40`，背景注入微绯红渐变，顶端光条亮起深红激光流，搭配 `ticker-glow-loss` 暗红脉冲呼吸动效，战报文字以柔和绯红高光呈现，营造电竞比赛中虽败犹荣、蓄势复仇的沉浸对决氛围；
+  - **通关胜利 (`game_win`)**：切换为翡翠绿/金翠胜利氛围，外框注入 `border-emerald-500/45` 与翠绿光流，搭配 `ticker-glow-win` 胜利微脉冲呼吸；
+  - **破纪录 (`record`)**：切换为尊贵鎏金光泽，外框注入 `border-amber-500/45`，搭配 `ticker-glow-record` 金光耀眼辉光；
+  - **正在挑战 (`playing`) / 默认**：延续标志性电竞翠绿霓虹呼吸微光。
+- **三段式黄金比例宽屏居中排版 (Balanced 3-Zone Architecture & Centered Headline)**：
+  - **左翼（身份溯源区）**：LIVE 状态雷达脉冲胶囊（颜色动态跟随主题）+ 游戏 3D Pop 浮动图标 + 玩家头像与高亮昵称（左对齐，固定紧凑宽度）；
+  - **中央舞台（战报事件 C 位核心 · 绝对居中）**：`flex-1 justify-center text-center`，居中陈列高光类型徽章（🎉 通关胜利 / 💥 挑战失败 / 🏆 破纪录 / 🎮 正在挑战）及大字号动态战报文字，在 1600px 巨幕宽屏下形成绝对视觉焦点，彻底消除中间大面积空旷断层；
+  - **右翼（时效与互动快捷操作）**：时间徽章（刚刚/x分钟前）+ `⚡ 互动挑战` 高质感胶囊按钮 + 轮播翻页控制微型按键（`‹ 1/15 ›`），右对齐呼应；
+  - **全端响应式无缝流动**：移动端（手机与窄屏平板）自动流式布局，保留玩家头像与精简战报，杜绝横向滚动条；完全基于 CSS 变量，Light/Dark 主题无缝适配。
+
 ## [v3.2.10] - 2026-10-24
+
+### 首页大厅搜索栏冗余清理与纯粹高质感【🎯 快速直达】胶囊重构 (Lobby Quick Switcher Pure Action Overhaul)
+- **核心痛点消除**：此前工具栏同时放置搜索输入框与“快速直达”按钮，不仅二者功能重叠冲突、视觉拥挤别扭，还占用了过多水平排版空间；
+- **纯粹高质感触发胶囊**：彻底移除外层冗余的长条搜索框，升格为独立的【🎯 快速直达 (18) ▾】高光交互胶囊按钮，自带实时收录游戏数量徽章与悬停动效；
+- **分层过滤体验**：
+  - PC 端点击轻量弹出 440px 玻璃拟态下拉面板，在浮层顶部按需提供轻量过滤输入框，并呈现实时 18 款游戏双列卡片（带 Emoji、标题与 PK 标识）；
+  - 移动端点击弹出居中四方形大触控模态卡片，支持单手点击与拼音/文字即时过滤直达，关闭后自动清空关键字，工具栏布局重归舒展呼吸感。
+
+### 全站统一 1600px 宽屏容器规范与全页面（含 Navbar/Footer/Docs/PK大厅）垂直对齐 (Universal 1600px Max-Width Standard Across All Routes)
+- **基准统一与阶梯缩窄根除 (Viewport Hierarchy Unification)**：
+  - **核心痛点根除**：此前首页大厅采用 `max-w-[1600px]`，但全局顶栏 Navbar 和页脚 Footer 被死死卡在 `max-w-7xl`（1280px），而游戏内页 Header 是 1600px、主舞台是 1400px、攻略是 1200px；`/docs` 更是直接撑满全屏、左侧栏贴在 0px 边缘，导致页面跳转时左右边距跳动严重、两端对齐完全错位；
+  - **全站基准容器标准统一**：将全站框架、导航与所有功能页面彻底统一为 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8` 绝对基准；
+  - **全局框架与导航彻底拉齐**：
+    - **全局顶栏（`MainLayoutComponent`）**：由 `max-w-7xl` 扩展为 `w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`，两端与内容区彻底对齐；
+    - **全局页脚（`FooterComponent`）**：由 `max-w-7xl` 扩展为 `w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`；
+  - **游戏内页（`GameLayoutComponent`）拉齐**：
+    - 顶部 `app-game-header` 容器内边距统一为 `px-3 sm:px-6 lg:px-8`；
+    - 游戏核心舞台（`<main>`）由 `max-w-[1400px]` 扩展拉齐至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`；
+    - 底部深度解谜攻略区（`<section>`）由 `max-w-[1200px]` 扩展拉齐至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`，垂直对齐无跳变。
+  - **文档中心（`DocsComponent`）两栏卡片式重构**：
+    - 破除原先全屏满宽硬切、左侧菜单贴死屏幕 0px 的后台式布局；
+    - 整体包装入 `w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8` 统一版心中，左侧目录设计为现代卡片式浮动栏（`w-64 sticky top-20`），右侧主内容为圆角卡片，完全与全站对齐，同时平滑原生滚动与目录锚点跳转。
+  - **全站其他所有子路由全面适配**：
+    - 全球排行榜（`LeaderboardComponent`）：统一至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`；
+    - 每日任务与打卡（`DailyComponent`）：统一至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`；
+    - 开发者博客列表与详情（`BlogListComponent` / `BlogPostComponent`）：统一至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`，支持 `xl:grid-cols-4` 四列网格；
+    - 个人成就与资料（`ProfileComponent`）：统一至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`；
+    - 对战大厅（`PkArenaComponent`）：由满屏铺满收敛至 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`；
+    - 法律条款与静态页（`LegalComponent` / `StaticPageComponent`）：基准容器统一为 `max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8`。
+
+### 全球排行榜脑力币（Coins）与段位资产直观展示 (Leaderboard Brain Coins & Ranking Assets Display)
+- **排行榜资产信息丰富化**：
+  - **前后端全链路打通**：后端 `GetLeaderboard` 与 `GetGlobalLeaderboard` 接口均关联 `gm_users.brain_coins`，在排行榜返回载荷中实时注入 `brain_coins` 字段；
+  - **高质感资产徽章呈现**：
+    - 全球综合榜单（Global）：展示 `# | 玩家 | 等级 | 🪙 脑力币 | 经验值 (XP)`；
+    - 游戏专属榜单（Game Mode）：展示 `# | 玩家 | 最佳战绩/用时 | 局数(胜率) | 🪙 脑力币`；
+    - 采用高亮金珀色（`text-amber-500`）硬币胶囊徽章呈现（如 `🪙 2,450`），直观彰显高玩积累的智力与胜场财富；
+  - **8 国多语言词条同步**：同步向 zh, en, ja, ko, es, de, fr, pt 字典注入 `"leaderboard.coins"` 规范翻译，保证国际化体验无缝无告警。
 
 ### 全局顶栏排版防错乱净化与 PK 等候大厅房主难度单选胶囊条 (Navbar Anti-Overlap & Waiting Room Segmented Difficulty Switcher)
 - **全局导航栏排版错乱根治与视觉冗余清理 (Global Navbar Clean-up & Beacon Decoupling)**：
@@ -20,8 +143,33 @@
     - 房主切换难度后，前端 WebSocket 瞬间发送 `change_game` 并触发本地 `difficultyChange` 事件与轻量 Toast 提示；
     - 后端 `manager.go` 在 `BroadcastStateLocked` 消息载荷中同步广播最新 `difficulty`、`game` 与 `mode`；
     - 前端 `WebSocketService` 优化：针对同游戏内切难度消除无谓的路由重载刷新，保持等候房间平滑不断连；房间内所有玩家（包括加入的对手）难度徽章实时联动变更。
-- **多语言字典全量同步 (`game.host_controlled`)**：
-  - 全球 8 种语言字典（zh, en, ja, ko, es, de, fr, pt）同步注入 `"game.host_controlled"` 规范词条。
+- **注册与登录密码框显示/隐藏小眼睛切换功能 (Password Visibility Toggle Eye Icon)**：
+  - **用户体验完善**：针对用户输入复杂密码易输错、无法直观核对的痛点，在登录页（`LoginComponent`）与注册页（`RegisterComponent`）的密码输入框右侧部署交互式“小眼睛”切换按钮；
+  - **动态图标与无障碍适配**：
+    - 默认状态为密码遮罩（`password` 类型），显示睁眼图标；点击后秒切明文（`text` 类型）并呈现闭眼/斜线眼睛图标（SVG 原生矢量微动效）；
+    - 支持键盘 Tab 聚焦与回车触发，绑定全语种动态 Tooltip 与 `aria-label`（`auth.show_password` / `auth.hide_password`）；
+    - 密码框右侧预留 `pr-11` 安全内边距，文字与图标完全不冲突。
+- **登录与注册页面排版重构与独立悬浮返回大厅胶囊 (Auth Pages Visual Hierarchy Refactor & Floating Back Capsule)**：
+  - **核心痛点根除**：彻底解决原登录与注册卡片内“← 游戏大厅”采用绝对定位负边距（`-top-6 -left-6`）导致与居中大标题（如“加入 Puzzle PK”或“登录 Puzzle PK”）产生严重挤压、文字重叠撞车的视觉缺陷；
+  - **页面级独立悬浮返回胶囊**：将返回大厅链接升格为页面视口左上角固定浮动的毛玻璃药丸胶囊（`fixed top-4 left-4 sm:top-6 sm:left-6 z-30`），集成平滑微动效向左箭头与毛玻璃质感（`backdrop-blur-xl`），全屏沉浸感极强，彻底与卡片内部文字解耦；
+  - **卡片视觉重心重塑与品牌图标徽章**：
+    - 卡片顶部居中新增柔光主题品牌图标徽章（登录页配置紫粉渐变双色手柄/登录图标，注册页配置青翠渐变用户徽章），使整体构图对称协调、开阔大气；
+    - 标题优化为 `text-3xl sm:text-4xl font-extrabold` 居中渐变大字，副标题间距舒展；
+    - 卡片底部在“已有账号/点此注册”下方增设精致的微文本“← 游戏大厅”二次引导链接，全屏与卡片内双重触达，兼具视觉美观与操作便捷。
+- **游戏舞台 Header 极简结构重构与聚合式设置菜单 (Game Header Extreme Simplification & Tools Menu)**：
+  - **核心痛点根除**：彻底消除原有游戏 Header 塞满 9~10 个散乱图标导致移动端溢出拥挤的缺陷；
+  - **三段式极简结构**：左侧为返回+标题，中间为难度/进度，右侧收敛为唯一的【⚔️ 联机对战】动作胶囊与【⚙️ 设置菜单】按钮；
+  - **聚合式浮层工具箱**：点击【⚙️】一站式弹出管理【📖 玩法规则】、【🔊 音效】、【📳 触感震动】、【🧘 全屏专注】、【🪙 脑力金币】与【📱 安装应用】，全端零横向滚动、呼吸感极佳。
+- **首页游戏卡片主次分明行动重构 (Lobby Card Primary & Secondary Action Overhaul)**：
+  - **主入口统一**：卡片主按钮统一为全宽【🕹️ 开始游戏】，进入即玩；
+  - **精致对战胶囊**：支持联机的游戏在右侧紧贴高光渐变【⚔️ PK】（或【⚡ 迎战】）药丸胶囊，彻底告别生硬的双拼平分与文字挤压。
+- **全游戏视听爽感与多层级触感振动体系落地 (Game Feel, Juiciness & Comprehensive Haptic System)**：
+  - **胜负全景视听联动**：在对局结算组件（`GameResultOverlayComponent`）中全面接入 `HapticService`，玩家获胜（Win）或破纪录时自动释放礼花纸屑动效（`confetti`）并触发胜利和弦触感（`vibrateSuccess`）；惜败时伴随低频沉闷触感（`vibrateError`）；轻点「🔄 再来一局 / 再战一局」或空格/R键时瞬间触发清脆轻微触感（`vibrateLight`）；
+  - **核心解谜即时正向反馈强化**：
+    - **数独（Sudoku）**：铅笔标注触发微触感，真实填数触发扎实实体中度触感（`vibrateMedium`），填错冲突即时触发警示震动（`vibrateError`），提示及最终通关瞬间触发高阶通关和弦触感与胜利音效；
+    - **24点（Math 24）**：两两消除合成触发清脆触感，最终解出 24 点成功瞬间多端秒级触发胜利震动与流光，掌机感与玩耍沉浸度显著跃升。
+- **多语言字典全量同步 (`nav.register` / `nav.login` / `audio.sound_effects` / `audio.vibration` / `auth.show_password` / `auth.hide_password` / `game.host_controlled`)**：
+  - 全球 8 种语言字典（zh, en, ja, ko, es, de, fr, pt）同步注入顶栏导航与工具箱菜单缺失的 `"nav.register"`, `"nav.login"`, `"audio.sound_effects"`, `"audio.vibration"` 以及 `"auth.show_password"`, `"auth.hide_password"`, `"game.host_controlled"` 规范词条，杜绝任何控制台 Missing Translation 告警。
 
 ---
 

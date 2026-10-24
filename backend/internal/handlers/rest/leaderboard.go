@@ -17,6 +17,7 @@ type LeaderboardEntry struct {
 	PlayCount     int    `json:"play_count"`
 	WinCount      int    `json:"win_count"`
 	Rating        int    `json:"rating"`
+	BrainCoins    int    `json:"brain_coins"`
 	IsCurrentUser bool   `json:"is_current_user"`
 }
 
@@ -59,13 +60,14 @@ func GetLeaderboard(c fiber.Ctx) error {
 	}
 
 	type rawRow struct {
-		UserID    uint   `gorm:"column:user_id"`
-		Username  string `gorm:"column:username"`
-		BestTime  int    `gorm:"column:best_time"`
-		BestScore int    `gorm:"column:best_score"`
-		PlayCount int    `gorm:"column:play_count"`
-		WinCount  int    `gorm:"column:win_count"`
-		Rating    int    `gorm:"column:rating"`
+		UserID     uint   `gorm:"column:user_id"`
+		Username   string `gorm:"column:username"`
+		BestTime   int    `gorm:"column:best_time"`
+		BestScore  int    `gorm:"column:best_score"`
+		PlayCount  int    `gorm:"column:play_count"`
+		WinCount   int    `gorm:"column:win_count"`
+		Rating     int    `gorm:"column:rating"`
+		BrainCoins int    `gorm:"column:brain_coins"`
 	}
 
 	var total int64
@@ -89,7 +91,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 		}
 
 		q.Count(&total)
-		q.Select("s.user_id, u.username, s.best_time, s.best_score, s.play_count, s.win_count, s.rating").
+		q.Select("s.user_id, u.username, s.best_time, s.best_score, s.play_count, s.win_count, s.rating, COALESCE(u.brain_coins, 0) AS brain_coins").
 			Offset(offset).Limit(limit).Scan(&rows)
 	} else {
 		// Unified game ranking: aggregate all modes and difficulties per user
@@ -117,14 +119,14 @@ func GetLeaderboard(c fiber.Ctx) error {
 
 		if rankType == "time" {
 			q = q.Where("s.best_time > 0").
-				Group("s.user_id, u.username").
+				Group("s.user_id, u.username, u.brain_coins").
 				Order("best_time ASC")
 		} else if rankType == "rating" {
-			q = q.Group("s.user_id, u.username").
+			q = q.Group("s.user_id, u.username, u.brain_coins").
 				Order("rating DESC")
 		} else {
 			q = q.Where("s.best_score > 0").
-				Group("s.user_id, u.username").
+				Group("s.user_id, u.username, u.brain_coins").
 				Order("best_score DESC")
 		}
 
@@ -133,7 +135,8 @@ func GetLeaderboard(c fiber.Ctx) error {
 			"COALESCE(MAX(s.best_score), 0) AS best_score, " +
 			"COALESCE(SUM(s.play_count), 0) AS play_count, " +
 			"COALESCE(SUM(s.win_count), 0) AS win_count, " +
-			"COALESCE(MAX(s.rating), 1000) AS rating").
+			"COALESCE(MAX(s.rating), 1000) AS rating, " +
+			"COALESCE(u.brain_coins, 0) AS brain_coins").
 			Offset(offset).Limit(limit).Scan(&rows)
 	}
 
@@ -150,6 +153,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 			PlayCount:     r.PlayCount,
 			WinCount:      r.WinCount,
 			Rating:        r.Rating,
+			BrainCoins:    r.BrainCoins,
 			IsCurrentUser: r.UserID == currentUserID,
 		}
 		if e.IsCurrentUser {
@@ -336,14 +340,15 @@ func GetGlobalLeaderboard(c fiber.Ctx) error {
 	q.Count(&total)
 
 	type rawRow struct {
-		UserID   uint   `gorm:"column:id"`
-		Username string `gorm:"column:username"`
-		XP       int    `gorm:"column:xp"`
-		Level    int    `gorm:"column:level"`
+		UserID     uint   `gorm:"column:id"`
+		Username   string `gorm:"column:username"`
+		XP         int    `gorm:"column:xp"`
+		Level      int    `gorm:"column:level"`
+		BrainCoins int    `gorm:"column:brain_coins"`
 	}
 
 	var rows []rawRow
-	q.Select("id, username, xp, level").
+	q.Select("id, username, xp, level, COALESCE(brain_coins, 0) AS brain_coins").
 		Order("xp DESC").
 		Offset(offset).
 		Limit(limit).
@@ -363,6 +368,7 @@ func GetGlobalLeaderboard(c fiber.Ctx) error {
 			"username":        r.Username,
 			"xp":              r.XP,
 			"level":           r.Level,
+			"brain_coins":     r.BrainCoins,
 			"is_current_user": isCurrentUser,
 		})
 	}

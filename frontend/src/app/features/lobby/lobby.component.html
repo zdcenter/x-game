@@ -11,7 +11,7 @@
          [class.hidden]="activeAnnouncements().length === 0">
       <span class="mr-2 sm:mr-3 text-lg sm:text-xl shrink-0 animate-pulse bg-[var(--color-bg-card)] pr-1">📣</span>
       <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
-        <div class="animate-marquee inline-block text-xs sm:text-sm font-bold text-[var(--color-accent-from)]">
+        <div class="animate-marquee inline-block text-xs sm:text-sm md:text-base font-bold text-[var(--color-accent-from)]">
           @for (ann of activeAnnouncements(); track ann.id) {
             <span class="mx-6 sm:mx-8">✨ {{ ann.content }}</span>
           }
@@ -39,21 +39,21 @@
           </div>
           <div>
             <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
-              <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[var(--color-accent-from)] flex items-center gap-1">
+              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-[var(--color-accent-from)] flex items-center gap-1.5">
                 <span>⚔️</span> {{ i18n.t('lobby.pk_arena_card_title')() || '多人竞技场' }}
               </span>
-              <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
                 LIVE PK
               </span>
             </div>
-            <p class="text-[11px] sm:text-xs text-[var(--color-text-secondary)] line-clamp-2">
+            <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
               {{ i18n.t('lobby.pk_arena_card_desc')() || '在线多人与亲子实时对决，比拼手速与脑力！' }}
             </p>
           </div>
           <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
-            <span class="text-[11px] sm:text-xs font-bold text-[var(--color-accent-from)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+            <span class="text-xs sm:text-sm font-bold text-[var(--color-accent-from)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {{ i18n.t('lobby.pk_arena_card_cta')() || '进入竞技大厅' }}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </span>
@@ -68,21 +68,21 @@
           </div>
           <div>
             <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
-              <span class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[var(--color-accent-to)] flex items-center gap-1">
+              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-[var(--color-accent-to)] flex items-center gap-1.5">
                 <span>🎲</span> {{ i18n.t('lobby.random_game')() || '随便来一把' }}
               </span>
-              <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
                 1s START
               </span>
             </div>
-            <p class="text-[11px] sm:text-xs text-[var(--color-text-secondary)] line-clamp-2">
+            <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
               {{ i18n.t('lobby.random_game_desc')() || '选择困难？手气不错一秒开局！' }}
             </p>
           </div>
           <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
-            <span class="text-[11px] sm:text-xs font-bold text-[var(--color-accent-to)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+            <span class="text-xs sm:text-sm font-bold text-[var(--color-accent-to)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {{ i18n.t('lobby.random_cta')() || '🎲 立即开局' }}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </span>
@@ -98,37 +98,37 @@
     <!-- Filters & Search Toolbar -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
       <!-- Category Pills -->
-      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
+      <div class="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
         <button (click)="selectedCategory.set('all')"
-                class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
                 [style.background]="selectedCategory() === 'all' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'all' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'all' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.all')() || '全部游戏' }}
         </button>
         <button (click)="selectedCategory.set('hot')"
-                class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
                 [style.background]="selectedCategory() === 'hot' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'hot' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'hot' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.hot')() || '🔥 热门榜' }}
         </button>
         <button (click)="selectedCategory.set('pk')"
-                class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
                 [style.background]="selectedCategory() === 'pk' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'pk' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'pk' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.pk')() || '⚔️ 实时联机PK' }}
         </button>
         <button (click)="selectedCategory.set('logic')"
-                class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
                 [style.background]="selectedCategory() === 'logic' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'logic' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'logic' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.logic')() || '🔢 数字推理' }}
         </button>
         <button (click)="selectedCategory.set('puzzle')"
-                class="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
                 [style.background]="selectedCategory() === 'puzzle' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'puzzle' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'puzzle' ? 'transparent' : 'var(--color-border-card)'">
@@ -136,49 +136,52 @@
         </button>
       </div>
 
-      <!-- Live Search Box & Quick Switcher -->
-      <div class="relative min-w-[210px] sm:w-72 shrink-0 quick-switcher-container">
-        <div class="relative flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input type="text"
-                 [(ngModel)]="searchQuery"
-                 (focus)="openQuickSwitcher()"
-                 [placeholder]="i18n.t('lobby.search_placeholder')() || '搜索益智游戏...'"
-                 class="w-full pl-9 pr-20 py-1.5 rounded-xl text-xs sm:text-sm bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-from)] transition-colors shadow-sm" />
-          
-          <div class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            @if (searchQuery()) {
-              <button (click)="searchQuery.set('')"
-                      class="px-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]"
-                      aria-label="Clear search">
-                ✕
-              </button>
-            }
-            <button (click)="toggleQuickSwitcher($event)"
-                    class="px-1.5 py-0.5 rounded-lg text-[11px] font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-from)] flex items-center gap-0.5 transition-all shadow-xs cursor-pointer active:scale-95"
-                    [title]="i18n.t('lobby.quick_select_title')()">
-              <span>🎯</span>
-              <span class="hidden xl:inline text-[10px]">{{ i18n.t('lobby.quick_select_btn')() }}</span>
-              <span class="text-[9px] transition-transform duration-200" [class.rotate-180]="isQuickSwitcherOpen()">▾</span>
-            </button>
-          </div>
-        </div>
+      <!-- Quick Switcher Trigger (Direct Action) -->
+      <div class="relative shrink-0 quick-switcher-container">
+        <button (click)="toggleQuickSwitcher($event)"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 group"
+                [class.border-[var(--color-accent-from)]]="isQuickSwitcherOpen()"
+                [class.ring-2]="isQuickSwitcherOpen()"
+                [class.ring-[var(--color-accent-from)]/20]="isQuickSwitcherOpen()"
+                [title]="i18n.t('lobby.quick_select_title')()">
+          <span class="text-base group-hover:scale-110 transition-transform">🎯</span>
+          <span>{{ i18n.t('lobby.quick_select_btn')() || '快速直达' }}</span>
+          <span class="px-1.5 py-0.2 rounded-full bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)] text-[10px] sm:text-xs font-mono font-bold">
+            {{ games().length }}
+          </span>
+          <span class="text-xs transition-transform duration-200 opacity-60 group-hover:opacity-100" [class.rotate-180]="isQuickSwitcherOpen()">▾</span>
+        </button>
 
         <!-- PC端下拉面板 (Desktop Dropdown) -->
         @if (isQuickSwitcherOpen()) {
           <div (click)="$event.stopPropagation()"
-               class="hidden md:flex absolute right-0 top-full mt-2 w-[440px] max-h-[460px] rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl z-50 flex-col overflow-hidden animate-fade-in backdrop-blur-xl">
-            <!-- 头部说明 -->
-            <div class="px-4 py-2.5 bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)] flex items-center justify-between shrink-0">
-              <span class="text-xs font-bold text-[var(--color-text-main)] flex items-center gap-1.5">
-                <span>🎯</span> {{ i18n.t('lobby.quick_select_title')() }}
-                <span class="text-[10px] font-normal text-[var(--color-text-muted)]">({{ allQuickGames().length }})</span>
-              </span>
-              <span class="text-[10px] text-[var(--color-text-muted)]">
-                {{ i18n.t('lobby.quick_select_hint')() }}
-              </span>
+               class="hidden md:flex absolute right-0 top-full mt-2 w-[440px] max-h-[500px] rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl z-50 flex-col overflow-hidden animate-fade-in backdrop-blur-xl">
+            <!-- 头部说明与即时过滤输入框 -->
+            <div class="p-3 bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)] flex flex-col gap-2 shrink-0">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[var(--color-text-main)] flex items-center gap-1.5">
+                  <span>🎯</span> {{ i18n.t('lobby.quick_select_title')() }}
+                  <span class="text-[10px] font-normal text-[var(--color-text-muted)]">({{ allQuickGames().length }}/{{ games().length }})</span>
+                </span>
+                <span class="text-[10px] text-[var(--color-text-muted)]">
+                  {{ i18n.t('lobby.quick_select_hint')() }}
+                </span>
+              </div>
+              <div class="relative">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text"
+                       [(ngModel)]="searchQuery"
+                       [placeholder]="i18n.t('lobby.search_placeholder')() || '输入游戏名称过滤...'"
+                       class="w-full pl-8 pr-7 py-1.5 rounded-lg text-xs bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-from)]" />
+                @if (searchQuery()) {
+                  <button (click)="searchQuery.set('')"
+                          class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] cursor-pointer">
+                    ✕
+                  </button>
+                }
+              </div>
             </div>
 
             <!-- 18款游戏双列网格 -->
@@ -359,14 +362,14 @@
                 <div>
                   <div class="flex items-center justify-between gap-2 mb-1.5">
                     <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]"
-                       class="text-base sm:text-lg font-bold hover:text-[var(--color-accent-from)] transition-colors truncate">
+                       class="text-base sm:text-lg md:text-xl font-extrabold hover:text-[var(--color-accent-from)] transition-colors truncate tracking-tight">
                       {{ getGameTitle(game.id) }}
                     </a>
 
                     <div class="flex items-center gap-1.5 shrink-0">
                       <!-- Hot Visit Stat Pill -->
-                      <div class="flex items-center gap-0.5 text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
-                        <span class="text-amber-500 text-[10px]">🔥</span>
+                      <div class="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
+                        <span class="text-amber-500 text-xs">🔥</span>
                         <span class="tabular-nums">{{ game.visitCount || 0 }}</span>
                       </div>
 
@@ -382,41 +385,37 @@
                   </div>
 
                   <!-- Short Description -->
-                  <p class="text-xs text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
+                  <p class="text-xs sm:text-[13.5px] text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
                     {{ getGameDesc(game.id) }}
                   </p>
                 </div>
 
-                <!-- Short-Link Direct CTA Buttons (The Conversion Engine) -->
-                <div class="pt-2 border-t border-[var(--color-border-card)]">
+                <!-- Direct Launch Action Group -->
+                <div class="pt-2.5 border-t border-[var(--color-border-card)] flex items-center gap-2">
+                  <!-- Main Play Button (Primary CTA) -->
+                  <button (click)="playSoloGame($event, game.id)"
+                          class="flex-1 py-2 px-3 sm:px-3.5 rounded-xl text-xs sm:text-sm font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                    <span>🕹️</span>
+                    <span>{{ i18n.t('lobby.play_instant')() || '开始游戏' }}</span>
+                  </button>
+
+                  <!-- Secondary PK Capsule (If multiplayer supported) -->
                   @if (hasMultiplayer(game.id)) {
-                    <!-- Split Action: Solo & PK -->
-                    <div class="grid grid-cols-2 gap-2">
-                      <button (click)="playSoloGame($event, game.id)"
-                              class="w-full py-1.5 px-2 rounded-xl text-xs font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] active:scale-95 transition-all text-center">
-                        🕹️ {{ i18n.t('lobby.play_solo')() || '单人试玩' }}
-                      </button>
-                      <button (click)="playPkGame($event, game.id)"
-                              class="w-full py-1.5 px-2 rounded-xl text-xs font-bold text-white active:scale-95 transition-all text-center flex items-center justify-center gap-1 truncate relative"
-                              [style.background]="getPkButtonInfo(game.id).gradient"
-                              [style.box-shadow]="getPkButtonInfo(game.id).shadow">
-                        @if (hasWaitingRoom(game.id)) {
-                          <span class="relative flex h-2 w-2 shrink-0">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                          </span>
-                          <span class="truncate">⚡ {{ i18n.t('lobby.quick_join')() }}</span>
-                        } @else {
-                          <span>{{ getPkButtonInfo(game.id).icon }}</span>
-                          <span class="truncate">{{ getPkButtonInfo(game.id).label }}</span>
-                        }
-                      </button>
-                    </div>
-                  } @else {
-                    <!-- Single Player Direct Launch -->
-                    <button (click)="playSoloGame($event, game.id)"
-                            class="w-full py-1.5 px-3 rounded-xl text-xs font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] active:scale-95 transition-all flex items-center justify-center gap-1.5">
-                      🕹️ {{ i18n.t('lobby.play_instant')() || '立即开局' }}
+                    <button (click)="playPkGame($event, game.id)"
+                            class="py-2 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold text-white active:scale-95 transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-sm hover:brightness-110"
+                            [style.background]="getPkButtonInfo(game.id).gradient"
+                            [style.box-shadow]="getPkButtonInfo(game.id).shadow"
+                            [title]="i18n.t('game.quick_pk')() || '联机对战'">
+                      @if (hasWaitingRoom(game.id)) {
+                        <span class="relative flex h-2 w-2 shrink-0">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                        </span>
+                        <span>⚡ {{ i18n.t('lobby.quick_join')() || '迎战' }}</span>
+                      } @else {
+                        <span>⚔️</span>
+                        <span>PK</span>
+                      }
                     </button>
                   }
                 </div>

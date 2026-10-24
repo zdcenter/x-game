@@ -200,12 +200,14 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   handleDismissRoom() {
+    if (this.store.currentRoomMode() === GameMode.Single) return;
     this.wsService.send({ type: 'dismiss_room' });
     this.store.leaveRoom();
   }
 
   goBack() {
-    if (this.store.roomId()) {
+    // 准则5：单机游戏纯客户端运行，绝不执行联机房间解散逻辑或提示
+    if (this.store.currentRoomMode() !== GameMode.Single && this.store.roomId()) {
       if (this.store.hostId() === this.playerId) {
         if (this.store.status() === GameStatus.Finished) {
           this.store.dismissRoom();
@@ -216,6 +218,9 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       } else {
         this.store.leaveRoom();
       }
+    } else {
+      // 单机模式离开：仅触发单机本地状态/存档清理，绝不调用 WebSocket 解散房间或弹出房间解散 Toast
+      this.store.leaveRoom();
     }
     this.navigateToLobby();
   }
@@ -254,6 +259,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   dismissRoom() {
+    // 严格防御：单机模式或无联机房间绝不执行解散，绝不弹出“房间已成功解散”提示！
+    if (this.store.currentRoomMode() === GameMode.Single || !this.store.roomId()) {
+      this.navigateToLobby();
+      return;
+    }
+
     // If game is finished or only host is in the room (or empty), dismiss immediately without confirmation!
     const storeAny = this.store as any;
     const players = typeof storeAny.roomPlayers === 'function' ? storeAny.roomPlayers() :

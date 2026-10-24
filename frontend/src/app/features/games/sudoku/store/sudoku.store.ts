@@ -9,6 +9,7 @@ import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../core/services/ad.service';
+import { HapticService } from '../../../../core/services/haptic.service';
 import { environment } from '../../../../../environments/environment';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { SudokuCell } from './sudoku-engine';
@@ -24,6 +25,7 @@ export class SudokuStore extends BaseGameStore {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
   private audio = inject(AudioService);
+  private haptic = inject(HapticService);
   private i18n = inject(I18nService);
   private adService = inject(AdService);
 
@@ -246,6 +248,11 @@ export class SudokuStore extends BaseGameStore {
     if (cell.fixed) return;
 
     this.audio.playSudoku('input');
+    if (this.pencilMode()) {
+      this.haptic.vibrateLight();
+    } else {
+      this.haptic.vibrateMedium();
+    }
 
     if (this.currentRoomMode() === GameMode.Steal) {
       const myPlayer = this.players()[this.playerId()];
@@ -283,6 +290,9 @@ export class SudokuStore extends BaseGameStore {
     // Trigger reactivity
     this.board.set([...b]);
     this.checkErrors();
+    if (cell.error) {
+      this.haptic.vibrateError();
+    }
     this.checkWinCondition();
 
     // Speed mode progress tracking
@@ -313,6 +323,7 @@ export class SudokuStore extends BaseGameStore {
     const targetVal = parseInt(solution[sel.r * 9 + sel.c], 10);
     
     this.audio.playSudoku('success');
+    this.haptic.vibrateSuccess();
     
     const newB = this.board();
     const cell = newB[sel.r][sel.c];
@@ -350,6 +361,7 @@ export class SudokuStore extends BaseGameStore {
     if (cell.fixed) return;
 
     this.audio.playSudoku('clear');
+    this.haptic.vibrateLight();
 
     if (this.currentRoomMode() === GameMode.Steal) {
       // Cannot erase in steal mode unless we implement it, but standard rules say only add.
@@ -545,6 +557,9 @@ export class SudokuStore extends BaseGameStore {
 
   private finishPuzzle() {
     if (!this.currentPuzzleId()) return;
+
+    this.audio.playSudoku('success');
+    this.haptic.vibrateSuccess();
 
     this.saveStateToBackend();
 

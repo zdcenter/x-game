@@ -12,8 +12,8 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] p-4 md:p-8">
-      <div class="max-w-5xl mx-auto flex flex-col gap-6">
+    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] py-4 md:py-8">
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex flex-col gap-6">
 
         <!-- Header -->
         <div class="flex items-center gap-3 border-b border-[var(--color-border-card)] pb-5">
@@ -32,7 +32,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
         <div class="flex flex-wrap items-center gap-3">
           <!-- Game selector -->
           <div class="flex-1 min-w-[200px]">
-            <select class="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-from)]/50"
+            <select class="w-full px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-from)]/50 cursor-pointer"
                     (change)="onGameChange($event)">
                 <option value="global" [selected]="selectedGameId() === 'global'">
                   🌍 {{ i18n.t('leaderboard.global')() }}
@@ -48,14 +48,14 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
           <!-- Period toggle -->
           <div class="flex rounded-xl border border-[var(--color-border-card)] overflow-hidden shadow-sm">
             <button (click)="setPeriod('all')"
-                    class="px-4 py-2.5 text-sm font-bold transition-all"
+                    class="px-4 py-2.5 text-sm font-bold transition-all cursor-pointer"
                     [class]="selectedPeriod() === 'all'
                       ? 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white'
                       : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
               {{ i18n.t('leaderboard.all_time')() }}
             </button>
             <button (click)="setPeriod('weekly')"
-                    class="px-4 py-2.5 text-sm font-bold transition-all"
+                    class="px-4 py-2.5 text-sm font-bold transition-all cursor-pointer"
                     [class]="selectedPeriod() === 'weekly'
                       ? 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white'
                       : 'bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
@@ -66,7 +66,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 
         <!-- My rank -->
         @if (authStore.isAuthenticated() && data()?.my_rank) {
-          <div class="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10">
+          <div class="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 shadow-sm">
             <span class="text-2xl font-black text-[var(--color-accent-from)]">#{{ data()!.my_rank }}</span>
             <div>
               <p class="text-sm font-bold text-[var(--color-text-main)]">{{ i18n.t('leaderboard.my_rank')() }}</p>
@@ -90,22 +90,30 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
             <!-- Header row -->
             <div class="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] border-b border-[var(--color-border-card)]">
               <div class="col-span-1 text-center">#</div>
-              <div class="col-span-5">{{ i18n.t('leaderboard.player')() }}</div>
+              <div class="col-span-4">{{ i18n.t('leaderboard.player')() }}</div>
               @if (selectedGameId() === 'global') {
-                <div class="col-span-3 text-right">{{ i18n.t('leaderboard.level')() }}</div>
-                <div class="col-span-3 text-right">{{ i18n.t('leaderboard.xp')() }}</div>
+                <div class="col-span-2 text-right">{{ i18n.t('leaderboard.level')() }}</div>
+                <div class="col-span-2 sm:col-span-3 text-right flex items-center justify-end gap-1">
+                  <span>🪙</span>
+                  <span class="hidden sm:inline">{{ i18n.t('leaderboard.coins')() || '脑力币' }}</span>
+                </div>
+                <div class="col-span-3 sm:col-span-2 text-right">{{ i18n.t('leaderboard.xp')() }}</div>
               } @else {
-                <div class="col-span-3 text-right">
+                <div class="col-span-3 sm:col-span-3 text-right">
                   {{ isTimeType() ? i18n.t('leaderboard.best_time')() : i18n.t('leaderboard.best_score')() }}
                 </div>
-                <div class="col-span-3 text-right">
+                <div class="col-span-2 text-right">
                   {{ i18n.t('leaderboard.plays')() }}
+                </div>
+                <div class="col-span-2 text-right flex items-center justify-end gap-1">
+                  <span>🪙</span>
+                  <span class="hidden sm:inline">{{ i18n.t('leaderboard.coins')() || '脑力币' }}</span>
                 </div>
               }
             </div>
 
             @for (entry of data()!.entries; track entry.user_id) {
-              <div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-[var(--color-border-card)]/50 last:border-0 transition-colors hover:bg-[var(--color-bg-main)]/50"
+              <div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-[var(--color-border-card)]/50 last:border-0 transition-colors hover:bg-[var(--color-bg-main)]/50 items-center"
                    [class.bg-[var(--color-accent-from)]/5]="entry.is_current_user">
                 <!-- Rank -->
                 <div class="col-span-1 text-center font-mono font-black"
@@ -117,7 +125,7 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
                   }
                 </div>
                 <!-- Player -->
-                <div class="col-span-5 flex items-center gap-2 min-w-0">
+                <div class="col-span-4 flex items-center gap-2 min-w-0">
                   <span class="font-bold text-sm truncate" [class.text-[var(--color-accent-from)]]="entry.is_current_user">
                     {{ entry.username }}
                     @if (entry.is_current_user) {
@@ -125,33 +133,42 @@ import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
                     }
                   </span>
                   @if (!entry.is_current_user && authStore.isAuthenticated()) {
-                    <button (click)="addFriend(entry.user_id)" class="opacity-0 group-hover:opacity-100 p-1 text-blue-500 hover:bg-blue-500/10 rounded-full transition-all" [title]="i18n.t('game.add_friend')() || 'Add Friend'">
+                    <button (click)="addFriend(entry.user_id)" class="opacity-0 group-hover:opacity-100 p-1 text-blue-500 hover:bg-blue-500/10 rounded-full transition-all cursor-pointer" [title]="i18n.t('game.add_friend')() || 'Add Friend'">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                     </button>
                   }
                 </div>
-                <!-- Score/Time / Level/XP -->
+                <!-- Global Mode Columns -->
                 @if (selectedGameId() === 'global') {
-                  <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-from)]">
+                  <div class="col-span-2 text-right font-mono font-bold text-[var(--color-accent-from)]">
                     Lv.{{ entry.level }}
                   </div>
-                  <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
+                  <div class="col-span-2 sm:col-span-3 text-right font-mono font-bold text-amber-500 flex items-center justify-end gap-1">
+                    <span class="text-xs">🪙</span>
+                    <span>{{ (entry.brain_coins || 0) | number }}</span>
+                  </div>
+                  <div class="col-span-3 sm:col-span-2 text-right text-xs sm:text-sm text-[var(--color-text-muted)] font-mono">
                     {{ entry.xp | number }} XP
                   </div>
                 } @else {
-                  <div class="col-span-3 text-right font-mono font-bold text-[var(--color-accent-to)]">
+                  <!-- Game-Specific Columns -->
+                  <div class="col-span-3 sm:col-span-3 text-right font-mono font-bold text-[var(--color-accent-to)]">
                     @if (isTimeType()) {
                       {{ formatTime(entry.best_time) }}
                     } @else {
                       {{ (entry.best_score || entry.rating || 0) | number }}
                     }
                   </div>
-                  <div class="col-span-3 text-right text-sm text-[var(--color-text-muted)]">
+                  <div class="col-span-2 text-right text-xs sm:text-sm text-[var(--color-text-muted)]">
                     @if (entry.win_count > 0 && entry.play_count > 0) {
                       <span>{{ entry.play_count }} <span class="text-xs opacity-75">({{ getWinRate(entry) }}%)</span></span>
                     } @else {
                       <span>{{ entry.play_count }}</span>
                     }
+                  </div>
+                  <div class="col-span-2 text-right font-mono font-bold text-amber-500 flex items-center justify-end gap-1">
+                    <span class="text-xs">🪙</span>
+                    <span>{{ (entry.brain_coins || 0) | number }}</span>
                   </div>
                 }
               </div>

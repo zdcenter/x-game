@@ -9,9 +9,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-5xl mx-auto">
-        <header class="text-center mb-16">
+    <div class="min-h-screen bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 sm:py-12">
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
+        <header class="text-center mb-12 sm:mb-16">
           <h1 class="text-4xl sm:text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
             {{ i18n.t('blog.title')() }}
           </h1>
@@ -20,7 +20,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
           </p>
         </header>
 
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           @for (post of displayPosts(); track post.id) {
             <article class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 group">
               <div class="flex flex-wrap gap-2 mb-4">

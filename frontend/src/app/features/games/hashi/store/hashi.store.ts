@@ -86,7 +86,7 @@ export class HashiStore extends BaseGameStore {
 
   // 开始单机关卡
   startSinglePlayer(puzzleId: string, content: string, difficulty: string, levelIndex: number) {
-    this.joinRoom('single-room', GameMode.Single, difficulty, this.playerId());
+    this.joinRoom('', GameMode.Single, difficulty, this.playerId());
     this.currentPuzzleId.set(puzzleId);
     this.currentPuzzleContent.set(content);
     this.localLevelIndex.set(levelIndex);

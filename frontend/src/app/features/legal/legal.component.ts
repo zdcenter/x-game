@@ -12,8 +12,9 @@ import { effect, SecurityContext, signal } from '@angular/core';
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl mx-auto bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xl rounded-2xl overflow-hidden">
+    <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-8 sm:py-12">
+      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xl rounded-3xl overflow-hidden">
         
         <!-- Header -->
         <div class="bg-[var(--color-bg-base)] border-b border-[var(--color-border-card)] px-6 py-8 sm:px-10 text-center relative">
@@ -30,13 +31,14 @@ import { effect, SecurityContext, signal } from '@angular/core';
         </div>
 
         <!-- Content -->
-        <div class="px-6 py-8 sm:px-10 leading-relaxed text-sm sm:text-base prose prose-invert max-w-none" [innerHTML]="contentHtml()">
+        <div class="px-6 py-8 sm:px-12 leading-relaxed text-sm sm:text-base prose prose-invert max-w-none" [innerHTML]="contentHtml()">
         </div>
 
       </div>
 
-      <div class="px-4 sm:px-8 max-w-4xl mx-auto w-full mt-12">
-        
+        <div class="px-4 sm:px-8 max-w-5xl mx-auto w-full mt-12">
+          
+        </div>
       </div>
     </div>
   `,

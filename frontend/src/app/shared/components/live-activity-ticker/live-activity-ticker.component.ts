@@ -53,6 +53,98 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
     return this.activityService.formatTimeAgo(act.timestamp);
   });
 
+  readonly currentTheme = computed<'win' | 'loss' | 'record' | 'room' | 'playing'>(() => {
+    const act = this.currentActivity();
+    if (!act) return 'playing';
+    switch (act.type) {
+      case 'game_win':
+        return 'win';
+      case 'game_lose':
+        return 'loss';
+      case 'record':
+        return 'record';
+      case 'room_created':
+        return 'room';
+      default:
+        return 'playing';
+    }
+  });
+
+  readonly containerThemeClass = computed(() => {
+    switch (this.currentTheme()) {
+      case 'loss':
+        return 'border-rose-500/40 hover:border-rose-500/60 bg-gradient-to-r from-rose-500/15 via-[var(--color-bg-card)] to-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.18)] ticker-glow-loss';
+      case 'win':
+        return 'border-emerald-500/45 hover:border-emerald-500/70 bg-gradient-to-r from-emerald-500/15 via-[var(--color-bg-card)] to-emerald-500/10 shadow-[0_0_22px_rgba(16,185,129,0.22)] ticker-glow-win';
+      case 'record':
+        return 'border-amber-500/45 hover:border-amber-500/75 bg-gradient-to-r from-amber-500/15 via-[var(--color-bg-card)] to-amber-500/10 shadow-[0_0_25px_rgba(245,158,11,0.25)] ticker-glow-record';
+      case 'room':
+        return 'border-indigo-500/35 hover:border-indigo-500/60 bg-gradient-to-r from-indigo-500/12 via-[var(--color-bg-card)] to-purple-500/10 shadow-[0_0_18px_rgba(99,102,241,0.18)]';
+      default:
+        return 'border-[#0fd228]/25 hover:border-[#0fd228]/45 bg-gradient-to-r from-[#0fd228]/10 via-[var(--color-bg-card)] to-[#0fd228]/5 shadow-xs hover:shadow-md';
+    }
+  });
+
+  readonly topAccentClass = computed(() => {
+    switch (this.currentTheme()) {
+      case 'loss':
+        return 'from-transparent via-rose-500 to-transparent opacity-95';
+      case 'win':
+        return 'from-transparent via-emerald-400 to-transparent opacity-95';
+      case 'record':
+        return 'from-transparent via-amber-400 to-transparent opacity-95';
+      case 'room':
+        return 'from-transparent via-indigo-400 to-transparent opacity-90';
+      default:
+        return 'from-transparent via-[#0fd228] to-transparent opacity-90';
+    }
+  });
+
+  readonly liveBadgeClass = computed(() => {
+    switch (this.currentTheme()) {
+      case 'loss':
+        return 'bg-rose-500/10 border-rose-500/40 text-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.25)]';
+      case 'win':
+        return 'bg-emerald-500/10 border-emerald-500/40 text-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.25)]';
+      case 'record':
+        return 'bg-amber-500/10 border-amber-500/40 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.25)]';
+      case 'room':
+        return 'bg-indigo-500/10 border-indigo-500/40 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.2)]';
+      default:
+        return 'bg-[#0fd228]/10 border-[#0fd228]/40 text-[#0fd228] shadow-[0_0_12px_rgba(15,210,40,0.25)]';
+    }
+  });
+
+  readonly liveDotClass = computed(() => {
+    switch (this.currentTheme()) {
+      case 'loss':
+        return 'bg-rose-500 shadow-[0_0_8px_#f43f5e]';
+      case 'win':
+        return 'bg-emerald-400 shadow-[0_0_8px_#34d399]';
+      case 'record':
+        return 'bg-amber-400 shadow-[0_0_8px_#fbbf24]';
+      case 'room':
+        return 'bg-indigo-400 shadow-[0_0_8px_#818cf8]';
+      default:
+        return 'bg-[#0fd228] shadow-[0_0_8px_#0fd228]';
+    }
+  });
+
+  readonly textHighlightClass = computed(() => {
+    switch (this.currentTheme()) {
+      case 'loss':
+        return 'text-rose-600 dark:text-rose-400 font-semibold';
+      case 'win':
+        return 'text-emerald-600 dark:text-emerald-400 font-semibold';
+      case 'record':
+        return 'text-amber-600 dark:text-amber-400 font-semibold';
+      case 'room':
+        return 'text-indigo-600 dark:text-indigo-400 font-medium';
+      default:
+        return 'text-[var(--color-text-main)] font-medium';
+    }
+  });
+
   ngOnInit(): void {
     this.startAutoCycle();
   }

@@ -15,13 +15,13 @@
               <ng-content select="[game-icon]"></ng-content>
             </div>
             <div class="min-w-0 flex flex-col justify-center">
-              <h1 class="text-xs sm:text-sm md:text-base lg:text-lg font-black tracking-tight uppercase flex items-center gap-1 sm:gap-2 truncate">
-                <button (click)="titleClick.emit()" class="truncate hover:opacity-80 active:scale-95 transition-all text-left bg-clip-text text-transparent bg-gradient-to-r max-w-[65px] xs:max-w-[110px] sm:max-w-none"
+              <h1 class="text-sm sm:text-base md:text-lg lg:text-xl font-black tracking-tight uppercase flex items-center gap-1 sm:gap-2 truncate">
+                <button (click)="titleClick.emit()" class="truncate hover:opacity-80 active:scale-95 transition-all text-left bg-clip-text text-transparent bg-gradient-to-r max-w-[80px] xs:max-w-[130px] sm:max-w-none"
                         [ngClass]="titleGradientClass">
                   {{ title }}
                 </button>
               </h1>
-              <p class="text-[10px] sm:text-xs text-[var(--color-text-main)] opacity-70 font-medium truncate hidden lg:block" *ngIf="subtitle">
+              <p class="text-xs sm:text-sm text-[var(--color-text-main)] opacity-75 font-medium truncate hidden lg:block" *ngIf="subtitle">
                 {{ subtitle }}
               </p>
             </div>
@@ -34,99 +34,111 @@
         </div>
         
         <!-- Right block: Actions & Utilities -->
-        <div class="flex items-center justify-end gap-1 sm:gap-2 z-30 shrink-0 xl:ml-auto relative">
+        <!-- Right block: Actions & Utilities -->
+        <div class="flex items-center justify-end gap-1.5 sm:gap-2 z-30 shrink-0 xl:ml-auto relative">
+          <!-- Main Action Injection (e.g. ⚔️ 联机对战 / ⚡ 迎战) -->
           <ng-content select="[header-right]"></ng-content>
 
-          <!-- Live PK Battle Beacon (Realtime room radar in game header) -->
-          <app-live-battle-beacon></app-live-battle-beacon>
-
-          <!-- User Brain Coins Balance (Click to open Coin Economy Guide) -->
-          @if (coinService.isAuthenticated()) {
-            <button (click)="coinGuideService.open()"
-                 class="hidden min-[420px]:flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-xl bg-amber-500/15 dark:bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 dark:border-amber-500/25 text-amber-700 dark:text-amber-300 font-black text-[11px] sm:text-xs shadow-xs shrink-0 cursor-pointer transition-all hover:scale-105 active:scale-95"
-                 [title]="i18n.t('game.coins_balance')() + ': ' + coinService.coins() + ' (' + (i18n.t('coins.guide_title')() || '规则指南') + ')'">
-              <app-coin-icon size="xs" />
-              <span class="font-mono">{{ coinService.coins() }}</span>
+          <!-- Quick Rules Button (Desk/Tablet visible) -->
+          @if (showRulesBtn) {
+            <button (click)="rules.emit()"
+                    class="hidden sm:inline-flex p-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-semibold items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
+                    [title]="i18n.t('game.rules')() || '规则说明'">
+              <span class="text-xs">📖</span>
+              <span class="hidden md:inline">{{ i18n.t('game.rules')() || '规则' }}</span>
             </button>
           }
 
-          <!-- System & Rule Toolset -->
-          <div class="flex items-center gap-0.5 sm:gap-1 pl-1 sm:pl-2 border-l border-[var(--color-border-card)]/80 shrink-0">
-            @if (showRulesBtn) {
-              <button (click)="rules.emit()"
-                      class="p-1 sm:p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shrink-0"
-                      [title]="i18n.t('game.rules')() || '规则'">
-                <!-- Open Book Guide Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </button>
-            }
-
-            <button (click)="audioService.toggleMute()"
-                    class="p-1 sm:p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shrink-0"
-                    [title]="audioService.isMuted() ? (i18n.t('audio.unmute')() || '开启声音') : (i18n.t('audio.mute')() || '静音')">
-              <svg *ngIf="!audioService.isMuted()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 19l-7-7H2V5h2l7-7v21z" />
-              </svg>
-              <svg *ngIf="audioService.isMuted()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1V10a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+          <!-- Unified Tools & Settings Dropdown Menu (⚙️) -->
+          <div class="relative">
+            <button (click)="toggleToolsMenu()"
+                    class="p-1.5 sm:p-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs flex items-center justify-center active:scale-95 shadow-2xs cursor-pointer group"
+                    [class.border-[var(--color-accent-from)]]="isToolsMenuOpen()"
+                    [title]="i18n.t('game.settings')() || '游戏设置与工具'">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
 
-            <button (click)="hapticService.toggleVibration()"
-                    class="hidden sm:inline-flex p-1 sm:p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shrink-0"
-                    [title]="hapticService.isVibrationEnabled() ? (i18n.t('audio.vibration_on')() || '震动已开启') : (i18n.t('audio.vibration_off')() || '震动已关闭')">
-              <svg *ngIf="hapticService.isVibrationEnabled()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h1M4 17h1M19 7h1M19 17h1" />
-              </svg>
-              <svg *ngIf="!hapticService.isVibrationEnabled()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-              </svg>
-            </button>
-            <!-- Zen Mode Toggle with Gentle First-Time Discovery Hint Tooltip -->
-            <div class="relative flex items-center">
-              <button (click)="toggleZen()"
-                      class="p-1 sm:p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors shrink-0"
-                      [title]="zenService.isZenMode() ? (i18n.t('game.exit_zen_mode')() || '退出全屏') : (i18n.t('game.zen_mode')() || '全屏专注')">
-                <svg *ngIf="!zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-                <svg *ngIf="zenService.isZenMode()" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m7-5l5 5m0 0v-4m0 4h-4" />
-                </svg>
-              </button>
+            <!-- Backdrop for Mobile / Dropdown outside-click -->
+            @if (isToolsMenuOpen()) {
+              <div class="fixed inset-0 z-40" (click)="closeToolsMenu()"></div>
+              <div class="absolute right-0 top-full mt-2 w-56 sm:w-60 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl p-2 z-50 flex flex-col gap-1 backdrop-blur-xl animate-scale-up"
+                   (click)="$event.stopPropagation()">
+                <!-- Rule Guide in Mobile menu -->
+                @if (showRulesBtn) {
+                  <button (click)="rules.emit(); closeToolsMenu()"
+                          class="w-full sm:hidden flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
+                    <span class="flex items-center gap-2"><span>📖</span> {{ i18n.t('game.rules')() || '玩法规则' }}</span>
+                  </button>
+                }
 
-              @if (showZenHint()) {
-                <div class="absolute right-0 top-full mt-2 z-50 animate-fade-in cursor-pointer whitespace-nowrap"
-                     (click)="dismissZenHint()">
-                  <div class="px-2.5 py-1.5 rounded-xl shadow-2xl text-[11px] font-bold text-[var(--color-text-main)] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center gap-1.5">
-                    <span class="text-amber-500">💡</span>
-                    <span>{{ i18n.t('game.zen_mode_tip')() }}</span>
-                  </div>
-                  <!-- Arrow -->
-                  <div class="w-2 h-2 rotate-45 bg-[var(--color-bg-card)] border-t border-l border-[var(--color-border-card)] absolute -top-1 right-2.5"></div>
-                </div>
-              }
-            </div>
+                <!-- Audio Toggle -->
+                <button (click)="audioService.toggleMute()"
+                        class="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
+                  <span class="flex items-center gap-2">
+                    <span>{{ audioService.isMuted() ? '🔇' : '🔊' }}</span>
+                    <span>{{ i18n.t('audio.sound_effects')() || '音效开关' }}</span>
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                        [class.bg-emerald-500/15]="!audioService.isMuted()"
+                        [class.text-emerald-500]="!audioService.isMuted()"
+                        [class.bg-red-500/15]="audioService.isMuted()"
+                        [class.text-red-500]="audioService.isMuted()">
+                    {{ audioService.isMuted() ? (i18n.t('audio.mute')() || '关闭') : (i18n.t('audio.unmute')() || '开启') }}
+                  </span>
+                </button>
 
-            <!-- PWA Install Button (When installable) -->
-            @if (pwaService.canInstall()) {
-              <button (click)="pwaService.install()"
-                      class="opacity-80 hover:opacity-100 transition-all px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1 shrink-0 active:scale-95 shadow-sm"
-                      [title]="i18n.t('pwa.install_app')()">
-                <span>📱</span>
-                <span class="hidden md:inline">{{ i18n.t('pwa.install')() }}</span>
-              </button>
-            } @else if (pwaService.isIos() && !pwaService.isStandalone()) {
-              <button (click)="pwaService.openIosGuide()"
-                      class="opacity-75 hover:opacity-100 transition-all p-1 rounded-full hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] shrink-0"
-                      [title]="i18n.t('pwa.ios_guide_title')()">
-                <span class="text-xs sm:text-sm">📲</span>
-              </button>
+                <!-- Vibration Toggle -->
+                <button (click)="hapticService.toggleVibration()"
+                        class="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
+                  <span class="flex items-center gap-2">
+                    <span>📳</span>
+                    <span>{{ i18n.t('audio.vibration')() || '触感震动' }}</span>
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-mono"
+                        [class.bg-emerald-500/15]="hapticService.isVibrationEnabled()"
+                        [class.text-emerald-500]="hapticService.isVibrationEnabled()"
+                        [class.bg-gray-500/15]="!hapticService.isVibrationEnabled()"
+                        [class.text-[var(--color-text-muted)]]="!hapticService.isVibrationEnabled()">
+                    {{ hapticService.isVibrationEnabled() ? 'ON' : 'OFF' }}
+                  </span>
+                </button>
+
+                <!-- Zen / Fullscreen Toggle -->
+                <button (click)="toggleZen(); closeToolsMenu()"
+                        class="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
+                  <span class="flex items-center gap-2">
+                    <span>🧘</span>
+                    <span>{{ zenService.isZenMode() ? (i18n.t('game.exit_zen_mode')() || '退出全屏') : (i18n.t('game.zen_mode')() || '全屏沉浸') }}</span>
+                  </span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-mono bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+                    {{ zenService.isZenMode() ? 'Exit' : 'Enter' }}
+                  </span>
+                </button>
+
+                <!-- Coins Guide -->
+                @if (coinService.isAuthenticated()) {
+                  <button (click)="coinGuideService.open(); closeToolsMenu()"
+                          class="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer border-t border-[var(--color-border-card)]/50 pt-2 mt-1">
+                    <span class="flex items-center gap-2">
+                      <app-coin-icon size="xs" />
+                      <span>{{ i18n.t('game.coins_balance')() || '脑力金币' }}</span>
+                    </span>
+                    <span class="font-mono text-amber-500 font-bold">{{ coinService.coins() }}</span>
+                  </button>
+                }
+
+                <!-- PWA Install option if available -->
+                @if (pwaService.canInstall()) {
+                  <button (click)="pwaService.install(); closeToolsMenu()"
+                          class="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer">
+                    <span>📱</span>
+                    <span>{{ i18n.t('pwa.install_app')() || '安装桌面/手机端应用' }}</span>
+                  </button>
+                }
+              </div>
             }
           </div>
         </div>
