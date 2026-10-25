@@ -459,12 +459,25 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       this.lines += linesCleared;
 
       const prevLevel = this.level;
-      // Super-linear multiline exponential scaling:
-      // Single: 100 * level, Double: 300 * level (3x), Triple: 600 * level (6x), Tetris: 1200 * level (12x)
-      const lineScores = [0, 100, 300, 600, 1200];
+      // 官方现代 Tetris Guideline 国际标准计分:
+      // Single: 100 * level, Double: 300 * level, Triple: 500 * level, Tetris: 800 * level
+      const lineScores = [0, 100, 300, 500, 800];
       let lineBaseScore = lineScores[linesCleared] * this.level;
 
-      // Check Perfect Clear (Board Wipe)
+      // 连续高难度消除 Back-to-Back (B2B) 1.5 倍加成 (800 * 1.5 = 1200 * level)
+      const isB2B = linesCleared === 4 && this.lastClearWasTetris;
+      if (isB2B) {
+        lineBaseScore = Math.floor(lineBaseScore * 1.5);
+      }
+
+      // 记录本次消除是否为四行 Tetris，用于维护 B2B 连续状态
+      if (linesCleared === 4) {
+        this.lastClearWasTetris = true;
+      } else if (linesCleared > 0) {
+        this.lastClearWasTetris = false;
+      }
+
+      // Check Perfect Clear (Board Wipe 全清奖励)
       const isAllClear = this.grid.every(row => row.every(cell => cell === 0));
       if (isAllClear) {
         lineBaseScore += 2000 * this.level;
@@ -478,7 +491,8 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
       }
 
       if (this.comboCount >= 2) {
-        const comboBonus = this.comboCount * 75 * this.level;
+        // Guideline 连击得分: 50 * (combo - 1) * level
+        const comboBonus = (this.comboCount - 1) * 50 * this.level;
         this.score += comboBonus;
         this.config.onCombo?.(this.comboCount);
       }
@@ -493,13 +507,8 @@ export class TetrisEngine implements ILocalEngine<TetrisState, TetrisAction> {
         else if (linesCleared === 3) attackLines = 2;
         else if (linesCleared === 4) attackLines = 4;
 
-        if (linesCleared === 4) {
-          if (this.lastClearWasTetris) {
-            attackLines += 1; // Back-to-Back Tetris bonus!
-          }
-          this.lastClearWasTetris = true;
-        } else {
-          this.lastClearWasTetris = false;
+        if (linesCleared === 4 && isB2B) {
+          attackLines += 1; // Back-to-Back Tetris bonus!
         }
 
         if (isAllClear) {

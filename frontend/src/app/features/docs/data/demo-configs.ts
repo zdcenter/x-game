@@ -714,15 +714,17 @@ export const ALL_DEMO_CONFIGS: Record<string, DemoConfig> = {
   // 'sudoku' removed: the toy 4x4 board is outdated and mismatched with the real 9x9 game engine.
   // 'hexa' removed: the generic 4x4 rectangular board completely contradicts the real 61-cell hexagonal honeycomb board.
   // The in-depth master guide document provides real geometric honeycomb analysis and visual diagrams.
-  'gomoku': gomokuDemoConfig,
+  // 'gomoku' removed: the generic 5x5 board is outdated and mismatched with the real 15x15 intersection engine.
+  // The in-depth master guide document provides full professional step-by-step guidance.,
   'lightsout': lightsoutDemoConfig,
-  'math24': math24DemoConfig,
+  // 'math24' removed: the toy 1x4 table with hardcoded styles is outdated and mismatched with the real card engine.
+  // The in-depth master guide document provides full professional step-by-step guidance.
   'codebreaker': codebreakerDemoConfig,
   'nonogram': nonogramDemoConfig,
   'sokoban': sokobanDemoConfig,
-  'watersort': watersortDemoConfig,
-  'tetris': tetrisDemoConfig,
-  'drop2048': drop2048DemoConfig,
+  // 'tetris' removed: the toy 4x6 grid with hardcoded styles is outdated and mismatched with the real 10x20 SRS matrix.
+  // 'drop2048' removed: the toy 3x4 grid with hardcoded styles is outdated and mismatched with the real 5x7 cascade matrix.
+  // The in-depth master guide document provides full professional step-by-step guidance.
   'block': blockDemoConfig,
   'idiom': idiomDemoConfig,
   // 'minesweeper' removed: the generic 5x5 board is outdated and mismatched with real 9x9/16x16/30x16 engines.
