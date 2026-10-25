@@ -1,6 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { storageGet, storageSet, storageRemove } from '../../../core/utils/browser.util';
-import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -256,6 +256,28 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
   }
 
   // Keyboard actions
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const tag = target?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable) return;
+    if (this.status() !== GameStatus.Playing) return;
+
+    if (event.key >= '0' && event.key <= '9') {
+      event.preventDefault();
+      this.pressKey(event.key);
+    } else if (event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault();
+      this.deleteLast();
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.submitGuess();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.clearInput();
+    }
+  }
+
   pressKey(num: string) {
     if (this.status() !== GameStatus.Playing) return;
     

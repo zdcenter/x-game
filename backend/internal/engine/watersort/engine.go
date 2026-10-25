@@ -13,9 +13,8 @@ import (
 const Capacity = 4
 
 var Colors = []string{
-	"#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#9B59B6", "#1ABC9C",
-	"#E67E22", "#E74C3C", "#34495E", "#2ECC71", "#3498DB", "#FD79A8",
-	"#8E44AD", "#D35400", "#C0392B", "#16A085", "#7F8C8D", "#F39C12",
+	"red", "blue", "green", "yellow", "purple", "orange", "cyan", "pink",
+	"brown", "gray", "lime", "teal", "navy", "magenta",
 }
 
 type Tube struct {
@@ -341,60 +340,77 @@ func (e *WatersortEngine) checkWin(tubes []Tube) bool {
 	return true
 }
 
+var hardMasterSeeds = [][][]int{
+	{{11,5,3,8},{8,10,9,5},{6,12,2,8},{10,1,1,0},{10,0,6,6},{12,2,2,1},{0,4,13,6},{8,4,11,3},{13,13,5,1},{10,4,11,12},{7,11,7,7},{9,3,3,9},{13,2,0,5},{9,7,4,12}},
+	{{3,7,13,4},{5,12,3,1},{11,2,13,0},{7,3,13,5},{11,11,8,5},{2,4,4,13},{2,0,2,10},{6,9,9,1},{7,11,12,8},{5,8,10,6},{6,7,8,9},{3,0,0,10},{6,4,12,12},{1,9,10,1}},
+	{{11,9,9,6},{6,6,2,1},{4,10,7,13},{2,13,8,10},{2,0,13,5},{4,3,6,0},{1,1,0,1},{8,7,10,4},{13,8,10,12},{12,5,3,8},{12,5,4,0},{7,5,9,11},{7,3,9,12},{2,3,11,11}},
+}
+
 func generatePuzzle(numColors int) []Tube {
 	numTubes := numColors + 2
-	tubes := make([][]string, numTubes)
+	tubes := make([]Tube, numTubes)
+
+	if numColors == 14 {
+		// Hard: Isomorphic master seed mapping
+		seedIdx := rand.Intn(len(hardMasterSeeds))
+		seed := hardMasterSeeds[seedIdx]
+
+		shuffledColors := make([]string, numColors)
+		copy(shuffledColors, Colors[:numColors])
+		rand.Shuffle(numColors, func(i, j int) {
+			shuffledColors[i], shuffledColors[j] = shuffledColors[j], shuffledColors[i]
+		})
+
+		perm := rand.Perm(numColors)
+		for i, originalIdx := range perm {
+			tubePattern := seed[originalIdx]
+			t := make([]string, Capacity)
+			for j := 0; j < Capacity; j++ {
+				t[j] = shuffledColors[tubePattern[j]]
+			}
+			tubes[i] = Tube{Colors: t}
+		}
+		tubes[numColors] = Tube{Colors: []string{}}
+		tubes[numColors+1] = Tube{Colors: []string{}}
+		return tubes
+	}
+
+	// For Easy (5) & Medium (9): distribute randomly into numColors full tubes + 2 empty tubes
+	for attempt := 0; attempt < 20; attempt++ {
+		deck := make([]string, 0, numColors*Capacity)
+		for i := 0; i < numColors; i++ {
+			for k := 0; k < Capacity; k++ {
+				deck = append(deck, Colors[i])
+			}
+		}
+		rand.Shuffle(len(deck), func(i, j int) {
+			deck[i], deck[j] = deck[j], deck[i]
+		})
+
+		hasMonocolor := false
+		for i := 0; i < numColors; i++ {
+			t := make([]string, Capacity)
+			copy(t, deck[i*Capacity:(i+1)*Capacity])
+			if t[0] == t[1] && t[1] == t[2] && t[2] == t[3] {
+				hasMonocolor = true
+				break
+			}
+			tubes[i] = Tube{Colors: t}
+		}
+		if hasMonocolor {
+			continue
+		}
+
+		tubes[numColors] = Tube{Colors: []string{}}
+		tubes[numColors+1] = Tube{Colors: []string{}}
+		return tubes
+	}
+
+	// Fallback
 	for i := 0; i < numColors; i++ {
-		tubes[i] = make([]string, Capacity)
-		for j := 0; j < Capacity; j++ {
-			tubes[i][j] = Colors[i]
-		}
+		tubes[i] = Tube{Colors: []string{Colors[i], Colors[(i+1)%numColors], Colors[(i+2)%numColors], Colors[(i+3)%numColors]}}
 	}
-	for i := numColors; i < numTubes; i++ {
-		tubes[i] = []string{}
-	}
-
-	iterations := numColors * 300
-	type Move struct{ src, dst int }
-
-	for i := 0; i < iterations; i++ {
-		var validMoves []Move
-		for src := 0; src < numTubes; src++ {
-			if len(tubes[src]) == 0 {
-				continue
-			}
-			top := tubes[src][len(tubes[src])-1]
-			// Reverse pop condition: top must rest on same color or be size 1
-			canPop := len(tubes[src]) == 1 || tubes[src][len(tubes[src])-2] == top
-			if !canPop {
-				continue
-			}
-
-			for dst := 0; dst < numTubes; dst++ {
-				if src == dst {
-					continue
-				}
-				if len(tubes[dst]) < Capacity {
-					// To encourage mixing, we prefer putting into empty tubes or tubes with different top
-					// But if we strictly forbid matching tops, we might get stuck easily.
-					validMoves = append(validMoves, Move{src, dst})
-				}
-			}
-		}
-
-		if len(validMoves) == 0 {
-			break // fallback if somehow stuck
-		}
-
-		m := validMoves[rand.Intn(len(validMoves))]
-		top := tubes[m.src][len(tubes[m.src])-1]
-		tubes[m.src] = tubes[m.src][:len(tubes[m.src])-1]
-		tubes[m.dst] = append(tubes[m.dst], top)
-	}
-
-	result := make([]Tube, numTubes)
-	for i, t := range tubes {
-		result[i] = Tube{Colors: t}
-	}
-	return result
+	tubes[numColors] = Tube{Colors: []string{}}
+	tubes[numColors+1] = Tube{Colors: []string{}}
+	return tubes
 }

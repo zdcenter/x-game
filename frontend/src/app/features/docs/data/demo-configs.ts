@@ -718,14 +718,15 @@ export const ALL_DEMO_CONFIGS: Record<string, DemoConfig> = {
   // The in-depth master guide document provides full professional step-by-step guidance.,
   'lightsout': lightsoutDemoConfig,
   // 'math24' removed: the toy 1x4 table with hardcoded styles is outdated and mismatched with the real card engine.
+  // 'codebreaker' removed: the outdated 4-color Mastermind toy board is retired in favor of the real 1A2B deduction matrix guide.
   // The in-depth master guide document provides full professional step-by-step guidance.
-  'codebreaker': codebreakerDemoConfig,
   'nonogram': nonogramDemoConfig,
-  'sokoban': sokobanDemoConfig,
+  // 'sokoban' removed: the simplistic 5x3 corridor widget is retired in favor of the real multi-box warehouse pathfinding guide.
+  // The in-depth master guide document provides full professional step-by-step guidance.
   // 'tetris' removed: the toy 4x6 grid with hardcoded styles is outdated and mismatched with the real 10x20 SRS matrix.
   // 'drop2048' removed: the toy 3x4 grid with hardcoded styles is outdated and mismatched with the real 5x7 cascade matrix.
+  // 'block' removed: the toy 4x4 mini grid is retired in favor of the real 10x10 zero-gravity spatial puzzle guide.
   // The in-depth master guide document provides full professional step-by-step guidance.
-  'block': blockDemoConfig,
   'idiom': idiomDemoConfig,
   // 'minesweeper' removed: the generic 5x5 board is outdated and mismatched with real 9x9/16x16/30x16 engines.
   // The in-depth master guide document provides full professional step-by-step guidance.

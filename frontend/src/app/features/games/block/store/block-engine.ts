@@ -207,8 +207,11 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
 
     this.score += points;
 
-    // Replace used shape with new one (or null if doing batches, but here it's 1-for-1 replenishment)
-    this.hand[handIndex] = getRandomShapes(1)[0];
+    // Set placed shape to null; when all 3 shapes in hand are placed, deal a fresh triad!
+    this.hand[handIndex] = null;
+    if (this.hand.every(s => s === null)) {
+      this.hand = getRandomShapes(3);
+    }
 
     this.checkGameOver();
     

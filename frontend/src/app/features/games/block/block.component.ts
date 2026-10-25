@@ -167,6 +167,8 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   // Preview overlay for drop
   previewShadow = signal<{ row: number, col: number, shape: BlockShape } | null>(null);
+  selectedHandIndex = signal<number | null>(null);
+  keyboardCursor = signal<{ row: number; col: number }>({ row: 4, col: 4 });
   
   showRules = signal(false);
   showOverlay = signal(false);
@@ -363,6 +365,72 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   dragStartOffset = { x: 0, y: 0 };
   dragCellSize = 48;
   dragCellGap = 4;
+  private dragStartPos = { x: 0, y: 0 };
+  private dragHasMoved = false;
+
+  selectHandSlot(index: number) {
+    if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
+    const shape = this.store.hand()[index];
+    if (!shape) return;
+
+    if (this.selectedHandIndex() === index) {
+      this.selectedHandIndex.set(null);
+      this.previewShadow.set(null);
+      this.audioService.playBlock('pickup');
+    } else {
+      this.selectedHandIndex.set(index);
+      this.audioService.playBlock('pickup');
+      this.haptic.vibrateLight();
+      this.updatePreviewForSelected(this.keyboardCursor().row, this.keyboardCursor().col);
+    }
+  }
+
+  onCellHover(row: number, col: number) {
+    this.keyboardCursor.set({ row, col });
+    if (this.isDragging) return;
+    if (this.selectedHandIndex() !== null) {
+      this.updatePreviewForSelected(row, col);
+    }
+  }
+
+  onCellClick(row: number, col: number) {
+    const handIdx = this.selectedHandIndex();
+    if (handIdx === null) return;
+    const shape = this.store.hand()[handIdx];
+    if (!shape) {
+      this.selectedHandIndex.set(null);
+      this.previewShadow.set(null);
+      return;
+    }
+
+    if (this.store.canPlace(shape, row, col, this.store.board())) {
+      this.store.placeShape(handIdx, row, col);
+      this.haptic.vibrateSnap();
+      this.selectedHandIndex.set(null);
+      this.previewShadow.set(null);
+    } else {
+      this.audioService.playBlock('error');
+      this.haptic.vibrateLight();
+    }
+  }
+
+  private updatePreviewForSelected(row: number, col: number) {
+    const handIdx = this.selectedHandIndex();
+    if (handIdx === null) {
+      this.previewShadow.set(null);
+      return;
+    }
+    const shape = this.store.hand()[handIdx];
+    if (!shape) {
+      this.previewShadow.set(null);
+      return;
+    }
+    if (this.store.canPlace(shape, row, col, this.store.board())) {
+      this.previewShadow.set({ row, col, shape });
+    } else {
+      this.previewShadow.set(null);
+    }
+  }
 
   onDragStart(event: MouseEvent | TouchEvent, shape: BlockShape, index: number) {
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
@@ -375,13 +443,15 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       event.preventDefault();
     }
 
+    const clientX = 'touches' in event ? event.touches[0].clientX : (event as MouseEvent).clientX;
+    const clientY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
+
     this.isDragging = true;
     this.draggedShape = shape;
     this.draggedIndex = index;
+    this.dragStartPos = { x: clientX, y: clientY };
+    this.dragHasMoved = false;
     this.haptic.vibrateLight();
-
-    const clientX = 'touches' in event ? event.touches[0].clientX : (event as MouseEvent).clientX;
-    const clientY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
 
     const isTouch = 'touches' in event || event.type.startsWith('touch');
     
@@ -433,6 +503,10 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     const clientX = 'touches' in event ? event.touches[0].clientX : (event as MouseEvent).clientX;
     const clientY = 'touches' in event ? event.touches[0].clientY : (event as MouseEvent).clientY;
 
+    if (!this.dragHasMoved && Math.hypot(clientX - this.dragStartPos.x, clientY - this.dragStartPos.y) > 8) {
+      this.dragHasMoved = true;
+    }
+
     this.dragPos = {
       x: clientX,
       y: clientY
@@ -481,10 +555,22 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   onDragEnd(event: MouseEvent | TouchEvent) {
     if (!this.isDragging) return;
 
+    if (!this.dragHasMoved) {
+      // User tapped or clicked without dragging: toggle selection of this hand slot
+      const idx = this.draggedIndex;
+      this.isDragging = false;
+      this.draggedShape = null;
+      this.draggedIndex = -1;
+      this.previewShadow.set(null);
+      this.selectHandSlot(idx);
+      return;
+    }
+
     if (this.previewShadow()) {
       const { row, col } = this.previewShadow()!;
       this.store.placeShape(this.draggedIndex, row, col);
       this.haptic.vibrateSnap();
+      this.selectedHandIndex.set(null);
     } else {
       this.audioService.playBlock('error');
     }
@@ -497,10 +583,68 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
     if (event.key.toLowerCase() === 'r' && this.store.currentRoomMode() === GameMode.Single) {
       this.store.startGame();
       event.preventDefault();
       return;
+    }
+
+    // Number keys 1, 2, 3 to select hand slot
+    if (['1', '2', '3'].includes(event.key)) {
+      const slotIdx = parseInt(event.key, 10) - 1;
+      this.selectHandSlot(slotIdx);
+      event.preventDefault();
+      return;
+    }
+
+    // Escape to cancel selection
+    if (event.key === 'Escape') {
+      if (this.selectedHandIndex() !== null) {
+        this.selectedHandIndex.set(null);
+        this.previewShadow.set(null);
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Arrow keys / WASD to move cursor
+    const boardSize = this.store.boardSize();
+    const cursor = { ...this.keyboardCursor() };
+    let moved = false;
+
+    if (event.key === 'ArrowUp' || event.key.toLowerCase() === 'w') {
+      cursor.row = Math.max(0, cursor.row - 1);
+      moved = true;
+    } else if (event.key === 'ArrowDown' || event.key.toLowerCase() === 's') {
+      cursor.row = Math.min(boardSize - 1, cursor.row + 1);
+      moved = true;
+    } else if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+      cursor.col = Math.max(0, cursor.col - 1);
+      moved = true;
+    } else if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+      cursor.col = Math.min(boardSize - 1, cursor.col + 1);
+      moved = true;
+    }
+
+    if (moved) {
+      this.keyboardCursor.set(cursor);
+      if (this.selectedHandIndex() !== null) {
+        this.updatePreviewForSelected(cursor.row, cursor.col);
+      }
+      event.preventDefault();
+      return;
+    }
+
+    // Space / Enter to place shape
+    if (event.key === ' ' || event.key === 'Enter') {
+      if (this.selectedHandIndex() !== null) {
+        this.onCellClick(cursor.row, cursor.col);
+        event.preventDefault();
+        return;
+      }
     }
   }
 }

@@ -10,7 +10,6 @@ import { GameRegistryService } from '../../core/services/game-registry.service';
 import { GameStepPlayerComponent } from './components/game-step-player/game-step-player.component';
 import { ALL_DEMO_CONFIGS } from './data/demo-configs';
 import { SlidingTutorialComponent } from '../games/sliding/components/sliding-tutorial/sliding-tutorial.component';
-import { SokobanTutorialComponent } from '../games/sokoban/components/sokoban-tutorial/sokoban-tutorial.component';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 
@@ -23,7 +22,7 @@ interface TocItem {
 @Component({
   selector: 'app-docs',
   standalone: true,
-  imports: [CommonModule, RouterLink, GameStepPlayerComponent, SlidingTutorialComponent, SokobanTutorialComponent],
+  imports: [CommonModule, RouterLink, GameStepPlayerComponent, SlidingTutorialComponent],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] py-4 sm:py-8">
       
@@ -103,16 +102,6 @@ interface TocItem {
                     <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sliding_advanced_tutorial')() || '进阶攻略演示：快速复原秘籍' }}</h2>
                     <div class="relative w-full max-w-md mx-auto">
                       <app-sliding-tutorial [inline]="true"></app-sliding-tutorial>
-                    </div>
-                  </div>
-                }
-
-                <!-- Advanced Interactive Tutorial for Sokoban -->
-                @if (currentGameId() === 'sokoban') {
-                  <div class="mt-8 mb-8">
-                    <h2 class="text-2xl font-bold text-[var(--color-text-primary)] mb-6 scroll-mt-20" id="advanced-tutorial">{{ i18n.t('docs.sokoban_advanced_tutorial')() || '推箱子真实演示' }}</h2>
-                    <div class="relative w-full max-w-md mx-auto">
-                      <app-sokoban-tutorial [inline]="true"></app-sokoban-tutorial>
                     </div>
                   </div>
                 } @else if (hasDemoConfig(currentGameId()) && currentGameId() !== 'sliding') {

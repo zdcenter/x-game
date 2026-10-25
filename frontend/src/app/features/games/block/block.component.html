@@ -162,7 +162,9 @@
                   <!-- Cells -->
                   @for (row of store.board(); track rIndex; let rIndex = $index) {
                     @for (cell of row; track cIndex; let cIndex = $index) {
-                      <div class="w-full h-full aspect-square rounded-sm"
+                      <div class="w-full h-full aspect-square rounded-sm cursor-pointer transition-colors relative"
+                           (mouseenter)="onCellHover(rIndex, cIndex)"
+                           (click)="onCellClick(rIndex, cIndex)"
                            [ngClass]="store.clearingSet().has(rIndex + '-' + cIndex) ? 'block-clearing' : (cell > 0 ? 'block-piece' : 'block-empty')"
                            [style.--clear-delay]="store.clearingSet().has(rIndex + '-' + cIndex) ? (((rIndex + cIndex) * 12) + 'ms') : '0ms'">
                       </div>
@@ -201,6 +203,13 @@
                         }
                       }
                     }
+                  } @else if (selectedHandIndex() !== null) {
+                    <div class="absolute rounded-sm border-2 border-red-500/50 bg-red-500/10 pointer-events-none transition-all duration-75"
+                         [style.width]="'calc((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ')'"
+                         [style.height]="'calc((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ')'"
+                         [style.left]="'calc(4px + (' + keyboardCursor().col + ' * ((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ' + 4px)))'"
+                         [style.top]="'calc(4px + (' + keyboardCursor().row + ' * ((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ' + 4px)))'">
+                    </div>
                   }
                 </div>
                 
@@ -219,9 +228,18 @@
           <div class="w-full flex justify-around items-end max-w-md mx-auto h-24 sm:h-32 lg:h-48 shrink-0 touch-none select-none relative z-10 px-2 pb-1 sm:pb-2 gap-2 sm:gap-4 border-t border-transparent lg:border-[var(--color-border-card)]"
                [ngClass]="'block-theme-' + store.colorTheme()">
             @for (shape of store.hand(); track $index; let idx = $index) {
-              <div class="flex-1 h-full flex items-center justify-center relative cursor-grab active:cursor-grabbing"
+              <div class="flex-1 h-full flex flex-col items-center justify-center relative cursor-pointer select-none rounded-xl transition-all duration-200"
+                   [class.ring-2]="selectedHandIndex() === idx"
+                   [class.ring-cyan-400]="selectedHandIndex() === idx"
+                   [class.bg-cyan-500/10]="selectedHandIndex() === idx"
+                   [class.shadow-[0_0_15px_rgba(34,211,238,0.3)]]="selectedHandIndex() === idx"
+                   [class.-translate-y-2]="selectedHandIndex() === idx"
                    (mousedown)="shape ? onDragStart($event, shape, idx) : null"
                    (touchstart)="shape ? onDragStart($event, shape, idx) : null">
+                <!-- Slot badge (1, 2, 3) -->
+                <div class="absolute top-1 left-2 text-[10px] font-bold opacity-50 px-1 rounded bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                  {{ idx + 1 }}
+                </div>
                 @if (shape) {
                   <div class="hover:scale-105 transition-transform pointer-events-none w-full flex items-center justify-center"
                        [style.opacity]="isDragging && draggedIndex === idx ? '0.2' : '1'"
