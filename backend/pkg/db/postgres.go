@@ -65,11 +65,6 @@ func InitPostgres() {
 		&domain.ContentCategory{},
 		&domain.ContentArticle{},
 		&domain.ContentDistribution{},
-		// Idiom game
-		&domain.Idiom{},
-		&domain.IdiomDailyChallenge{},
-		&domain.UserIdiomDailyGuess{},
-		&domain.UserIdiomProgress{},
 		// Connect game
 		&domain.ConnectPuzzle{},
 		&domain.UserConnectProgress{},
@@ -100,7 +95,6 @@ func InitPostgres() {
 	SeedAds()
 	SeedAchievements()
 	SeedBlog()
-	SeedIdioms()
 	SeedConnect()
 	SeedHashi()
 

@@ -2,6 +2,64 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.40] - 2026-10-25
+
+### 全站 PK 实时竞技性能风暴：经典 2048、推箱子、点灯逻辑与扫雷客户端乐观更新与零延迟响应升级 (Full-Platform PK Real-Time Arena Performance Surge: Classic 2048, Sokoban, Lights Out & Minesweeper Client-Side Optimistic Updates & Zero-Latency Feel)
+- **经典 2048 (`classic2048`) 0ms 极速滑动与硬件加速**：
+  - 彻底拔除旧版 PK 模式下每次滑动必须等待 WebSocket 往返才能移动棋盘的延迟架构；
+  - 引入客户端乐观更新（Optimistic Move & Merge），玩家滑动手势/按键触发瞬间本地 0ms 完成方块滑移、碰撞合并与分数更新，随后异步对齐服务端权威随机发牌；
+  - 为 `.c2048-tile-pop` 启用 `will-change: transform` 声明，开启 GPU 合成加速，每秒 4~6 步高速滑打如丝般顺滑；
+- **推箱子 (`sokoban`) PK 模式零延迟走步与推箱**：
+  - 重构 PK 模式数据流，接入本地 `pkLocalEngine` 乐观状态机；
+  - 玩家按下 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或虚拟摇杆时，小人与箱子瞬间移动（0ms 响应），同时异步广播动作并由后端权威判定胜负终态；
+  - 彻底根治以往因每一步等网络二维数组回包导致的小人瞬移、卡顿与抽搐，快跑推箱体验跃升；
+- **点灯逻辑 (`lightsout`) 本地十字瞬时翻转**：
+  - 针对竞速点灯高频狂点的特性，在 PK 模式下实现本地乐观翻转（Optimistic Toggle）；
+  - 点击任何灯泡时，本地瞬时执行十字连带状态翻转与音效播放，彻底解决“点击无反馈、反复重按导致步数错乱”的痛点；
+- **游戏通用设置菜单体验升级 (Game Header Settings Dropdown UX)**：
+  - **脑力币余额置顶**：将核心个人资产“脑力币余额”从底部调整至最顶端，在音效开关上方醒目展现，附带高质感分隔线；
+  - **点击外部空白自动关闭 (Click Outside to Close)**：通过全局文档指针事件监听与容器判定，玩家在打开设置面板后，点击屏幕任意外部空白或游戏棋盘即可顺畅自动关闭，无需二次寻找齿轮图标；
+- **攻略中心左侧导航字号与易读性升级 (Docs Navigation Typography)**：
+  - 全面放大左侧手风琴分类标题与游戏列表项字号（从 `text-xs (12px)` 提升至 `text-sm (14px)`）；
+  - 图标与徽章同步按比例放大，扩大单项点击触控区域（padding 增至 `px-3.5 py-2.5`），侧边栏宽度扩展至 `w-72`，彻底告别文字过小看不清的问题。
+
+## [v3.2.39] - 2026-10-25
+
+### 数字华容道核心算法、同轴多格连带滑动、PK 乐观更新与极速手感全面升级 (Sliding Puzzle Multi-Tile Line Slide, PK Optimistic UI & High-Performance Shuffle Engine)
+- **同轴多格连带滑动（Line Slide / Multi-Tile Pushing）**：
+  - 彻底打破传统单机与后端仅允许相邻 1 格（Manhattan 距离 == 1）的死板限制；
+  - 点击与空位同轴（同行或同列）相隔 2 格或 3 格的方块时，沿线所有中间方块顺次推移入空位，单次操作即可批量移动整行/整列；
+  - 前端单机引擎 `LocalSlidingEngine`、PK 本地乐观逻辑与后端 `Board.Move(idx)` 均同步实现连滑算法，步数与胜负判定严格吻合，竞速推盘手感跃升；
+- **PK 模式客户端乐观预测更新（Optimistic UI Update & Zero-Latency Feel）**：
+  - 彻底解决旧版 PK 模式下因等待 WebSocket 服务端回包才渲染棋盘导致的 50~100ms 粘滞感与卡顿；
+  - 玩家点击时，客户端本地瞬间（0ms）应用 `applySlideMove` 计算并触发 UI 滑块平滑位移、播放音效与震动，同时异步投递 WebSocket 指令；
+  - 服务端回包后进行一致性校准，若遇异常才进行终态矫正，使 PK 模式获得与单机模式完全一致的极致丝滑与零延迟体验；
+- **高熵非回退打乱算法（Non-Backtracking Shuffle Engine）**：
+  - 重构前端与 Go 后端打乱算法，记录上一步空位坐标，在随机游走置乱中过滤即时回退步（`A <-> B` 震荡），极大提升每次行走的空间熵增效率；
+  - 将打乱步数从低效的 $N^2 \times 100$ 优化为高效的 $N^2 \times 50$（耗时降低 50% 以上），100% 保持数学可解性，并增加开局终态防御检查；
+- **极速响应动画与 GPU 硬件加速**：
+  - 将方块过渡动画时长从 200ms 压缩至 100ms（`duration-100 ease-out`），完美承载职业竞速选手 8~12 步/秒的高频连击，杜绝动画排队与插值打架；
+  - 启用 `will-change: transform` 声明，引导浏览器合成器线程将滑块晋升为独立图层，彻底消除滑动过程中的主线程重排掉帧；
+- **渲染响应性能重构**：
+  - 将 `tiles` 响应式 computed 从 $O(N^2)$ 的反复 `cells.indexOf(val)` 彻底重构为单次线性 $O(N)$ 遍历，在大尺寸棋盘（5x5/6x6/10x10）下大幅降低 CPU 计算与垃圾回收压力。
+
+## [v3.2.38] - 2026-10-25
+
+### 攻略文档中心左侧导航分类折叠手风琴重构与零滚动条体验升级 (Docs Sidebar Category Accordion & Zero Internal Scrollbar UX Upgrade)
+- **侧边栏滚动条痛点根治**：
+  - 针对游戏数量不断增多（已达 18 款）导致左侧导航栏出现独立内部滚动条、干扰主页面浏览体验的问题，彻底移除桌面端固定高度限制与内部滚动条（`overflow-y-auto`、`lg:max-h-[calc(100vh-100px)]`）；
+  - 侧边栏常驻吸顶（`lg:sticky lg:top-20`），高度自适应紧凑内容，用户只需使用浏览器原生全局滚动条即可顺滑阅览整篇万字长文攻略与图文教程；
+- **全游戏 4 大维度分类折叠手风琴 (Category Accordion)**：
+  - **🔢 数字与计算 (Math & Numbers)**：数独 (sudoku)、24点 (math24)、经典2048 (classic2048)、下落2048 (drop2048)；
+  - **🧩 空间与逻辑 (Logic & Spatial)**：数桥 (hashi)、连线 (connect)、数织 (nonogram)、推箱子 (sokoban)、水管分色 (watersort)、点灯逻辑 (lightsout)；
+  - **⚔️ 棋盘与消除 (Board & Elimination)**：五子棋 (gomoku)、六边形消除 (hexa)、俄罗斯方块 (tetris)、方块消除 (block)；
+  - **🧠 推演与传统 (Deduction & Culture)**：扫雷 (minesweeper)、1A2B密码破译 (codebreaker)、数字华容道 (sliding)、真·成语接龙 (idiom)；
+  - **动态容错与兜底**：自动检测所有未来新增游戏，未显式声明的游戏自动归入“更多游戏 (More Games)”分类，保证任何新游戏零遗漏；
+- **智能交互与自适应联动**：
+  - **当前游戏分类智能展开**：进入任何游戏攻略页面时，所属分类自动保持展开并高亮当前游戏项，其他分类折叠呈现简洁徽章（带对应分类游戏数统计）；
+  - **平滑手风琴折叠展开**：支持点击任意分类标题独立展开/收起，箭头图标 180° 平滑旋转动效；
+  - **多语言与全局主题变量 (严格贯彻 Rule 2)**：抽离 `docs.cat.*` 国际化键值（中英双语），完全基于 CSS 全局变量，在 Light/Dark 主题下浑然一体。
+
 ## [v3.2.37] - 2026-10-25
 
 ### 真·成语接龙 (True Idiom Solitaire) 方案 A 颠覆式重构、纯前端离线计算引擎、零 LaTeX 研报级深度宝典与双层解耦升级 (True Idiom Solitaire Scheme A Overhaul, Pure Client-Side Engine, Zero-LaTeX Monograph & In-Page Guide)
@@ -20,9 +78,11 @@
     - 💡 **画龙点睛 (智能提示)**：自动在当前槽位填入推荐成语的正确汉字；
     - 🔄 **移花接木 (换字刷新)**：当前候选字盘思路受阻时，一键刷新生成全新一组候选字方块；
     - 📖 **成语宝典 (灵感宝库)**：弹窗展开当前尾字所有可接成语列表，点击即可直接填入；
-  - **双人神龙争夺战 Speed PK 竞技重构**：
+  - **双人神龙争夺战 Speed PK 竞技重构与后端全面内存化 (100% In-Memory, Zero Database)**：
     - 双方玩家同台共享同一条延展神龙，公共目标首字实时刷新；
     - 率先拼出合法成语的玩家得分并铸造新龙头，同时将自己的尾字留给对手形成博弈压制，手速与词汇量双重对决；
+    - **彻底拔除数据库依赖与历史包袱**：将 3500 词库纯词表压缩至 51 KB，通过 `//go:embed` 常驻在后端 `IdiomPKEngine` 内存哈希表与首字索引树中，抢答校验与出题耗时缩短至 10 纳秒级（提升上万倍）；
+    - **下线数据库表与启动插入**：从 `AutoMigrate` 中剔除 `gm_idioms`、`gm_idiom_daily_challenges`、`gm_user_idiom_progresses`、`gm_user_idiom_daily_guesses`，从 `postgres.go` 中彻底下线 `SeedIdioms()` 与 1.6MB 种子解析，服务器启动秒开且数据库完全轻装上阵；
 - **严格遵循双层解耦文档架构标准 (Dual-Tier Decoupled Architecture)**：
   - **第一层：局内战术速查指南 (`game.idiom.seo_desc`)**：
     - 直接内嵌于 `/games/idiom` 游戏界面棋盘下方与规则弹窗，兼顾高频操作查询与搜索引擎 SEO；

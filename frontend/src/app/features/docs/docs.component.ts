@@ -19,6 +19,18 @@ interface TocItem {
   level: number;
 }
 
+interface DocCategoryDef {
+  id: string;
+  icon: string;
+  titleKey: string;
+  defaultTitle: string;
+  gameIds: string[];
+}
+
+interface DocCategoryWithGames extends DocCategoryDef {
+  games: GameDoc[];
+}
+
 @Component({
   selector: 'app-docs',
   standalone: true,
@@ -34,35 +46,67 @@ interface TocItem {
       <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-6 items-start relative">
         
         <!-- Left Sidebar (Navigation) -->
-        <aside class="fixed inset-y-0 left-0 pt-16 z-50 w-72 bg-[var(--color-bg-card)] border-r border-[var(--color-border-card)] transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:pt-0 lg:z-auto lg:w-64 lg:shrink-0 lg:rounded-2xl lg:border lg:border-[var(--color-border-card)] lg:shadow-sm lg:sticky lg:top-20 lg:max-h-[calc(100vh-100px)] flex flex-col overflow-hidden"
+        <aside class="fixed inset-y-0 left-0 pt-16 z-50 w-72 bg-[var(--color-bg-card)] border-r border-[var(--color-border-card)] transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:pt-0 lg:z-auto lg:w-72 lg:shrink-0 lg:rounded-2xl lg:border lg:border-[var(--color-border-card)] lg:shadow-sm lg:sticky lg:top-20 flex flex-col"
                [class.-translate-x-full]="!isMobileMenuOpen()"
                [class.translate-x-0]="isMobileMenuOpen()">
-          <div class="h-full overflow-y-auto py-4 px-3 flex flex-col gap-1 custom-scrollbar">
-            <div class="px-3 pb-3 mb-2 border-b border-[var(--color-border-card)] flex items-center justify-between">
-              <h2 class="text-base font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                <span>📚</span>
+          <div class="p-3.5 flex flex-col gap-2.5 max-lg:overflow-y-auto max-lg:h-full">
+            <div class="px-2 pb-3 border-b border-[var(--color-border-card)] flex items-center justify-between">
+              <h2 class="text-base font-extrabold text-[var(--color-text-primary)] flex items-center gap-2">
+                <span class="text-lg">📚</span>
                 <span>{{ i18n.t('docs.title')() || '游戏教程' }}</span>
               </h2>
-              <button class="lg:hidden p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] cursor-pointer" (click)="isMobileMenuOpen.set(false)">✕</button>
+              <button class="lg:hidden p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] cursor-pointer" (click)="isMobileMenuOpen.set(false)">✕</button>
             </div>
             
-            @for (game of games(); track game.id; let idx = $index) {
-              <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
-                 (click)="isMobileMenuOpen.set(false)"
-                 class="px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2.5"
-                 [class.bg-[var(--color-accent-from)]/10]="currentGameId() === game.id"
-                 [class.text-[var(--color-accent-from)]]="currentGameId() === game.id"
-                 [class.border]="currentGameId() === game.id"
-                 [class.border-[var(--color-accent-from)]/30]="currentGameId() === game.id"
-                 [class.text-[var(--color-text-secondary)]]="currentGameId() !== game.id"
-                 [class.hover:bg-[var(--color-bg-main)]]="currentGameId() !== game.id"
-                 [class.hover:text-[var(--color-text-main)]]="currentGameId() !== game.id">
-                 <span class="w-6 h-6 rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-xs opacity-75 font-mono">
-                   {{ idx + 1 }}
-                 </span>
-                 <span class="truncate">{{ getGameTitle(game.id) }}</span>
-              </a>
-            }
+            <!-- Category Accordion Navigation -->
+            <div class="flex flex-col gap-2.5">
+              @for (cat of categoriesWithGames(); track cat.id) {
+                <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/40 overflow-hidden transition-all">
+                  <!-- Category Header -->
+                  <button type="button"
+                          (click)="toggleCategory(cat.id)"
+                          class="w-full px-3.5 py-2.5 flex items-center justify-between text-sm font-bold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer select-none">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="text-base shrink-0">{{ cat.icon }}</span>
+                      <span class="truncate">{{ i18n.t(cat.titleKey)() || cat.defaultTitle }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0 ml-1.5">
+                      <span class="px-2 py-0.5 text-xs rounded-full bg-[var(--color-bg-card)] text-[var(--color-text-muted)] border border-[var(--color-border-card)] font-mono font-medium">
+                        {{ cat.games.length }}
+                      </span>
+                      <svg xmlns="http://www.w3.org/2000/svg" 
+                           class="w-4 h-4 text-[var(--color-text-muted)] transition-transform duration-200"
+                           [class.rotate-180]="isCategoryExpanded(cat.id)"
+                           viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  <!-- Category Game Items -->
+                  @if (isCategoryExpanded(cat.id)) {
+                    <div class="px-2 pb-2 pt-1 flex flex-col gap-1 border-t border-[var(--color-border-card)]/50">
+                      @for (game of cat.games; track game.id) {
+                        <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
+                           (click)="isMobileMenuOpen.set(false)"
+                           class="px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center justify-between group"
+                           [class.bg-[var(--color-accent-from)]/15]="currentGameId() === game.id"
+                           [class.text-[var(--color-accent-from)]]="currentGameId() === game.id"
+                           [class.font-bold]="currentGameId() === game.id"
+                           [class.text-[var(--color-text-secondary)]]="currentGameId() !== game.id"
+                           [class.hover:bg-[var(--color-bg-card)]]="currentGameId() !== game.id"
+                           [class.hover:text-[var(--color-text-primary)]]="currentGameId() !== game.id">
+                          <span class="truncate">{{ getGameTitle(game.id) }}</span>
+                          @if (currentGameId() === game.id) {
+                            <span class="w-2 h-2 rounded-full bg-[var(--color-accent-from)] shrink-0"></span>
+                          }
+                        </a>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
           </div>
         </aside>
 
@@ -204,6 +248,74 @@ export class DocsComponent {
   currentGameId = signal<string>('');
   isMobileMenuOpen = signal(false);
 
+  readonly DOC_CATEGORIES: DocCategoryDef[] = [
+    {
+      id: 'math',
+      icon: '🔢',
+      titleKey: 'docs.cat.math',
+      defaultTitle: '数字与计算',
+      gameIds: ['sudoku', 'math24', 'classic2048', 'drop2048']
+    },
+    {
+      id: 'logic',
+      icon: '🧩',
+      titleKey: 'docs.cat.logic',
+      defaultTitle: '空间与逻辑',
+      gameIds: ['hashi', 'connect', 'nonogram', 'sokoban', 'watersort', 'lightsout']
+    },
+    {
+      id: 'board',
+      icon: '⚔️',
+      titleKey: 'docs.cat.board',
+      defaultTitle: '棋盘与消除',
+      gameIds: ['gomoku', 'hexa', 'tetris', 'block']
+    },
+    {
+      id: 'deduction',
+      icon: '🧠',
+      titleKey: 'docs.cat.deduction',
+      defaultTitle: '推演与传统',
+      gameIds: ['minesweeper', 'codebreaker', 'sliding', 'idiom']
+    }
+  ];
+
+  expandedCategories = signal<Record<string, boolean>>({});
+
+  categoriesWithGames = computed<DocCategoryWithGames[]>(() => {
+    const allGames = this.games();
+    const gameMap = new Map(allGames.map(g => [g.id, g]));
+    const categorizedGameIds = new Set<string>();
+
+    const result: DocCategoryWithGames[] = this.DOC_CATEGORIES.map(cat => {
+      const catGames: GameDoc[] = [];
+      for (const gid of cat.gameIds) {
+        const g = gameMap.get(gid);
+        if (g) {
+          catGames.push(g);
+          categorizedGameIds.add(gid);
+        }
+      }
+      return {
+        ...cat,
+        games: catGames
+      };
+    }).filter(cat => cat.games.length > 0);
+
+    const remainingGames = allGames.filter(g => !categorizedGameIds.has(g.id));
+    if (remainingGames.length > 0) {
+      result.push({
+        id: 'more',
+        icon: '🎮',
+        titleKey: 'docs.cat.more',
+        defaultTitle: '更多游戏',
+        gameIds: remainingGames.map(g => g.id),
+        games: remainingGames
+      });
+    }
+
+    return result;
+  });
+
   currentGame = computed(() => {
     return this.games().find(g => g.id === this.currentGameId()) || null;
   });
@@ -225,6 +337,27 @@ export class DocsComponent {
       const id = data['gameId'];
       if (id) {
         this.currentGameId.set(id);
+      }
+    });
+
+    // Auto-expand category for the current active game
+    effect(() => {
+      const currentId = this.currentGameId();
+      const categories = this.categoriesWithGames();
+      if (currentId) {
+        const found = categories.find(c => c.games.some(g => g.id === currentId));
+        if (found) {
+          this.expandedCategories.update(state => ({
+            ...state,
+            [found.id]: true
+          }));
+        }
+      } else if (categories.length > 0) {
+        // If on /docs root index, expand first category by default if none is open
+        this.expandedCategories.update(state => {
+          if (Object.values(state).some(v => v)) return state;
+          return { ...state, [categories[0].id]: true };
+        });
       }
     });
 
@@ -262,6 +395,17 @@ export class DocsComponent {
         this.setLinkTag('alternate', `${origin}/en/docs/${game.id}`, 'x-default');
       }
     });
+  }
+
+  isCategoryExpanded(catId: string): boolean {
+    return !!this.expandedCategories()[catId];
+  }
+
+  toggleCategory(catId: string): void {
+    this.expandedCategories.update(state => ({
+      ...state,
+      [catId]: !state[catId]
+    }));
   }
 
   getGameTitle(id: string): string {

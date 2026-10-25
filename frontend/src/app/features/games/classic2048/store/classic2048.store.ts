@@ -32,22 +32,40 @@ export class Classic2048Store extends BaseGameStore {
     return Object.keys(boards).map(k => ({ id: k, board: boards[k] }));
   });
 
+  private pkInitialized = false;
+
   constructor() {
     super();
 
     effect(() => {
       const st = this.rawState() as any;
-      if (this.currentRoomMode() === GameMode.Single || !st) return;
+      if (this.currentRoomMode() === GameMode.Single || !st) {
+        this.pkInitialized = false;
+        return;
+      }
       
       if (st.boards) {
         this.pkBoards.set(st.boards);
-        // Sync local player board
         const myBoard = st.boards[this.playerId()];
         if (myBoard) {
-          this.cells.set(myBoard.cells || []);
-          this.localScore.set(myBoard.score || 0);
-          if (myBoard.status) {
-            this.localStatus.set(myBoard.status as GameStatusType);
+          const globalStatus = this.status();
+
+          // Initialize local engine for PK when starting or restarting
+          if (!this.pkInitialized || globalStatus === GameStatus.Starting || (globalStatus === GameStatus.Playing && this.engine.status === 'waiting')) {
+            if (myBoard.cells && myBoard.cells.length > 0) {
+              this.engine.cells = myBoard.cells.map((r: number[]) => [...r]);
+              this.engine.boardSize = myBoard.cells.length;
+              this.engine.score = myBoard.score || 0;
+              this.engine.status = 'playing';
+              this.syncEngineState();
+              this.pkInitialized = true;
+            }
+          }
+
+          // If game finished on server, sync final status
+          if (myBoard.status === 'finished' || st.status === 'finished') {
+            this.localStatus.set(GameStatus.Finished);
+            this.pkInitialized = false;
           }
         }
       }
@@ -80,7 +98,12 @@ export class Classic2048Store extends BaseGameStore {
         }
       }
     } else {
-      this.ws.send({ action: 'move', dir });
+      // PK Mode: Optimistic local update for instantaneous 0ms feedback
+      const changed = this.engine.handleAction({ action: 'move', dir });
+      if (changed) {
+        this.syncEngineState();
+        this.ws.send({ action: 'move', dir });
+      }
     }
   }
 

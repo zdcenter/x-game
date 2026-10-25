@@ -974,6 +974,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.puzzlepk.com/en/blog/block-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/block-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.puzzlepk.com/en/blog/classic2048-strategy</loc>
     <lastmod>2026-08-26</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
@@ -992,20 +1010,20 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/en/blog/block-puzzle-strategy</loc>
+    <loc>https://www.puzzlepk.com/en/blog/hashi-bridges-strategy</loc>
     <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/zh/blog/block-puzzle-strategy</loc>
+    <loc>https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy</loc>
     <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1060,24 +1078,6 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
     <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/hashi-bridges-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

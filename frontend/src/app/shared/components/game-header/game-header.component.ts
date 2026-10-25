@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AudioService } from '../../../core/services/audio.service';
@@ -40,9 +40,20 @@ export class GameHeaderComponent implements OnInit {
   coinGuideService = inject(CoinGuideService);
   i18n = inject(I18nService);
   router = inject(Router);
+  private elementRef = inject(ElementRef);
 
   readonly showZenHint = signal<boolean>(false);
   readonly isToolsMenuOpen = signal<boolean>(false);
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isToolsMenuOpen()) return;
+    const target = event.target as HTMLElement;
+    const container = this.elementRef.nativeElement.querySelector('.tools-menu-container');
+    if (container && !container.contains(target)) {
+      this.closeToolsMenu();
+    }
+  }
 
   ngOnInit() {
     if (!this.gameId) {

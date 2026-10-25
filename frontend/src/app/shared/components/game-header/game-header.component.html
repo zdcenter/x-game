@@ -50,7 +50,7 @@
           }
 
           <!-- Unified Tools & Settings Dropdown Menu (⚙️) -->
-          <div class="relative">
+          <div class="relative tools-menu-container">
             <button (click)="toggleToolsMenu()"
                     class="p-1.5 sm:p-2 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs flex items-center justify-center active:scale-95 shadow-2xs cursor-pointer group"
                     [class.border-[var(--color-accent-from)]]="isToolsMenuOpen()"
@@ -61,9 +61,8 @@
               </svg>
             </button>
 
-            <!-- Backdrop for Mobile / Dropdown outside-click -->
+            <!-- Dropdown Menu -->
             @if (isToolsMenuOpen()) {
-              <div class="fixed inset-0 z-40" (click)="closeToolsMenu()"></div>
               <div class="absolute right-0 top-full mt-2 w-56 sm:w-60 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl p-2 z-50 flex flex-col gap-1 backdrop-blur-xl animate-scale-up"
                    (click)="$event.stopPropagation()">
                 <!-- Rule Guide in Mobile menu -->
@@ -71,6 +70,18 @@
                   <button (click)="rules.emit(); closeToolsMenu()"
                           class="w-full sm:hidden flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
                     <span class="flex items-center gap-2"><span>📖</span> {{ i18n.t('game.rules')() || '玩法规则' }}</span>
+                  </button>
+                }
+
+                <!-- Coins Guide (Featured at TOP as requested) -->
+                @if (coinService.isAuthenticated()) {
+                  <button (click)="coinGuideService.open(); closeToolsMenu()"
+                          class="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer border-b border-[var(--color-border-card)]/60 pb-2 mb-0.5">
+                    <span class="flex items-center gap-2">
+                      <app-coin-icon size="xs" />
+                      <span>{{ i18n.t('game.coins_balance')() || '脑力金币' }}</span>
+                    </span>
+                    <span class="font-mono text-amber-500 font-bold">{{ coinService.coins() }}</span>
                   </button>
                 }
 
@@ -118,22 +129,10 @@
                   </span>
                 </button>
 
-                <!-- Coins Guide -->
-                @if (coinService.isAuthenticated()) {
-                  <button (click)="coinGuideService.open(); closeToolsMenu()"
-                          class="w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer border-t border-[var(--color-border-card)]/50 pt-2 mt-1">
-                    <span class="flex items-center gap-2">
-                      <app-coin-icon size="xs" />
-                      <span>{{ i18n.t('game.coins_balance')() || '脑力金币' }}</span>
-                    </span>
-                    <span class="font-mono text-amber-500 font-bold">{{ coinService.coins() }}</span>
-                  </button>
-                }
-
                 <!-- PWA Install option if available -->
                 @if (pwaService.canInstall()) {
                   <button (click)="pwaService.install(); closeToolsMenu()"
-                          class="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer">
+                          class="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 transition-colors cursor-pointer border-t border-[var(--color-border-card)]/50 pt-2 mt-0.5">
                     <span>📱</span>
                     <span>{{ i18n.t('pwa.install_app')() || '安装桌面/手机端应用' }}</span>
                   </button>

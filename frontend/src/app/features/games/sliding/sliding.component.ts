@@ -117,11 +117,16 @@ export class SlidingComponent extends BaseGameComponent {
     const cells = board.cells;
     const tileObjects = [];
     
-    for (let val = 1; val < size * size; val++) {
-      const idx = cells.indexOf(val);
-      const row = Math.floor(idx / size);
-      const col = idx % size;
-      tileObjects.push({ val, row, col, size });
+    for (let idx = 0; idx < cells.length; idx++) {
+      const val = cells[idx];
+      if (val !== 0) {
+        tileObjects.push({
+          val,
+          row: Math.floor(idx / size),
+          col: idx % size,
+          size
+        });
+      }
     }
     
     return tileObjects;

@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
@@ -13,13 +13,46 @@ export class LightsoutStore extends BaseGameStore {
   private audio = inject(AudioService);
 
   private localEngine = signal<LocalLightsoutEngine | null>(null);
+  private pkBoard = signal<{ board: boolean[][]; moves: number } | null>(null);
   private tick = signal(0);
+
+  constructor() {
+    super();
+
+    effect(() => {
+      if (this.currentRoomMode() === GameMode.Single) {
+        this.pkBoard.set(null);
+        return;
+      }
+      const st = this.rawState() as any;
+      const myP = st?.players?.[this.playerId()];
+      if (!myP || !myP.board || myP.board.length === 0) {
+        this.pkBoard.set(null);
+        return;
+      }
+
+      const current = untracked(() => this.pkBoard());
+      const globalStatus = this.status();
+
+      // Sync from server if not initialized, game starting/restarting, or server moved ahead
+      if (!current || globalStatus === GameStatus.Starting || (globalStatus === GameStatus.Playing && current.board.length === 0) || myP.moves >= current.moves) {
+        this.pkBoard.set({
+          board: myP.board.map((r: boolean[]) => [...r]),
+          moves: myP.moves || 0
+        });
+      }
+    });
+  }
 
   readonly board = computed<boolean[][]>(() => {
     this.tick();
     if (this.currentRoomMode() === GameMode.Single) {
       const b = this.localEngine()?.board || [];
       return b.map(row => [...row]);
+    }
+    const pk = this.pkBoard();
+    if (pk) {
+      return pk.board.map(row => [...row]);
     }
     const st = this.rawState() as any;
     if (st?.players && st.players[this.playerId()]) {
@@ -33,6 +66,10 @@ export class LightsoutStore extends BaseGameStore {
     this.tick();
     if (this.currentRoomMode() === GameMode.Single) {
       return this.localEngine()?.moves || 0;
+    }
+    const pk = this.pkBoard();
+    if (pk) {
+      return pk.moves;
     }
     const st = this.rawState() as any;
     if (st?.players && st.players[this.playerId()]) {
@@ -150,9 +187,6 @@ export class LightsoutStore extends BaseGameStore {
 
   readonly currentSolution = computed(() => this.currentRoomMode() === GameMode.Single ? (this.localEngine()?.solution || []) : (this.rawState() as any)?.solution || []);
 
-  constructor() {
-    super();
-  }
 
   private getDifficultySize(diff: string): number {
     return diff === GameDifficulty.Easy ? 4 : diff === GameDifficulty.Hard ? 6 : diff === GameDifficulty.Expert ? 7 : diff === GameDifficulty.Master ? 8 : 5;
@@ -215,6 +249,21 @@ export class LightsoutStore extends BaseGameStore {
         this.tick.set(this.tick() + 1);
       }
     } else {
+      // PK Mode: Optimistic local toggle for instant 0ms visual feedback
+      const current = this.board();
+      if (current.length > 0) {
+        const b = current.map(r => [...r]);
+        const size = b.length;
+        b[row][col] = !b[row][col];
+        if (row > 0) b[row - 1][col] = !b[row - 1][col];
+        if (row < size - 1) b[row + 1][col] = !b[row + 1][col];
+        if (col > 0) b[row][col - 1] = !b[row][col - 1];
+        if (col < size - 1) b[row][col + 1] = !b[row][col + 1];
+
+        const moves = (this.pkBoard()?.moves || this.moves()) + 1;
+        this.pkBoard.set({ board: b, moves });
+        this.tick.set(this.tick() + 1);
+      }
       this.ws.send({ action: C2SAction.Toggle, row, col });
       this.audio.playPuzzle('toggle');
     }

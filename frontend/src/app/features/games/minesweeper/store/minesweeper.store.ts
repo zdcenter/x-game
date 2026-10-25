@@ -52,6 +52,7 @@ export class MinesweeperStore extends BaseGameStore {
   // Local state for single player mode
   private localEngine = signal<LocalMinesweeperEngine | null>(null);
   private tick = signal(0);
+  private optimisticFlags = signal<Record<string, CellState>>({});
   
   bestTime = signal<number>(0);
 
@@ -89,7 +90,25 @@ export class MinesweeperStore extends BaseGameStore {
     return s.board || { cells: [], status: 'waiting', width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
   });
 
-  readonly board = computed<Cell[][]>(() => this.myBoardData()?.cells || []);
+  readonly board = computed<Cell[][]>(() => {
+    const rawCells = this.myBoardData()?.cells || [];
+    if (this.currentRoomMode() === GameMode.Single) return rawCells;
+    const flags = this.optimisticFlags();
+    if (Object.keys(flags).length === 0) return rawCells;
+
+    return rawCells.map((row: Cell[], y: number) =>
+      row.map((cell: Cell, x: number) => {
+        const key = `${x}_${y}`;
+        if (cell.state === CellState.Revealed || cell.state === CellState.Exploded) {
+          return cell;
+        }
+        if (flags[key] !== undefined) {
+          return { ...cell, state: flags[key] };
+        }
+        return cell;
+      })
+    );
+  });
   override readonly singlePlayerStatus = computed<GameStatusType>(() => {
     this.tick();
     return this.localEngine()?.status || 'waiting';
@@ -276,7 +295,23 @@ export class MinesweeperStore extends BaseGameStore {
   toggleFlag(x: number, y: number) {
     if (this.status() !== GameStatus.Playing) return;
     this.audio.playFlag();
-    this.dispatch({ type: MinesweeperActionType.Flag, x, y });
+
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.dispatch({ type: MinesweeperActionType.Flag, x, y });
+    } else {
+      // PK Mode: Optimistic local flag toggling for instant visual response
+      const currentCells = this.myBoardData()?.cells;
+      if (currentCells && currentCells[y] && currentCells[y][x]) {
+        const cell = currentCells[y][x];
+        if (cell.state !== CellState.Revealed && cell.state !== CellState.Exploded) {
+          const key = `${x}_${y}`;
+          const currentFlag = this.optimisticFlags()[key] ?? cell.state;
+          const nextState = currentFlag === CellState.Flagged ? CellState.Hidden : CellState.Flagged;
+          this.optimisticFlags.update(flags => ({ ...flags, [key]: nextState }));
+        }
+      }
+      this.dispatch({ type: MinesweeperActionType.Flag, x, y });
+    }
   }
 
   applyHint() {

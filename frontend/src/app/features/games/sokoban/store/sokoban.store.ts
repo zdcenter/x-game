@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { LocalSokobanEngine, SokobanActionType } from './local-sokoban-engine';
@@ -40,6 +40,7 @@ export class SokobanStore extends BaseGameStore {
   private timer: any;
   
   localEngine = signal<LocalSokobanEngine | null>(null, { equal: () => false });
+  private pkLocalEngine = signal<LocalSokobanEngine | null>(null, { equal: () => false });
   currentLevelId = signal<string>('');
   levelsList = signal<any[]>([]);
   hasNextLevel = computed(() => {
@@ -62,6 +63,51 @@ export class SokobanStore extends BaseGameStore {
 
   override readonly singlePlayerList = computed(() => [{id: this.playerId()}]);
 
+  constructor() {
+    super();
+
+    // Synchronize server PK board into optimistic pkLocalEngine
+    effect(() => {
+      if (this.currentRoomMode() === GameMode.Single) {
+        this.pkLocalEngine.set(null);
+        return;
+      }
+      const state = this.rawState() as SokobanGameState;
+      const myP = state?.players?.[this.playerId()];
+      if (!myP || !myP.board || myP.board.length === 0) {
+        this.pkLocalEngine.set(null);
+        return;
+      }
+
+      const currentEng = untracked(() => this.pkLocalEngine());
+      const globalStatus = this.status();
+
+      // Initialize or reset when game starts, restarts, or if server is significantly out of sync
+      if (!currentEng || globalStatus === GameStatus.Starting || (globalStatus === GameStatus.Playing && currentEng.status !== GameStatus.Playing) || myP.moves < (currentEng.moves - 2)) {
+        const eng = new LocalSokobanEngine(
+          'pk_level',
+          this.currentDifficulty(),
+          undefined,
+          {
+            board: myP.board.map(r => [...r]),
+            moves: myP.moves,
+            status: myP.status
+          },
+          (s) => this.audio.playSokoban(s),
+          () => this.haptic.vibrateLight(),
+          () => {
+            this.isShaking.set(true);
+            setTimeout(() => this.isShaking.set(false), 300);
+          }
+        );
+        this.pkLocalEngine.set(eng);
+      } else if (myP.status === GameStatus.Finished && currentEng.status !== GameStatus.Finished) {
+        currentEng.status = GameStatus.Finished;
+        this.pkLocalEngine.set(currentEng);
+      }
+    });
+  }
+
   myPlayerState = computed(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
@@ -71,6 +117,16 @@ export class SokobanStore extends BaseGameStore {
         board: engine.board, 
         moves: engine.moves, 
         status: engine.status 
+      } as SokobanPlayerState;
+    }
+
+    const pkEng = this.pkLocalEngine();
+    if (pkEng) {
+      return {
+        id: this.playerId(),
+        board: pkEng.board,
+        moves: pkEng.moves,
+        status: pkEng.status
       } as SokobanPlayerState;
     }
 
@@ -218,6 +274,12 @@ export class SokobanStore extends BaseGameStore {
       }
       return;
     }
+    // PK Mode: Optimistic local move for 0ms latency feel
+    const pkEng = this.pkLocalEngine();
+    if (pkEng && pkEng.status === GameStatus.Playing) {
+      pkEng.handleAction({ type: SokobanActionType.Move, dir });
+      this.pkLocalEngine.set(pkEng);
+    }
     this.ws.send({ action: C2SAction.Move, dir });
   }
 
@@ -247,6 +309,12 @@ export class SokobanStore extends BaseGameStore {
         this.localEngine.set(eng);
       }
       return;
+    }
+    // PK Mode: Optimistic undo
+    const pkEng = this.pkLocalEngine();
+    if (pkEng && pkEng.status === GameStatus.Playing) {
+      pkEng.handleAction({ type: SokobanActionType.Undo });
+      this.pkLocalEngine.set(pkEng);
     }
     this.ws.send({ action: C2SAction.Undo });
   }

@@ -88,7 +88,7 @@
               <!-- Tiles -->
               <div class="w-full h-full relative">
                 @for (tile of tiles(); track tile.val) {
-                <div class="absolute p-1 sm:p-1.5 transition-transform duration-200 ease-out top-0 left-0" [style.width]="(100 / tile.size) + '%'"
+                <div class="absolute p-1 sm:p-1.5 transition-transform duration-100 ease-out will-change-transform top-0 left-0" [style.width]="(100 / tile.size) + '%'"
                   [style.height]="(100 / tile.size) + '%'" [style.transform]="'translate(' + (tile.col * 100) + '%, ' + (tile.row * 100) + '%)'">
                   <button (click)="onTileClick(tile)" [disabled]="store.status() !== GameStatus.Playing"
                     class="w-full h-full rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center font-black font-mono tracking-tight transition-all duration-150 select-none focus:outline-none drop-shadow-xs"

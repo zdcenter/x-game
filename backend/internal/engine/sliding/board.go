@@ -48,11 +48,35 @@ func (b *Board) Clone() *Board {
 }
 
 func (b *Board) Shuffle(moves int) {
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	lastIdx := -1
 	for i := 0; i < moves; i++ {
 		neighbors := b.getValidNeighbors(b.EmptyIdx)
+		if len(neighbors) == 0 {
+			continue
+		}
+		// Avoid immediately backtracking to the previous empty index to maximize entropy
+		var candidates []int
+		for _, n := range neighbors {
+			if n != lastIdx {
+				candidates = append(candidates, n)
+			}
+		}
+		if len(candidates) == 0 {
+			candidates = neighbors
+		}
+
+		nextIdx := candidates[r.Intn(len(candidates))]
+		lastIdx = b.EmptyIdx
+		b.Cells[b.EmptyIdx], b.Cells[nextIdx] = b.Cells[nextIdx], b.Cells[b.EmptyIdx]
+		b.EmptyIdx = nextIdx
+	}
+
+	// Ensure the board does not start in an already-solved state
+	if b.CheckWin() {
+		neighbors := b.getValidNeighbors(b.EmptyIdx)
 		if len(neighbors) > 0 {
-			nextIdx := neighbors[rand.Intn(len(neighbors))]
+			nextIdx := neighbors[r.Intn(len(neighbors))]
 			b.Cells[b.EmptyIdx], b.Cells[nextIdx] = b.Cells[nextIdx], b.Cells[b.EmptyIdx]
 			b.EmptyIdx = nextIdx
 		}
@@ -80,8 +104,9 @@ func (b *Board) getValidNeighbors(idx int) []int {
 	return neighbors
 }
 
+// Move handles single tile or multi-tile line sliding towards the empty space.
 func (b *Board) Move(idx int) bool {
-	if idx < 0 || idx >= b.Size*b.Size {
+	if idx < 0 || idx >= b.Size*b.Size || idx == b.EmptyIdx {
 		return false
 	}
 
@@ -89,19 +114,40 @@ func (b *Board) Move(idx int) bool {
 	emptyRow, emptyCol := b.EmptyIdx/size, b.EmptyIdx%size
 	targetRow, targetCol := idx/size, idx%size
 
-	// Check if adjacent (Manhattan distance == 1)
-	distRow := emptyRow - targetRow
-	distCol := emptyCol - targetCol
-	if distRow < 0 {
-		distRow = -distRow
-	}
-	if distCol < 0 {
-		distCol = -distCol
+	if emptyRow == targetRow {
+		// Same row: slide all tiles between emptyCol and targetCol towards empty space
+		if targetCol < emptyCol {
+			for col := emptyCol - 1; col >= targetCol; col-- {
+				curr := emptyRow*size + col
+				b.Cells[b.EmptyIdx], b.Cells[curr] = b.Cells[curr], b.Cells[b.EmptyIdx]
+				b.EmptyIdx = curr
+			}
+		} else {
+			for col := emptyCol + 1; col <= targetCol; col++ {
+				curr := emptyRow*size + col
+				b.Cells[b.EmptyIdx], b.Cells[curr] = b.Cells[curr], b.Cells[b.EmptyIdx]
+				b.EmptyIdx = curr
+			}
+		}
+		b.Moves++
+		return true
 	}
 
-	if distRow+distCol == 1 {
-		b.Cells[b.EmptyIdx], b.Cells[idx] = b.Cells[idx], b.Cells[b.EmptyIdx]
-		b.EmptyIdx = idx
+	if emptyCol == targetCol {
+		// Same column: slide all tiles between emptyRow and targetRow towards empty space
+		if targetRow < emptyRow {
+			for row := emptyRow - 1; row >= targetRow; row-- {
+				curr := row*size + emptyCol
+				b.Cells[b.EmptyIdx], b.Cells[curr] = b.Cells[curr], b.Cells[b.EmptyIdx]
+				b.EmptyIdx = curr
+			}
+		} else {
+			for row := emptyRow + 1; row <= targetRow; row++ {
+				curr := row*size + emptyCol
+				b.Cells[b.EmptyIdx], b.Cells[curr] = b.Cells[curr], b.Cells[b.EmptyIdx]
+				b.EmptyIdx = curr
+			}
+		}
 		b.Moves++
 		return true
 	}

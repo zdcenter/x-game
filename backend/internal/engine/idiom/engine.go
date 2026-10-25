@@ -1,6 +1,7 @@
 package idiom
 
 import (
+	_ "embed"
 	"encoding/json"
 	"math/rand"
 	"strings"
@@ -8,10 +9,39 @@ import (
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
-	"github.com/x-game/backend/pkg/db"
 )
 
+//go:embed idiom_words.json
+var idiomWordsJSON []byte
+
 const distractorPool = "的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取据处队南给色光门即保治北造百规热领七海口东导器压志世金增争济阶油思术极交受联什认六共权收证改清己美再采转更刷加粮格并示才几石类精采满号"
+
+var (
+	allWords  []string
+	wordMap   map[string]bool
+	charIndex map[rune][]string // Grouped by first character for O(1) lookup
+)
+
+func init() {
+	engine.RegisterGame("idiom")
+	engine.Register("idiom_speed", func() engine.GameEngine {
+		return &IdiomPKEngine{}
+	})
+
+	// Initialize in-memory vocabulary dictionary (Zero database dependency!)
+	if err := json.Unmarshal(idiomWordsJSON, &allWords); err != nil {
+		allWords = []string{"心旷神怡", "怡然自得", "得心应手", "手疾眼快"}
+	}
+	wordMap = make(map[string]bool, len(allWords))
+	charIndex = make(map[rune][]string)
+	for _, w := range allWords {
+		wordMap[w] = true
+		runes := []rune(w)
+		if len(runes) == 4 {
+			charIndex[runes[0]] = append(charIndex[runes[0]], w)
+		}
+	}
+}
 
 type PKPlayerState struct {
 	ID         string `json:"id"`
@@ -36,13 +66,6 @@ type IdiomPKEngine struct {
 	Target      int                       `json:"target"`
 	RoundNum    int                       `json:"round_num"`
 	Difficulty  string                    `json:"difficulty"`
-}
-
-func init() {
-	engine.RegisterGame("idiom")
-	engine.Register("idiom_speed", func() engine.GameEngine {
-		return &IdiomPKEngine{}
-	})
 }
 
 func (e *IdiomPKEngine) InitGame(options interface{}) error {
@@ -192,7 +215,7 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 		runes := []rune(answer)
 		isCorrect := false
 
-		// Validate answer: 4 chars, starts with TargetChar, exists in DB, not used in chain
+		// In-Memory Validation: 4 chars, starts with TargetChar, exists in wordMap, not already in chain
 		if len(runes) == 4 && len([]rune(e.TargetChar)) > 0 && runes[0] == []rune(e.TargetChar)[0] {
 			alreadyUsed := false
 			for _, w := range e.Chain {
@@ -201,12 +224,8 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 					break
 				}
 			}
-			if !alreadyUsed {
-				var count int64
-				db.DB.Model(&domain.Idiom{}).Where("word = ?", answer).Count(&count)
-				if count > 0 {
-					isCorrect = true
-				}
+			if !alreadyUsed && wordMap[answer] {
+				isCorrect = true
 			}
 		}
 
@@ -295,24 +314,39 @@ func (e *IdiomPKEngine) CheckGameOver() (bool, []string) {
 	return e.State == engine.StateFinished, e.Winners
 }
 
-// startNewChain picks an initial seed idiom to start the Solitaire dragon. Must be called with lock held.
+// startNewChain picks an initial seed idiom in memory to start the Solitaire dragon.
 func (e *IdiomPKEngine) startNewChain() {
-	var idiom domain.Idiom
-	q := db.DB.Order("RANDOM()")
-	if e.Difficulty != "" {
-		q = q.Where("difficulty = ?", e.Difficulty)
-	}
-	q.First(&idiom)
-	if idiom.Word == "" {
-		db.DB.Order("RANDOM()").First(&idiom)
+	if len(allWords) == 0 {
+		e.Chain = []string{"心旷神怡"}
+		e.CurrentWord = "心旷神怡"
+		e.pickNextInChain()
+		return
 	}
 
-	e.Chain = []string{idiom.Word}
-	e.CurrentWord = idiom.Word
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	// Try up to 20 times to pick an idiom whose tail has at least 2 successors
+	var chosen string
+	for i := 0; i < 20; i++ {
+		candidate := allWords[rng.Intn(len(allWords))]
+		runes := []rune(candidate)
+		if len(runes) == 4 {
+			tail := runes[3]
+			if len(charIndex[tail]) >= 2 {
+				chosen = candidate
+				break
+			}
+		}
+	}
+	if chosen == "" {
+		chosen = allWords[rng.Intn(len(allWords))]
+	}
+
+	e.Chain = []string{chosen}
+	e.CurrentWord = chosen
 	e.pickNextInChain()
 }
 
-// pickNextInChain builds the next step for chaining from the last word in e.Chain.
+// pickNextInChain builds the next step for chaining from the last word in e.Chain using pure memory.
 func (e *IdiomPKEngine) pickNextInChain() {
 	if len(e.Chain) == 0 {
 		e.startNewChain()
@@ -326,33 +360,40 @@ func (e *IdiomPKEngine) pickNextInChain() {
 		return
 	}
 	tailChar := string(runes[3])
+	tailRune := runes[3]
 	e.TargetChar = tailChar
 
-	// Find an idiom in DB that starts with tailChar and is not in e.Chain
-	var nextIdiom domain.Idiom
-	q := db.DB.Where("word LIKE ? AND word NOT IN ?", tailChar+"%", e.Chain)
-	if e.Difficulty != "" {
-		q = q.Where("difficulty = ?", e.Difficulty)
+	// Lookup candidate successors in-memory
+	candidates := charIndex[tailRune]
+	usedSet := make(map[string]bool, len(e.Chain))
+	for _, w := range e.Chain {
+		usedSet[w] = true
 	}
-	q.Order("RANDOM()").First(&nextIdiom)
 
-	// If no successor found, pick a fresh seed to restart chain gracefully
-	if nextIdiom.Word == "" {
-		var fresh domain.Idiom
-		db.DB.Order("RANDOM()").First(&fresh)
-		if fresh.Word != "" {
-			e.Chain = append(e.Chain, fresh.Word)
-			e.CurrentWord = fresh.Word
-			lastRunes := []rune(fresh.Word)
-			tailChar = string(lastRunes[3])
-			e.TargetChar = tailChar
-			db.DB.Where("word LIKE ? AND word NOT IN ?", tailChar+"%", e.Chain).Order("RANDOM()").First(&nextIdiom)
+	var validSuccessors []string
+	for _, w := range candidates {
+		if !usedSet[w] {
+			validSuccessors = append(validSuccessors, w)
 		}
 	}
 
-	targetWord := nextIdiom.Word
-	if targetWord == "" {
-		targetWord = "心旷神怡" // Safe fallback
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var targetWord string
+	if len(validSuccessors) > 0 {
+		targetWord = validSuccessors[rng.Intn(len(validSuccessors))]
+	} else {
+		// Dead end reached: restart with a fresh seed gracefully
+		if len(allWords) > 0 {
+			targetWord = allWords[rng.Intn(len(allWords))]
+			e.Chain = append(e.Chain, targetWord)
+			e.CurrentWord = targetWord
+			freshRunes := []rune(targetWord)
+			tailChar = string(freshRunes[3])
+			tailRune = freshRunes[3]
+			e.TargetChar = tailChar
+		} else {
+			targetWord = "心旷神怡"
+		}
 	}
 
 	targetChars := []rune(targetWord)
@@ -364,7 +405,6 @@ func (e *IdiomPKEngine) pickNextInChain() {
 		exclude[c] = true
 	}
 	pool := []rune(distractorPool)
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var available []rune
 	for _, c := range pool {
 		if !exclude[c] {
