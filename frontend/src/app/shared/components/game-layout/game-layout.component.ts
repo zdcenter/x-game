@@ -183,42 +183,50 @@ import { getOrigin } from '../../../core/utils/browser.util';
   @if (!zenService.isZenMode()) {
     <section class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 mt-6 sm:mt-10 pb-12">
       <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 shadow-sm">
-        <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-card)]">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-card)]">
           <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">
-            <span>{{ i18n.t('game.strategy_guide_title')() || '🧠 深度解谜策略与游戏说明' }}</span>
+            <span>{{ i18n.t('game.strategy_guide_title')() || '🎮 玩法规则与操作指南' }}</span>
           </h2>
-          @if (relatedGuideSlug) {
-            <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)]/20 transition-all">
-              📖 {{ i18n.t('game.read_guide')() }}
+          <div class="flex items-center gap-2">
+            <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)]/20 transition-all cursor-pointer">
+              <span>📚</span>
+              <span>{{ i18n.t('game.read_docs_guide')() || '进阶攻略' }}</span>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </a>
-          }
+            @if (relatedGuideSlug) {
+              <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+                 class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--color-text-secondary)] border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all cursor-pointer">
+                <span>📖</span>
+                <span>{{ i18n.t('game.read_guide')() }}</span>
+              </a>
+            }
+          </div>
         </div>
         <div class="markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed" 
              [innerHTML]="i18n.t(computedSeoDescKey)()">
         </div>
 
-        @if (relatedGuideSlug) {
-          <div class="mt-6 pt-5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[var(--color-bg-main)]">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner">📚</span>
-              <div>
-                <div class="text-xs font-bold text-[var(--color-accent-from)]">{{ i18n.t('game.guide_callout_tag')() }}</div>
-                <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-main)] mt-0.5">{{ i18n.t('game.guide_callout_title')() }}</div>
-              </div>
+        <!-- Callout Banner: Link to Deep Tutorial /docs/:gameId -->
+        <div class="mt-6 pt-5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[var(--color-bg-main)]">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner">🎓</span>
+            <div>
+              <div class="text-xs font-bold text-[var(--color-accent-from)]">{{ i18n.t('game.docs_callout_tag')() || '深度教程与技巧宝典' }}</div>
+              <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-main)] mt-0.5">{{ i18n.t('game.docs_callout_title')() || '想进阶成为解谜大师？查阅全套核心技巧与高阶推演指南' }}</div>
             </div>
-            <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-               class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all shrink-0">
-              📖 {{ i18n.t('game.read_full_guide')() }}
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
           </div>
-        }
+          <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
+             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all shrink-0 cursor-pointer">
+            <span>📚</span>
+            <span>{{ i18n.t('game.read_full_docs')() || '查阅完整攻略文档' }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
       </div>
     </section>
   }
@@ -228,9 +236,18 @@ import { getOrigin } from '../../../core/utils/browser.util';
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
   <ng-content select="[game-overlay]"></ng-content>
 
-  <!-- Floating Utility Actions (Bottom-Right: Share & Bug/Feedback) -->
+  <!-- Floating Utility Actions (Bottom-Right: Strategy Guide, Share & Bug/Feedback) -->
   <aside class="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-2.5 sm:right-4 z-40 flex flex-col gap-2 items-center pointer-events-auto"
          aria-label="Game auxiliary actions">
+    <!-- In-depth Strategy & Docs Button (直达本游戏进阶攻略文档) -->
+    <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
+       target="_blank"
+       class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--color-bg-card)]/90 hover:bg-[var(--color-bg-card)] backdrop-blur-md border border-[var(--color-accent-from)]/50 text-[var(--color-accent-from)] shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center group cursor-pointer"
+       [attr.title]="i18n.t('game.read_docs_guide')() || '进阶攻略文档'">
+      <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">📚</span>
+      <span class="sr-only">{{ i18n.t('game.read_docs_guide')() || '进阶攻略文档' }}</span>
+    </a>
+
     <!-- Share / Recommend Game Button -->
     <button type="button"
             (click)="onShareGame()"

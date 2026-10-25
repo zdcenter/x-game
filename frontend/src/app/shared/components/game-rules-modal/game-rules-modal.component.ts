@@ -32,44 +32,40 @@ import { RouterLink } from '@angular/router';
         <!-- Draggable Modal Window -->
         <div cdkDrag
              class="pointer-events-auto bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)] shadow-2xl 
-                    w-full max-w-2xl lg:max-w-md max-h-[80vh] flex flex-col overflow-hidden relative">
+                    w-full max-w-2xl lg:max-w-xl max-h-[85vh] flex flex-col overflow-hidden relative">
           
           <!-- Header (Drag Handle) -->
           <div cdkDragHandle 
-               class="flex items-center justify-between p-5 border-b border-[var(--color-border-card)] 
+               class="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--color-border-card)] 
                       lg:cursor-move lg:active:cursor-grabbing hover:bg-[var(--color-border-card)]/30 transition-colors">
-            <h3 class="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-              📖 {{ i18n.t('game.rules.title')() }}
+            <h3 class="text-base sm:text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              <span>📖</span>
+              <span>{{ i18n.t('game.rules.title')() || '玩法规则与快捷键指南' }}</span>
             </h3>
             <button (click)="closed.emit()"
-                    class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] z-10">
+                    class="w-8 h-8 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] transition-colors flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] z-10 cursor-pointer">
               ✕
             </button>
           </div>
           
-          <!-- Content -->
-          <div class="flex-1 min-h-0 p-5 overflow-y-auto prose prose-invert prose-sm max-w-none
-                      [&_h1]:text-xl [&_h1]:font-bold [&_h1]:text-[var(--color-text-primary)] [&_h1]:mb-3
-                      [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-[var(--color-text-primary)] [&_h2]:mb-2 [&_h2]:mt-4
-                      [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-[var(--color-text-primary)] [&_h3]:mb-2
-                      [&_p]:text-[var(--color-text-secondary)] [&_p]:mb-3 [&_p]:leading-relaxed
-                      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ul]:text-[var(--color-text-secondary)]
-                      [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_ol]:text-[var(--color-text-secondary)]
-                      [&_li]:mb-1
-                      [&_strong]:text-[var(--color-text-primary)] [&_strong]:font-semibold
-                      [&_code]:bg-[var(--color-bg-main)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs"
+          <!-- Content: Render Quick Rules & Controls Guide with full markdown-body styling -->
+          <div class="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto markdown-body text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed"
                [innerHTML]="parsedRulesHTML()">
           </div>
           
-          <!-- Footer -->
-          <div class="p-4 border-t border-[var(--color-border-card)] flex flex-col gap-3">
+          <!-- Footer: Direct link to Deep Strategy Document (/docs/:gameId) -->
+          <div class="p-4 border-t border-[var(--color-border-card)] flex flex-col gap-2.5 bg-[var(--color-bg-main)]/60">
             <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]" target="_blank"
-               class="w-full py-2 text-center text-sm font-medium text-[var(--color-accent-from)] hover:text-[var(--color-accent-to)] hover:underline flex items-center justify-center gap-1 transition-colors">
-              {{ i18n.t('docs.read_more')() || '📖 Read full tutorial & strategies' }}
+               class="w-full py-2.5 px-3 rounded-xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 text-center text-xs font-bold text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+              <span>📚</span>
+              <span>{{ i18n.t('game.read_full_docs')() || '查阅完整进阶攻略文档 (技巧推演与深度定理)' }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
             </a>
             <button (click)="closed.emit()"
-                    class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-95">
-              {{ i18n.t('game.rules.got_it')() }}
+                    class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-md hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 cursor-pointer text-xs sm:text-sm">
+              {{ i18n.t('game.rules.got_it')() || '我知道了' }}
             </button>
           </div>
         </div>
@@ -87,10 +83,16 @@ export class GameRulesModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
 
   private rawGameRules = signal<string | null>(null);
-
   private loaded = false;
 
   parsedRulesHTML = computed(() => {
+    // 优先加载专为快速上手打造的规则与操作指南 (来自 i18n，包含按键表格和防坑提示)
+    const quickGuideKey = `game.${this.gameId}.seo_desc`;
+    const quickGuide = this.i18n.t(quickGuideKey)();
+    if (quickGuide && quickGuide.trim().length > 0 && quickGuide !== quickGuideKey) {
+      return this.sanitizer.bypassSecurityTrustHtml(quickGuide);
+    }
+
     const rawRules = this.rawGameRules();
     if (rawRules === null) {
       return this.sanitizer.bypassSecurityTrustHtml(marked.parse(this.i18n.t('game.rules.loading')(), { async: false }) as string);
@@ -104,7 +106,12 @@ export class GameRulesModalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isOpen'] && this.isOpen && !this.loaded) {
-      this.loadRules();
+      // 只有在没有针对当前游戏的 i18n quickGuide 时才需要去请求 games-docs.json
+      const quickGuideKey = `game.${this.gameId}.seo_desc`;
+      const quickGuide = this.i18n.t(quickGuideKey)();
+      if (!quickGuide || quickGuide === quickGuideKey) {
+        this.loadRules();
+      }
     }
   }
 

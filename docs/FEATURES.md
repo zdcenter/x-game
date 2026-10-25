@@ -21,6 +21,19 @@
 
 ## 2. 核心架构与公共组件
 
+- **Google AdSense 审核合规重构：玩法规则与深度攻略文档双层解耦体系 (`GameLayoutComponent`, `DocsComponent`, `styles.css`)**：
+  - **核心痛点根治**：彻底消除此前游戏页下方描述与 `/docs` 教程内容同质化、重复化导致的 Google AdSense “低价值/抄袭内容 (Thin / Low-value Content)”审核不通过问题；
+  - **两层清晰分工设计**：
+    - **层级 1：游戏主界面下方【玩法规则与操作指南 (How to Play & Quick Controls)】**：面向在玩用户，突出极简胜负判定、完整键盘快捷键表（`<kbd>` 样式）、移动触屏手势、辅助功能（十字同数高亮、实时防错、自动存档）以及联机 PK 规则，并配备直达深度教程与博客的醒目入口；
+    - **层级 2：独立教程文档 `/docs/:gameId`【全阶解谜大师深度指南】**：面向求知玩家与搜索引擎，提供超过 2500 字的系统化理论体系（符号集逻辑、初级/中级排除法、进阶数对定理、大师级 X-Wing / Swordfish / XY-Wing 定理、残局推演示范与竞速对抗心得），建立高专业度壁垒（E-E-A-T）；
+  - **已完成标杆游戏升级**：
+    - **数独 (Sudoku)**：全端键盘光标/填数/候选数/撤销快捷键表 + 7 大章节学术攻略（符号集模型、初中级排除法、数对与链式排除、X-Wing/Swordfish 大师定理）；
+    - **数字华容道 (Sliding Puzzle)**：全端键盘 <kbd>WASD</kbd> / 方向键推块映射表 + 触控手势 + 7 大章节通关宝典（1874 年发明与 Sam Loyd 骗局、逆序数模型与 1879 年 Johnson & Story 奇偶不变性定理、标准层先法与转角 L 型嵌合推入法、最后两行 3-置换闭环跑道、大尺寸网格 5x5/6x6/10x10 递归降解与连推技巧 Multi-tile Pushing、Ghost Blank 空白格视线流）；
+    - **六边形消除 (Hexa Puzzle)**：三维消除轴与全平台拖拽/触屏防遮挡视差映射表 + 超级连击倍率表 + 7 大章节蜂窝几何全书（正六边形平铺 $\{6,3\}$ 与立方体坐标系 $q+r+s=0$、不可旋转积木拓扑与威胁度分级、空间管理四大公理、三向交织引爆点 Triple-Axis Crossroads 构造技巧、连续连击 Combo Chains 运营公式、多人同构实时 PK 竞技生存策略）；
+    - **扫雷 (Minesweeper)**：全端键盘 <kbd>R</kbd>/<kbd>Space</kbd>/<kbd>F</kbd> 键位与鼠标左右键/触控长按/双击 Chording 扫除映射表 + 经典定式速查 + 7 大章节离散逻辑全书（1990 年起源历史、局部齐次线性约束方程、Richard Kaye 2000 年 NP-完全性证明、集合论差集减法原理严格代数推导、1-1/1-2-1/1-2-2-1 定式矩阵、终盘全局剩余雷数反推法 Mine Counting、国际 3BV 效率学与 Chording 速度提升、50/50 必然死局的最优尽早猜雷决策树 Early Guessing、Speed/Steal PK 实时竞技战术）；
+  - **按键 `<kbd>` 与富文本增强排版**：在全局 CSS 中注入立体键盘键位排版、表格与代码块样式，兼容全站 Light/Dark 主题无缝切换。
+
+
 - **全平台现代字体系统规划与全端响应式字阶升级体系 (`styles.css`, `lobby.component.html`, `game-header.component.html`)**：
   - **原生跨平台高质量系统字体栈**：全局注入现代高性能系统级字体栈（`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei UI", sans-serif`），无缝兼容 macOS、iOS、Windows、Android 与 Linux，告别各操作系统字体质感参差不齐的痛点；
   - **全局抗锯齿与排版渲染优化**：在全局 `html, body` 开启 `-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;`，字体边缘极其平滑锐利，杜绝笔画发硬与边缘毛刺；

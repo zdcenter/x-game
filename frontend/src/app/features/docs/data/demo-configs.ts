@@ -711,7 +711,9 @@ export const minesweeperDemoConfig: DemoConfig = {
 
 export const ALL_DEMO_CONFIGS: Record<string, DemoConfig> = {
   'sliding': slidingDemoConfig,
-  'sudoku': sudokuDemoConfig,
+  // 'sudoku' removed: the toy 4x4 board is outdated and mismatched with the real 9x9 game engine.
+  // 'hexa' removed: the generic 4x4 rectangular board completely contradicts the real 61-cell hexagonal honeycomb board.
+  // The in-depth master guide document provides real geometric honeycomb analysis and visual diagrams.
   'gomoku': gomokuDemoConfig,
   'lightsout': lightsoutDemoConfig,
   'math24': math24DemoConfig,
@@ -720,9 +722,9 @@ export const ALL_DEMO_CONFIGS: Record<string, DemoConfig> = {
   'sokoban': sokobanDemoConfig,
   'watersort': watersortDemoConfig,
   'tetris': tetrisDemoConfig,
-  'hexa': hexaDemoConfig,
   'drop2048': drop2048DemoConfig,
   'block': blockDemoConfig,
   'idiom': idiomDemoConfig,
-  'minesweeper': minesweeperDemoConfig
+  // 'minesweeper' removed: the generic 5x5 board is outdated and mismatched with real 9x9/16x16/30x16 engines.
+  // The in-depth master guide document provides full professional step-by-step guidance.
 };
