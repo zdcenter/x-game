@@ -1,39 +1,74 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener, computed } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
-import { boardSizePx } from '../../../core/utils/board-size.util';
-import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
-import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { RoomLifecycleHandle, setupRoomLifecycle } from '../../../core/services/room-lifecycle';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { computed } from '@angular/core';
+import { HapticService } from '../../../core/services/haptic.service';
+import { LeaderboardService } from '../../../core/services/leaderboard.service';
+import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-lightsout',
   standalone: true,
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     GameResultOverlayComponent,
-    GameToolbarComponent,
-    GameLayoutComponent, GamePkHudComponent],
+    GameLayoutComponent,
+    GamePkHudComponent,
+    GameScoreCapsuleComponent,
+    GameToolbarComponent
+  ],
   providers: [LightsoutStore],
-  templateUrl: './lightsout.component.html'
+  templateUrl: './lightsout.component.html',
+  styles: [`
+    @keyframes lo-shockwave-h {
+      0%   { transform: scaleX(0.05); opacity: 1; }
+      100% { transform: scaleX(1); opacity: 0; }
+    }
+    .lo-shockwave-h {
+      animation: lo-shockwave-h 0.35s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+
+    @keyframes lo-shockwave-v {
+      0%   { transform: scaleY(0.05); opacity: 1; }
+      100% { transform: scaleY(1); opacity: 0; }
+    }
+    .lo-shockwave-v {
+      animation: lo-shockwave-v 0.35s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+
+    @keyframes lo-spark {
+      0%   { transform: translate(0, 0) scale(1.8); opacity: 1; filter: brightness(2.2); }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; filter: brightness(1); }
+    }
+    .lo-spark {
+      animation: lo-spark 0.95s cubic-bezier(0.1, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes lo-halo-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50%      { transform: scale(1.08); opacity: 1; }
+    }
+    .lo-halo-pulse {
+      animation: lo-halo-pulse 1.4s ease-in-out infinite;
+    }
+  `]
 })
 export class LightsoutComponent extends BaseGameComponent implements OnInit, OnDestroy {
   GameMode = GameMode;
@@ -44,35 +79,37 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   private authStore = inject(AuthStore);
   i18n = inject(I18nService);
   private router = inject(Router);
+  private haptic = inject(HapticService);
+  private leaderboardService = inject(LeaderboardService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
   showRules = signal(false);
   showOverlay = signal(false);
   hintCell = signal<{r: number, c: number} | null>(null);
+  keyboardCursor = signal<{ row: number; col: number }>({ row: 2, col: 2 });
+  shockwave = signal<{ row: number; col: number; ts: number } | null>(null);
+  particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
+  worldRecord = signal<{ bestScore: number; username: string } | null>(null);
 
   private windowSize = inject(WindowSizeService);
 
   readonly boardSizePx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
-    const size = this.store.size(); // 3 to 8
     
     const isPk = this.store.currentRoomMode() !== GameMode.Single;
     const chromeH = isPk
       ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
-      : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
-    const availH = Math.max(260, vh - chromeH);
+      : (vw < 640 ? 245 : vw < 1024 ? 265 : 285);
+    const availH = Math.max(240, vh - chromeH);
 
     const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
-    const availW = Math.max(260, Math.min(vw - padW, 1400));
+    const availW = Math.max(240, Math.min(vw - padW, 1400));
 
-    // Dynamic max board dimension:
-    // Mobile: up to 440px
-    // Tablet (iPad): up to 720px (allows light bulbs and board to be large and easy to tap)
-    // Desktop: up to 760px
-    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 720 : 760);
+    // Dynamic max board dimension
+    const maxDim = vw < 640 ? 420 : (vw < 1024 ? 580 : 640);
 
-    const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
+    const dim = Math.max(240, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
   });
 
@@ -89,7 +126,14 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
       isMe: true,
       status: this.store.isFinished() ? GameStatus.Finished : GameStatus.Playing,
       metrics: [
-        { label: this.i18n.t('game.pk.light_rem')(), value: this.store.remainingLights(), icon: '💡', colorClass: 'text-amber-400 font-bold' },
+        { 
+          label: this.store.targetMode() === 'on' 
+            ? (this.i18n.t('lightsout.goal_lit')() || '待点亮') 
+            : (this.i18n.t('lightsout.goal_extinguish')() || '待熄灭'), 
+          value: this.store.remainingLights(), 
+          icon: this.store.targetMode() === 'on' ? '💡' : '🌑', 
+          colorClass: 'text-amber-400 font-bold' 
+        },
         { label: this.i18n.t('game.pk.steps')(), value: this.store.moves(), icon: '🦶', colorClass: 'text-sky-400 font-semibold' }
       ]
     };
@@ -137,16 +181,23 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getDifficultyName() {
-    const diff = this.store.currentRoomMode() === GameMode.Single ? this.store.currentDifficulty() : this.store.size() === 4 ? GameDifficulty.Easy : this.store.size() === 6 ? GameDifficulty.Hard : this.store.size() === 7 ? GameDifficulty.Expert : this.store.size() === 8 ? GameDifficulty.Master : GameDifficulty.Medium;
+    const diff = this.store.currentRoomMode() === GameMode.Single
+      ? this.store.currentDifficulty()
+      : this.store.size() === 4 ? GameDifficulty.Easy : this.store.size() === 6 ? GameDifficulty.Hard : this.store.size() === 7 ? GameDifficulty.Expert : this.store.size() === 8 ? GameDifficulty.Master : GameDifficulty.Medium;
     const key = this.gameRegistry.getDifficultyLabel('lightsout', diff);
     return key ? this.i18n.t(key)() : diff;
   }
 
   getSubtitle(): string {
-    return this.getModeName() + ' - ' + this.getDifficultyName();
+    const base = this.getModeName() + ' - ' + this.getDifficultyName();
+    if (this.store.currentRoomMode() === GameMode.Single) {
+      const modeBadge = this.store.targetMode() === 'on'
+        ? (this.i18n.t('lightsout.mode_on')() || '点灯模式')
+        : (this.i18n.t('lightsout.mode_off')() || '灭灯模式');
+      return `${base} · ${modeBadge}`;
+    }
+    return base;
   }
-
-
 
   private roomLifecycle!: RoomLifecycleHandle;
 
@@ -161,10 +212,36 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
       },
     });
 
+    // Cross shockwave wave trigger
+    effect(() => {
+      const toggled = this.store.lastToggled();
+      if (toggled) {
+        this.shockwave.set(toggled);
+        const timer = setTimeout(() => {
+          if (this.shockwave()?.ts === toggled.ts) {
+            this.shockwave.set(null);
+          }
+        }, 360);
+      }
+    });
+
+    // Game Finished Overlay & Sparks
     effect((onCleanup) => {
       const isFin = this.store.status() === GameStatus.Finished;
       if (isFin) {
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
+        if (this.store.remainingLights() === 0) {
+          const colors = ['#fde047', '#38bdf8', '#34d399', '#c084fc', '#ffffff'];
+          const sparks = Array.from({ length: 36 }, (_, i) => ({
+            id: `${Date.now()}-${i}`,
+            color: colors[i % colors.length],
+            size: 6 + Math.random() * 8,
+            tx: Math.random() * 340 - 170,
+            ty: Math.random() * 340 - 170,
+          }));
+          this.particles.set(sparks);
+          setTimeout(() => this.particles.set([]), 1200);
+        }
+        const timer = setTimeout(() => this.showOverlay.set(true), 1200);
         onCleanup(() => clearTimeout(timer));
       } else {
         this.showOverlay.set(false);
@@ -174,6 +251,10 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   override ngOnInit() {
     super.ngOnInit();
+
+    this.leaderboardService.getWorldRecord('lightsout').subscribe(rec => {
+      if (rec) this.worldRecord.set(rec);
+    });
 
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
@@ -231,8 +312,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     this.store.changeDifficulty(diff);
   }
 
-
-
   isConnected() {
     return this.wsService.isConnected();
   }
@@ -262,18 +341,29 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         ? (this.i18n.t('game.cleared_first')() || 'You cleared the board first!')
         : (this.i18n.t('game.opponent_finished')() || 'An opponent cleared the board first!');
     }
-    return this.i18n.t('game.all_lights_out')() || 'All lights out!';
+    return this.store.targetMode() === 'on'
+      ? (this.i18n.t('lightsout.all_lit_win')() || '全盘点亮！璀璨辉煌！')
+      : (this.i18n.t('lightsout.all_out_win')() || this.i18n.t('game.all_lights_out')() || 'All lights out!');
   }
 
   getOverlayStats() {
     return [
-      { label: 'MOVES', value: this.store.moves() }
+      { label: this.i18n.t('game.moves')() || 'MOVES', value: this.store.moves() }
     ];
   }
 
   onCellClick(r: number, c: number) {
     this.hintCell.set(null);
+    this.keyboardCursor.set({ row: r, col: c });
+    this.haptic.vibrateLight();
     this.store.toggle(r, c);
+  }
+
+  undo() {
+    if (this.store.canUndo()) {
+      this.haptic.vibrateLight();
+      this.store.undo();
+    }
   }
 
   applyHint() {
@@ -284,6 +374,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
       for (let c = 0; c < size; c++) {
         if (sol[r] && sol[r][c]) {
           this.hintCell.set({ r, c });
+          this.haptic.vibrateSnap();
           return;
         }
       }
@@ -292,15 +383,76 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
     if (event.key.toLowerCase() === 'r' && this.store.currentRoomMode() === GameMode.Single) {
       this.store.startGame();
       event.preventDefault();
       return;
     }
+
     if (event.key.toLowerCase() === 'h' && this.store.currentRoomMode() === GameMode.Single) {
       this.applyHint();
       event.preventDefault();
       return;
+    }
+
+    if ((event.key.toLowerCase() === 'z' || event.key.toLowerCase() === 'u') && this.store.currentRoomMode() === GameMode.Single) {
+      this.undo();
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key.toLowerCase() === 'm' && this.store.currentRoomMode() === GameMode.Single) {
+      this.store.toggleTargetMode();
+      event.preventDefault();
+      return;
+    }
+
+    // Number keys 1-5 to switch difficulty in single player mode
+    if (this.store.currentRoomMode() === GameMode.Single && ['1', '2', '3', '4', '5'].includes(event.key)) {
+      const diffs = [GameDifficulty.Easy, GameDifficulty.Medium, GameDifficulty.Hard, GameDifficulty.Expert, GameDifficulty.Master];
+      const selected = diffs[parseInt(event.key, 10) - 1];
+      if (selected && selected !== this.store.currentDifficulty()) {
+        this.changeDifficulty(selected);
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Arrow keys & WASD to move cursor
+    const s = this.store.size();
+    const cur = { ...this.keyboardCursor() };
+    let moved = false;
+
+    if (event.key === 'ArrowUp' || event.key.toLowerCase() === 'w') {
+      cur.row = Math.max(0, cur.row - 1);
+      moved = true;
+    } else if (event.key === 'ArrowDown' || event.key.toLowerCase() === 's') {
+      cur.row = Math.min(s - 1, cur.row + 1);
+      moved = true;
+    } else if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
+      cur.col = Math.max(0, cur.col - 1);
+      moved = true;
+    } else if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') {
+      cur.col = Math.min(s - 1, cur.col + 1);
+      moved = true;
+    }
+
+    if (moved) {
+      this.keyboardCursor.set(cur);
+      event.preventDefault();
+      return;
+    }
+
+    // Space or Enter to toggle
+    if (event.key === ' ' || event.key === 'Enter') {
+      if (this.store.status() === GameStatus.Playing && !this.store.isFinished()) {
+        this.onCellClick(cur.row, cur.col);
+        event.preventDefault();
+        return;
+      }
     }
   }
 }

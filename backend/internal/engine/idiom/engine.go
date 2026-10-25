@@ -26,6 +26,8 @@ type IdiomPKEngine struct {
 	engine.BaseEngine
 	Players     map[string]*PKPlayerState `json:"players"`
 	CurrentWord string                    `json:"current_word"`
+	Chain       []string                  `json:"chain"`
+	TargetChar  string                    `json:"target_char"`
 	Display     []string                  `json:"display"`
 	Keyboard    []string                  `json:"keyboard"`
 	RoundWinner string                    `json:"round_winner"`
@@ -55,6 +57,11 @@ func (e *IdiomPKEngine) InitGame(options interface{}) error {
 	e.RoundNum = 0
 	e.RoundWinner = ""
 	e.Difficulty = ""
+	e.Chain = make([]string, 0)
+	e.CurrentWord = ""
+	e.TargetChar = ""
+	e.Display = make([]string, 0)
+	e.Keyboard = make([]string, 0)
 
 	if opts, ok := options.(map[string]interface{}); ok {
 		if t, ok := opts["target"].(int); ok && t > 0 {
@@ -98,6 +105,8 @@ func (e *IdiomPKEngine) GetState() interface{} {
 	return map[string]interface{}{
 		"status":       e.State,
 		"current_word": e.CurrentWord,
+		"chain":        e.Chain,
+		"target_char":  e.TargetChar,
 		"display":      e.Display,
 		"keyboard":     e.Keyboard,
 		"players":      e.Players,
@@ -123,7 +132,7 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
-			e.pickNewIdiom()
+			e.startNewChain()
 			e.RoundNum = 1
 		})
 		return e.State, nil
@@ -143,6 +152,9 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 		e.Winners = []string{}
 		e.RoundWinner = ""
 		e.RoundNum = 0
+		e.Chain = []string{}
+		e.CurrentWord = ""
+		e.TargetChar = ""
 		e.State = engine.StateWaiting
 		return e.State, nil
 	}
@@ -177,17 +189,39 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 		answer := strings.Join(req.Answer, "")
 		player.Attempts++
 
-		if answer == e.CurrentWord {
+		runes := []rune(answer)
+		isCorrect := false
+
+		// Validate answer: 4 chars, starts with TargetChar, exists in DB, not used in chain
+		if len(runes) == 4 && len([]rune(e.TargetChar)) > 0 && runes[0] == []rune(e.TargetChar)[0] {
+			alreadyUsed := false
+			for _, w := range e.Chain {
+				if w == answer {
+					alreadyUsed = true
+					break
+				}
+			}
+			if !alreadyUsed {
+				var count int64
+				db.DB.Model(&domain.Idiom{}).Where("word = ?", answer).Count(&count)
+				if count > 0 {
+					isCorrect = true
+				}
+			}
+		}
+
+		if isCorrect {
 			player.Correct = true
 			e.RoundWinner = playerID
 			e.Wins[playerID]++
+			e.Chain = append(e.Chain, answer)
+			e.CurrentWord = answer
 
 			if e.Wins[playerID] >= e.Target {
 				e.Winners = []string{playerID}
 				e.State = engine.StateFinished
 				e.Broadcast()
 			} else {
-				// Broadcast round win, then auto-advance to next round after 2s
 				e.Broadcast()
 				go e.scheduleNextRound()
 			}
@@ -207,7 +241,7 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 					p.LastWrong = false
 					e.Broadcast()
 				}
-				// If all players are now locked, auto-advance to next round
+				// If all players are locked, auto-advance to next round
 				allLocked := true
 				for _, p := range e.Players {
 					if !p.Locked {
@@ -236,7 +270,7 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 }
 
 func (e *IdiomPKEngine) scheduleNextRound() {
-	time.Sleep(2 * time.Second)
+	time.Sleep(1500 * time.Millisecond)
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 	if e.State != engine.StatePlaying {
@@ -251,7 +285,7 @@ func (e *IdiomPKEngine) scheduleNextRound() {
 	}
 	e.RoundWinner = ""
 	e.RoundNum++
-	e.pickNewIdiom()
+	e.pickNextInChain()
 	e.Broadcast()
 }
 
@@ -261,8 +295,8 @@ func (e *IdiomPKEngine) CheckGameOver() (bool, []string) {
 	return e.State == engine.StateFinished, e.Winners
 }
 
-// pickNewIdiom selects a random idiom and builds display + keyboard. Must be called with lock held.
-func (e *IdiomPKEngine) pickNewIdiom() {
+// startNewChain picks an initial seed idiom to start the Solitaire dragon. Must be called with lock held.
+func (e *IdiomPKEngine) startNewChain() {
 	var idiom domain.Idiom
 	q := db.DB.Order("RANDOM()")
 	if e.Difficulty != "" {
@@ -273,35 +307,64 @@ func (e *IdiomPKEngine) pickNewIdiom() {
 		db.DB.Order("RANDOM()").First(&idiom)
 	}
 
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	chars := []rune(idiom.Word)
+	e.Chain = []string{idiom.Word}
+	e.CurrentWord = idiom.Word
+	e.pickNextInChain()
+}
 
-	// 1 blank normally, 40% chance of 2 blanks
-	numBlanks := 1
-	if rng.Float32() < 0.4 {
-		numBlanks = 2
-	}
-	positions := rng.Perm(4)[:numBlanks]
-	posSet := make(map[int]bool)
-	for _, p := range positions {
-		posSet[p] = true
+// pickNextInChain builds the next step for chaining from the last word in e.Chain.
+func (e *IdiomPKEngine) pickNextInChain() {
+	if len(e.Chain) == 0 {
+		e.startNewChain()
+		return
 	}
 
-	display := make([]string, 4)
-	for i, c := range chars {
-		if posSet[i] {
-			display[i] = "_"
-		} else {
-			display[i] = string(c)
+	lastWord := e.Chain[len(e.Chain)-1]
+	runes := []rune(lastWord)
+	if len(runes) < 4 {
+		e.startNewChain()
+		return
+	}
+	tailChar := string(runes[3])
+	e.TargetChar = tailChar
+
+	// Find an idiom in DB that starts with tailChar and is not in e.Chain
+	var nextIdiom domain.Idiom
+	q := db.DB.Where("word LIKE ? AND word NOT IN ?", tailChar+"%", e.Chain)
+	if e.Difficulty != "" {
+		q = q.Where("difficulty = ?", e.Difficulty)
+	}
+	q.Order("RANDOM()").First(&nextIdiom)
+
+	// If no successor found, pick a fresh seed to restart chain gracefully
+	if nextIdiom.Word == "" {
+		var fresh domain.Idiom
+		db.DB.Order("RANDOM()").First(&fresh)
+		if fresh.Word != "" {
+			e.Chain = append(e.Chain, fresh.Word)
+			e.CurrentWord = fresh.Word
+			lastRunes := []rune(fresh.Word)
+			tailChar = string(lastRunes[3])
+			e.TargetChar = tailChar
+			db.DB.Where("word LIKE ? AND word NOT IN ?", tailChar+"%", e.Chain).Order("RANDOM()").First(&nextIdiom)
 		}
 	}
 
-	// Build 12-char keyboard: all 4 idiom chars + distractors
+	targetWord := nextIdiom.Word
+	if targetWord == "" {
+		targetWord = "心旷神怡" // Safe fallback
+	}
+
+	targetChars := []rune(targetWord)
+	display := []string{tailChar, "_", "_", "_"}
+
+	// Build 12-char keyboard: all chars of targetWord + distractors
 	exclude := make(map[rune]bool)
-	for _, c := range chars {
+	for _, c := range targetChars {
 		exclude[c] = true
 	}
 	pool := []rune(distractorPool)
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var available []rune
 	for _, c := range pool {
 		if !exclude[c] {
@@ -309,14 +372,14 @@ func (e *IdiomPKEngine) pickNewIdiom() {
 		}
 	}
 	rng.Shuffle(len(available), func(i, j int) { available[i], available[j] = available[j], available[i] })
-	needed := 12 - len(chars)
+	needed := 12 - len(targetChars)
 	if needed < 0 {
 		needed = 0
 	}
 	if len(available) > needed {
 		available = available[:needed]
 	}
-	all := append(chars, available...)
+	all := append(targetChars, available...)
 	rng.Shuffle(len(all), func(i, j int) { all[i], all[j] = all[j], all[i] })
 
 	keyboard := make([]string, len(all))
@@ -324,7 +387,6 @@ func (e *IdiomPKEngine) pickNewIdiom() {
 		keyboard[i] = string(r)
 	}
 
-	e.CurrentWord = idiom.Word
 	e.Display = display
 	e.Keyboard = keyboard
 }

@@ -3,11 +3,13 @@ import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface
 
 export enum LightsoutActionType {
   Toggle = 'toggle',
+  Undo = 'undo',
   Forfeit = 'forfeit'
 }
 
 export type LightsoutAction =
   | { type: LightsoutActionType.Toggle, row: number, col: number }
+  | { type: LightsoutActionType.Undo }
   | { type: LightsoutActionType.Forfeit };
 
 export class LocalLightsoutEngine implements ILocalEngine<any, LightsoutAction> {
@@ -19,14 +21,18 @@ export class LocalLightsoutEngine implements ILocalEngine<any, LightsoutAction> 
   difficulty: string = GameDifficulty.Medium;
   finished: boolean = false;
   playerId: string = '';
+  moveHistory: { row: number, col: number }[] = [];
+  targetMode: 'on' | 'off' = 'on';
 
   private onWin?: () => void;
 
-  initGame(config: { playerId: string, difficulty: string, size: number, onWin?: () => void }) {
+  initGame(config: { playerId: string, difficulty: string, size: number, targetMode?: 'on' | 'off', onWin?: () => void }) {
     this.playerId = config.playerId;
     this.difficulty = config.difficulty;
     this.size = config.size;
+    this.targetMode = config.targetMode || 'on';
     this.onWin = config.onWin;
+    this.moveHistory = [];
 
     this.initSinglePlayerBoard(this.size);
     this.status = GameStatus.Playing;
@@ -46,9 +52,18 @@ export class LocalLightsoutEngine implements ILocalEngine<any, LightsoutAction> 
       return;
     }
 
+    if (action.type === LightsoutActionType.Undo) {
+      if (this.moveHistory.length === 0) return;
+      const last = this.moveHistory.pop()!;
+      this.toggleCell(last.row, last.col);
+      if (this.moves > 0) this.moves--;
+      return;
+    }
+
     if (action.type === LightsoutActionType.Toggle) {
       const { row, col } = action;
       this.toggleCell(row, col);
+      this.moveHistory.push({ row, col });
       this.moves++;
 
       if (this.checkWin()) {
@@ -73,18 +88,23 @@ export class LocalLightsoutEngine implements ILocalEngine<any, LightsoutAction> 
   }
 
   private checkWin(): boolean {
+    const targetState = this.targetMode === 'on';
     for (const row of this.board) {
       for (const cell of row) {
-        if (cell) return false;
+        if (cell !== targetState) return false;
       }
     }
     return true;
   }
 
   private initSinglePlayerBoard(s: number) {
-    this.board = Array(s).fill(null).map(() => Array(s).fill(false));
+    const targetState = this.targetMode === 'on';
+    // Initialize starting state as the target victory state
+    this.board = Array(s).fill(null).map(() => Array(s).fill(targetState));
     this.solution = Array(s).fill(null).map(() => Array(s).fill(false));
 
+    // Scramble by applying random toggles from the solved target state
+    // This mathematically guarantees 100% solvability back to targetState!
     const clicks = s * s * 2;
     for (let i = 0; i < clicks; i++) {
       const r = Math.floor(Math.random() * s);
@@ -92,9 +112,10 @@ export class LocalLightsoutEngine implements ILocalEngine<any, LightsoutAction> 
       this.toggleCell(r, c);
     }
     
+    // In rare case that it scrambles back to won state, toggle at least 2 corners
     if (this.checkWin()) {
       this.toggleCell(0, 0);
-      this.toggleCell(s-1, s-1);
+      this.toggleCell(s - 1, s - 1);
     }
 
     this.moves = 0;

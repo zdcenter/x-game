@@ -715,8 +715,8 @@ export const ALL_DEMO_CONFIGS: Record<string, DemoConfig> = {
   // 'hexa' removed: the generic 4x4 rectangular board completely contradicts the real 61-cell hexagonal honeycomb board.
   // The in-depth master guide document provides real geometric honeycomb analysis and visual diagrams.
   // 'gomoku' removed: the generic 5x5 board is outdated and mismatched with the real 15x15 intersection engine.
-  // The in-depth master guide document provides full professional step-by-step guidance.,
-  'lightsout': lightsoutDemoConfig,
+  // 'lightsout' removed: the toy mini grid is retired in favor of the real discrete GF(2) linear algebra matrix guide.
+  // The in-depth master guide document provides full professional step-by-step guidance.
   // 'math24' removed: the toy 1x4 table with hardcoded styles is outdated and mismatched with the real card engine.
   // 'codebreaker' removed: the outdated 4-color Mastermind toy board is retired in favor of the real 1A2B deduction matrix guide.
   // The in-depth master guide document provides full professional step-by-step guidance.

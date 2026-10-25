@@ -1,8 +1,9 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [isHost]="store.hostId() === store.playerId()"
   [gameId]="'lightsout'"
   [title]="i18n.t('lobby.lightsout')() || 'Lights Out'"
   [subtitle]="getSubtitle()"
-  icon="🎮"
+  icon="💡"
   iconGradientClass="from-amber-400 to-orange-500"
   titleGradientClass="from-amber-300 to-orange-400"
   shadowClass="shadow-amber-500/20"
@@ -26,223 +27,223 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
-          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
-            <app-game-waiting-room
-              gameId="lightsout"
-              [mode]="store.currentRoomMode()"
-              [roomId]="store.roomId()"
-              [difficulty]="store.size() === 4 ? GameDifficulty.Easy : store.size() === 6 ? GameDifficulty.Hard : GameDifficulty.Medium"
-              [players]="store.playersList()"
-              [hostId]="store.hostId()"
-              [currentUserId]="playerId"
-              [readyPlayers]="store.readyPlayers()"
-              (start)="store.startGame()"
-              (leave)="goBack()"
-              (changeSettings)="openChangeSettings()"
-              (ready)="store.ready()"
-              (cancelReady)="store.cancelReady()"
-              (kick)="store.kickPlayer($event)"
-              [target]="store.currentRoomTarget()"
-            ></app-game-waiting-room>
-          </div>
-        } @else {
-          
-          <!-- Starting Overlay -->
-          @if (store.status() === GameStatus.Starting) {
-            <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-          }
+  <!-- PK Waiting Room -->
+  @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
+    <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
+      <app-game-waiting-room
+        gameId="lightsout"
+        [mode]="store.currentRoomMode()"
+        [roomId]="store.roomId()"
+        [difficulty]="store.size() === 4 ? GameDifficulty.Easy : store.size() === 6 ? GameDifficulty.Hard : GameDifficulty.Medium"
+        [players]="store.playersList()"
+        [hostId]="store.hostId()"
+        [currentUserId]="playerId"
+        [readyPlayers]="store.readyPlayers()"
+        (start)="store.startGame()"
+        (leave)="goBack()"
+        (changeSettings)="openChangeSettings()"
+        (ready)="store.ready()"
+        (cancelReady)="store.cancelReady()"
+        (kick)="store.kickPlayer($event)"
+        [target]="store.currentRoomTarget()"
+      ></app-game-waiting-room>
+    </div>
+  } @else {
+    
+    <!-- Starting Overlay -->
+    @if (store.status() === GameStatus.Starting) {
+      <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+    }
 
-          <div class="flex-grow flex flex-col items-center justify-center my-auto p-1 sm:p-2 w-full relative">
+    <div class="flex-grow flex flex-col items-center justify-center my-auto p-1 sm:p-2 w-full relative min-h-0 overflow-y-auto custom-scrollbar">
 
-            <!-- Players Info Row -->
-            @if (store.currentRoomMode() === GameMode.Single) {
-              <!-- Classic Style for Single Player -->
-              <div class="flex-none py-1 mb-1 w-full max-w-[800px] shrink-0">
-                <div class="w-full flex justify-center items-center gap-3 px-4">
-                  <div class="flex flex-col items-center bg-black/20 rounded-xl px-8 py-1">
-                    <span class="text-[10px] uppercase tracking-wider text-[var(--color-text-secondary)] font-bold">{{ i18n.t('game.moves')() || 'MOVES' }}</span>
-                    <span class="text-xl sm:text-2xl font-black text-amber-500 font-mono">{{ store.moves() }}</span>
-                  </div>
+      <!-- Players Status / Top HUD -->
+      @if (store.currentRoomMode() === GameMode.Single) {
+        <!-- Single Player Clean Integrated Capsule -->
+        <div class="flex-none px-3 sm:px-6 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm">
+          <app-game-score-capsule
+            [score]="store.remainingLights()"
+            [scoreLabel]="store.targetMode() === 'on' ? (i18n.t('lightsout.goal_lit')() || '待点亮') : (i18n.t('lightsout.goal_extinguish')() || '待熄灭')"
+            [bestScore]="store.moves()"
+            [myBestLabel]="i18n.t('game.moves')() || 'MOVES'"
+            [worldBestScore]="worldRecord()?.bestScore"
+            [worldRecordHolder]="worldRecord()?.username"
+            [scoreIcon]="store.targetMode() === 'on' ? '💡' : '🌑'"
+          >
+            <!-- Center: Mode Toggle Switcher + Dynamic Progress Meter -->
+            <div class="flex items-center gap-2 sm:gap-3">
+              <!-- Target Mode Toggle Button -->
+              <button
+                type="button"
+                (click)="store.toggleTargetMode()"
+                class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer select-none border"
+                [class]="store.targetMode() === 'on' 
+                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
+                  : 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30 hover:bg-slate-500/25'"
+                [title]="store.targetMode() === 'on' ? (i18n.t('lightsout.switch_to_off')() || '切换为灭灯模式') : (i18n.t('lightsout.switch_to_on')() || '切换为点灯模式')">
+                <span class="text-xs">{{ store.targetMode() === 'on' ? '💡' : '🌑' }}</span>
+                <span class="font-mono tracking-tight whitespace-nowrap">
+                  {{ store.targetMode() === 'on' ? (i18n.t('lightsout.mode_on')() || '点灯模式') : (i18n.t('lightsout.mode_off')() || '灭灯模式') }}
+                </span>
+                <span class="text-[10px] opacity-60 hidden sm:inline">⇄</span>
+              </button>
 
-                  <!-- Instant Restart Button -->
-                  <button (click)="store.startGame()"
-                          class="px-3 py-2 rounded-xl bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-sm hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer group"
-                          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
-                    <span class="text-base group-hover:rotate-180 transition-transform duration-300">🔄</span>
-                    <span class="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden sm:inline">
-                      {{ i18n.t('game.restart')() || '重开' }}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <!-- Universal PK Battle HUD (Lights Out) -->
-              <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
-                <app-game-pk-hud
-                  [myPlayer]="myPlayerPkStats()"
-                  [opponents]="opponentsPkStats()"
-                  [gameMode]="store.currentRoomMode()"
-                  [status]="store.status()"
-                  [targetWins]="store.currentRoomTarget()"
-                  [roundFormat]="store.room()?.roundFormat || 'BO3'"
-                  [seriesScore]="seriesScore()"
-                ></app-game-pk-hud>
-              </div>
-            }
-
-            <!-- Board Area (Strict Aspect Square) -->
-            <div class="relative flex-none flex items-center justify-center min-h-0 w-full py-2 shrink-0 overflow-visible">
-              <!-- Board -->
-              <div class="relative flex flex-col items-center justify-start bg-gradient-to-br from-amber-900/20 to-orange-900/20 rounded-xl border border-orange-500/20 shadow-[0_0_40px_rgba(245,158,11,0.1)] p-2 sm:p-4 backdrop-blur-sm mx-auto"
-                   [style.width]="boardSizePx()" [style.height]="boardSizePx()">
-                
-                <div class="w-full h-full grid gap-1.5 sm:gap-2 lg:gap-3"
-                     [style.gridTemplateColumns]="'repeat(' + store.size() + ', minmax(0, 1fr))'"
-                     [style.gridTemplateRows]="'repeat(' + store.size() + ', minmax(0, 1fr))'">
-                  
-                  @for (row of store.board(); track rIndex; let rIndex = $index) {
-                    @for (cell of row; track cIndex; let cIndex = $index) {
-                      <button 
-                        class="group w-full h-full rounded-md sm:rounded-xl relative overflow-hidden active:scale-[0.95] touch-manipulation focus:outline-none flex items-center justify-center bg-slate-800/80 border border-slate-700/50 shadow-[inset_0_2px_6px_rgba(0,0,0,0.8)] transition-all duration-300 cursor-pointer"
-                        [class.ring-4]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
-                        [class.ring-orange-500]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
-                        [class.animate-pulse]="hintCell()?.r === rIndex && hintCell()?.c === cIndex"
-                        (click)="onCellClick(rIndex, cIndex)"
-                        [disabled]="store.status() !== GameStatus.Playing || store.isFinished()"
-                      >
-                        <!-- ON State Background Layer (Animated Opacity) -->
-                        <div class="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-400/30 shadow-[inset_0_0_15px_rgba(245,158,11,0.2),0_0_15px_rgba(245,158,11,0.15)] transition-opacity duration-500 ease-in-out pointer-events-none"
-                             [class.opacity-0]="!cell"
-                             [class.opacity-100]="cell">
-                        </div>
-
-                        <!-- Custom Illustrated Bulb Icon (Matches User Design perfectly) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" 
-                             class="relative z-10 w-[65%] h-[65%] transition-all duration-500 ease-in-out pointer-events-none select-none"
-                             [class.scale-75]="!cell"
-                             [class.opacity-60]="!cell"
-                             [class.scale-100]="cell"
-                             [class.opacity-100]="cell"
-                             [style.filter]="cell ? 'drop-shadow(0 0 8px rgba(251,191,36,0.5))' : 'none'">
-                             
-                          <defs>
-                            <radialGradient id="glassGlow-{{rIndex}}-{{cIndex}}" cx="50%" cy="40%" r="50%">
-                              <stop offset="0%" stop-color="#fef3c7" stop-opacity="1" />
-                              <stop offset="40%" stop-color="#fde68a" stop-opacity="0.8" />
-                              <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
-                            </radialGradient>
-                          </defs>
-
-                          <!-- Outer glowing aura for ON state -->
-                          <circle cx="32" cy="22" r="22" class="fill-amber-400 blur-md transition-opacity duration-500" [class.opacity-30]="cell" [class.opacity-0]="!cell" />
-
-                          <!-- Bulb Glass -->
-                          <path d="M 32 4 A 18 18 0 0 0 14 22 C 14 31 22 36 25 42 L 39 42 C 42 36 50 31 50 22 A 18 18 0 0 0 32 4 Z" 
-                                class="transition-colors duration-500"
-                                stroke-width="1"
-                                [class.fill-slate-700]="!cell"
-                                [class.stroke-slate-600]="!cell"
-                                [class.fill-amber-400]="cell"
-                                [class.stroke-amber-500]="cell" />
-                          
-                          <!-- Inner Glow -->
-                          <path d="M 32 4 A 18 18 0 0 0 14 22 C 14 31 22 36 25 42 L 39 42 C 42 36 50 31 50 22 A 18 18 0 0 0 32 4 Z" 
-                                [attr.fill]="'url(#glassGlow-' + rIndex + '-' + cIndex + ')'" class="transition-opacity duration-500"
-                                [class.opacity-100]="cell" [class.opacity-0]="!cell" />
-
-                          <!-- Specular Highlight (Reflection) -->
-                          <path d="M 18 20 A 12 12 0 0 1 28 8" class="stroke-white transition-opacity duration-500" stroke-width="2" stroke-linecap="round" fill="none"
-                                [class.opacity-50]="cell" [class.opacity-10]="!cell" />
-
-                          <!-- Filament Posts -->
-                          <path d="M 29 42 L 29 28 M 35 42 L 35 28" 
-                                class="transition-colors duration-500"
-                                [class.stroke-amber-600]="cell" [class.stroke-slate-800]="!cell"
-                                stroke-width="1.5" stroke-linecap="round" />
-
-                          <!-- Filament Wire (3 Loops) -->
-                          <path d="M 29 28 L 30 21 L 31 25 L 32 21 L 33 25 L 34 21 L 35 28" 
-                                class="transition-all duration-500" fill="none"
-                                [class.stroke-amber-100]="cell" [class.stroke-slate-500]="!cell"
-                                [class.opacity-100]="cell" [class.opacity-40]="!cell"
-                                stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
-
-                          <!-- Bulb Base (Screw part) -->
-                          <!-- Main metal cylinder -->
-                          <path d="M 25 42 L 39 42 L 37 54 L 27 54 Z" class="fill-slate-400" />
-                          
-                          <!-- Base Shadow -->
-                          <path d="M 39 42 L 37 54 L 32 54 L 32 42 Z" class="fill-slate-500 opacity-40" />
-
-                          <!-- Threads (Dark ridges) -->
-                          <path d="M 24 45 Q 32 48 40 45" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
-                          <path d="M 25 49 Q 32 52 39 49" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
-                          <path d="M 26 53 Q 32 56 38 53" class="stroke-slate-500" stroke-width="2" fill="none" stroke-linecap="round" />
-
-                          <!-- Bottom Contact (Black/Dark grey tip) -->
-                          <path d="M 28 54 L 36 54 C 36 58 34 60 32 60 C 30 60 28 58 28 54 Z" class="fill-slate-700" />
-                          <path d="M 32 60 C 34 60 36 58 36 54 L 32 54 Z" class="fill-slate-800 opacity-40" />
-
-                        </svg>
-
-                        <!-- Empty Cavity for OFF state -->
-                        <div class="absolute inset-1 rounded-full pointer-events-none transition-all duration-500 ease-in-out"
-                             [class.bg-black/40]="!cell"
-                             [class.scale-100]="!cell"
-                             [class.opacity-100]="!cell"
-                             [class.bg-black/0]="cell"
-                             [class.scale-125]="cell"
-                             [class.opacity-0]="cell">
-                        </div>
-                      </button>
-                    }
-                  }
-                </div>
+              <!-- Dynamic Progress Ratio & Percentage Pill -->
+              <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 rounded-full">
+                <span class="text-xs">⚡</span>
+                <span class="text-[11px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap font-mono">
+                  {{ store.clearedPercentage() }}% {{ store.targetMode() === 'on' ? (i18n.t('lightsout.lit')() || '已点亮') : (i18n.t('lightsout.extinguished')() || '已熄灭') }}
+                </span>
               </div>
             </div>
+          </app-game-score-capsule>
+        </div>
+      } @else {
+        <!-- Universal PK Battle HUD (Lights Out) -->
+        <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+          <app-game-pk-hud
+            [myPlayer]="myPlayerPkStats()"
+            [opponents]="opponentsPkStats()"
+            [gameMode]="store.currentRoomMode()"
+            [status]="store.status()"
+            [targetWins]="store.currentRoomTarget()"
+            [roundFormat]="store.room()?.roundFormat || 'BO3'"
+            [seriesScore]="seriesScore()"
+          ></app-game-pk-hud>
+        </div>
+      }
 
-            <!-- Actions Toolbar -->
-            @if (store.currentRoomMode() === GameMode.Single) {
-              <div class="flex-none flex justify-center items-center py-2 sm:py-4 w-full shrink-0">
-                <app-game-toolbar
-                  [layoutStyle]="'compact'"
-                  [showPrev]="false"
-                  [showNext]="false"
-                  [showUndo]="false"
-                  [showRestart]="true"
-                  [showHint]="true"
-                  hintLayout="sudoku"
-                  (restart)="store.restartGame()"
-                  (hintApplied)="applyHint()"
-                  class="w-full relative z-10"
-                ></app-game-toolbar>
-              </div>
+      <!-- Main Board Stage -->
+      <div class="relative flex-none flex items-center justify-center min-h-0 w-full py-2 sm:py-4 shrink-0 overflow-visible">
+        
+        <!-- Victory Starburst Particles -->
+        <div class="absolute inset-0 pointer-events-none z-40 overflow-hidden flex items-center justify-center">
+          @for (p of particles(); track p.id) {
+            <div class="absolute rounded-full lo-spark mix-blend-screen"
+                 [style.background-color]="p.color"
+                 [style.width.px]="p.size"
+                 [style.height.px]="p.size"
+                 [style.--tx]="p.tx + 'px'"
+                 [style.--ty]="p.ty + 'px'"
+                 style="box-shadow: 0 0 12px currentColor, 0 0 24px #ffffff;">
+            </div>
+          }
+        </div>
+
+        <!-- Clean Comfortable Board Card (Glare-Free, Eye-Friendly) -->
+        <div class="relative flex flex-col items-center justify-center bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl border border-[var(--color-border-card)] shadow-md p-2.5 sm:p-4 mx-auto overflow-hidden select-none z-10"
+             [style.width]="boardSizePx()" [style.height]="boardSizePx()">
+          
+          <!-- Cross Shockwave Laser Beams -->
+          @if (shockwave()) {
+            <!-- Horizontal Laser Beam -->
+            <div class="absolute left-2.5 right-2.5 pointer-events-none z-30 lo-shockwave-h"
+                 [style.top]="'calc(' + shockwave()!.row + ' * (100% / ' + store.size() + ') + (50% / ' + store.size() + ') - 1.5px)'"
+                 style="height: 3px; background: linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.5) 30%, #f59e0b 50%, rgba(251,191,36,0.5) 70%, transparent 100%);">
+            </div>
+            <!-- Vertical Laser Beam -->
+            <div class="absolute top-2.5 bottom-2.5 pointer-events-none z-30 lo-shockwave-v"
+                 [style.left]="'calc(' + shockwave()!.col + ' * (100% / ' + store.size() + ') + (50% / ' + store.size() + ') - 1.5px)'"
+                 style="width: 3px; background: linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.5) 30%, #f59e0b 50%, rgba(251,191,36,0.5) 70%, transparent 100%);">
+            </div>
+          }
+
+          <!-- Grid Matrix of Tiles -->
+          <div class="w-full h-full grid gap-2 sm:gap-3 relative z-10"
+               [style.gridTemplateColumns]="'repeat(' + store.size() + ', minmax(0, 1fr))'"
+               [style.gridTemplateRows]="'repeat(' + store.size() + ', minmax(0, 1fr))'">
+            
+            @for (row of store.board(); track rIndex; let rIndex = $index) {
+              @for (cell of row; track cIndex; let cIndex = $index) {
+                <button
+                  type="button"
+                  class="group relative w-full h-full rounded-xl sm:rounded-2xl transition-all duration-150 select-none cursor-pointer flex items-center justify-center p-1 sm:p-2 focus:outline-none"
+                  [class.active:scale-95]="store.status() === GameStatus.Playing"
+                  (click)="onCellClick(rIndex, cIndex)"
+                  [disabled]="store.status() !== GameStatus.Playing || store.isFinished()"
+                >
+                  @if (cell) {
+                    <!-- === ON STATE: Warm Soothing Golden Amber Tile (No Glare, Comfortable) === -->
+                    <div class="relative w-full h-full rounded-xl sm:rounded-2xl bg-gradient-to-b from-amber-400 to-amber-500 border border-amber-300/80 shadow-md shadow-amber-500/20 flex items-center justify-center transition-all duration-150">
+                      <!-- Clean friendly lightbulb icon -->
+                      <svg class="w-3/5 h-3/5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm-2 18c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-.5h-4v.5z"/>
+                      </svg>
+                    </div>
+                  } @else {
+                    <!-- === OFF STATE: Soft Calm Neutral Tile === -->
+                    <div class="relative w-full h-full rounded-xl sm:rounded-2xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)]/50 border border-[var(--color-border-card)] shadow-sm flex items-center justify-center transition-all duration-150">
+                      <!-- Dimmed bulb icon -->
+                      <svg class="w-3/5 h-3/5 text-[var(--color-text-muted)] opacity-25 group-hover:opacity-40 transition-opacity" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zm-2 18c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-.5h-4v.5z"/>
+                      </svg>
+                    </div>
+                  }
+
+                  <!-- Focused Reticle (Keyboard Navigation) -->
+                  @if (keyboardCursor().row === rIndex && keyboardCursor().col === cIndex) {
+                    <div class="absolute inset-0 rounded-xl sm:rounded-2xl ring-2 ring-amber-400 pointer-events-none z-20">
+                      <div class="absolute -top-1 -left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-amber-400"></div>
+                      <div class="absolute -top-1 -right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-amber-400"></div>
+                      <div class="absolute -bottom-1 -left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-amber-400"></div>
+                      <div class="absolute -bottom-1 -right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-amber-400"></div>
+                    </div>
+                  }
+
+                  <!-- Hint Radar Golden Ring -->
+                  @if (hintCell()?.r === rIndex && hintCell()?.c === cIndex) {
+                    <div class="absolute inset-0 rounded-xl sm:rounded-2xl ring-4 ring-amber-400 lo-halo-pulse shadow-md shadow-amber-400/40 z-20 pointer-events-none"></div>
+                  }
+                </button>
+              }
             }
           </div>
-        }
+        </div>
+      </div>
 
-        <!-- Game Over Overlay -->
-        @if (store.status() === GameStatus.Finished && showOverlay()) {
-          <app-game-result-overlay
-            currentGameId="lightsout"
-            [status]="getOverlayStatus()"
-            [title]="getOverlayTitle()"
-            [subtitle]="getOverlaySubtitle()"
-            [stats]="getOverlayStats()"
-            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-            [opponentInfo]="opponentsPkStats()[0]"
-            [pkSeriesScore]="seriesScore()"
-            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-            [xpResult]="store.lastStatResult()?.xp_result"
-            [isNewRecord]="store.lastStatResult()?.isNewRecord"
+      <!-- Unified Action Toolbar below board (Single Player) -->
+      @if (store.currentRoomMode() === GameMode.Single) {
+        <div class="flex-none flex justify-center items-center py-2 sm:py-3 w-full mx-auto relative z-20 shrink-0" [style.max-width]="boardSizePx()">
+          <app-game-toolbar
+            [layoutStyle]="'compact'"
+            [showPrev]="false"
+            [showNext]="false"
+            [showUndo]="true"
+            [disableUndo]="!store.canUndo()"
             [showRestart]="true"
-            [showLeave]="true"
-            (rematch)="handleRematch()"
-            (restart)="store.restartGame()"
-            (leave)="goBack()"
-            [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-            (changeRoomGame)="store.changeRoomGame($event)"
-          ></app-game-result-overlay>
-        }
+            [showHint]="true"
+            hintLayout="sudoku"
+            (undo)="undo()"
+            (restart)="store.startGame()"
+            (hintApplied)="applyHint()"
+            class="w-full max-w-sm sm:max-w-md"
+          ></app-game-toolbar>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Game Over Result Overlay -->
+  @if (store.status() === GameStatus.Finished && showOverlay()) {
+    <app-game-result-overlay
+      currentGameId="lightsout"
+      [status]="getOverlayStatus()"
+      [title]="getOverlayTitle()"
+      [subtitle]="getOverlaySubtitle()"
+      [stats]="getOverlayStats()"
+      [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
+      [opponentInfo]="opponentsPkStats()[0]"
+      [pkSeriesScore]="seriesScore()"
+      [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
+      [xpResult]="store.lastStatResult()?.xp_result"
+      [isNewRecord]="store.lastStatResult()?.isNewRecord"
+      [showRestart]="true"
+      [showLeave]="true"
+      (rematch)="handleRematch()"
+      (restart)="store.restartGame()"
+      (leave)="goBack()"
+      [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
+      (changeRoomGame)="store.changeRoomGame($event)"
+    ></app-game-result-overlay>
+  }
 </app-game-layout>

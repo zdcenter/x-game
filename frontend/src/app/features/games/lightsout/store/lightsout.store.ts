@@ -16,20 +16,22 @@ export class LightsoutStore extends BaseGameStore {
   private tick = signal(0);
 
   readonly board = computed<boolean[][]>(() => {
+    this.tick();
     if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
-      return this.localEngine()?.board || [];
+      const b = this.localEngine()?.board || [];
+      return b.map(row => [...row]);
     }
     const st = this.rawState() as any;
     if (st?.players && st.players[this.playerId()]) {
-      return st.players[this.playerId()].board || [];
+      const b = st.players[this.playerId()].board || [];
+      return b.map((row: any) => [...row]);
     }
     return [];
   });
 
   readonly moves = computed<number>(() => {
+    this.tick();
     if (this.currentRoomMode() === GameMode.Single) {
-      this.tick();
       return this.localEngine()?.moves || 0;
     }
     const st = this.rawState() as any;
@@ -39,7 +41,17 @@ export class LightsoutStore extends BaseGameStore {
     return 0;
   });
 
-  readonly remainingLights = computed<number>(() => {
+  readonly targetMode = signal<'on' | 'off'>(
+    (typeof localStorage !== 'undefined' && (localStorage.getItem('lightsout_target_mode') as any)) || 'on'
+  );
+
+  readonly totalLights = computed<number>(() => {
+    const s = this.size();
+    return s * s;
+  });
+
+  readonly litLights = computed<number>(() => {
+    this.tick();
     const b = this.board();
     let count = 0;
     for (const row of b) {
@@ -49,6 +61,33 @@ export class LightsoutStore extends BaseGameStore {
     }
     return count;
   });
+
+  readonly remainingGoalLights = computed<number>(() => {
+    this.tick();
+    const lit = this.litLights();
+    const total = this.totalLights();
+    return this.targetMode() === 'on' ? Math.max(0, total - lit) : lit;
+  });
+
+  readonly remainingLights = computed<number>(() => this.remainingGoalLights());
+
+  readonly clearedPercentage = computed<number>(() => {
+    this.tick();
+    const total = this.totalLights();
+    if (total <= 0) return 0;
+    const rem = this.remainingGoalLights();
+    return Math.max(0, Math.min(100, Math.round(((total - rem) / total) * 100)));
+  });
+
+  readonly canUndo = computed<boolean>(() => {
+    if (this.currentRoomMode() !== GameMode.Single) return false;
+    this.tick();
+    return (this.localEngine()?.moveHistory?.length || 0) > 0;
+  });
+
+  readonly colorTheme = signal<'amber'>('amber');
+
+  readonly lastToggled = signal<{ row: number; col: number; ts: number } | null>(null);
 
   readonly size = computed<number>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
@@ -131,6 +170,7 @@ export class LightsoutStore extends BaseGameStore {
         playerId: this.playerId(),
         difficulty: diff,
         size: this.getDifficultySize(diff),
+        targetMode: this.targetMode(),
         onWin: () => {
           this.audio.playPuzzle('success');
           this.submitSinglePlayerStats();
@@ -144,6 +184,16 @@ export class LightsoutStore extends BaseGameStore {
     }
   }
 
+  toggleTargetMode() {
+    if (this.currentRoomMode() !== GameMode.Single) return;
+    const next = this.targetMode() === 'on' ? 'off' : 'on';
+    this.targetMode.set(next);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('lightsout_target_mode', next);
+    }
+    this.startGame();
+  }
+
   override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
     super.joinRoom(roomId, mode, difficulty, hostId, target);
     if (mode === GameMode.Single) {
@@ -151,8 +201,11 @@ export class LightsoutStore extends BaseGameStore {
     }
   }
 
+
   toggle(row: number, col: number) {
     if (this.status() !== GameStatus.Playing || this.isFinished()) return;
+
+    this.lastToggled.set({ row, col, ts: Date.now() });
 
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
@@ -164,6 +217,18 @@ export class LightsoutStore extends BaseGameStore {
     } else {
       this.ws.send({ action: C2SAction.Toggle, row, col });
       this.audio.playPuzzle('toggle');
+    }
+  }
+
+  undo() {
+    if (this.currentRoomMode() !== GameMode.Single || this.status() !== GameStatus.Playing || this.isFinished()) return;
+    const engine = this.localEngine();
+    if (engine && engine.moveHistory.length > 0) {
+      const last = engine.moveHistory[engine.moveHistory.length - 1];
+      this.lastToggled.set({ row: last.row, col: last.col, ts: Date.now() });
+      engine.handleAction({ type: LightsoutActionType.Undo });
+      this.audio.playPuzzle('move');
+      this.tick.set(this.tick() + 1);
     }
   }
 

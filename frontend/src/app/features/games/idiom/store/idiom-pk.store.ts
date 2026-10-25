@@ -16,6 +16,8 @@ export interface IdiomPKPlayerState {
 export interface IdiomPKState {
   status: string | number;
   current_word: string;
+  chain?: string[];
+  target_char?: string;
   display: string[];
   keyboard: string[];
   players: Record<string, IdiomPKPlayerState>;
@@ -40,6 +42,8 @@ export class IdiomPKStore extends BaseGameStore {
     return this.rawState() as IdiomPKState | null;
   }
 
+  chain = computed<string[]>(() => this.pkState?.chain ?? []);
+  targetChar = computed<string>(() => this.pkState?.target_char ?? '');
   display = computed<string[]>(() => this.pkState?.display ?? []);
   keyboard = computed<string[]>(() => this.pkState?.keyboard ?? []);
   currentWord = computed<string>(() => this.pkState?.current_word ?? '');

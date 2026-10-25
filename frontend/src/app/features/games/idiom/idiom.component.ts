@@ -1,121 +1,120 @@
-import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import {
-  CharResult, DailyGuessResponse, DailyStateResponse,
-  FillResponse, FillSubmitResponse, GuessRecord, HistoryRecord, IdiomService, IdiomStats, SocialStats
-} from './store/idiom.service';
-import { IdiomPKStore } from './store/idiom-pk.store';
-import { AudioService } from '../../../core/services/audio.service';
-import { XpService } from '../../../core/services/xp.service';
-import { SettingsService } from '../../../core/services/settings.service';
-import { FloatingTextService } from '../../../core/services/floating-text.service';
-import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GameTimerService } from '../../../core/services/game-timer.service';
-import { GameStatus, GameMode } from '../../../core/models/game.model';
+import { GameStatus, GameMode, GameResult } from '../../../core/models/game.model';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
-type IdiomView = 'lobby' | 'fill' | 'wordle';
+import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
+import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
+import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { IdiomPKStore } from './store/idiom-pk.store';
+import { IdiomSolitaireEngine, IdiomItem, ChainMode } from './store/idiom-engine';
+import { AudioService } from '../../../core/services/audio.service';
+import { XpService } from '../../../core/services/xp.service';
+import { FloatingTextService } from '../../../core/services/floating-text.service';
 
 @Component({
   selector: 'app-idiom',
   standalone: true,
   providers: [IdiomPKStore],
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     GameLayoutComponent,
-    GameToolbarComponent,
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
-    GameStartingOverlayComponent],
-  styles: [`
-    @keyframes char-pop {
-      0%   { transform: scale(0.4) rotate(-8deg); opacity: 0.6; }
-      65%  { transform: scale(1.18) rotate(3deg); opacity: 1; }
-      100% { transform: scale(1) rotate(0deg); }
-    }
-    @keyframes cell-shake {
-      0%,100% { transform: translateX(0); }
-      15%  { transform: translateX(-10px); }
-      30%  { transform: translateX(10px); }
-      50%  { transform: translateX(-8px); }
-      70%  { transform: translateX(7px); }
-      85%  { transform: translateX(-4px); }
-    }
-    @keyframes cell-correct {
-      0%   { transform: scale(1); }
-      35%  { transform: scale(1.18); }
-      65%  { transform: scale(0.93); }
-      100% { transform: scale(1); }
-    }
-    @keyframes badge-pop {
-      0%   { transform: scale(0); opacity: 0; }
-      60%  { transform: scale(1.25); opacity: 1; }
-      80%  { transform: scale(0.92); }
-      100% { transform: scale(1); }
-    }
-    @keyframes slide-up {
-      0%   { transform: translateY(32px); opacity: 0; }
-      100% { transform: translateY(0);    opacity: 1; }
-    }
-    @keyframes pulse-slow {
-      0%,100% { opacity: 0.3; }
-      50%      { opacity: 0.7; }
-    }
-    @keyframes active-ring {
-      0%,100% { box-shadow: 0 0 0 2px rgba(168,85,247,0.5); }
-      50%     { box-shadow: 0 0 0 5px rgba(168,85,247,0.15); }
-    }
-    @keyframes cursor-blink {
-      0%,100% { opacity: 1; }
-      50%     { opacity: 0; }
-    }
-    .anim-char-pop   { display:inline-block; animation: char-pop   0.28s cubic-bezier(.36,.07,.19,.97) both; }
-    .anim-badge-pop  { display:inline-flex;  animation: badge-pop  0.35s cubic-bezier(.36,.07,.19,.97) both; }
-    .anim-slide-up   { animation: slide-up   0.32s ease-out both; }
-    .anim-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
-    .anim-shake      { animation: cell-shake  0.45s ease-out both; }
-    .anim-correct    { animation: cell-correct 0.38s ease-out both; }
-    .anim-active-ring{ animation: active-ring 1.6s ease-in-out infinite; }
-    .anim-cursor     { display:inline-block; animation: cursor-blink 1s step-end infinite; }
-  `],
+    GameStartingOverlayComponent,
+  ],
   templateUrl: './idiom.component.html',
+  styles: [`
+    @keyframes gold-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    }
+    @keyframes dragon-enter {
+      0% { transform: scale(0.6) translateY(20px); opacity: 0; }
+      70% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes slot-shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .anim-gold-pulse { animation: gold-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    .anim-dragon-enter { animation: dragon-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+    .anim-slot-shake { animation: slot-shake 0.4s ease-in-out both; }
+  `]
 })
 export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   authStore = inject(AuthStore);
   private route = inject(ActivatedRoute);
-  private svc = inject(IdiomService);
   private audio = inject(AudioService);
   private xpService = inject(XpService);
   private floatingText = inject(FloatingTextService);
   pkStore = inject(IdiomPKStore);
+
   GameStatus = GameStatus;
   GameMode = GameMode;
+  GameResult = GameResult;
 
-  // ---- PK room lifecycle ----
+  // Single-player Engine
+  engine = IdiomSolitaireEngine.getInstance();
+  isLoading = signal(true);
+
+  // Solitaire States
+  chainMode = signal<ChainMode>('exact'); // 'exact' (同字) | 'pinyin' (同音)
+  solitaireChain = signal<IdiomItem[]>([]);
+  streak = signal(0);
+  maxStreak = signal(0);
+
+  currentSlots = signal<string[]>(['', '', '']); // Slots 1, 2, 3 (Slot 0 is the pinned targetChar)
+  activeSlotIndex = signal(0); // 0, 1, 2
+  keypad = signal<string[]>([]);
+  keypadUsed = signal<boolean[]>([]);
+  hintsRemaining = signal(5);
+  shufflesRemaining = signal(3);
+  isDeadEnd = signal(false);
+  shakeSlots = signal(false);
+  errorMessage = signal('');
+
+  // Modals
+  showRules = signal(false);
+  inspectedIdiom = signal<IdiomItem | null>(null);
+  candidatesModalOpen = signal(false);
+  candidatesList = signal<IdiomItem[]>([]);
+
+  // PK Room States
   pkRoomId = signal('');
   pkRoomMode = signal<string>(GameMode.Speed);
   pkDifficulty = signal('');
   showPkOverlay = signal(false);
   private roomLifecycle: RoomLifecycleHandle;
 
-  // ---- PK fill answer state ----
-  pkFillAnswer = signal<string[]>(['', '', '', '']);
-  pkFillSelected = signal<string[]>([]);
-  pkActiveBlank = signal(-1);
+  // PK Fill inputs (for current round)
+  pkSlots = signal<string[]>(['', '', '']);
+  pkKeypadUsed = signal<boolean[]>([]);
+
+  @ViewChild('chainScrollContainer') chainScrollContainer?: ElementRef<HTMLDivElement>;
 
   override get store() { return this.pkStore; }
   override get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
+
+  currentTail = computed(() => {
+    const chain = this.solitaireChain();
+    return chain.length ? chain[chain.length - 1] : null;
+  });
+
+  targetChar = computed(() => this.currentTail()?.lastChar || '');
+  targetPinyin = computed(() => {
+    const tail = this.currentTail();
+    if (!tail) return '';
+    const parts = tail.p.split(' ');
+    return parts[3] || tail.lastPinyin;
+  });
 
   constructor() {
     super();
@@ -125,7 +124,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       onLeaveRoom: () => this.leavePkRoom(),
     });
 
-    // Countdown timer effect
+    // PK status effect
     effect((onCleanup) => {
       const s = this.pkStore.status();
       if (s === GameStatus.Starting) {
@@ -144,286 +143,46 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       }
     });
 
-    // Reset fill state when display changes (new round)
+    // Reset PK slots on new round
     effect(() => {
-      const display = this.pkStore.display();
-      if (display.length > 0) {
-        this.pkFillAnswer.set(['', '', '', '']);
-        this.pkFillSelected.set([]);
-        this.pkActiveBlank.set(display.findIndex(ch => ch === '_'));
+      const targetChar = this.pkStore.targetChar();
+      const keyboard = this.pkStore.keyboard();
+      if (targetChar && keyboard.length > 0) {
+        this.pkSlots.set(['', '', '']);
+        this.pkKeypadUsed.set(new Array(keyboard.length).fill(false));
       }
     });
 
-    // Clear answer & allow retry when server reports wrong
+    // PK wrong feedback shake
     effect(() => {
       if (this.pkStore.myState()?.last_wrong) {
-        setTimeout(() => this.clearPkAnswer(), 700);
+        this.audio.playIdiom('wrong');
+        this.shakeSlots.set(true);
+        setTimeout(() => {
+          this.shakeSlots.set(false);
+          this.clearPkSlots();
+        }, 600);
       }
     });
   }
 
-  joinPkRoom(roomId: string, mode: string, diff: string, host: string, target = 3) {
-    this.pkRoomId.set(roomId);
-    this.pkRoomMode.set(mode);
-    this.pkDifficulty.set(diff);
-    this.pkStore.joinRoom(roomId, mode, diff, host, target);
-    this.roomLifecycle.saveReconnectInfo(roomId, mode, diff, host);
-  }
-
-  leavePkRoom() {
-    this.pkStore.leaveRoom();
-    this.pkRoomId.set('');
-    this.roomLifecycle.clearReconnectInfo();
-  }
-
-  // PK fill keyboard handler
-  onPkKeyPress(ch: string) {
-    const display = this.pkStore.display();
-    const myState = this.pkStore.myState();
-    if (!display.length || this.pkStore.isRoundOver() || myState?.last_wrong || myState?.locked) return;
-    const active = this.pkActiveBlank();
-    if (active === -1 || display[active] !== '_') return;
-
-    const ans = [...this.pkFillAnswer()];
-    ans[active] = ch;
-    this.pkFillAnswer.set(ans);
-    this.pkFillSelected.update(s => [...s, ch]);
-
-    const allFilled = display.every((c, i) => c !== '_' || !!ans[i]);
-    if (allFilled) {
-      // Assemble full 4-char word: fixed chars from display + filled chars from ans
-      const fullAns = display.map((c, i) => c !== '_' ? c : ans[i]);
-      this.pkStore.submitFillAnswer(fullAns);
-    } else {
-      for (let j = active + 1; j < 4; j++) {
-        if (display[j] === '_' && !ans[j]) { this.pkActiveBlank.set(j); return; }
-      }
-      for (let j = 0; j < active; j++) {
-        if (display[j] === '_' && !ans[j]) { this.pkActiveBlank.set(j); return; }
-      }
-    }
-  }
-
-  pkUndoChar(i: number, ch: string) {
-    if (ch !== '_') return;
-    const ans = [...this.pkFillAnswer()];
-    if (!ans[i]) return;
-    this.pkFillSelected.update(s => s.filter((_, idx) => idx !== s.lastIndexOf(ans[i])));
-    ans[i] = '';
-    this.pkFillAnswer.set(ans);
-    this.pkActiveBlank.set(i);
-  }
-
-  clearPkAnswer() {
-    this.pkFillAnswer.set(['', '', '', '']);
-    this.pkFillSelected.set([]);
-    const display = this.pkStore.display();
-    this.pkActiveBlank.set(display.findIndex(c => c === '_'));
-  }
-
-  pkCellClass(i: number, ch: string, activeIdx: number): string {
-    // Round-over: ALL cells (blank + fixed) get green/dim treatment
-    if (this.pkStore.isRoundOver()) {
-      return this.pkStore.iWonRound()
-        ? 'border-green-400 bg-green-500 text-white anim-correct shadow-[0_0_18px_rgba(34,197,94,0.55)]'
-        : 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] opacity-50 cursor-default';
-    }
-    // Wrong shake: ALL cells shake (like single-player), blank cells go red
-    if (this.pkStore.myState()?.last_wrong) {
-      return ch !== '_'
-        ? 'border-red-400/60 bg-[var(--color-bg-card)] text-[var(--color-text-main)] anim-shake cursor-default'
-        : 'border-red-500 bg-red-500 text-white anim-shake';
-    }
-    if (ch !== '_') return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] cursor-default';
-    if (this.pkFillAnswer()[i]) return 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-violet-600/15 text-[var(--color-text-main)]';
-    if (activeIdx === i) return 'border-purple-400 bg-purple-500/15 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.3)] cursor-text';
-    return 'border-dashed border-purple-300/25 bg-[var(--color-bg-card)] cursor-default';
-  }
-
-  pkWinDots(wins: number, target: number): { idx: number; filled: boolean }[] {
-    return Array.from({ length: target }, (_, i) => ({ idx: i, filled: i < wins }));
-  }
-
-  override ngOnDestroy() {
-    super.ngOnDestroy();
-    this.pkStore.leaveRoom();
-  }
-
-  handleLobbyJoinRoom(room: any) {
-    if (room.password) this.wsService.setPendingPassword(room.password);
-    this.joinPkRoom(room.roomId, room.mode, room.difficulty || '', room.host);
-  }
-
-  getHeaderSubtitle(): string {
-    if (this.pkRoomId()) {
-      return '极速填空 PK';
-    }
-    if (this.view() === 'fill') {
-      return this.fillDifficulty() ? this.diffLabel(this.fillDifficulty()!) : this.i18n.t('idiom.mode_fill')();
-    }
-    if (this.view() === 'wordle') {
-      return this.i18n.t('idiom.mode_wordle')();
-    }
-    return this.i18n.t('idiom.subtitle')();
-  }
-
-  handleHeaderBack() {
-    if (this.pkRoomId()) {
-      this.leavePkRoom();
-    } else if (this.view() === 'fill') {
-      if (this.fillDifficulty()) {
-        this.fillDifficulty.set(null);
-      } else {
-        this.backToLobby();
-      }
-    } else if (this.view() === 'wordle') {
-      this.backToLobby();
-    } else {
-      this.goBack();
-    }
-  }
-
-  override handleJoinRoom(event: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
-    if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinPkRoom(event.roomId, event.mode, event.difficulty || '', event.host);
-    this.isMobileSidebarOpen.set(false);
-  }
-
-  override handleCreateRoom(event: { name: string; mode: string; difficulty: string; password?: string; target?: number }) {
-    if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinPkRoom(event.name, event.mode, event.difficulty || '', this.playerId, event.target ?? 3);
-    this.isMobileSidebarOpen.set(false);
-  }
-  // ---- Navigation ----
-  view = signal<IdiomView>('lobby');
-  showRules = signal(false);
-  // ---- Fill mode ----
-  fillDifficulty = signal<'easy' | 'medium' | 'hard' | null>(null);
-
-  recommendedDifficulty = computed<'easy' | 'medium' | 'hard'>(() => {
-    const s = this.idiomStats();
-    if (!s || !s.by_difficulty.length) return 'easy';
-    const get = (d: string) => s.by_difficulty.find(x => x.difficulty === d);
-    const easy = get('easy');
-    if (!easy || easy.total === 0 || easy.mastered / easy.total < 0.8) return 'easy';
-    const medium = get('medium');
-    if (!medium || medium.total === 0 || medium.mastered / medium.total < 0.8) return 'medium';
-    return 'hard';
-  });
-
-  diffStat(d: string) {
-    return this.idiomStats()?.by_difficulty.find(x => x.difficulty === d) ?? null;
-  }
-
-  fillQ = signal<FillResponse | null>(null);
-  fillAnswer = signal<string[]>(['', '', '', '']);
-  fillSelected = signal<string[]>([]);
-  fillResult = signal<FillSubmitResponse | null>(null);
-  // Per-idiom consecutive correct count (from server response), NOT a session-wide counter
-  streak = signal(0);
-  answerState = signal<'idle' | 'checking' | 'correct' | 'wrong' | 'correcting' | 'correcting_done'>('idle');
-  correctWord = signal<string[]>([]);
-  autoNextCountdown = signal(0);
-  private autoNextTimer: ReturnType<typeof setInterval> | null = null;
-
-  fillComplete = computed(() => {
-    const q = this.fillQ();
-    if (!q) return false;
-    return q.display.every((ch, i) => ch !== '_' || !!this.fillAnswer()[i]);
-  });
-
-  // User-selectable active blank index; -1 = none
-  activeBlankIndex = signal(-1);
-
-
-  // ---- Wordle mode ----
-  wordleKeyboard = signal<string[]>([]);
-  wordleGuesses = signal<GuessRecord[]>([]);
-  wordleComplete = signal(false);
-  wordleWon = signal(false);
-  wordleAnswer = signal<{ word: string; explanation: string; story: string } | null>(null);
-  socialStats = signal<SocialStats | null>(null);
-  currentGuess = signal<string[]>([]);
-  wordleHintSource = signal('');
-  wordleHintMeaning = signal('');
-  wordleInputError = signal('');
-  wordleSubmitting = signal(false);
-  wordleShakeRow = signal(false);
-  private wordleInputHandled = false;
-
-  // ---- Stats & History ----
-  idiomStats = signal<IdiomStats | null>(null);
-  idiomHistory = signal<HistoryRecord[]>([]);
-  showHistory = signal(false);
-
-  masteryPercent = computed(() => {
-    const s = this.idiomStats();
-    if (!s || s.total === 0) return 0;
-    return Math.round((s.mastered / s.total) * 100);
-  });
-
-  diffLabel(d: string): string {
-    return d === 'easy' ? '简单' : d === 'medium' ? '中等' : '困难';
-  }
-  diffColor(d: string): string {
-    return d === 'easy' ? 'bg-green-500' : d === 'medium' ? 'bg-yellow-500' : 'bg-red-500';
-  }
-  diffBarColor(d: string): string {
-    return d === 'easy' ? 'from-green-500 to-emerald-400' : d === 'medium' ? 'from-yellow-500 to-amber-400' : 'from-red-500 to-orange-400';
-  }
-  relativeTime(iso: string): string {
-    const diff = Date.now() - new Date(iso).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1) return '刚刚';
-    if (m < 60) return `${m}分钟前`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}小时前`;
-    return `${Math.floor(h / 24)}天前`;
-  }
-
-  wordleGrid = computed(() => {
-    const guesses = this.wordleGuesses();
-    const current = this.currentGuess();
-    const rows: { char: string; status: string; active?: boolean }[][] = [];
-    for (let i = 0; i < 6; i++) {
-      const guess = guesses[i];
-      if (guess) {
-        rows.push(guess.result.map(r => ({ char: r.char, status: r.status })));
-      } else if (i === guesses.length && !this.wordleComplete()) {
-        // active input row: show current typing chars + cursor
-        rows.push(Array(4).fill(null).map((_, ci) => ({
-          char: current[ci] || '',
-          status: 'input',
-          active: ci === current.length,
-        })));
-      } else {
-        rows.push(Array(4).fill(null).map(() => ({ char: '', status: '' })));
-      }
-    }
-    return rows;
-  });
-
-  wordleKeyStatus = computed(() => {
-    const map = new Map<string, 'correct' | 'present' | 'absent'>();
-    const priority: Record<string, number> = { correct: 3, present: 2, absent: 1 };
-    for (const guess of this.wordleGuesses()) {
-      for (const r of guess.result) {
-        const cur = map.get(r.char);
-        if (!cur || priority[r.status] > priority[cur]) {
-          map.set(r.char, r.status as 'correct' | 'present' | 'absent');
-        }
-      }
-    }
-    return map;
-  });
-
-  override ngOnInit() {
+  override async ngOnInit() {
     super.ngOnInit();
-    this.loadWordleState();
-    if (this.authStore.isAuthenticated()) {
-      this.svc.getStats().subscribe(s => this.idiomStats.set(s));
-      this.svc.getHistory().subscribe(h => this.idiomHistory.set(h));
+
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    // Load idiom dictionary client-side (Rule 5)
+    try {
+      await this.engine.loadDictionary();
+      this.isLoading.set(false);
+      this.startNewSolitaireGame();
+    } catch (err) {
+      console.error('Failed to load idiom dictionary:', err);
+      this.isLoading.set(false);
+    }
+
     // PK room lifecycle: reconnect or join from query params
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
@@ -442,480 +201,327 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  
-
-  backToLobby() {
-    this.view.set('lobby');
-    // Refresh stats + history so lobby shows up-to-date data
-    if (this.authStore.isAuthenticated()) {
-      this.svc.getStats().subscribe(s => this.idiomStats.set(s));
-      this.svc.getHistory().subscribe(h => this.idiomHistory.set(h));
-    }
-  }
-  // ---- Fill mode ----
-  enterFill() {
-    this.fillDifficulty.set(null);
-    this.fillQ.set(null);
-    this.view.set('fill');
+  override ngOnDestroy() {
+    super.ngOnDestroy();
+    this.pkStore.leaveRoom();
   }
 
-  selectDifficulty(d: string) {
-    this.fillDifficulty.set(d as 'easy' | 'medium' | 'hard');
-    this.fillQ.set(null);
-    this.loadFill();
-  }
+  // ==========================================
+  // Single Player Solitaire Logic
+  // ==========================================
 
-  loadFill() {
-    this.fillAnswer.set(['', '', '', '']);
-    this.fillSelected.set([]);
-    this.fillResult.set(null);
-    this.answerState.set('idle');
-    this.activeBlankIndex.set(-1);
-    this.svc.getFill(this.fillDifficulty() ?? undefined).subscribe(q => {
-      this.fillQ.set(q);
-      // Default: activate the first blank
-      this.activeBlankIndex.set(q.display.findIndex(ch => ch === '_'));
-    });
-  }
-
-  // After filling a blank, advance to the next unfilled blank
-  private advanceActive(filledIdx: number) {
-    const q = this.fillQ()!;
-    const ans = this.fillAnswer();
-    // Search forward first
-    for (let j = filledIdx + 1; j < q.display.length; j++) {
-      if (q.display[j] === '_' && !ans[j]) { this.activeBlankIndex.set(j); return; }
-    }
-    // Wrap around
-    for (let j = 0; j < filledIdx; j++) {
-      if (q.display[j] === '_' && !ans[j]) { this.activeBlankIndex.set(j); return; }
-    }
-    this.activeBlankIndex.set(-1);
-  }
-
-  isFillKeyUsed(ch: string): boolean {
-    return this.fillSelected().includes(ch);
-  }
-
-  // iOS and Android fire IME events in opposite order:
-  // iOS:     compositionend (with char) → input (isComposing=true, skip)
-  // Android: input (isComposing=false, commit) → compositionend (cleanup)
-  // inputHandled flag prevents double-fill across both paths.
-  private inputHandled = false;
-
-  onCompositionEnd(event: CompositionEvent) {
-    if (this.inputHandled) {
-      // Android path: input event already committed the char
-      this.inputHandled = false;
-      (event.target as HTMLInputElement).value = '';
-      return;
-    }
-    // iOS path: compositionend carries the committed char
-    const input = event.target as HTMLInputElement;
-    const text = event.data || input.value;
-    const chars = [...text];
-    if (!chars.length) return;
-    const ch = chars[chars.length - 1];
-    input.value = '';
-    this.onHandwriteChar(ch);
-  }
-
-  onHandwriteInput(event: Event) {
-    const ie = event as InputEvent;
-    if (ie.isComposing) return; // still composing (iOS will handle in compositionend)
-    const input = ie.target as HTMLInputElement;
-    const chars = [...input.value];
-    if (!chars.length) return;
-    const ch = chars[chars.length - 1];
-    input.value = '';
-    this.inputHandled = true; // tell compositionend to skip
-    this.onHandwriteChar(ch);
-  }
-
-  // Fill active blank with any character (handwrite / IME path)
-  onHandwriteChar(ch: string) {
-    const q = this.fillQ();
-    const state = this.answerState();
-    if (!q || (state !== 'idle' && state !== 'correcting')) return;
-    const activeIdx = this.activeBlankIndex();
-    if (activeIdx === -1) return;
-    const ans = [...this.fillAnswer()];
-    ans[activeIdx] = ch;
-    this.fillAnswer.set(ans);
-    this.audio.playIdiom('fill');
-    if (q.keyboard.includes(ch) && !this.fillSelected().includes(ch)) {
-      this.fillSelected.update(s => [...s, ch]);
-    }
-    if (q.display.every((c, j) => c !== '_' || !!ans[j])) {
-      this.activeBlankIndex.set(-1);
-      if (state === 'correcting') {
-        setTimeout(() => this.checkCorrection(), 200);
-      } else {
-        this.answerState.set('checking');
-        setTimeout(() => this.submitFill(), 350);
-      }
-    } else {
-      this.advanceActive(activeIdx);
-      setTimeout(() => {
-        (document.getElementById('hw-input') as HTMLInputElement | null)?.focus();
-      }, 30);
+  startNewSolitaireGame() {
+    if (!this.engine.loaded) return;
+    try {
+      const seed = this.engine.getRandomSeed(this.chainMode());
+      this.solitaireChain.set([seed]);
+      this.streak.set(0);
+      this.hintsRemaining.set(5);
+      this.shufflesRemaining.set(3);
+      this.refreshCurrentStep();
+    } catch (err) {
+      console.error('Failed to start solitaire game:', err);
     }
   }
 
-  // Cell visual class — activeIdx passed from template (direct signal read, ensures reactivity)
-  cellClass(i: number, ch: string, activeIdx: number): string {
-    if (ch !== '_') {
-      return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)] cursor-default';
-    }
-    const state = this.answerState();
-    if (state === 'correct') {
-      return 'border-green-500 bg-green-500 text-white anim-correct';
-    }
-    if (state === 'wrong') {
-      const isRight = this.fillAnswer()[i] === this.correctWord()[i];
-      return isRight
-        ? 'border-green-500 bg-green-500 text-white anim-correct'
-        : 'border-red-500 bg-red-500 text-white anim-shake';
-    }
-    if (state === 'correcting_done') {
-      return 'border-green-500 bg-green-500 text-white anim-correct';
-    }
-    if (this.fillAnswer()[i]) {
-      return 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-violet-600/15 text-[var(--color-text-main)]';
-    }
-    if (activeIdx === i) {
-      return 'border-purple-400 bg-purple-500/15 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.3)] cursor-text';
-    }
-    // Waiting blank
-    return 'border-dashed border-purple-300/25 bg-[var(--color-bg-card)] cursor-default';
-  }
-
-  cellAnimation(i: number, ch: string): string {
-    // Staggered anim-correct/-shake are applied via class; return '' here (delay handled by style)
-    return '';
-  }
-
-  cellAnimDelay(i: number, ch: string): string {
-    const state = this.answerState();
-    if ((state === 'correct' || state === 'wrong') && ch === '_') {
-      return `${i * 70}ms`;
-    }
-    return '0ms';
-  }
-
-  onFillKeyPress(ch: string) {
-    const q = this.fillQ();
-    const state = this.answerState();
-    if (!q || (state !== 'idle' && state !== 'correcting')) return;
-    if (this.isFillKeyUsed(ch)) return;
-    const activeIdx = this.activeBlankIndex();
-    if (activeIdx === -1) return;
-
-    const ans = [...this.fillAnswer()];
-    ans[activeIdx] = ch;
-    this.fillAnswer.set(ans);
-    this.fillSelected.update(s => [...s, ch]);
-    this.audio.playIdiom('fill');
-
-    if (q.display.every((c, j) => c !== '_' || !!ans[j])) {
-      this.activeBlankIndex.set(-1);
-      if (state === 'correcting') {
-        setTimeout(() => this.checkCorrection(), 200);
-      } else {
-        this.answerState.set('checking');
-        setTimeout(() => this.submitFill(), 350);
-      }
-    } else {
-      this.advanceActive(activeIdx);
-    }
-  }
-
-  // Click a blank: select it (and open system keyboard); click a filled blank: undo and select
-  undoFillChar(i: number, displayCh: string) {
-    const state = this.answerState();
-    if (displayCh !== '_' || (state !== 'idle' && state !== 'correcting')) return;
-    const ch = this.fillAnswer()[i];
-    if (ch) {
-      const ans = [...this.fillAnswer()];
-      ans[i] = '';
-      this.fillAnswer.set(ans);
-      this.fillSelected.update(s => s.filter(c => c !== ch));
-      this.audio.playIdiom('erase');
-    }
-    this.activeBlankIndex.set(i);
-    // Synchronous focus within user gesture → mobile browser opens system keyboard/IME immediately
-    (document.getElementById('hw-input') as HTMLInputElement | null)?.focus();
-  }
-
-  clearFillAnswer() {
-    const state = this.answerState();
-    if (state !== 'idle' && state !== 'correcting') return;
-    const q = this.fillQ();
-    if (!q) return;
-    this.fillAnswer.set(q.display.map(() => ''));
-    this.fillSelected.set([]);
-    this.activeBlankIndex.set(q.display.findIndex(ch => ch === '_'));
-  }
-
-  submitFill() {
-    const q = this.fillQ();
-    if (!q) return;
-    const fullAnswer = q.display.map((ch, i) => ch === '_' ? this.fillAnswer()[i] : ch);
-    this.svc.submitFill(q.idiom_id, fullAnswer).subscribe(res => {
-      this.fillResult.set(res);
-      this.correctWord.set([...res.word]);
-      // streak = per-idiom consecutive_correct from server (0 when wrong, resets per idiom)
-      this.streak.set(res.consecutive_correct ?? 0);
-      if (res.is_correct) {
-        this.answerState.set('correct');
-        if (res.is_mastered) {
-          this.audio.playIdiom('mastered');
-        } else {
-          this.audio.playIdiom('correct');
-        }
-        if (res.xp_result && res.xp_result.xp_earned > 0) {
-          this.xpService.showXpGain(res.xp_result.xp_earned);
-          if (res.xp_result.leveled_up) {
-            // Slight delay so level-up victory plays after the correct/mastered sound fades
-            setTimeout(() => this.audio.playUI('victory'), 400);
-          }
-        }
-        
-        // Show combo text
-        if (res.consecutive_correct && res.consecutive_correct > 1) {
-          const x = window.innerWidth / 2;
-          const y = window.innerHeight / 2 - 100;
-          this.floatingText.show(`🔥 连对 ×${res.consecutive_correct}!`, x, y, { size: 'lg', color: '#fbbf24' });
-        } else if (res.is_mastered) {
-          const x = window.innerWidth / 2;
-          const y = window.innerHeight / 2 - 100;
-          this.floatingText.show(`👑 完全掌握!`, x, y, { size: 'lg', color: '#fbbf24' });
-        } else {
-          const x = window.innerWidth / 2;
-          const y = window.innerHeight / 2 - 100;
-          this.floatingText.show(`⭐ 正确!`, x, y, { size: 'md', color: '#10b981' });
-        }
-
-        // Auto-advance after 2 s
-        this.autoNextCountdown.set(2);
-        this.autoNextTimer = setInterval(() => {
-          this.autoNextCountdown.update(v => v - 1);
-          if (this.autoNextCountdown() <= 0) this.nextFill();
-        }, 1000);
-      } else {
-        this.answerState.set('wrong');
-        this.audio.playIdiom('wrong');
-        // After 1.5s let user read the explanation, then enter correction mode
-        setTimeout(() => this.enterCorrecting(), 1500);
-      }
-      // Refresh stats + history after every answer (correct or wrong)
-      if (this.authStore.isAuthenticated()) {
-        this.svc.getStats().subscribe(s => this.idiomStats.set(s));
-        this.svc.getHistory().subscribe(h => this.idiomHistory.set(h));
-      }
-    });
-  }
-
-  enterCorrecting() {
-    const q = this.fillQ();
-    if (!q) return;
-    this.fillAnswer.set(q.display.map(() => ''));
-    this.fillSelected.set([]);
-    this.activeBlankIndex.set(q.display.findIndex(ch => ch === '_'));
-    this.answerState.set('correcting');
-  }
-
-  // Validate correction attempt (no server call — just local compare)
-  private checkCorrection() {
-    const q = this.fillQ();
-    if (!q) return;
-    const correct = this.correctWord();
-    const ans = this.fillAnswer();
-    const allMatch = q.display.every((ch, i) => ch !== '_' || ans[i] === correct[i]);
-    if (allMatch) {
-      this.answerState.set('correcting_done');
-      this.audio.playIdiom('correcting_done');
-    } else {
-      // Wrong chars: clear them and reset active to first wrong blank
-      const newAns = ans.map((a, i) => (q.display[i] === '_' && a !== correct[i]) ? '' : a);
-      this.fillAnswer.set(newAns);
-      this.fillSelected.set(newAns.filter(Boolean));
-      const firstWrong = q.display.findIndex((ch, i) => ch === '_' && !newAns[i]);
-      this.activeBlankIndex.set(firstWrong);
-    }
-  }
-
-  applyFillHint() {
-    const q = this.fillQ();
-    if (!q || this.answerState() !== 'idle') return;
-    const ans = [...this.fillAnswer()];
-    const firstEmpty = q.display.findIndex((ch, i) => ch === '_' && !ans[i]);
-    if (firstEmpty === -1) return;
-    const dummyAnswer = q.display.map((ch, i) => ch === '_' ? (ans[i] || '一') : ch);
-    this.svc.submitFill(q.idiom_id, dummyAnswer).subscribe(res => {
-      const correct = [...res.word];
-      const newAns = [...this.fillAnswer()];
-      newAns[firstEmpty] = correct[firstEmpty];
-      this.fillAnswer.set(newAns);
-      const hintChar = correct[firstEmpty];
-      if (q.keyboard.includes(hintChar)) {
-        this.fillSelected.update(s => s.includes(hintChar) ? s : [...s, hintChar]);
-      }
-      // If now complete, auto-submit
-      if (q.display.every((c, j) => c !== '_' || !!newAns[j])) {
-        this.answerState.set('checking');
-        setTimeout(() => this.submitFill(), 350);
-      }
-    });
-  }
-
-  nextFill() {
-    if (this.autoNextTimer) { clearInterval(this.autoNextTimer); this.autoNextTimer = null; }
-    this.autoNextCountdown.set(0);
+  toggleChainMode(mode: ChainMode) {
+    if (this.chainMode() === mode) return;
+    this.chainMode.set(mode);
+    this.refreshCurrentStep();
     this.audio.playIdiom('next');
-    this.loadFill();
   }
 
-  // ---- Wordle mode ----
-  enterWordle() { this.view.set('wordle'); }
+  refreshCurrentStep() {
+    const tail = this.currentTail();
+    if (!tail) return;
 
-  loadWordleState() {
-    this.svc.getDailyState().subscribe((state: DailyStateResponse) => {
-      this.wordleKeyboard.set(state.keyboard || []);
-      this.wordleGuesses.set(state.guesses || []);
-      this.wordleHintSource.set(state.hint_source || '');
-      this.wordleHintMeaning.set(state.hint_meaning || '');
-      if (state.is_complete) {
-        this.wordleComplete.set(true);
-        const last = (state.guesses || []).at(-1);
-        this.wordleWon.set(!!last && last.result.every(r => r.status === 'correct'));
-        if (state.word) {
-          this.wordleAnswer.set({ word: state.word, explanation: state.explanation || '', story: state.story || '' });
-        }
-      }
-      this.svc.getSocialStats().subscribe(s => this.socialStats.set(s));
-    });
+    this.currentSlots.set(['', '', '']);
+    this.activeSlotIndex.set(0);
+    this.errorMessage.set('');
+
+    const usedWords = new Set(this.solitaireChain().map(i => i.w));
+    const { keys, successorsCount } = this.engine.generateKeypad(
+      tail.lastChar,
+      tail.lastPinyin,
+      this.chainMode(),
+      usedWords,
+      12
+    );
+
+    this.keypad.set(keys);
+    this.keypadUsed.set(new Array(keys.length).fill(false));
+    this.isDeadEnd.set(successorsCount === 0);
+
+    setTimeout(() => this.scrollChainToEnd(), 100);
   }
 
-  focusWordleInput() {
-    (document.getElementById('wordle-input') as HTMLInputElement | null)?.focus();
-  }
+  onKeypadPress(char: string, index: number) {
+    if (this.keypadUsed()[index]) return;
 
-  onWordleCompositionEnd(event: CompositionEvent) {
-    if (this.wordleInputHandled) {
-      this.wordleInputHandled = false;
-      (event.target as HTMLInputElement).value = '';
-      return;
-    }
-    // iOS path
-    const input = event.target as HTMLInputElement;
-    const text = event.data || input.value;
-    const chars = [...text].filter(ch => /\p{Script=Han}/u.test(ch));
-    input.value = '';
-    for (const ch of chars) this.addWordleChar(ch);
-  }
+    const slots = [...this.currentSlots()];
+    const emptyIdx = slots.findIndex(s => !s);
+    if (emptyIdx === -1) return;
 
-  onWordleInput(event: Event) {
-    const ie = event as InputEvent;
-    if (ie.isComposing) return;
-    const input = ie.target as HTMLInputElement;
-    const chars = [...input.value].filter(ch => /\p{Script=Han}/u.test(ch));
-    input.value = '';
-    if (!chars.length) return;
-    this.wordleInputHandled = true;
-    for (const ch of chars) this.addWordleChar(ch);
-  }
+    slots[emptyIdx] = char;
+    this.currentSlots.set(slots);
 
-  addWordleChar(ch: string) {
-    if (this.wordleComplete() || this.currentGuess().length >= 4 || this.wordleSubmitting()) return;
-    this.wordleInputError.set('');
-    this.currentGuess.update(g => [...g, ch]);
+    const used = [...this.keypadUsed()];
+    used[index] = true;
+    this.keypadUsed.set(used);
+
     this.audio.playIdiom('fill');
-    // auto-submit when 4th char is filled
-    if (this.currentGuess().length === 4) {
-      setTimeout(() => this.submitWordle(), 180);
+
+    // If all 3 slots filled, automatically submit
+    if (slots.every(s => !!s)) {
+      setTimeout(() => this.submitSolitaire(), 200);
     }
   }
 
-  clearLastGuessChar() {
-    if (this.currentGuess().length === 0) return;
-    this.wordleInputError.set('');
-    this.currentGuess.update(g => g.slice(0, -1));
+  onSlotClick(slotIdx: number) {
+    const char = this.currentSlots()[slotIdx];
+    if (!char) return;
+
+    // Retract character
+    const slots = [...this.currentSlots()];
+    slots[slotIdx] = '';
+    this.currentSlots.set(slots);
+
+    // Unmark in keypad
+    const keypad = this.keypad();
+    const used = [...this.keypadUsed()];
+    const keyIdx = keypad.findIndex((k, i) => k === char && used[i]);
+    if (keyIdx !== -1) {
+      used[keyIdx] = false;
+      this.keypadUsed.set(used);
+    }
+
     this.audio.playIdiom('erase');
   }
 
-  onWordleKeyPress(ch: string) {
-    if (this.wordleComplete() || this.currentGuess().length >= 4) return;
-    // Toggle: clicking same char again removes last char if it matches
-    this.addWordleChar(ch);
+  clearSlots() {
+    this.currentSlots.set(['', '', '']);
+    this.keypadUsed.set(new Array(this.keypad().length).fill(false));
+    this.errorMessage.set('');
+    this.audio.playIdiom('erase');
   }
 
-  submitWordle() {
-    if (this.currentGuess().length < 4 || this.wordleSubmitting()) return;
-    const guess = this.currentGuess().join('');
-    this.wordleSubmitting.set(true);
-    this.wordleInputError.set('');
-    this.svc.submitDailyGuess(guess).subscribe({
-      next: (res: DailyGuessResponse) => {
-        this.wordleSubmitting.set(false);
-        this.wordleGuesses.update(g => [...g, { guess_seq: res.guess_seq, guess, result: res.result }]);
-        this.currentGuess.set([]);
-        if (res.hint_meaning) this.wordleHintMeaning.set(res.hint_meaning);
-        if (res.is_win || res.remaining === 0) {
-          this.wordleComplete.set(true);
-          this.wordleWon.set(res.is_win);
-          if (res.word) {
-            this.wordleAnswer.set({ word: res.word, explanation: res.explanation || '', story: res.story || '' });
-          }
-          this.audio.playIdiom(res.is_win ? 'mastered' : 'wrong');
-          this.svc.getSocialStats().subscribe(s => this.socialStats.set(s));
-        } else {
-          this.audio.playIdiom('fill');
-        }
-      },
-      error: (err) => {
-        this.wordleSubmitting.set(false);
-        const msg = err?.error?.message || '提交失败，请重试';
-        this.wordleInputError.set(msg);
-        this.audio.playIdiom('wrong');
-        // shake the active row
-        this.wordleShakeRow.set(true);
-        setTimeout(() => this.wordleShakeRow.set(false), 500);
-        setTimeout(() => this.wordleInputError.set(''), 2500);
-      },
-    });
+  submitSolitaire() {
+    const slots = this.currentSlots();
+    if (slots.some(s => !s)) {
+      this.showError('请先填满 4 个汉字');
+      return;
+    }
+
+    const fullWord = this.targetChar() + slots.join('');
+    const idiomItem = this.engine.findByWord(fullWord);
+
+    if (!idiomItem) {
+      this.showError(`“${fullWord}”不是中华成语词典中的合法成语`);
+      return;
+    }
+
+    // Check if already in chain
+    const chainWords = this.solitaireChain().map(i => i.w);
+    if (chainWords.includes(fullWord)) {
+      this.showError(`成语“${fullWord}”在本次神龙链条中已经使用过了`);
+      return;
+    }
+
+    // Validate chain rule
+    const prev = this.currentTail();
+    if (!prev) return;
+    const ruleCheck = this.engine.canChain(prev, idiomItem, this.chainMode());
+    if (!ruleCheck.valid) {
+      this.showError(ruleCheck.reason || '首尾无法接龙');
+      return;
+    }
+
+    // Success!
+    this.audio.playIdiom('correct');
+    this.solitaireChain.update(list => [...list, idiomItem]);
+    this.streak.update(s => s + 1);
+    if (this.streak() > this.maxStreak()) {
+      this.maxStreak.set(this.streak());
+    }
+
+    this.xpService.showXpGain(15);
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2 - 80;
+    this.floatingText.show(`🐉 神龙延展 +1 节!`, centerX, centerY, { size: 'lg', color: '#f59e0b' });
+
+    this.refreshCurrentStep();
   }
 
-  shareWordle() {
-    const date = new Date().toISOString().slice(0, 10);
-    const guesses = this.wordleGuesses();
-    const grid = guesses.map(g =>
-      g.result.map(r => r.status === 'correct' ? '🟩' : r.status === 'present' ? '🟨' : '⬛').join('')
-    ).join('\n');
-    const text = `成语猜词 ${date} ${this.wordleWon() ? guesses.length + '/6' : 'X/6'}\n${grid}\nhttps://puzzlepk.com/${this.i18n.currentLang()}/games/idiom`;
-    if (typeof navigator !== 'undefined') {
-      navigator.share ? navigator.share({ text }) : navigator.clipboard?.writeText(text);
+  showError(msg: string) {
+    this.errorMessage.set(msg);
+    this.audio.playIdiom('wrong');
+    this.shakeSlots.set(true);
+    setTimeout(() => this.shakeSlots.set(false), 500);
+  }
+
+  useHint() {
+    if (this.hintsRemaining() <= 0) return;
+    const tail = this.currentTail();
+    if (!tail) return;
+
+    const usedWords = new Set(this.solitaireChain().map(i => i.w));
+    const hintIdiom = this.engine.getHint(tail.lastChar, tail.lastPinyin, this.chainMode(), usedWords);
+    if (!hintIdiom) {
+      this.showError('未能找到符合规则的后续成语');
+      return;
+    }
+
+    this.hintsRemaining.update(h => h - 1);
+    const hintChars = Array.from(hintIdiom.w).slice(1); // Chars 1, 2, 3
+    this.clearSlots();
+
+    // Auto fill first unfilled slot
+    const slots = ['', '', ''];
+    slots[0] = hintChars[0];
+    this.currentSlots.set(slots);
+
+    // Mark keypad key
+    const keypad = this.keypad();
+    const used = [...this.keypadUsed()];
+    const keyIdx = keypad.findIndex((k, i) => k === hintChars[0] && !used[i]);
+    if (keyIdx !== -1) {
+      used[keyIdx] = true;
+      this.keypadUsed.set(used);
+    }
+
+    this.audio.playIdiom('fill');
+    this.floatingText.show(`💡 推荐：${hintIdiom.w}`, window.innerWidth / 2, window.innerHeight / 2 - 80, { size: 'md', color: '#10b981' });
+  }
+
+  useShuffle() {
+    if (this.shufflesRemaining() <= 0) return;
+    this.shufflesRemaining.update(s => s - 1);
+    this.refreshCurrentStep();
+    this.audio.playIdiom('next');
+    this.floatingText.show('🔄 已重置本节候选字盘', window.innerWidth / 2, window.innerHeight / 2 - 80, { size: 'sm', color: '#38bdf8' });
+  }
+
+  openCandidatesModal() {
+    const tail = this.currentTail();
+    if (!tail) return;
+    const usedWords = new Set(this.solitaireChain().map(i => i.w));
+    const successors = this.engine.findSuccessors(tail.lastChar, tail.lastPinyin, this.chainMode(), usedWords);
+    this.candidatesList.set(successors);
+    this.candidatesModalOpen.set(true);
+  }
+
+  selectCandidateIdiom(item: IdiomItem) {
+    this.candidatesModalOpen.set(false);
+    this.clearSlots();
+    const chars = Array.from(item.w).slice(1);
+    this.currentSlots.set(chars);
+    setTimeout(() => this.submitSolitaire(), 150);
+  }
+
+  inspectIdiom(item: IdiomItem) {
+    this.inspectedIdiom.set(item);
+  }
+
+  scrollChainToEnd() {
+    if (this.chainScrollContainer?.nativeElement) {
+      const el = this.chainScrollContainer.nativeElement;
+      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
     }
   }
 
-  // ---- Style helpers ----
-  wordleCellClass(status: string): string {
-    switch (status) {
-      case 'correct': return 'bg-green-500 border-green-500 text-white';
-      case 'present': return 'bg-yellow-400 border-yellow-400 text-white';
-      case 'absent':  return 'bg-gray-600 border-gray-600 text-gray-300';
-      case 'input':   return 'border-green-400/70 bg-green-500/10 text-[var(--color-text-main)]';
-      default:        return 'border-[var(--color-border-card)]/50 border-dashed bg-[var(--color-bg-card)]';
+  // ==========================================
+  // PK Mode Logic
+  // ==========================================
+
+  joinPkRoom(roomId: string, mode: string, diff: string, host: string, target = 3) {
+    this.pkRoomId.set(roomId);
+    this.pkRoomMode.set(mode);
+    this.pkDifficulty.set(diff);
+    this.pkStore.joinRoom(roomId, mode, diff, host, target);
+    this.roomLifecycle.saveReconnectInfo(roomId, mode, diff, host);
+  }
+
+  leavePkRoom() {
+    this.pkStore.leaveRoom();
+    this.pkRoomId.set('');
+    this.roomLifecycle.clearReconnectInfo();
+  }
+
+  onPkKeypadPress(char: string, index: number) {
+    if (this.pkKeypadUsed()[index] || this.pkStore.isRoundOver()) return;
+
+    const slots = [...this.pkSlots()];
+    const emptyIdx = slots.findIndex(s => !s);
+    if (emptyIdx === -1) return;
+
+    slots[emptyIdx] = char;
+    this.pkSlots.set(slots);
+
+    const used = [...this.pkKeypadUsed()];
+    used[index] = true;
+    this.pkKeypadUsed.set(used);
+
+    this.audio.playIdiom('fill');
+
+    if (slots.every(s => !!s)) {
+      const fullAnswer = [this.pkStore.targetChar(), ...slots];
+      this.pkStore.submitFillAnswer(fullAnswer);
     }
   }
 
-  wordleKeyBtnClass(ch: string): string {
-    const status = this.wordleKeyStatus().get(ch);
-    switch (status) {
-      case 'correct': return 'bg-green-500 border-green-500 text-white';
-      case 'present': return 'bg-yellow-400 border-yellow-400 text-white';
-      case 'absent':  return 'bg-gray-700 border-gray-700 text-gray-500 opacity-50 cursor-not-allowed';
-      default:        return 'border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-main)]';
+  onPkSlotClick(slotIdx: number) {
+    if (this.pkStore.isRoundOver()) return;
+    const char = this.pkSlots()[slotIdx];
+    if (!char) return;
+
+    const slots = [...this.pkSlots()];
+    slots[slotIdx] = '';
+    this.pkSlots.set(slots);
+
+    const keyboard = this.pkStore.keyboard();
+    const used = [...this.pkKeypadUsed()];
+    const keyIdx = keyboard.findIndex((k, i) => k === char && used[i]);
+    if (keyIdx !== -1) {
+      used[keyIdx] = false;
+      this.pkKeypadUsed.set(used);
     }
+
+    this.audio.playIdiom('erase');
+  }
+
+  clearPkSlots() {
+    this.pkSlots.set(['', '', '']);
+    this.pkKeypadUsed.set(new Array(this.pkStore.keyboard().length).fill(false));
+  }
+
+  // ==========================================
+  // Header & Navigation
+  // ==========================================
+
+  getHeaderSubtitle(): string {
+    if (this.pkRoomId()) {
+      return '双人神龙争夺战';
+    }
+    return this.chainMode() === 'exact' ? '真·成语接龙 · 同字严谨模式' : '真·成语接龙 · 同音趣味模式';
+  }
+
+  handleHeaderBack() {
+    if (this.pkRoomId()) {
+      this.leavePkRoom();
+    } else {
+      this.goBack();
+    }
+  }
+
+  override handleJoinRoom(event: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
+    this.joinPkRoom(event.roomId, event.mode, event.difficulty || '', event.host);
+    this.isMobileSidebarOpen.set(false);
+  }
+
+  override handleCreateRoom(event: { name: string; mode: string; difficulty: string; password?: string; target?: number }) {
+    if (event.password) this.wsService.setPendingPassword(event.password);
+    this.joinPkRoom(event.name, event.mode, event.difficulty || '', this.playerId, event.target ?? 3);
+    this.isMobileSidebarOpen.set(false);
   }
 }
