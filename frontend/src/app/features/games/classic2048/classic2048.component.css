@@ -57,10 +57,10 @@
 
 /* Board Outer Frame */
 .c2048-board {
-  background: var(--c2048-board-bg);
-  border-radius: 1rem;
-  border: var(--c2048-board-border);
-  box-shadow: var(--c2048-board-shadow);
+  background: var(--c2048-board-bg, var(--color-bg-card));
+  border-radius: 1.5rem;
+  border: var(--c2048-board-border, 1px solid var(--color-border-card));
+  box-shadow: var(--c2048-board-shadow, 0 16px 32px -8px rgba(0, 0, 0, 0.15));
   touch-action: none;
   user-select: none;
   overscroll-behavior: contain;
@@ -68,10 +68,10 @@
 
 /* Board Empty Cells */
 .c2048-empty-cell {
-  background: var(--c2048-empty-bg);
-  border-radius: 0.75rem;
-  box-shadow: var(--c2048-empty-shadow);
-  border: var(--c2048-empty-border, none);
+  background: var(--c2048-empty-bg, var(--color-bg-sub));
+  border-radius: 0.85rem;
+  box-shadow: var(--c2048-empty-shadow, inset 0 2px 4px rgba(0, 0, 0, 0.05));
+  border: var(--c2048-empty-border, 1px solid var(--color-border-card));
 }
 
 .c2048-tile-wrapper {
@@ -80,13 +80,13 @@
 
 /* Tile Shell & Card Top */
 .c2048-tile-base {
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   box-shadow: var(--c2048-tile-glow, none);
 }
 
 .c2048-tile-top {
   background: var(--c2048-tile-bg);
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   border: var(--c2048-tile-border, none);
   box-shadow: var(--c2048-tile-inner-shadow, none);
   color: var(--c2048-tile-color);
@@ -98,21 +98,23 @@
    THEME 1: CLASSIC (Iconic Warm Timber & Earthy Clay Palette)
    -------------------------------------------------------------------------- */
 [data-theme="classic"] {
-  --c2048-board-bg: #bbada0;
-  --c2048-board-border: 4px solid #a89a8e;
-  --c2048-board-shadow: 0 10px 25px -5px rgba(142, 122, 107, 0.45), inset 0 2px 4px rgba(0, 0, 0, 0.1);
-  --c2048-empty-bg: #cdc1b4;
-  --c2048-empty-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.08);
+  --c2048-board-bg: var(--color-bg-card);
+  --c2048-board-border: 1px solid var(--color-border-card);
+  --c2048-board-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.15);
+  --c2048-empty-bg: var(--color-bg-sub);
+  --c2048-empty-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+  --c2048-empty-border: 1px solid var(--color-border-card);
   --c2048-tile-border: none;
   --c2048-tile-inner-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 :host-context(.theme-dark) [data-theme="classic"] {
-  --c2048-board-bg: #3f3934;
-  --c2048-board-border: 4px solid #2d2824;
-  --c2048-board-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(0, 0, 0, 0.25);
-  --c2048-empty-bg: #524b45;
+  --c2048-board-bg: var(--color-bg-card);
+  --c2048-board-border: 1px solid var(--color-border-card);
+  --c2048-board-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.4);
+  --c2048-empty-bg: var(--color-bg-sub);
   --c2048-empty-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.25);
+  --c2048-empty-border: 1px solid var(--color-border-card);
 }
 
 [data-theme="classic"] .tile-2 {

@@ -180,13 +180,35 @@ import { FriendService } from '../services/friend.service';
       </header>
       }
 
-      <!-- Mobile/iPad Navigation Overlay (xl-) -->
+      <!-- Mobile/iPad Navigation Drawer (xl-) -->
       @if (isMobileMenuOpen()) {
-        <div class="fixed inset-0 top-[3.5rem] sm:top-[4rem] z-40 bg-[var(--color-bg-main)] overflow-y-auto xl:hidden animate-fade-in-down border-b border-[var(--color-border-card)] pb-6 shadow-xl" (click)="isMobileMenuOpen.set(false)">
-          <nav class="px-4 pt-4 pb-6 space-y-2 max-w-2xl mx-auto">
+        <!-- Backdrop: click outside to dismiss -->
+        <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs xl:hidden transition-opacity"
+             (click)="isMobileMenuOpen.set(false)"></div>
+
+        <!-- Right-Aligned Sliding Drawer -->
+        <div class="fixed top-0 right-0 h-full w-[300px] sm:w-[340px] max-w-[85vw] z-50 bg-[var(--color-bg-card)] border-l border-[var(--color-border-card)] shadow-2xl flex flex-col xl:hidden animate-slide-in-right overflow-y-auto"
+             (click)="$event.stopPropagation()">
+          
+          <!-- Drawer Header with Logo & Close Button -->
+          <div class="flex items-center justify-between px-5 h-14 sm:h-16 border-b border-[var(--color-border-card)] shrink-0">
+            <span class="text-xl font-black tracking-widest bg-clip-text text-transparent"
+                  style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              Puzzle PK
+            </span>
+            <button (click)="isMobileMenuOpen.set(false)"
+                    class="p-2 rounded-xl text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer"
+                    title="Close">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
             <!-- Mobile User Profile & Auth Deck (< sm) -->
             @if (authStore.currentUser()) {
-              <div class="sm:hidden mb-3 p-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm flex items-center justify-between gap-3" (click)="$event.stopPropagation()">
+              <div class="sm:hidden mb-3 p-3 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-sm flex items-center justify-between gap-3">
                 <a [routerLink]="['/', i18n.currentLang(), 'profile']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-2.5 min-w-0">
                   <span class="w-10 h-10 rounded-full flex items-center justify-center text-base font-black text-white shrink-0 shadow-md"
                         style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
@@ -207,13 +229,13 @@ import { FriendService } from '../services/friend.service';
                 </button>
               </div>
             } @else {
-              <div class="sm:hidden mb-3 p-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm flex items-center justify-between gap-2" (click)="$event.stopPropagation()">
+              <div class="sm:hidden mb-3 p-3 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-sm flex items-center justify-between gap-2">
                 <a [routerLink]="['/', i18n.currentLang(), 'login']" (click)="isMobileMenuOpen.set(false)"
                    class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-sm">
                   {{ i18n.t('nav.signin')() }}
                 </a>
                 <a [routerLink]="['/', i18n.currentLang(), 'register']" (click)="isMobileMenuOpen.set(false)"
-                   class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)]">
+                   class="flex-1 py-2 px-3 text-center text-xs font-bold rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)]">
                   {{ i18n.t('nav.register')() || '注册' }}
                 </a>
               </div>
@@ -221,8 +243,8 @@ import { FriendService } from '../services/friend.service';
 
             @if (authStore.isAuthenticated()) {
               <button (click)="friendService.togglePanel(true); isMobileMenuOpen.set(false)"
-                      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors text-left cursor-pointer">
-                <span class="text-2xl">👥</span>
+                      class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors text-left cursor-pointer">
+                <span class="text-xl">👥</span>
                 <span>{{ i18n.t('game.friends')() || '好友列表' }}</span>
                 @if (pendingFriendRequests() > 0) {
                   <span class="ml-auto px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-bold">
@@ -231,35 +253,35 @@ import { FriendService } from '../services/friend.service';
                 }
               </button>
             }
-            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
-              <span class="text-2xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
+            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'daily']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
-              <span class="text-2xl">📅</span> {{ i18n.t('daily.title')() || 'Daily' }}
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-xl">📅</span> {{ i18n.t('daily.title')() || 'Daily' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
-              <span class="text-2xl">📖</span> {{ i18n.t('nav.docs')() || 'Docs' }}
+            <a [routerLink]="['/', i18n.currentLang(), 'docs']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-xl">📖</span> {{ i18n.t('nav.docs')() || 'Docs' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card)] hover:text-[var(--color-text-main)] transition-colors">
-              <span class="text-2xl">📝</span> {{ i18n.t('nav.blog')() || 'Blog' }}
+            <a [routerLink]="['/', i18n.currentLang(), 'blog']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-xl">📝</span> {{ i18n.t('nav.blog')() || 'Blog' }}
             </a>
 
             <!-- Mobile Quick Settings: Theme & Language (sm-) -->
-            <div class="pt-4 mt-2 border-t border-[var(--color-border-card)] flex items-center justify-between gap-3 sm:hidden" (click)="$event.stopPropagation()">
+            <div class="pt-4 mt-3 border-t border-[var(--color-border-card)] flex items-center justify-between gap-3 sm:hidden">
               <button (click)="theme.cycleTheme()"
-                      class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] font-bold text-sm text-[var(--color-text-main)] shadow-sm active:scale-95 transition-all">
+                      class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-bold text-xs text-[var(--color-text-main)] shadow-sm active:scale-95 transition-all">
                 <span>{{ theme.currentTheme() === 'dark' ? '☀️' : '🌙' }}</span>
-                <span>{{ theme.currentTheme() === 'dark' ? (i18n.currentLang() === 'zh' ? '浅色模式' : 'Light') : (i18n.currentLang() === 'zh' ? '深色模式' : 'Dark') }}</span>
+                <span>{{ theme.currentTheme() === 'dark' ? (i18n.currentLang() === 'zh' ? '浅色' : 'Light') : (i18n.currentLang() === 'zh' ? '深色' : 'Dark') }}</span>
               </button>
               
               <div class="relative flex-1">
                 <button (click)="isLangMenuOpen.set(!isLangMenuOpen())"
-                        class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] font-bold text-sm text-[var(--color-text-main)] shadow-sm active:scale-95 transition-all">
+                        class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-bold text-xs text-[var(--color-text-main)] shadow-sm active:scale-95 transition-all">
                   <span>{{ currentLangFlag() }}</span>
                   <span>{{ i18n.currentLang().toUpperCase() }}</span>
                 </button>
                 @if (isLangMenuOpen()) {
-                  <div class="absolute left-0 bottom-full mb-2 w-full rounded-xl shadow-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] py-2 z-[100] max-h-56 overflow-y-auto">
+                  <div class="absolute right-0 bottom-full mb-2 w-48 rounded-xl shadow-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] py-2 z-[100] max-h-56 overflow-y-auto">
                     @for (lang of supportedLangs; track lang.code) {
                       <button (click)="i18n.setLang(lang.code); isLangMenuOpen.set(false); isMobileMenuOpen.set(false)" 
                               class="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] flex items-center gap-3"

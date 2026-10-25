@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -164,11 +165,11 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     if (rState && rState.difficulty) {
       return rState.difficulty;
     }
-    return localStorage.getItem('sudoku_single_diff') || GameDifficulty.Easy;
+    return getSavedDifficulty('sudoku', GameDifficulty.Easy);
   }
 
   changeSingleDifficulty(diff: string) {
-    localStorage.setItem('sudoku_single_diff', diff);
+    setSavedDifficulty('sudoku', diff);
     // Find next unsolved level for this diff
     this.http.get<any[]>(`${environment.apiUrl}/sudoku/levels/${diff}`).subscribe({
       next: (levels) => {

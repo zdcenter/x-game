@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, comput
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -225,7 +226,8 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
         this.showLobby.set(false);
       }
     } else {
-      this.store.joinRoom('', GameMode.Single, GameDifficulty.Easy, this.playerId);
+      const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
+      this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
     }
   }
 

@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal, effect, untracked } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { BaseGameStore } from '../../../core/store/base-game.store';
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { environment } from '../../../../environments/environment';
 import { ConnectEngine, ConnectPuzzleDef } from './connect-engine';
 import { C2SAction } from '../../../core/models/websocket.model';
@@ -162,7 +163,7 @@ export class ConnectStore extends BaseGameStore {
 
   constructor() {
     super();
-    this.currentDifficulty.set('easy'); // Force default to easy
+    this.currentDifficulty.set(getSavedDifficulty('connect', 'easy'));
     // Watch for PK puzzle changes
     effect(() => {
       const state = this.rawState() as ConnectGameState;
@@ -271,6 +272,7 @@ export class ConnectStore extends BaseGameStore {
   }
 
   changeSingleDifficulty(diff: string) {
+    setSavedDifficulty('connect', diff);
     this.currentDifficulty.set(diff);
     this.fetchLevelsAndLoad(diff);
   }

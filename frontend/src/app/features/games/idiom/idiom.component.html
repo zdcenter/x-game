@@ -40,16 +40,16 @@
     } @else {
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Streak badge -->
-        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold shadow-sm">
-          <span>🔥</span>
+        <div class="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold shadow-sm">
+          <span class="text-sm sm:text-base">🔥</span>
           <span class="font-extrabold">{{ streak() }}</span>
-          <span class="hidden sm:inline text-[11px] opacity-80">连龙</span>
+          <span class="hidden sm:inline text-xs sm:text-sm opacity-80">连龙</span>
         </div>
         <!-- Dragon length badge -->
-        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold shadow-sm">
-          <span>🐉</span>
+        <div class="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs sm:text-sm font-bold shadow-sm">
+          <span class="text-sm sm:text-base">🐉</span>
           <span class="font-extrabold">{{ solitaireChain().length }}</span>
-          <span class="hidden sm:inline text-[11px] opacity-80">节</span>
+          <span class="hidden sm:inline text-xs sm:text-sm opacity-80">节</span>
         </div>
       </div>
     }
@@ -207,21 +207,21 @@
 
     <!-- ===================== SINGLE PLAYER SOLITAIRE ===================== -->
     } @else {
-      <div class="w-full flex-1 flex flex-col items-center justify-between relative min-h-0 select-none max-w-4xl gap-2 sm:gap-4">
+      <div class="w-full flex-1 flex flex-col items-center justify-between relative min-h-0 select-none max-w-5xl gap-2.5 sm:gap-4 md:gap-5">
 
         <!-- Top Control Bar (Mode toggle & Props) -->
-        <div class="w-full flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm">
+        <div class="w-full flex items-center justify-between flex-wrap gap-2.5 px-3.5 sm:px-5 py-2 sm:py-2.5 md:py-3 rounded-2xl md:rounded-3xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm">
           <!-- Chain Mode Toggle -->
-          <div class="flex items-center gap-1 p-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+          <div class="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
             <button (click)="toggleChainMode('exact')"
-                    class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all"
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm md:text-base font-extrabold transition-all cursor-pointer"
                     [ngClass]="chainMode() === 'exact'
                       ? 'bg-amber-500 text-white shadow-sm'
                       : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)]'">
               🀄 同字严谨
             </button>
             <button (click)="toggleChainMode('pinyin')"
-                    class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all"
+                    class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm md:text-base font-extrabold transition-all cursor-pointer"
                     [ngClass]="chainMode() === 'pinyin'
                       ? 'bg-rose-500 text-white shadow-sm'
                       : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)]'">
@@ -230,76 +230,76 @@
           </div>
 
           <!-- Quick Prop Buttons -->
-          <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-2 sm:gap-2.5">
             <!-- Hint -->
             <button (click)="useHint()"
                     [disabled]="hintsRemaining() <= 0"
                     title="画龙点睛：填入正确字"
-                    class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all active:scale-95"
+                    class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border transition-all active:scale-95 cursor-pointer"
                     [ngClass]="hintsRemaining() > 0
                       ? 'border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10'
                       : 'opacity-40 border-[var(--color-border-card)] text-[var(--color-text-secondary)] cursor-not-allowed'">
-              <span>💡</span>
+              <span class="text-sm sm:text-base">💡</span>
               <span class="hidden sm:inline">提示</span>
-              <span class="text-[10px] font-mono">({{ hintsRemaining() }})</span>
+              <span class="text-xs sm:text-sm font-mono font-extrabold">({{ hintsRemaining() }})</span>
             </button>
 
             <!-- Shuffle Keypad -->
             <button (click)="useShuffle()"
                     [disabled]="shufflesRemaining() <= 0"
                     title="移花接木：重置候选字盘"
-                    class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all active:scale-95"
+                    class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border transition-all active:scale-95 cursor-pointer"
                     [ngClass]="shufflesRemaining() > 0
                       ? 'border-sky-500/40 text-sky-500 hover:bg-sky-500/10'
                       : 'opacity-40 border-[var(--color-border-card)] text-[var(--color-text-secondary)] cursor-not-allowed'">
-              <span>🔄</span>
+              <span class="text-sm sm:text-base">🔄</span>
               <span class="hidden sm:inline">换字</span>
-              <span class="text-[10px] font-mono">({{ shufflesRemaining() }})</span>
+              <span class="text-xs sm:text-sm font-mono font-extrabold">({{ shufflesRemaining() }})</span>
             </button>
 
             <!-- Dictionary/Candidates -->
             <button (click)="openCandidatesModal()"
                     title="成语宝库：查看所有可接成语"
-                    class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 active:scale-95 transition-all">
-              <span>📖</span>
+                    class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 active:scale-95 transition-all cursor-pointer">
+              <span class="text-sm sm:text-base">📖</span>
               <span class="hidden sm:inline">宝典</span>
             </button>
 
             <!-- Restart -->
             <button (click)="startNewSolitaireGame()"
                     title="重新开启一条全新神龙"
-                    class="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-bold border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] active:scale-95 transition-all">
-              <span>⚡</span>
+                    class="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] active:scale-95 transition-all cursor-pointer">
+              <span class="text-sm sm:text-base">⚡</span>
               <span class="hidden sm:inline">重开</span>
             </button>
           </div>
         </div>
 
         <!-- 🐉 The Dragon Chain Track (Horizontal Scrollable Ribbon) -->
-        <div class="w-full flex flex-col gap-1.5">
-          <div class="flex items-center justify-between text-xs text-[var(--color-text-secondary)] px-1">
-            <span class="font-extrabold flex items-center gap-1.5 text-[var(--color-text-main)]">
+        <div class="w-full flex flex-col gap-2">
+          <div class="flex items-center justify-between text-xs sm:text-sm md:text-base text-[var(--color-text-secondary)] px-1">
+            <span class="font-extrabold flex items-center gap-2 text-[var(--color-text-main)] text-sm sm:text-base md:text-lg">
               <span>🐉 成语神龙轨迹</span>
-              <span class="text-amber-500">已接 {{ solitaireChain().length }} 节</span>
+              <span class="text-amber-500 font-black">已接 {{ solitaireChain().length }} 节</span>
             </span>
-            <span class="text-[11px] opacity-75">轻触卡片查看典故故事 ➔</span>
+            <span class="text-xs sm:text-sm opacity-80">轻触卡片查看典故故事 ➔</span>
           </div>
 
           <div #chainScrollContainer
-               class="w-full overflow-x-auto flex items-center gap-2 sm:gap-3 py-2 px-1 rounded-2xl bg-[var(--color-bg-card)]/60 border border-[var(--color-border-card)]/80 scrollbar-thin">
+               class="w-full overflow-x-auto flex items-center gap-2.5 sm:gap-3.5 py-2.5 sm:py-3.5 px-2.5 sm:px-3.5 rounded-2xl md:rounded-3xl bg-[var(--color-bg-card)]/70 border border-[var(--color-border-card)] scrollbar-thin">
             @for (item of solitaireChain(); track $index) {
-              <div class="shrink-0 flex items-center gap-2 anim-dragon-enter">
+              <div class="shrink-0 flex items-center gap-2 sm:gap-3 anim-dragon-enter">
                 <!-- Idiom Jade Card -->
                 <button (click)="inspectIdiom(item)"
-                        class="group flex flex-col items-center justify-center px-3 py-2 rounded-xl border transition-all active:scale-95 shadow-sm hover:shadow-md"
+                        class="group flex flex-col items-center justify-center px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border transition-all active:scale-95 shadow-sm hover:shadow-md cursor-pointer"
                         [ngClass]="$index === solitaireChain().length - 1
                           ? 'bg-gradient-to-br from-amber-500/15 via-[var(--color-bg-card)] to-rose-500/15 border-amber-500 text-amber-500 anim-gold-pulse'
                           : 'bg-[var(--color-bg-card)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-amber-500/50'">
-                  <div class="flex items-center gap-1 text-[10px] text-[var(--color-text-secondary)] font-mono mb-0.5">
-                    <span>#{{ $index + 1 }}</span>
-                    <span class="opacity-60">{{ item.p.split(' ')[0] }}</span>
+                  <div class="flex items-center gap-1.5 text-xs sm:text-sm text-[var(--color-text-secondary)] font-mono mb-0.5">
+                    <span class="font-bold">#{{ $index + 1 }}</span>
+                    <span class="opacity-70">{{ item.p.split(' ')[0] }}</span>
                   </div>
-                  <div class="font-black text-sm sm:text-base tracking-wider flex items-center">
+                  <div class="font-black text-base sm:text-lg md:text-2xl tracking-wider flex items-center">
                     <span>{{ item.w.slice(0, 3) }}</span>
                     <span class="text-amber-500 font-extrabold underline decoration-amber-500/60 decoration-2 underline-offset-4">{{ item.w[3] }}</span>
                   </div>
@@ -307,7 +307,7 @@
 
                 <!-- Dragon Connector Link -->
                 @if ($index < solitaireChain().length - 1) {
-                  <div class="flex items-center text-amber-500/60 text-xs font-black">
+                  <div class="flex items-center text-amber-500/60 text-sm sm:text-base font-black">
                     ➔
                   </div>
                 }
@@ -315,39 +315,39 @@
             }
 
             <!-- Dragon Head Prompt Node -->
-            <div class="shrink-0 flex items-center gap-2">
-              <div class="flex items-center text-amber-500 font-black text-xs animate-pulse">➔</div>
-              <div class="flex flex-col items-center justify-center px-3.5 py-2 rounded-xl border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-500 text-xs font-extrabold animate-pulse">
+            <div class="shrink-0 flex items-center gap-2 sm:gap-3">
+              <div class="flex items-center text-amber-500 font-black text-sm sm:text-base animate-pulse">➔</div>
+              <div class="flex flex-col items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-500 text-xs sm:text-sm md:text-base font-extrabold animate-pulse">
                 <span>接“{{ targetChar() }}”</span>
-                <span class="text-[10px] font-mono opacity-80">{{ targetPinyin() }}</span>
+                <span class="text-xs sm:text-sm font-mono opacity-80">{{ targetPinyin() }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 铸造台：Active Target & Input Slots -->
-        <div class="w-full flex flex-col items-center gap-3 my-auto py-2" [class.anim-slot-shake]="shakeSlots()">
+        <div class="w-full flex flex-col items-center gap-3.5 sm:gap-5 my-auto py-2 sm:py-4" [class.anim-slot-shake]="shakeSlots()">
 
           <!-- Target Prompt Info -->
-          <div class="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+          <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-base text-[var(--color-text-secondary)] font-medium">
             <span>当前尾字</span>
-            <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-500 font-black text-sm">{{ targetChar() }}</span>
-            <span class="font-mono text-xs">({{ targetPinyin() }})</span>
+            <span class="px-2.5 sm:px-3.5 py-1 rounded-lg sm:rounded-xl bg-amber-500/20 text-amber-500 font-black text-sm sm:text-base md:text-xl">{{ targetChar() }}</span>
+            <span class="font-mono text-xs sm:text-sm md:text-base text-amber-500/80 font-bold">({{ targetPinyin() }})</span>
             <span>请拼出后续成语：</span>
           </div>
 
           <!-- 4-Character Slot Line -->
-          <div class="flex items-center gap-2 sm:gap-4">
+          <div class="flex items-center gap-2.5 sm:gap-4 md:gap-6">
             <!-- Pinned Slot 0: Target Char (Fixed Head) -->
-            <div class="w-15 h-15 sm:w-18 sm:h-18 rounded-2xl flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-2 border-amber-500 text-amber-500 shadow-md shadow-amber-500/10">
-              <span class="font-black text-2xl sm:text-3xl leading-none">{{ targetChar() }}</span>
-              <span class="text-[10px] font-mono opacity-80 mt-1">{{ targetPinyin() }}</span>
+            <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-26 lg:h-26 rounded-2xl md:rounded-3xl flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-2 sm:border-3 border-amber-500 text-amber-500 shadow-md shadow-amber-500/10">
+              <span class="font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-none">{{ targetChar() }}</span>
+              <span class="text-xs sm:text-sm font-mono opacity-80 mt-1 sm:mt-1.5">{{ targetPinyin() }}</span>
             </div>
 
             <!-- Slots 1, 2, 3 -->
             @for (slot of currentSlots(); track $index) {
               <button (click)="onSlotClick($index)"
-                      class="w-15 h-15 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl border-2 transition-all active:scale-95 shadow-sm"
+                      class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-26 lg:h-26 rounded-2xl md:rounded-3xl flex items-center justify-center font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl border-2 sm:border-3 transition-all active:scale-95 shadow-sm cursor-pointer"
                       [ngClass]="slot
                         ? 'bg-[var(--color-bg-card)] border-rose-500 text-rose-500 hover:border-rose-400'
                         : 'border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-card)]/40 text-[var(--color-text-secondary)] hover:border-amber-500/50'">
@@ -358,27 +358,27 @@
 
           <!-- Error Alert Banner -->
           @if (errorMessage()) {
-            <div class="text-xs font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 px-3 py-1 rounded-full animate-bounce">
+            <div class="text-xs sm:text-sm md:text-base font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 px-4 py-1.5 rounded-full animate-bounce">
               ⚠️ {{ errorMessage() }}
             </div>
           }
 
           <!-- Dead-end notification -->
           @if (isDeadEnd()) {
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold">
+            <div class="flex items-center gap-2 px-4 py-2 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm md:text-base font-bold">
               <span>🎉 神龙入海，功德圆满！本字已无可接成语，达成 {{ solitaireChain().length }} 节长龙！</span>
-              <button (click)="startNewSolitaireGame()" class="underline font-black hover:text-amber-400">再战一局</button>
+              <button (click)="startNewSolitaireGame()" class="underline font-black hover:text-amber-400 ml-1 cursor-pointer">再战一局</button>
             </div>
           }
         </div>
 
         <!-- 🀄 12-Key Tactile Keypad -->
-        <div class="w-full flex flex-col gap-2.5 max-w-xl">
-          <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-2.5 w-full">
+        <div class="w-full flex flex-col gap-3 sm:gap-4 max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
+          <div class="grid grid-cols-4 sm:grid-cols-6 gap-2.5 sm:gap-3.5 md:gap-4 w-full">
             @for (key of keypad(); track $index) {
               <button (click)="onKeypadPress(key, $index)"
                       [disabled]="keypadUsed()[$index]"
-                      class="h-12 sm:h-14 rounded-xl font-black text-xl sm:text-2xl border transition-all active:scale-90 flex items-center justify-center shadow-sm"
+                      class="h-13 sm:h-16 md:h-18 lg:h-20 rounded-xl sm:rounded-2xl font-black text-xl sm:text-2xl md:text-3xl lg:text-4xl border transition-all active:scale-90 flex items-center justify-center shadow-sm cursor-pointer"
                       [ngClass]="keypadUsed()[$index]
                         ? 'opacity-20 border-transparent bg-transparent cursor-not-allowed scale-90'
                         : 'bg-[var(--color-bg-card)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-amber-500/60 hover:text-amber-500 hover:scale-105'">
@@ -388,13 +388,13 @@
           </div>
 
           <!-- Keypad Utilities (Clear & Submit) -->
-          <div class="flex items-center justify-center gap-3">
+          <div class="flex items-center justify-center gap-3 sm:gap-5">
             <button (click)="clearSlots()"
-                    class="px-4 py-2 rounded-xl text-xs font-bold text-[var(--color-text-secondary)] border border-[var(--color-border-card)] hover:text-rose-500 hover:border-rose-500/40 active:scale-95 transition-all">
+                    class="px-5 sm:px-7 md:px-8 py-2.5 sm:py-3 md:py-3.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm md:text-base font-bold text-[var(--color-text-secondary)] border border-[var(--color-border-card)] hover:text-rose-500 hover:border-rose-500/40 active:scale-95 transition-all cursor-pointer">
               ⌫ 清空已填
             </button>
             <button (click)="submitSolitaire()"
-                    class="px-6 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 shadow-md shadow-amber-500/20 active:scale-95 transition-all">
+                    class="px-7 sm:px-10 md:px-12 py-2.5 sm:py-3 md:py-3.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm md:text-base font-black text-white bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer">
               ✔ 铸造接龙
             </button>
           </div>

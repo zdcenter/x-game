@@ -53,96 +53,43 @@
             
             <!-- TOP HUD & INFO BAR -->
             @if (store.currentRoomMode() === GameMode.Single) {
-              <div class="flex-none w-full max-w-[460px] sm:max-w-[540px] md:max-w-[580px] mx-auto flex flex-col gap-2.5">
-                <!-- Theme Switcher & Reset Quick Bar -->
-                <div class="flex items-center justify-between w-full px-0.5">
-                  <!-- Theme Pill Selector -->
-                  <div class="inline-flex items-center p-0.5 sm:p-1 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl border border-[var(--color-border)] shadow-sm text-xs font-semibold">
+              <!-- Single Player Modern Jewel Glass Score Capsule HUD -->
+              <div class="flex-none px-3 sm:px-6 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm mb-2">
+                <app-game-score-capsule
+                  [score]="store.localScore()"
+                  [bestScore]="math.max(store.localScore(), bestScore())"
+                  [worldBestScore]="worldRecord()?.bestScore"
+                  [worldRecordHolder]="worldRecord()?.username"
+                  scoreIcon="🔢"
+                >
+                  <!-- Center: Theme Selector, Moves & Timer, Quick Restart -->
+                  <div class="flex items-center gap-1.5 sm:gap-2.5">
+                    <!-- Theme Toggle Button -->
                     <button type="button"
-                            (click)="setTheme('classic')"
-                            [class.bg-[var(--color-bg-main)]]="currentTheme() === 'classic'"
-                            [class.text-amber-500]="currentTheme() === 'classic'"
-                            [class.shadow-sm]="currentTheme() === 'classic'"
-                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 hover:text-[var(--color-text-main)]">
-                      <span>🪵</span>
-                      <span>{{ i18n.t('game.classic2048.theme_classic')() }}</span>
+                            (click)="cycleTheme()"
+                            class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            [title]="i18n.t('game.theme')() || 'Theme'">
+                      <span class="text-xs sm:text-sm">{{ currentThemeIcon() }}</span>
+                      <span class="hidden md:inline font-medium text-[11px]">{{ currentThemeName() }}</span>
                     </button>
+
+                    <!-- Moves & Time Indicator -->
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] rounded-xl text-xs font-mono font-bold text-[var(--color-text-muted)] shadow-xs">
+                      <span>⏱️ {{ timeDisplay }}</span>
+                      <span class="opacity-30">|</span>
+                      <span>🔄 {{ store.localMoves() }}</span>
+                    </div>
+
+                    <!-- Instant Restart Button -->
                     <button type="button"
-                            (click)="setTheme('neon')"
-                            [class.bg-[var(--color-bg-main)]]="currentTheme() === 'neon'"
-                            [class.text-cyan-400]="currentTheme() === 'neon'"
-                            [class.shadow-sm]="currentTheme() === 'neon'"
-                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 hover:text-[var(--color-text-main)]">
-                      <span>⚡</span>
-                      <span>{{ i18n.t('game.classic2048.theme_neon')() }}</span>
-                    </button>
-                    <button type="button"
-                            (click)="setTheme('glacier')"
-                            [class.bg-[var(--color-bg-main)]]="currentTheme() === 'glacier'"
-                            [class.text-sky-400]="currentTheme() === 'glacier'"
-                            [class.shadow-sm]="currentTheme() === 'glacier'"
-                            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 hover:text-[var(--color-text-main)]">
-                      <span>🧊</span>
-                      <span>{{ i18n.t('game.classic2048.theme_glacier')() }}</span>
+                            (click)="store.restartGame()"
+                            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+                            [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+                      <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                      <span class="hidden md:inline font-medium text-[11px]">{{ i18n.t('game.restart')() || '重开' }}</span>
                     </button>
                   </div>
-
-                  <!-- Quick Restart Button -->
-                  <button type="button"
-                          (click)="store.restartGame()"
-                          class="px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)]/80 hover:bg-[var(--color-bg-card)] text-xs font-bold text-[var(--color-text-main)] border border-[var(--color-border)] hover:border-amber-500/40 shadow-sm transition-all flex items-center gap-1.5 active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>{{ i18n.t('game.restart')() }}</span>
-                  </button>
-                </div>
-
-                <!-- 3-Deck HUD Cards: Score / Best / Stats -->
-                <div class="grid grid-cols-3 gap-2 sm:gap-3 w-full">
-                  <!-- SCORE CARD -->
-                  <div class="relative overflow-visible flex flex-col items-center justify-center py-2 px-3 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
-                    <span class="text-[10px] sm:text-xs font-black tracking-wider uppercase text-[var(--color-text-muted)]">
-                      {{ i18n.t('game.classic2048.score')() }}
-                    </span>
-                    <span class="text-xl sm:text-2xl font-black text-[var(--color-text-main)] tabular-nums leading-none mt-1">
-                      {{ store.localScore() }}
-                    </span>
-                    <!-- Floating +Score Delta -->
-                    @if (showDelta() && scoreDelta() > 0) {
-                      <span class="absolute -top-3 right-2 text-xs sm:text-sm font-black text-amber-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] animate-fade-slide-up pointer-events-none z-30">
-                        +{{ scoreDelta() }}
-                      </span>
-                    }
-                  </div>
-
-                  <!-- BEST & WORLD RECORD CARD -->
-                  <div class="flex flex-col items-center justify-center py-1.5 px-2.5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm relative group"
-                       [title]="(i18n.t('game.record_holder')() || 'Record Holder') + ': ' + (worldRecord()?.username || i18n.t('game.unclaimed')())">
-                    <div class="flex items-center justify-between w-full text-[10px] sm:text-[11px] font-bold text-[var(--color-text-muted)] px-1">
-                      <span class="text-amber-500">👑 {{ i18n.t('game.my_best')() }}</span>
-                      <span class="tabular-nums font-black text-amber-500 text-xs sm:text-sm">{{ Math.max(store.localScore(), bestScore()) }}</span>
-                    </div>
-                    <div class="w-full my-1 border-t border-[var(--color-border)]/60"></div>
-                    <div class="flex items-center justify-between w-full text-[10px] sm:text-[11px] font-bold text-[var(--color-text-muted)] px-1">
-                      <span class="text-orange-500">🏆 {{ i18n.t('game.world_best')() }}</span>
-                      <span class="tabular-nums font-black text-orange-500 text-xs sm:text-sm">{{ (worldRecord()?.bestScore && worldRecord()!.bestScore > 0 ? worldRecord()!.bestScore : Math.max(store.localScore(), bestScore())) }}</span>
-                    </div>
-                  </div>
-
-                  <!-- MOVES / TIMER STATS CARD -->
-                  <div class="flex flex-col items-center justify-center py-2 px-2.5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm">
-                    <div class="flex items-center justify-between w-full text-[11px] font-bold text-[var(--color-text-muted)] px-1">
-                      <span>⏱️</span>
-                      <span class="tabular-nums font-mono text-[var(--color-text-main)]">{{ timeDisplay }}</span>
-                    </div>
-                    <div class="w-full my-1 border-t border-[var(--color-border)]/60"></div>
-                    <div class="flex items-center justify-between w-full text-[11px] font-bold text-[var(--color-text-muted)] px-1">
-                      <span>🔄</span>
-                      <span class="tabular-nums font-mono text-[var(--color-text-main)]">{{ store.localMoves() }}</span>
-                    </div>
-                  </div>
-                </div>
+                </app-game-score-capsule>
               </div>
             } @else {
               <!-- Universal PK Battle HUD (Classic 2048) -->
@@ -161,7 +108,7 @@
             }
 
             <!-- Game Board -->
-            <div class="relative p-2 md:p-3 shrink-0 c2048-board transition-all duration-300 w-full max-w-[460px] sm:max-w-[540px] md:max-w-[580px] aspect-square mx-auto touch-none select-none"
+            <div class="relative p-2.5 sm:p-4 shrink-0 c2048-board transition-all duration-300 w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] aspect-square mx-auto touch-none select-none rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-[var(--color-border-card)]"
                  [attr.data-theme]="currentTheme()"
                  [class.animate-shake]="store.shakeTrigger() > 0">
               <!-- Grid background -->
@@ -212,7 +159,7 @@
               </div>
               
               @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="w-full max-w-[450px] sm:max-w-[540px] md:max-w-[580px] mx-auto z-10 shrink-0">
+                <div class="w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] mx-auto z-10 shrink-0 mt-3">
                   <app-game-toolbar
                     [layoutStyle]="'compact'"
                     [showRestart]="true"

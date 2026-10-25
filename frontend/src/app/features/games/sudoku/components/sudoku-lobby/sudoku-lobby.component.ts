@@ -8,7 +8,7 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { SudokuStore } from '../../store/sudoku.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
-import { storageGet, storageSet } from '../../../../../core/utils/browser.util';
+import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
 
 import { environment } from '../../../../../../environments/environment';
 
@@ -60,7 +60,7 @@ export class SudokuLobbyComponent implements OnInit {
 
   difficulties = sudokuDifficulties;
 
-  activeTab = signal<string>(storageGet('sudoku_single_diff') || GameDifficulty.Easy);
+  activeTab = signal<string>(getSavedDifficulty('sudoku', GameDifficulty.Easy));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
@@ -69,7 +69,7 @@ export class SudokuLobbyComponent implements OnInit {
   }
 
   selectDifficulty(diff: string) {
-    storageSet('sudoku_single_diff', diff);
+    setSavedDifficulty('sudoku', diff);
     this.activeTab.set(diff);
     this.loadLevels(diff);
   }

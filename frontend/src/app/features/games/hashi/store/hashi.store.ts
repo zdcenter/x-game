@@ -152,17 +152,15 @@ export class HashiStore extends BaseGameStore {
       return;
     }
 
-    this.adService.showRewardedAd(() => {
-      this.audio.playSudoku('success'); // Play a success sound
-      
-      // Since toggleBridge cycles 0 -> 1 -> 2 -> 0, we can calculate how many clicks are needed
-      const clicks = (move.targetCount - move.currentCount + 3) % 3;
-      
-      for (let i = 0; i < clicks; i++) {
-        this.toggleBridge(move.r1, move.c1, move.r2, move.c2);
-      }
-      this.toast.show(this.i18n.t('game.hint_applied')() || 'Hint applied!', 'success');
-    });
+    this.audio.playSudoku('success'); // Play a success sound
+    
+    // Since toggleBridge cycles 0 -> 1 -> 2 -> 0, we can calculate how many clicks are needed
+    const clicks = (move.targetCount - move.currentCount + 3) % 3;
+    
+    for (let i = 0; i < clicks; i++) {
+      this.toggleBridge(move.r1, move.c1, move.r2, move.c2);
+    }
+    this.toast.show(this.i18n.t('game.hint_applied')() || 'Hint applied!', 'success');
   }
 
   private syncEngineToState() {

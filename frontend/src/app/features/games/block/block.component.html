@@ -189,12 +189,12 @@
                     </div>
                   }
 
-                  <!-- Preview Shadow -->
+                  <!-- Preview Shadow (Ghost / 虚影) with Tactile Magnetic Snap Feel -->
                   @if (previewShadow()) {
                     @for (row of previewShadow()!.shape.matrix; track rIndex; let rIndex = $index) {
                       @for (cell of row; track cIndex; let cIndex = $index) {
                         @if (cell === 1) {
-                          <div class="absolute rounded-sm bg-white/30 backdrop-blur-sm shadow-[0_0_15px_rgba(255,255,255,0.5)] border border-white/50 pointer-events-none transition-all duration-100"
+                          <div class="absolute rounded-sm block-piece block-ghost-cell pointer-events-none transition-all duration-75"
                                [style.width]="'calc((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ')'"
                                [style.height]="'calc((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ')'"
                                [style.left]="'calc(4px + (' + (previewShadow()!.col + cIndex) + ' * ((100% - ' + ((store.boardSize() - 1) * 4 + 8) + 'px) / ' + store.boardSize() + ' + 4px)))'"

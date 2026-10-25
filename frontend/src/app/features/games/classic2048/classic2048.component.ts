@@ -18,6 +18,7 @@ import { GameResultOverlayComponent } from '../../../shared/components/game-resu
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
+import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
@@ -38,6 +39,7 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
     GameWaitingRoomComponent,
     GameResultOverlayComponent,
     GameStartingOverlayComponent,
+    GameScoreCapsuleComponent,
     GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
@@ -239,6 +241,29 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     }
     this.audio.playClick();
   }
+
+  cycleTheme() {
+    const themes: C2048Theme[] = ['classic', 'neon', 'glacier'];
+    const currIdx = themes.indexOf(this.currentTheme());
+    const nextTheme = themes[(currIdx + 1) % themes.length];
+    this.setTheme(nextTheme);
+  }
+
+  readonly currentThemeIcon = computed(() => {
+    switch (this.currentTheme()) {
+      case 'neon': return '⚡';
+      case 'glacier': return '🧊';
+      default: return '🪵';
+    }
+  });
+
+  readonly currentThemeName = computed(() => {
+    switch (this.currentTheme()) {
+      case 'neon': return this.i18n.t('game.classic2048.theme_neon')();
+      case 'glacier': return this.i18n.t('game.classic2048.theme_glacier')();
+      default: return this.i18n.t('game.classic2048.theme_classic')();
+    }
+  });
 
   get timeDisplay() {
     const m = Math.floor(this.timeSeconds / 60);

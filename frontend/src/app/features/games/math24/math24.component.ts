@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -294,6 +295,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   onDifficultyChange(event: any) {
     const diff = event?.target?.value || event;
     if (this.store.currentDifficulty() === diff) return;
+    setSavedDifficulty('math24', diff);
     this.store.currentDifficulty.set(diff);
     this.store.localLevelIndex.set(-1);
     this.store.loadNextLevel();

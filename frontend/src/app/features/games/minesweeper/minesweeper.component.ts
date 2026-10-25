@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
-import { storageGet, storageSet } from '../../../core/utils/browser.util';
+import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -380,7 +380,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
       this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
     } else {
-      const savedDiff = storageGet('minesweeper_single_diff') || 'easy';
+      const savedDiff = getSavedDifficulty('minesweeper', 'easy');
       this.changeSingleDifficulty(savedDiff);
     }
   }
@@ -501,7 +501,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
     
     this.currentDifficulty.set(diff);
-    storageSet('minesweeper_single_diff', diff);
+    setSavedDifficulty('minesweeper', diff);
     this.currentRoomMode.set(GameMode.Single);
     this.store.startLocalGame(width, height, mines, diff);
 

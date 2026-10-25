@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../core/services/toast.service';
+import { environment } from '../../../environments/environment';
 
 interface FeedbackItem {
   id: string;
@@ -203,6 +204,7 @@ interface FeedbackItem {
 export class AdminFeedbackComponent implements OnInit {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
+  private apiUrl = environment.apiUrl;
 
   feedbacks = signal<FeedbackItem[]>([]);
   total = signal(0);
@@ -230,7 +232,7 @@ export class AdminFeedbackComponent implements OnInit {
     if (this.filterType) params.type = this.filterType;
     if (this.filterStatus) params.status = this.filterStatus;
 
-    this.http.get<{ data: FeedbackItem[]; total: number }>('/api/v1/admin/feedbacks', { params }).subscribe({
+    this.http.get<{ data: FeedbackItem[]; total: number }>(`${this.apiUrl}/admin/feedbacks`, { params }).subscribe({
       next: (res) => {
         this.feedbacks.set(res.data || []);
         this.total.set(res.total || 0);
@@ -248,7 +250,7 @@ export class AdminFeedbackComponent implements OnInit {
   }
 
   updateStatus(item: FeedbackItem, status: string) {
-    this.http.put(`/api/v1/admin/feedbacks/${item.id}`, { status }).subscribe({
+    this.http.put(`${this.apiUrl}/admin/feedbacks/${item.id}`, { status }).subscribe({
       next: () => {
         item.status = status;
         this.toast.success('状态更新成功');
@@ -261,7 +263,7 @@ export class AdminFeedbackComponent implements OnInit {
 
   deleteFeedback(item: FeedbackItem) {
     if (!confirm('确定删除该反馈记录吗？')) return;
-    this.http.delete(`/api/v1/admin/feedbacks/${item.id}`).subscribe({
+    this.http.delete(`${this.apiUrl}/admin/feedbacks/${item.id}`).subscribe({
       next: () => {
         this.feedbacks.update(list => list.filter(f => f.id !== item.id));
         this.total.update(n => n - 1);

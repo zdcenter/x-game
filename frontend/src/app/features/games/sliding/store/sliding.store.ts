@@ -10,7 +10,7 @@ export class SlidingStore extends BaseGameStore {
   readonly gameId = GameId.Sliding;
   private audio = inject(AudioService);
 
-  private localEngine = signal<LocalSlidingEngine | null>(null);
+  private localEngine = signal<LocalSlidingEngine | null>(new LocalSlidingEngine(GameDifficulty.Easy));
   private pkOptimisticBoard = signal<{ size: number; cells: number[]; emptyIdx: number; status: string; startAt: number; moves: number } | null>(null);
   readonly bestTime = signal<number>(0);
 
@@ -18,7 +18,7 @@ export class SlidingStore extends BaseGameStore {
   override readonly singlePlayerList = computed(() => []);
 
   readonly singlePlayerStatus = computed<GameStatusType | string>(() =>
-    this.localEngine()?.status || 'waiting'
+    this.localEngine()?.status || GameStatus.Playing
   );
 
   readonly globalStartAt = computed(() => {

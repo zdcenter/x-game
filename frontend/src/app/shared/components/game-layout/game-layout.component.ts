@@ -22,7 +22,7 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
 import { FeedbackModalComponent } from '../feedback-modal/feedback-modal.component';
 import { FeedbackService } from '../../../core/services/feedback.service';
 import { ShareService } from '../../../core/services/share.service';
-import { getOrigin } from '../../../core/utils/browser.util';
+import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-layout',
@@ -442,6 +442,9 @@ export class GameLayoutComponent implements OnInit, OnChanges {
 
   onDifficultyChange(newDiff: string) {
     this.currentDifficulty = newDiff;
+    if (this.gameId) {
+      setSavedDifficulty(this.gameId, newDiff);
+    }
     this.difficultyChange.emit(newDiff);
   }
 

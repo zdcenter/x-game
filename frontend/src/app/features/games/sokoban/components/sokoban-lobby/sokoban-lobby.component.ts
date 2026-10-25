@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -54,15 +55,16 @@ export class SokobanLobbyComponent implements OnInit {
     { id: GameDifficulty.Expert, labelKey: 'game.diff_sokoban_professional', desc: 'True test of skill' }
   ];
 
-  activeTab = signal<string>(GameDifficulty.Easy);
+  activeTab = signal<string>(getSavedDifficulty('sokoban', GameDifficulty.Easy));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels(GameDifficulty.Easy);
+    this.loadLevels(this.activeTab());
   }
 
   selectDifficulty(diff: string) {
+    setSavedDifficulty('sokoban', diff);
     this.activeTab.set(diff);
     this.loadLevels(diff);
   }

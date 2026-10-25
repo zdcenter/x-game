@@ -240,7 +240,7 @@
           </div>
 
           <app-game-toolbar
-            [layoutStyle]="'default'"
+            [layoutStyle]="'compact'"
             [showPrev]="true"
             [showNext]="true"
             [showRestart]="true"
@@ -248,7 +248,7 @@
             [showUndo]="false"
             [disablePrev]="store.localLevelIndex() <= 0"
             [disableNext]="false"
-            hintLayout="sudoku"
+            hintLayout="toolbar-compact"
             (prevLevel)="playPreviousLevel()"
             (nextLevel)="playNextLevel()"
             (restart)="store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex())"

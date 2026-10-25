@@ -52,6 +52,37 @@ export const storageRemove = (key: string): void => {
   if (isBrowser()) localStorage.removeItem(key);
 };
 
+/**
+ * Safely retrieve the player's last selected difficulty for a game.
+ * Checks multiple backwards-compatible keys (e.g. `${gameId}_single_diff`, `${gameId}_difficulty`, `game_diff_${gameId}`).
+ */
+export const getSavedDifficulty = (gameId: string, defaultDiff: string): string => {
+  if (!isBrowser()) return defaultDiff;
+  try {
+    return (
+      localStorage.getItem(`${gameId}_single_diff`) ||
+      localStorage.getItem(`${gameId}_difficulty`) ||
+      localStorage.getItem(`game_diff_${gameId}`) ||
+      defaultDiff
+    );
+  } catch {
+    return defaultDiff;
+  }
+};
+
+/**
+ * Safely persist the player's selected difficulty for a game.
+ */
+export const setSavedDifficulty = (gameId: string, diff: string): void => {
+  if (!isBrowser() || !gameId || !diff) return;
+  try {
+    localStorage.setItem(`${gameId}_single_diff`, diff);
+    if (gameId === 'nonogram') {
+      localStorage.setItem('nonogram_difficulty', diff);
+    }
+  } catch {}
+};
+
 export const getNavigatorLanguage = (): string | null =>
   isBrowser() ? navigator.language : null;
 

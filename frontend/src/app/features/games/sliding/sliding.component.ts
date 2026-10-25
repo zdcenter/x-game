@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
-import { isBrowser } from '../../../core/utils/browser.util';
+import { isBrowser, getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, computed, inject, signal, effect, untracked, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -305,7 +305,8 @@ export class SlidingComponent extends BaseGameComponent {
         if (pending.password) this.wsService.setPendingPassword(pending.password);
         this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       } else {
-        this.store.joinRoom('', GameMode.Single, 'easy');
+        const savedDiff = getSavedDifficulty('sliding', 'easy');
+        this.store.joinRoom('', GameMode.Single, savedDiff);
       }
 
       this.timerInterval = setInterval(() => {
@@ -334,6 +335,7 @@ export class SlidingComponent extends BaseGameComponent {
 
   changeSingleDifficulty(diff: string) {
     if (this.roomId()) return;
+    setSavedDifficulty('sliding', diff);
     this.store.currentDifficulty.set(diff);
     this.store.playAgain();
   }

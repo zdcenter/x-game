@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, HostListener } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -227,6 +228,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   async onDifficultyChange(event: Event | string) {
     const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
     if (diff === this.store.currentDifficulty()) return;
+    setSavedDifficulty('hashi', diff);
     
     try {
       const levelsRes = await lastValueFrom(this.http.get<any>(`${environment.apiUrl}/hashi/levels/${diff}`));

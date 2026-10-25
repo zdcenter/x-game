@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface FeedbackPayload {
   game_id: string;
@@ -36,6 +37,6 @@ export class FeedbackService {
   }
 
   submit(payload: FeedbackPayload): Observable<any> {
-    return this.http.post('/api/v1/feedback', payload);
+    return this.http.post(`${environment.apiUrl}/feedback`, payload);
   }
 }

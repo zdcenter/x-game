@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
 import { Component, EventEmitter, Output, inject, signal, OnInit, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -42,7 +43,7 @@ export class Math24LobbyComponent implements OnInit {
     { id: GameDifficulty.Expert, labelKey: 'game.diff_math24_expert' }
   ];
 
-  activeTab = signal<string>(GameDifficulty.Easy);
+  activeTab = signal<string>(getSavedDifficulty('math24', GameDifficulty.Easy));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
@@ -60,10 +61,11 @@ export class Math24LobbyComponent implements OnInit {
   totalPages = computed(() => Math.ceil(this.levels().length / this.pageSize));
 
   ngOnInit() {
-    this.loadLevels(GameDifficulty.Easy);
+    this.loadLevels(this.activeTab());
   }
 
   selectDifficulty(diff: string) {
+    setSavedDifficulty('math24', diff);
     this.activeTab.set(diff);
     this.currentPage.set(1);
     this.loadLevels(diff);

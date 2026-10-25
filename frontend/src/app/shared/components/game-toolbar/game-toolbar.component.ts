@@ -33,8 +33,8 @@ export class GameToolbarComponent {
   @Input() disableNext: boolean = false;
   @Input() disableUndo: boolean = false;
   
-  @Input() hintLayout: 'compact' | 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'sokoban' | 'toolbar-compact' = 'sudoku';
-  @Input() layoutStyle: 'default' | 'compact' = 'default';
+  @Input() hintLayout: 'compact' | 'math24' | 'sudoku' | 'minesweeper' | 'icon' | 'text' | 'sokoban' | 'toolbar-compact' = 'toolbar-compact';
+  @Input() layoutStyle: 'default' | 'compact' = 'compact';
 
   @Output() prevLevel = new EventEmitter<void>();
   @Output() nextLevel = new EventEmitter<void>();

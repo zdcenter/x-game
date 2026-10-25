@@ -1,4 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -154,7 +155,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
           return;
         }
         const mode = params['mode'] || GameMode.Single;
-        const diff = params['difficulty'] || 'medium';
+        const diff = params['difficulty'] || getSavedDifficulty('gomoku', 'medium');
         const roomId = params['room'] || `gomoku-${Date.now()}`;
         const host = params['host'] || roomId;
         
@@ -270,6 +271,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   changeDifficulty(event: Event | string) {
     const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
     if (diff === this.currentDifficulty()) return;
+    setSavedDifficulty('gomoku', diff);
     this.currentDifficulty.set(diff);
     // Re-init the store to apply new difficulty
     this.store.joinRoom(

@@ -1,6 +1,7 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -266,7 +267,8 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       }
     } else {
       if (!this.currentRoomId()) {
-        this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium, this.playerId);
+        const savedDiff = getSavedDifficulty('block', GameDifficulty.Medium);
+        this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
       }
     }  }
 
@@ -324,6 +326,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   changeSingleDifficulty(diff: string) {
+    setSavedDifficulty('block', diff);
     this.store.joinRoom('', GameMode.Single, diff, this.playerId);
   }
 
@@ -367,6 +370,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   dragCellGap = 4;
   private dragStartPos = { x: 0, y: 0 };
   private dragHasMoved = false;
+  private lastSnapPos: { row: number; col: number } | null = null;
 
   selectHandSlot(index: number) {
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
@@ -479,9 +483,11 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     const shapeWidth = shapeCols * cellRenderSize + (shapeCols - 1) * cellGap;
     const shapeHeight = shapeRows * cellRenderSize + (shapeRows - 1) * cellGap;
     
-    // We want the piece to be vertically completely above the finger, and shifted slightly left
-    const fingerOffsetY = isTouch ? (shapeHeight + 40) : (shapeHeight / 2);
-    const fingerOffsetX = isTouch ? (shapeWidth / 2 + 20) : (shapeWidth / 2);
+    // We want the piece to float in the top-left quadrant of the finger on touch so thumb never occludes it
+    const fingerOffsetY = isTouch ? (shapeHeight + 36) : (shapeHeight / 2);
+    const fingerOffsetX = isTouch ? (shapeWidth + 14) : (shapeWidth / 2);
+
+    this.lastSnapPos = null;
 
     // We set dragStartOffset so that the top-left of the dragged div is exactly at `pointer - fingerOffset`.
     this.dragStartOffset = {
@@ -529,23 +535,55 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     const shapeWidth = shapeCols * cellRenderSize + (shapeCols - 1) * cellGap;
     const shapeHeight = shapeRows * cellRenderSize + (shapeRows - 1) * cellGap;
     
-    const fingerOffsetY = isTouch ? (shapeHeight + 40) : (shapeHeight / 2);
-    const fingerOffsetX = isTouch ? (shapeWidth / 2 + 20) : (shapeWidth / 2);
+    const fingerOffsetY = isTouch ? (shapeHeight + 36) : (shapeHeight / 2);
+    const fingerOffsetX = isTouch ? (shapeWidth + 14) : (shapeWidth / 2);
 
     const pieceTopLeftX = this.dragPos.x - fingerOffsetX;
     const pieceTopLeftY = this.dragPos.y - fingerOffsetY;
 
-    // Convert to board coordinates
     const localX = pieceTopLeftX - boardRect.left;
     const localY = pieceTopLeftY - boardRect.top;
 
-    const col = Math.round((localX - 4) / cellStepX);
-    const row = Math.round((localY - 4) / cellStepY);
+    // Convert to floating board coordinates
+    const exactCol = (localX - 4) / cellStepX;
+    const exactRow = (localY - 4) / cellStepY;
 
-    // Provide visual preview if it fits
-    if (this.store.canPlace(this.draggedShape, row, col, this.store.board())) {
+    const baseCol = Math.round(exactCol);
+    const baseRow = Math.round(exactRow);
+
+    // Magnetic search: find the nearest valid slot with high fault tolerance
+    let snappedSlot: { row: number; col: number } | null = null;
+
+    // Check direct slot first
+    if (this.store.canPlace(this.draggedShape, baseRow, baseCol, this.store.board())) {
+      snappedSlot = { row: baseRow, col: baseCol };
+    } else {
+      // Expanded magnetic snap: search surrounding neighbors within ~1.65 cell distance
+      let minDistance = 1.65;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = baseRow + dr;
+          const nc = baseCol + dc;
+          const dist = Math.hypot(exactRow - nr, exactCol - nc);
+          if (dist < minDistance && this.store.canPlace(this.draggedShape, nr, nc, this.store.board())) {
+            minDistance = dist;
+            snappedSlot = { row: nr, col: nc };
+          }
+        }
+      }
+    }
+
+    // Provide visual preview with tactile magnetic snap if a valid slot is found
+    if (snappedSlot) {
+      const { row, col } = snappedSlot;
+      if (!this.lastSnapPos || this.lastSnapPos.row !== row || this.lastSnapPos.col !== col) {
+        this.haptic.vibrateLight();
+        this.lastSnapPos = { row, col };
+      }
       this.previewShadow.set({ row, col, shape: this.draggedShape });
     } else {
+      this.lastSnapPos = null;
       this.previewShadow.set(null);
     }
   }
@@ -561,6 +599,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       this.isDragging = false;
       this.draggedShape = null;
       this.draggedIndex = -1;
+      this.lastSnapPos = null;
       this.previewShadow.set(null);
       this.selectHandSlot(idx);
       return;
@@ -578,6 +617,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     this.isDragging = false;
     this.draggedShape = null;
     this.draggedIndex = -1;
+    this.lastSnapPos = null;
     this.previewShadow.set(null);
   }
 

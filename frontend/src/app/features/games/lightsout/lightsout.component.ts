@@ -1,4 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener, computed } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
@@ -264,7 +265,8 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium);
+      const savedDiff = getSavedDifficulty('lightsout', GameDifficulty.Medium);
+      this.store.joinRoom('', GameMode.Single, savedDiff);
     }
   }
 
@@ -308,6 +310,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   changeDifficulty(event: Event | string) {
     const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
+    setSavedDifficulty('lightsout', diff);
     this.gameTimer.stopCountdown();
     this.store.changeDifficulty(diff);
   }

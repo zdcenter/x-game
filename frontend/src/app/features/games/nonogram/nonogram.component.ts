@@ -10,6 +10,7 @@ import { PlayerBadgeComponent } from '../../../shared/components/player-badge/pl
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -94,9 +95,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   changeSingleDifficulty(diff: string) {
     if (this.store.roomId()) return;
     this.store.currentDifficulty.set(diff);
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('nonogram_difficulty', diff);
-    }
+    setSavedDifficulty('nonogram', diff);
     this.store.playAgain();
   }
 
@@ -139,8 +138,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
       return;
     } else {
-      const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
-      const initialDiff = savedDiff || GameDifficulty.Easy;
+      const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
       this.store.currentDifficulty.set(initialDiff);
       this.store.joinRoom('', GameMode.Single, initialDiff);
     }
@@ -557,9 +555,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   }
 
   useHint() {
-    this.adService.showRewardedAd(() => {
-      this.store.useHint();
-    });
+    this.store.useHint();
   }
 
   onContextMenu(event: Event) {

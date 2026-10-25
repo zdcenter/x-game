@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
-import { storageGet, storageSet } from '../../../core/utils/browser.util';
+import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef, computed, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -154,7 +154,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
       }
     } else {
-      const savedDiff = storageGet('watersort_single_diff') || 'easy';
+      const savedDiff = getSavedDifficulty('watersort', 'easy');
       this._store.joinRoom('', GameMode.Single, savedDiff, this.myId);
     }
   }
@@ -178,7 +178,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   changeSingleDifficulty(diff: string) {
-    storageSet('watersort_single_diff', diff);
+    setSavedDifficulty('watersort', diff);
     this._store.leaveRoom();
     setTimeout(() => {
       this._store.joinRoom('', GameMode.Single, diff, this.myId);
