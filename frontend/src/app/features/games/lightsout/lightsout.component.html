@@ -1,6 +1,6 @@
 <app-game-layout
-  [isHost]="store.hostId() === store.playerId()"
   [gameId]="'lightsout'"
+  [store]="store"
   [title]="i18n.t('lobby.lightsout')() || 'Lights Out'"
   [subtitle]="getSubtitle()"
   icon="💡"
@@ -8,15 +8,12 @@
   titleGradientClass="from-amber-300 to-orange-400"
   shadowClass="shadow-amber-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-amber-900/30 dark:to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="changeDifficulty($event)"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
-  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="getOverlayStats()"
+  [customResultTitle]="getOverlayTitle()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
@@ -27,35 +24,7 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  <!-- PK Waiting Room -->
-  @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
-    <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
-      <app-game-waiting-room
-        gameId="lightsout"
-        [mode]="store.currentRoomMode()"
-        [roomId]="store.roomId()"
-        [difficulty]="store.size() === 4 ? GameDifficulty.Easy : store.size() === 6 ? GameDifficulty.Hard : GameDifficulty.Medium"
-        [players]="store.playersList()"
-        [hostId]="store.hostId()"
-        [currentUserId]="playerId"
-        [readyPlayers]="store.readyPlayers()"
-        (start)="store.startGame()"
-        (leave)="goBack()"
-        (changeSettings)="openChangeSettings()"
-        (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()"
-        (kick)="store.kickPlayer($event)"
-        [target]="store.currentRoomTarget()"
-      ></app-game-waiting-room>
-    </div>
-  } @else {
-    
-    <!-- Starting Overlay -->
-    @if (store.status() === GameStatus.Starting) {
-      <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-    }
-
-    <div class="flex-grow flex flex-col items-center justify-center my-auto p-1 sm:p-2 w-full relative min-h-0 overflow-y-auto custom-scrollbar">
+  <div class="flex-grow flex flex-col items-center justify-center my-auto p-1 sm:p-2 w-full relative min-h-0 overflow-y-auto custom-scrollbar">
 
       <!-- Players Status / Top HUD -->
       @if (store.currentRoomMode() === GameMode.Single) {
@@ -221,29 +190,4 @@
         </div>
       }
     </div>
-  }
-
-  <!-- Game Over Result Overlay -->
-  @if (store.status() === GameStatus.Finished && showOverlay()) {
-    <app-game-result-overlay
-      currentGameId="lightsout"
-      [status]="getOverlayStatus()"
-      [title]="getOverlayTitle()"
-      [subtitle]="getOverlaySubtitle()"
-      [stats]="getOverlayStats()"
-      [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-      [opponentInfo]="opponentsPkStats()[0]"
-      [pkSeriesScore]="seriesScore()"
-      [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-      [xpResult]="store.lastStatResult()?.xp_result"
-      [isNewRecord]="store.lastStatResult()?.isNewRecord"
-      [showRestart]="true"
-      [showLeave]="true"
-      (rematch)="handleRematch()"
-      (restart)="store.restartGame()"
-      (leave)="goBack()"
-      [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-      (changeRoomGame)="store.changeRoomGame($event)"
-    ></app-game-result-overlay>
-  }
 </app-game-layout>

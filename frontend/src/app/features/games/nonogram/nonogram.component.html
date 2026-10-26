@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'nonogram'"
   [title]="t('lobby.nonogram')() || 'Nonogram'"
   [subtitle]="getSubtitle()"
@@ -7,9 +8,6 @@
   titleGradientClass="from-blue-400 to-indigo-400"
   shadowClass="shadow-blue-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-indigo-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [hideLeftPanel]="hideLeftPanel()"
@@ -17,28 +15,23 @@
   (difficultyChange)="changeSingleDifficulty($event)"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="[
+    { label: t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
+  ]"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.startGame()"
+  (restart)="handleRestart()"
+  (rematch)="handleRematch()"
+  (dismiss)="handleDismissRoom()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 <div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-center my-auto">
-
-
-          @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
-            <app-game-waiting-room class="w-full h-full flex min-h-[500px]" [gameId]="'nonogram'" [mode]="store.currentRoomMode()"
-              [roomId]="store.roomId()" [difficulty]="store.currentDifficulty()" [players]="getPlayerScores()" [hostId]="store.hostId()"
-              [currentUserId]="playerId" (leave)="goBack()" (start)="store.startGame()"
-              (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
-              (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
-              [target]="store.currentRoomTarget()">
-            </app-game-waiting-room>
-          } @else {
 
             <!-- Players Info Row (Hidden in Single Player to maximize board height) -->
             @if (store.currentRoomMode() !== GameMode.Single) {
@@ -218,39 +211,5 @@
               </div>
             </div>
           </div>
-        }
-
-          <!-- Starting Overlay -->
-          @if (store.status() === GameStatus.Starting) {
-            <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()" class="absolute inset-0 z-50"></app-game-starting-overlay>
-          }
-
-          @if (store.status() === GameStatus.Finished && showOverlay()) {
-            <app-game-result-overlay
-              currentGameId="nonogram"
-              [status]="getGameResult()"
-              [title]="getGameResult() === 'win' ? t('game.you_win')() : t('game.you_lose')()"
-              [stats]="[
-                { label: t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
-              ]"
-              [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-              [opponentInfo]="opponentsPkStats()[0]"
-              [pkSeriesScore]="seriesScore()"
-              [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-              [xpResult]="store.lastStatResult()?.xp_result"
-              [coinsEarned]="store.lastStatResult()?.coins_earned"
-              [isNewRecord]="store.lastStatResult()?.isNewRecord"
-              [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
-              [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
-              [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-              (rematch)="handleRematch()"
-              (restart)="handleRestart()"
-              (leave)="goBack()"
-              (dismiss)="handleDismissRoom()"
-              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-              (changeRoomGame)="store.changeRoomGame($event)">
-            </app-game-result-overlay>
-          }
-
       </div>
 </app-game-layout>

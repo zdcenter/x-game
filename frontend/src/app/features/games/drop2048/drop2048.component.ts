@@ -9,9 +9,6 @@ import { Drop2048Store } from './store/drop2048.store';
 import { getDrop2048BlockStyle } from './store/drop2048-engine';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
@@ -33,9 +30,6 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
-    GameWaitingRoomComponent,
-    GameResultOverlayComponent,
-    GameStartingOverlayComponent,
     Drop2048BoardComponent,
     GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   providers: [Drop2048Store],
@@ -57,16 +51,9 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     return [me, ...opps];
   });
   adService = inject(AdService);
-  private authStore = inject(AuthStore);
-  GameStatus = GameStatus;
-  GameMode = GameMode;
   override store = inject(Drop2048Store);
   roomLifecycle!: RoomLifecycleHandle;
-  private router = inject(Router);
-  i18n = inject(I18nService);
-  private gameRegistry = inject(GameRegistryService);
   private floatingText = inject(FloatingTextService);
-  private leaderboardService = inject(LeaderboardService);
 
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
 
@@ -132,8 +119,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   }
 
   view = signal<'lobby' | 'room' | 'play'>('lobby');
-  showRules = signal(false);
-  showOverlay = signal(false);
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
 
   constructor() {
@@ -173,6 +158,11 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
     effect((onCleanup) => {
       if (this.store.status() === GameStatus.Finished) {
+        if (this.store.currentRoomMode() !== GameMode.Single && this.store.winners().includes(this.playerId)) {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -183,6 +173,11 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     effect(() => {
       const c = this.store.comboCount();
       if (c > 0) {
+        if (c >= 2) {
+          this.vibrateCombo();
+        } else {
+          this.vibrateMedium();
+        }
         let x = window.innerWidth / 2;
         let y = window.innerHeight / 2;
         
@@ -283,7 +278,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   }
 
   private windowSize = inject(WindowSizeService);
-  Math = Math;
 
   cellSize = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
@@ -343,18 +337,22 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     const isSpace = event.code === 'Space' || event.key === ' ' || event.key === 'Space';
 
     if (isLeft) {
+      this.vibrateLight();
       this.store.moveLeft();
       event.preventDefault();
       event.stopPropagation();
     } else if (isRight) {
+      this.vibrateLight();
       this.store.moveRight();
       event.preventDefault();
       event.stopPropagation();
     } else if (isDown) {
+      this.vibrateLight();
       this.store.softDrop();
       event.preventDefault();
       event.stopPropagation();
     } else if (isSpace) {
+      this.vibrateSnap();
       this.store.hardDrop();
       event.preventDefault();
       event.stopPropagation();
@@ -388,6 +386,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
     // Horizontal movement (switch columns)
     if (Math.abs(dx) > 26) {
+      this.vibrateLight();
       if (dx > 0) {
         this.store.moveRight();
       } else {
@@ -399,6 +398,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
     // Vertical soft drop (only downwards)
     if (dy > 32) {
+      this.vibrateLight();
       this.store.softDrop();
       this.lastProcessedY = currentY;
       this.hasMoved = true;
@@ -414,6 +414,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
     // Fast downward flick triggers hard drop
     if (!this.hasMoved && totalDy > 45 && duration < 280) {
+      this.vibrateSnap();
       this.store.hardDrop();
     }
   }

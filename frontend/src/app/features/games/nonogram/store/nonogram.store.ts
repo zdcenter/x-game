@@ -300,12 +300,14 @@ export class NonogramStore extends BaseGameStore {
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
       const state = this.localState();
-      if (state) {
+      if (state && state.status !== GameStatus.Finished) {
         this.localState.set({
           ...state,
           status: GameStatus.Playing,
           startAt: Date.now()
         });
+      } else {
+        this.initSinglePlayer(this.currentDifficulty() as string, true);
       }
     } else {
       super.startGame();

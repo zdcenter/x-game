@@ -15,9 +15,6 @@ import { AudioService } from '../../../core/services/audio.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
 import { BlockShape } from './utils/shapes';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -31,9 +28,6 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
-    GameWaitingRoomComponent,
-    GameResultOverlayComponent,
-    GameStartingOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent,
     GameScoreCapsuleComponent],
@@ -67,7 +61,6 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
   `]
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  private haptic = inject(HapticService);
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     const opps = this.store.opponents().map(opp => ({
       id: opp.id,
@@ -148,16 +141,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   adService = inject(AdService);
-  GameDifficulty = GameDifficulty;
-  GameStatus = GameStatus;
-  GameMode = GameMode;
-  Math = Math;
   override store = inject(BlockStore);
-  private authStore = inject(AuthStore);
-  gameRegistry = inject(GameRegistryService);
-  public i18n = inject(I18nService);
-  private audioService = inject(AudioService);
-  private leaderboardService = inject(LeaderboardService);
 
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
   
@@ -171,14 +155,9 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   selectedHandIndex = signal<number | null>(null);
   keyboardCursor = signal<{ row: number; col: number }>({ row: 4, col: 4 });
   
-  showRules = signal(false);
-  showOverlay = signal(false);
   isShaking = signal(false);
   floatItems = signal<{ id: number; text: string; tier: 1 | 2 | 3; xPct: number }[]>([]);
   particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   private roomLifecycle!: RoomLifecycleHandle;
 

@@ -9,17 +9,14 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-steal.component';
 import { Math24PkSpeedComponent } from './components/math24-pk-speed/math24-pk-speed.component';
 import { Math24BoardComponent } from './components/math24-board/math24-board.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { Math24LobbyComponent } from './components/math24-lobby/math24-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { FormsModule } from '@angular/forms';
@@ -32,44 +29,26 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
   selector: 'app-math24',
   standalone: true,
   imports: [CommonModule,
-    
-    
-    GameWaitingRoomComponent,
     Math24PkStealComponent,
     Math24PkSpeedComponent,
     Math24BoardComponent,
-    GameResultOverlayComponent,
     Math24LobbyComponent,
-    GameStartingOverlayComponent,
-    
-    
     FormsModule, GameLayoutComponent],
   templateUrl: './math24.component.html'
 })
 export class Math24Component extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
-  store = inject(Math24Store);
-  private authStore = inject(AuthStore);
+  override store = inject(Math24Store);
   private roomLifecycle!: RoomLifecycleHandle;
-  private router = inject(Router);
-  i18n = inject(I18nService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
-    private dailyService = inject(DailyChallengeService);
+  private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private pendingDailyChallengeId = signal<string | null>(null);
   view = signal<'lobby' | 'room' | 'play'>('lobby');
   startingCountdown = signal(3);
-  showRules = signal(false);
-  showOverlay = signal(false);  private countdownInterval: any;
-
-  get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
+  private countdownInterval: any;
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     return Object.entries(this.store.players())
@@ -146,6 +125,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       
       const isFin = this.store.isFinished() || this.store.status() === GameStatus.Finished;
       if (isFin) {
+        this.celebrateVictory();
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {

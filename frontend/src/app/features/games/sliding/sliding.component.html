@@ -1,5 +1,6 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
   [gameId]="'sliding'"
+  [store]="store"
   [title]="t('sliding.title')() || 'Sliding Puzzle'"
   [subtitle]="getSubtitle()"
   icon="🔲"
@@ -7,15 +8,12 @@
   titleGradientClass="from-purple-400 to-pink-400"
   shadowClass="shadow-pink-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-purple-900/20 dark:to-pink-900/20 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="changeSingleDifficulty($event)"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
-  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="getOverlayStats()"
+  [customResultTitle]="getOverlayTitle()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
@@ -27,8 +25,6 @@
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
-
-          @if (currentRoomMode() === GameMode.Single || store.status() !== GameStatus.Waiting) {
 
           <!-- Single Player Classic Header -->
           @if (currentRoomMode() === GameMode.Single) {
@@ -126,41 +122,6 @@
                 class="flex-1 min-w-[200px]"
               ></app-game-toolbar>
             </div>
-          }
-          
-          @if (store.status() === GameStatus.Starting) {
-            <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-          }
-
-
-          @if (store.status() === GameStatus.Finished && showOverlay()) {
-            <app-game-result-overlay currentGameId="sliding" [status]="getOverlayStatus()" [title]="getOverlayTitle()"
-              [subtitle]="getOverlaySubtitle()" [stats]="getOverlayStats()"
-              [isPkMatch]="currentRoomMode() !== GameMode.Single"
-              [opponentInfo]="opponentsPkStats()[0]"
-              [pkSeriesScore]="seriesScore()"
-              [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-              [xpResult]="store.lastStatResult()?.xp_result"
-              [isNewRecord]="store.lastStatResult()?.isNewRecord"
-              [showRestart]="currentRoomMode() === GameMode.Single || store.hostId() === playerId"
-              [showDismiss]="currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-              [showLeave]="currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
-              (rematch)="handleRematch()"
-              (leave)="goBack()"
-              (restart)="store.playAgain()" (dismiss)="dismissRoom()"
-              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-              (changeRoomGame)="store.changeRoomGame($event)">
-            </app-game-result-overlay>
-          }
-
-          } @else {
-            <app-game-waiting-room class="w-full h-full flex" [gameId]="'sliding'" [mode]="currentRoomMode()"
-              [roomId]="roomId()" [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()"
-              [currentUserId]="playerId" (leave)="goBack()" (start)="store.startGame()"
-              (changeSettings)="openChangeSettings()" [readyPlayers]="store.readyPlayers() || {}"
-              (kick)="store.kickPlayer($event)" (ready)="store.ready()" (cancelReady)="store.cancelReady()"
-              [target]="store.currentRoomTarget()">
-            </app-game-waiting-room>
           }
         </div>
 </app-game-layout>

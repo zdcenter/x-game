@@ -10,11 +10,8 @@ import { WatersortStore } from './store/watersort.store';
 import { TubeComponent } from './components/tube/tube.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -27,9 +24,7 @@ import { getLiquidTheme, LiquidColorTheme } from './water-colors.util';
 @Component({
   selector: 'app-watersort',
   standalone: true,
-  imports: [CommonModule, TubeComponent, GameStartingOverlayComponent,
-    GameWaitingRoomComponent,  
-    GameResultOverlayComponent,
+  imports: [CommonModule, TubeComponent,
     GameToolbarComponent, FormsModule, GameLayoutComponent,
     GamePkHudComponent],
   templateUrl: './watersort.component.html',
@@ -70,23 +65,11 @@ import { getLiquidTheme, LiquidColorTheme } from './water-colors.util';
   `]
 })
 export class WatersortComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
-@ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
+  @ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
   @ViewChildren('tubeElements', { read: ElementRef }) tubeElements!: QueryList<ElementRef>;
-  public i18n = inject(I18nService);
   public _store = inject(WatersortStore);
-  private authStore = inject(AuthStore);
-  public timerService = inject(GameTimerService);
-  private router = inject(Router);
-  private toastService = inject(ToastService);
-  private audioService = inject(AudioService);
   
-  showRules = signal(false);
-  showOverlay = signal(false);
-  get store() { return this._store; }
-  override get playerId() { return this.authStore.currentUser()?.username || this.authStore.guestId; }
+  override get store() { return this._store; }
   
   private cdr = inject(ChangeDetectorRef);
 
@@ -136,6 +119,11 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       }
 
       if (status === GameStatus.Finished) {
+        if (this.didIWin()) {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -450,16 +438,20 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       const tube = this.myTubes()[index];
       if (tube && tube.colors.length > 0) {
         this.selectedTubeIndex = index;
+        this.vibrateLight();
         this.audioService.playWaterSort('clink');
       }
     } else {
       if (this.selectedTubeIndex !== index) {
         if (this.isValidPour(this.selectedTubeIndex, index)) {
+          this.vibrateSnap();
           this.triggerPourAnimation(this.selectedTubeIndex, index);
         } else {
+          this.vibrateError();
           this.audioService.playWaterSort('clink'); // Play clink on deselect/invalid target
         }
       } else {
+        this.vibrateLight();
         this.audioService.playWaterSort('clink'); // Play clink on deselecting same tube
       }
       this.selectedTubeIndex = null;

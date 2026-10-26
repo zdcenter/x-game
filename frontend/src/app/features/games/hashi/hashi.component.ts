@@ -9,14 +9,11 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { HashiStore } from './store/hashi.store';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { HashiLobbyComponent } from './components/hashi-lobby/hashi-lobby.component';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { environment } from '../../../../environments/environment';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -27,11 +24,8 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
   imports: [
     CommonModule,
     FormsModule,
-    GameResultOverlayComponent,
     GameToolbarComponent,
     HashiLobbyComponent,
-    GameWaitingRoomComponent,
-    GameStartingOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent
   ],
@@ -39,13 +33,8 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
   templateUrl: './hashi.component.html'
 })
 export class HashiComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  
-  store = inject(HashiStore);
-  private authStore = inject(AuthStore);
+  override store = inject(HashiStore);
   private roomLifecycle!: RoomLifecycleHandle;
-  i18n = inject(I18nService);
   private windowSize = inject(WindowSizeService);
   http = inject(HttpClient);
 
@@ -114,10 +103,6 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     const grid = this.store.boardGrid();
     return grid.length > 15 || (grid[0] && grid[0].length > 15);
   });
-
-  get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     const isFinished = this.store.winners().includes(this.playerId);
@@ -199,6 +184,13 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
         untracked(() => this.gameTimer.startCountdown());
       } else {
         untracked(() => this.gameTimer.stopCountdown());
+      }
+      if (st === GameStatus.Finished) {
+        if (this.store.currentRoomMode() === GameMode.Single || this.store.winners().includes(this.playerId)) {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
       }
     });
   }
@@ -304,6 +296,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     const current = this.selectedIsland();
     if (!current) {
       this.selectedIsland.set({r, c});
+      this.vibrateLight();
     } else {
       // If clicking same island, deselect
       if (current.r === r && current.c === c) {
@@ -311,6 +304,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
       } else {
         // Try to draw bridge
         this.store.toggleBridge(current.r, current.c, r, c);
+        this.vibrateSnap();
         this.selectedIsland.set(null); // Keep or deselect based on UX preference
       }
     }
@@ -350,6 +344,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
           if (endR !== start.r || endC !== start.c) {
              // Swiped to a different island!
              this.store.toggleBridge(start.r, start.c, endR, endC);
+             this.vibrateSnap();
              event.preventDefault();
           }
        }

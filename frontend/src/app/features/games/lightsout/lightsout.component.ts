@@ -11,9 +11,6 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -27,9 +24,6 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
   standalone: true,
   imports: [
     CommonModule,
-    GameWaitingRoomComponent,
-    GameStartingOverlayComponent,
-    GameResultOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent,
     GameScoreCapsuleComponent,
@@ -72,21 +66,10 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
   `]
 })
 export class LightsoutComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
   override store = inject(LightsoutStore);
-  private gameRegistry = inject(GameRegistryService);
-  private authStore = inject(AuthStore);
-  i18n = inject(I18nService);
-  private router = inject(Router);
-  private haptic = inject(HapticService);
-  private leaderboardService = inject(LeaderboardService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
 
-  showRules = signal(false);
-  showOverlay = signal(false);
   hintCell = signal<{r: number, c: number} | null>(null);
   keyboardCursor = signal<{ row: number; col: number }>({ row: 2, col: 2 });
   shockwave = signal<{ row: number; col: number; ts: number } | null>(null);
@@ -113,10 +96,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     const dim = Math.max(240, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
   });
-
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
@@ -230,6 +209,11 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     effect((onCleanup) => {
       const isFin = this.store.status() === GameStatus.Finished;
       if (isFin) {
+        if (this.getOverlayStatus() === 'win') {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
         if (this.store.remainingLights() === 0) {
           const colors = ['#fde047', '#38bdf8', '#34d399', '#c084fc', '#ffffff'];
           const sparks = Array.from({ length: 36 }, (_, i) => ({

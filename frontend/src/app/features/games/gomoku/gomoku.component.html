@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'gomoku'"
   [title]="i18n.t('game.gomoku')()"
   [subtitle]="getSubtitle()"
@@ -7,49 +8,26 @@
   titleGradientClass="from-emerald-400 to-teal-500"
   shadowClass="shadow-emerald-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-emerald-900/30 dark:to-teal-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="currentDifficulty()"
   (difficultyChange)="changeDifficulty($event)"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished "
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [customResultTitle]="winnerText"
+  [isDefeat]="store.winner() !== myPlayerId()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.startGame()"
+  (restart)="onRestart()"
+  (rematch)="onRestart()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (currentRoomMode() !== GameMode.Single && gameStatus() === GameStatus.Waiting) {
-          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
-            <app-game-waiting-room
-              class="w-full h-full flex"
-              [gameId]="'gomoku'"
-              [mode]="currentRoomMode()"
-              [roomId]="roomId()" [difficulty]="GameDifficulty.Medium"
-              [players]="mappedPlayers"
-              [hostId]="hostId()"
-              [currentUserId]="myPlayerId()"
-              (start)="store.startGame()"
-              (leave)="goBack()"
-              (changeSettings)="openChangeSettings()"
-              [readyPlayers]="store.readyPlayers()"
-              (kick)="store.kickPlayer($event)"
-              (ready)="store.ready()"
-              (cancelReady)="store.cancelReady()"
-              [target]="store.currentRoomTarget()"
-            >
-            </app-game-waiting-room>
-          </div>
-        }
-
-        @if (currentRoomMode() === GameMode.Single || gameStatus() !== GameStatus.Waiting) {
           <!-- Main Game Area with Centered Responsive Layout -->
           <main class="flex-1 w-full mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-auto py-2 sm:py-3 min-h-0 overflow-y-auto lg:overflow-hidden select-none">
             
@@ -198,29 +176,4 @@
               </div>
             </div>
           </main>
-        }
-
-        <!-- Starting Overlay -->
-        @if (gameStatus() === GameStatus.Starting) {
-          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-        }
-
-        <!-- Result Overlay -->
-        @if (showResultOverlay()) {
-          <app-game-result-overlay
-            class="absolute inset-0 z-50 flex items-center justify-center"
-            currentGameId="gomoku"
-            [status]="store.winner() === myPlayerId() ? 'win' : 'lose'"
-            [title]="winnerText"
-            [xpResult]="store.lastStatResult()?.xp_result"
-            [isNewRecord]="store.lastStatResult()?.isNewRecord"
-            [showRestart]="true"
-            [showLeave]="true"
-            [stats]="[]"
-            (restart)="onRestart()"
-            (leave)="goBack()"
-                [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-                (changeRoomGame)="store.changeRoomGame($event)">
-          </app-game-result-overlay>
-        }
 </app-game-layout>

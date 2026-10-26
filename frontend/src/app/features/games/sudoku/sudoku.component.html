@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'sudoku'"
   [title]="i18n.t('lobby.sudoku')()"
   [subtitle]="getSubtitle()"
@@ -7,76 +8,55 @@
   titleGradientClass="from-blue-400 to-emerald-400"
   shadowClass="shadow-emerald-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
-  [showRules]="showRules()"
-  [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="currentDifficulty()"
   (difficultyChange)="changeSingleDifficulty($event)"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [isLobby]="view() === 'lobby'"
+  [showNextLevel]="store.currentRoomMode() === GameMode.Single"
+  [overlayStats]="getSinglePlayerStats()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
-  (playAgain)="store.startGame()"
+  (playAgain)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.playAgain()"
+  (nextLevel)="playNextLevel()"
+  (restart)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.playAgain()"
+  (rematch)="store.playAgain()"
+  (dismiss)="store.dismissRoom()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
-  [isLobby]="view() === 'lobby'"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (view() === 'lobby') {
-        <app-sudoku-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
-          (levelSelect)="startLevel($event)"
-          (openLobby)="navigateToPkArena()">
-        </app-sudoku-lobby>
-      } @else if (view() === 'room') {
-        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
-          <app-sudoku-room class="flex-1 min-h-0 w-full" (changeSettings)="openChangeSettings()"></app-sudoku-room>
-        </div>
-      } @else if (view() === 'countdown' || store.status() === GameStatus.Starting) {
-        <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+  @if (view() === 'lobby') {
+    <app-sudoku-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
+      (levelSelect)="startLevel($event)"
+      (openLobby)="navigateToPkArena()">
+    </app-sudoku-lobby>
+  } @else {
+    <!-- PLAY VIEW -->
+    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
+      @if (store.currentRoomMode() !== GameMode.Single) {
+        <app-sudoku-pk-speed (openLobby)="navigateToPkArena()"></app-sudoku-pk-speed>
       } @else {
-        <!-- PLAY VIEW -->
-        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
-          @if (store.currentRoomMode() !== GameMode.Single) {
-            <app-sudoku-pk-speed (openLobby)="navigateToPkArena()"></app-sudoku-pk-speed>
-          } @else {
-            <!-- Single Player -->
-            <div class="flex-none flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-visible relative w-full justify-center my-auto">
-              <div class="flex-none flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-center md:justify-center content-center md:content-center items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto mt-4">
-                <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-360px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === GameMode.Single">
-                  <app-sudoku-board class="w-full"></app-sudoku-board>
-                </div>
-                <div class="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 w-full md:w-16 flex-shrink-0 mt-1 md:mt-0">
-                  <app-sudoku-numpad></app-sudoku-numpad>
-                </div>
-                <div class="order-3 md:order-none md:col-start-1 md:row-start-2 w-full mt-1 md:mt-0">
-                  <app-sudoku-tools class="w-full"></app-sudoku-tools>
-                </div>
-              </div>
-
-              <!-- Victory Overlay -->
-              @if (store.isFinished() && store.currentRoomMode() === GameMode.Single && showOverlay()) {
-                <app-game-result-overlay
-                  currentGameId="sudoku"
-                  [status]="'win'"  [title]="i18n.t('game.win')()" [promptText]="i18n.t('game.sudoku.next_level_prompt')()"
-                  [stats]="getSinglePlayerStats()"
-                  [xpResult]="store.lastStatResult()?.xp_result"
-                  [isNewRecord]="store.lastStatResult()?.isNewRecord"
-                  [showNextLevel]="true"
-                  [showLeave]="true"
-                  (leave)="store.view.set('lobby')"
-                  (nextLevel)="playNextLevel()"
-                  class="absolute inset-0 z-50"
-                  [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-                  (changeRoomGame)="store.changeRoomGame($event)">
-                </app-game-result-overlay>
-              }
+        <!-- Single Player -->
+        <div class="flex-none flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-visible relative w-full justify-center my-auto">
+          <div class="flex-none flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-center md:justify-center content-center md:content-center items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto mt-4">
+            <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-360px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === GameMode.Single">
+              <app-sudoku-board class="w-full"></app-sudoku-board>
             </div>
-          }
+            <div class="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 w-full md:w-16 flex-shrink-0 mt-1 md:mt-0">
+              <app-sudoku-numpad></app-sudoku-numpad>
+            </div>
+            <div class="order-3 md:order-none md:col-start-1 md:row-start-2 w-full mt-1 md:mt-0">
+              <app-sudoku-tools class="w-full"></app-sudoku-tools>
+            </div>
+          </div>
         </div>
       }
+    </div>
+  }
 </app-game-layout>

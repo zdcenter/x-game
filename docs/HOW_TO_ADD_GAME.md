@@ -367,15 +367,11 @@ export class MyGameStore extends BaseGameStore {
 在 `frontend/src/app/features/games/mygame/mygame.component.ts` 中：
 
 ```typescript
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { MyGameStore } from './store/mygame.store';
-import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
@@ -385,24 +381,19 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
   imports: [
     CommonModule,
     GameLayoutComponent,
-    GameWaitingRoomComponent,
-    GameStartingOverlayComponent,
-    GameResultOverlayComponent,
     GamePkHudComponent,
   ],
   providers: [MyGameStore],
   templateUrl: './mygame.component.html'
 })
 export class MyGameComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-
   override store = inject(MyGameStore);
-  showRules = signal(false);
+  // ✨ BaseGameComponent 自动提供 authStore, router, toast, audio, haptic, i18n,
+  // GameMode, GameStatus, GameDifficulty, Math, math, t, showRules, showOverlay, playerId 等！无需重复定义！
 
   // 对手 PK 进度 HUD 映射
   readonly opponentPkStats = computed<PkPlayerStats[]>(() => {
-    if (this.store.currentRoomMode() === GameMode.Single) return [];
+    if (this.store.currentRoomMode() === this.GameMode.Single) return [];
     const myId = this.playerId;
     const raw = this.store.rawState() as any;
     const players = raw?.players || {};
@@ -419,7 +410,7 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
 
   override ngOnInit(): void {
     super.ngOnInit(); // 必须调用：自动连接大厅 WS 并监听同游戏房间快速迎战
-    if (this.store.currentRoomMode() === GameMode.Single) {
+    if (this.store.currentRoomMode() === this.GameMode.Single) {
       this.store.startSingleGame();
     }
   }
@@ -431,24 +422,23 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
 }
 ```
 
-### 4. HTML 模板：使用 GameLayout 黄金骨架
+### 4. HTML 模板：使用 GameLayout 黄金骨架 (v3.2.47+ 自动编排器)
 在 `frontend/src/app/features/games/mygame/mygame.component.html` 中：
+
+> **✨ v3.2.47 极致精简**：只需传入 `[store]="store"` 与 `[overlayStats]="..."`，**联机等待室 (`GameWaitingRoom`)、3 秒倒计时 (`GameStartingOverlay`) 与终局结算 (`GameResultOverlay`) 均由 `<app-game-layout>` 自动内聚管理**！无需在子组件重复书写 60+ 行等待室与弹窗模板！
 
 ```html
 <app-game-layout
   [gameId]="'mygame'"
+  [store]="store"
   [title]="i18nBase.t('lobby.mygame')()"
   icon="🎮"
   iconGradientClass="from-indigo-500 to-cyan-500"
   titleGradientClass="from-indigo-400 to-cyan-400"
   shadowClass="shadow-cyan-500/20"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished"
-  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="[{ label: '得分', value: store.localScore() }]"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
@@ -458,71 +448,31 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  <!-- 1. PK 模式等待大厅 (在 status === Waiting 时展示) -->
-  @if (store.currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
-    <app-game-waiting-room
-      [gameId]="'mygame'"
-      [mode]="store.currentRoomMode()"
-      [roomId]="store.roomId()"
-      [difficulty]="store.currentDifficulty()"
-      [players]="store.playersList()"
-      [hostId]="store.hostId()"
-      [currentUserId]="playerId"
-      [readyPlayers]="store.readyPlayers()"
-      [target]="store.currentRoomTarget()"
-      (leave)="goBack()"
-      (start)="store.startGame()"
-      (ready)="store.ready()"
-      (cancelReady)="store.cancelReady()"
-      (kick)="store.kickPlayer($event)"
-    />
-  } @else {
-    <!-- 2. 游戏核心操作舞台 -->
-    <div class="flex-1 w-full h-full flex flex-col items-center justify-between p-2 sm:p-4 min-h-0">
-      
-      <!-- PK 对战实时比分 HUD (仅在多人对战且进行中时呈现) -->
-      @if (store.currentRoomMode() !== GameMode.Single) {
-        <app-game-pk-hud
-          [myScore]="store.localScore()"
-          [opponents]="opponentPkStats()"
-          [roundFormat]="store.room()?.roundFormat || 'BO3'"
-          [seriesScore]="{ me: store.pkWins()[playerId] || 0, opponent: store.pkWins()[opponentPkStats()[0]?.id || ''] || 0 }"
-          (surrender)="store.forfeit()"
-        />
-      }
+  <!-- 核心操作舞台：开发者只需专注于自身独有的棋盘/画布！ -->
+  <div class="flex-1 w-full h-full flex flex-col items-center justify-between p-2 sm:p-4 min-h-0">
+    
+    <!-- PK 对战实时比分 HUD (仅在多人对战且进行中时呈现) -->
+    @if (store.currentRoomMode() !== GameMode.Single) {
+      <app-game-pk-hud
+        [myStats]="{ id: playerId, nickname: playerId, score: store.localScore(), progress: 0, finished: false }"
+        [opponents]="opponentPkStats()"
+        [roundFormat]="store.room()?.roundFormat || 'BO3'"
+        [seriesScore]="{ me: store.pkWins()[playerId] || 0, opponent: store.pkWins()[opponentPkStats()[0]?.id || ''] || 0 }"
+      />
+    }
 
-      <!-- 核心棋盘 / 画布区域 -->
-      <div class="my-auto flex items-center justify-center">
-        <button (click)="store.makeMove(10)" 
-                class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold active:scale-95 transition-all shadow-lg">
-          点击得分 (+10) - 当前: {{ store.localScore() }}
-        </button>
-      </div>
+    <!-- 核心棋盘 / 画布区域 -->
+    <div class="my-auto flex items-center justify-center">
+      <button (click)="store.makeMove(10)" 
+              class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold active:scale-95 transition-all shadow-lg cursor-pointer">
+        点击得分 (+10) - 当前: {{ store.localScore() }}
+      </button>
     </div>
-  }
-
-  <!-- 3. 3 秒开始倒计时覆盖层 -->
-  @if (store.status() === GameStatus.Starting) {
-    <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()" />
-  }
-
-  <!-- 4. 终局结算覆盖层 (含提前淘汰优雅退出与观战支持) -->
-  @if (store.status() === GameStatus.Finished) {
-    <app-game-result-overlay
-      currentGameId="mygame"
-      [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
-      [title]="store.winners().includes(playerId) ? i18nBase.t('game.you_win')() : i18nBase.t('game.you_lose')()"
-      [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-      [stats]="[{ label: '得分', value: store.localScore() }]"
-      [showLeave]="true"
-      [isWaitingOthers]="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Finished"
-      (rematch)="handleRematch()"
-      (restart)="store.startSingleGame()"
-      (leave)="goBack()"
-    />
-  }
+  </div>
 </app-game-layout>
 ```
+
+> **提示**：如果游戏具有特殊的终局展示需求（例如自定义游戏结束画面），可传入 `[autoManageOverlays]="false"`，此时 `<app-game-layout>` 会退回至自由插槽模式，允许开发者在 `<ng-content>` 中自定义控制覆盖层。
 
 ---
 

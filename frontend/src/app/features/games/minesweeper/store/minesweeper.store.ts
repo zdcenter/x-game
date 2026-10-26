@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { Injectable, computed, inject, effect, signal } from '@angular/core';
+import { Injectable, computed, inject, effect, signal, untracked } from '@angular/core';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
@@ -198,9 +198,30 @@ export class MinesweeperStore extends BaseGameStore {
 
   constructor() {
     super();
+
+    // Reset optimistic flags when entering waiting or starting state (rematch / new round)
+    effect(() => {
+      const st = this.status();
+      if (st === GameStatus.Waiting || st === GameStatus.Starting) {
+        untracked(() => this.optimisticFlags.set({}));
+      }
+    });
+
+    // Reset optimistic flags when a new playing board is delivered with 0 revealed cells
+    effect(() => {
+      const board = this.myBoardData();
+      if (board && board.revealed_cnt === 0 && board.status === 'playing') {
+        untracked(() => {
+          if (Object.keys(this.optimisticFlags()).length > 0) {
+            this.optimisticFlags.set({});
+          }
+        });
+      }
+    });
   }
 
   startLocalGame(width: number, height: number, mines: number, difficulty: string = GameDifficulty.Medium) {
+    this.optimisticFlags.set({});
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(difficulty);
     this.ws.disconnect(GameId.Minesweeper); // Ensure we don't hold a WebSocket for single player
@@ -221,6 +242,7 @@ export class MinesweeperStore extends BaseGameStore {
   }
 
   startTutorialGame() {
+    this.optimisticFlags.set({});
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set('tutorial');
     this.ws.disconnect(GameId.Minesweeper);
@@ -236,16 +258,39 @@ export class MinesweeperStore extends BaseGameStore {
   }
 
   override startGame() {
+    this.optimisticFlags.set({});
     if (this.currentRoomMode() === GameMode.Single) {
        const engine = this.localEngine();
-       if (engine) {
-          engine.status = GameStatus.Playing;
-          engine.startAt = Date.now();
+       if (engine && engine.width > 0 && engine.height > 0) {
+          if (this.currentDifficulty() === 'tutorial') {
+            engine.initTutorialBoard();
+          } else {
+            engine.initGame({ width: engine.width, height: engine.height, mines: engine.mines });
+          }
           this.tick.set(this.tick() + 1);
        }
     } else {
       super.startGame();
     }
+  }
+
+  override restartGame() {
+    this.optimisticFlags.set({});
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.startGame();
+    } else {
+      super.restartGame();
+    }
+  }
+
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
+    this.optimisticFlags.set({});
+    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  }
+
+  override leaveRoom() {
+    this.optimisticFlags.set({});
+    super.leaveRoom();
   }
 
   reviveGame() {

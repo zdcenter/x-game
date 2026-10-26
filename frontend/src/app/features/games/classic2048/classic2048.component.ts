@@ -13,10 +13,6 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
 import { GameStatsService } from '../../../core/services/game-stats.service';
 import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -36,9 +32,6 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
-    GameWaitingRoomComponent,
-    GameResultOverlayComponent,
-    GameStartingOverlayComponent,
     GameScoreCapsuleComponent,
     GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './classic2048.component.html',
@@ -46,9 +39,6 @@ export type C2048Theme = 'classic' | 'neon' | 'glacier';
   providers: [Classic2048Store]
 })
 export class Classic2048Component extends BaseGameComponent implements OnInit, OnDestroy {
-  private haptic = inject(HapticService);
-  private leaderboardService = inject(LeaderboardService);
-  private gameRegistry = inject(GameRegistryService);
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
 
   getSubtitle(): string {
@@ -59,7 +49,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     const labelKey = this.gameRegistry.getModeLabel('classic2048', mode);
     return labelKey ? this.i18n.t(labelKey)() : this.i18n.t('game.speed_mode')();
   }
-  Math = Math;
+
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     return this.store.playersList().map(p => {
       const board = this.store.pkBoards()[p.id];
@@ -146,24 +136,13 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   adService = inject(AdService);
   override store = inject(Classic2048Store);
-  i18n = inject(I18nService);
   private statsService = inject(GameStatsService);
-  authStore = inject(AuthStore);
-  toastService = inject(ToastService);
-  private audio = inject(AudioService);
   
-  GameStatus = GameStatus;
-  GameMode = GameMode;
-  math = Math;
-
-  showRules = signal(false);
   bestScore = signal<number>(0);
   scoreDelta = signal<number>(0);
   showDelta = signal<boolean>(false);
   currentTheme = signal<C2048Theme>('classic');
   private prevScore = 0;
-
-  get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
 
   private lifecycle!: RoomLifecycleHandle;
 
@@ -195,6 +174,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
     effect(() => {
       if (this.store.status() === GameStatus.Finished && this.store.currentRoomMode() === GameMode.Single) {
+        this.vibrateError();
         this.submitScore();
       }
     });
@@ -220,6 +200,11 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
         this.showDelta.set(true);
         setTimeout(() => this.showDelta.set(false), 800);
         this.audio.playDrop2048('merge');
+        if (delta >= 128) {
+          this.vibrateCombo();
+        } else {
+          this.vibrateMedium();
+        }
 
         if (score > this.bestScore()) {
           this.bestScore.set(score);

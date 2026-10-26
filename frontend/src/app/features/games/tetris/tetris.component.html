@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'tetris'"
   [title]="i18n.t('tetris.title')()"
   [subtitle]="getSubtitle()"
@@ -7,36 +8,28 @@
   titleGradientClass="from-indigo-400 to-cyan-400"
   shadowClass="shadow-cyan-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-indigo-900/30 dark:to-cyan-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="getOverlayStats()"
+  [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.startGame()"
+  (restart)="store.restartGame()"
+  (rematch)="handleRematch()"
+  (dismiss)="dismissRoom()"
+  (revive)="handleRevive()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Waiting) {
-          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
-            <app-game-waiting-room
-              [gameId]="'tetris'" [mode]="currentRoomMode()" [roomId]="currentRoomId()"
-              [difficulty]="GameDifficulty.Medium" [players]="getPlayerScores()" [hostId]="store.hostId()" [currentUserId]="playerId"
-              [readyPlayers]="store.readyPlayers() || {}" (leave)="goBack()" (start)="store.startGame()"
-              (changeSettings)="openChangeSettings()" (kick)="store.kickPlayer($event)" (ready)="store.ready()"
-              (cancelReady)="store.cancelReady()" [target]="store.currentRoomTarget()">
-            </app-game-waiting-room>
-          </div>
-        } @else {
-          <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5" #boardArea>
+  <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5" #boardArea>
             
           <!-- Single Player Modern Glass Capsule HUD -->
           @if (currentRoomMode() === GameMode.Single) {
@@ -488,13 +481,6 @@
             </div>
 
           </div>
-          
-        }
-
-        <!-- Overlays -->
-        @if (store.status() === GameStatus.Starting) {
-          <app-game-starting-overlay [countdown]="timerService.countdownDisplay()"></app-game-starting-overlay>
-        }
 
         @if (store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Waiting) {
           <div class="absolute inset-0 z-[60] flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm rounded-xl lg:rounded-2xl">
@@ -513,32 +499,5 @@
             [players]="spectatingPlayers()"
             [currentUserId]="playerId"
           ></app-game-spectating-overlay>
-        }
-
-        @if (store.status() === GameStatus.Finished && (showOverlay() || store.currentRoomMode() !== GameMode.Single)) {
-          <app-game-result-overlay
-            currentGameId="tetris"
-            [status]="store.winners().includes(playerId) ? 'win' : 'lose'"
-            [title]="store.winners().includes(playerId) ? i18n.t('game.you_win')() : (store.currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-            [stats]="getOverlayStats()"
-            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-            [opponentInfo]="opponentsPkStats()[0]"
-            [pkSeriesScore]="seriesScore()"
-            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-            [xpResult]="store.lastStatResult()?.xp_result"
-            [isNewRecord]="store.lastStatResult()?.isNewRecord"
-            [showLeave]="true"
-            [isWaitingOthers]="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Finished"
-            [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
-            [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-            [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
-            (rematch)="handleRematch()"
-            (leave)="goBack()"
-            (restart)="store.restartGame()"
-            (dismiss)="dismissRoom()"
-            (revive)="handleRevive()"
-        [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-        (changeRoomGame)="store.changeRoomGame($event)">
-          </app-game-result-overlay>
         }
 </app-game-layout>

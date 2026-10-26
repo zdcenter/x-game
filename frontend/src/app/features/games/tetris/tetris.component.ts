@@ -7,7 +7,6 @@ import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
@@ -15,8 +14,6 @@ import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES, TETROMINO_THEMES } from './models/tetris.model';
 import { HapticService } from '../../../core/services/haptic.service';
@@ -33,14 +30,12 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
 })
 export class TetrisComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  private haptic = inject(HapticService);
-  private leaderboardService = inject(LeaderboardService);
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     const opps = this.store.opponents().map(opp => ({
@@ -100,21 +95,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     };
   });
   adService = inject(AdService);
-  GameDifficulty = GameDifficulty;
-  GameStatus = GameStatus;
-  GameMode = GameMode;
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLDivElement>;
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(TetrisStore);
-  private authStore = inject(AuthStore);
-  public timerService = inject(GameTimerService);
-  private router = inject(Router);
-  private toastService = inject(ToastService);
-  i18n = inject(I18nService);
   private floatingText = inject(FloatingTextService);
-  private gameRegistry = inject(GameRegistryService);
   private windowSize = inject(WindowSizeService);
-  Math = Math;
 
   readonly boardHeightPx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
@@ -153,11 +138,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   readonly COLORS = TETROMINO_COLORS;
   currentRoomMode = this.store.currentRoomMode;
   currentRoomId = computed(() => this.wsService.gameState()?.roomId || '');
-  showRules = signal(false);
-  showOverlay = signal(false);
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   showLevelUp = signal(false);
   levelUpNum = signal(0);
@@ -185,9 +165,15 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
       if (status === GameStatus.Finished) {
         if (this.currentRoomMode() === GameMode.Single) {
+          this.vibrateError();
           const timer = setTimeout(() => this.showOverlay.set(true), 1000);
           onCleanup(() => clearTimeout(timer));
         } else {
+          if (this.store.winners().includes(this.playerId)) {
+            this.celebrateVictory();
+          } else {
+            this.vibrateError();
+          }
           this.showOverlay.set(true);
         }
       } else {
@@ -206,12 +192,18 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
     effect(() => {
       const lv = this.store.levelUpSignal();
-      if (lv > 0) { this.levelUpNum.set(lv); this.showLevelUp.set(true); setTimeout(() => this.showLevelUp.set(false), 1600); }
+      if (lv > 0) {
+        this.vibrateMedium();
+        this.levelUpNum.set(lv);
+        this.showLevelUp.set(true);
+        setTimeout(() => this.showLevelUp.set(false), 1600);
+      }
     });
 
     effect(() => {
       const t = this.store.tetrisTrigger();
       if (t > 0) {
+        this.vibrateCombo();
         this.showTetrisBanner.set(true);
         setTimeout(() => this.showTetrisBanner.set(false), 1400);
       }
@@ -220,6 +212,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     effect(() => {
       const c = this.store.comboTrigger();
       if (c > 0) {
+        this.vibrateSnap();
         if (this.boardArea) {
           const rect = this.boardArea.nativeElement.getBoundingClientRect();
           this.floatingText.show(`🔥 COMBO ×${c}!`, rect.left + rect.width / 2, rect.top + rect.height / 2, { size: 'lg', color: '#fbbf24' });

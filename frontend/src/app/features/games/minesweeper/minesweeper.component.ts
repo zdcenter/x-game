@@ -33,27 +33,15 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameResultOverlayComponent, GameWaitingRoomComponent, GameStartingOverlayComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
   styleUrl: './minesweeper.component.css'
 })
 export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
-  Math = Math;
-  store = inject(MinesweeperStore);
-  i18n = inject(I18nService);
-  authStore = inject(AuthStore);
-  audioService = inject(AudioService);
-  toastService = inject(ToastService);
-  router = inject(Router);
-  private gameRegistry = inject(GameRegistryService);
-    private roomLifecycle!: RoomLifecycleHandle;
-
-  showRules = signal(false);  get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
+  override store = inject(MinesweeperStore);
+  private roomLifecycle!: RoomLifecycleHandle;
   currentRoomMode = signal<string>(GameMode.Single);
   currentRoomId = signal<string>('');
   currentDifficulty = signal<string>('medium');
@@ -334,8 +322,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       if (status === GameStatus.Finished) {
         if (this.isDefeat()) {
            this.audioService.playMinesweeper('explosion');
+           this.vibrateError();
         } else {
            this.audioService.playMinesweeper('win');
+           this.celebrateVictory();
         }
         
         const timer = setTimeout(() => {
@@ -370,8 +360,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   elapsedTime = signal<string>('00:00');
   elapsedSeconds = signal<number>(0);
   private elapsedInterval: any;
-  
-  showOverlay = signal(false);
 
   override ngOnInit() {
     super.ngOnInit(); // connects lobby WS
@@ -424,8 +412,14 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
 
 
-  handleCellReveal(cell: any) { this.store.revealCell(cell.x, cell.y); }
-  handleCellFlag(cell: any) { this.store.toggleFlag(cell.x, cell.y); }
+  handleCellReveal(cell: any) {
+    if (!cell.flagged && !cell.revealed) this.vibrateLight();
+    this.store.revealCell(cell.x, cell.y);
+  }
+  handleCellFlag(cell: any) {
+    if (!cell.revealed) this.vibrateMedium();
+    this.store.toggleFlag(cell.x, cell.y);
+  }
 
   override openChangeSettings() {
     if (this.lobbyPanel && this.currentRoomId()) {

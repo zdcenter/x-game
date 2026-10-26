@@ -1,22 +1,5 @@
 
     <div class="flex-grow flex flex-col p-2 md:p-6 gap-2 md:gap-6 overflow-y-auto custom-scrollbar relative">
-      
-      @if ((store.isFinished() || store.gameStatus() === GameStatus.Finished) && showOverlay()) {
-        <app-game-result-overlay
-          currentGameId="sudoku"
-          [status]="isWinner() ? 'win' : 'lose'"
-          [title]="isWinner() ? i18n.t('game.win')() : i18n.t('game.lose')()"
-          [stats]="getStats()"
-          [showLeave]="store.hostId() !== store.playerId()"
-          [showRestart]="store.hostId() === store.playerId()"
-          [showDismiss]="store.hostId() === store.playerId()"
-          (restart)="store.playAgain()"
-          (dismiss)="store.dismissRoom()"
-          (leave)="store.view.set('lobby')"
-          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-          (changeRoomGame)="store.changeRoomGame($event)">
-        </app-game-result-overlay>
-      }
 
 
 

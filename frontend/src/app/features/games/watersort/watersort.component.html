@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'watersort'"
   [title]="i18n.t('app.title.watersort')()"
   [subtitle]="getSubtitle()"
@@ -7,46 +8,27 @@
   titleGradientClass="from-blue-400 to-cyan-400"
   shadowClass="shadow-cyan-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-cyan-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
-  [showRules]="showRules()"
-  [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="currentDifficulty()"
   (difficultyChange)="changeSingleDifficulty($event)"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.startGame()"
+  (restart)="playAgain()"
+  (rematch)="handleRematch()"
+  (dismiss)="dismissRoom()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (currentRoomMode() !== GameMode.Single && status === GameStatus.Waiting) {
-          <div class="flex-1 min-h-0 overflow-y-auto p-2 lg:p-4 w-full" style="touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
-            <app-game-waiting-room
-              [gameId]="'watersort'"
-              [mode]="currentRoomMode()"
-              [roomId]="currentRoomId()"
-              [difficulty]="_store.currentDifficulty() || 'easy'"
-              [players]="playersList()"
-              [hostId]="_store.hostId()"
-              [currentUserId]="playerId"
-              (leave)="goBack()"
-              (start)="_store.startGame()"
-              (changeSettings)="openChangeSettings()"
-              [readyPlayers]="_store.readyPlayers()"
-              (kick)="_store.kickPlayer($event)"
-              (ready)="_store.ready()"
-              (cancelReady)="_store.cancelReady()"
-              [target]="_store.currentRoomTarget()">
-            </app-game-waiting-room>
-          </div>
-        } @else {
+  <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5">
 
           <!-- Players Info Row -->
           @if (currentRoomMode() === GameMode.Single) {
@@ -144,54 +126,23 @@
                 </div>
               }
             </div>
-
-            <!-- Starting Countdown Overlay -->
-            @if (status === GameStatus.Starting) {
-              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-            }
-
-            <!-- Toolbar -->
-            @if (currentRoomMode() === GameMode.Single) {
-              <div class="flex-none w-full relative z-20 mt-4 border-[var(--color-border-card)] shrink-0 py-2 sm:py-4">
-                <app-game-toolbar
-                  [layoutStyle]="'compact'"
-                  [showPrev]="false"
-                  [showNext]="false"
-                  [showUndo]="false"
-                  [showRestart]="true"
-                  [showHint]="true"
-                  hintLayout="sudoku"
-                  (restart)="playAgain()"
-                  (hintApplied)="applyHint()"
-                ></app-game-toolbar>
-              </div>
-            }
-
           </div>
-        }
-        
-        <!-- Game Over Overlay -->
-        @if (status === GameStatus.Finished && showOverlay()) {
-          <app-game-result-overlay
-            currentGameId="watersort"
-            [status]="didIWin() ? 'win' : 'lose'"
-            [title]="didIWin() ? i18n.t('game.you_win')() : (currentRoomMode() === GameMode.Single ? i18n.t('game.game_over')() : i18n.t('game.you_lose')())"
-            [stats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
-            [xpResult]="_store.lastStatResult()?.xp_result"
-            [isNewRecord]="_store.lastStatResult()?.isNewRecord"
-            [isPkMatch]="currentRoomMode() !== GameMode.Single"
-            [opponentInfo]="opponentsPkStats()[0]"
-            [pkSeriesScore]="seriesScore()"
-            [pkRoundFormat]="'BO3'"
-            (rematch)="handleRematch()"
-            [showLeave]="currentRoomMode() === GameMode.Single || !isHost()"
-            [showRestart]="currentRoomMode() === GameMode.Single || isHost()"
-            [showDismiss]="currentRoomMode() !== GameMode.Single && isHost()"
-            (leave)="goBack()"
-            (restart)="playAgain()"
-            (dismiss)="dismissRoom()"
-            [enableChangeRoomGame]="_store.currentRoomMode() !== GameMode.Single && _store.hostId() === _store.playerId()"
-            (changeRoomGame)="_store.changeRoomGame($event)">
-          </app-game-result-overlay>
-        }
+
+    <!-- Toolbar -->
+    @if (currentRoomMode() === GameMode.Single) {
+      <div class="flex-none w-full relative z-20 mt-4 border-[var(--color-border-card)] shrink-0 py-2 sm:py-4">
+        <app-game-toolbar
+          [layoutStyle]="'compact'"
+          [showPrev]="false"
+          [showNext]="false"
+          [showUndo]="false"
+          [showRestart]="true"
+          [showHint]="true"
+          hintLayout="sudoku"
+          (restart)="playAgain()"
+          (hintApplied)="applyHint()"
+        ></app-game-toolbar>
+      </div>
+    }
+  </div>
 </app-game-layout>

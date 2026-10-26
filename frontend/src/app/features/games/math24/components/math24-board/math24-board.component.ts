@@ -7,6 +7,7 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { Math24Solver } from '../../utils/math24-solver';
 import { GameToolbarComponent } from '../../../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameMode } from '../../../../../core/models/game.model';
+import { HapticService } from '../../../../../core/services/haptic.service';
 
 @Component({
   selector: 'app-math24-board',
@@ -223,8 +224,11 @@ export class Math24BoardComponent {
     });
   }
 
+  haptic = inject(HapticService);
+
   selectCard(card: Math24Card) {
     if (this.freezeRemaining() > 0) return;
+    this.haptic.vibrateLight();
     if (!this.selectedCard) {
       this.selectedCard = card;
     } else if (this.selectedCard.id === card.id) {
@@ -233,6 +237,7 @@ export class Math24BoardComponent {
       // Record existing IDs before combine to identify the result card
       const prevIds = new Set(this.store.currentBoardCards().map(c => c.id));
       this.store.combineCards(this.selectedCard, card, this.selectedOp);
+      this.haptic.vibrateSnap();
       this.selectedOp = null;
 
       // Auto-select the result card so the next operation can start immediately
@@ -251,11 +256,13 @@ export class Math24BoardComponent {
   selectOp(op: Operator) {
     if (this.freezeRemaining() > 0) return;
     if (this.selectedCard) {
+      this.haptic.vibrateLight();
       this.selectedOp = this.selectedOp === op ? null : op;
     }
   }
 
   undo() {
+    this.haptic.vibrateLight();
     this.store.undo();
     this.selectedCard = null;
     this.selectedOp = null;

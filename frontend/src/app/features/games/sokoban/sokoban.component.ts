@@ -11,10 +11,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { ToastService } from '../../../core/services/toast.service';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
@@ -36,9 +33,6 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
   imports: [
     GameSpectatingOverlayComponent, 
     CommonModule,
-    GameResultOverlayComponent,
-    GameWaitingRoomComponent,
-    GameStartingOverlayComponent,
     SokobanBoardComponent,
     SokobanLobbyComponent,
     GameToolbarComponent,
@@ -50,26 +44,15 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => []);
   adService = inject(AdService);
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
   override store = inject(SokobanStore);
-  private authStore = inject(AuthStore);
-  private gameRegistry = inject(GameRegistryService);
-  private router = inject(Router);
   private route = inject(ActivatedRoute);
   private dailyService = inject(DailyChallengeService);
-  i18n = inject(I18nService);
-  toastService = inject(ToastService);
   editRoomService = inject(EditRoomService);
   private pendingDailyChallengeId = signal<string | null>(null);
   private roomLifecycle!: RoomLifecycleHandle;
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
-  override isMobileSidebarOpen = signal(false);
   showLobby = signal(true);
-  showRules = signal(false);
-  showOverlay = signal(false);
 
   private windowSize = inject(WindowSizeService);
 
@@ -100,10 +83,6 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   });
 
   predefinedDifficulties = this.gameRegistry.getConfig('sokoban')?.difficulties || [];
-
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   myPlayerPkStats = computed<PkPlayerStats>(() => {
     const prog = Math.round(this.store.myProgress());
@@ -168,6 +147,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     super();
     effect((onCleanup) => {
       if (this.store.status() === GameStatus.Finished) {
+        this.celebrateVictory();
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -321,7 +301,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     return raw.winners.includes(this.playerId) ? 'win' : 'lose';
   }
 
-  handleRestart() {
+  override handleRestart() {
     if (this.store.currentRoomMode() === GameMode.Single) {
       this.store.restart();
     } else {

@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnCh
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
-import { GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameMode, GameStatus, GameResultType } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
 import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
@@ -22,12 +22,30 @@ import { ZenModeService } from '../../../core/services/zen-mode.service';
 import { FeedbackModalComponent } from '../feedback-modal/feedback-modal.component';
 import { FeedbackService } from '../../../core/services/feedback.service';
 import { ShareService } from '../../../core/services/share.service';
+import { GameTimerService } from '../../../core/services/game-timer.service';
+import { GameStoreInterface } from '../../../core/interfaces/game-store.interface';
+import { GameWaitingRoomComponent } from '../game-waiting-room/game-waiting-room.component';
+import { GameStartingOverlayComponent } from '../game-starting-overlay/game-starting-overlay.component';
+import { GameResultOverlayComponent } from '../game-result-overlay/game-result-overlay.component';
 import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-game-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, GameHeaderComponent, GameRulesModalComponent, DifficultySelectorComponent, FloatingEmojiComponent, OfflineBannerComponent, FeedbackModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    GameHeaderComponent,
+    GameRulesModalComponent,
+    DifficultySelectorComponent,
+    FloatingEmojiComponent,
+    OfflineBannerComponent,
+    FeedbackModalComponent,
+    GameWaitingRoomComponent,
+    GameStartingOverlayComponent,
+    GameResultOverlayComponent
+  ],
   template: `
 <div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none bg-[var(--color-bg-base)]"
      [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-[calc(100dvh-64px)]'">
@@ -55,10 +73,10 @@ import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util'
         <div game-icon class="text-xl sm:text-2xl md:text-3xl drop-shadow-md">{{ icon }}</div>
 
         <ng-container header-center>
-          @if (currentRoomMode === GameMode.Single && !hideDefaultDifficulty && availableDifficulties.length > 1) {
+          @if (effectiveRoomMode() === GameMode.Single && !hideDefaultDifficulty && availableDifficulties.length > 1) {
             <app-difficulty-selector 
               [availableDifficulties]="availableDifficulties"
-              [currentDifficulty]="currentDifficulty"
+              [currentDifficulty]="effectiveDifficulty()"
               (difficultyChange)="onDifficultyChange($event)">
             </app-difficulty-selector>
           }
@@ -69,7 +87,7 @@ import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util'
           <div class="flex items-center gap-1 sm:gap-2">
             <ng-content select="[header-right]"></ng-content>
 
-            @if (currentRoomMode === GameMode.Single && status !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
+            @if (effectiveRoomMode() === GameMode.Single && effectiveStatus() !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
               @if (waitingRoomForThisGame(); as targetRoom) {
                 <button (click)="onQuickJoinTargetRoom(targetRoom)"
                         class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0 cursor-pointer pointer-events-auto"
@@ -90,8 +108,8 @@ import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util'
               }
             }
 
-            @if (showPlayAgainBtn) {
-              <button (click)="playAgain.emit()"
+            @if (effectiveShowPlayAgain()) {
+              <button (click)="onPlayAgainClicked()"
                       class="px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 group"
                       [title]="i18n.t('game.space_shortcut_hint')() || 'Press Space or R to restart'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,7 +120,7 @@ import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util'
               </button>
             }
 
-            @if (showLeaveBtn) {
+            @if (effectiveShowLeave()) {
               <button (click)="back.emit()" class="px-2 sm:px-3 py-1 sm:py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shadow-sm active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -121,7 +139,7 @@ import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util'
         [class.items-center]="!isLobby">
     
     <!-- Guest Playing in PK Room Badge (Unranked play) -->
-    @if (currentRoomId && !authStore.isAuthenticated()) {
+    @if (effectiveRoomId() && !authStore.isAuthenticated()) {
       <div class="mb-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-bold flex items-center gap-1.5 shadow-sm animate-fade-in">
         <span>👀</span>
         <span>{{ i18n.t('pk.guest_badge')() }}</span>
@@ -151,23 +169,82 @@ import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util'
       </div>
     }
 
-    <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
-    <div class="w-full flex-grow flex flex-col border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 relative"
-         [ngClass]="{
-           'min-h-[320px] sm:min-h-[420px] items-center justify-center': !isLobby,
-           'min-h-[520px] sm:min-h-[620px] lg:min-h-[680px] h-[72vh] max-h-[840px] items-stretch justify-start overflow-hidden': isLobby,
-           'touch-none overscroll-none': !isLobby && !allowScroll && status !== GameStatus.Waiting,
-           'touch-pan-y': isLobby || allowScroll || status === GameStatus.Waiting,
-           'overflow-y-auto h-full min-h-0': !isLobby && (allowScroll || status === GameStatus.Waiting)
-         }"
-         [style.overscroll-behavior]="(isLobby || allowScroll || status === GameStatus.Waiting) ? 'contain' : 'none'"
-         [style.touch-action]="(isLobby || allowScroll || status === GameStatus.Waiting) ? 'pan-y' : 'none'">
-      <!-- Project custom game components here -->
-      <ng-content></ng-content>
-    </div>
+    <!-- Auto-managed Multiplayer Waiting Room (When store is provided) -->
+    @if (isAutoWaitingRoomVisible()) {
+      <div class="w-full flex-grow flex flex-col min-h-0 overflow-hidden p-2 lg:p-4">
+        <app-game-waiting-room
+          [gameId]="gameId"
+          [mode]="effectiveRoomMode()"
+          [roomId]="effectiveRoomId() || ''"
+          [difficulty]="effectiveDifficulty()"
+          [players]="effectivePlayers()"
+          [hostId]="effectiveHostId()"
+          [currentUserId]="storePlayerId()"
+          [readyPlayers]="effectiveReadyPlayers()"
+          [target]="effectiveTarget()"
+          (start)="onWaitingRoomStart()"
+          (leave)="back.emit()"
+          (changeSettings)="openChangeSettingsGlobal()"
+          (ready)="onWaitingRoomReady()"
+          (cancelReady)="onWaitingRoomCancelReady()"
+          (kick)="onWaitingRoomKick($event)"
+          (difficultyChange)="onDifficultyChange($event)"
+        ></app-game-waiting-room>
+      </div>
+    } @else {
+      <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
+      <div class="w-full flex-grow flex flex-col border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-2xl lg:rounded-3xl shadow-sm transition-colors duration-300 p-1 sm:p-2.5 relative"
+           [ngClass]="{
+             'min-h-[320px] sm:min-h-[420px] items-center justify-center': !isLobby,
+             'min-h-[520px] sm:min-h-[620px] lg:min-h-[680px] h-[72vh] max-h-[840px] items-stretch justify-start overflow-hidden': isLobby,
+             'touch-none overscroll-none': !isLobby && !allowScroll && effectiveStatus() !== GameStatus.Waiting,
+             'touch-pan-y': isLobby || allowScroll || effectiveStatus() === GameStatus.Waiting,
+             'overflow-y-auto h-full min-h-0': !isLobby && (allowScroll || effectiveStatus() === GameStatus.Waiting)
+           }"
+           [style.overscroll-behavior]="(isLobby || allowScroll || effectiveStatus() === GameStatus.Waiting) ? 'contain' : 'none'"
+           [style.touch-action]="(isLobby || allowScroll || effectiveStatus() === GameStatus.Waiting) ? 'pan-y' : 'none'">
+        <!-- Project custom game components here -->
+        <ng-content></ng-content>
+
+        <!-- Auto-managed 3s Countdown Overlay -->
+        @if (isAutoStartingVisible()) {
+          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+        }
+
+        <!-- Auto-managed Game Finished Result Overlay -->
+        @if (isAutoResultVisible()) {
+          <app-game-result-overlay
+            [currentGameId]="gameId"
+            [status]="resultStatus()"
+            [title]="resultTitle()"
+            [subtitle]="customResultSubtitle"
+            [stats]="overlayStats || []"
+            [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
+            [opponentInfo]="resultOpponent()"
+            [pkSeriesScore]="resultPkSeriesScore()"
+            [pkRoundFormat]="resultPkRoundFormat()"
+            [xpResult]="resultXpResult()"
+            [isNewRecord]="resultIsNewRecord()"
+            [showLeave]="true"
+            [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
+            [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+            [showRevive]="effectiveShowRevive()"
+            [showNextLevel]="showNextLevel"
+            (rematch)="onResultRematch()"
+            (leave)="back.emit()"
+            (restart)="onResultRestart()"
+            (dismiss)="onResultDismiss()"
+            (revive)="onResultRevive()"
+            (nextLevel)="nextLevel.emit()"
+            [enableChangeRoomGame]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+            (changeRoomGame)="onResultChangeRoomGame($event)"
+          ></app-game-result-overlay>
+        }
+      </div>
+    }
 
     <!-- Emoji Broadcast Bar (When inside multiplayer room) -->
-    @if (currentRoomId) {
+    @if (effectiveRoomId()) {
       <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
         @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
           <button (click)="sendEmoji(em)" class="w-9 h-9 sm:w-11 sm:h-11 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-lg sm:text-xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
@@ -343,6 +420,18 @@ export class GameLayoutComponent implements OnInit, OnChanges {
     }
   }
 
+  gameTimer = inject(GameTimerService);
+
+  @Input() store?: GameStoreInterface;
+  @Input({ transform: booleanAttribute }) autoManageOverlays: boolean = true;
+  @Input() overlayStats?: { icon?: string; label?: string; value: string | number }[];
+  @Input() customResultTitle?: string;
+  @Input() customResultSubtitle?: string;
+  @Input() isDefeat?: boolean;
+  @Input() showOverlay: boolean = true;
+  @Input({ transform: booleanAttribute }) showRevive: boolean = false;
+  @Input({ transform: booleanAttribute }) showNextLevel: boolean = false;
+
   @Input({ required: true }) gameId!: string;
   @Input() title: string = '';
   @Input() subtitle: string = '';
@@ -381,6 +470,188 @@ export class GameLayoutComponent implements OnInit, OnChanges {
   @Output() createRoom = new EventEmitter<any>();
   @Output() mobileSidebarClosed = new EventEmitter<void>();
   @Output() difficultyChange = new EventEmitter<string>();
+  @Output() rematch = new EventEmitter<void>();
+  @Output() restart = new EventEmitter<void>();
+  @Output() dismiss = new EventEmitter<void>();
+  @Output() revive = new EventEmitter<void>();
+  @Output() nextLevel = new EventEmitter<void>();
+
+  readonly effectiveShowRevive = computed(() => {
+    if (this.showRevive) return true;
+    if (!this.store) return false;
+    const s = this.store as any;
+    if (typeof s.canRevive === 'function') return s.canRevive();
+    if (typeof s.hasRevived === 'function') return !s.hasRevived();
+    return false;
+  });
+
+  readonly storePlayerId = computed(() => {
+    return (this.store as any)?.playerId?.() || (this.store as any)?.playerId || this.authStore.currentUser()?.username || this.authStore.guestId || '';
+  });
+
+  readonly effectiveRoomMode = computed(() => {
+    return this.store ? this.store.currentRoomMode() : this.currentRoomMode;
+  });
+
+  readonly effectiveRoomId = computed(() => {
+    return this.store ? (this.store.roomId() || null) : this.currentRoomId;
+  });
+
+  readonly effectiveStatus = computed(() => {
+    return this.store ? this.store.status() : this.status;
+  });
+
+  readonly effectiveIsHost = computed(() => {
+    return this.store ? (this.store.hostId() === this.storePlayerId()) : this.isHost;
+  });
+
+  readonly effectiveDifficulty = computed(() => {
+    return this.currentDifficulty || (this.store as any)?.currentDifficulty?.() || (this.store as any)?.difficulty?.() || 'medium';
+  });
+
+  readonly effectivePlayers = computed(() => {
+    return this.store ? (this.store.playersList?.() || (this.store as any).roomPlayers?.() || []) : [];
+  });
+
+  readonly effectiveReadyPlayers = computed(() => {
+    return this.store ? (this.store.readyPlayers?.() || {}) : {};
+  });
+
+  readonly effectiveTarget = computed(() => {
+    return this.store ? (this.store.currentRoomTarget?.() || 1) : 1;
+  });
+
+  readonly effectiveHostId = computed(() => {
+    return this.store ? (this.store.hostId?.() || '') : (this.isHost ? this.storePlayerId() : '');
+  });
+
+  readonly effectiveShowPlayAgain = computed(() => {
+    return this.showPlayAgainBtn || (!!this.store && this.effectiveRoomMode() === GameMode.Single && this.effectiveStatus() === GameStatus.Finished && this.showOverlay);
+  });
+
+  readonly effectiveShowLeave = computed(() => {
+    return this.showLeaveBtn || (!!this.store && this.effectiveRoomMode() !== GameMode.Single);
+  });
+
+  readonly isAutoWaitingRoomVisible = computed(() => {
+    return !this.isLobby && !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Waiting && this.effectiveRoomMode() !== GameMode.Single;
+  });
+
+  readonly isAutoStartingVisible = computed(() => {
+    return !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Starting;
+  });
+
+  readonly isAutoResultVisible = computed(() => {
+    return !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Finished && (this.showOverlay || this.effectiveRoomMode() !== GameMode.Single);
+  });
+
+  readonly resultStatus = computed<GameResultType>(() => {
+    const myId = this.storePlayerId();
+    const winners = (this.store as any)?.winners?.() || [];
+    if (winners.length > 0) return winners.includes(myId) ? 'win' : 'lose';
+    if (this.isDefeat !== undefined) return this.isDefeat ? 'lose' : 'win';
+    return 'win';
+  });
+
+  readonly resultTitle = computed(() => {
+    if (this.customResultTitle) return this.customResultTitle;
+    const isWin = this.resultStatus() === 'win';
+    if (isWin) return this.i18n.t('game.you_win')() || '🎉 胜利！';
+    return this.effectiveRoomMode() === GameMode.Single ? (this.i18n.t('game.game_over')() || '游戏结束') : (this.i18n.t('game.you_lose')() || '惜败');
+  });
+
+  readonly resultOpponent = computed(() => {
+    if (this.effectiveRoomMode() === GameMode.Single) return undefined;
+    const myId = this.storePlayerId();
+    const opp = this.effectivePlayers().find((p: any) => (p.id || p.userId || p.username) !== myId);
+    return opp ? { id: opp.id || opp.userId, nickname: opp.nickname || opp.username || opp.id, score: opp.score || 0 } : undefined;
+  });
+
+  readonly resultPkSeriesScore = computed(() => {
+    return (this.store as any)?.pkScoreLabel?.() || '';
+  });
+
+  readonly resultPkRoundFormat = computed(() => {
+    return (this.store as any)?.room?.()?.roundFormat || (this.effectiveTarget() > 1 ? `BO${this.effectiveTarget() * 2 - 1}` : 'BO1');
+  });
+
+  readonly resultXpResult = computed(() => {
+    return (this.store as any)?.lastStatResult?.()?.xp_result;
+  });
+
+  readonly resultIsNewRecord = computed(() => {
+    return (this.store as any)?.lastStatResult?.()?.isNewRecord;
+  });
+
+  onPlayAgainClicked() {
+    this.playAgain.emit();
+    if (this.store && this.effectiveRoomMode() === GameMode.Single) {
+      if (typeof (this.store as any).restartGame === 'function') {
+        (this.store as any).restartGame();
+      } else if (typeof (this.store as any).startGame === 'function') {
+        (this.store as any).startGame();
+      }
+    }
+  }
+
+  onWaitingRoomStart() {
+    this.store?.startGame();
+  }
+
+  onWaitingRoomReady() {
+    this.store?.ready();
+  }
+
+  onWaitingRoomCancelReady() {
+    this.store?.cancelReady();
+  }
+
+  onWaitingRoomKick(targetId: string) {
+    this.store?.kickPlayer(targetId);
+  }
+
+  onResultRestart() {
+    this.restart.emit();
+    if (this.store) {
+      if (this.effectiveRoomMode() === GameMode.Single) {
+        this.playAgain.emit();
+        if (typeof (this.store as any).restartGame === 'function') {
+          (this.store as any).restartGame();
+        } else if (typeof (this.store as any).startGame === 'function') {
+          (this.store as any).startGame();
+        }
+      } else {
+        this.store.restartGame();
+      }
+    }
+  }
+
+  onResultRematch() {
+    this.rematch.emit();
+    this.onResultRestart();
+  }
+
+  onResultDismiss() {
+    this.dismiss.emit();
+    if (this.store) {
+      this.store.dismissRoom();
+    }
+    this.back.emit();
+  }
+
+  onResultRevive() {
+    this.revive.emit();
+    const s = this.store as any;
+    if (typeof s?.reviveGame === 'function') {
+      s.reviveGame();
+    } else if (typeof s?.revive === 'function') {
+      s.revive();
+    }
+  }
+
+  onResultChangeRoomGame(game: string) {
+    (this.store as any)?.changeRoomGame?.(game);
+  }
 
   GameMode = GameMode;
   GameStatus = GameStatus;

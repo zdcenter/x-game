@@ -2,13 +2,10 @@ import { Component, computed, inject, ChangeDetectionStrategy, ViewChild, Elemen
 import { CommonModule } from '@angular/common';
 import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -29,7 +26,7 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -40,32 +37,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   override store = inject(NonogramStore);
   private windowSize = inject(WindowSizeService);
-  public i18n = inject(I18nService);
-  private authStore = inject(AuthStore);
   private adService = inject(AdService);
-  private gameRegistry = inject(GameRegistryService);
-  private haptic = inject(HapticService);
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
-
-  readonly GameStatus = GameStatus;
-  readonly GameMode = GameMode;
-  readonly GameDifficulty = GameDifficulty;
 
   private roomLifecycle: RoomLifecycleHandle;
 
   predefinedDifficulties = this.gameRegistry.getConfig('nonogram')?.difficulties || [];
-
-  showRules = signal<boolean>(false);
-  showOverlay = signal<boolean>(false);
-
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
-
-  get t() {
-    return this.i18n.t.bind(this.i18n);
-  }
 
 
 
@@ -122,6 +100,12 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     // Show result overlay with a delay after game finishes
     effect((onCleanup) => {
       if (this.store.status() === GameStatus.Finished) {
+        const isWin = this.store.currentRoomMode() === GameMode.Single || this.store.winners().includes(this.playerId);
+        if (isWin) {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -362,6 +346,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
     // ⚡ 0ms Instant Response: Paint start cell immediately without any latency!
     this.dragTargetState = this.store.determineNextState(coord.x, coord.y, isRightClick);
+    this.vibrateLight();
     this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
 
     // Gentle long-press (360ms) to toggle alternate mode on mobile if kept still
@@ -373,6 +358,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
           // Cycle: 1 -> 2 -> 0
           const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 0 : 2);
           this.dragTargetState = altState;
+          this.vibrateMedium();
           this.store.setCellsBatch([this.startCoord], altState as any, this.currentBatchId);
         }
       }, 360);
@@ -702,7 +688,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.store.playAgain();
   }
 
-  handleRestart() {
+  override handleRestart() {
     this.store.playAgain();
   }
 

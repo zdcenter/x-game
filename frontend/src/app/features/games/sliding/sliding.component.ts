@@ -32,7 +32,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameWaitingRoomComponent, GameResultOverlayComponent, GameStartingOverlayComponent, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -40,17 +40,8 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 export class SlidingComponent extends BaseGameComponent {
   getSubtitle() { return ""; }
 
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(SlidingStore);
-  private authStore = inject(AuthStore);
-  private router = inject(Router);
-  readonly i18n = inject(I18nService);
-  private toastService = inject(ToastService);
-  private gameRegistry = inject(GameRegistryService);
-  private haptic = inject(HapticService);
   private windowSize = inject(WindowSizeService);
 
   readonly boardSizePx = computed(() => {
@@ -80,11 +71,8 @@ export class SlidingComponent extends BaseGameComponent {
     return `${dim}px`;
   });
 
-  showRules = signal<boolean>(false);
   isMenuOpen = signal<boolean>(false);
-  showOverlay = signal<boolean>(false);
   hintTarget = signal<number | null>(null);
-  Math = Math;
 
   get difficulties() {
     return this.gameRegistry.getConfig('sliding')?.difficulties || [];
@@ -95,14 +83,6 @@ export class SlidingComponent extends BaseGameComponent {
   finishedAt = signal<number | null>(null);
   
   private roomLifecycle: RoomLifecycleHandle;
-
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
-
-  get t() {
-    return this.i18n.t.bind(this.i18n);
-  }
 
   currentRoomMode = this.store.currentRoomMode;
   roomId = this.store.roomId;
@@ -275,6 +255,7 @@ export class SlidingComponent extends BaseGameComponent {
     effect((onCleanup) => {
       const status = this.store.status();
       if (status === GameStatus.Finished) {
+        this.celebrateVictory();
         if (!this.finishedAt()) {
           this.finishedAt.set(Date.now());
         }

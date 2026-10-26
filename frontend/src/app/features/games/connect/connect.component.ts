@@ -40,10 +40,7 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
     CommonModule,
     ConnectBoardComponent,
     ConnectLobbyComponent,
-    GameResultOverlayComponent,
     GameSpectatingOverlayComponent,
-    GameWaitingRoomComponent,
-    GameStartingOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent,
     GameToolbarComponent
@@ -59,23 +56,15 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
   `]
 })
 export class ConnectComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
   GameResult = GameResult;
   
-  store = inject(ConnectStore);
-  router = inject(Router);
+  override store = inject(ConnectStore);
   http = inject(HttpClient);
-  i18n = inject(I18nService);
-  authStore = inject(AuthStore);
-  toastService = inject(ToastService);
   editRoomService = inject(EditRoomService);
   private pendingDailyChallengeId = signal<string | null>(null);
   private roomLifecycle!: RoomLifecycleHandle;
   
   view = this.store.view;
-  showOverlay = signal(false);  showRules = signal(false);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
   private windowSize = inject(WindowSizeService);
@@ -103,10 +92,6 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
   });
-
-  get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     const isFinished = this.store.winners().includes(this.playerId);
@@ -173,6 +158,7 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
       
       const isFin = this.store.isFinished() || status === GameStatus.Finished;
       if (isFin) {
+        this.celebrateVictory();
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {

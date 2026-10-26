@@ -1,34 +1,17 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { HexaStore } from './store/hexa.store';
-import { AuthStore } from '../../../core/auth/auth.store';
-import { GameTimerService } from '../../../core/services/game-timer.service';
-import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { RoomLifecycleHandle, setupRoomLifecycle } from '../../../core/services/room-lifecycle';
 import { HexaBoardComponent } from './components/hexa-board/hexa-board.component';
 import { HexPiece, HexCoord } from './store/hexa-engine';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { ToastService } from '../../../core/services/toast.service';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
-import { AudioService } from '../../../core/services/audio.service';
-import { HapticService } from '../../../core/services/haptic.service';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
-import { LeaderboardService } from '../../../core/services/leaderboard.service';
-
 
 @Component({
   selector: 'app-hexa',
@@ -36,48 +19,22 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
   imports: [CommonModule,
     FormsModule,
     HexaBoardComponent,
-    GameWaitingRoomComponent,
-    GameResultOverlayComponent,
-    GameStartingOverlayComponent,
     GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'
 })
 export class HexaComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameDifficulty = GameDifficulty;
-  GameStatus = GameStatus;
-  GameMode = GameMode;
   override store = inject(HexaStore);
-  private authStore = inject(AuthStore);
-  public timerService = inject(GameTimerService);
-  private router = inject(Router);
-  private toastService = inject(ToastService);
-  override gameTimer = inject(GameTimerService);
-  readonly i18n = inject(I18nService);
-  private audioService = inject(AudioService);
-  private haptic = inject(HapticService);
-  private gameRegistry = inject(GameRegistryService);
-  private leaderboardService = inject(LeaderboardService);
 
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
-  showRules = signal(false);
-  showOverlay = signal(false);
   isShaking = signal(false);
   floatItems = signal<{ id: number; text: string; tier: 1 | 2; xPct: number }[]>([]);
   particles = signal<{ id: string; color: string; size: number; tx: number; ty: number }[]>([]);
-  Math = Math;
-  get t() {
-    return this.i18n.t.bind(this.i18n);
-  }
 
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLElement>;
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   @ViewChild(HexaBoardComponent) boardComponent!: HexaBoardComponent;
-
-  override get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
@@ -224,6 +181,12 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       this.floatItems.update(items => [...items, item]);
       setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1250);
 
+      if (tier === 2) {
+        this.vibrateCombo();
+      } else {
+        this.vibrateMedium();
+      }
+
       // 全屏爆裂星芒火花粒子喷泉
       const colors = ['#fde047', '#fbbf24', '#f59e0b', '#38bdf8', '#c084fc', '#34d399', '#ffffff'];
       const count = tier === 2 ? 32 : 18;
@@ -250,6 +213,11 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       }
       
       if (status === GameStatus.Finished || this.store.gameOver()) {
+        if (this.currentRoomMode() !== GameMode.Single && this.store.winners().includes(this.playerId)) {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {

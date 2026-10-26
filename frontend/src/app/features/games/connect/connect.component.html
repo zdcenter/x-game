@@ -1,6 +1,6 @@
 <app-game-layout
-  [isHost]="store.hostId() === store.playerId()"
   [gameId]="'connect'"
+  [store]="store"
   [title]="i18n.t('lobby.connect')()"
   [subtitle]="getSubtitle()"
   icon="🔗"
@@ -8,14 +8,12 @@
   titleGradientClass="from-cyan-400 to-blue-400"
   shadowClass="shadow-cyan-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-cyan-900/30 dark:to-blue-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
-  [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [overlayStats]="getSinglePlayerStats()"
+  [showNextLevel]="store.currentRoomMode() === GameMode.Single"
+  (nextLevel)="onOverlayClose()"
   [hideDefaultDifficulty]="true"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
@@ -73,34 +71,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Waiting room in play view if PK waiting -->
-      <app-game-waiting-room
-        class="absolute inset-0 z-30 w-full h-full flex bg-[var(--color-bg-base)]/90 backdrop-blur-sm"
-        *ngIf="store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single"
-        [gameId]="'connect'"
-        [mode]="store.currentRoomMode()"
-        [roomId]="store.roomId()"
-        [difficulty]="store.currentDifficulty() || GameDifficulty.Medium"
-        [players]="getPlayers()"
-        [hostId]="store.hostId()"
-        [currentUserId]="store.playerId()"
-        [readyPlayers]="$any(store.rawState())?.readyPlayers || {}"
-        (leave)="store.leaveRoom(); goBackToLobby()"
-        (start)="store.startGame()"
-        (changeSettings)="openChangeSettings()"
-        (kick)="store.kickPlayer($event)"
-        (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()"
-        [target]="store.currentRoomTarget()"
-      ></app-game-waiting-room>
-
-      <!-- Starting countdown -->
-      <app-game-starting-overlay
-        *ngIf="store.status() === GameStatus.Starting"
-        [countdown]="gameTimer.countdownDisplay()">
-      </app-game-starting-overlay>
-
       <!-- Universal PK HUD -->
       <div *ngIf="store.currentRoomMode() !== GameMode.Single" class="flex-none py-1 mb-2 shrink-0 w-full">
         <app-game-pk-hud
@@ -153,28 +123,6 @@
       </div>
     </ng-container>
   </div>
-
-  <!-- Result Overlay -->
-  <app-game-result-overlay
-    *ngIf="showOverlay()"
-    [currentGameId]="'connect'"
-    [status]="store.winners().includes(playerId) ? GameResult.Win : GameResult.Lose"
-    [title]="store.winners().includes(playerId) ? 'Victory' : 'Defeat'"
-    [stats]="getSinglePlayerStats()"
-    [showNextLevel]="store.currentRoomMode() === GameMode.Single"
-    [showRestart]="true"
-    [showLeave]="true"
-    [isNewRecord]="store.lastStatResult()?.isNewRecord"
-    [xpResult]="store.lastStatResult()?.xp_result"
-    [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-    [opponentInfo]="opponentsPkStats()[0]"
-    [pkSeriesScore]="seriesScore()"
-    [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-    (rematch)="handleRematch()"
-    (nextLevel)="onOverlayClose()"
-    (restart)="store.restart(); showOverlay.set(false)"
-    (leave)="goBackToLobby(); showOverlay.set(false)">
-  </app-game-result-overlay>
 
   <app-game-spectating-overlay 
     *ngIf="store.isSpectator()"

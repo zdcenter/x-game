@@ -9,37 +9,28 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GomokuStore } from './store/gomoku.store';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameService } from '../../../core/services/game.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { boardSizePx } from '../../../core/utils/board-size.util';
-import { GomokuAI, GomokuColor } from './store/gomoku-ai';
+import { GomokuAI, type GomokuColor } from './store/gomoku-ai';
 
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameResultOverlayComponent, GameWaitingRoomComponent, GameStartingOverlayComponent, GameLayoutComponent],
+  imports: [CommonModule, GameLayoutComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']
 })
 export class GomokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
-  i18n = inject(I18nService);
   route = inject(ActivatedRoute);
-  authStore = inject(AuthStore);
   override store = inject(GomokuStore);
-  audio = inject(AudioService);
   private windowSize = inject(WindowSizeService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
@@ -70,8 +61,14 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
       if (status === GameStatus.Finished) {
         if (this.store.winner() && this.store.winner() !== 'tie') {
           this.audio.playGomoku('stoneWin');
+          if (this.store.winner() === this.myPlayerId()) {
+            this.celebrateVictory();
+          } else {
+            this.vibrateError();
+          }
         } else if (this.store.winner() === 'tie') {
           this.audio.playLose(); // fallback for tie or surrender
+          this.vibrateMedium();
         }
         setTimeout(() => this.showResultOverlay.set(true), 2000);
       } else {
@@ -80,7 +77,6 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     });
   }
 
-  showRules = signal(false);
   showResultOverlay = signal(false);
   hintMove = signal<[number, number] | null>(null);
 
@@ -225,6 +221,9 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   onCellClick(y: number, x: number) {
     if (this.hintMove()) {
       this.hintMove.set(null);
+    }
+    if (this.isMyTurn && this.board()[y]?.[x] === 0) {
+      this.vibrateSnap();
     }
     this.store.makeMove(y, x);
   }

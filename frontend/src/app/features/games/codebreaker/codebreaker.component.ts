@@ -8,11 +8,8 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { CodebreakerStore } from './store/codebreaker.store';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameService } from '../../../core/services/game.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -27,34 +24,17 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 @Component({
   selector: 'app-codebreaker',
   standalone: true,
-  imports: [CommonModule,
-    GameResultOverlayComponent,
-    
-    GameWaitingRoomComponent,
-    
-    GameStartingOverlayComponent,
-    
-    GameToolbarComponent, GameLayoutComponent],
+  imports: [CommonModule, GameToolbarComponent, GameLayoutComponent],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
   styleUrls: ['./codebreaker.component.css']
 })
 export class CodebreakerComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
-  i18n = inject(I18nService);
   route = inject(ActivatedRoute);
-  authStore = inject(AuthStore);
   override store = inject(CodebreakerStore);
-  toastService = inject(ToastService);
-  audio = inject(AudioService);
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
-
-    showRules = signal(false);
-  showOverlay = signal(false);
   // User input signals
   currentInput = signal<string>('');
 
@@ -114,6 +94,11 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
       }
 
       if (status === GameStatus.Finished) {
+        if (this.winners().includes(this.myPlayerId())) {
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
+        }
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {
@@ -293,16 +278,19 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
       return;
     }
 
+    this.vibrateLight();
     this.currentInput.set(input + num);
   }
 
   clearInput() {
+    this.vibrateLight();
     this.currentInput.set('');
   }
 
   deleteLast() {
     const input = this.currentInput();
     if (input.length > 0) {
+      this.vibrateLight();
       this.currentInput.set(input.slice(0, -1));
     }
   }
@@ -310,12 +298,14 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
   submitGuess() {
     const val = this.currentInput();
     if (val.length !== this.digitLength()) {
+      this.vibrateError();
       this.toastService.show(
         this.i18n.t('codebreaker.invalid_length')().replace('{length}', this.digitLength().toString()),
         'error'
       );
       return;
     }
+    this.vibrateSnap();
     this.store.submitGuess(val);
     this.currentInput.set('');
     this.revealLatest.set(false);

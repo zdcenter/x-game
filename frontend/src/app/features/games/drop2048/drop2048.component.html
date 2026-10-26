@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'drop2048'"
   [title]="i18n.t('lobby.drop2048')()"
   [subtitle]="getSubtitle()"
@@ -7,47 +8,33 @@
   titleGradientClass="from-blue-400 to-indigo-500"
   shadowClass="shadow-blue-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-indigo-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [customResultTitle]="i18n.t(getResultTitle())()"
+  [customResultSubtitle]="store.currentRoomMode() === GameMode.Single ? i18n.t('game.final_score')() + ': ' + store.score() : ''"
+  [overlayStats]="[
+    {icon: '⭐', label: 'SCORE', value: store.score()},
+    {icon: '🧱', label: 'MAX TILE', value: store.maxTile()},
+    {icon: '🏆', label: 'LEVEL', value: store.level()}
+  ]"
+  [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.startGame()"
+  (restart)="store.restartGame()"
+  (rematch)="handleRematch()"
+  (revive)="handleRevive()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (view() === 'room') {
-          <div class="flex-grow flex items-center justify-center p-4 min-h-0 overflow-y-auto">
-            <app-game-waiting-room
-              class="w-full h-full flex"
-              [gameId]="'drop2048'"
-              [mode]="store.currentRoomMode()"
-              [roomId]="currentRoomId()" [difficulty]="store.currentDifficulty()"
-              [players]="store.playersList()"
-              [hostId]="store.hostId()"
-              [currentUserId]="playerId"
-              [readyPlayers]="store.readyPlayers()"
-              (start)="store.startGame()"
-              (leave)="goBack()"
-              (changeSettings)="openChangeSettings()"
-              (ready)="store.ready()"
-              (cancelReady)="store.cancelReady()"
-              (kick)="store.kickPlayer($event)"
-            ></app-game-waiting-room>
-          </div>
-        }
-
-        @if (view() === 'play') {
-          <div class="flex-1 flex flex-col relative w-full min-h-0">
+  <div class="flex-1 flex flex-col relative w-full min-h-0">
             <div class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2">
 
               <!-- Single Player Modern Glass Capsule HUD -->
@@ -322,45 +309,4 @@
 
             </div>
           </div>
-        }
-
-        <!-- Starting Overlay -->
-        @if (store.status() === GameStatus.Starting) {
-          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-        }
-
-        <!-- Game Over Result Overlay -->
-        @if (store.status() === GameStatus.Finished && showOverlay()) {
-          <app-game-result-overlay
-            currentGameId="drop2048"
-            [status]="store.currentRoomMode() === GameMode.Single ? 'lose' : (getResultTitle() === 'game.you_lose' ? 'lose' : 'win')"
-            [title]="i18n.t(getResultTitle())()"
-            [subtitle]="store.currentRoomMode() === GameMode.Single ? i18n.t('game.final_score')() + ': ' + store.score() : ''"
-            [stats]="[
-              {icon: '⭐', label: 'SCORE', value: store.score()},
-              {icon: '🧱', label: 'MAX TILE', value: store.maxTile()},
-              {icon: '🏆', label: 'LEVEL', value: store.level()}
-            ]"
-            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-            [opponentInfo]="opponentsPkStats()[0]"
-            [pkSeriesScore]="seriesScore()"
-            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-            [xpResult]="store.lastStatResult()?.xp_result"
-            [isNewRecord]="store.lastStatResult()?.isNewRecord"
-            [showRestart]="store.hostId() === playerId || store.currentRoomMode() === GameMode.Single"
-            [showLeave]="true"
-            [isWaitingOthers]="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Finished"
-            [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
-            [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-            (rematch)="handleRematch()"
-            (restart)="store.restartGame()"
-            (leave)="goBack()"
-            (revive)="handleRevive()"
-            (changeRoomGame)="store.changeRoomGame($event)"
-          >
-            <div class="text-xl mb-4 font-bold text-[var(--color-text-secondary)]">
-              FINAL SCORE: <span class="text-cyan-400 text-3xl">{{ store.score() }}</span>
-            </div>
-          </app-game-result-overlay>
-        }
 </app-game-layout>

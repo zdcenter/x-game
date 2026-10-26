@@ -2,6 +2,7 @@ import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models
 import { Component, HostListener, computed, inject, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SokobanStore } from '../../store/sokoban.store';
+import { HapticService } from '../../../../../core/services/haptic.service';
 
 @Component({
   selector: 'app-sokoban-board',
@@ -478,6 +479,11 @@ export class SokobanBoardComponent {
     
     if (postMoves > preMoves) {
       this.playerAction.set(isBox ? 'push' : 'walk');
+      if (isBox) {
+        this.haptic.vibrateSnap();
+      } else {
+        this.haptic.vibrateLight();
+      }
       if (this.actionTimeout) clearTimeout(this.actionTimeout);
       this.actionTimeout = setTimeout(() => {
         this.playerAction.set('idle');
@@ -496,6 +502,7 @@ export class SokobanBoardComponent {
   }
 
   store = inject(SokobanStore);
+  haptic = inject(HapticService);
 
   rows = computed(() => this.activeBoard().length || 1);
   cols = computed(() => {

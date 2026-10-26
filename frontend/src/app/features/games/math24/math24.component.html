@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'math24'"
   [title]="i18n.t('lobby.math24')()"
   [subtitle]="getSubtitle()"
@@ -7,21 +8,24 @@
   titleGradientClass="from-blue-400 to-indigo-500"
   shadowClass="shadow-blue-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-indigo-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
-  [showRules]="showRules()"
-  [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="onDifficultyChange($event)"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [isLobby]="view() === 'lobby'"
+  [customResultTitle]="getGameResultTitle()"
+  [overlayStats]="getStats()"
+  [showNextLevel]="store.currentRoomMode() === GameMode.Single"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="playAgain()"
+  (rematch)="handleRematch()"
+  (nextLevel)="playNextLevel()"
+  (restart)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
@@ -32,61 +36,11 @@
       (levelSelect)="startLevel($event)"
       (openLobby)="navigateToPkArena()">
     </app-math24-lobby>
-  } @else if (view() === 'room') {
-    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start overflow-y-auto"
-         style="touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
-      <app-game-waiting-room
-        class="flex-1 min-h-0 w-full"
-        [gameId]="'math24'"
-        [mode]="store.currentRoomMode()"
-        [roomId]="store.roomId()"
-        [difficulty]="store.currentDifficulty() || GameDifficulty.Medium"
-        [players]="store.playersList()"
-        [currentUserId]="playerId"
-        [hostId]="store.hostId()"
-        [readyPlayers]="store.readyPlayers()"
-        [target]="store.currentRoomTarget()"
-        (start)="store.startGame()"
-        (leave)="goBack()"
-        (changeSettings)="openChangeSettings()"
-        (kick)="store.kickPlayer($event)"
-        (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()"
-        (difficultyChange)="store.currentDifficulty.set($event)">
-      </app-game-waiting-room>
-    </div>
   } @else {
     <!-- PLAY VIEW -->
     <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
-      
       <div class="flex-1 overflow-y-auto relative p-2 lg:p-4 h-full flex flex-col items-center justify-start w-full"
            style="touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
-        <!-- Result Overlay -->
-        @if (store.isFinished() && showOverlay()) {
-          <app-game-result-overlay
-            currentGameId="math24"
-            [status]="getGameResultStatus()"
-            [title]="getGameResultTitle()"
-            [stats]="getStats()"
-            [xpResult]="store.lastStatResult()?.xp_result"
-            [isNewRecord]="store.lastStatResult()?.isNewRecord"
-            [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-            [opponentInfo]="opponentsPkStats()[0]"
-            [pkSeriesScore]="seriesScore()"
-            [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-            (rematch)="handleRematch()"
-            [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
-            [showNextLevel]="store.currentRoomMode() === GameMode.Single"
-            [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
-            [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-            (leave)="view.set('lobby')"
-            (nextLevel)="playNextLevel()"
-            (restart)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
-            [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-            (changeRoomGame)="store.changeRoomGame($event)">
-          </app-game-result-overlay>
-        }
-
         <!-- PK Steal Mode -->
         @if (store.currentRoomMode() === GameMode.Steal && store.status() !== GameStatus.Waiting) {
           <app-math24-pk-steal class="w-full h-full" [playerId]="playerId" [hostId]="store.hostId()"></app-math24-pk-steal>
@@ -100,11 +54,6 @@
         <!-- Single Player Mode -->
         @if (store.currentRoomMode() === GameMode.Single) {
           <app-math24-board class="w-full"></app-math24-board>
-        }
-
-        <!-- Starting Overlay -->
-        @if (store.status() === GameStatus.Starting) {
-          <app-game-starting-overlay [countdown]="startingCountdown()"></app-game-starting-overlay>
         }
       </div>
     </div>

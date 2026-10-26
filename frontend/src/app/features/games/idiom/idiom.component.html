@@ -1,5 +1,5 @@
 <app-game-layout
-  [isHost]="pkStore.hostId() === pkStore.playerId()"
+  [store]="pkRoomId() ? pkStore : undefined"
   [gameId]="'idiom'"
   [title]="'真·成语接龙'"
   [subtitle]="getHeaderSubtitle()"
@@ -8,18 +8,19 @@
   [titleGradientClass]="'from-amber-400 to-rose-500'"
   [shadowClass]="'shadow-amber-500/20'"
   [headerBgClass]="'dark:bg-gradient-to-r dark:from-amber-950/20 dark:to-rose-950/20 px-4 lg:px-6 py-2 lg:py-3 mb-0'"
-  [currentRoomMode]="pkRoomId() ? pkRoomMode() : GameMode.Single"
-  [currentRoomId]="pkRoomId()"
-  [status]="pkStore.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="pkDifficulty()"
   [hideDefaultDifficulty]="true"
   [showLeaveBtn]="!!pkRoomId()"
+  [customResultTitle]="pkStore.winners().includes(playerId) ? '旗开得胜！' : '再接再厉！'"
+  [customResultSubtitle]="pkStore.winners().includes(playerId) ? '恭喜您率先接龙完成神龙争夺！' : '对手率先完成了神龙接龙！'"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="handleHeaderBack()"
+  (restart)="pkStore.restartGame()"
+  (rematch)="pkStore.restartGame()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
@@ -61,31 +62,7 @@
     @if (pkRoomId()) {
       <div class="w-full flex-1 flex flex-col items-center justify-start relative min-h-0 select-none max-w-4xl">
 
-        <!-- Waiting Room -->
-        @if (pkStore.status() === 'waiting') {
-          <div class="w-full h-full overflow-y-auto">
-            <app-game-waiting-room
-              [gameId]="'idiom'"
-              [mode]="pkRoomMode()"
-              [roomId]="pkRoomId()"
-              [difficulty]="pkDifficulty()"
-              [players]="pkStore.players().map(p => ({ id: p.id }))"
-              [hostId]="pkStore.hostId()"
-              [currentUserId]="pkStore.playerId()"
-              [readyPlayers]="pkStore.readyPlayers()"
-              [target]="pkStore.currentRoomTarget()"
-              (start)="pkStore.startGame()"
-              (leave)="leavePkRoom()"
-              (ready)="pkStore.ready()"
-              (cancelReady)="pkStore.cancelReady()">
-            </app-game-waiting-room>
-          </div>
-        }
 
-        <!-- Countdown -->
-        @if (pkStore.status() === 'starting') {
-          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-        }
 
         <!-- Playing Arena -->
         @if (pkStore.status() === 'playing') {
@@ -188,20 +165,7 @@
           </div>
         }
 
-        <!-- Result Overlay -->
-        @if (showPkOverlay()) {
-          <app-game-result-overlay
-            [currentGameId]="'idiom'"
-            [status]="pkStore.winners().includes(playerId) ? GameResult.Win : GameResult.Lose"
-            [title]="pkStore.winners().includes(playerId) ? '旗开得胜！' : '再接再厉！'"
-            [subtitle]="pkStore.winners().includes(playerId) ? '恭喜您率先接龙完成神龙争夺！' : '对手率先完成了神龙接龙！'"
-            [isPkMatch]="true"
-            [showRestart]="true"
-            [showLeave]="true"
-            (restart)="pkStore.restartGame(); showPkOverlay.set(false)"
-            (leave)="leavePkRoom(); showPkOverlay.set(false)">
-          </app-game-result-overlay>
-        }
+
 
       </div>
 

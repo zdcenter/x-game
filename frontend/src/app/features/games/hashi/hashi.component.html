@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'hashi'"
   [title]="i18n.t('lobby.hashi')()"
   [subtitle]="''"
@@ -7,9 +8,6 @@
   titleGradientClass="from-blue-400 to-emerald-400"
   shadowClass="shadow-emerald-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="false"
   [hideLeftPanel]="hideLeftPanel()"
   [showMobileSidebar]="isMobileSidebarOpen()"
@@ -17,15 +15,20 @@
   (difficultyChange)="onDifficultyChange($event)"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished "
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
-  
-  
+  [isLobby]="view() === 'lobby' && store.currentRoomMode() === GameMode.Single"
+  [customResultTitle]="getOverlayTitle()"
+  [customResultSubtitle]="getOverlaySubtitle()"
+  [showNextLevel]="store.currentRoomMode() === GameMode.Single"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
-  (playAgain)="store.startGame()"
+  (playAgain)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
+  (nextLevel)="playNextLevel()"
+  (restart)="store.currentRoomMode() === GameMode.Single ? store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex()) : store.restartGame()"
+  (rematch)="handleRematch()"
+  (dismiss)="dismissRoom()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
-  [isLobby]="view() === 'lobby' && store.currentRoomMode() === GameMode.Single"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 @if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
@@ -35,24 +38,7 @@
       } @else {
         <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
           
-          @if (store.localStatus() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
-            <app-game-waiting-room class="w-full h-full flex"
-              [gameId]="'hashi'"
-              [mode]="store.currentRoomMode()"
-              [difficulty]="store.currentDifficulty()"
-              [roomId]="store.roomId()"
-              [hostId]="store.hostId()"
-              [players]="store.playersList()"
-              [currentUserId]="playerId"
-              [readyPlayers]="store.readyPlayers()"
-              [target]="store.currentRoomTarget()"
-              (leave)="goBack()"
-              (start)="store.startGame()"
-              (ready)="store.ready()"
-              (cancelReady)="store.cancelReady()"
-              (kick)="store.kickPlayer($event)">
-            </app-game-waiting-room>
-          } @else {
+
           
           <!-- Players / Opponents (Top Universal PK HUD) -->
           @if (store.currentRoomMode() !== GameMode.Single && store.localStatus() !== GameStatus.Waiting) {
@@ -86,10 +72,6 @@
                   <span class="font-mono font-bold text-base text-[var(--color-text-main)]">{{ store.timeSpent() * 1000 | date:'mm:ss' }}</span>
                 </div>
               </div>
-            }
-
-            @if (store.localStatus() === GameStatus.Starting) {
-              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
             }
 
             <div class="relative select-none flex items-center justify-center rounded-2xl bg-[var(--color-bg-main)]/50 border border-[var(--color-border-card)] shadow-inner p-2 sm:p-3 transition-all duration-300"
@@ -255,33 +237,6 @@
             (hintApplied)="store.applyHint()"
           ></app-game-toolbar>
 
-          @if (store.localStatus() === GameStatus.Finished) {
-            <app-game-result-overlay
-              currentGameId="hashi"
-              [status]="store.currentRoomMode() === GameMode.Single ? 'win' : (store.winners().includes(playerId) ? 'win' : 'lose')"
-              [title]="getOverlayTitle()"
-              [subtitle]="getOverlaySubtitle()"
-              [xpResult]="store.lastStatResult()?.xp_result"
-              [isNewRecord]="store.lastStatResult()?.isNewRecord"
-              [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-              [opponentInfo]="opponentsPkStats()[0]"
-              [pkSeriesScore]="seriesScore()"
-              [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-              (rematch)="handleRematch()"
-              [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
-              [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-              [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
-              [showNextLevel]="store.currentRoomMode() === GameMode.Single"
-              (leave)="goBack()"
-              (nextLevel)="playNextLevel()"
-              (restart)="store.currentRoomMode() === GameMode.Single ? store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex()) : store.restartGame()"
-              (dismiss)="dismissRoom()"
-              [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-              (changeRoomGame)="store.changeRoomGame($event)"
-            ></app-game-result-overlay>
-          }
-          
-          } <!-- closes @else (line 68) -->
-        </div> <!-- closes PLAY VIEW div (line 48) -->
-      } <!-- closes @else (line 46) -->
+        </div>
+      }
 </app-game-layout>

@@ -1,5 +1,6 @@
+import { Directive, inject, signal, effect, Injector, OnInit, OnDestroy, HostBinding, ViewChild, HostListener } from '@angular/core';
+import confetti from 'canvas-confetti';
 import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
-import { Directive, inject, signal, effect, Injector, OnInit, OnDestroy, HostBinding, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
@@ -14,6 +15,11 @@ import { ToastService } from '../services/toast.service';
 import { I18nService } from '../i18n/i18n.service';
 import { LiveActivityService } from '../services/live-activity.service';
 import { WindowSizeService } from '../services/window-size.service';
+import { AuthStore } from '../auth/auth.store';
+import { AudioService } from '../services/audio.service';
+import { HapticService } from '../services/haptic.service';
+import { GameRegistryService } from '../services/game-registry.service';
+import { LeaderboardService } from '../services/leaderboard.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -24,19 +30,45 @@ import { WindowSizeService } from '../services/window-size.service';
  */
 @Directive()
 export abstract class BaseGameComponent implements OnInit, OnDestroy {
-  protected gameTimer = inject(GameTimerService);
-  protected wsService = inject(WebSocketService);
-  protected gameService = inject(GameService);
+  // Core Services
+  public gameTimer = inject(GameTimerService);
+  public timerService = this.gameTimer;
+  public wsService = inject(WebSocketService);
+  public gameService = inject(GameService);
   public settingsService = inject(SettingsService);
-  private _baseRoute = inject(ActivatedRoute);
-  protected _baseRouter = inject(Router);
-  protected crossGameJoin = inject(CrossGameJoinService);
-  protected baseToastService = inject(ToastService);
-  protected i18nBase = inject(I18nService);
-  protected liveActivityService = inject(LiveActivityService);
-  protected windowSizeService = inject(WindowSizeService);
-  private _injector = inject(Injector);
+  protected _baseRoute = inject(ActivatedRoute);
+  public router = inject(Router);
+  protected _baseRouter = this.router;
+  public crossGameJoin = inject(CrossGameJoinService);
+  public toast = inject(ToastService);
+  public toastService = this.toast;
+  protected baseToastService = this.toast;
+  public i18n = inject(I18nService);
+  protected i18nBase = this.i18n;
+  public liveActivityService = inject(LiveActivityService);
+  public windowSizeService = inject(WindowSizeService);
+  public authStore = inject(AuthStore);
+  public audio = inject(AudioService);
+  public audioService = this.audio;
+  public haptic = inject(HapticService);
+  public gameRegistry = inject(GameRegistryService);
+  public leaderboardService = inject(LeaderboardService);
+  protected _injector = inject(Injector);
 
+  // Common Enums & Math for Templates
+  readonly GameDifficulty = GameDifficulty;
+  readonly GameStatus = GameStatus;
+  readonly GameMode = GameMode;
+  readonly Math = Math;
+  readonly math = Math;
+
+  get t() {
+    return this.i18n.t.bind(this.i18n);
+  }
+
+  // Common UI State Signals
+  showRules = signal<boolean>(false);
+  showOverlay = signal<boolean>(false);
   isMobileSidebarOpen = signal<boolean>(false);
   
   @ViewChild(GameLayoutComponent) gameLayout?: GameLayoutComponent;
@@ -45,9 +77,49 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     return 'flex-1 flex flex-col w-full overflow-hidden min-h-0';
   }
 
-  // Each subclass must implement these to hook into the base room logic
+  // Subclasses provide their specific game store
   abstract get store(): GameStoreInterface;
-  abstract get playerId(): string;
+
+  // Default playerId derived from authStore; subclasses can still override if custom
+  get playerId(): string {
+    return this.authStore.currentUser()?.username || this.authStore.guestId || 'Guest';
+  }
+
+  // Common Haptic Feedback Helpers
+  vibrateLight() { this.haptic.vibrateLight(); }
+  vibrateMedium() { this.haptic.vibrateMedium(); }
+  vibrateHeavy() { this.haptic.vibrateHeavy(); }
+  vibrateSuccess() { this.haptic.vibrateSuccess(); }
+  vibrateError() { this.haptic.vibrateError(); }
+  vibrateSnap() { this.haptic.vibrateSnap(); }
+  vibrateSwipe() { this.haptic.vibrateSwipe(); }
+  vibrateCombo() { this.haptic.vibrateCombo(); }
+  vibrateImpact() { this.haptic.vibrateImpact(); }
+
+  /**
+   * Triggers physical tactile feedback and instant dual-cannon dopamine confetti burst.
+   * Safe for SSR and respects prefers-reduced-motion.
+   */
+  celebrateVictory() {
+    this.vibrateSuccess();
+    if (!isBrowser()) return;
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7, x: 0.3 },
+        colors: ['#38bdf8', '#fbbf24', '#34d399', '#f43f5e', '#a855f7'],
+        disableForReducedMotion: true
+      });
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7, x: 0.7 },
+        colors: ['#38bdf8', '#fbbf24', '#34d399', '#f43f5e', '#a855f7'],
+        disableForReducedMotion: true
+      });
+    } catch (_) {}
+  }
 
   /**
    * Auto-connect lobby WebSocket so the game-lobby-panel receives
@@ -254,6 +326,10 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleRestart() {
+    this.doRestart();
+  }
+
   handleRematch() {
     this.doRestart();
   }
@@ -320,5 +396,99 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
         });
       }
     }
+  }
+
+  /**
+   * Centralized desktop keyboard fluency handler:
+   * - Esc: Close rules modal or mobile sidebar
+   * - R: Quick restart in single-player or rematch in PK
+   * - Z / U: Undo previous move (if game supports undo)
+   * - H: Trigger hint (if game supports hint)
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleGlobalKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented) return;
+
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable) {
+      return;
+    }
+
+    // Allow child component hook to intercept or handle first
+    if (this.onKeyDown(event)) {
+      return;
+    }
+
+    // Esc: close rules modal or close mobile sidebar
+    if (event.key === 'Escape') {
+      if (this.showRules()) {
+        this.showRules.set(false);
+        this.vibrateLight();
+        event.preventDefault();
+        return;
+      }
+      if (this.isMobileSidebarOpen()) {
+        this.isMobileSidebarOpen.set(false);
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // R: Restart game
+    if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (this.store && this.store.currentRoomMode() === GameMode.Single) {
+        this.vibrateLight();
+        this.handleTitleClick();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Ctrl+Z or U: Undo
+    const isUndo = ((event.key === 'z' || event.key === 'Z') && (event.ctrlKey || event.metaKey)) ||
+                   ((event.key === 'u' || event.key === 'U') && !event.ctrlKey && !event.metaKey);
+    if (isUndo) {
+      const storeAny = this.store as any;
+      const compAny = this as any;
+      if (typeof compAny.undo === 'function') {
+        this.vibrateLight();
+        compAny.undo();
+        event.preventDefault();
+        return;
+      } else if (typeof storeAny?.undo === 'function') {
+        const canUndo = typeof storeAny.canUndo === 'function' ? storeAny.canUndo() : true;
+        if (canUndo) {
+          this.vibrateLight();
+          storeAny.undo();
+          event.preventDefault();
+          return;
+        }
+      }
+    }
+
+    // H: Hint
+    if ((event.key === 'h' || event.key === 'H') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      const compAny = this as any;
+      if (typeof compAny.applyHint === 'function') {
+        this.vibrateLight();
+        compAny.applyHint();
+        event.preventDefault();
+        return;
+      } else if (typeof compAny.useHint === 'function') {
+        this.vibrateLight();
+        compAny.useHint();
+        event.preventDefault();
+        return;
+      }
+    }
+  }
+
+  /**
+   * Subclasses can override this hook to handle custom keyboard shortcuts.
+   * Return true to consume the event and prevent BaseGameComponent shortcuts.
+   */
+  protected onKeyDown(event: KeyboardEvent): boolean {
+    return false;
   }
 }

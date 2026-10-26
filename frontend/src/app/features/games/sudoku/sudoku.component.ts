@@ -11,10 +11,8 @@ import { SudokuLobbyComponent, sudokuDifficulties } from './components/sudoku-lo
 import { SudokuBoardComponent } from './components/sudoku-board/sudoku-board.component';
 import { SudokuNumpadComponent } from './components/sudoku-numpad/sudoku-numpad.component';
 import { SudokuToolsComponent } from './components/sudoku-tools/sudoku-tools.component';
-import { SudokuRoomComponent } from './components/sudoku-room/sudoku-room.component';
 import { SudokuPkStealComponent } from './components/sudoku-pk-steal/sudoku-pk-steal.component';
 import { SudokuPkSpeedComponent } from './components/sudoku-pk-speed/sudoku-pk-speed.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AuthStore } from '../../../core/auth/auth.store';
@@ -28,7 +26,6 @@ import { DailyChallengeService } from '../../../core/services/daily-challenge.se
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 
 @Component({
@@ -41,10 +38,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
     SudokuBoardComponent, 
     SudokuNumpadComponent,
     SudokuToolsComponent,
-    SudokuRoomComponent,
     SudokuPkSpeedComponent,
-    GameResultOverlayComponent,
-    GameStartingOverlayComponent,
     GameLayoutComponent
   ],
   providers: [SudokuStore],
@@ -52,17 +46,10 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
   templateUrl: './sudoku.component.html',
   styleUrl: './sudoku.component.css'})
 export class SudokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  GameMode = GameMode;
-  GameStatus = GameStatus;
-  GameDifficulty = GameDifficulty;
-  store = inject(SudokuStore);
-  router = inject(Router);
+  override store = inject(SudokuStore);
   http = inject(HttpClient);
-  i18n = inject(I18nService);
-  authStore = inject(AuthStore);
   private roomLifecycle!: RoomLifecycleHandle;
-  private gameRegistry = inject(GameRegistryService);
-    private dailyService = inject(DailyChallengeService);
+  private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);
   private pendingDailyChallengeId = signal<string | null>(null);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
@@ -70,9 +57,6 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   sudokuDifficulties = sudokuDifficulties;
 
   view = this.store.view;
-  showOverlay = signal(false);  showRules = signal(false);  get playerId(): string {
-    return this.authStore.currentUser()?.username || this.authStore.guestId;
-  }
 
   constructor() {
     super();
@@ -86,6 +70,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       
       const isFin = this.store.isFinished() || status === GameStatus.Finished;
       if (isFin) {
+        this.celebrateVictory();
         const timer = setTimeout(() => this.showOverlay.set(true), 1500);
         onCleanup(() => clearTimeout(timer));
       } else {

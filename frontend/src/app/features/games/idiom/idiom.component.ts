@@ -7,9 +7,6 @@ import { GameStatus, GameMode, GameResult } from '../../../core/models/game.mode
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { IdiomPKStore } from './store/idiom-pk.store';
 import { IdiomSolitaireEngine, IdiomItem, ChainMode } from './store/idiom-engine';
 import { AudioService } from '../../../core/services/audio.service';
@@ -23,9 +20,6 @@ import { FloatingTextService } from '../../../core/services/floating-text.servic
   imports: [
     CommonModule,
     GameLayoutComponent,
-    GameWaitingRoomComponent,
-    GameResultOverlayComponent,
-    GameStartingOverlayComponent,
   ],
   templateUrl: './idiom.component.html',
   styles: [`
@@ -49,16 +43,11 @@ import { FloatingTextService } from '../../../core/services/floating-text.servic
   `]
 })
 export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  i18n = inject(I18nService);
-  authStore = inject(AuthStore);
   private route = inject(ActivatedRoute);
-  private audio = inject(AudioService);
   private xpService = inject(XpService);
   private floatingText = inject(FloatingTextService);
   pkStore = inject(IdiomPKStore);
 
-  GameStatus = GameStatus;
-  GameMode = GameMode;
   GameResult = GameResult;
 
   // Single-player Engine
@@ -81,8 +70,6 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   shakeSlots = signal(false);
   errorMessage = signal('');
 
-  // Modals
-  showRules = signal(false);
   inspectedIdiom = signal<IdiomItem | null>(null);
   candidatesModalOpen = signal(false);
   candidatesList = signal<IdiomItem[]>([]);
@@ -101,7 +88,6 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   @ViewChild('chainScrollContainer') chainScrollContainer?: ElementRef<HTMLDivElement>;
 
   override get store() { return this.pkStore; }
-  override get playerId(): string { return this.authStore.currentUser()?.username || this.authStore.guestId; }
 
   currentTail = computed(() => {
     const chain = this.solitaireChain();
@@ -135,6 +121,9 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       if (s === GameStatus.Finished) {
         if (this.pkStore.winners().includes(this.pkStore.playerId())) {
           this.audio.playWin();
+          this.celebrateVictory();
+        } else {
+          this.vibrateError();
         }
         const t = setTimeout(() => this.showPkOverlay.set(true), 1200);
         onCleanup(() => clearTimeout(t));
@@ -157,6 +146,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     effect(() => {
       if (this.pkStore.myState()?.last_wrong) {
         this.audio.playIdiom('wrong');
+        this.vibrateError();
         this.shakeSlots.set(true);
         setTimeout(() => {
           this.shakeSlots.set(false);
@@ -269,6 +259,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     used[index] = true;
     this.keypadUsed.set(used);
 
+    this.vibrateLight();
     this.audio.playIdiom('fill');
 
     // If all 3 slots filled, automatically submit
@@ -295,6 +286,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       this.keypadUsed.set(used);
     }
 
+    this.vibrateLight();
     this.audio.playIdiom('erase');
   }
 
@@ -302,6 +294,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     this.currentSlots.set(['', '', '']);
     this.keypadUsed.set(new Array(this.keypad().length).fill(false));
     this.errorMessage.set('');
+    this.vibrateLight();
     this.audio.playIdiom('erase');
   }
 
@@ -344,6 +337,12 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       this.maxStreak.set(this.streak());
     }
 
+    if (this.streak() > 0 && this.streak() % 5 === 0) {
+      this.celebrateVictory();
+    } else {
+      this.vibrateSnap();
+    }
+
     this.xpService.showXpGain(15);
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2 - 80;
@@ -354,6 +353,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
 
   showError(msg: string) {
     this.errorMessage.set(msg);
+    this.vibrateError();
     this.audio.playIdiom('wrong');
     this.shakeSlots.set(true);
     setTimeout(() => this.shakeSlots.set(false), 500);
@@ -461,9 +461,11 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     used[index] = true;
     this.pkKeypadUsed.set(used);
 
+    this.vibrateLight();
     this.audio.playIdiom('fill');
 
     if (slots.every(s => !!s)) {
+      this.vibrateSnap();
       const fullAnswer = [this.pkStore.targetChar(), ...slots];
       this.pkStore.submitFillAnswer(fullAnswer);
     }
@@ -486,6 +488,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
       this.pkKeypadUsed.set(used);
     }
 
+    this.vibrateLight();
     this.audio.playIdiom('erase');
   }
 

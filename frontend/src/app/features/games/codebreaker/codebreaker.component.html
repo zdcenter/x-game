@@ -1,4 +1,5 @@
-<app-game-layout [isHost]="store.hostId() === store.playerId()"
+<app-game-layout
+  [store]="store"
   [gameId]="'codebreaker'"
   [title]="i18n.t('lobby.codebreaker')()"
   [subtitle]="getSubtitle()"
@@ -7,50 +8,29 @@
   titleGradientClass="from-teal-400 to-emerald-400"
   shadowClass="shadow-emerald-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-teal-900/30 dark:to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
-  [showRules]="showRules()"
-  [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="currentDifficulty()"
   (difficultyChange)="changeDifficulty($event)"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [isDefeat]="!winners().includes(myPlayerId())"
+  [customResultTitle]="winnerText"
+  [customResultSubtitle]="winDescription"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.startGame()"
+  (restart)="onRestart()"
+  (rematch)="onRestart()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (currentRoomMode() !== GameMode.Single && status() === GameStatus.Waiting) {
-          <div class="flex-1 min-h-0 overflow-hidden p-2 lg:p-4">
-            <app-game-waiting-room
-              [gameId]="'codebreaker'"
-              [mode]="currentRoomMode()"
-              [roomId]="roomId()"
-              [difficulty]="currentDifficulty()"
-              [players]="mappedPlayers"
-              [hostId]="store.hostId()"
-              [currentUserId]="myPlayerId()"
-              (start)="store.startGame()"
-              (leave)="goBack()"
-              (changeSettings)="openChangeSettings()"
-              [readyPlayers]="store.readyPlayers()"
-              (kick)="store.kickPlayer($event)"
-              (ready)="store.ready()"
-              (cancelReady)="store.cancelReady()"
-              [target]="store.currentRoomTarget()">
-            </app-game-waiting-room>
-          </div>
-        }
-
-        @if (currentRoomMode() === GameMode.Single || status() !== GameStatus.Waiting) {
-          <!-- Main Content Area -->
-          <div class="flex-none w-full flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 pb-4 lg:pb-8 p-2 lg:p-4 min-h-0 lg:overflow-hidden lg:max-h-[850px]">
+  <!-- Main Content Area -->
+  <div class="flex-none w-full flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 pb-4 lg:pb-8 p-2 lg:p-4 min-h-0 lg:overflow-hidden lg:max-h-[850px]">
             
             <!-- Left Panel: My Guess History (Scrollable) -->
             <div class="w-full lg:flex-1 h-[280px] lg:h-auto lg:min-h-0 bg-[var(--color-bg-base)] rounded-2xl border border-[var(--color-border-card)] p-3 lg:p-4 shadow-lg flex flex-col overflow-hidden shrink-0">
@@ -288,30 +268,5 @@
                 </div>
               </div>
             }
-
-          </div>
-        }
-        
-        <!-- Starting Overlay -->
-        @if (status() === GameStatus.Starting) {
-          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-        }
-
-        <!-- Results Overlay -->
-        @if (status() === GameStatus.Finished && showOverlay()) {
-          <app-game-result-overlay
-            currentGameId="codebreaker"
-            [status]="winners().includes(myPlayerId()) ? 'win' : 'lose'"
-            [title]="winnerText"
-            [subtitle]="winDescription"
-            [xpResult]="store.lastStatResult()?.xp_result"
-            [isNewRecord]="store.lastStatResult()?.isNewRecord"
-            [showRestart]="true"
-            [showLeave]="true"
-            (restart)="onRestart()"
-            (leave)="goBack()"
-                [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-                (changeRoomGame)="store.changeRoomGame($event)">
-          </app-game-result-overlay>
-        }
+  </div>
 </app-game-layout>

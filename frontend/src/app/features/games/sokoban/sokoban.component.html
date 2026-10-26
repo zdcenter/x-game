@@ -1,5 +1,5 @@
 <app-game-layout
-  [isHost]="store.hostId() === store.playerId()"
+  [store]="store"
   [gameId]="'sokoban'"
   [title]="i18n.t('lobby.sokoban')()"
   [subtitle]="showLobby() ? i18n.t('lobby.select_level')() : (getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === GameMode.Single ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : ''))"
@@ -8,24 +8,30 @@
   titleGradientClass="from-amber-300 to-orange-400"
   shadowClass="shadow-orange-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-amber-900/30 dark:to-orange-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [currentRoomMode]="store.currentRoomMode()"
-  [currentRoomId]="store.roomId()"
-  [status]="store.status()"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [hideDefaultDifficulty]="true"
+  [isLobby]="showLobby()"
+  [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
+  [overlayStats]="[
+    { label: i18n.t('game.moves')(), value: store.myMoves() },
+    { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
+  ]"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="handleRestart()"
+  (restart)="handleRestart()"
+  (rematch)="handleRematch()"
+  (nextLevel)="handleNextLevel()"
+  (dismiss)="handleDismissRoom()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
-  [isLobby]="showLobby()"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
   <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
@@ -35,10 +41,6 @@
                          (levelSelect)="onLevelSelect($event)">
       </app-sokoban-lobby>
     } @else {
-      <!-- Starting Overlay -->
-      @if (store.status() === GameStatus.Starting) {
-        <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-      }
 
       @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
         @if (store.currentRoomMode() === GameMode.Single) {
@@ -131,56 +133,6 @@
         </div>
       }
 
-      @if (store.status() === GameStatus.Finished && showOverlay()) {
-        <app-game-result-overlay
-          currentGameId="sokoban"
-          [status]="getGameResult()"
-          [title]="getGameResult() === 'win' ? i18n.t('game.you_win')() : i18n.t('game.you_lose')()"
-          [stats]="[
-            { label: i18n.t('game.moves')(), value: store.myMoves() },
-            { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
-          ]"
-          [isPkMatch]="store.currentRoomMode() !== GameMode.Single"
-          [opponentInfo]="opponentsPkStats()[0]"
-          [pkSeriesScore]="seriesScore()"
-          [pkRoundFormat]="store.room()?.roundFormat || 'BO3'"
-          [xpResult]="store.lastStatResult()?.xp_result"
-          [isNewRecord]="store.lastStatResult()?.isNewRecord"
-          [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
-          [showRestart]="store.currentRoomMode() === GameMode.Single || store.hostId() === playerId"
-          [showLeave]="store.currentRoomMode() === GameMode.Single || store.hostId() !== playerId"
-          [showDismiss]="store.currentRoomMode() !== GameMode.Single && store.hostId() === playerId"
-          (rematch)="handleRematch()"
-          (nextLevel)="handleNextLevel()"
-          (restart)="handleRestart()"
-          (leave)="goBack()"
-          (dismiss)="handleDismissRoom()"
-          [enableChangeRoomGame]="store.currentRoomMode() !== GameMode.Single && store.hostId() === store.playerId()"
-          (changeRoomGame)="store.changeRoomGame($event)">
-        </app-game-result-overlay>
-      }
     }
   </div>
-
-  @if (store.status() === GameStatus.Waiting && store.currentRoomMode() !== GameMode.Single) {
-    <div class="fixed top-[64px] inset-x-0 bottom-0 z-[100] flex flex-col bg-[var(--color-bg-main)]">
-      <app-game-waiting-room class="w-full h-full flex"
-        [gameId]="'sokoban'"
-        [mode]="store.currentRoomMode()"
-        [roomId]="store.roomId()"
-        [difficulty]="store.currentDifficulty()"
-        [players]="store.playersList()"
-        [hostId]="store.hostId()"
-        [currentUserId]="playerId"
-        [readyPlayers]="store.readyPlayers()"
-        (start)="store.startGame()"
-        (leave)="goBack()"
-        (changeSettings)="openChangeSettings()"
-        (ready)="store.ready()"
-        (cancelReady)="store.cancelReady()"
-        (kick)="store.kickPlayer($event)"
-        [target]="store.currentRoomTarget()"
-      ></app-game-waiting-room>
-    </div>
-  }
 </app-game-layout>
