@@ -23,17 +23,21 @@ import { FormsModule } from '@angular/forms';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-math24',
   standalone: true,
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     Math24PkStealComponent,
     Math24PkSpeedComponent,
     Math24BoardComponent,
     Math24LobbyComponent,
-    FormsModule, GameLayoutComponent],
+    FormsModule,
+    GameLayoutComponent,
+    GameHandheldHeaderComponent
+  ],
   templateUrl: './math24.component.html'
 })
 export class Math24Component extends BaseGameComponent implements OnInit, OnDestroy {
@@ -125,11 +129,9 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       
       const isFin = this.store.isFinished() || this.store.status() === GameStatus.Finished;
       if (isFin) {
-        this.celebrateVictory();
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
+        if (this.store.isVictory()) {
+          this.celebrateVictory();
+        }
       }
     });
   }
@@ -157,12 +159,11 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target || 1);
-      if (joinInfo.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom(joinInfo);
+      } else {
+        this.handleJoinRoom(joinInfo);
       }
-      this.view.set('room');
     }
   }
 
@@ -284,7 +285,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {
     this.view.set('play');
     this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);  }
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+  override handleCreateRoom(event: any) {
     super.handleCreateRoom(event);
     if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
@@ -292,9 +293,9 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     this.view.set("room");
   }
 
-  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+  override handleJoinRoom(params: any) {
     super.handleJoinRoom(params);
-    if (params.mode !== GameMode.Single) {
+    if (params.mode !== GameMode.Single && !params.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
     this.view.set('room');

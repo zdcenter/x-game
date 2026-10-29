@@ -14,6 +14,7 @@ import (
 type SpeedEngine struct {
 	engine.BaseEngine
 	Boards        map[string]*Board
+	InitialBoard  *Board
 	Winners       []string
 	Wins          map[string]int // Accumulated round wins across restarts
 	Target        int            // Series target: first to win Target rounds wins
@@ -75,6 +76,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Winners = make([]string, 0)
 	e.Wins = make(map[string]int)
 	e.State = engine.StateWaiting
+	e.InitialBoard = NewBoard(e.BoardSize)
 
 	return nil
 }
@@ -83,9 +85,14 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
+	if e.InitialBoard == nil {
+		e.InitialBoard = NewBoard(e.BoardSize)
+	}
+
 	if _, exists := e.Boards[playerID]; !exists {
-		e.Boards[playerID] = NewBoard(e.BoardSize)
-		e.Boards[playerID].Status = string(engine.StateWaiting)
+		board := e.InitialBoard.Clone()
+		board.Status = string(engine.StateWaiting)
+		e.Boards[playerID] = board
 		if _, hasWins := e.Wins[playerID]; !hasWins {
 			e.Wins[playerID] = 0
 		}
@@ -135,7 +142,13 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 	if baseAction.Action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		startAt := time.Now().Add(3 * time.Second).UnixMilli()
 		e.GlobalStartAt = startAt
+
+		// Generate ONE synchronized fair starting board dealt to all players
+		fairBoard := NewBoard(e.BoardSize)
+		e.InitialBoard = fairBoard.Clone()
 		for _, b := range e.Boards {
+			b.Cells = fairBoard.Clone().Cells
+			b.Score = 0
 			b.Status = string(engine.StateStarting)
 			b.StartAt = startAt
 		}
@@ -158,7 +171,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			if w >= e.Target {
 				seriesOver = true
 				break
-		}
+			}
 		}
 		if seriesOver {
 			for p := range e.Wins {
@@ -168,9 +181,10 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
+		fairBoard := NewBoard(e.BoardSize)
+		e.InitialBoard = fairBoard.Clone()
 		for _, b := range e.Boards {
-			newBoard := NewBoard(e.BoardSize)
-			b.Cells = newBoard.Cells
+			b.Cells = fairBoard.Clone().Cells
 			b.Score = 0
 			b.Status = string(engine.StateWaiting)
 			b.StartAt = 0

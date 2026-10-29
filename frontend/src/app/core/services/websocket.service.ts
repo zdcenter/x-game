@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { CrossGameJoinService } from './cross-game-join.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
+import { GameRegistryService } from './game-registry.service';
 import { S2CEvent, WSErrorCode, WsQueryParam } from '../models/websocket.model';
 import { createWebSocket, isBrowser } from '../utils/browser.util';
 import { LobbyActivity } from '../models/activity.model';
@@ -23,6 +24,7 @@ export class WebSocketService {
   private crossGameJoin = inject(CrossGameJoinService);
   private toastService = inject(ToastService);
   private i18n = inject(I18nService);
+  private gameRegistry = inject(GameRegistryService);
   
   private socket: WebSocket | null = null;
   private lobbySocket: WebSocket | null = null;
@@ -51,6 +53,13 @@ export class WebSocketService {
 
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
+  
+  // Current active room tracking signals
+  readonly activeGameId = signal<string>('');
+  readonly currentRoomId = signal<string>('');
+  readonly currentMode = signal<string>('');
+  readonly currentDifficulty = signal<string>('');
+  readonly isCurrentSpectator = signal<boolean>(false);
   
   // Expose the latest game state from the server
   readonly gameState = signal<any>(null);
@@ -86,7 +95,7 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '', target: number = 1, bounty: number = 0) {
+  connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '', target: number = 1, bounty: number = 0, isSpectator: boolean = false) {
     // Auto-consume pendingPassword if no explicit password provided
     if (!password && this._pendingPassword) {
       password = this._pendingPassword;
@@ -135,10 +144,19 @@ export class WebSocketService {
     this.gameReconnectAttempts = 0;
     this.gameDisconnectIntentional = false;
 
+    this.activeGameId.set(gameId);
+    this.currentRoomId.set(roomId);
+    this.currentMode.set(mode);
+    this.currentDifficulty.set(difficulty);
+    this.isCurrentSpectator.set(isSpectator || action === 'spectate');
+
     const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
     let url = `${environment.wsUrl}/ws/join/${encodeURIComponent(roomId)}?${WsQueryParam.Game}=${encodeURIComponent(gameId)}&${WsQueryParam.PlayerId}=${encodeURIComponent(playerId)}&${WsQueryParam.Mode}=${encodeURIComponent(mode)}&${WsQueryParam.Difficulty}=${encodeURIComponent(difficulty)}&${WsQueryParam.HostId}=${encodeURIComponent(cleanHostId)}&${WsQueryParam.Target}=${target}`;
     if (action) {
       url += `&${WsQueryParam.Action}=${encodeURIComponent(action)}`;
+    }
+    if (isSpectator || action === 'spectate') {
+      url += `&${WsQueryParam.Spectate}=true`;
     }
     if (password) {
       url += `&${WsQueryParam.Password}=${encodeURIComponent(password)}`;
@@ -170,8 +188,23 @@ export class WebSocketService {
         if (msg.players) {
           msg.state.roomPlayers = msg.players;
         }
+        if (msg.spectators) {
+          msg.state.spectators = msg.spectators;
+        }
         if (msg.bountyCoins !== undefined) {
           msg.state.bountyCoins = msg.bountyCoins;
+        }
+        if (msg.difficulty) {
+          msg.state.difficulty = msg.difficulty;
+          this.currentDifficulty.set(msg.difficulty);
+        }
+        if (msg.mode) {
+          msg.state.mode = msg.mode;
+          this.currentMode.set(msg.mode);
+        }
+        if (msg.game) {
+          msg.state.game = msg.game;
+          this.activeGameId.set(msg.game);
         }
         this.gameState.set(msg.state);
       } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {
@@ -193,27 +226,65 @@ export class WebSocketService {
       } else if (msg.type === S2CEvent.HostChanged) {
         this.hostChangedEvent.set({ newHost: msg.newHost, oldHost: msg.oldHost });
       } else if (msg.type === S2CEvent.GameChanged) {
+        const spectating = isSpectator || action === 'spectate' || this.isCurrentSpectator();
         this.crossGameJoin.setPendingJoin({
           game: msg.game,
           roomId: msg.roomId,
           mode: msg.mode,
           difficulty: msg.difficulty,
-          host: msg.host || ''
+          host: msg.host || '',
+          action: spectating ? 'spectate' : 'join',
+          spectate: spectating
         });
         
         console.log('Room changed game/settings:', msg.game, msg.difficulty);
+        if (msg.difficulty) {
+          this.currentDifficulty.set(msg.difficulty);
+          this.gameState.update(s => s ? { ...s, difficulty: msg.difficulty } : { difficulty: msg.difficulty });
+        }
+        if (msg.mode) {
+          this.currentMode.set(msg.mode);
+          this.gameState.update(s => s ? { ...s, mode: msg.mode } : { mode: msg.mode });
+        }
+        if (msg.game) {
+          this.activeGameId.set(msg.game);
+          this.gameState.update(s => s ? { ...s, game: msg.game } : { game: msg.game });
+        }
+
         const lang = this.router.url.split('/')[1] || 'zh';
         const targetUrl = `/${lang}/games/${msg.game}`;
         const currentUrlBase = this.router.url.split('?')[0].replace(/\/$/, '');
 
         // 仅在跨不同游戏切换时才触发路由跳转；同一游戏内切换难度无需重载路由！
         if (currentUrlBase !== targetUrl) {
+          const gameConfig = this.gameRegistry.getConfig(msg.game);
+          const gameTitleKey = gameConfig?.titleKey || `lobby.${msg.game}`;
+          const gameName = this.i18n.t(gameTitleKey)() || this.i18n.t(`game.${msg.game}`)() || msg.game;
+          this.toastService.show(this.i18n.t('game.game_switched_toast', { game: gameName })() || `房间已切换至游戏: ${gameName}`, 'info');
           this.router.navigate([targetUrl]);
+        } else {
+          const diffLabel = this.gameRegistry.getDifficultyLabel(msg.game, msg.difficulty);
+          const diffName = diffLabel ? (this.i18n.t(diffLabel)() || msg.difficulty) : msg.difficulty;
+          const diffText = this.i18n.t('game.difficulty')() || '游戏难度';
+          this.toastService.show(`${diffText}: ${diffName} ✓`, 'info');
         }
       } else if (msg.type === 'game' && msg.event === S2CEvent.EmojiBroadcast) {
         this.emojiReceivedEvent.set(msg.payload);
       } else if (msg.type === 'game' && msg.event === S2CEvent.ChatBroadcast) {
         this.roomChatReceivedEvent.set(msg.payload);
+      } else if (msg.type === S2CEvent.StartRejected) {
+        // Host tried to start but was rejected (player not ready / not enough players)
+        const reason = msg.reason;
+        if (reason === 'player_not_ready') {
+          const playerName = msg.player || '?';
+          this.toastService.warning(
+            this.i18n.t('game.start_rejected_not_ready', { player: playerName })() || `无法开始: 玩家 ${playerName} 尚未准备`
+          );
+        } else {
+          this.toastService.warning(
+            this.i18n.t('game.start_rejected_not_enough')() || '无法开始: 需要至少2名玩家'
+          );
+        }
       }
     };
 
@@ -233,10 +304,10 @@ export class WebSocketService {
       const delay = Math.min(2000 * Math.pow(2, this.gameReconnectAttempts), 30000);
       this.gameReconnectAttempts++;
       
-      console.log(`Game WS reconnecting in ${delay}ms (attempt ${this.gameReconnectAttempts})`);
       this.reconnectTimeout = setTimeout(() => {
         if (!this.isConnected() && !this.gameDisconnectIntentional) {
-          this.connect(gameId, roomId, playerId, mode, difficulty, hostId, 'join', '', target);
+          const reconnectAction = isSpectator ? 'spectate' : (action || 'join');
+          this.connect(gameId, roomId, playerId, mode, difficulty, hostId, reconnectAction, password, target, bounty, isSpectator);
         }
       }, delay);
     };
@@ -415,6 +486,11 @@ export class WebSocketService {
       this.socket = null;
       this.isConnected.set(false);
       this.currentGameId = null;
+      this.activeGameId.set('');
+      this.currentRoomId.set('');
+      this.currentMode.set('');
+      this.currentDifficulty.set('');
+      this.isCurrentSpectator.set(false);
     }
     this.gameState.set(null);
   }

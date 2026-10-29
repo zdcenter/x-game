@@ -10,6 +10,7 @@ export enum WsQueryParam {
   Difficulty = 'difficulty',
   HostId     = 'hostId',
   Action     = 'action',
+  Spectate   = 'spectate',
   Password   = 'password',
   Target     = 'target',
   Bounty     = 'bounty',
@@ -34,6 +35,8 @@ export enum C2SAction {
   // ===== 房间级别操作 =====
   /** 请求加入房间 */
   JoinRoom = 'join',
+  /** 请求观战房间 */
+  Spectate = 'spectate',
   /** 请求离开房间 */
   LeaveRoom = 'leave_game',
   /** 准备就绪 */
@@ -113,6 +116,8 @@ export enum S2CEvent {
   Error = 'error',
   /** 服务器响应客户端心跳 */
   Pong = 'pong',
+  /** 房主开始游戏被拒绝 (玩家未准备 / 人数不足) */
+  StartRejected = 'start_rejected',
 }
 
 /**
@@ -218,6 +223,8 @@ export interface UnifiedStatePayload<T = any> {
   difficulty: GameDifficultyType;
   /** 房间内全量玩家字典 (以 PlayerId 为 Key) */
   players: Record<string, PlayerInfo>;
+  /** 房间内观战者 ID 列表 */
+  spectators?: string[];
 
   // ===== 游戏特有状态数据 =====
   /** 各游戏专属的引擎状态切片 (由 Go 后端 Engine.GetState() 返回) */

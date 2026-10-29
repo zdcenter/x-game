@@ -34,8 +34,8 @@ export class LocalSokobanEngine implements ILocalEngine<any, SokobanAction> {
     if (onHaptic) this.onHaptic = onHaptic;
     if (onShake) this.onShake = onShake;
     
-    if (existingData && existingData.levelStr === this.levelStr) {
-      this.board = existingData.board;
+    if (existingData && (existingData.board || existingData.levelStr === this.levelStr)) {
+      this.board = existingData.board ? existingData.board.map((r: any) => [...r]) : [];
       this.history = existingData.history || [];
       this.moves = existingData.moves || 0;
       this.timeSpent = existingData.timeSpent || 0;

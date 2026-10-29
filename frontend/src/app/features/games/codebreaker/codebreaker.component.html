@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'codebreaker'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('lobby.codebreaker')()"
   [subtitle]="getSubtitle()"
   icon="🔐"
@@ -12,7 +13,6 @@
   (difficultyChange)="changeDifficulty($event)"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [isDefeat]="!winners().includes(myPlayerId())"
   [customResultTitle]="winnerText"
@@ -29,8 +29,53 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'codebreaker'"
+      [gameTitle]="i18n.t('lobby.codebreaker')() || '密码破译'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        @if (currentRoomMode() === GameMode.Single) {
+          <!-- 猜测次数指示 -->
+          <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-teal-500/10 border border-teal-500/25 text-teal-400 font-mono text-xs font-bold">
+            <span>🕵️</span>
+            <span>{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() || '次' }}</span>
+          </div>
+
+          <!-- 笑脸重置 -->
+          <button
+            type="button"
+            (click)="onRestart()"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
+            [title]="i18n.t('game.restart')() || '重新开始'"
+          >
+            {{ store.status() === GameStatus.Finished ? (winners().includes(myPlayerId()) ? '😎' : '😵') : '😃' }}
+          </button>
+
+          <!-- 最佳战绩 -->
+          @if (maxAchievedA() > 0) {
+            <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-mono text-xs font-bold">
+              <span>🎯</span>
+              <span>{{ maxAchievedA() }}A</span>
+            </div>
+          }
+        } @else {
+          <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
+            <span>⚔️ PK 模式</span>
+          </div>
+        }
+      </div>
+    </app-game-handheld-header>
+  }
+
   <!-- Main Content Area -->
-  <div class="flex-none w-full flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 pb-4 lg:pb-8 p-2 lg:p-4 min-h-0 lg:overflow-hidden lg:max-h-[850px]">
+  <div class="flex-grow w-full flex flex-col lg:flex-row items-stretch justify-center gap-4 lg:gap-6 pb-4 lg:pb-8 p-2 lg:p-4 min-h-0 lg:overflow-hidden lg:max-h-[850px] my-auto">
             
             <!-- Left Panel: My Guess History (Scrollable) -->
             <div class="w-full lg:flex-1 h-[280px] lg:h-auto lg:min-h-0 bg-[var(--color-bg-base)] rounded-2xl border border-[var(--color-border-card)] p-3 lg:p-4 shadow-lg flex flex-col overflow-hidden shrink-0">

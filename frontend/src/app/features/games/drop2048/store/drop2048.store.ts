@@ -10,6 +10,7 @@ import { C2SAction } from '../../../../core/models/websocket.model';
 export interface Drop2048Opponent {
   id: string;
   score: number;
+  matrix?: number[][];
   finished: boolean;
 }
 
@@ -51,12 +52,51 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   levelUpSignal = signal<number>(0);
 
   readonly score = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localScore();
-    const st = this.rawState() as any;
-    if (!st || !st.players || !st.players[this.playerId()]) return this.localScore();
-    return st.players[this.playerId()].score || 0;
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) return this.localScore();
+    const focus = this.focusedPlayerId();
+    const raw = this.rawState() as any;
+    const players = raw?.players;
+    let targetId = focus;
+    if (!targetId && players) {
+      const keys = Object.keys(players);
+      const oppKey = keys.find(k => k && k !== this.playerId());
+      targetId = oppKey || keys[0] || '';
+    }
+
+    if (targetId && players && players[targetId]) {
+      return Number(players[targetId].score || 0);
+    }
+    return this.localScore();
   });
 
+  readonly displayBoard = computed<DropBlock[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.board();
+    }
+    const focus = this.focusedPlayerId();
+    const opps = this.opponents();
+    const target = (focus ? opps.find(o => o.id === focus) : null) || opps[0];
+    if (target?.matrix && Array.isArray(target.matrix) && target.matrix.length > 0) {
+      const blocks: DropBlock[] = [];
+      for (let r = 0; r < target.matrix.length; r++) {
+        const row = target.matrix[r];
+        if (Array.isArray(row)) {
+          for (let c = 0; c < row.length; c++) {
+            if (row[c] > 0) {
+              blocks.push({
+                id: `spec-${r}-${c}`,
+                val: row[c],
+                r,
+                c
+              });
+            }
+          }
+        }
+      }
+      return blocks;
+    }
+    return this.board();
+  });
 
   readonly singlePlayerStatus = computed(() => this.localStatus());
 
@@ -65,11 +105,14 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   opponents = computed<Drop2048Opponent[]>(() => {
     const st = this.rawState() as any;
     if (!st || !st.players) return [];
+    const isSpec = this.isSpectator();
+    const myId = this.playerId();
     return Object.values(st.players)
-      .filter((p: any) => p.id !== this.playerId())
+      .filter((p: any) => p && (isSpec || p.id !== myId))
       .map((p: any) => ({
         id: p.id,
         score: p.score,
+        matrix: p.matrix || [],
         finished: p.finished
       }));
   });
@@ -115,8 +158,17 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
     }, 1000 / 60);
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = '', hostId: string = '', target: number = 1) {
-    super.joinRoom(roomId, mode, diff, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    diff: string = '',
+    hostId: string = '',
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, diff, hostId, target, password, bounty, isSpectator);
     if (mode === GameMode.Single) {
       this.localStatus.set(GameStatus.Waiting);
       this.engine.stop();
@@ -230,12 +282,18 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
           this.audio.playDrop2048(sound, combo);
         }
       },
-      onSyncState: () => this.syncState(),
+      onSyncState: () => {
+        this.updateSignals();
+        this.syncState();
+      },
       onBigMerge: () => this.shakeTrigger.update(n => n + 1),
       onLevelUp: (lv) => { this.levelUpSignal.set(lv); setTimeout(() => this.levelUpSignal.set(0), 1600); }
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
+    if (!this.isSpectator()) {
+      this.syncState();
+    }
   }
 
   private resetLocalState() {
@@ -252,10 +310,20 @@ export class Drop2048Store extends BaseGameStore implements OnDestroy {
   }
 
   private syncState() {
-    this.ws.send({
-      action: C2SAction.Move,
-      score: this.engine.score
-    });
+    if (this.currentRoomMode() !== GameMode.Single) {
+      this.updateSignals();
+      const m = Array.from({ length: DROP2048_ROWS }, () => Array(DROP2048_COLS).fill(0));
+      for (const b of this.engine.board) {
+        if (b.r >= 0 && b.r < DROP2048_ROWS && b.c >= 0 && b.c < DROP2048_COLS) {
+          m[b.r][b.c] = b.val;
+        }
+      }
+      this.ws.send({
+        action: C2SAction.Move,
+        score: this.engine.score,
+        matrix: m
+      });
+    }
   }
 
   private updateSignals() {

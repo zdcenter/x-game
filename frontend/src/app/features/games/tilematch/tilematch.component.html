@@ -1,0 +1,491 @@
+<app-game-layout
+  [store]="store"
+  [gameId]="'tilematch'"
+  [title]="i18n.t('lobby.tilematch')()"
+  icon="🐑"
+  iconGradientClass="from-emerald-500 to-teal-500"
+  titleGradientClass="from-emerald-400 to-teal-400"
+  shadowClass="shadow-emerald-500/20"
+  [showRules]="showRules()"
+  [showMobileSidebar]="isMobileSidebarOpen()"
+  [hideDefaultDifficulty]="true"
+  [immersive]="isImmersionActive()"
+  [overlayStats]="[
+    { label: 'SCORE', value: store.localScore() },
+    { label: 'LEFT', value: store.remainingCardsCount() }
+  ]"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
+  (titleClick)="handleTitleClick()"
+  (back)="goBack()"
+  (playAgain)="store.startGame()"
+  (restart)="store.restartGame()"
+  (rematch)="handleRematch()"
+  (navigateToPk)="navigateToPkArena()"
+  (joinRoom)="handleJoinRoom($event)"
+  (createRoom)="handleCreateRoom($event)"
+  (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+  (difficultyChange)="switchDifficulty($event)"
+>
+  <!-- 沉浸式真·全屏大草坪 (移动端/平板首屏 100dvh 满屏铺满，PC 端黄金卡座，平板自适应超大舞台) -->
+  <div class="pastoral-meadow-root w-full flex flex-col relative select-none overflow-hidden justify-between p-1.5 sm:p-2 md:p-3"
+       [class.is-tablet-meadow]="deviceService.isTablet()"
+       [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] max-w-none m-0 rounded-none' : (deviceService.isTablet() ? 'min-h-[100dvh] h-[100dvh] max-w-none m-0 rounded-none p-3' : (deviceService.isMobile() ? 'min-h-[100dvh] h-[100dvh] max-w-none m-0 rounded-none p-1.5' : 'max-w-[460px] sm:max-w-[480px] md:max-w-[500px] mx-auto rounded-3xl my-1 sm:my-2 shadow-2xl border-4 border-[#4d8b2e]/40 min-h-[680px] h-[760px] max-h-[95vh] p-2'))">
+
+    <!-- 6 簇灵动的原版简笔画小草点缀 (纯手绘 SVG，错落分布在田园四周) -->
+    <div class="grass-tuft-deco grass-tl pointer-events-none"></div>
+    <div class="grass-tuft-deco grass-tr pointer-events-none"></div>
+    <div class="grass-tuft-deco grass-ml pointer-events-none"></div>
+    <div class="grass-tuft-deco grass-mr pointer-events-none"></div>
+    <div class="grass-tuft-deco grass-bl pointer-events-none"></div>
+    <div class="grass-tuft-deco grass-br pointer-events-none"></div>
+
+    <!-- Top Native Header (Single Mode: 1:1 原生微立体 Header，常用功能全整合且无系统多余导航栏) -->
+    @if (store.currentRoomMode() === GameMode.Single) {
+      <div class="sheep-top-bar flex-none w-full flex flex-col items-center justify-center pt-1 pb-1 relative z-30">
+        
+        <div class="w-full flex items-center justify-between px-2 sm:px-4 md:px-6">
+          <!-- 左侧常用功能区：【返回大厅 / 退出全屏】+【⚙️ 规则手册】 -->
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              (click)="goBack(); vibrateLight()"
+              class="sheep-nav-btn cursor-pointer"
+              title="返回大厅 (退出全屏)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              (click)="showRules.set(true); vibrateLight()"
+              class="sheep-nav-btn cursor-pointer"
+              [title]="i18n.t('tilematch.rules_title')() || '规则手册'">
+              <span class="text-sm sm:text-base">📖</span>
+            </button>
+          </div>
+
+          <!-- 中间居中：田园白玉微立体关卡胶囊 (告别死黑色与时间日期干扰) -->
+          <div class="relative flex flex-col items-center">
+            <!-- 白玉胶囊主体 -->
+            <div
+              (click)="toggleLevelPicker(); vibrateLight()"
+              class="meadow-level-capsule cursor-pointer group hover:scale-105 active:scale-95 transition-all">
+              <button
+                type="button"
+                (click)="$event.stopPropagation(); prevLevel(); vibrateLight()"
+                class="capsule-arrow left"
+                [title]="store.currentLevel() > 1 ? ('上一关 (第 ' + (store.currentLevel() - 1) + ' 关)') : '已是第一关'">◀</button>
+              <div class="capsule-title">
+                {{ store.currentDifficulty() === GameDifficulty.Easy ? '🌱' : (store.currentDifficulty() === GameDifficulty.Medium ? '🐑' : '🔥') }}
+                第 {{ store.currentLevel() }} 关 · {{ store.totalCardsCount() }} 张
+                @if (store.winStreak() >= 2) {
+                  <span class="text-amber-500 font-black ml-1 text-[11px]">🔥x{{ store.winStreak() }}</span>
+                }
+              </div>
+              <button
+                type="button"
+                (click)="$event.stopPropagation(); nextLevel(); vibrateLight()"
+                class="capsule-arrow right"
+                [title]="'下一关 (第 ' + (store.currentLevel() + 1) + ' 关)'">▶</button>
+            </div>
+
+            <!-- 关卡下拉切换气泡菜单 -->
+            @if (isLevelPickerOpen()) {
+              <div class="level-picker-popover animate-fade-in">
+                <div class="level-picker-arrow"></div>
+                <div class="flex items-center justify-between text-[11px] font-black text-emerald-800 dark:text-emerald-300 mb-1 px-1 gap-2">
+                  <span>{{ i18n.t('tilematch.level')() }} · {{ i18n.t('tilematch.progress')() }}</span>
+                  <span class="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold">🏆 {{ i18n.t('tilematch.highest_record')() }}: 第 {{ store.highestLevel() }} 关</span>
+                </div>
+                <div class="flex flex-col gap-1 w-full">
+                  <button
+                    type="button"
+                    (click)="jumpToLevel(1); vibrateLight()"
+                    [class.active-level]="store.currentLevel() < 15"
+                    class="level-item-btn">
+                    <span>🌱 {{ i18n.t('tilematch.mode_easy')() }} (18~57张)</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="jumpToLevel(15); vibrateLight()"
+                    [class.active-level]="store.currentLevel() >= 15 && store.currentLevel() < 27"
+                    class="level-item-btn">
+                    <span>🐑 {{ i18n.t('tilematch.mode_medium')() }} (60~93张)</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="jumpToLevel(27); vibrateLight()"
+                    [class.active-level]="store.currentLevel() >= 27"
+                    class="level-item-btn">
+                    <span>🔥 {{ i18n.t('tilematch.mode_hard')() }} (96张+)</span>
+                  </button>
+                  <div class="border-t border-emerald-500/20 my-0.5"></div>
+                  <button
+                    type="button"
+                    (click)="resetProgressToLevelOne(); vibrateLight()"
+                    class="level-item-btn text-rose-600 dark:text-rose-400 hover:bg-rose-500/10">
+                    <span>🔄 {{ i18n.t('tilematch.reset_level_1')() }}</span>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- 右侧常用功能区：【⚔️ 开房PK】+【🔄 重新开始】 -->
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              (click)="navigateToPkArena(); vibrateLight()"
+              class="sheep-nav-btn relative cursor-pointer"
+              title="开房PK / 联机对战">
+              <span class="text-xs sm:text-sm">⚔️</span>
+              <span class="pk-micro-badge">PK</span>
+            </button>
+            <button
+              type="button"
+              (click)="store.restartGame(); vibrateLight()"
+              class="sheep-nav-btn cursor-pointer"
+              title="重新开始本关">
+              <span class="text-xs sm:text-sm">🔄</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 极简微型完成度进度指示线 (低调、优雅、不遮挡) -->
+        <div class="w-full max-w-[280px] md:max-w-[400px] mx-auto flex items-center justify-between gap-1.5 px-3 mt-0.5">
+          <span class="text-[10px] font-mono font-bold text-[#447a24] dark:text-[#a7f3d0]">
+            ★ {{ store.localScore() }}
+            @if (store.combo() >= 2) {
+              <span class="ml-1 text-amber-600 font-black">🔥x{{ store.combo() }}</span>
+            }
+          </span>
+          <div class="flex-grow bg-[#4d8b2e]/20 dark:bg-black/30 h-1.5 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-gradient-to-r from-emerald-600 to-teal-500 rounded-full transition-all duration-300"
+              [style.width.%]="store.progressPercent()">
+            </div>
+          </div>
+          <span class="text-[10px] font-mono font-bold text-[#447a24] dark:text-[#a7f3d0]">
+            {{ store.clearedCardsCount() }}/{{ store.totalCardsCount() }} ({{ store.progressPercent() }}%)
+          </span>
+        </div>
+
+      </div>
+    } @else {
+      <!-- PK Mode Top Bar: 极简草坪嵌入式导航 & 对战 HUD (无额外垂直挤压，彻底杜绝遮挡) -->
+      <div class="sheep-pk-header flex-none w-full flex flex-col items-center justify-center pt-0.5 pb-0.5 relative z-30">
+        <div class="w-full flex items-center justify-between px-2 sm:px-3 mb-0.5">
+          <!-- 左侧操作区：【🚪 退出房间 / 返回大厅】+【📖 规则手册】 -->
+          <div class="flex items-center gap-1 sm:gap-1.5">
+            <button
+              type="button"
+              (click)="goBack(); vibrateLight()"
+              class="sheep-nav-btn cursor-pointer"
+              [title]="i18n.t('game.leave')() || '退出房间 (返回大厅)'">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              (click)="showRules.set(true); vibrateLight()"
+              class="sheep-nav-btn cursor-pointer"
+              [title]="i18n.t('tilematch.rules_title')() || '规则手册'">
+              <span class="text-xs sm:text-sm">📖</span>
+            </button>
+          </div>
+
+          <!-- 中间居中：田园半透微立体房号与局况指示胶囊 -->
+          <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/70 dark:bg-black/40 border border-[#4d8b2e]/30 shadow-2xs backdrop-blur-md text-[11px] sm:text-xs font-bold text-[#2d5817] dark:text-[#86efac]">
+            <span class="text-xs">⚔️</span>
+            <span>房号: <b class="font-mono text-emerald-700 dark:text-emerald-300">{{ store.roomId() }}</b></span>
+            <span class="opacity-40">|</span>
+            <span class="text-[10px] sm:text-[11px]">{{ store.room()?.roundFormat || (store.currentRoomTarget() > 1 ? ('BO' + (store.currentRoomTarget() * 2 - 1)) : 'BO1') }}</span>
+          </div>
+
+          <!-- 右侧操作区：音效开关 / 对局结束后的快捷【🔄 再来一局】 -->
+          <div class="flex items-center gap-1 sm:gap-1.5">
+            @if (store.status() === GameStatus.Finished) {
+              <button
+                type="button"
+                (click)="handleRematch(); vibrateLight()"
+                class="sheep-nav-btn cursor-pointer"
+                [title]="i18n.t('game.rematch')() || '再来一局'">
+                <span class="text-xs sm:text-sm">🔄</span>
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="audio.toggleMute(); vibrateLight()"
+                class="sheep-nav-btn cursor-pointer"
+                [title]="audio.isMuted() ? '开启音效' : '静音'">
+                <span class="text-xs sm:text-sm">{{ audio.isMuted() ? '🔇' : '🔊' }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- 对决 HUD (紧凑嵌入) -->
+        <div class="w-full px-0.5 sm:px-1">
+          <app-game-pk-hud
+            [myPlayer]="myPlayerPkStats()"
+            [opponents]="opponentsPkStats()"
+            [gameMode]="store.currentRoomMode()"
+            [status]="store.status()"
+            [targetWins]="store.currentRoomTarget()"
+            [roundFormat]="store.room()?.roundFormat || 'BO3'"
+            [isSpectator]="store.isSpectator()"
+            [focusedPlayerId]="store.focusedPlayerId()"
+            (playerSelect)="store.setFocusedPlayer($event)"
+          ></app-game-pk-hud>
+        </div>
+      </div>
+    }
+
+    <!-- Stash Zone (移出暂存区，通透田园风) -->
+    @if (store.stashCards().length > 0) {
+      <div class="flex-none w-full max-w-sm mb-1 px-3 py-1 rounded-2xl bg-white/70 dark:bg-black/40 border-2 border-dashed border-[#5a9b30]/60 flex items-center justify-center gap-3 backdrop-blur-sm shadow-sm animate-fade-in z-20">
+        <span class="text-xs font-black text-[#3a6b20] dark:text-[#86efac]">📤 暂存区:</span>
+        <div class="flex items-center gap-2">
+          @for (card of store.stashCards(); track card.id) {
+            <button
+              type="button"
+              (click)="onStashCardClick(card, $event)"
+              class="tile-card tile-card-interactive"
+              title="点击放回收集槽">
+              <span class="tile-emoji">{{ TILE_EMOJIS[card.type] || '❓' }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Main Game Board (完全无边界！悬浮在明朗大草地上的主牌堆舞台) -->
+    <div class="classic-sheep-board relative flex-grow min-h-0 w-full flex items-center justify-center my-0.5">
+      <!-- 饱满充实的长方形舞台，全比例无负向缩放，自适应平板大屏扩张 -->
+      <div class="board-stage relative mx-auto transition-all duration-300"
+           [ngClass]="deviceService.isTablet() ? 'w-[560px] h-[650px]' : (deviceService.isDesktop() ? 'w-[420px] h-[450px]' : 'w-[360px] h-[420px]')">
+        @for (card of store.boardCards(); track card.id) {
+          <div
+            [id]="'tile-' + card.id"
+            [ngStyle]="getBoardCardStyle(card)"
+            (click)="onCardClick(card, $event)"
+            [class.is-blocked]="card.isBlocked"
+            [class.is-shaking]="shakeCardId() === card.id"
+            class="tile-card"
+            [class.tile-card-interactive]="!card.isBlocked"
+            [title]="card.isBlocked ? (i18n.t('tilematch.blocked_tip')() || '上层卡牌遮挡中，请先消除压在上方的卡牌') : (i18n.t('tilematch.select_tip')() || '点击放入底部卡槽')">
+            <span class="tile-emoji">{{ TILE_EMOJIS[card.type] || '❓' }}</span>
+            @if (card.isBlocked) {
+              <div class="tile-shadow-overlay"></div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Floating Dopamine Feedback Popup -->
+      @if (floatingFeedback(); as fb) {
+        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-50 animate-pop-up">
+          <div class="px-5 py-2 rounded-2xl bg-gradient-to-r from-amber-400 via-rose-500 to-purple-600 text-white font-black text-2xl sm:text-3xl shadow-2xl tracking-wider uppercase border-2 border-white/50 backdrop-blur-md drop-shadow-lg">
+            {{ fb.text }}
+          </div>
+          @if (fb.subText) {
+            <div class="text-sm font-bold text-white/95 mt-1 bg-black/40 px-3 py-1 rounded-full drop-shadow">
+              {{ fb.subText }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- 7-Slot Wood Fence Tray (1:1 还原原版卡通小木栅栏卡槽，自适应设备等宽居中) -->
+    <div class="wood-fence-tray flex-none w-full mx-auto px-2 py-1.5 sm:px-3 sm:py-2 md:px-3.5 md:py-2 relative transition-all duration-300 z-10"
+         [ngClass]="deviceService.isTablet() ? 'max-w-[560px]' : (deviceService.isDesktop() ? 'max-w-[420px]' : 'max-w-[360px]')"
+         [class.ring-4]="store.slotNearFull()"
+         [class.ring-rose-500]="store.slotNearFull()">
+      
+      <!-- 围栏木桩立柱 (凸出圆润木桩帽) -->
+      <div class="fence-post-left">
+        <div class="fence-post-cap"></div>
+      </div>
+      <div class="fence-post-right">
+        <div class="fence-post-cap"></div>
+      </div>
+
+      <!-- 上木横梁与下木横梁 -->
+      <div class="fence-rail fence-rail-top"></div>
+      <div class="fence-rail fence-rail-bottom"></div>
+
+      @if (store.slotNearFull()) {
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-rose-500 text-white font-black text-[10px] animate-bounce shadow-md tracking-wide z-30">
+          ⚠️ {{ i18n.t('tilematch.slot_warning')() }}
+        </div>
+      }
+
+      <!-- 7 格木槽内板 (自适应手机 56px、桌面 72px 与平板 92px，大屏自适应变大并居中) -->
+      <div class="wood-slot-inner grid grid-cols-7 gap-1 sm:gap-1.5 md:gap-2 w-full px-1 md:px-2 py-0.5 md:py-1 items-center justify-items-center relative"
+           [ngClass]="deviceService.isTablet() ? 'h-[92px]' : (deviceService.isDesktop() ? 'h-[72px]' : 'h-[56px]')">
+        @for (index of [0, 1, 2, 3, 4, 5, 6]; track index) {
+          <div
+            [attr.data-slot-index]="index"
+            class="slot-cell w-full h-full rounded-lg flex items-center justify-center relative overflow-hidden"
+            [class.slot-cell-clearing]="isSlotClearing(index)">
+
+            <!-- 用户专属定制：消除时的槽内闪闪星星与多巴胺爆发粒子群 -->
+            @if (isSlotClearing(index)) {
+              <div class="slot-sparkle-stars pointer-events-none">
+                <span class="slot-star star-1">✨</span>
+                <span class="slot-star star-2">⭐</span>
+                <span class="slot-star star-3">🌟</span>
+                <span class="slot-star star-4">💫</span>
+                <span class="slot-star star-5">✨</span>
+                <div class="slot-star-burst-ring"></div>
+                <div class="slot-glow-pillar"></div>
+              </div>
+            }
+
+            @if (getDisplayedSlotCard(index); as card) {
+              <div class="tile-card tile-in-slot animate-slot-enter"
+                   [class.tile-clearing]="isSlotClearing(index)"
+                   [class.tile-clearing-left]="getClearingDirection(index) === 'left'"
+                   [class.tile-clearing-center]="getClearingDirection(index) === 'center'"
+                   [class.tile-clearing-right]="getClearingDirection(index) === 'right'">
+                <span class="tile-emoji">{{ TILE_EMOJIS[card.type] || '❓' }}</span>
+                @if (isSlotClearing(index)) {
+                  <div class="tile-clearing-shine"></div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Power-Ups Toolbar (1:1 还原原版 3 个亮天蓝色微立体大道具方块按钮，自适应居中与尺寸匹配) -->
+    <div class="powerups-dock flex-none w-full mx-auto my-1 sm:my-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-center z-10"
+         [ngClass]="deviceService.isTablet() ? 'max-w-[560px] gap-8' : (deviceService.isDesktop() ? 'max-w-[430px] gap-6' : 'max-w-[360px] gap-4')">
+      <!-- Stash Prop (移出) -->
+      <button
+        type="button"
+        (click)="handleUseStash()"
+        [disabled]="store.stashUsed() || store.slotCards().length === 0"
+        [class.opacity-50]="store.stashUsed() || store.slotCards().length === 0"
+        class="classic-blue-prop cursor-pointer"
+        [title]="(i18n.t('tilematch.stash_prop')() || '移出') + ' (快捷键: 1)'">
+        <div class="prop-icon-box">
+          <svg viewBox="0 0 48 48" class="prop-svg-icon" fill="none">
+            <path d="M12 28L24 16L36 28" stroke="#fcd34d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M24 16V36" stroke="#fcd34d" stroke-width="6" stroke-linecap="round"/>
+            <path d="M10 40H38" stroke="#fcd34d" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="prop-text-label">{{ i18n.t('tilematch.stash_prop')() }}</span>
+        <div class="prop-badge-plus">+</div>
+      </button>
+
+      <!-- Undo Prop (撤回) -->
+      <button
+        type="button"
+        (click)="handleUseUndo()"
+        [disabled]="store.undoRemaining() <= 0"
+        [class.opacity-50]="store.undoRemaining() <= 0"
+        class="classic-blue-prop cursor-pointer"
+        [title]="(i18n.t('tilematch.undo_prop')() || '撤销') + ' (快捷键: 2 / Z)'">
+        <div class="prop-icon-box">
+          <svg viewBox="0 0 48 48" class="prop-svg-icon" fill="none">
+            <path d="M18 16L10 24L18 32" stroke="#fcd34d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 24H28C34.6274 24 40 29.3726 40 36" stroke="#fcd34d" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="prop-text-label">{{ i18n.t('tilematch.undo_prop')() }}</span>
+        <div class="prop-badge-plus">{{ store.undoRemaining() > 0 ? '+' : '0' }}</div>
+      </button>
+
+      <!-- Shuffle Prop (洗牌) -->
+      <button
+        type="button"
+        (click)="handleUseShuffle()"
+        [disabled]="store.shuffleRemaining() <= 0"
+        [class.opacity-50]="store.shuffleRemaining() <= 0"
+        class="classic-blue-prop cursor-pointer"
+        [title]="(i18n.t('tilematch.shuffle_prop')() || '洗牌') + ' (快捷键: 3)'">
+        <div class="prop-icon-box">
+          <svg viewBox="0 0 48 48" class="prop-svg-icon" fill="none">
+            <path d="M32 14L40 22L32 30" stroke="#fcd34d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M40 22H28C22 22 18 34 10 34" stroke="#fcd34d" stroke-width="6" stroke-linecap="round"/>
+            <path d="M10 14C18 14 22 26 28 26" stroke="#fcd34d" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="prop-text-label">{{ i18n.t('tilematch.shuffle_prop')() }}</span>
+        <div class="prop-badge-plus">{{ store.shuffleRemaining() > 0 ? '+' : '0' }}</div>
+      </button>
+    </div>
+
+    <!-- Flying Card Animation Overlay -->
+    @for (fly of flyingTiles(); track fly.id) {
+      <div
+        class="flying-tile"
+        [style.left.px]="fly.startX"
+        [style.top.px]="fly.startY"
+        [style.--target-x]="(fly.targetX - fly.startX) + 'px'"
+        [style.--target-y]="(fly.targetY - fly.startY) + 'px'">
+        <span class="tile-emoji">{{ TILE_EMOJIS[fly.type] || '❓' }}</span>
+      </div>
+    }
+
+    <!-- Floating Victory Banner (免全屏黑幕打断，通关自动开启下一局) -->
+    @if (victoryNotice(); as notice) {
+      <div class="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce pointer-events-none">
+        <div class="px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-xs sm:text-sm shadow-2xl backdrop-blur-md border border-white/30 flex items-center gap-2 whitespace-nowrap">
+          <span class="text-base sm:text-lg">🎉</span>
+          <span>{{ i18n.t('tilematch.victory_title')() || '完美通关！' }}</span>
+          <span class="text-[11px] sm:text-xs bg-black/20 px-2 py-0.5 rounded-full font-mono font-medium">
+            1.5s 后挑战第 {{ store.currentLevel() + 1 }} 关 ({{ store.totalCardsCount() + 3 }} 张牌)...
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Non-Blocking Revive & Restart Prompt (槽满绝境挽救，杜绝冷冰冰死局) -->
+    @if (showRevivePrompt()) {
+      <div class="absolute inset-x-3 bottom-24 sm:bottom-28 z-50 flex justify-center animate-fade-in pointer-events-auto">
+        <div class="max-w-md w-full p-3.5 sm:p-4 rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-amber-500/40 shadow-2xl flex flex-col items-center gap-2.5 sm:gap-3">
+          <div class="flex items-center gap-1.5 text-amber-500 font-bold text-xs sm:text-sm">
+            <span class="text-base sm:text-lg">⚡</span>
+            <span>{{ i18n.t('tilematch.slot_full_title')() || '卡槽已满！是否绝地逢生？' }}</span>
+          </div>
+          <div class="flex items-center gap-2 w-full">
+            <!-- 看广告/激励移出 3 张牌原地复活 -->
+            <button
+              type="button"
+              (click)="handleRevive(); vibrateLight()"
+              class="flex-1 py-2 sm:py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black text-xs sm:text-sm shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>⚡</span>
+              <span>{{ i18n.t('tilematch.revive_btn')() || '移出3张复活' }}</span>
+            </button>
+            <!-- 重新开局 -->
+            <button
+              type="button"
+              (click)="handleRestart(); vibrateLight()"
+              class="py-2 sm:py-2.5 px-3.5 sm:px-4 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] font-semibold text-xs sm:text-sm active:scale-95 transition-all cursor-pointer whitespace-nowrap">
+              {{ i18n.t('tilematch.restart_btn')() || '重开本局' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 移动端与平板端：图文攻略与新手秘籍快速跳转胶囊 (非全屏 Zen 模式下显示，引导玩家查阅并为 Google 爬虫提供显式锚点) -->
+    @if (!zenService.isZenMode() && deviceService.isHandheld()) {
+      <div class="flex-none w-full flex justify-center py-1 z-20">
+        <a href="#strategy-guide" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-white bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 shadow-xs transition-all active:scale-95 cursor-pointer">
+          <span>📖</span>
+          <span>{{ i18n.t('game.strategy_guide_title')() || '玩法规则与进阶攻略' }}</span>
+          <span class="animate-bounce">▾</span>
+        </a>
+      </div>
+    }
+
+  </div>
+</app-game-layout>

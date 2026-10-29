@@ -54,6 +54,12 @@ import { AdPlacement, AdNetwork } from '../../core/models/ad.model';
                   <p class="text-xs opacity-60 mb-3">新用户在规定时间内不弹插屏广告</p>
                   <input type="number" [(ngModel)]="globalSettingsForm.ad_new_user_exemption_hours" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[var(--color-accent-from)] text-[var(--color-text-main)] font-mono">
                </div>
+
+               <div class="bg-[var(--color-bg-main)] p-4 rounded-xl border border-[var(--color-border-card)]">
+                  <label class="block text-sm font-bold mb-1">自动下一关插屏频次 (次)</label>
+                  <p class="text-xs opacity-60 mb-3">采用极速流转自动下一局时，累计通关多少次触发一次插屏 (0为关闭)</p>
+                  <input type="number" [(ngModel)]="globalSettingsForm.ad_auto_next_frequency" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-[var(--color-accent-from)] text-[var(--color-text-main)] font-mono">
+               </div>
             </div>
           </div>
           
@@ -256,7 +262,8 @@ export class AdminAdsComponent implements OnInit {
   globalSettingsForm = {
     ad_interstitial_frequency: '3',
     ad_min_game_seconds: '30',
-    ad_new_user_exemption_hours: '24'
+    ad_new_user_exemption_hours: '24',
+    ad_auto_next_frequency: '3'
   };
 
   ngOnInit() {

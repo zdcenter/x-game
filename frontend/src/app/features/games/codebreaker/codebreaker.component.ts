@@ -19,12 +19,17 @@ import { SettingsService } from '../../../core/services/settings.service';
 
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
-
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-codebreaker',
   standalone: true,
-  imports: [CommonModule, GameToolbarComponent, GameLayoutComponent],
+  imports: [
+    CommonModule,
+    GameToolbarComponent,
+    GameLayoutComponent,
+    GameHandheldHeaderComponent
+  ],
   providers: [CodebreakerStore],
   templateUrl: './codebreaker.component.html',
   styleUrls: ['./codebreaker.component.css']
@@ -94,15 +99,11 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
       }
 
       if (status === GameStatus.Finished) {
-        if (this.winners().includes(this.myPlayerId())) {
+        if (this.store.isVictory()) {
           this.celebrateVictory();
         } else {
           this.vibrateError();
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
       }
     });
 
@@ -132,8 +133,11 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom(joinInfo);
+      } else {
+        this.handleJoinRoom(joinInfo);
+      }
     } else {
       this.route.queryParams.subscribe(params => {
         // Only run if we don't already have an active room set by consumePendingOrReconnect
@@ -154,15 +158,25 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, host: string, target: number = 1) {
+  joinRoom(
+    roomId: string,
+    mode: string,
+    difficulty: string,
+    host: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false,
+    action?: string
+  ) {
     if (!roomId) return;
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.roomId.set(roomId);
 
-    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
-    
-    this.store.joinRoom(roomId, mode, difficulty, host, target);
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    this.store.joinRoom(roomId, mode, difficulty, host, target, password, bounty, isSpectator);
 
     // Reset local helpers on join
     this.currentInput.set('');
@@ -184,7 +198,7 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
       }
     }
     
-    if (mode !== GameMode.Single) {
+    if (mode !== GameMode.Single && !isSpectator) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
     }
   }
@@ -197,17 +211,37 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
 
   override handleCreateRoom(config: any) {
     if (config.password) this.wsService.setPendingPassword(config.password);
-    const roomId = config.name || `codebreaker-${Date.now()}`;
+    this.wsService.setPendingAction('create');
+    const roomId = config.name || config.roomId || `codebreaker-${Date.now()}`;
     const host = this.myPlayerId();
     const diff = config.difficulty || 'medium';
-    this.joinRoom(roomId, config.mode, diff, host);
+    this.joinRoom(
+      roomId,
+      config.mode,
+      diff,
+      host,
+      config.target ?? 1,
+      config.password || '',
+      config.bountyCoins || 0,
+      false,
+      'create'
+    );
     this.isMobileSidebarOpen.set(false);
   }
 
   override handleJoinRoom(room: any) {
     if (room.password) this.wsService.setPendingPassword(room.password);
     const diff = room.difficulty || 'medium';
-    this.joinRoom(room.roomId, room.mode, diff, room.host);
+    this.joinRoom(
+      room.roomId,
+      room.mode,
+      diff,
+      room.host,
+      room.target ?? 1,
+      room.password || '',
+      room.bountyCoins || 0,
+      room.isSpectator || false
+    );
     this.isMobileSidebarOpen.set(false);
   }
 

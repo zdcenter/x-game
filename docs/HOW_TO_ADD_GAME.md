@@ -50,7 +50,33 @@
 
 ---
 
-## 二、新增游戏全流程极简路线图（7 步走）
+## 二、新增游戏全流程极简路线图（🚀 推荐：一键脚手架 CLI）
+
+### ⚡ 极速方式：一键命令自动装配前后端基础骨架
+
+在 `frontend` 目录下直接运行全新打造的脚手架工具：
+
+```bash
+# 格式：npm run gen:game <game_id> [中文标题] [图标Emoji]
+npm run gen:game reversi "黑白棋" "⚪"
+npm run gen:game tilematch "羊了个羊" "🀄"
+```
+
+该命令将在 **30 秒内全自动完成以下全部工作**：
+1. **后端 Go 引擎**：自动创建 `backend/internal/engine/<id>/engine.go`（含 3 秒倒计时与多回合制闭环）；
+2. **后端空白引用**：自动在 `backend/cmd/api/engines_gen.go` 注入包引用；
+3. **前端本地引擎**：自动生成 `src/app/features/games/<id>/store/<id>-engine.ts`（0ms 纯客户端计算）；
+4. **前端算法单测**：自动生成 `store/<id>-engine.spec.ts`（支持 `npx vitest run` 瞬时验证）；
+5. **前端 Store**：自动生成继承 `BaseGameStore` 且具备防幽灵重置契约的 `<id>.store.ts`；
+6. **前端组件与页面**：自动生成集成 `BaseGameComponent` 与 `<app-game-layout>` 黄金骨架的 `.component.ts/html/css`；
+7. **全局配置与路由**：自动在 `game.model.ts` 追加枚举、在 `game-definitions.ts` 挂载路由（自动预渲染无需改 route 文件）；
+8. **双语与 SEO 词条**：自动向 `zh.json` 与 `en.json` 注入标题与描述。
+
+开发者只需直接聚焦在 `store/<id>-engine.ts` 中填入你的棋盘消除/移动核心算法，其余所有底层框架完全自动就绪！
+
+---
+
+### 手动新增极简流程（供参考）：
 
 ```mermaid
 flowchart TD
@@ -355,11 +381,10 @@ export class MyGameStore extends BaseGameStore {
     }
   }
 
-  // 5. 单机重开
-  startSingleGame() {
-    this.localScore.set(0);
-    this.singleStatus.set(GameStatus.Playing);
-  }
+  // 5. 终局胜负契约 (Universal Victory Contract):
+  // BaseGameStore 默认已实现标准 isVictory 与 isDefeat 信号。
+  // 单机解谜游戏通关默认即为胜利；若是死局类游戏（如 2048/消除），死局标志会自动判定为失败；
+  // 如有极其特殊的业务胜负逻辑，可直接重写 override readonly isVictory = computed<boolean>(() => ...)
 }
 ```
 

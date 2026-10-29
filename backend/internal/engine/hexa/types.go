@@ -10,11 +10,20 @@ const (
 	GameDurationSeconds = 180
 )
 
+type HexCell struct {
+	Q      int    `json:"q"`
+	R      int    `json:"r"`
+	S      int    `json:"s"`
+	Filled bool   `json:"filled"`
+	Color  string `json:"color,omitempty"`
+}
+
 type PlayerInfo struct {
-	ID           string `json:"id"`
-	Score        int    `json:"score"`
-	PiecesPlaced int    `json:"piecesPlaced"`
-	Finished     bool   `json:"finished"`
+	ID           string    `json:"id"`
+	Score        int       `json:"score"`
+	PiecesPlaced int       `json:"piecesPlaced"`
+	Finished     bool      `json:"finished"`
+	Cells        []HexCell `json:"cells,omitempty"`
 }
 
 type GameState struct {
@@ -26,8 +35,9 @@ type GameState struct {
 }
 
 type ActionPayload struct {
-	Action       string `json:"action"`
-	Score        int    `json:"score,omitempty"`
-	PiecesPlaced int    `json:"piecesPlaced,omitempty"`
-	Finished     bool   `json:"finished,omitempty"`
+	Action       string    `json:"action"`
+	Score        int       `json:"score,omitempty"`
+	PiecesPlaced int       `json:"piecesPlaced,omitempty"`
+	Finished     bool      `json:"finished,omitempty"`
+	Cells        []HexCell `json:"cells,omitempty"`
 }

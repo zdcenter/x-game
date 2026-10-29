@@ -76,7 +76,8 @@ func Register(router fiber.Router) {
 		mode := c.Query("mode", string(domain.ModeSingle))             // string(domain.ModeSingle), string(domain.ModeSteal), string(domain.ModeSpeed)
 		difficulty := c.Query("difficulty", string(domain.DiffMedium)) // string(domain.DiffEasy), string(domain.DiffMedium), string(domain.DiffHard)
 		hostId := c.Query("hostId", "")               // Used to preserve host on reconnect
-		action := c.Query("action", "")               // "create" or "join"
+		action := c.Query("action", "")               // "create" or "join" or "spectate"
+		isSpectator := action == "spectate" || c.Query("spectate", "") == "true"
 		password := c.Query("password", "")           // Optional 4-digit room password
 		playerID := c.Query("playerId", "anonymous")
 		targetStr := c.Query("target", "1")           // PK rounds target (1/3/5/10)
@@ -91,7 +92,10 @@ func Register(router fiber.Router) {
 		}
 		var room *wsManager.Room
 
-		if action == "create" {
+		if isSpectator {
+			// Spectators always join an existing room
+			room, err = wsManager.JoinRoom(roomID)
+		} else if action == "create" {
 			// Explicit create: only create, fail if exists
 			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target, bountyCoins)
 			if err != nil && err.Error() != string(domain.ErrHostRoomLimit) {
@@ -107,6 +111,9 @@ func Register(router fiber.Router) {
 		} else if action == "join" {
 			// Explicit join: only join, fail if not exists
 			room, err = wsManager.JoinRoom(roomID)
+			if err != nil && err.Error() == string(domain.ErrRoomNotFound) && hostId != "" && (hostId == playerID || strings.HasPrefix(playerID, hostId) || hostId == "Host") {
+				room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target, bountyCoins)
+			}
 		} else {
 			// Backward compatible: use GetOrCreateRoom
 			room, err = wsManager.GetOrCreateRoom(roomID, gameId, mode, difficulty, hostId)
@@ -121,11 +128,12 @@ func Register(router fiber.Router) {
 		}
 
 		client := &wsManager.Client{
-			ID:   playerID,
-			Conn: c,
+			ID:          playerID,
+			Conn:        c,
+			IsSpectator: isSpectator,
 		}
 
-		log.Printf("Player %s attempting to join room %s", playerID, roomID)
+		log.Printf("Player %s attempting to join room %s (action=%q, isSpectator=%v)", playerID, roomID, action, isSpectator)
 		if err := room.AddClient(client, password); err != nil {
 			log.Printf("Player %s rejected from room %s: %v", playerID, roomID, err)
 			msg := fmt.Sprintf(`{"type": "error", "message": "%s"}`, err.Error())

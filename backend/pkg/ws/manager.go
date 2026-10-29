@@ -14,18 +14,30 @@ import (
 )
 
 type Client struct {
-	ID      string
-	Conn    *websocket.Conn
-	IsReady bool
-	WriteMu sync.Mutex
+	ID          string
+	Conn        *websocket.Conn
+	IsReady     bool
+	IsSpectator bool
+	WriteMu     sync.Mutex
 }
 
 // WriteMessage securely writes to the websocket connection
 func (c *Client) WriteMessage(messageType int, data []byte) error {
 	c.WriteMu.Lock()
 	defer c.WriteMu.Unlock()
+	if c.Conn == nil {
+		return nil
+	}
 	c.Conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 	return c.Conn.WriteMessage(messageType, data)
+}
+
+// Close safely closes the client websocket connection if not nil
+func (c *Client) Close() error {
+	if c == nil || c.Conn == nil {
+		return nil
+	}
+	return c.Conn.Close()
 }
 
 type Room struct {
@@ -53,16 +65,17 @@ var (
 )
 
 type RoomSnapshot struct {
-	ID          string                `json:"id"`
-	Game        domain.GameId         `json:"game"`
-	Host        string                `json:"host"`
-	Mode        domain.GameMode       `json:"mode"`
-	Difficulty  domain.GameDifficulty `json:"difficulty"`
-	Status      domain.GameStatus     `json:"status"`
-	CreatedAt   int64                 `json:"createdAt"`
-	PlayerCount int                   `json:"players"`
-	HasPassword bool                  `json:"hasPassword"`
-	BountyCoins int                   `json:"bountyCoins,omitempty"`
+	ID             string                `json:"id"`
+	Game           domain.GameId         `json:"game"`
+	Host           string                `json:"host"`
+	Mode           domain.GameMode       `json:"mode"`
+	Difficulty     domain.GameDifficulty `json:"difficulty"`
+	Status         domain.GameStatus     `json:"status"`
+	CreatedAt      int64                 `json:"createdAt"`
+	PlayerCount    int                   `json:"players"`
+	SpectatorCount int                   `json:"spectators,omitempty"`
+	HasPassword    bool                  `json:"hasPassword"`
+	BountyCoins    int                   `json:"bountyCoins,omitempty"`
 }
 
 func GetActiveRooms() []RoomSnapshot {
@@ -78,7 +91,15 @@ func GetActiveRooms() []RoomSnapshot {
 	snapshots := make([]RoomSnapshot, 0, len(roomsCopy))
 	for _, r := range roomsCopy {
 		r.mu.Lock()
-		count := len(r.Clients)
+		playerCount := 0
+		spectatorCount := 0
+		for _, c := range r.Clients {
+			if c.IsSpectator {
+				spectatorCount++
+			} else {
+				playerCount++
+			}
+		}
 		game := r.Game
 		host := r.Host
 		mode := r.Mode
@@ -105,16 +126,17 @@ func GetActiveRooms() []RoomSnapshot {
 		r.mu.Unlock()
 
 		snapshots = append(snapshots, RoomSnapshot{
-			ID:          r.ID,
-			Game:        game,
-			Host:        host,
-			Mode:        mode,
-			Difficulty:  diff,
-			Status:      status,
-			CreatedAt:   createdAt,
-			PlayerCount: count,
-			HasPassword: hasPassword,
-			BountyCoins: bounty,
+			ID:             r.ID,
+			Game:           game,
+			Host:           host,
+			Mode:           mode,
+			Difficulty:     diff,
+			Status:         status,
+			CreatedAt:      createdAt,
+			PlayerCount:    playerCount,
+			SpectatorCount: spectatorCount,
+			HasPassword:    hasPassword,
+			BountyCoins:    bounty,
 		})
 	}
 	return snapshots
@@ -355,12 +377,14 @@ func getGameOptions(gameId, mode, difficulty string, target int) map[string]inte
 		"target":     target,
 	}
 	var gameConfig domain.GameConfig
-	if err := db.DB.First(&gameConfig, "id = ?", gameId).Error; err == nil {
-		if gameConfig.Config != "" {
-			var configData map[string]interface{}
-			if err := json.Unmarshal([]byte(gameConfig.Config), &configData); err == nil {
-				for k, v := range configData {
-					options[k] = v
+	if db.DB != nil {
+		if err := db.DB.First(&gameConfig, "id = ?", gameId).Error; err == nil {
+			if gameConfig.Config != "" {
+				var configData map[string]interface{}
+				if err := json.Unmarshal([]byte(gameConfig.Config), &configData); err == nil {
+					for k, v := range configData {
+						options[k] = v
+					}
 				}
 			}
 		}
@@ -388,13 +412,13 @@ func (r *Room) AddClient(client *Client, password string) error {
 		delete(r.KickedPlayers, client.ID)
 	}
 
-	// Reject if game actively in progress and player is new (allow host to bypass in case of InitGame race condition)
+	// Reject if game actively in progress and player is new (allow host and spectators to bypass)
 	st := r.Engine.GetStatus()
-	if st != engine.StateWaiting && st != engine.StateFinished && !r.Engine.HasPlayer(client.ID) && r.Host != client.ID {
+	if !client.IsSpectator && st != engine.StateWaiting && st != engine.StateFinished && !r.Engine.HasPlayer(client.ID) && r.Host != client.ID {
 		return fmt.Errorf("game already started")
 	}
 
-	if r.Host == "" {
+	if r.Host == "" && !client.IsSpectator {
 		r.Host = client.ID
 	}
 
@@ -405,7 +429,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 
 	r.Clients[client.ID] = client
 
-	if st == engine.StateWaiting || st == engine.StateFinished || r.Engine.HasPlayer(client.ID) {
+	if !client.IsSpectator && (st == engine.StateWaiting || st == engine.StateFinished || r.Engine.HasPlayer(client.ID)) {
 		r.Engine.AddPlayer(client.ID)
 	}
 
@@ -417,12 +441,15 @@ func (r *Room) AddClient(client *Client, password string) error {
 func (r *Room) RemoveClient(client *Client) {
 	r.mu.Lock()
 
+	isSwitchingGame := time.Now().Unix()-r.GameChangedAt < 30
+
 	// Only remove if this exact client connection is still the active one
 	if existing, ok := r.Clients[client.ID]; ok && existing == client {
 		delete(r.Clients, client.ID)
 
-		// If game hasn't started, completely remove them so the slot frees up
-		if r.Engine.GetStatus() == engine.StateWaiting {
+		// If game hasn't started and client wasn't spectator, completely remove them so the slot frees up
+		// BUT do NOT remove from engine if the room is currently transitioning between games
+		if !client.IsSpectator && r.Engine.GetStatus() == engine.StateWaiting && !isSwitchingGame {
 			r.Engine.RemovePlayer(client.ID)
 		}
 	} else {
@@ -431,8 +458,13 @@ func (r *Room) RemoveClient(client *Client) {
 		return
 	}
 
-	isEmpty := len(r.Clients) == 0
-	isSwitchingGame := time.Now().Unix()-r.GameChangedAt < 5
+	activeContestants := 0
+	for _, c := range r.Clients {
+		if !c.IsSpectator {
+			activeContestants++
+		}
+	}
+	isEmpty := activeContestants == 0
 	isHostLeaving := r.Host == client.ID && !isSwitchingGame
 	gameStatus := r.Engine.GetStatus()
 
@@ -458,11 +490,49 @@ func (r *Room) RemoveClient(client *Client) {
 			room.transferHost(hID)
 		}(roomID, client.ID)
 	} else if isEmpty && !isSwitchingGame {
-		// Room is empty and not playing: destroy immediately
+		// Room has no active contestants: destroy immediately and notify remaining spectators
 		mu.Lock()
 		delete(Rooms, roomID)
 		mu.Unlock()
 		go Lobby.BroadcastLobbyUpdate()
+
+		r.mu.Lock()
+		msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, msg)
+			c.Close()
+		}
+		r.Clients = make(map[string]*Client)
+		r.mu.Unlock()
+		return
+	} else if isEmpty && isSwitchingGame {
+		// All contestants temporarily disconnected to load the new game page.
+		// Start a 30s grace timer to clean up only if nobody reconnects.
+		go func(rID string, changedAt int64) {
+			time.Sleep(30 * time.Second)
+			mu.Lock()
+			room, exists := Rooms[rID]
+			mu.Unlock()
+			if !exists {
+				return
+			}
+			room.mu.Lock()
+			defer room.mu.Unlock()
+			if room.GameChangedAt == changedAt {
+				active := 0
+				for _, c := range room.Clients {
+					if !c.IsSpectator {
+						active++
+					}
+				}
+				if active == 0 {
+					mu.Lock()
+					delete(Rooms, rID)
+					mu.Unlock()
+					go Lobby.BroadcastLobbyUpdate()
+				}
+			}
+		}(roomID, r.GameChangedAt)
 	} else if isHostLeaving {
 		// Not in active game: transfer host immediately
 		r.transferHost(client.ID)
@@ -477,20 +547,37 @@ func (r *Room) transferHost(oldHostID string) {
 	r.mu.Lock()
 	roomID := r.ID
 
-	if len(r.Clients) == 0 {
+	// Pick the first connected non-spectator client as new host
+	var newHost string
+	for id, c := range r.Clients {
+		if !c.IsSpectator {
+			newHost = id
+			break
+		}
+	}
+
+	if newHost == "" {
+		isSwitchingGame := time.Now().Unix()-r.GameChangedAt < 30
+		if isSwitchingGame {
+			r.mu.Unlock()
+			return
+		}
+
 		r.mu.Unlock()
 		mu.Lock()
 		delete(Rooms, roomID)
 		mu.Unlock()
 		go Lobby.BroadcastLobbyUpdate()
-		return
-	}
 
-	// Pick the first connected client as new host
-	var newHost string
-	for id := range r.Clients {
-		newHost = id
-		break
+		r.mu.Lock()
+		msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, msg)
+			c.Close()
+		}
+		r.Clients = make(map[string]*Client)
+		r.mu.Unlock()
+		return
 	}
 
 	r.Host = newHost
@@ -514,6 +601,63 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 	r.LastActivity = time.Now().Unix()
 
+	senderClient, clientExists := r.Clients[clientID]
+	if !clientExists {
+		return
+	}
+
+	if senderClient.IsSpectator {
+		var baseMsg map[string]interface{}
+		if err := json.Unmarshal(payload, &baseMsg); err == nil {
+			msgType, _ := baseMsg["type"].(string)
+			act, _ := baseMsg["action"].(string)
+
+			if msgType == string(domain.ActionPing) {
+				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
+				return
+			}
+			if msgType == string(domain.ActionLeaveRoom) {
+				delete(r.Clients, clientID)
+				senderClient.Close()
+				r.BroadcastStateLocked()
+				go Lobby.BroadcastLobbyUpdate()
+				return
+			}
+			if act == string(domain.ActionEmoji) || msgType == string(domain.ActionEmoji) {
+				var emojiMsg struct {
+					Payload struct {
+						Emoji string `json:"emoji"`
+					} `json:"payload"`
+				}
+				if err := json.Unmarshal(payload, &emojiMsg); err == nil {
+					broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "emoji": "%s"}}`,
+						"game", domain.EventEmoji, clientID, emojiMsg.Payload.Emoji))
+					for _, c := range r.Clients {
+						c.WriteMessage(websocket.TextMessage, broadcastMsg)
+					}
+				}
+				return
+			}
+			if act == string(domain.ActionChat) || msgType == string(domain.ActionChat) {
+				var chatMsg struct {
+					Payload struct {
+						Text string `json:"text"`
+					} `json:"payload"`
+				}
+				if err := json.Unmarshal(payload, &chatMsg); err == nil {
+					broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "text": "%s"}}`,
+						"game", domain.EventChat, clientID, chatMsg.Payload.Text))
+					for _, c := range r.Clients {
+						c.WriteMessage(websocket.TextMessage, broadcastMsg)
+					}
+				}
+				return
+			}
+		}
+		log.Printf("Spectator %s attempted restricted action in room %s", clientID, r.ID)
+		return
+	}
+
 	oldStatus := r.Engine.GetStatus()
 	defer func() {
 		if r.Engine != nil {
@@ -526,7 +670,12 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 	var baseMsg map[string]interface{}
 	if err := json.Unmarshal(payload, &baseMsg); err == nil {
-		if msgType, ok := baseMsg["type"].(string); ok {
+		msgType, _ := baseMsg["type"].(string)
+		act, _ := baseMsg["action"].(string)
+		if msgType == "" {
+			msgType = act
+		}
+		if msgType != "" {
 			// Respond to application-level ping with pong
 			if msgType == string(domain.ActionPing) {
 				if c, ok := r.Clients[clientID]; ok {
@@ -535,15 +684,22 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				return
 			}
 
-			act, _ := baseMsg["action"].(string)
 			if msgType == string(domain.ActionRestartGame) || act == string(domain.ActionRestartGame) {
 				log.Printf("Restarting room %s via engine (triggered by %s)", r.ID, clientID)
 				r.Engine.HandleAction(clientID, string(domain.ActionRestartGame), payload)
 
-				if len(r.Clients) >= 2 && r.Mode != "single" {
+				activePlayers := 0
+				for _, c := range r.Clients {
+					if !c.IsSpectator {
+						activePlayers++
+					}
+				}
+				if activePlayers >= 2 && r.Mode != "single" {
 					// Direct Fast-Path Rematch: keep players in room, auto-ready, and launch countdown directly!
 					for _, c := range r.Clients {
-						c.IsReady = true
+						if !c.IsSpectator {
+							c.IsReady = true
+						}
 					}
 					r.Engine.HandleAction(r.Host, string(domain.ActionStartGame), []byte(`{"action":"start"}`))
 				} else {
@@ -559,43 +715,68 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				}
 				return
 			} else if msgType == string(domain.ActionLeaveRoom) {
+				isSwitching := time.Now().Unix()-r.GameChangedAt < 30
+				if isSwitching {
+					// Client is transitioning games with the room; do not treat component unmount as abandoning room
+					return
+				}
+
 				leavingClient, exists := r.Clients[clientID]
 				if exists {
 					delete(r.Clients, clientID)
 					if r.Engine != nil {
 						r.Engine.RemovePlayer(clientID)
 					}
-					leavingClient.Conn.Close()
+					leavingClient.Close()
 				}
 
-				if len(r.Clients) == 0 {
+				activeCount := 0
+				for _, c := range r.Clients {
+					if !c.IsSpectator {
+						activeCount++
+					}
+				}
+
+				if activeCount == 0 {
 					roomID := r.ID
 					mu.Lock()
 					delete(Rooms, roomID)
 					mu.Unlock()
 					go Lobby.BroadcastLobbyUpdate()
+
+					msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+					for _, c := range r.Clients {
+						c.WriteMessage(websocket.TextMessage, msg)
+						c.Close()
+					}
+					r.Clients = make(map[string]*Client)
 					return
 				}
 
 				if clientID == r.Host {
 					var newHost string
-					for id := range r.Clients {
-						newHost = id
-						break
+					for id, c := range r.Clients {
+						if !c.IsSpectator {
+							newHost = id
+							break
+						}
 					}
-					r.Host = newHost
-					log.Printf("Room %s: host transferred from %s to %s on leave", r.ID, clientID, newHost)
-					msg := []byte(fmt.Sprintf(`{"type": "%s", "newHost": "%s", "oldHost": "%s"}`, domain.EventHostChanged, newHost, clientID))
-					for _, c := range r.Clients {
-						c.WriteMessage(websocket.TextMessage, msg)
+					if newHost != "" {
+						r.Host = newHost
+						log.Printf("Room %s: host transferred from %s to %s on leave", r.ID, clientID, newHost)
+						msg := []byte(fmt.Sprintf(`{"type": "%s", "newHost": "%s", "oldHost": "%s"}`, domain.EventHostChanged, newHost, clientID))
+						for _, c := range r.Clients {
+							c.WriteMessage(websocket.TextMessage, msg)
+						}
 					}
 				}
 
 				r.BroadcastStateLocked()
 				go Lobby.BroadcastLobbyUpdate()
 				return
-			} else if msgType == string(domain.ActionChangeGame) {
-				if clientID == r.Host {
+			} else if msgType == string(domain.ActionChangeGame) || act == string(domain.ActionChangeGame) {
+				c, ok := r.Clients[clientID]
+				if ok && !c.IsSpectator && clientID == r.Host {
 					gameId, _ := baseMsg["game"].(string)
 					mode, _ := baseMsg["mode"].(string)
 					diff, _ := baseMsg["difficulty"].(string)
@@ -620,8 +801,10 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 						eng.InitGame(getGameOptions(gameId, mode, diff, r.Target))
 
-						for id := range r.Clients {
-							eng.AddPlayer(id)
+						for id, client := range r.Clients {
+							if !client.IsSpectator {
+								eng.AddPlayer(id)
+							}
 						}
 
 						if asyncEng, ok := eng.(interface{ SetBroadcaster(func()) }); ok {
@@ -669,7 +852,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 							if r.Engine != nil {
 								r.Engine.RemovePlayer(targetID)
 							}
-							targetClient.Conn.Close()
+							targetClient.Close()
 							r.BroadcastStateLocked()
 							go Lobby.BroadcastLobbyUpdate()
 						}
@@ -723,13 +906,25 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				return
 			}
 			if r.Mode != "single" {
-				if len(r.Clients) < 2 {
+				activePlayers := 0
+				for _, c := range r.Clients {
+					if !c.IsSpectator {
+						activePlayers++
+					}
+				}
+				if activePlayers < 2 {
 					log.Printf("Cannot start multiplayer game with fewer than 2 players in room %s", r.ID)
+					if hostClient, ok := r.Clients[clientID]; ok {
+						hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"error","message":"%s"}`, domain.ErrNotEnoughPlayers)))
+					}
 					return
 				}
 				for _, c := range r.Clients {
-					if c.ID != r.Host && !c.IsReady {
+					if !c.IsSpectator && c.ID != r.Host && !c.IsReady {
 						log.Printf("Cannot start game: player %s is not ready", c.ID)
+						if hostClient, ok := r.Clients[clientID]; ok {
+							hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"start_rejected","reason":"player_not_ready","player":"%s"}`, c.ID)))
+						}
 						return
 					}
 				}
@@ -781,7 +976,12 @@ func (r *Room) BroadcastStateLocked() {
 
 	readyPlayers := make(map[string]bool)
 	playersList := make([]map[string]interface{}, 0, len(r.Clients))
+	spectatorsList := make([]string, 0)
 	for id, client := range r.Clients {
+		if client.IsSpectator {
+			spectatorsList = append(spectatorsList, id)
+			continue
+		}
 		readyPlayers[id] = client.IsReady
 		pData := map[string]interface{}{
 			"id":      id,
@@ -804,6 +1004,7 @@ func (r *Room) BroadcastStateLocked() {
 		"host":         r.Host,
 		"readyPlayers": readyPlayers,
 		"players":      playersList,
+		"spectators":   spectatorsList,
 		"bountyCoins":  r.BountyCoins,
 		"difficulty":   r.Difficulty,
 		"game":         r.Game,
@@ -840,7 +1041,7 @@ func DismissRoom(roomID string, clientID string) {
 	r.mu.Lock()
 	for _, c := range r.Clients {
 		c.WriteMessage(websocket.TextMessage, msg)
-		c.Conn.Close()
+		c.Close()
 	}
 	r.Clients = make(map[string]*Client)
 	r.mu.Unlock()

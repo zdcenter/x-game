@@ -18,6 +18,7 @@ import { HapticService } from '../../../core/services/haptic.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-lightsout',
@@ -27,7 +28,8 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
     GameLayoutComponent,
     GamePkHudComponent,
     GameScoreCapsuleComponent,
-    GameToolbarComponent
+    GameToolbarComponent,
+    GameHandheldHeaderComponent
   ],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html',
@@ -80,20 +82,24 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
   readonly boardSizePx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
-    
+    const isHandheld = this.deviceService.isHandheld();
     const isPk = this.store.currentRoomMode() !== GameMode.Single;
-    const chromeH = isPk
-      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
-      : (vw < 640 ? 245 : vw < 1024 ? 265 : 285);
-    const availH = Math.max(240, vh - chromeH);
+    
+    // Handheld has immersive compact header (~50-60px)
+    const chromeH = isHandheld
+      ? (isPk ? 160 : 130)
+      : (isPk ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290) : (vw < 640 ? 245 : vw < 1024 ? 265 : 285));
+    const availH = Math.max(260, vh - chromeH);
 
-    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
-    const availW = Math.max(240, Math.min(vw - padW, 1400));
+    const padW = isHandheld ? 16 : (vw < 640 ? 24 : vw < 1024 ? 48 : 64);
+    const availW = Math.max(260, Math.min(vw - padW, 1400));
 
-    // Dynamic max board dimension
-    const maxDim = vw < 640 ? 420 : (vw < 1024 ? 580 : 640);
+    // Dynamic max board dimension - allow comfortable expansion on iPad
+    const maxDim = isHandheld
+      ? (vw < 640 ? 460 : (vw < 1024 ? 660 : 740))
+      : (vw < 640 ? 420 : (vw < 1024 ? 580 : 640));
 
-    const dim = Math.max(240, Math.floor(Math.min(availW, availH, maxDim)));
+    const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
   });
 
@@ -226,10 +232,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
           this.particles.set(sparks);
           setTimeout(() => this.particles.set([]), 1200);
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1200);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
       }
     });
   }
@@ -243,10 +245,10 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
 
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      if (pending.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.handleJoinRoom(pending);
       }
     } else {
       const savedDiff = getSavedDifficulty('lightsout', GameDifficulty.Medium);
@@ -254,16 +256,16 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     }
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number}) {
+  override handleCreateRoom(event: any) {
     super.handleCreateRoom(event);
     if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.store.roomId() || event.name, event.mode, event.difficulty, this.playerId);
     }
   }
 
-  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+  override handleJoinRoom(params: any) {
     super.handleJoinRoom(params);
-    if (params.mode !== GameMode.Single) {
+    if (params.mode !== GameMode.Single && !params.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
   }

@@ -24,9 +24,19 @@ import { FormsModule } from '@angular/forms';
 import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
+import { DeviceService } from '../../../core/services/device.service';
+import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
+import { ZenModeService } from '../../../core/services/zen-mode.service';
+import { PwaService } from '../../../core/services/pwa.service';
+import { FeedbackService } from '../../../core/services/feedback.service';
+import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-icon.component';
+import { ElementRef, HostListener } from '@angular/core';
 
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-sudoku',
@@ -39,7 +49,8 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
     SudokuNumpadComponent,
     SudokuToolsComponent,
     SudokuPkSpeedComponent,
-    GameLayoutComponent
+    GameLayoutComponent,
+    GameHandheldHeaderComponent
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +59,18 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 export class SudokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(SudokuStore);
   http = inject(HttpClient);
+  coinService = inject(CoinService);
+  coinGuideService = inject(CoinGuideService);
+  zenService = inject(ZenModeService);
+  pwaService = inject(PwaService);
+  feedbackService = inject(FeedbackService);
+  private elementRef = inject(ElementRef);
+
+  getDifficultyLabel(diff: string): string {
+    const item = this.sudokuDifficulties.find(d => d.id === diff);
+    return item ? (this.i18n.t(item.labelKey as any)() || item.id) : diff;
+  }
+
   private roomLifecycle!: RoomLifecycleHandle;
   private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);
@@ -70,11 +93,9 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       
       const isFin = this.store.isFinished() || status === GameStatus.Finished;
       if (isFin) {
-        this.celebrateVictory();
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
+        if (this.store.isVictory()) {
+          this.celebrateVictory();
+        }
       }
     });
 
@@ -123,13 +144,13 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       return;
     }
 
-    // Check for cross-game join or reconnect
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
-      if (joinInfo.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      this.view.set('room');
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom(joinInfo);
+      } else {
+        this.handleJoinRoom(joinInfo);
       }
     }
   }
@@ -154,6 +175,9 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   changeSingleDifficulty(diff: string) {
+    if (this.store.currentRoomMode() !== GameMode.Single || this.store.roomId()) {
+      return;
+    }
     setSavedDifficulty('sudoku', diff);
     // Find next unsolved level for this diff
     this.http.get<any[]>(`${environment.apiUrl}/sudoku/levels/${diff}`).subscribe({
@@ -180,21 +204,45 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     });
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
+  override handleJoinRoom(event: any) {
     if (this.store.roomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== GameMode.Single) {
+    const action = event.isSpectator ? 'spectate' : 'join';
+    this.wsService.setPendingAction(action);
+    this.view.set('room');
+    this.store.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false
+    );
+    if (event.mode !== GameMode.Single && !event.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    const roomId = event.name || event.roomId;
+    this.view.set('room');
+    this.store.joinRoom(
+      roomId,
+      event.mode,
+      event.difficulty,
+      this.playerId,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      false
+    );
     if (event.mode !== GameMode.Single) {
-      this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
+      this.roomLifecycle.saveReconnectInfo(roomId, event.mode, event.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
   }

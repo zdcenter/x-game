@@ -15,6 +15,13 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { DeviceService } from '../../../core/services/device.service';
+import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
+import { ZenModeService } from '../../../core/services/zen-mode.service';
+import { PwaService } from '../../../core/services/pwa.service';
+import { FeedbackService } from '../../../core/services/feedback.service';
+import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-icon.component';
 import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameFrozenOverlayComponent } from '../../../shared/components/game-frozen-overlay/game-frozen-overlay.component';
 import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
@@ -30,10 +37,12 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -41,6 +50,13 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 })
 export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(MinesweeperStore);
+  coinService = inject(CoinService);
+  coinGuideService = inject(CoinGuideService);
+  zenService = inject(ZenModeService);
+  pwaService = inject(PwaService);
+  feedbackService = inject(FeedbackService);
+  private elementRef = inject(ElementRef);
+
   private roomLifecycle!: RoomLifecycleHandle;
   currentRoomMode = signal<string>(GameMode.Single);
   currentRoomId = signal<string>('');
@@ -216,7 +232,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
 
     // Speed mode
-    return this.store.speedOpponents().map(opp => {
+    return this.store.speedOpponents().map((opp: any) => {
       const pInfo = players.find((p: any) => p.id === opp.id);
       return {
         id: opp.id,
@@ -317,6 +333,22 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       });
     });
 
+    let prevRevealed = 0;
+    effect(() => {
+      const current = this.store.myRevealedCnt();
+      const status = this.store.status();
+      if (status !== GameStatus.Playing) {
+        prevRevealed = current;
+        return;
+      }
+      const diff = current - prevRevealed;
+      if (diff >= 3) {
+        this.audioService.playMinesweeperCascade(diff);
+        this.vibrateCombo();
+      }
+      prevRevealed = current;
+    });
+
     effect((onCleanup) => {
       const status = this.store.status();
       if (status === GameStatus.Finished) {
@@ -327,13 +359,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
            this.audioService.playMinesweeper('win');
            this.celebrateVictory();
         }
-        
-        const timer = setTimeout(() => {
-          this.showOverlay.set(true);
-        }, 1500); // 1.5 seconds delay
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
+      }
+    });
+
+    effect(() => {
+      const storeDiff = this.store.currentDifficulty();
+      if (storeDiff && this.currentRoomMode() !== GameMode.Single) {
+        untracked(() => this.currentDifficulty.set(storeDiff));
       }
     });
 
@@ -366,7 +398,27 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom({
+          name: joinInfo.roomId,
+          mode: joinInfo.mode,
+          difficulty: joinInfo.difficulty,
+          password: joinInfo.password,
+          bountyCoins: joinInfo.bountyCoins
+        });
+      } else {
+        this.joinRoom(
+          joinInfo.roomId,
+          joinInfo.mode,
+          joinInfo.difficulty,
+          joinInfo.host,
+          joinInfo.target ?? 1,
+          joinInfo.password,
+          joinInfo.bountyCoins,
+          joinInfo.isSpectator,
+          joinInfo.isSpectator ? 'spectate' : 'join'
+        );
+      }
     } else {
       const savedDiff = getSavedDifficulty('minesweeper', 'easy');
       this.changeSingleDifficulty(savedDiff);
@@ -383,24 +435,36 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
-    if (this.currentRoomId() === event.roomId) return;
+  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number, isSpectator?: boolean }) {
+    if (this.currentRoomId() === event.roomId && this.isSpectator() === !!event.isSpectator) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host, 1, event.password, event.bountyCoins, event.isSpectator, event.isSpectator ? 'spectate' : 'join');
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string, target?: number, bountyCoins?: number }) {
+    this.isMobileSidebarOpen.set(false);
+    if (this.gameLayout) {
+      this.gameLayout.togglePkDrawer(false);
+    }
+    this.wsService.setPendingAction('create');
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1, event.password, event.bountyCoins, false, 'create');
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string, target: number = 1) {
+  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string, target: number = 1, password?: string, bounty?: number, isSpectator: boolean = false, action?: string) {
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.currentRoomId.set(roomId);
     this.isMobileSidebarOpen.set(false);
-    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
+    if (!isSpectator && mode !== GameMode.Single) {
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    }
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    if (password) {
+      this.wsService.setPendingPassword(password);
+    }
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target, password || '', bounty || 0, isSpectator);
   }
 
 
@@ -419,6 +483,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   handleCellFlag(cell: any) {
     if (!cell.revealed) this.vibrateMedium();
     this.store.toggleFlag(cell.x, cell.y);
+  }
+
+  handleReviveWithAd() {
+    this.adService.showReviveRewardedAd('minesweeper', () => {
+      this.store.reviveGame();
+      this.toast.success(this.i18n.t('game.revived')() || '🎉 避雷护盾生效！踩爆的地雷已自动插旗标记，游戏继续！');
+    });
   }
 
   override openChangeSettings() {
@@ -471,6 +542,9 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   changeSingleDifficulty(diff: string) {
+    if (this.currentRoomMode() !== GameMode.Single || this.store.roomId()) {
+      return;
+    }
     if (diff === 'custom') {
       this.openCustomDialog();
       return;
@@ -499,15 +573,46 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentRoomMode.set(GameMode.Single);
     this.store.startLocalGame(width, height, mines, diff);
 
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    if (width <= 9) {
-      this.cellSize.set(isMobile ? 38 : 42);
-    } else if (width <= 16) {
-      this.cellSize.set(isMobile ? 32 : 36);
+    this.cellSize.set(this.calculateAdaptiveCellSize(width));
+  }
+
+  calculateAdaptiveCellSize(cols: number): number {
+    if (typeof window === 'undefined') return this.defaultCellSize;
+    const screenW = window.innerWidth;
+    const isMobile = screenW < 640;
+    const isTablet = screenW >= 640 && screenW < 1024;
+
+    if (cols <= 9) {
+      if (isMobile) {
+        const ideal = Math.floor((screenW - 28) / 9);
+        return Math.max(36, Math.min(48, ideal));
+      }
+      if (isTablet) return 46;
+      return 42;
+    } else if (cols <= 16) {
+      if (isMobile) return 32;
+      if (isTablet) {
+        const ideal = Math.floor((screenW - 48) / 16);
+        return Math.max(34, Math.min(42, ideal));
+      }
+      return 36;
     } else {
-      this.cellSize.set(isMobile ? 26 : 30);
+      if (isMobile) return 26;
+      if (isTablet) return 28;
+      return 30;
     }
   }
+
+  getDifficultyDisplayName(): string {
+    const diff = this.currentDifficulty();
+    if (diff.startsWith('custom_')) {
+      const parts = diff.split('_');
+      return `${this.i18n.t('game.custom')() || '自定义'} (${parts[1]}×${parts[2]})`;
+    }
+    const d = this.predefinedDifficulties.find((x: any) => x.id === diff);
+    return d ? `${this.i18n.t(d.labelKey as any)()} (${d.desc})` : diff;
+  }
+
   getDifficultyText(difficulty: string): string {
     const d = this.predefinedDifficulties.find((x: any) => x.id === difficulty);
     return d ? `${this.i18n.t(d.labelKey as any)()} (${d.desc})` : difficulty;

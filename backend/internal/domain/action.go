@@ -7,6 +7,8 @@ const (
 	// ===== 房间级别操作 =====
 	// 请求加入房间
 	ActionJoinRoom    C2SAction = "join"
+	// 请求观战房间
+	ActionSpectate    C2SAction = "spectate"
 	// 请求离开房间
 	ActionLeaveRoom   C2SAction = "leave_game"
 	// 准备就绪
@@ -101,4 +103,6 @@ const (
 	ErrKickCooldown       ErrorCode = "err_kick_cooldown"
 	ErrMultiplayerDisabled ErrorCode = "err_multiplayer_disabled"
 	ErrHostRoomLimit       ErrorCode = "err_host_room_limit"
+	ErrNotEnoughPlayers    ErrorCode = "err_not_enough_players"
+	ErrPlayerNotReady      ErrorCode = "err_player_not_ready"
 )

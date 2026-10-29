@@ -52,6 +52,23 @@ export const storageRemove = (key: string): void => {
   if (isBrowser()) localStorage.removeItem(key);
 };
 
+export const cookieGet = (name: string): string | null => {
+  if (!isBrowser()) return null;
+  const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+  return match ? decodeURIComponent(match[3]) : null;
+};
+
+export const cookieSet = (name: string, value: string, days: number = 30): void => {
+  if (!isBrowser()) return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+};
+
+export const cookieRemove = (name: string): void => {
+  if (!isBrowser()) return;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+};
+
 /**
  * Safely retrieve the player's last selected difficulty for a game.
  * Checks multiple backwards-compatible keys (e.g. `${gameId}_single_diff`, `${gameId}_difficulty`, `game_diff_${gameId}`).

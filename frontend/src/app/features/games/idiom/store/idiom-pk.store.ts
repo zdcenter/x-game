@@ -72,6 +72,12 @@ export class IdiomPKStore extends BaseGameStore {
     return Object.entries(w).find(([id]) => id !== this.playerId())?.[1] ?? 0;
   });
 
+  opponents = computed(() => {
+    const isSpec = this.isSpectator();
+    const pid = this.playerId();
+    return this.players().filter(p => isSpec || p.id !== pid);
+  });
+
   isRoundOver = computed<boolean>(() => this.roundWinner() !== '');
   iWonRound = computed<boolean>(() => this.roundWinner() === this.playerId());
 
@@ -85,9 +91,11 @@ export class IdiomPKStore extends BaseGameStore {
       if (rw && rw !== lastRoundWinner) {
         lastRoundWinner = rw;
         if (rw === this.playerId()) {
-          this.audio.playPuzzle('success');
+          this.audio.playIdiom('correct');
+        } else if (!this.isSpectator()) {
+          this.audio.playIdiom('wrong');
         } else {
-          this.audio.playPuzzle('error');
+          this.audio.playIdiom('next');
         }
       }
       if (rn > lastRoundNum && rn > 0 && !rw) {

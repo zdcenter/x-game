@@ -27,6 +27,8 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-sokoban',
   standalone: true,
@@ -37,13 +39,13 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
     SokobanLobbyComponent,
     GameToolbarComponent,
     GameLayoutComponent,
-    GamePkHudComponent
+    GamePkHudComponent,
+    GameHandheldHeaderComponent
   ],
   templateUrl: './sokoban.component.html'
 })
 export class SokobanComponent extends BaseGameComponent implements OnInit, OnDestroy {
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => []);
-  adService = inject(AdService);
   override store = inject(SokobanStore);
   private route = inject(ActivatedRoute);
   private dailyService = inject(DailyChallengeService);
@@ -145,13 +147,11 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
 
   constructor() {
     super();
-    effect((onCleanup) => {
+    effect(() => {
       if (this.store.status() === GameStatus.Finished) {
-        this.celebrateVictory();
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
+        if (this.store.isVictory()) {
+          this.celebrateVictory();
+        }
       }
     });
 
@@ -200,11 +200,21 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      if (pending.mode !== GameMode.Single) {
+      if (pending.isSpectator) this.wsService.setPendingAction('spectate');
+      this.store.joinRoom(
+        pending.roomId,
+        pending.mode,
+        pending.difficulty,
+        pending.host || '',
+        pending.target ?? 1,
+        pending.password || '',
+        pending.bountyCoins ?? 0,
+        pending.isSpectator || false
+      );
+      if (pending.mode !== GameMode.Single && !pending.isSpectator) {
         this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
-        this.showLobby.set(false);
       }
+      this.showLobby.set(false);
     } else {
       const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
       this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
@@ -281,12 +291,12 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     }
   }
 
-  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string; bountyCoins?: number; isSpectator?: boolean }) {
     super.handleJoinRoom(params);
-    if (params.mode !== GameMode.Single) {
+    if (params.mode !== GameMode.Single && !params.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
-      this.showLobby.set(false);
     }
+    this.showLobby.set(false);
   }
 
   override handleDismissRoom() {

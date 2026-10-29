@@ -6,6 +6,13 @@ import { GameMode, GameDifficulty } from '../../shared/components/game-lobby-pan
 import { GAME_DEFINITIONS } from '../config/game-definitions';
 import { isBrowser } from '../utils/browser.util';
 
+export interface GameFinishFlowConfig {
+  winAction?: 'modal' | 'auto_next';
+  loseAction?: 'modal' | 'board_overlay' | 'auto_restart';
+  autoNextAdFreq?: number; // -1: inherit global, 0: disabled, >0: custom
+  autoNextDelayMs?: number; // default 1500
+}
+
 export interface GameConfig {
   /** Unique game identifier, e.g. 'minesweeper', 'sudoku' */
   id: string;
@@ -25,6 +32,8 @@ export interface GameConfig {
   multiRound?: boolean;
   /** Custom open graph cover image (filename in assets or public folder) */
   coverImage?: string;
+  /** Post-game finish flow orchestration (modal vs auto_next, in-board overlay, ad frequency) */
+  finishFlow?: GameFinishFlowConfig;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -54,6 +63,9 @@ export class GameRegistryService {
         if (meta.modes?.length)         entry.modes = meta.modes;
         if (meta.difficulties?.length)  entry.difficulties = meta.difficulties;
         if (meta.multiRound != null)    entry.multiRound = meta.multiRound;
+        if (meta.finishFlow) {
+          entry.finishFlow = { ...entry.finishFlow, ...meta.finishFlow };
+        }
       });
     }).catch(() => {});
   }

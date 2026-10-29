@@ -1,4 +1,4 @@
-import { Directive, inject, signal, effect, Injector, OnInit, OnDestroy, HostBinding, ViewChild, HostListener } from '@angular/core';
+import { Directive, inject, signal, computed, effect, Injector, OnInit, OnDestroy, HostBinding, ViewChild, HostListener } from '@angular/core';
 import confetti from 'canvas-confetti';
 import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -20,6 +20,8 @@ import { AudioService } from '../services/audio.service';
 import { HapticService } from '../services/haptic.service';
 import { GameRegistryService } from '../services/game-registry.service';
 import { LeaderboardService } from '../services/leaderboard.service';
+import { DeviceService } from '../services/device.service';
+import { AdService } from '../services/ad.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -53,6 +55,9 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public haptic = inject(HapticService);
   public gameRegistry = inject(GameRegistryService);
   public leaderboardService = inject(LeaderboardService);
+  public deviceService = inject(DeviceService);
+  public adService = inject(AdService);
+  readonly isHandheld = this.deviceService.isHandheld;
   protected _injector = inject(Injector);
 
   // Common Enums & Math for Templates
@@ -79,6 +84,9 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
   // Subclasses provide their specific game store
   abstract get store(): GameStoreInterface;
+
+  /** Universal spectator mode status derived from store */
+  readonly isSpectator = computed<boolean>(() => this.store?.isSpectator?.() ?? false);
 
   // Default playerId derived from authStore; subclasses can still override if custom
   get playerId(): string {
@@ -201,7 +209,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
                     difficulty: pendingCross.difficulty,
                     host: pendingCross.host,
                     password: pendingCross.password,
-                    bountyCoins: pendingCross.bountyCoins
+                    bountyCoins: pendingCross.bountyCoins,
+                    isSpectator: pendingCross.spectate || pendingCross.action === 'spectate'
                   });
                 }
               }, 50);
@@ -217,12 +226,13 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             roomId: q['joinRoom'],
             mode: q['mode'],
             difficulty: q['diff'],
-            host: q['host'] || ''
+            host: q['host'] || '',
+            isSpectator: q['spectate'] === 'true' || q['action'] === 'spectate'
           });
 
           this._baseRouter.navigate([], {
             relativeTo: this._baseRoute,
-            queryParams: { joinRoom: null, mode: null, diff: null, host: null },
+            queryParams: { joinRoom: null, mode: null, diff: null, host: null, spectate: null },
             queryParamsHandling: 'merge',
             replaceUrl: true
           });
@@ -246,19 +256,20 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     const segments = urlPath.split('/');
     const gamesIdx = segments.indexOf('games');
     if (gamesIdx >= 0) gameId = segments[gamesIdx + 1];
-    
-    this._baseRouter.navigate(['/pk-arena'], { queryParams: gameId ? { game: gameId } : {} });
+    const lang = this.i18n.currentLang();
+    this._baseRouter.navigate(['/', lang, 'pk-arena'], { queryParams: gameId ? { game: gameId } : {} });
   }
 
-  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number}) {
+  handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number, isSpectator?: boolean}) {
     this.isMobileSidebarOpen.set(false);
     if (this.gameLayout) {
       this.gameLayout.togglePkDrawer(false);
     }
-    if (this.store.roomId() === event.roomId) return;
-    this.wsService.setPendingAction('join');
+    if (this.store.roomId() === event.roomId && this.isSpectator() === !!event.isSpectator) return;
+    const action = event.isSpectator ? 'spectate' : 'join';
+    this.wsService.setPendingAction(action);
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host, 1, event.password || '', event.bountyCoins ?? 0);
+    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host, 1, event.password || '', event.bountyCoins ?? 0, event.isSpectator || false);
   }
 
   handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number, bountyCoins?: number}) {
@@ -268,7 +279,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     }
     this.wsService.setPendingAction('create');
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1, event.password || '', event.bountyCoins ?? 0);
+    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1, event.password || '', event.bountyCoins ?? 0, false);
   }
 
   handleDismissRoom() {

@@ -16,8 +16,8 @@ export class HexaStore extends BaseGameStore {
   engine = new HexaEngine();
 
   // Hexa State Signals
-  cells = signal<HexCell[]>(Array.from(this.engine.cells.values()));
-  score = signal<number>(0);
+  localCells = signal<HexCell[]>(Array.from(this.engine.cells.values()));
+  localScore = signal<number>(0);
   combo = signal<number>(0);
   availablePieces = signal<HexPiece[]>([]);
   gameOver = signal<boolean>(false);
@@ -27,6 +27,61 @@ export class HexaStore extends BaseGameStore {
   lastScoreGain = signal<{ score: number; combo: number; lines: number; isAllClear?: boolean; ts: number } | null>(null);
   clearingCells = signal<Map<string, string>>(new Map());
   private clearTimerId: any = null;
+
+  // Cells (Supports Director View for Spectators)
+  cells = computed<HexCell[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.localCells();
+    }
+    const focus = this.focusedPlayerId();
+    const raw = this.rawState() as any;
+    const players = raw?.players;
+    let targetId = focus;
+    if (!targetId && players) {
+      const keys = Object.keys(players);
+      const oppKey = keys.find(k => k && k !== this.playerId());
+      targetId = oppKey || keys[0] || '';
+    }
+
+    if (targetId && players) {
+      const p = (typeof players === 'object' && !Array.isArray(players))
+        ? (players[targetId] || players[Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase()) || ''])
+        : (Array.isArray(players) ? players.find((x: any) => x?.id === targetId || x?.id?.toLowerCase() === targetId.toLowerCase()) : null);
+      if (p?.cells && Array.isArray(p.cells) && p.cells.length > 0) {
+        return p.cells as HexCell[];
+      }
+    }
+
+    return this.localCells();
+  });
+
+  // Score (Supports Director View for Spectators)
+  score = computed<number>(() => {
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.localScore();
+    }
+    const focus = this.focusedPlayerId();
+    const raw = this.rawState() as any;
+    const players = raw?.players;
+    let targetId = focus;
+    if (!targetId && players) {
+      const keys = Object.keys(players);
+      const oppKey = keys.find(k => k && k !== this.playerId());
+      targetId = oppKey || keys[0] || '';
+    }
+
+    if (targetId && players) {
+      const p = (typeof players === 'object' && !Array.isArray(players))
+        ? (players[targetId] || players[Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase()) || ''])
+        : (Array.isArray(players) ? players.find((x: any) => x?.id === targetId || x?.id?.toLowerCase() === targetId.toLowerCase()) : null);
+      if (p && p.score !== undefined) {
+        return Number(p.score || 0);
+      }
+    }
+
+    return this.localScore();
+  });
+
   fillPct = computed(() => this.cells().filter(c => c.filled).length / 61);
 
   // Visual Palette Theme: 'crystal' (Harmonious Multi-Gem) | 'gold' (Royal Amber Gold) | 'ocean' (Deep Ocean Ice)
@@ -150,8 +205,17 @@ export class HexaStore extends BaseGameStore {
     });
   }
 
-  override joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: string = '', hostId: string = '', target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: GameModeType | string = GameMode.Single,
+    difficulty: string = '',
+    hostId: string = '',
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     if (mode === GameMode.Single) {
       this.startSinglePlayer();
       this.loadBestScore();
@@ -240,14 +304,15 @@ export class HexaStore extends BaseGameStore {
     if (this.currentRoomMode() !== GameMode.Single) {
       this.ws.send({
         action: C2SAction.Move, 
-        score: this.score(),
+        score: this.localScore(),
         piecesPlaced: this.engine.piecesPlaced,
-        finished: this.gameOver()
+        finished: this.gameOver(),
+        cells: this.engine.getState().cells
       });
     } else {
-      if (this.score() > this.bestScore()) {
-        this.bestScore.set(this.score());
-        storageSet('hexa_best_score', this.score().toString());
+      if (this.localScore() > this.bestScore()) {
+        this.bestScore.set(this.localScore());
+        storageSet('hexa_best_score', this.localScore().toString());
       }
       this.saveSinglePlayerProgress();
     }
@@ -255,8 +320,8 @@ export class HexaStore extends BaseGameStore {
 
   private updateSignals() {
     const state = this.engine.getState();
-    this.cells.set(state.cells);
-    this.score.set(state.score);
+    this.localCells.set(state.cells);
+    this.localScore.set(state.score);
     this.combo.set(state.combo);
     this.availablePieces.set([...state.availablePieces]);
     this.gameOver.set(state.gameOver);
@@ -280,8 +345,24 @@ export class HexaStore extends BaseGameStore {
     }
   }
 
+  protected override onSinglePlayerStart(): void {
+    this.startSinglePlayer();
+    this.loadBestScore();
+  }
+
+  protected override onSinglePlayerRestart(): void {
+    this.startSinglePlayer();
+    this.loadBestScore();
+  }
+
   // Single Player
   private startSinglePlayer() {
+    if (this.clearTimerId) {
+      clearTimeout(this.clearTimerId);
+      this.clearTimerId = null;
+    }
+    this.clearingCells.set(new Map());
+    this.comboTrigger.set(0);
     this.clearSinglePlayerSave();
     this.engine.initGame(); // Uses Math.random
     this.updateSignals();

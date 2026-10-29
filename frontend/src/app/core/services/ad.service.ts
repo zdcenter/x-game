@@ -301,4 +301,76 @@ export class AdService {
 
     this.executeAdWaterfall(placement, 'next', 'between_games', onComplete);
   }
+
+  private readonly AUTO_NEXT_GAMES_PREFIX = 'xgame_auto_next_count_';
+
+  /**
+   * 自动下一局频控调度钩子 (Auto-Next Interstitial Flow Controller)
+   * 记录该游戏的自动连续通关次数，当达到后台配置的频次时弹出插屏广告，结束后无缝自动进入下一题。
+   * 支持单游戏独立指定的自定义频次 (customFrequency)：-1 继承全局，0 完全免广告，>0 自定义通关局数。
+   */
+  tryShowAutoNextInterstitial(gameId: string, onContinueNextGame: () => void, customFrequency?: number): void {
+    if (!isBrowser()) {
+      onContinueNextGame();
+      return;
+    }
+
+    // 若指定为 0，代表该游戏关闭自动下一局插屏广告
+    if (customFrequency === 0) {
+      onContinueNextGame();
+      return;
+    }
+
+    const key = this.AUTO_NEXT_GAMES_PREFIX + gameId;
+    let count = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+    localStorage.setItem(key, count.toString());
+
+    // 优先采用单游戏独立指定的频次；若未指定或为 -1，则继承全局基准频控
+    let frequency = 3;
+    if (customFrequency !== undefined && customFrequency > 0) {
+      frequency = customFrequency;
+    } else {
+      const settings = this.settingsService.settings();
+      frequency = parseInt(settings['ad_auto_next_frequency'] || settings['ad_interstitial_frequency'] || '3', 10);
+    }
+
+    if (count >= frequency) {
+      localStorage.setItem(key, '0');
+      this.tryShowInterstitial(() => onContinueNextGame());
+    } else {
+      onContinueNextGame();
+    }
+  }
+
+  /**
+   * 绝境复活激励广告钩子 (Revive Rewarded Ad Hook)
+   * 支持扫雷踩雷复活、羊了个羊卡槽满清移复活、2048死局清障等
+   */
+  showReviveRewardedAd(gameId: string, onRevived: () => void, onDeclined?: () => void): void {
+    const placement = this.getPlacement('revive_ad') || this.getPlacement('hint_ad');
+    if (!placement || !placement.is_enabled) {
+      // 若后台未启用复活广告或广告暂不可用，直接宽容触发复活
+      onRevived();
+      return;
+    }
+
+    const dailyViews = this.getDailyViews(placement.id);
+    if (placement.daily_total_limit !== -1 && dailyViews >= placement.daily_total_limit) {
+      this.toast.show(this.i18n.t('game.ad_limit_reached')() || "Today's limit reached.", 'error');
+      if (onDeclined) onDeclined();
+      return;
+    }
+
+    this.executeAdWaterfall(
+      placement,
+      'reward',
+      `revive_${gameId}`,
+      () => {
+        this.toast.show(this.i18n.t('game.revived')() || 'Revived!', 'success');
+        onRevived();
+      },
+      onDeclined
+    );
+  }
 }
+

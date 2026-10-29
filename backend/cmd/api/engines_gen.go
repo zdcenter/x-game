@@ -21,4 +21,5 @@ import (
 	_ "github.com/x-game/backend/internal/engine/sudoku"
 	_ "github.com/x-game/backend/internal/engine/tetris"
 	_ "github.com/x-game/backend/internal/engine/watersort"
+	_ "github.com/x-game/backend/internal/engine/tilematch"
 )

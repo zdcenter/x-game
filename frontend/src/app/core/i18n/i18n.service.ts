@@ -62,7 +62,13 @@ export class I18nService {
   t(key: string, params?: Record<string, unknown>): Signal<string> {
     return computed(() => {
       const lang = this.currentLang(); // reactive dependency
-      return this.transloco.translate(key, params ?? {}, lang) || key;
+      let res = this.transloco.translate(key, params ?? {}, lang) || key;
+      if (params && typeof res === 'string' && Object.keys(params).length > 0) {
+        for (const [k, v] of Object.entries(params)) {
+          res = res.replace(new RegExp(`\\{\\{?\\s*${k}\\s*\\}\\}?`, 'g'), String(v));
+        }
+      }
+      return res;
     });
   }
 

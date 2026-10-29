@@ -12,6 +12,7 @@ import (
 type SpeedPlayer struct {
 	ID       string `json:"id"`
 	Progress int    `json:"progress"` // Number of cells filled / connected correctly
+	Paths    string `json:"paths,omitempty"`
 	Finished bool   `json:"finished"`
 }
 
@@ -35,12 +36,14 @@ func (e *SpeedEngine) fetchPuzzle() {
 		e.Puzzle = `{"width":5,"height":5,"endpoints":[{"color":1,"p1":[0,0],"p2":[4,4]}]}`
 	} else {
 		p := puzzles[rand.Intn(len(puzzles))]
-		// We send the entire puzzle logic to clients
 		puzzleData := map[string]interface{}{
 			"id":        p.ID,
 			"width":     p.Width,
 			"height":    p.Height,
 			"endpoints": json.RawMessage(p.Endpoints),
+		}
+		if p.Blocks != "" && p.Blocks != "[]" {
+			puzzleData["blocks"] = json.RawMessage(p.Blocks)
 		}
 		b, _ := json.Marshal(puzzleData)
 		e.Puzzle = string(b)
@@ -128,6 +131,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 		for _, p := range e.Players {
 			p.Progress = 0
 			p.Finished = false
+			p.Paths = ""
 		}
 		e.fetchPuzzle()
 		return e.State, nil
@@ -144,16 +148,25 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 
 	if action == "progress" {
 		var req struct {
-			Progress int `json:"progress"`
+			Progress int    `json:"progress"`
+			Paths    string `json:"paths,omitempty"`
 		}
 		if err := json.Unmarshal(payload, &req); err == nil {
 			if req.Progress >= 0 {
 				player.Progress = req.Progress
 			}
+			if req.Paths != "" {
+				player.Paths = req.Paths
+			}
 		}
 	} else if action == "finish" {
-		// In Connect, the client validates its own board and submits "finish"
-		// If needed, we could add server-side validation here
+		var req struct {
+			Paths string `json:"paths,omitempty"`
+		}
+		_ = json.Unmarshal(payload, &req)
+		if req.Paths != "" {
+			player.Paths = req.Paths
+		}
 		player.Finished = true
 
 		e.State = engine.StateFinished

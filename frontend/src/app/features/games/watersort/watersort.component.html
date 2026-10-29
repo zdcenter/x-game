@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'watersort'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('app.title.watersort')()"
   [subtitle]="getSubtitle()"
   icon="🧪"
@@ -12,7 +13,6 @@
   (difficultyChange)="changeSingleDifficulty($event)"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [overlayStats]="[{ label: i18n.t('game.moves')(), value: myMoves() }]"
   (rulesClosed)="showRules.set(false)"
@@ -28,11 +28,59 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5">
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'watersort'"
+      [gameTitle]="i18n.t('app.title.watersort')() || '水排序'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        <!-- 步数 -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('game.moves')() || '步数' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-cyan-500 font-mono leading-tight">
+            {{ myMoves() }}
+          </span>
+        </div>
 
-          <!-- Players Info Row -->
-          @if (currentRoomMode() === GameMode.Single) {
-            <!-- Modern Responsive Style for Single Player -->
+        <!-- 😃 经典笑脸重启 -->
+        <button
+          type="button"
+          (click)="playAgain()"
+          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+        >
+          {{ store.status() === GameStatus.Finished ? '😎' : '😊' }}
+        </button>
+      </div>
+    </app-game-handheld-header>
+  }
+
+  <div class="flex-grow flex flex-col items-center justify-center my-auto min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5">
+
+          <!-- Universal PK HUD -->
+          @if (currentRoomMode() !== GameMode.Single) {
+            <div class="flex-none py-1 mb-1 shrink-0 w-full">
+              <app-game-pk-hud
+                [myPlayer]="myPlayerPkStats()"
+                [opponents]="opponentsPkStats()"
+                [targetWins]="_store.currentRoomTarget()"
+                [gameMode]="currentRoomMode()"
+                [status]="status"
+                [isSpectator]="_store.isSpectator()"
+                [focusedPlayerId]="_store.focusedPlayerId()"
+                (playerSelect)="_store.setFocusedPlayer($event)">
+              </app-game-pk-hud>
+            </div>
+          } @else if (!isHandheld()) {
+            <!-- Modern Responsive Style for Single Player (PC 桌面端展示) -->
             <div class="flex-none py-1.5 mb-1 w-full shrink-0">
               <div class="w-full flex justify-center items-center gap-3 px-4">
                 <div class="flex items-center gap-2.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs rounded-2xl px-6 py-2 transition-all">
@@ -52,17 +100,6 @@
                   </span>
                 </button>
               </div>
-            </div>
-          } @else {
-            <!-- Universal PK HUD -->
-            <div class="flex-none py-1 mb-1 shrink-0 w-full">
-              <app-game-pk-hud
-                [myPlayer]="myPlayerPkStats()"
-                [opponents]="opponentsPkStats()"
-                [targetWins]="_store.currentRoomTarget()"
-                [gameMode]="currentRoomMode()"
-                [status]="status">
-              </app-game-pk-hud>
             </div>
           }
 

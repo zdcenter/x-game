@@ -93,12 +93,54 @@ export class NonogramStore extends BaseGameStore {
     });
   });
 
-  // Current board grid
-  readonly grid = computed(() => {
+  // Current board grid (Supports Director View for Spectators & Opponents)
+  readonly grid = computed<CellState[][]>(() => {
     if (this.currentRoomMode() === GameMode.Single) return this.localState()?.grid || [];
-    // For steal mode, backend sends the shared board
-    // For speed mode, backend doesn't send the board, we track it locally
-    return (this.rawState() as any)?.board || this.localState()?.grid || [];
+    if (this.currentRoomMode() === GameMode.Steal) {
+      return (this.rawState() as any)?.board || [];
+    }
+
+    // Speed mode:
+    const isSpec = this.isSpectator();
+    const focus = this.focusedPlayerId();
+    const myId = this.playerId();
+    const raw = this.rawState() as any;
+    const players = raw?.players;
+
+    // Determine target player to display
+    let targetId = '';
+    if (isSpec) {
+      if (focus) {
+        targetId = focus;
+      } else {
+        const list = this.playersList();
+        const opp = list.find((p: any) => p && p.id && p.id !== myId);
+        targetId = opp ? opp.id : (list[0]?.id || '');
+      }
+    } else if (focus && focus !== myId) {
+      targetId = focus;
+    }
+
+    if (targetId && (isSpec || targetId !== myId) && players) {
+      const p = (typeof players === 'object' && !Array.isArray(players))
+        ? (players[targetId] || players[Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase()) || ''])
+        : (Array.isArray(players) ? players.find((x: any) => x?.id === targetId || x?.id?.toLowerCase() === targetId.toLowerCase()) : null);
+      if (p?.grid && Array.isArray(p.grid) && p.grid.length > 0) {
+        return p.grid as CellState[][];
+      }
+    }
+
+    if (!isSpec && this.localState()?.grid) {
+      return this.localState()!.grid;
+    }
+
+    // Default initialized blank grid matching puzzle dimensions
+    const w = this.width();
+    const h = this.height();
+    if (w > 0 && h > 0) {
+      return Array.from({ length: h }, () => Array(w).fill(0 as CellState));
+    }
+    return [];
   });
   
   readonly totalFilled = computed(() => {
@@ -281,7 +323,16 @@ export class NonogramStore extends BaseGameStore {
     });
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty?: string, hostId?: string, target: number = 1) {
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty?: string,
+    hostId?: string,
+    target: number = 1,
+    password?: string,
+    bountyCoins?: number,
+    isSpectator?: boolean
+  ) {
     if (mode === GameMode.Single) {
       const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
       if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
@@ -289,7 +340,7 @@ export class NonogramStore extends BaseGameStore {
       }
     }
     const finalDiff = difficulty || GameDifficulty.Easy;
-    super.joinRoom(roomId, mode, finalDiff, hostId, target);
+    super.joinRoom(roomId, mode, finalDiff, hostId, target, password, bountyCoins, isSpectator);
 
     if (mode === GameMode.Single) {
       this.currentDifficulty.set(finalDiff);
@@ -377,6 +428,7 @@ export class NonogramStore extends BaseGameStore {
 
   handleCellClick(x: number, y: number, isRightClick: boolean = false, forceMode?: 'fill' | 'cross') {
     if (this.status() !== GameStatus.Playing) return;
+    if (this.isSpectator()) return;
 
     if (this.currentRoomMode() === GameMode.Steal) {
       // Steal mode: we don't handle cross locally, it's just visual, but fill is sent to server
@@ -443,7 +495,7 @@ export class NonogramStore extends BaseGameStore {
       const total = this.totalFilled();
       const progress = total > 0 ? Math.min(100, Math.round((filledCount / total) * 100)) : 0;
       
-      this.ws.send({ action: 'progress', progress, finished: isWin });
+      this.ws.send({ action: 'progress', progress, finished: isWin, grid: newGrid });
       if (isWin) {
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
       }

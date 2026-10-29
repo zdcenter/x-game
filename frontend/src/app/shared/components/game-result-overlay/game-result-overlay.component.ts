@@ -20,6 +20,7 @@ import { WebSocketService } from '../../../core/services/websocket.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 import { LiveActivityService } from '../../../core/services/live-activity.service';
 import { HapticService } from '../../../core/services/haptic.service';
+import { GameSwitchService } from '../../../core/services/game-switch.service';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -86,6 +87,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   settingsService = inject(SettingsService);
   private wsService = inject(WebSocketService);
   private liveActivityService = inject(LiveActivityService);
+  private gameSwitchService = inject(GameSwitchService);
 
   readonly costRevive = computed(() => this.settingsService.coinEconomy().costRevive);
   readonly canAffordRevive = computed(() => this.coinService.canAfford(this.costRevive()));
@@ -146,6 +148,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   /** PK Match Specific Inputs */
   @Input() isPkMatch: boolean = false;
+  @Input() isHost: boolean = false;
   @Input() opponentInfo?: { nickname?: string; avatar?: string; score?: number | string; isHost?: boolean; id?: string; playerId?: string };
   @Input() pkSeriesScore?: { me: number; opponent: number };
   @Input() pkRoundFormat?: string;
@@ -582,6 +585,15 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
     if (!this.currentGameId) return;
     const lang = this.i18n.currentLang();
     this.router.navigate(['/', lang, 'pk-arena'], { queryParams: { game: this.currentGameId } });
+  }
+
+  openSwitchGame() {
+    if (!this.isHost) return;
+    this.gameSwitchService.open({
+      currentGameId: this.currentGameId,
+      currentMode: 'pk',
+      isPkMatch: true
+    });
   }
 
   handleGoToGame(gameId: string) {

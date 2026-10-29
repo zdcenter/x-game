@@ -5,19 +5,20 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../../core/services/ad.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { Math24Solver } from '../../utils/math24-solver';
-import { GameToolbarComponent } from '../../../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameMode } from '../../../../../core/models/game.model';
 import { HapticService } from '../../../../../core/services/haptic.service';
+import { DeviceService } from '../../../../../core/services/device.service';
+import { GameToolbarComponent } from '../../../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-math24-board',
   standalone: true,
   imports: [CommonModule, GameToolbarComponent],
   template: `
-    <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,440px,calc(100dvh-180px))] sm:max-w-[460px] mx-auto h-full gap-2 sm:gap-3 py-1 select-none">
+    <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,560px,calc(100dvh-170px))] sm:max-w-[520px] md:max-w-[560px] mx-auto h-full gap-2 sm:gap-3 py-1 select-none">
       
-      <!-- Level Badge (Single Player only) -->
-      @if (store.currentRoomMode() === GameMode.Single) {
+      <!-- Level Badge (Single Player only, PC only) -->
+      @if (store.currentRoomMode() === GameMode.Single && !isHandheld()) {
         <div class="flex justify-center w-full px-2">
           <div class="px-4 py-1 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs text-xs sm:text-sm font-black text-blue-400">
             {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
@@ -27,7 +28,8 @@ import { HapticService } from '../../../../../core/services/haptic.service';
 
       <!-- 3x3 Grid Board -->
       <div class="grid grid-cols-3 grid-rows-3 gap-2.5 sm:gap-4 w-full aspect-square relative select-none"
-           [class.animate-shake]="store.isShaking()">
+           [class.animate-shake]="store.isShaking()"
+           [class.pointer-events-none]="store.isSpectator()">
         
         <!-- Freeze Overlay -->
         @if (freezeRemaining() > 0) {
@@ -126,6 +128,12 @@ import { HapticService } from '../../../../../core/services/haptic.service';
             (restart)="reset()"
             (hintApplied)="applyHint()"
           ></app-game-toolbar>
+        } @else if (store.isSpectator()) {
+          <!-- Spectator Director View Indicator -->
+          <div class="flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs sm:text-sm max-w-[280px] mx-auto">
+            <span>👁️</span>
+            <span>{{ i18n.t('game.director_view')() || '导播观战中' }} · {{ store.focusedPlayerId() || ('对局中') }}</span>
+          </div>
         } @else {
           <!-- PK Mode: Clean Undo & Reset Actions -->
           <div class="flex items-center justify-center gap-3 w-full max-w-[280px] mx-auto">
@@ -185,6 +193,8 @@ export class Math24BoardComponent {
   i18n = inject(I18nService);
   adService = inject(AdService);
   toastService = inject(ToastService);
+  deviceService = inject(DeviceService);
+  isHandheld = this.deviceService.isHandheld;
 
   getCardFontSize(val: number): string {
     const num = Math.abs(val);
@@ -227,7 +237,7 @@ export class Math24BoardComponent {
   haptic = inject(HapticService);
 
   selectCard(card: Math24Card) {
-    if (this.freezeRemaining() > 0) return;
+    if (this.store.isSpectator() || this.freezeRemaining() > 0) return;
     this.haptic.vibrateLight();
     if (!this.selectedCard) {
       this.selectedCard = card;
@@ -254,7 +264,7 @@ export class Math24BoardComponent {
   }
 
   selectOp(op: Operator) {
-    if (this.freezeRemaining() > 0) return;
+    if (this.store.isSpectator() || this.freezeRemaining() > 0) return;
     if (this.selectedCard) {
       this.haptic.vibrateLight();
       this.selectedOp = this.selectedOp === op ? null : op;
@@ -262,6 +272,7 @@ export class Math24BoardComponent {
   }
 
   undo() {
+    if (this.store.isSpectator()) return;
     this.haptic.vibrateLight();
     this.store.undo();
     this.selectedCard = null;
@@ -269,6 +280,7 @@ export class Math24BoardComponent {
   }
 
   reset() {
+    if (this.store.isSpectator()) return;
     this.store.reset();
     this.selectedCard = null;
     this.selectedOp = null;

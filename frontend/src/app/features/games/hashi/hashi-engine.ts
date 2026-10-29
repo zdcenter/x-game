@@ -331,4 +331,32 @@ export class HashiEngine {
 
      return null;
   }
+
+  exportBridges(): Bridge[] {
+    return this.bridges.map(b => ({
+      r1: b.r1,
+      c1: b.c1,
+      r2: b.r2,
+      c2: b.c2,
+      count: b.count,
+      isHorizontal: b.isHorizontal
+    }));
+  }
+
+  loadBridges(bridges: any[]) {
+    if (!Array.isArray(bridges)) {
+      this.bridges = [];
+    } else {
+      this.bridges = bridges.map(b => ({
+        r1: b.r1,
+        c1: b.c1,
+        r2: b.r2,
+        c2: b.c2,
+        count: b.count || 1,
+        isHorizontal: b.isHorizontal ?? (b.r1 === b.r2)
+      }));
+    }
+    this.recalculateIslandBridges();
+  }
 }
+

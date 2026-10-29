@@ -20,7 +20,8 @@ export const GameId = {
   Nonogram: 'nonogram',
   Classic2048: 'classic2048',
   Connect: 'connect',
-  Hashi: 'hashi'
+  Hashi: 'hashi',
+  Tilematch: 'tilematch'
 } as const;
 
 export type GameIdType = typeof GameId[keyof typeof GameId];

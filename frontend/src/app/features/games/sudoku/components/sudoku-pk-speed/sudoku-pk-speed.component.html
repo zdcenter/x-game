@@ -10,6 +10,9 @@
           [opponents]="opponentsPkStats()"
           [roundFormat]="store.room()?.roundFormat || 'BO3'"
           [seriesScore]="seriesScore()"
+          [isSpectator]="store.isSpectator()"
+          [focusedPlayerId]="store.focusedPlayerId()"
+          (playerSelect)="store.setFocusedPlayer($event)"
         ></app-game-pk-hud>
       </div>
 
@@ -18,13 +21,15 @@
           <app-sudoku-board class="w-full"></app-sudoku-board>
         </div>
 
-        <div class="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 w-full md:w-16 flex-shrink-0 mt-1 md:mt-0">
-          <app-sudoku-numpad></app-sudoku-numpad>
-        </div>
+        @if (!store.isSpectator()) {
+          <div class="order-2 md:order-none md:col-start-2 md:row-start-1 md:row-span-2 w-full md:w-16 flex-shrink-0 mt-1 md:mt-0">
+            <app-sudoku-numpad></app-sudoku-numpad>
+          </div>
 
-        <div class="order-3 md:order-none md:col-start-1 md:row-start-2 w-full mt-1 md:mt-0">
-          <app-sudoku-tools class="w-full"></app-sudoku-tools>
-        </div>
+          <div class="order-3 md:order-none md:col-start-1 md:row-start-2 w-full mt-1 md:mt-0">
+            <app-sudoku-tools class="w-full"></app-sudoku-tools>
+          </div>
+        }
       </div>
     </div>
   

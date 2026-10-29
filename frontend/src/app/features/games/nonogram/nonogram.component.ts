@@ -21,29 +21,53 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { HapticService } from '../../../core/services/haptic.service';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { DeviceService } from '../../../core/services/device.service';
+import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
+import { ZenModeService } from '../../../core/services/zen-mode.service';
+import { PwaService } from '../../../core/services/pwa.service';
+import { FeedbackService } from '../../../core/services/feedback.service';
+import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-icon.component';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NonogramComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  getSubtitle() { return ""; }
-
   override store = inject(NonogramStore);
+  coinService = inject(CoinService);
+  coinGuideService = inject(CoinGuideService);
+  zenService = inject(ZenModeService);
+  pwaService = inject(PwaService);
+  feedbackService = inject(FeedbackService);
+  private elementRef = inject(ElementRef);
+
   private windowSize = inject(WindowSizeService);
-  private adService = inject(AdService);
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
 
   private roomLifecycle: RoomLifecycleHandle;
 
   predefinedDifficulties = this.gameRegistry.getConfig('nonogram')?.difficulties || [];
+
+  readonly currentDifficultyLabel = computed(() => {
+    const diffId = this.store.currentDifficulty();
+    const item = this.predefinedDifficulties.find(d => d.id === diffId);
+    if (!item) return diffId;
+    const label = this.t(item.labelKey)();
+    return `${label} (${item.desc || diffId})`;
+  });
+
+  getSubtitle() {
+    return this.currentDifficultyLabel();
+  }
 
 
 
@@ -97,19 +121,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       }
     });
 
-    // Show result overlay with a delay after game finishes
-    effect((onCleanup) => {
+    effect(() => {
       if (this.store.status() === GameStatus.Finished) {
-        const isWin = this.store.currentRoomMode() === GameMode.Single || this.store.winners().includes(this.playerId);
-        if (isWin) {
+        if (this.store.isVictory()) {
           this.celebrateVictory();
         } else {
           this.vibrateError();
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
       }
     });
   }
@@ -118,8 +136,16 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     super.ngOnInit();
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
+      this.store.joinRoom(
+        pending.roomId,
+        pending.mode,
+        pending.difficulty,
+        pending.host || '',
+        pending.target ?? 1,
+        pending.password,
+        pending.bountyCoins,
+        pending.isSpectator
+      );
       return;
     } else {
       const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
@@ -148,68 +174,74 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const maxRowHints = rowHints.length > 0 ? Math.max(...rowHints.map((r: number[]) => r.length), 1) : 1;
     const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
 
-    // Dynamic hint area equivalents in cell units (matching actual font and padding in CSS)
-    // Row hints are horizontally arranged numbers with gaps: allow ~0.62 cell units per hint number
-    const rowHintEq = Math.max(1.8, maxRowHints * 0.62 + 0.6);
-    // Col hints are vertically arranged numbers: allow ~0.55 cell units per hint number
-    const colHintEq = Math.max(1.8, maxColHints * 0.55 + 0.6);
-
-    const totalCols = w + rowHintEq;
-    const totalRows = h + colHintEq;
-
     // Available width for the board container:
-    // Real cumulative padding of outer layout (GameLayout) and board wrappers:
-    // Mobile (<640px): Layout px-2 (16px) + Stage p-1 (8px) + Board p-1 (8px) = 32px
-    // Tablet (640-1024px): Layout px-4 (32px) + Stage p-2.5 (20px) + Board p-2.5 (20px) = 72px + safety margin = 80px
-    // Desktop (>=1024px): Layout px-6 (48px) + Stage p-2.5 (20px) + Board p-3 (24px) = 92px + safety margin = 100px
-    const padW = vw < 640 ? 32 : (vw < 1024 ? 80 : 100);
-    const maxBoardW = vw >= 1024 ? 960 : (vw >= 640 ? 840 : vw - padW);
+    // Mobile (<640px): leave only 16px safety margins so board gracefully fills viewport
+    // Tablet (640-1024px): 40px margins
+    // Desktop (>=1024px): 80px margins
+    const padW = vw < 640 ? 16 : (vw < 1024 ? 40 : 80);
+    const maxBoardW = vw >= 1024 ? 960 : (vw >= 640 ? 780 : vw - padW);
     const availW = Math.max(260, Math.min(vw - padW, maxBoardW));
 
     // Available height in viewport:
-    // Header (~56px) + Stage padding + Toolbar (~52px) + Bottom margin (~20px)
-    // PK HUD adds ~48px if multiplayer
     const isSingle = this.store.currentRoomMode() === GameMode.Single;
+    const isHandheld = this.deviceService.isHandheld();
     const chromeH = isSingle
-      ? (vw < 640 ? 150 : (vw < 1024 ? 175 : 185))
-      : (vw < 640 ? 195 : (vw < 1024 ? 225 : 240));
-    const availH = Math.max(260, vh - chromeH);
+      ? (isHandheld ? (vw < 640 ? 115 : 135) : 175)
+      : (isHandheld ? (vw < 640 ? 155 : 175) : 215);
+    const availH = Math.max(280, vh - chromeH);
 
-    const sizeW = Math.floor(availW / totalCols);
-    const sizeH = Math.floor(availH / totalRows);
+    // Realistic pixel reservations for hint areas:
+    // Row hints: ~16px per hint number + padding ~12px
+    const estRowHintWidth = Math.max(38, maxRowHints * 16 + 12);
+    const availGridW = Math.max(160, availW - estRowHintWidth);
 
-    let calculatedSize: number;
-    if (vw >= 640) {
-      // Tablet and Desktop: fit both width and height gracefully to keep within viewport
-      calculatedSize = Math.min(sizeW, sizeH);
+    // Col hints: ~16px per hint number line + padding ~10px
+    const estColHintHeight = Math.max(38, maxColHints * 16 + 10);
+    const availGridH = Math.max(160, availH - estColHintHeight);
+
+    const sizeW = Math.floor(availGridW / w);
+    const sizeH = Math.floor(availGridH / h);
+    let calculatedSize = Math.min(sizeW, sizeH);
+
+    // Monotonic scaling guarantee: Board total footprint must NEVER shrink as grid count increases!
+    if (vw < 640) {
+      // Mobile portrait:
+      // 5x5: ~58-64px (grid width ~300px)
+      // 10x10: ~30-34px (grid width ~320px)
+      // 15x15: ~22-26px (grid width ~340-360px)
+      // 20x20: ~19-22px (grid width ~380-400px)
+      // 25x25: ~18-20px (grid width ~450px, smooth scrolling enabled)
+      if (w >= 25) {
+        return Math.max(18, Math.min(calculatedSize, 26));
+      } else if (w >= 20) {
+        return Math.max(19, Math.min(calculatedSize, 32));
+      } else if (w >= 15) {
+        return Math.max(22, Math.min(calculatedSize, 42));
+      } else if (w >= 10) {
+        return Math.max(30, Math.min(calculatedSize, 56));
+      } else {
+        return Math.max(58, Math.min(calculatedSize, 96));
+      }
     } else {
-      // Mobile: if grid is small (5x5, 10x10), fit to screen; if large, base primarily on width with minSize
-      calculatedSize = w <= 10 ? Math.min(sizeW, sizeH) : sizeW;
+      // Tablet and Desktop:
+      // Board footprint (w * cellSize) is strictly non-decreasing across difficulties:
+      // 5x5: 64-96px (span 320-480px)
+      // 10x10: 40-60px (span 400-600px)
+      // 15x15: 30-45px (span 450-675px)
+      // 20x20: 25-36px (span 500-720px)
+      // 25x25: 23-32px (span 575-750px)
+      if (w >= 25) {
+        return Math.max(23, Math.min(calculatedSize, 34));
+      } else if (w >= 20) {
+        return Math.max(25, Math.min(calculatedSize, 40));
+      } else if (w >= 15) {
+        return Math.max(30, Math.min(calculatedSize, 48));
+      } else if (w >= 10) {
+        return Math.max(40, Math.min(calculatedSize, 64));
+      } else {
+        return Math.max(64, Math.min(calculatedSize, 112));
+      }
     }
-
-    // Adaptive min/max bounds based on grid difficulty to give rich, immersive board sizes
-    let minSize = 20;
-    let maxSize = 112;
-
-    if (w >= 25) {
-      minSize = 20;
-      maxSize = 36;
-    } else if (w >= 20) {
-      minSize = 22;
-      maxSize = 42;
-    } else if (w >= 15) {
-      minSize = 24;
-      maxSize = 52;
-    } else if (w >= 10) {
-      minSize = vw < 640 ? 28 : 34;
-      maxSize = 84;
-    } else {
-      // 5x5 Easy: allows up to 112px on iPad / PC so it fills the screen majestically!
-      minSize = vw < 640 ? 46 : 60;
-      maxSize = 112;
-    }
-
-    return Math.max(minSize, Math.min(calculatedSize, maxSize));
   });
 
   @ViewChild('cellsGrid') cellsGridRef?: ElementRef<HTMLElement>;
@@ -642,8 +674,9 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       }
     }
 
+    const isSpec = this.store.isSpectator();
     return players
-      .filter(p => p && p.id !== myId)
+      .filter(p => p && (isSpec || p.id !== myId))
       .map(opp => {
         const oppProg = Math.round(Number(opp.progress || 0));
         const wins = winsMap[opp.id] || 0;

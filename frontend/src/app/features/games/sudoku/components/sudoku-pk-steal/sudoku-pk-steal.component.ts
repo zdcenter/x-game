@@ -37,7 +37,7 @@ export class SudokuPkStealComponent {
       id: this.store.playerId(),
       nickname: this.store.playerId(),
       isHost: this.store.playerId() === this.store.hostId(),
-      isMe: true,
+      isMe: !this.store.isSpectator(),
       score: score,
       status: GameStatus.Playing,
       metrics: [
@@ -48,12 +48,13 @@ export class SudokuPkStealComponent {
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     const myId = this.store.playerId();
-    const players = this.getSortedPlayers().filter(p => p.id !== myId);
+    const isSpec = this.store.isSpectator();
+    const players = this.getSortedPlayers().filter(p => isSpec || p.id !== myId);
     return players.map(p => ({
       id: p.id,
       nickname: p.id,
       isHost: p.id === this.store.hostId(),
-      isMe: false,
+      isMe: !isSpec && p.id === myId,
       score: p.score || 0,
       status: GameStatus.Playing,
       metrics: [
@@ -122,15 +123,6 @@ export class SudokuPkStealComponent {
   }
 
   constructor() {
-    effect((onCleanup) => {
-      if (this.store.isFinished() || this.store.gameStatus() === GameStatus.Finished) {
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
-      }
-    });
-
     // Handle freeze countdown
     effect(() => {
       const players = this.store.players() as any;

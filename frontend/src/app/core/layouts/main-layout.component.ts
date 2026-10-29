@@ -18,6 +18,7 @@ import { CoinGuideService } from '../services/coin-guide.service';
 import { CoinGuideModalComponent } from '../../shared/components/coin-guide-modal/coin-guide-modal.component';
 import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 import { FriendService } from '../services/friend.service';
+import { DeviceService } from '../services/device.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -26,8 +27,8 @@ import { FriendService } from '../services/friend.service';
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
-      <!-- Global Navbar -->
-      @if (!zenService.isZenMode()) {
+      <!-- Global Navbar (自动在移动端/平板设备游戏沉浸或 ZenMode 时完全隐藏) -->
+      @if (!isFullImmersion()) {
         <header class="flex-shrink-0 relative z-50 backdrop-blur-md border-b" style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
         <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
 
@@ -428,6 +429,19 @@ export class MainLayoutComponent {
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
   friendService = inject(FriendService);
+  deviceService = inject(DeviceService);
+
+  /**
+   * 全屏沉浸判定：
+   * 1. 显式开启 ZenMode（任何设备）；
+   * 2. 只有手持移动设备（手机、平板）且处于沉浸请求或游戏路由时才自动满屏；
+   * 3. PC 桌面端默认保持标准网页流（展示全站导航、可向下滚动查看深度攻略玩法规则与 AdSense 广告位），保障 SEO 与变现！
+   */
+  readonly isFullImmersion = computed(() => {
+    if (this.zenService.isZenMode()) return true;
+    const isHandheld = this.deviceService.isHandheld();
+    return isHandheld && (this.layout.isImmersiveGame() || this.zenService.isGameRoute());
+  });
 
   pendingFriendRequests = computed(() => {
     return this.friendService.friends().filter(f => f.status === 'pending_received').length;

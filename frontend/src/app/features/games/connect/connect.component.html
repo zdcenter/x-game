@@ -1,6 +1,7 @@
 <app-game-layout
   [gameId]="'connect'"
   [store]="store"
+  [immersive]="isHandheld()"
   [title]="i18n.t('lobby.connect')()"
   [subtitle]="getSubtitle()"
   icon="🔗"
@@ -23,9 +24,88 @@
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
-  [isLobby]="view() === 'lobby'"
+  [isLobby]="view() === 'lobby' && store.currentRoomMode() === GameMode.Single"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'connect'"
+      [gameTitle]="i18n.t('lobby.connect')() || '一笔画连线'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="view() !== 'play' ? goBack() : goBackToLobby()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      @if (view() !== 'play') {
+        <div class="flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-bold text-xs sm:text-sm">
+          <span>🔗</span>
+          <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
+        </div>
+      } @else {
+        <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        <!-- 关卡 -->
+        <button
+          type="button"
+          (click)="goBackToLobby()"
+          class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 active:scale-95 transition-all cursor-pointer shrink-0"
+          [title]="i18n.t('lobby.select_level')() || '选择关卡'"
+        >
+          <span class="text-xs sm:text-sm">#</span>
+          <span class="text-xs sm:text-base font-black font-mono leading-tight">
+            {{ store.currentLevelNum() }}
+          </span>
+        </button>
+
+        <!-- 连线配对 -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('game.flows')() || '连线' }}
+          </span>
+          <span class="text-xs sm:text-base font-black font-mono leading-tight"
+                [class.text-emerald-500]="store.connectedFlows() === store.totalFlows()"
+                [class.text-cyan-500]="store.connectedFlows() !== store.totalFlows()">
+            {{ store.connectedFlows() }}/{{ store.totalFlows() }}
+          </span>
+        </div>
+
+        <!-- 覆盖率 -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('game.coverage')() || '覆盖率' }}
+          </span>
+          <span class="text-xs sm:text-base font-black font-mono leading-tight"
+                [class.text-emerald-500]="store.coveragePercent() === 100"
+                [class.text-amber-500]="store.coveragePercent() !== 100">
+            {{ store.coveragePercent() }}%
+          </span>
+        </div>
+
+        <!-- 笑脸重启 -->
+        <button
+          type="button"
+          (click)="onRestart()"
+          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+        >
+          {{ store.status() === GameStatus.Finished ? '😎' : '😊' }}
+        </button>
+
+        <!-- 计时 -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('game.time')() || '用时' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-blue-400 font-mono leading-tight">
+            {{ formatTime(store.timeSpent()) }}
+          </span>
+        </div>
+      </div>
+      }
+    </app-game-handheld-header>
+  }
+
   <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
     <ng-container *ngIf="view() === 'lobby'">
       <app-connect-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
@@ -34,8 +114,9 @@
     </ng-container>
 
     <ng-container *ngIf="view() === 'play'">
-      <!-- INFO BAR for single player -->
-      <div *ngIf="store.currentRoomMode() === GameMode.Single" class="w-full mx-auto flex flex-wrap justify-between items-center gap-2 px-3 sm:px-4 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl mb-4 text-xs sm:text-sm border border-[var(--color-border-card)] shadow-sm" [style.max-width]="boardWidthPx()">
+      <!-- INFO BAR for single player (PC 桌面端展示) -->
+      @if (!isHandheld() && store.currentRoomMode() === GameMode.Single) {
+        <div class="w-full mx-auto flex flex-wrap justify-between items-center gap-2 px-3 sm:px-4 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl mb-4 text-xs sm:text-sm border border-[var(--color-border-card)] shadow-sm" [style.max-width]="boardWidthPx()">
         <div class="text-[var(--color-text-main)] font-bold flex items-center gap-2">
           <span class="px-2 py-0.5 rounded-md bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black text-xs uppercase">{{ i18n.t('game.diff_' + store.currentDifficulty())() }}</span>
           <span>第 {{ store.currentLevelNum() }} 关</span>
@@ -71,14 +152,18 @@
           </div>
         </div>
       </div>
+      }
       <!-- Universal PK HUD -->
-      <div *ngIf="store.currentRoomMode() !== GameMode.Single" class="flex-none py-1 mb-2 shrink-0 w-full">
+      <div *ngIf="store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Waiting" class="flex-none py-1 mb-2 shrink-0 w-full">
         <app-game-pk-hud
           [myPlayer]="myPlayerPkStats()"
           [opponents]="opponentsPkStats()"
           [targetWins]="store.currentRoomTarget()"
           [gameMode]="store.currentRoomMode()"
-          [status]="store.status()">
+          [status]="store.status()"
+          [isSpectator]="store.isSpectator()"
+          [focusedPlayerId]="store.focusedPlayerId()"
+          (playerSelect)="store.setFocusedPlayer($event)">
         </app-game-pk-hud>
       </div>
 
@@ -95,7 +180,7 @@
           class="w-full h-full block"
           *ngIf="store.localEngine()"
           [engine]="store.localEngine()!"
-          [disabled]="store.status() !== GameStatus.Playing"
+          [disabled]="store.status() !== GameStatus.Playing || store.isSpectator()"
           [highlightUnfilled]="store.connectedFlows() === store.totalFlows() && store.coveragePercent() < 100"
           (boardChange)="onBoardChange()">
         </app-connect-board>
@@ -123,9 +208,4 @@
       </div>
     </ng-container>
   </div>
-
-  <app-game-spectating-overlay 
-    *ngIf="store.isSpectator()"
-    [players]="store.opponents()">
-  </app-game-spectating-overlay>
 </app-game-layout>

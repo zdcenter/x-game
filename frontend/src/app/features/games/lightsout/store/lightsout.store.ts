@@ -50,6 +50,18 @@ export class LightsoutStore extends BaseGameStore {
       const b = this.localEngine()?.board || [];
       return b.map(row => [...row]);
     }
+    if (this.isSpectator()) {
+      const st = this.rawState() as any;
+      if (!st?.players) return [];
+      let targetId = this.focusedPlayerId();
+      if (!targetId || !st.players[targetId]) {
+        const found = Object.keys(st.players).find(k => k.toLowerCase() === targetId.toLowerCase());
+        if (found) targetId = found;
+        else targetId = Object.keys(st.players)[0] || '';
+      }
+      const b = st.players[targetId]?.board || [];
+      return b.map((row: any) => [...row]);
+    }
     const pk = this.pkBoard();
     if (pk) {
       return pk.board.map(row => [...row]);
@@ -66,6 +78,17 @@ export class LightsoutStore extends BaseGameStore {
     this.tick();
     if (this.currentRoomMode() === GameMode.Single) {
       return this.localEngine()?.moves || 0;
+    }
+    if (this.isSpectator()) {
+      const st = this.rawState() as any;
+      if (!st?.players) return 0;
+      let targetId = this.focusedPlayerId();
+      if (!targetId || !st.players[targetId]) {
+        const found = Object.keys(st.players).find(k => k.toLowerCase() === targetId.toLowerCase());
+        if (found) targetId = found;
+        else targetId = Object.keys(st.players)[0] || '';
+      }
+      return st.players[targetId]?.moves || 0;
     }
     const pk = this.pkBoard();
     if (pk) {
@@ -164,8 +187,9 @@ export class LightsoutStore extends BaseGameStore {
     const st = this.rawState() as any;
     if (!st?.players) return [];
     
+    const isSpec = this.isSpectator();
     return Object.keys(st.players)
-      .filter(id => id !== this.playerId())
+      .filter(id => isSpec || id !== this.playerId())
       .map(id => {
         const p = st.players[id];
         let remaining = 0;
@@ -228,8 +252,17 @@ export class LightsoutStore extends BaseGameStore {
     this.startGame();
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty: string = GameDifficulty.Medium,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     if (mode === GameMode.Single) {
       this.startGame();
     }

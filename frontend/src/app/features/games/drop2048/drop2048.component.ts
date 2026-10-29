@@ -25,13 +25,15 @@ import { GameScoreCapsuleComponent } from '../../../shared/components/game-score
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-drop2048',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
     Drop2048BoardComponent,
-    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html',
   styleUrls: ['./drop2048.component.css']
@@ -50,7 +52,6 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     };
     return [me, ...opps];
   });
-  adService = inject(AdService);
   override store = inject(Drop2048Store);
   roomLifecycle!: RoomLifecycleHandle;
   private floatingText = inject(FloatingTextService);
@@ -63,7 +64,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
-      isMe: true,
+      isMe: !this.store.isSpectator(),
       score: this.store.score(),
       status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
       metrics: [
@@ -73,19 +74,23 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   });
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
-    return this.store.opponents().map(opp => {
-      return {
-        id: opp.id,
-        nickname: opp.id,
-        isHost: opp.id === this.store.hostId(),
-        isMe: false,
-        score: opp.score,
-        status: opp.finished ? GameStatus.Finished : GameStatus.Playing,
-        metrics: [
-          { label: this.i18n.t('game.pk.score')() || '分', value: opp.score, icon: '⭐', colorClass: 'text-amber-500 font-bold' }
-        ]
-      };
-    });
+    const isSpec = this.store.isSpectator();
+    const myId = this.playerId;
+    return this.store.opponents()
+      .filter(opp => isSpec || opp.id !== myId)
+      .map(opp => {
+        return {
+          id: opp.id,
+          nickname: opp.id,
+          isHost: opp.id === this.store.hostId(),
+          isMe: !isSpec && opp.id === myId,
+          score: opp.score,
+          status: opp.finished ? GameStatus.Finished : GameStatus.Playing,
+          metrics: [
+            { label: this.i18n.t('game.pk.score')() || '分', value: opp.score, icon: '⭐', colorClass: 'text-amber-500 font-bold' }
+          ]
+        };
+      });
   });
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
@@ -156,17 +161,13 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       });
     });
 
-    effect((onCleanup) => {
+    effect(() => {
       if (this.store.status() === GameStatus.Finished) {
-        if (this.store.currentRoomMode() !== GameMode.Single && this.store.winners().includes(this.playerId)) {
+        if (this.store.isVictory()) {
           this.celebrateVictory();
         } else {
           this.vibrateError();
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
       }
     });
 
@@ -205,8 +206,11 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
     if (joinInfo) {
       if (joinInfo.mode !== GameMode.Single) {
-        if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-        this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host, joinInfo.target ?? 1);
+        if (joinInfo.isCreate) {
+          this.handleCreateRoom(joinInfo);
+        } else {
+          this.handleJoinRoom(joinInfo);
+        }
       } else {
         this.view.set('play');
         this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium);
@@ -227,22 +231,58 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     this.store.joinRoom('', GameMode.Single, diff);
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId?: string, target: number = 1) {
+  joinRoom(
+    roomId: string,
+    mode: string,
+    difficulty: string,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false,
+    action?: string
+  ) {
     this.isMobileSidebarOpen.set(false);
-    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
+    if (!isSpectator) {
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    }
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     this.view.set('room');
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
+  override handleJoinRoom(event: any) {
     if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    this.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false,
+      event.isSpectator ? 'spectate' : 'join'
+    );
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    const roomId = event.name || event.roomId;
+    this.joinRoom(
+      roomId,
+      event.mode,
+      event.difficulty,
+      this.playerId,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      false,
+      'create'
+    );
   }
 
   onRoomCreated() {
@@ -329,7 +369,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       return;
     }
 
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
 
     const isLeft = event.code === 'ArrowLeft' || event.key === 'ArrowLeft' || event.code === 'KeyA' || event.key === 'a' || event.key === 'A';
     const isRight = event.code === 'ArrowRight' || event.key === 'ArrowRight' || event.code === 'KeyD' || event.key === 'd' || event.key === 'D';
@@ -367,7 +407,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
   private hasMoved = false;
 
   onTouchStart(e: TouchEvent) {
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
     this.touchStartX = e.touches[0].clientX;
     this.touchStartY = e.touches[0].clientY;
     this.lastProcessedX = this.touchStartX;

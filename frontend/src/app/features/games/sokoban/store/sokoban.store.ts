@@ -73,7 +73,12 @@ export class SokobanStore extends BaseGameStore {
         return;
       }
       const state = this.rawState() as SokobanGameState;
-      const myP = state?.players?.[this.playerId()];
+      const players = state?.players;
+      let myP = players?.[this.playerId()];
+      if (!myP && players) {
+        const match = Object.keys(players).find(k => k.toLowerCase() === this.playerId().toLowerCase());
+        if (match) myP = players[match];
+      }
       if (!myP || !myP.board || myP.board.length === 0) {
         this.pkLocalEngine.set(null);
         return;
@@ -87,8 +92,9 @@ export class SokobanStore extends BaseGameStore {
         const eng = new LocalSokobanEngine(
           'pk_level',
           this.currentDifficulty(),
-          undefined,
+          '',
           {
+            levelStr: '',
             board: myP.board.map(r => [...r]),
             moves: myP.moves,
             status: myP.status
@@ -120,8 +126,20 @@ export class SokobanStore extends BaseGameStore {
       } as SokobanPlayerState;
     }
 
+    if (this.isSpectator()) {
+      const state = this.rawState() as SokobanGameState;
+      if (!state || !state.players) return null;
+      let targetId = this.focusedPlayerId();
+      if (!targetId || !state.players[targetId]) {
+        const found = Object.keys(state.players).find(k => k.toLowerCase() === targetId.toLowerCase());
+        if (found) targetId = found;
+        else targetId = Object.keys(state.players)[0] || '';
+      }
+      return state.players[targetId] || null;
+    }
+
     const pkEng = this.pkLocalEngine();
-    if (pkEng) {
+    if (pkEng && pkEng.board && pkEng.board.length > 0) {
       return {
         id: this.playerId(),
         board: pkEng.board,
@@ -132,7 +150,12 @@ export class SokobanStore extends BaseGameStore {
 
     const state = this.rawState() as SokobanGameState;
     if (!state || !state.players) return null;
-    return state.players[this.playerId()];
+    let myState = state.players[this.playerId()];
+    if (!myState) {
+      const matchKey = Object.keys(state.players).find(k => k.toLowerCase() === this.playerId().toLowerCase());
+      if (matchKey) myState = state.players[matchKey];
+    }
+    return myState || null;
   });
 
   myBoard = computed(() => {
@@ -186,8 +209,9 @@ export class SokobanStore extends BaseGameStore {
     const state = this.rawState() as SokobanGameState;
     if (!state || !state.players) return [];
     
+    const isSpec = this.isSpectator();
     return Object.values(state.players)
-      .filter(p => p.id !== this.playerId())
+      .filter(p => isSpec || p.id !== this.playerId())
       .map(p => ({
         id: p.id,
         board: p.board,
@@ -209,8 +233,8 @@ export class SokobanStore extends BaseGameStore {
     this.startTimer();
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string, target: number = 1, password: string = '', bounty: number = 0, isSpectator: boolean = false) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     this.isDead.set(false);
     
     if (mode === GameMode.Single) {
@@ -342,6 +366,9 @@ export class SokobanStore extends BaseGameStore {
   }
 
   changeSingleDifficulty(diff: string) {
+    if (this.currentRoomMode() !== GameMode.Single || this.roomId()) {
+      return;
+    }
     this.currentDifficulty.set(diff);
     this.fetchLevelsAndLoad(diff);
   }

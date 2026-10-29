@@ -10,8 +10,8 @@ import { ConnectStore } from '../connect.store';
   imports: [CommonModule],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
   template: `
-    <div class="flex-1 flex flex-col p-1 sm:p-2 lg:p-4 w-full h-full min-w-0 min-h-0">
-      <div class="flex-1 flex flex-col w-full h-full bg-[var(--color-bg-card)] rounded-2xl shadow-xl border border-[var(--color-border-card)] min-w-0 min-h-0 overflow-hidden">
+    <div class="flex-1 flex flex-col p-0 sm:p-2 lg:p-4 w-full h-full min-w-0 min-h-0">
+      <div class="flex-1 flex flex-col w-full h-full bg-[var(--color-bg-card)] rounded-none sm:rounded-2xl shadow-none sm:shadow-xl border-0 sm:border border-[var(--color-border-card)] min-w-0 min-h-0 overflow-hidden">
       
       <!-- Header Tabs -->
       <div class="flex border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)] shrink-0">

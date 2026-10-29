@@ -3,6 +3,7 @@
   [gameId]="'block'"
   [title]="i18n.t('app.title.block')() || 'Block Puzzle'"
   [subtitle]="getSubtitle()"
+  [immersive]="isHandheld()"
   icon="🟩"
   iconGradientClass="from-blue-500 to-indigo-500"
   titleGradientClass="from-blue-400 to-indigo-400"
@@ -12,7 +13,6 @@
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="changeSingleDifficulty($event)"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [customResultTitle]="resultTitle"
   [overlayStats]="resultStats"
@@ -30,75 +30,128 @@
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
 
-          <!-- Players Status Bar -->
-          @if (store.currentRoomMode() === GameMode.Single) {
-            <!-- Single Player Modern Jewel Glass HUD -->
-            <div class="flex-none px-3 sm:px-8 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm">
-              <app-game-score-capsule
-                [score]="store.score()"
-                [bestScore]="store.bestScore()"
-                [worldBestScore]="worldRecord()?.bestScore"
-                [worldRecordHolder]="worldRecord()?.username"
-                scoreIcon="🟦"
-              >
-                <!-- Center: Dynamic Combo Badge & Theme Switcher -->
-                <div class="flex items-center gap-1.5 sm:gap-3">
-                  @if (store.clearTrigger() > 1) {
-                    <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border border-emerald-500/40 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.3)] animate-pulse">
-                      <span class="text-xs sm:text-sm">🔥</span>
-                      <span class="text-[10px] sm:text-xs font-black text-emerald-600 dark:text-emerald-400 tracking-wider whitespace-nowrap">
-                        {{ store.clearTrigger() }}x COMBO
-                      </span>
-                    </div>
-                  }
+  <!-- Integrated Handheld Header Bar (仅移动/平板手持端展示，PC 桌面端保持标准统一单顶栏杜绝重复) -->
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'block'"
+      [gameTitle]="i18n.t('app.title.block')() || '方块消除'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()">
 
-                  <!-- Instant Restart Button -->
-                  <button
-                    type="button"
-                    (click)="store.startGame()"
-                    class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer group"
-                    [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
-                    <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
-                    <span class="hidden md:inline font-medium text-[11px]">
-                      {{ i18n.t('game.restart')() || '重开' }}
-                    </span>
-                  </button>
+      <!-- Center: Score + Best + Restart -->
+      @if (store.currentRoomMode() === GameMode.Single) {
+        <div class="flex items-center gap-1.5 sm:gap-3 flex-1 justify-center min-w-0">
+          <!-- SCORE -->
+          <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+               [title]="'SCORE'">
+            <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">SCORE</span>
+            <span class="font-digital text-blue-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+              {{ store.score() }}
+            </span>
+          </div>
 
-                  <!-- Palette Theme Toggle Button (单一色/多色自由切换) -->
-                  <button
-                    type="button"
-                    (click)="store.cycleColorTheme()"
-                    class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all"
-                    [title]="i18n.t('hexa.theme_tooltip')()">
-                    <span class="text-xs sm:text-sm">🎨</span>
-                    <span class="hidden md:inline font-medium text-[11px]">
-                      {{ i18n.t('hexa.theme.' + store.colorTheme())() }}
-                    </span>
-                  </button>
-                </div>
-              </app-game-score-capsule>
-            </div>
-          } @else {
-            <!-- Universal PK Battle HUD (Block Puzzle) -->
-            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
-              <app-game-pk-hud
-                [myPlayer]="myPlayerPkStats()"
-                [opponents]="opponentsPkStats()"
-                [gameMode]="store.currentRoomMode()"
-                [status]="store.status()"
-                [targetWins]="store.currentRoomTarget()"
-                [roundFormat]="store.room()?.roundFormat || 'BO3'"
-                [seriesScore]="seriesScore()"
-              ></app-game-pk-hud>
+          <!-- BEST -->
+          <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+               [title]="'BEST'">
+            <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">BEST</span>
+            <span class="font-digital text-emerald-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+              {{ store.bestScore() }}
+            </span>
+          </div>
+
+          <!-- 😃 经典笑脸重启 -->
+          <button (click)="store.startGame()"
+                  class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
+                  [title]="i18n.t('game.restart')() || '重新开始'">
+            {{ store.status() === GameStatus.Finished ? '😵' : '😃' }}
+          </button>
+        </div>
+      } @else {
+        <!-- PK 模式头部指示器 -->
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
+          <span class="text-xs sm:text-base">⚔️</span>
+          <span class="truncate">{{ i18n.t('app.title.block')() || '方块消除' }} · PK</span>
+        </div>
+      }
+    </app-game-handheld-header>
+  }
+
+  <!-- Universal PK Battle HUD (Block Puzzle) -->
+  @if (store.currentRoomMode() !== GameMode.Single) {
+    <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+      <app-game-pk-hud
+        [myPlayer]="myPlayerPkStats()"
+        [opponents]="opponentsPkStats()"
+        [gameMode]="store.currentRoomMode()"
+        [status]="store.status()"
+        [targetWins]="store.currentRoomTarget()"
+        [roundFormat]="store.room()?.roundFormat || 'BO3'"
+        [seriesScore]="seriesScore()"
+        [isSpectator]="store.isSpectator()"
+        [focusedPlayerId]="store.focusedPlayerId()"
+        (playerSelect)="store.setFocusedPlayer($event)"
+      ></app-game-pk-hud>
+    </div>
+  } @else if (!isHandheld()) {
+    <!-- Single Player Modern Jewel Glass HUD (PC 桌面端展示) -->
+    <div class="flex-none px-3 sm:px-8 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm">
+      <app-game-score-capsule
+        [score]="store.score()"
+        [bestScore]="store.bestScore()"
+        [worldBestScore]="worldRecord()?.bestScore"
+        [worldRecordHolder]="worldRecord()?.username"
+        scoreIcon="🟦"
+      >
+        <!-- Center: Dynamic Combo Badge & Theme Switcher -->
+        <div class="flex items-center gap-1.5 sm:gap-3">
+          @if (store.clearTrigger() > 1) {
+            <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-emerald-500/20 border border-emerald-500/40 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.3)] animate-pulse">
+              <span class="text-xs sm:text-sm">🔥</span>
+              <span class="text-[10px] sm:text-xs font-black text-emerald-600 dark:text-emerald-400 tracking-wider whitespace-nowrap">
+                {{ store.clearTrigger() }}x COMBO
+              </span>
             </div>
           }
 
-          <!-- Board Area (Scrollable if needed) -->
-          <div class="w-full flex-grow flex flex-col items-center justify-center my-auto py-2 lg:py-4 min-h-0 overflow-y-auto custom-scrollbar">
-            <!-- 彻底抛弃 Flexbox 自动推算，使用物理级绝对尺寸 -->
-            <div class="relative flex items-center justify-center shrink-0 mb-4"
-                 [class.block-shake]="isShaking()"
-                 style="width: min(75vmin, 500px); height: min(75vmin, 500px);">
+          <!-- Instant Restart Button -->
+          <button
+            type="button"
+            (click)="store.startGame()"
+            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+            [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+            <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
+            <span class="hidden md:inline font-medium text-[11px]">
+              {{ i18n.t('game.restart')() || '重开' }}
+            </span>
+          </button>
+
+          <!-- Palette Theme Toggle Button (单一色/多色自由切换) -->
+          <button
+            type="button"
+            (click)="store.cycleColorTheme()"
+            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all"
+            [title]="i18n.t('hexa.theme_tooltip')()">
+            <span class="text-xs sm:text-sm">🎨</span>
+            <span class="hidden md:inline font-medium text-[11px]">
+              {{ i18n.t('hexa.theme.' + store.colorTheme())() }}
+            </span>
+          </button>
+        </div>
+      </app-game-score-capsule>
+    </div>
+  }
+
+          <!-- Unified Game Stage: Board + Compact Hand Shapes (紧凑相连，操作顺手) -->
+          <div class="w-full flex-grow flex flex-col items-center justify-center min-h-0 py-1 sm:py-2 select-none overflow-hidden">
+            <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,500px)] mx-auto gap-2 sm:gap-3 shrink-0">
+              <!-- 棋盘绝对物理尺寸，留出下方手牌舒适空间 -->
+              <div class="relative flex items-center justify-center shrink-0"
+                   [class.block-shake]="isShaking()"
+                   style="width: min(calc(100vw - 16px), calc(100dvh - 200px), 500px); height: min(calc(100vw - 16px), calc(100dvh - 200px), 500px);">
 
               <!-- Score Float-up Texts -->
               <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
@@ -191,6 +244,45 @@
                   }
                 </div>
                 
+                <!-- Single Player In-Board Game Over & Instant Restart Overlay -->
+                @if (store.currentRoomMode() === GameMode.Single && (store.isDead() || store.status() === GameStatus.Finished)) {
+                  <div class="absolute inset-0 z-40 flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] animate-fade-in text-center select-none shadow-2xl">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl mb-2 bg-rose-500/15 border border-rose-500/30 text-rose-500 shadow-lg animate-bounce">
+                      😵
+                    </div>
+                    <h3 class="text-lg sm:text-2xl font-black text-[var(--color-text-main)] mb-1 tracking-tight">
+                      {{ i18n.t('game.game_over')() || '游戏结束' }}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mb-3">
+                      {{ i18n.t('game.no_moves_left')() || '无可用放置空间' }}
+                    </p>
+
+                    <!-- Score Stats -->
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="flex flex-col items-center px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs min-w-[64px]">
+                        <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase">SCORE</span>
+                        <span class="text-sm sm:text-lg font-black text-blue-500 font-digital">{{ store.score() }}</span>
+                      </div>
+                      <div class="flex flex-col items-center px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs min-w-[64px]">
+                        <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase">BEST</span>
+                        <span class="text-sm sm:text-lg font-black text-emerald-500 font-digital">{{ store.bestScore() }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Direct Restart Button -->
+                    <button
+                      type="button"
+                      (click)="store.startGame()"
+                      class="px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/30 active:scale-95 transition-all flex items-center gap-2 cursor-pointer group">
+                      <span class="group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                      <span>{{ i18n.t('game.play_again')() || i18n.t('game.restart')() || '重新开始' }}</span>
+                      <span class="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded bg-black/20 text-white/80 border border-white/20">
+                        Space / R
+                      </span>
+                    </button>
+                  </div>
+                }
+
                 <!-- Spectating Overlay -->
                 @if (store.currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Playing && store.isDead()) {
                   <app-game-spectating-overlay
@@ -200,44 +292,54 @@
                 }
               </div>
             </div>
-          </div>
 
-          <!-- Hand Shapes (Always visible at bottom) -->
-          <div class="w-full flex justify-around items-end max-w-md mx-auto h-24 sm:h-32 lg:h-48 shrink-0 touch-none select-none relative z-10 px-2 pb-1 sm:pb-2 gap-2 sm:gap-4 border-t border-transparent lg:border-[var(--color-border-card)]"
-               [ngClass]="'block-theme-' + store.colorTheme()">
-            @for (shape of store.hand(); track $index; let idx = $index) {
-              <div class="flex-1 h-full flex flex-col items-center justify-center relative cursor-pointer select-none rounded-xl transition-all duration-200"
-                   [class.ring-2]="selectedHandIndex() === idx"
-                   [class.ring-cyan-400]="selectedHandIndex() === idx"
-                   [class.bg-cyan-500/10]="selectedHandIndex() === idx"
-                   [class.shadow-[0_0_15px_rgba(34,211,238,0.3)]]="selectedHandIndex() === idx"
-                   [class.-translate-y-2]="selectedHandIndex() === idx"
-                   (mousedown)="shape ? onDragStart($event, shape, idx) : null"
-                   (touchstart)="shape ? onDragStart($event, shape, idx) : null">
-                <!-- Slot badge (1, 2, 3) -->
-                <div class="absolute top-1 left-2 text-[10px] font-bold opacity-50 px-1 rounded bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
-                  {{ idx + 1 }}
-                </div>
-                @if (shape) {
-                  <div class="hover:scale-105 transition-transform pointer-events-none w-full flex items-center justify-center"
-                       [style.opacity]="isDragging && draggedIndex === idx ? '0.2' : '1'"
-                       [style.transformOrigin]="'center bottom'">
-                    
-                    <div class="flex flex-col gap-1">
-                      @for (row of shape.matrix; track rIndex; let rIndex = $index) {
-                        <div class="flex gap-1">
-                          @for (cell of row; track cIndex; let cIndex = $index) {
-                            <div class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm"
-                                 [ngClass]="cell === 1 ? 'block-piece' : 'opacity-0'"></div>
-                          }
-                        </div>
-                      }
-                    </div>
+            <!-- Hand Shapes (紧跟在棋盘正下方一小段距离，操作丝滑顺手) -->
+            @if (!store.isSpectator()) {
+              <div class="w-full flex justify-around items-center max-w-[500px] mx-auto h-20 sm:h-24 lg:h-28 shrink-0 touch-none select-none relative z-10 px-2 gap-2 sm:gap-3 rounded-xl bg-[var(--color-bg-sub)]/60 border border-[var(--color-border-card)]/60 shadow-xs"
+                   [ngClass]="'block-theme-' + store.colorTheme()">
+                @for (shape of store.hand(); track $index; let idx = $index) {
+                <div class="flex-1 h-full flex flex-col items-center justify-center relative cursor-pointer select-none rounded-xl transition-all duration-200"
+                     [class.ring-2]="selectedHandIndex() === idx"
+                     [class.ring-cyan-400]="selectedHandIndex() === idx"
+                     [class.bg-cyan-500/10]="selectedHandIndex() === idx"
+                     [class.shadow-[0_0_15px_rgba(34,211,238,0.3)]]="selectedHandIndex() === idx"
+                     [class.-translate-y-2]="selectedHandIndex() === idx"
+                     (mousedown)="shape ? onDragStart($event, shape, idx) : null"
+                     (touchstart)="shape ? onDragStart($event, shape, idx) : null">
+                  <!-- Slot badge (1, 2, 3) -->
+                  <div class="absolute top-1 left-2 text-[10px] font-bold opacity-50 px-1 rounded bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                    {{ idx + 1 }}
                   </div>
-                }
+                  @if (shape) {
+                    <div class="hover:scale-105 transition-transform pointer-events-none w-full flex items-center justify-center"
+                         [style.opacity]="isDragging && draggedIndex === idx ? '0.2' : '1'"
+                         [style.transformOrigin]="'center bottom'">
+                      
+                      <div class="flex flex-col gap-1">
+                        @for (row of shape.matrix; track rIndex; let rIndex = $index) {
+                          <div class="flex gap-1">
+                            @for (cell of row; track cIndex; let cIndex = $index) {
+                              <div class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 rounded-sm"
+                                   [ngClass]="cell === 1 ? 'block-piece' : 'opacity-0'"></div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              </div>
+            } @else {
+              <!-- Spectator Director View Info Bar -->
+              <div class="w-full flex items-center justify-center max-w-[500px] mx-auto py-3 px-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold shadow-xs">
+                <span>👁️</span>
+                <span>{{ i18n.t('game.director_view')() || '导播观战中' }} · {{ store.focusedPlayerId() || '选手视角' }}</span>
               </div>
             }
-          </div>
+
+        </div>
+      </div>
 
 
   <!-- Dragged Piece Overlay -->

@@ -1,6 +1,7 @@
-import { Component, Input, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { GameSwitchService } from '../../../core/services/game-switch.service';
 import { GameMode, GameStatus, GameModeType, GameStatusType } from '../../../core/models/game.model';
 import { PkMetric, PkPlayerStats } from './game-pk-hud.model';
 
@@ -12,7 +13,7 @@ import { PkMetric, PkPlayerStats } from './game-pk-hud.model';
   styleUrls: ['./game-pk-hud.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    'class': 'w-full block select-none'
+    'class': 'w-full block select-none pointer-events-auto'
   }
 })
 export class GamePkHudComponent {
@@ -27,6 +28,16 @@ export class GamePkHudComponent {
     progress: 0,
     wins: 0
   };
+
+  private readonly _isSpectator = signal<boolean>(false);
+  @Input() set isSpectator(val: boolean) { this._isSpectator.set(!!val); }
+  get isSpectator(): boolean { return this._isSpectator(); }
+
+  private readonly _focusedPlayerId = signal<string>('');
+  @Input() set focusedPlayerId(val: string) { this._focusedPlayerId.set(val || ''); }
+  get focusedPlayerId(): string { return this._focusedPlayerId(); }
+
+  @Output() playerSelect = new EventEmitter<string>();
 
   // Signal-backed inputs to ensure full reactivity under zoneless change detection
   private readonly _myPlayer = signal<PkPlayerStats | null>(null);
@@ -63,8 +74,75 @@ export class GamePkHudComponent {
   @Input() set elapsedTime(val: string | undefined) { this._elapsedTime.set(val); }
   get elapsedTime(): string | undefined { return this._elapsedTime(); }
 
+  @Input() enableSwitchGame: boolean = true;
+  @Input() isHost: boolean = false;
+  @Input() roomId?: string;
+  @Input() currentGameId?: string;
+  @Input() currentDifficulty?: string;
+
+  readonly canSwitchGame = computed(() => {
+    return this.enableSwitchGame && (this.isHost || !!this.myPlayer?.isHost || !!this.duelPlayer1()?.isHost);
+  });
+
+  private readonly gameSwitchService = inject(GameSwitchService);
+
+  openSwitchGame(event?: Event) {
+    if (event) event.stopPropagation();
+    if (!this.canSwitchGame()) return;
+    this.gameSwitchService.open({
+      roomId: this.roomId,
+      currentGameId: this.currentGameId,
+      currentDifficulty: this.currentDifficulty,
+      currentMode: 'pk',
+      isPkMatch: true
+    });
+  }
+
+  isPlayerFocused(id?: string): boolean {
+    if (!this.isSpectator || !id) return false;
+    const focus = this.focusedPlayerId;
+    return id === focus || id.toLowerCase() === focus.toLowerCase();
+  }
+
+  readonly effectiveDuel = computed<{ p1: PkPlayerStats; p2: PkPlayerStats } | null>(() => {
+    const opps = this._opponents();
+    const me = this._myPlayer() || this.defaultPlayer;
+
+    if (this._isSpectator()) {
+      // In spectator mode, gather all valid unique contestants (exclude spectator)
+      const list: PkPlayerStats[] = [];
+      const seen = new Set<string>();
+      const meId = me?.id || '';
+      for (const p of opps) {
+        if (p && p.id && !seen.has(p.id) && p.id !== meId) {
+          seen.add(p.id);
+          list.push(p);
+        }
+      }
+      if (list.length >= 2) {
+        return { p1: list[0], p2: list[1] };
+      } else if (list.length === 1) {
+        return { p1: list[0], p2: list[0] };
+      }
+      return null;
+    }
+
+    if (opps.length === 1) {
+      return { p1: me, p2: opps[0] };
+    }
+    return null;
+  });
+
   readonly isDuel = computed(() => {
-    return this._opponents().length === 1;
+    return this.effectiveDuel() !== null;
+  });
+
+  readonly duelPlayer1 = computed<PkPlayerStats>(() => {
+    return this.effectiveDuel()?.p1 || this.myPlayer;
+  });
+
+  readonly duelPlayer2 = computed<PkPlayerStats | null>(() => {
+    return this.effectiveDuel()?.p2 || this.primaryOpponent();
   });
 
   readonly primaryOpponent = computed<PkPlayerStats | null>(() => {
@@ -79,14 +157,14 @@ export class GamePkHudComponent {
   });
 
   readonly myProgress = computed(() => {
-    const p = this._myPlayer();
+    const p = this.duelPlayer1();
     if (!p) return 0;
     if (this.isScoreBased()) {
       if (p.progress !== undefined && p.progress > 0) {
         return Math.min(100, Math.max(0, Math.round(Number(p.progress))));
       }
       const myScore = Math.max(0, Number(p.score ?? 0));
-      const oppScore = Math.max(0, Number(this.primaryOpponent()?.score ?? 0));
+      const oppScore = Math.max(0, Number(this.duelPlayer2()?.score ?? 0));
       const total = myScore + oppScore;
       if (total === 0) return 50;
       return Math.min(100, Math.max(5, Math.round((myScore / total) * 100)));
@@ -95,13 +173,13 @@ export class GamePkHudComponent {
   });
 
   readonly opponentProgress = computed(() => {
-    const opp = this.primaryOpponent();
+    const opp = this.duelPlayer2();
     if (!opp) return 0;
     if (this.isScoreBased()) {
       if (opp.progress !== undefined && opp.progress > 0) {
         return Math.min(100, Math.max(0, Math.round(Number(opp.progress))));
       }
-      const myScore = Math.max(0, Number(this._myPlayer()?.score ?? 0));
+      const myScore = Math.max(0, Number(this.duelPlayer1()?.score ?? 0));
       const oppScore = Math.max(0, Number(opp.score ?? 0));
       const total = myScore + oppScore;
       if (total === 0) return 50;
@@ -115,7 +193,7 @@ export class GamePkHudComponent {
       if (player.progress !== undefined && player.progress > 0) {
         return Math.min(100, Math.max(0, Math.round(Number(player.progress))));
       }
-      const allPlayers = [this.myPlayer, ...this.opponents];
+      const allPlayers = this.allPlayersSorted();
       const maxScore = Math.max(...allPlayers.map(p => Number(p?.score ?? 0)), 1);
       const score = Math.max(0, Number(player?.score ?? 0));
       return Math.min(100, Math.max(5, Math.round((score / maxScore) * 100)));
@@ -124,32 +202,32 @@ export class GamePkHudComponent {
   }
 
   readonly leadState = computed<'lead' | 'behind' | 'tied'>(() => {
-    const opp = this.primaryOpponent();
-    const me = this._myPlayer();
-    if (!opp || !me) return 'tied';
+    const p1 = this.duelPlayer1();
+    const p2 = this.duelPlayer2();
+    if (!p1 || !p2) return 'tied';
 
     if (this.isScoreBased()) {
-      const myScore = me.score ?? 0;
-      const oppScore = opp.score ?? 0;
-      if (myScore > oppScore) return 'lead';
-      if (myScore < oppScore) return 'behind';
+      const s1 = p1.score ?? 0;
+      const s2 = p2.score ?? 0;
+      if (s1 > s2) return 'lead';
+      if (s1 < s2) return 'behind';
       return 'tied';
     } else {
-      const myP = this.myProgress();
-      const oppP = this.opponentProgress();
-      if (myP > oppP) return 'lead';
-      if (myP < oppP) return 'behind';
+      const prog1 = this.myProgress();
+      const prog2 = this.opponentProgress();
+      if (prog1 > prog2) return 'lead';
+      if (prog1 < prog2) return 'behind';
       return 'tied';
     }
   });
 
   readonly leadDeltaText = computed(() => {
-    const opp = this.primaryOpponent();
-    const me = this._myPlayer();
-    if (!opp || !me) return '';
+    const p1 = this.duelPlayer1();
+    const p2 = this.duelPlayer2();
+    if (!p1 || !p2) return '';
 
     if (this.isScoreBased()) {
-      const diff = (me.score ?? 0) - (opp.score ?? 0);
+      const diff = (p1.score ?? 0) - (p2.score ?? 0);
       if (diff === 0) return this.i18n.t('game.pk.tied')() || '平局';
       const absDiff = Math.abs(diff);
       const sign = diff > 0 ? '+' : '-';
@@ -173,24 +251,26 @@ export class GamePkHudComponent {
   });
 
   readonly myWins = computed(() => {
-    return this._myPlayer()?.wins ?? 0;
+    return this.duelPlayer1()?.wins ?? 0;
   });
 
   readonly opponentWins = computed(() => {
-    return this.primaryOpponent()?.wins ?? 0;
+    return this.duelPlayer2()?.wins ?? 0;
   });
 
-  // All players list sorted for multi-player (3+ players)
   readonly allPlayersSorted = computed<PkPlayerStats[]>(() => {
     const list: PkPlayerStats[] = [];
     const me = this._myPlayer();
-    if (me) list.push(me);
+    if (me && !this.isSpectator && me.id) list.push(me);
     const opps = this._opponents();
     if (opps && opps.length > 0) {
-      list.push(...opps);
+      if (this.isSpectator && me && me.id) {
+        list.push(...opps.filter(o => o && o.id && o.id !== me.id));
+      } else {
+        list.push(...opps);
+      }
     }
 
-    // Sort by score if score-based, or by progress descending
     return list.slice().sort((a, b) => {
       if (this.isScoreBased()) {
         return (b.score ?? 0) - (a.score ?? 0);
@@ -198,6 +278,12 @@ export class GamePkHudComponent {
       return (Number(b.progress ?? 0)) - (Number(a.progress ?? 0));
     });
   });
+
+  onAvatarClick(playerId?: string) {
+    if (this.isSpectator && playerId) {
+      this.playerSelect.emit(playerId);
+    }
+  }
 
   avatarChar(name?: string): string {
     if (!name) return '?';

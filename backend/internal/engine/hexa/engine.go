@@ -99,6 +99,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 			p.Score = 0
 			p.PiecesPlaced = 0
 			p.Finished = false
+			p.Cells = nil
 		}
 		e.Broadcast()
 		return e.State, nil
@@ -116,6 +117,9 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 		p.PiecesPlaced = act.PiecesPlaced
 		if act.Finished {
 			p.Finished = true
+		}
+		if len(act.Cells) > 0 {
+			p.Cells = act.Cells
 		}
 
 		// Check if all players are finished
@@ -144,6 +148,9 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 			p.Score = act.Score
 		}
 		p.Finished = true
+		if len(act.Cells) > 0 {
+			p.Cells = act.Cells
+		}
 
 		// Check if all finished
 		allFinished := true

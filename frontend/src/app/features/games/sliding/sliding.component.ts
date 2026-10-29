@@ -27,12 +27,21 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { DeviceService } from '../../../core/services/device.service';
+import { CoinService } from '../../../core/services/coin.service';
+import { CoinGuideService } from '../../../core/services/coin-guide.service';
+import { ZenModeService } from '../../../core/services/zen-mode.service';
+import { PwaService } from '../../../core/services/pwa.service';
+import { FeedbackService } from '../../../core/services/feedback.service';
+import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-icon.component';
 
+
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -43,6 +52,17 @@ export class SlidingComponent extends BaseGameComponent {
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(SlidingStore);
   private windowSize = inject(WindowSizeService);
+  coinService = inject(CoinService);
+  coinGuideService = inject(CoinGuideService);
+  zenService = inject(ZenModeService);
+  pwaService = inject(PwaService);
+  feedbackService = inject(FeedbackService);
+  private elementRef = inject(ElementRef);
+
+  getDifficultyLabel(diff: string): string {
+    const item = this.difficulties.find((d: any) => d.id === diff);
+    return item ? (this.t(item.labelKey)() || item.desc || item.id) : diff;
+  }
 
   readonly boardSizePx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
@@ -252,18 +272,17 @@ export class SlidingComponent extends BaseGameComponent {
       }
     });
 
-    effect((onCleanup) => {
+    effect(() => {
       const status = this.store.status();
       if (status === GameStatus.Finished) {
-        this.celebrateVictory();
+        if (this.store.isVictory()) {
+          this.celebrateVictory();
+        }
         if (!this.finishedAt()) {
           this.finishedAt.set(Date.now());
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
       } else {
         this.finishedAt.set(null);
-        this.showOverlay.set(false);
       }
     });
 
@@ -283,8 +302,20 @@ export class SlidingComponent extends BaseGameComponent {
     if (isBrowser()) {
       const pending = this.roomLifecycle.consumePendingOrReconnect();
       if (pending) {
-        if (pending.password) this.wsService.setPendingPassword(pending.password);
-        this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
+        if (pending.isCreate) {
+          this.handleCreateRoom(pending);
+        } else {
+          this.joinRoom(
+            pending.roomId,
+            pending.mode,
+            pending.difficulty,
+            pending.host || '',
+            pending.target ?? 1,
+            pending.password || '',
+            pending.bountyCoins || 0,
+            pending.isSpectator || false
+          );
+        }
       } else {
         const savedDiff = getSavedDifficulty('sliding', 'easy');
         this.store.joinRoom('', GameMode.Single, savedDiff);
@@ -328,21 +359,56 @@ export class SlidingComponent extends BaseGameComponent {
     }
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId: string, target: number = 1) {
-    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
+  joinRoom(
+    roomId: string,
+    mode: string,
+    difficulty: string,
+    hostId: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false,
+    action?: string
+  ) {
+    if (!isSpectator) {
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    }
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     this.isMenuOpen.set(false);
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
+  override handleJoinRoom(event: any) {
     if (this.roomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    this.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false,
+      event.isSpectator ? 'spectate' : 'join'
+    );
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    this.joinRoom(
+      event.name || event.roomId,
+      event.mode,
+      event.difficulty,
+      this.playerId,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      false,
+      'create'
+    );
   }
 
   getPlayerScores() {

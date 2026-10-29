@@ -11,6 +11,7 @@ import { playBlockSound, BlockSoundType } from './audio/block.sound';
 import { playSudokuSound } from './audio/sudoku.sound';
 import { playPuzzleSound } from './audio/puzzle.sound';
 import { playIdiomSound } from './audio/idiom.sound';
+import { playTileMatchSound, TileMatchSoundType } from './audio/tilematch.sound';
 import { storageGet, storageSet, createAudioContext } from '../utils/browser.util';
 
 @Injectable({
@@ -154,14 +155,15 @@ export class AudioService {
   playCountdownGo() { this.playUI('countdown_go'); }
 
   // --- Minesweeper Sounds ---
-  async playMinesweeper(name: 'dig' | 'flag' | 'explosion' | 'win') {
+  async playMinesweeper(name: 'dig' | 'flag' | 'explosion' | 'win' | 'cascade', cascadeCount = 3) {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
-      playMinesweeperSound(this.audioCtx, this.masterGain, name);
+      playMinesweeperSound(this.audioCtx, this.masterGain, name, cascadeCount);
     }
   }
 
+  playMinesweeperCascade(count = 3) { this.playMinesweeper('cascade', count); }
   playExplosion() { this.playMinesweeper('explosion'); }
   playFlag() { this.playMinesweeper('flag'); }
 
@@ -250,7 +252,7 @@ export class AudioService {
     }
   }
 
-  // --- Idiom Sounds ---
+  // --- Idiom (成语接龙) Sounds ---
   async playIdiom(name: 'fill' | 'erase' | 'correct' | 'wrong' | 'mastered' | 'correcting_done' | 'next') {
     if (this.isMuted()) return;
     await this.initWebAudio();
@@ -258,4 +260,14 @@ export class AudioService {
       playIdiomSound(this.audioCtx, this.masterGain, name);
     }
   }
+
+  // --- TileMatch (羊了个羊) Sounds ---
+  async playTileMatch(name: TileMatchSoundType, combo: number = 0) {
+    if (this.isMuted()) return;
+    await this.initWebAudio();
+    if (this.audioCtx && this.masterGain) {
+      playTileMatchSound(this.audioCtx, this.masterGain, name, combo);
+    }
+  }
 }
+

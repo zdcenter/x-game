@@ -17,10 +17,18 @@ type GameConfig struct {
 // Fields here are managed via Admin UI and served by GET /api/v1/games/meta.
 // Engine-specific params (e.g. penaltySeconds) live alongside these fields.
 type GameMetaConfig struct {
-	Icon         string         `json:"icon,omitempty"`
-	MultiRound   bool           `json:"multiRound,omitempty"`
-	Modes        []GameModeInfo `json:"modes,omitempty"`
-	Difficulties []GameDiffInfo `json:"difficulties,omitempty"`
+	Icon         string                `json:"icon,omitempty"`
+	MultiRound   bool                  `json:"multiRound,omitempty"`
+	Modes        []GameModeInfo        `json:"modes,omitempty"`
+	Difficulties []GameDiffInfo        `json:"difficulties,omitempty"`
+	FinishFlow   *GameFinishFlowConfig `json:"finishFlow,omitempty"`
+}
+
+type GameFinishFlowConfig struct {
+	WinAction       string `json:"winAction,omitempty"`       // "modal" | "auto_next"
+	LoseAction      string `json:"loseAction,omitempty"`      // "modal" | "board_overlay" | "auto_restart"
+	AutoNextAdFreq  int    `json:"autoNextAdFreq,omitempty"`  // -1: 继承全局, 0: 关闭广告, >0: 自定义频次
+	AutoNextDelayMs int    `json:"autoNextDelayMs,omitempty"` // 自动流转等待毫秒 (默认 1500)
 }
 
 type GameModeInfo struct {

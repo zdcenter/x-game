@@ -3,6 +3,7 @@
   [gameId]="'drop2048'"
   [title]="i18n.t('lobby.drop2048')()"
   [subtitle]="getSubtitle()"
+  [immersive]="isHandheld()"
   icon="🟦"
   iconGradientClass="from-blue-500 to-indigo-600"
   titleGradientClass="from-blue-400 to-indigo-500"
@@ -11,7 +12,6 @@
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [customResultTitle]="i18n.t(getResultTitle())()"
   [customResultSubtitle]="store.currentRoomMode() === GameMode.Single ? i18n.t('game.final_score')() + ': ' + store.score() : ''"
@@ -35,63 +35,125 @@
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
   <div class="flex-1 flex flex-col relative w-full min-h-0">
-            <div class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2">
+    <!-- Integrated Handheld Header Bar (仅移动/平板手持端展示，PC 桌面端保持标准统一单顶栏杜绝重复) -->
+    @if (isHandheld()) {
+      <app-game-handheld-header
+        [gameId]="'drop2048'"
+        [gameTitle]="i18n.t('lobby.drop2048')() || '下落2048'"
+        [showBack]="true"
+        [showRules]="true"
+        [showPk]="store.currentRoomMode() === GameMode.Single"
+        (back)="goBack()"
+        (rules)="showRules.set(true)"
+        (pk)="navigateToPkArena()">
 
-              <!-- Single Player Modern Glass Capsule HUD -->
-              @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
-                  <app-game-score-capsule
-                    [score]="store.score()"
-                    [bestScore]="store.bestScore()"
-                    [worldBestScore]="worldRecord()?.bestScore"
-                    [worldRecordHolder]="worldRecord()?.username"
-                    scoreIcon="⭐"
-                  >
-                    <!-- Center: Level & Dynamic Combo Badge -->
-                    <div class="flex items-center gap-1.5 sm:gap-2.5">
-                      <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
-                        <span class="text-xs sm:text-sm font-bold text-cyan-500">LV</span>
-                        <div class="flex flex-col">
-                          <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('drop2048.level')() }}</span>
-                          <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
-                            {{ store.level() }}
-                          </span>
-                        </div>
-                      </div>
+        <!-- Center: Score + Best + Level + Restart -->
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <div class="flex items-center gap-1.5 sm:gap-3 flex-1 justify-center min-w-0">
+            <!-- SCORE -->
+            <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                 [title]="'SCORE'">
+              <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">SCORE</span>
+              <span class="font-digital text-amber-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+                {{ store.score() }}
+              </span>
+            </div>
 
-                      @if (store.comboCount() >= 1) {
-                        <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
-                          <span>🔥</span>
-                          <span>x{{ store.comboCount() + 1 }}</span>
-                        </div>
-                      }
+            <!-- LV -->
+            <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                 [title]="'LEVEL'">
+              <span class="text-[10px] sm:text-xs font-black text-cyan-500 select-none">LV</span>
+              <span class="font-mono text-cyan-500 font-bold text-xs sm:text-base leading-none">
+                {{ store.level() }}
+              </span>
+            </div>
 
-                      <!-- Instant Restart Button -->
-                      <button (click)="store.startGame()"
-                              class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-cyan-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1 cursor-pointer"
-                              [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
-                        <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
-                        <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
-                          {{ i18n.t('game.restart')() || '重开' }}
-                        </span>
-                      </button>
-                    </div>
-                  </app-game-score-capsule>
+            <!-- BEST -->
+            <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                 [title]="'BEST'">
+              <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">BEST</span>
+              <span class="font-digital text-emerald-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+                {{ store.bestScore() }}
+              </span>
+            </div>
+
+            <!-- 😃 经典笑脸重启 -->
+            <button (click)="store.restartGame()"
+                    class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
+                    [title]="i18n.t('game.restart')() || '重新开始'">
+              {{ store.status() === GameStatus.Finished ? '😵' : '😃' }}
+            </button>
+          </div>
+        } @else {
+          <!-- PK 模式头部指示器 -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
+            <span class="text-xs sm:text-base">⚔️</span>
+            <span class="truncate">{{ i18n.t('lobby.drop2048')() || '下落2048' }} · PK</span>
+          </div>
+        }
+      </app-game-handheld-header>
+    }
+
+    <div class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2">
+
+      <!-- Universal PK Battle HUD -->
+      @if (store.currentRoomMode() !== GameMode.Single) {
+        <div class="w-full flex-none shrink-0 py-1">
+          <app-game-pk-hud
+            [myPlayer]="myPlayerPkStats()"
+            [opponents]="opponentsPkStats()"
+            [gameMode]="store.currentRoomMode()"
+            [status]="store.status()"
+            [targetWins]="store.currentRoomTarget()"
+            [roundFormat]="store.room()?.roundFormat || 'BO3'"
+            [seriesScore]="seriesScore()"
+            [isSpectator]="store.isSpectator()"
+            [focusedPlayerId]="store.focusedPlayerId()"
+            (playerSelect)="store.setFocusedPlayer($event)"
+          ></app-game-pk-hud>
+        </div>
+      } @else if (!isHandheld()) {
+        <!-- Single Player Modern Glass Capsule HUD (PC 桌面端展示) -->
+        <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
+          <app-game-score-capsule
+            [score]="store.score()"
+            [bestScore]="store.bestScore()"
+            [worldBestScore]="worldRecord()?.bestScore"
+            [worldRecordHolder]="worldRecord()?.username"
+            scoreIcon="⭐"
+          >
+            <!-- Center: Level & Dynamic Combo Badge -->
+            <div class="flex items-center gap-1.5 sm:gap-2.5">
+              <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                <span class="text-xs sm:text-sm font-bold text-cyan-500">LV</span>
+                <div class="flex flex-col">
+                  <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('drop2048.level')() }}</span>
+                  <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
+                    {{ store.level() }}
+                  </span>
                 </div>
-              } @else {
-                <!-- Top Opponents Panel in PK Mode (Modern Universal GamePkHud) -->
-                <div class="w-full flex-none shrink-0 py-1">
-                  <app-game-pk-hud
-                    [myPlayer]="myPlayerPkStats()"
-                    [opponents]="opponentsPkStats()"
-                    [gameMode]="store.currentRoomMode()"
-                    [status]="store.status()"
-                    [targetWins]="store.currentRoomTarget()"
-                    [roundFormat]="store.room()?.roundFormat || 'BO3'"
-                    [seriesScore]="seriesScore()"
-                  ></app-game-pk-hud>
+              </div>
+
+              @if (store.comboCount() >= 1) {
+                <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
+                  <span>🔥</span>
+                  <span>x{{ store.comboCount() + 1 }}</span>
                 </div>
               }
+
+              <!-- Instant Restart Button -->
+              <button (click)="store.startGame()"
+                      class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-cyan-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1 cursor-pointer"
+                      [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
+                <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
+                  {{ i18n.t('game.restart')() || '重开' }}
+                </span>
+              </button>
+            </div>
+          </app-game-score-capsule>
+        </div>
+      }
 
               <!-- Mobile Top Compact Indicators for Small Screens -->
               <div class="flex md:hidden items-center justify-between w-full max-w-[350px] px-2 pt-0 pb-1 shrink-0 mx-auto">
@@ -195,11 +257,11 @@
 
                     <app-drop2048-board
                       [cellSize]="cellSize()"
-                      [board]="store.board()"
-                      [activeBlock]="store.activeBlock()"
-                      [combos]="store.combos()"
-                      [particles]="store.particles()"
-                      [ghostRow]="store.ghostRow()"
+                      [board]="store.displayBoard()"
+                      [activeBlock]="store.isSpectator() ? null : store.activeBlock()"
+                      [combos]="store.isSpectator() ? [] : store.combos()"
+                      [particles]="store.isSpectator() ? [] : store.particles()"
+                      [ghostRow]="store.isSpectator() ? -1 : store.ghostRow()"
                     ></app-drop2048-board>
                   </div>
 
@@ -264,48 +326,38 @@
 
                 </div>
 
-                <!-- Opponents (PK Mode Extra Right Column) -->
-                @if (store.currentRoomMode() !== GameMode.Single) {
-                  <div class="flex flex-col gap-2 lg:gap-3 w-24 sm:w-28 lg:w-36 shrink-0 self-start overflow-y-auto custom-scrollbar" style="max-height: min(calc(100dvh - 260px), 720px);">
-                    @for (opp of store.opponents(); track opp.id) {
-                      <div class="bg-[var(--color-bg-card)] backdrop-blur-sm rounded-xl p-2.5 border-2 border-[var(--color-border-card)] flex flex-col items-center gap-1 shadow-lg w-full">
-                        <div class="text-[10px] font-bold text-[var(--color-text-main)] truncate w-full text-center">
-                          {{ opp.id === store.hostId() ? '👑 ' : '' }}{{ opp.id }}
-                          @if (opp.finished) { <span class="text-red-500">💀</span> }
-                        </div>
-                        <div class="text-xs font-mono font-bold text-amber-500">
-                          {{ opp.score }}
-                        </div>
-                      </div>
-                    }
-                  </div>
-                }
-
               </div>
 
-              <!-- Mobile Virtual On-Screen Controller (Phone Only) -->
-              <div class="flex md:hidden items-center justify-center gap-2.5 sm:gap-4 w-full max-w-[360px] px-2 py-1 shrink-0 z-20 mx-auto">
-                <button (click)="store.moveLeft()"
-                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none"
-                        title="Left">
-                  ◀
-                </button>
-                <button (click)="store.softDrop()"
-                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-amber-500/20 transition-all select-none"
-                        title="Soft Drop">
-                  ▼
-                </button>
-                <button (click)="store.moveRight()"
-                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none"
-                        title="Right">
-                  ▶
-                </button>
-                <button (click)="store.hardDrop()"
-                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-base font-black active:scale-90 transition-all select-none"
-                        title="Hard Drop">
-                  ⚡
-                </button>
-              </div>
+              <!-- Mobile Virtual On-Screen Controller or Spectator Director Bar -->
+              @if (!store.isSpectator()) {
+                <div class="flex md:hidden items-center justify-center gap-2.5 sm:gap-4 w-full max-w-[360px] px-2 py-1 shrink-0 z-20 mx-auto">
+                  <button (click)="store.moveLeft()"
+                          class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                          title="Left">
+                    ◀
+                  </button>
+                  <button (click)="store.softDrop()"
+                          class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-amber-500/20 transition-all select-none"
+                          title="Soft Drop">
+                    ▼
+                  </button>
+                  <button (click)="store.moveRight()"
+                          class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                          title="Right">
+                    ▶
+                  </button>
+                  <button (click)="store.hardDrop()"
+                          class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-base font-black active:scale-90 transition-all select-none"
+                          title="Hard Drop">
+                    ⚡
+                  </button>
+                </div>
+              } @else {
+                <div class="flex items-center justify-center gap-2 w-full max-w-md mx-auto px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold shadow-sm">
+                  <span>👁️</span>
+                  <span>{{ i18n.t('game.director_view')() || '导播观战中' }} · {{ store.focusedPlayerId() || '选手视角' }}</span>
+                </div>
+              }
 
             </div>
           </div>

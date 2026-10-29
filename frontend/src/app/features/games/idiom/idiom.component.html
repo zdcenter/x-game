@@ -1,6 +1,7 @@
 <app-game-layout
-  [store]="pkRoomId() ? pkStore : undefined"
+  [store]="pkStore"
   [gameId]="'idiom'"
+  [immersive]="isHandheld()"
   [title]="'真·成语接龙'"
   [subtitle]="getHeaderSubtitle()"
   [icon]="'🐉'"
@@ -12,9 +13,9 @@
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="pkDifficulty()"
   [hideDefaultDifficulty]="true"
-  [showLeaveBtn]="!!pkRoomId()"
-  [customResultTitle]="pkStore.winners().includes(playerId) ? '旗开得胜！' : '再接再厉！'"
-  [customResultSubtitle]="pkStore.winners().includes(playerId) ? '恭喜您率先接龙完成神龙争夺！' : '对手率先完成了神龙接龙！'"
+  [showLeaveBtn]="pkStore.currentRoomMode() !== GameMode.Single"
+  [customResultTitle]="pkStore.isSpectator() ? undefined : (pkStore.winners().includes(playerId) ? '旗开得胜！' : '再接再厉！')"
+  [customResultSubtitle]="pkStore.isSpectator() ? undefined : (pkStore.winners().includes(playerId) ? '恭喜您率先接龙完成神龙争夺！' : '对手率先完成了神龙接龙！')"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
@@ -26,72 +27,149 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  <!-- Header Right Stats / Badges -->
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'idiom'"
+      [gameTitle]="'真·成语接龙'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="!pkRoomId()"
+      (back)="handleHeaderBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        @if (!pkRoomId()) {
+          <!-- 连龙数 Streak -->
+          <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-500 text-xs font-bold">
+            <span>🔥</span>
+            <span class="font-black font-mono">{{ streak() }}</span>
+          </div>
+
+          <!-- 龙身长度 Length -->
+          <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-bold">
+            <span>🐉</span>
+            <span class="font-black font-mono">{{ solitaireChain().length }}</span>
+            <span class="text-[10px] opacity-75">节</span>
+          </div>
+
+          <!-- 锦囊提示 -->
+          <button
+            type="button"
+            (click)="useHint()"
+            [disabled]="hintsRemaining() <= 0"
+            class="flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+            [title]="'仙术锦囊 (剩余 ' + hintsRemaining() + ' 次)'"
+          >
+            <span>💡</span>
+            <span class="font-mono">{{ hintsRemaining() }}</span>
+          </button>
+
+          <!-- 乾坤重置 -->
+          <button
+            type="button"
+            (click)="useShuffle()"
+            [disabled]="shufflesRemaining() <= 0"
+            class="w-7 h-7 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-xs hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+            [title]="'乾坤重置 (剩余 ' + shufflesRemaining() + ' 次)'"
+          >
+            🔄
+          </button>
+        } @else {
+          <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
+            <span>🐉 神龙争夺 ({{ pkStore.myWins() }}:{{ pkStore.opponentWins() }})</span>
+          </div>
+        }
+      </div>
+    </app-game-handheld-header>
+  }
+
+  <!-- Header Right Stats / Badges (PC Only) -->
   <div header-right class="contents">
-    @if (pkRoomId()) {
-      @if (pkStore.status() === 'playing' || pkStore.status() === 'finished') {
-        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-          <span class="text-xs font-bold text-amber-500">🐉 神龙争夺</span>
-          <span class="text-sm font-black text-green-500">{{ pkStore.myWins() }}</span>
-          <span class="text-xs text-[var(--color-text-secondary)]">:</span>
-          <span class="text-sm font-black text-rose-500">{{ pkStore.opponentWins() }}</span>
-          <span class="text-[10px] text-[var(--color-text-secondary)]">/ {{ pkStore.target() }}</span>
+    @if (!isHandheld()) {
+      @if (pkRoomId()) {
+        @if (pkStore.status() === 'playing' || pkStore.status() === 'finished') {
+          <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+            <span class="text-xs font-bold text-amber-500">🐉 神龙争夺</span>
+            <span class="text-sm font-black text-green-500">{{ pkStore.myWins() }}</span>
+            <span class="text-xs text-[var(--color-text-secondary)]">:</span>
+            <span class="text-sm font-black text-rose-500">{{ pkStore.opponentWins() }}</span>
+            <span class="text-[10px] text-[var(--color-text-secondary)]">/ {{ pkStore.target() }}</span>
+          </div>
+        }
+      } @else {
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Streak badge -->
+          <div class="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold shadow-sm">
+            <span class="text-sm sm:text-base">🔥</span>
+            <span class="font-extrabold">{{ streak() }}</span>
+            <span class="hidden sm:inline text-xs sm:text-sm opacity-80">连龙</span>
+          </div>
+          <!-- Dragon length badge -->
+          <div class="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs sm:text-sm font-bold shadow-sm">
+            <span class="text-sm sm:text-base">🐉</span>
+            <span class="font-extrabold">{{ solitaireChain().length }}</span>
+            <span class="hidden sm:inline text-xs sm:text-sm opacity-80">节</span>
+          </div>
         </div>
       }
-    } @else {
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Streak badge -->
-        <div class="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold shadow-sm">
-          <span class="text-sm sm:text-base">🔥</span>
-          <span class="font-extrabold">{{ streak() }}</span>
-          <span class="hidden sm:inline text-xs sm:text-sm opacity-80">连龙</span>
-        </div>
-        <!-- Dragon length badge -->
-        <div class="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs sm:text-sm font-bold shadow-sm">
-          <span class="text-sm sm:text-base">🐉</span>
-          <span class="font-extrabold">{{ solitaireChain().length }}</span>
-          <span class="hidden sm:inline text-xs sm:text-sm opacity-80">节</span>
-        </div>
-      </div>
     }
   </div>
 
-  <div class="w-full flex-grow flex flex-col justify-start items-center relative min-h-0 w-full py-1 sm:py-2 px-2 sm:px-4">
+  <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2 px-2 sm:px-4">
 
     <!-- ===================== PK ARENA MODE ===================== -->
-    @if (pkRoomId()) {
-      <div class="w-full flex-1 flex flex-col items-center justify-start relative min-h-0 select-none max-w-4xl">
+    @if (pkStore.currentRoomMode() !== GameMode.Single) {
+      <div class="w-full flex-1 flex flex-col items-center justify-start relative min-h-0 select-none max-w-4xl mx-auto">
 
+        <!-- Universal PK HUD -->
+        @if (pkStore.status() !== GameStatus.Waiting) {
+          <div class="flex-none py-1 mb-2 shrink-0 w-full">
+            <app-game-pk-hud
+              [myPlayer]="myPlayerPkStats()"
+              [opponents]="opponentsPkStats()"
+              [targetWins]="pkStore.target()"
+              [gameMode]="pkStore.currentRoomMode()"
+              [status]="pkStore.status()"
+              [isSpectator]="pkStore.isSpectator()"
+              [focusedPlayerId]="pkStore.focusedPlayerId()"
+              (playerSelect)="pkStore.setFocusedPlayer($event)">
+            </app-game-pk-hud>
+          </div>
+        }
 
+        <!-- Spectator Waiting View (When room is in Waiting state and user is spectator) -->
+        @if (pkStore.status() === GameStatus.Waiting && pkStore.isSpectator()) {
+          <div class="w-full my-auto flex flex-col items-center justify-center p-6 sm:p-8 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-center shadow-lg max-w-md">
+            <div class="text-4xl sm:text-5xl mb-3 animate-pulse">👀</div>
+            <h3 class="text-lg sm:text-xl font-black text-[var(--color-text-main)] mb-1">正在观战成语接龙对决</h3>
+            <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mb-4">
+              等待双方选手准备就绪，房主开战后将实时同步神龙接龙战况
+            </p>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+              <span>对局准备中...</span>
+            </div>
+          </div>
+        }
 
-        <!-- Playing Arena -->
-        @if (pkStore.status() === 'playing') {
+        <!-- Playing / Finished Arena -->
+        @if (pkStore.status() === 'playing' || pkStore.status() === 'finished') {
           <div class="w-full h-full flex flex-col items-center justify-between gap-3 sm:gap-4 max-w-2xl">
 
-            <!-- Round & Score Bar -->
-            <div class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-[var(--color-text-secondary)]">第 {{ pkStore.roundNum() }} 轮</span>
-                <span class="text-xs font-extrabold text-amber-500">目标首字：{{ pkStore.targetChar() }}</span>
+            <!-- Round Banner if won -->
+            @if (pkStore.isRoundOver()) {
+              <div class="w-full px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 font-black text-sm flex items-center justify-center gap-2 animate-bounce">
+                <span>🎉</span>
+                <span>{{ pkStore.roundWinner() === playerId ? '我方率先抢答接龙成功！' : (pkStore.roundWinner() + ' 率先抢答接龙成功！') }}</span>
               </div>
-              <div class="flex items-center gap-3 text-xs">
-                <div class="flex items-center gap-1 text-green-500 font-bold">
-                  <span>我方</span>
-                  <span class="text-sm font-black">{{ pkStore.myWins() }}</span>
-                </div>
-                <span class="text-[var(--color-text-secondary)]">vs</span>
-                <div class="flex items-center gap-1 text-rose-500 font-bold">
-                  <span>对手</span>
-                  <span class="text-sm font-black">{{ pkStore.opponentWins() }}</span>
-                </div>
-              </div>
-            </div>
+            }
 
             <!-- Shared Dragon Chain in PK -->
             <div class="w-full flex flex-col gap-1.5">
               <div class="flex items-center justify-between text-xs text-[var(--color-text-secondary)] px-1">
                 <span class="font-bold flex items-center gap-1">🐉 战场同台神龙（{{ pkStore.chain().length }} 节）</span>
-                <span class="text-[11px]">抢先接龙者攻城略地</span>
+                <span class="text-[11px]">{{ pkStore.isSpectator() ? '实时观战双方接龙对决' : '抢先接龙者攻城略地' }}</span>
               </div>
               <div class="w-full overflow-x-auto flex items-center gap-2 py-2 px-1 scrollbar-thin">
                 @for (word of pkStore.chain(); track $index) {
@@ -128,7 +206,10 @@
                 <!-- Slots 1, 2, 3 -->
                 @for (slot of pkSlots(); track $index) {
                   <button (click)="onPkSlotClick($index)"
-                          class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl border-2 transition-all active:scale-95 shadow-sm"
+                          [disabled]="pkStore.isSpectator()"
+                          class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center font-black text-2xl sm:text-3xl border-2 transition-all shadow-sm"
+                          [class.active:scale-95]="!pkStore.isSpectator()"
+                          [class.cursor-default]="pkStore.isSpectator()"
                           [ngClass]="slot
                             ? 'bg-[var(--color-bg-card)] border-rose-500/70 text-rose-500 hover:border-rose-400'
                             : 'border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-card)]/50 text-transparent'">
@@ -138,34 +219,46 @@
               </div>
             </div>
 
-            <!-- PK Tactile Keypad -->
-            <div class="w-full flex flex-col gap-2">
-              <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full">
-                @for (key of pkStore.keyboard(); track $index) {
-                  <button (click)="onPkKeypadPress(key, $index)"
-                          [disabled]="pkKeypadUsed()[$index] || pkStore.isRoundOver()"
-                          class="h-12 sm:h-13 rounded-xl font-black text-lg sm:text-xl border transition-all active:scale-90 flex items-center justify-center shadow-sm"
-                          [ngClass]="pkKeypadUsed()[$index]
-                            ? 'opacity-25 border-transparent bg-transparent cursor-not-allowed'
-                            : 'bg-[var(--color-bg-card)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-amber-500/60 hover:text-amber-500 hover:scale-105'">
-                    {{ key }}
-                  </button>
-                }
-              </div>
+            <!-- PK Controls (Contestant Keypad vs Spectator Info) -->
+            @if (!pkStore.isSpectator()) {
+              <!-- PK Tactile Keypad -->
+              <div class="w-full flex flex-col gap-2">
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full">
+                  @for (key of pkStore.keyboard(); track $index) {
+                    <button (click)="onPkKeypadPress(key, $index)"
+                            [disabled]="pkKeypadUsed()[$index] || pkStore.isRoundOver()"
+                            class="h-12 sm:h-13 rounded-xl font-black text-lg sm:text-xl border transition-all active:scale-90 flex items-center justify-center shadow-sm"
+                            [ngClass]="pkKeypadUsed()[$index]
+                              ? 'opacity-25 border-transparent bg-transparent cursor-not-allowed'
+                              : 'bg-[var(--color-bg-card)] border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-amber-500/60 hover:text-amber-500 hover:scale-105'">
+                      {{ key }}
+                    </button>
+                  }
+                </div>
 
-              <!-- Clear button -->
-              <div class="flex justify-center mt-1">
-                <button (click)="clearPkSlots()"
-                        class="px-4 py-1.5 rounded-lg text-xs font-bold text-[var(--color-text-secondary)] border border-[var(--color-border-card)] hover:text-rose-500 hover:border-rose-500/40 active:scale-95 transition-all">
-                  ✕ 清空已选
-                </button>
+                <!-- Clear button -->
+                <div class="flex justify-center mt-1">
+                  <button (click)="clearPkSlots()"
+                          class="px-4 py-1.5 rounded-lg text-xs font-bold text-[var(--color-text-secondary)] border border-[var(--color-border-card)] hover:text-rose-500 hover:border-rose-500/40 active:scale-95 transition-all">
+                    ✕ 清空已选
+                  </button>
+                </div>
               </div>
-            </div>
+            } @else {
+              <!-- Spectator Live Info Box -->
+              <div class="w-full flex flex-col items-center justify-center py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500/10 to-rose-500/10 border border-amber-500/20 text-center gap-1.5">
+                <div class="flex items-center gap-2 text-sm font-black text-amber-500">
+                  <span>👁️</span>
+                  <span>观战视角：实时神龙战场播报</span>
+                </div>
+                <p class="text-xs text-[var(--color-text-secondary)]">
+                  两方选手正在字盘中争分夺秒搜寻以“{{ pkStore.targetChar() }}”开头的四字成语，率先完成抢答者将斩获本轮胜场！
+                </p>
+              </div>
+            }
 
           </div>
         }
-
-
 
       </div>
 

@@ -11,9 +11,10 @@ import (
 )
 
 type SpeedPlayer struct {
-	ID       string `json:"id"`
-	Progress int    `json:"progress"` // Number of correct bridges placed
-	Finished bool   `json:"finished"`
+	ID       string      `json:"id"`
+	Progress int         `json:"progress"` // Number of correct bridges placed
+	Finished bool        `json:"finished"`
+	Bridges  interface{} `json:"bridges,omitempty"`
 }
 
 type SpeedEngine struct {
@@ -64,7 +65,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 
 func (e *SpeedEngine) fetchNewPuzzle() {
 	var puzzles []domain.HashiPuzzle
-	if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
+	if db.DB == nil || db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error != nil || len(puzzles) == 0 {
 		// Fallback puzzle 7x7 if none found
 		e.Puzzle = `{"width":7,"height":7,"islands":[{"r":0,"c":0,"v":3},{"r":0,"c":2,"v":4},{"r":0,"c":4,"v":3},{"r":0,"c":6,"v":2},{"r":2,"c":0,"v":3},{"r":2,"c":2,"v":4},{"r":2,"c":4,"v":4},{"r":2,"c":6,"v":3},{"r":4,"c":0,"v":3},{"r":4,"c":2,"v":4},{"r":4,"c":4,"v":3},{"r":4,"c":6,"v":2},{"r":6,"c":0,"v":2},{"r":6,"c":2,"v":3},{"r":6,"c":4,"v":2},{"r":6,"c":6,"v":1}],"solution":[]}`
 	} else {
@@ -152,6 +153,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 		for _, p := range e.Players {
 			p.Progress = 0
 			p.Finished = false
+			p.Bridges = nil
 		}
 		e.fetchNewPuzzle()
 		return e.State, nil
@@ -171,15 +173,25 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 
 	if action == "progress" {
 		var req struct {
-			Progress int `json:"progress"`
+			Progress int         `json:"progress"`
+			Bridges  interface{} `json:"bridges"`
 		}
 		if err := json.Unmarshal(payload, &req); err == nil {
 			if req.Progress >= 0 {
 				player.Progress = req.Progress
 			}
+			if req.Bridges != nil {
+				player.Bridges = req.Bridges
+			}
 		}
 	} else if action == "finish" {
-		// Trust the frontend for completion
+		var req struct {
+			Bridges interface{} `json:"bridges"`
+		}
+		_ = json.Unmarshal(payload, &req)
+		if req.Bridges != nil {
+			player.Bridges = req.Bridges
+		}
 		player.Finished = true
 
 		e.State = engine.StateFinished

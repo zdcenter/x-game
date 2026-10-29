@@ -145,10 +145,20 @@ export class PwaUpdateService {
   }
 
   private async onWorkerWaiting(worker: ServiceWorker) {
-    console.log('[PWA] New version is waiting to activate');
-    this.hasUpdate.set(true);
-    // 立即拉取远程 version.json 填充 newVersion，确保提示卡片能即时展示版本号
-    await this.fetchRemoteVersion();
+    console.log('[PWA] Service Worker waiting event triggered');
+    const remoteVer = await this.fetchRemoteVersion();
+    // 关键校验：仅当远程版本明确存在且与当前本地运行版本不同时，才提示更新
+    if (remoteVer && remoteVer !== environment.version) {
+      const dismissedVer = sessionStorage.getItem('pwa_dismissed_version');
+      if (dismissedVer !== remoteVer) {
+        this.hasUpdate.set(true);
+      }
+    } else {
+      console.log('[PWA] Worker waiting but remote version matches current environment version, auto-activating...');
+      // 版本一致时让 worker 静默 skipWaiting 接管，不干扰用户
+      worker.postMessage({ type: 'SKIP_WAITING' });
+      this.hasUpdate.set(false);
+    }
   }
 
   /**
@@ -199,8 +209,13 @@ export class PwaUpdateService {
     // B. 直连探测 /version.json 最新构建元数据
     const remoteVersion = await this.fetchRemoteVersion();
     if (remoteVersion && remoteVersion !== environment.version) {
-      console.log(`[PWA] Remote version ${remoteVersion} detected (current: ${environment.version})`);
-      this.hasUpdate.set(true);
+      const dismissedVer = sessionStorage.getItem('pwa_dismissed_version');
+      if (dismissedVer !== remoteVersion) {
+        console.log(`[PWA] Remote version ${remoteVersion} detected (current: ${environment.version})`);
+        this.hasUpdate.set(true);
+      }
+    } else {
+      this.hasUpdate.set(false);
     }
   }
 
@@ -208,12 +223,18 @@ export class PwaUpdateService {
    * 立即应用更新：
    * 1. 向 waiting 中的 SW 发送 SKIP_WAITING
    * 2. 清理陈旧 CacheStorage 缓存
-   * 3. 强制重载刷新页面
+   * 3. 记录已应用版本防重复弹窗
+   * 4. 强制重载刷新页面
    */
   async applyUpdate(): Promise<void> {
     if (!this.isBrowser) return;
 
     this.isUpdating.set(true);
+    const ver = this.newVersion();
+    if (ver) {
+      sessionStorage.setItem('pwa_dismissed_version', ver);
+      sessionStorage.setItem('pwa_applied_version', ver);
+    }
 
     try {
       // 1. 通知 waiting 中的 Service Worker 立即接管
@@ -237,6 +258,10 @@ export class PwaUpdateService {
   }
 
   dismiss(): void {
+    const ver = this.newVersion();
+    if (ver) {
+      sessionStorage.setItem('pwa_dismissed_version', ver);
+    }
     this.hasUpdate.set(false);
   }
 }

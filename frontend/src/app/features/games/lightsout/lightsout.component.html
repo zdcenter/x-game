@@ -1,6 +1,7 @@
 <app-game-layout
   [gameId]="'lightsout'"
   [store]="store"
+  [immersive]="isHandheld()"
   [title]="i18n.t('lobby.lightsout')() || 'Lights Out'"
   [subtitle]="getSubtitle()"
   icon="💡"
@@ -24,11 +25,69 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'lightsout'"
+      [gameTitle]="i18n.t('lobby.lightsout')() || '熄灯/点灯'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <!-- 模式指示切换 (💡/🌑) -->
+          <button
+            type="button"
+            (click)="store.toggleTargetMode()"
+            class="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border text-xs font-bold active:scale-95 transition-all cursor-pointer"
+            [class]="store.targetMode() === 'on' 
+              ? 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+              : 'bg-slate-500/15 text-slate-400 border-slate-500/30'"
+            [title]="store.targetMode() === 'on' ? (i18n.t('lightsout.switch_to_off')() || '切换为灭灯模式') : (i18n.t('lightsout.switch_to_on')() || '切换为点灯模式')"
+          >
+            <span>{{ store.targetMode() === 'on' ? '💡' : '🌑' }}</span>
+            <span class="font-mono text-xs">{{ store.remainingLights() }}</span>
+          </button>
+
+          <!-- 步数 -->
+          <div class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
+            <span class="text-xs font-mono font-bold text-[var(--color-text-secondary)]">
+              {{ store.moves() }} {{ i18n.t('game.moves')() || '步' }}
+            </span>
+          </div>
+
+          <!-- 笑脸重置 -->
+          <button
+            type="button"
+            (click)="store.startGame()"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
+            [title]="i18n.t('game.restart')() || '重新开始'"
+          >
+            {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+          </button>
+
+          <!-- 进度百分比 -->
+          <div class="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 font-mono text-xs font-bold">
+            <span>⚡</span>
+            <span>{{ store.clearedPercentage() }}%</span>
+          </div>
+        } @else {
+          <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
+            <span>⚔️ PK 模式</span>
+          </div>
+        }
+      </div>
+    </app-game-handheld-header>
+  }
+
   <div class="flex-grow flex flex-col items-center justify-center my-auto p-1 sm:p-2 w-full relative min-h-0 overflow-y-auto custom-scrollbar">
 
       <!-- Players Status / Top HUD -->
-      @if (store.currentRoomMode() === GameMode.Single) {
-        <!-- Single Player Clean Integrated Capsule -->
+      @if (!isHandheld() && store.currentRoomMode() === GameMode.Single) {
+        <!-- Single Player Clean Integrated Capsule (PC Only) -->
         <div class="flex-none px-3 sm:px-6 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm">
           <app-game-score-capsule
             [score]="store.remainingLights()"
@@ -67,7 +126,9 @@
             </div>
           </app-game-score-capsule>
         </div>
-      } @else {
+      }
+
+      @if (store.currentRoomMode() !== GameMode.Single) {
         <!-- Universal PK Battle HUD (Lights Out) -->
         <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
           <app-game-pk-hud
@@ -78,6 +139,9 @@
             [targetWins]="store.currentRoomTarget()"
             [roundFormat]="store.room()?.roundFormat || 'BO3'"
             [seriesScore]="seriesScore()"
+            [isSpectator]="store.isSpectator()"
+            [focusedPlayerId]="store.focusedPlayerId()"
+            (playerSelect)="store.setFocusedPlayer($event)"
           ></app-game-pk-hud>
         </div>
       }

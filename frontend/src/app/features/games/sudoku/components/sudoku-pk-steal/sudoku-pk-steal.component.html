@@ -34,6 +34,9 @@
           [opponents]="opponentsPkStats()"
           [roundFormat]="store.room()?.roundFormat || 'BO3'"
           [seriesScore]="seriesScore()"
+          [isSpectator]="store.isSpectator()"
+          [focusedPlayerId]="store.focusedPlayerId()"
+          (playerSelect)="store.setFocusedPlayer($event)"
         ></app-game-pk-hud>
       </div>
 

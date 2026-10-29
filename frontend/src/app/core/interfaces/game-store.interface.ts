@@ -39,6 +39,14 @@ export interface GameStoreInterface {
   /** 游戏状态 */
   readonly status: Signal<GameStatusType | string>;
 
+  /**
+   * 平台统一终局胜负状态契约 (Universal Game Victory Contract)
+   * - true: 当前玩家胜利/通关
+   * - false: 失败/惜败/死局
+   */
+  readonly isVictory: Signal<boolean>;
+  readonly isDefeat: Signal<boolean>;
+
   // ===== 大厅/等待房间需要的数据 =====
 
   /**
@@ -73,9 +81,16 @@ export interface GameStoreInterface {
    * @param roomId 房间 ID
    * @param mode 模式
    * @param difficulty 难度
-   * @param hostId 房主 ID（可选，创建房间时传当前玩家 ID）
+   * @param isSpectator 是否以观战者身份进入
    */
-  joinRoom(roomId: string, mode: GameModeType | string, difficulty: GameDifficultyType | string, hostId?: string, target?: number, password?: string, bounty?: number): void;
+  joinRoom(roomId: string, mode: GameModeType | string, difficulty: GameDifficultyType | string, hostId?: string, target?: number, password?: string, bounty?: number, isSpectator?: boolean, action?: string): void;
+
+  /** 是否为观战模式 */
+  readonly isSpectator?: Signal<boolean>;
+  /** 观战模式当前导播聚焦选手 ID */
+  readonly focusedPlayerId?: Signal<string>;
+  /** 切换导播聚焦选手 */
+  readonly setFocusedPlayer?: (playerId: string) => void;
 
   /**
    * 离开房间。

@@ -81,9 +81,16 @@ export class Math24Store extends BaseGameStore {
     if (!state) return null;
     
     if (this.currentRoomMode() === GameMode.Steal) {
-      return state.puzzle;
+      return state.currentPuzzle || state.puzzle || null;
     } else if (this.currentRoomMode() === GameMode.Speed) {
-      const p = state.players[this.playerId()];
+      const players = state.players || {};
+      let targetId = this.isSpectator() ? this.focusedPlayerId() : this.playerId();
+      if (!targetId || !players[targetId]) {
+        const keys = Object.keys(players);
+        const match = keys.find(k => k.toLowerCase() === (targetId || '').toLowerCase());
+        targetId = match || keys[0] || '';
+      }
+      const p = players[targetId];
       if (p && state.puzzles && p.progress < state.puzzles.length) {
         return state.puzzles[p.progress];
       }
@@ -120,7 +127,8 @@ export class Math24Store extends BaseGameStore {
       
       if (mode !== GameMode.Single && puzzle && puzzle.cards) {
         untracked(() => {
-          const id = puzzle.id || puzzle.cards;
+          const focusKey = this.isSpectator() ? `${this.focusedPlayerId()}_` : '';
+          const id = `${focusKey}${puzzle.id || puzzle.cards}`;
           if (this.currentPuzzleId() !== id) {
             this.currentPuzzleId.set(id);
             this.loadMultiplayerPuzzle(puzzle.cards);

@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'sokoban'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('lobby.sokoban')()"
   [subtitle]="showLobby() ? i18n.t('lobby.select_level')() : (getModeName() + ' - ' + getDifficultyName() + (store.currentRoomMode() === GameMode.Single ? (' - ' + i18n.t('game.level')() + ' ' + store.currentLevelNum()) : ''))"
   icon="📦"
@@ -11,10 +12,9 @@
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [hideDefaultDifficulty]="true"
-  [isLobby]="showLobby()"
+  [isLobby]="showLobby() && store.currentRoomMode() === GameMode.Single"
   [showNextLevel]="store.hasNextLevel() && store.currentRoomMode() === GameMode.Single"
   [overlayStats]="[
     { label: i18n.t('game.moves')(), value: store.myMoves() },
@@ -23,7 +23,7 @@
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
-  (back)="goBack()"
+  (back)="showLobby() ? goBack() : showLobby.set(true)"
   (playAgain)="handleRestart()"
   (restart)="handleRestart()"
   (rematch)="handleRematch()"
@@ -34,6 +34,71 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'sokoban'"
+      [gameTitle]="i18n.t('lobby.sokoban')() || '推箱子'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="showLobby() ? goBack() : showLobby.set(true)"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      @if (showLobby()) {
+        <div class="flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 font-bold text-xs sm:text-sm">
+          <span>📦</span>
+          <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
+        </div>
+      } @else {
+        <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        <!-- 关卡编号 -->
+        <button
+          type="button"
+          (click)="showLobby.set(true)"
+          class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 active:scale-95 transition-all cursor-pointer shrink-0"
+          [title]="i18n.t('lobby.select_level')() || '选择关卡'"
+        >
+          <span class="text-xs sm:text-sm">#</span>
+          <span class="text-xs sm:text-base font-black font-mono leading-tight">
+            {{ store.currentLevelNum() }}
+          </span>
+        </button>
+
+        <!-- 步数 -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('game.moves')() || '步数' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-amber-500 font-mono leading-tight">
+            {{ store.myMoves() }}
+          </span>
+        </div>
+
+        <!-- 😃 经典笑脸重启 -->
+        <button
+          type="button"
+          (click)="handleRestart()"
+          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+        >
+          {{ store.status() === GameStatus.Finished ? '😎' : (store.isDead() ? '😵' : '😊') }}
+        </button>
+
+        <!-- 用时 -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('game.time')() || '用时' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-blue-400 font-mono leading-tight">
+            {{ gameTimer.formatTime(store.timeSpent()) }}
+          </span>
+        </div>
+      </div>
+      }
+    </app-game-handheld-header>
+  }
+
   <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
     @if (showLobby()) {
       <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
@@ -43,8 +108,23 @@
     } @else {
 
       @if (store.status() === GameStatus.Playing || store.status() === GameStatus.Finished || store.status() === GameStatus.Starting) {
-        @if (store.currentRoomMode() === GameMode.Single) {
-          <!-- Single Player Unified HUD Bar: 关卡大厅 + 移动步数 + 游戏用时 (单行对齐棋盘宽度) -->
+        <!-- Universal PK Battle HUD -->
+        @if (store.currentRoomMode() !== GameMode.Single) {
+          <div class="flex-none py-1 mb-1 shrink-0 w-full relative z-10">
+            <app-game-pk-hud
+              [myPlayer]="myPlayerPkStats()"
+              [opponents]="opponentsPkStats()"
+              [targetWins]="store.currentRoomTarget()"
+              [gameMode]="store.currentRoomMode()"
+              [status]="store.status()"
+              [isSpectator]="store.isSpectator()"
+              [focusedPlayerId]="store.focusedPlayerId()"
+              (playerSelect)="store.setFocusedPlayer($event)"
+              [elapsedTime]="gameTimer.formatTime(store.timeSpent())">
+            </app-game-pk-hud>
+          </div>
+        } @else if (!isHandheld()) {
+          <!-- Single Player Unified HUD Bar (PC 桌面端展示) -->
           <div class="w-full flex items-center justify-between px-1 mb-2 shrink-0 relative z-10" [style.max-width]="boardDimPx()">
             <!-- Left: 选关大厅快捷按钮 -->
             <button (click)="showLobby.set(true)" 
@@ -78,18 +158,6 @@
               </div>
             </div>
           </div>
-        } @else {
-          <!-- PK Style -->
-          <div class="flex-none py-1 mb-1 shrink-0 w-full relative z-10">
-            <app-game-pk-hud
-              [myPlayer]="myPlayerPkStats()"
-              [opponents]="opponentsPkStats()"
-              [targetWins]="store.currentRoomTarget()"
-              [gameMode]="store.currentRoomMode()"
-              [status]="store.status()"
-              [elapsedTime]="gameTimer.formatTime(store.timeSpent())">
-            </app-game-pk-hud>
-          </div>
         }
 
         <!-- Board Area -->
@@ -110,27 +178,36 @@
         </div>
 
         <!-- Action Toolbar -->
-        <div class="w-full mt-2" [style.max-width]="boardDimPx()">
-          <app-game-toolbar
-            [layoutStyle]="'compact'"
-            [showBack]="true"
-            [showPrev]="store.currentRoomMode() === GameMode.Single"
-            [showUndo]="true"
-            [showRestart]="true"
-            [showHint]="store.currentRoomMode() === GameMode.Single"
-            [showNext]="store.currentRoomMode() === GameMode.Single"
-            [disablePrev]="store.currentLevelNum() <= 1"
-            [disableNext]="!store.hasNextLevel()"
-            hintLayout="sudoku"
-            (back)="goBack()"
-            (prevLevel)="store.prevLevel()"
-            (undo)="store.undo()"
-            (restart)="handleRestart()"
-            (hintApplied)="applyHint()"
-            (nextLevel)="store.nextLevel()"
-            class="w-full"
-          ></app-game-toolbar>
-        </div>
+        @if (!store.isSpectator()) {
+          <div class="w-full mt-2" [style.max-width]="boardDimPx()">
+            <app-game-toolbar
+              [layoutStyle]="'compact'"
+              [showBack]="true"
+              [showPrev]="store.currentRoomMode() === GameMode.Single"
+              [showUndo]="true"
+              [showRestart]="true"
+              [showHint]="store.currentRoomMode() === GameMode.Single"
+              [showNext]="store.currentRoomMode() === GameMode.Single"
+              [disablePrev]="store.currentLevelNum() <= 1"
+              [disableNext]="!store.hasNextLevel()"
+              hintLayout="sudoku"
+              (back)="goBack()"
+              (prevLevel)="store.prevLevel()"
+              (undo)="store.undo()"
+              (restart)="handleRestart()"
+              (hintApplied)="applyHint()"
+              (nextLevel)="store.nextLevel()"
+              class="w-full"
+            ></app-game-toolbar>
+          </div>
+        } @else {
+          <div class="w-full mt-2 flex items-center justify-center" [style.max-width]="boardDimPx()">
+            <div class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-xs sm:text-sm">
+              <span>👁️</span>
+              <span>{{ i18n.t('game.director_view')() || '导播观战中' }} · {{ store.focusedPlayerId() || ('对局中') }}</span>
+            </div>
+          </div>
+        }
       }
 
     }

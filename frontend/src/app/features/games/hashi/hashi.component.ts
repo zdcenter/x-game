@@ -17,6 +17,7 @@ import { environment } from '../../../../environments/environment';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
 @Component({
   selector: 'app-hashi',
@@ -27,7 +28,8 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
     GameToolbarComponent,
     HashiLobbyComponent,
     GameLayoutComponent,
-    GamePkHudComponent
+    GamePkHudComponent,
+    GameHandheldHeaderComponent
   ],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'
@@ -115,7 +117,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
-      isMe: true,
+      isMe: !this.store.isSpectator(),
       score: bridgeCount,
       progress: prog,
       status: isFinished ? GameStatus.Finished : GameStatus.Playing,
@@ -129,8 +131,9 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     const totalIslands = this.store.islands().length;
     const targetBridges = totalIslands > 0 ? totalIslands * 2 : 100;
     const oppProg = this.store.opponentProgress();
+    const isSpec = this.store.isSpectator();
     return this.store.playersList()
-      .filter(p => p.id !== this.playerId)
+      .filter(p => isSpec || p.id !== this.playerId)
       .map(p => {
         const isFinished = this.store.winners().includes(p.id);
         const count = oppProg[p.id] || 0;
@@ -139,7 +142,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
           id: p.id,
           nickname: p.id,
           isHost: p.id === this.store.hostId(),
-          isMe: false,
+          isMe: !isSpec && p.id === this.playerId,
           score: count,
           progress: prog,
           status: isFinished ? GameStatus.Finished : GameStatus.Playing,
@@ -199,8 +202,20 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     super.ngOnInit();
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.joinRoom(
+          pending.roomId,
+          pending.mode,
+          pending.difficulty,
+          pending.host || '',
+          pending.target ?? 1,
+          pending.password || '',
+          pending.bountyCoins || 0,
+          pending.isSpectator || false
+        );
+      }
     } else {
       this.store.joinRoom('', GameMode.Single);
     }
@@ -245,21 +260,57 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, hostId: string, target: number = 1) {
-    this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
-    this.store.joinRoom(roomId, mode, difficulty, hostId, target);
+  joinRoom(
+    roomId: string,
+    mode: string,
+    difficulty: string,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false,
+    action?: string
+  ) {
+    if (!isSpectator) {
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, hostId);
+    }
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    this.store.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator, finalAction);
     this.view.set('play');
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
+  override handleJoinRoom(event: any) {
     if (this.store.roomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
+    this.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false,
+      event.isSpectator ? 'spectate' : 'join'
+    );
   }
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    const roomId = event.name || event.roomId;
+    this.joinRoom(
+      roomId,
+      event.mode,
+      event.difficulty,
+      this.playerId,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      false,
+      'create'
+    );
   }
 
   getElapsedMs(startAt: number): number {
@@ -291,7 +342,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
 
   // Handle island click for drawing bridges
   onIslandClick(r: number, c: number) {
-    if (this.store.localStatus() !== GameStatus.Playing) return;
+    if (this.store.localStatus() !== GameStatus.Playing || this.store.isSpectator()) return;
 
     const current = this.selectedIsland();
     if (!current) {
@@ -311,7 +362,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   onTouchStart(event: TouchEvent, r: number, c: number) {
-    if (this.store.localStatus() !== GameStatus.Playing) return;
+    if (this.store.localStatus() !== GameStatus.Playing || this.store.isSpectator()) return;
     this.touchStartIsland.set({r, c});
   }
 
@@ -320,7 +371,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     this.touchStartIsland.set(null);
     if (!start) return;
 
-    if (this.store.localStatus() !== GameStatus.Playing) return;
+    if (this.store.localStatus() !== GameStatus.Playing || this.store.isSpectator()) return;
     
     if (event.changedTouches.length === 0) return;
     const touch = event.changedTouches[0];

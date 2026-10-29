@@ -82,6 +82,30 @@ export class HashiStore extends BaseGameStore {
         this.stopTimer();
       }
     });
+
+    // 观战模式实时同步对战选手的桥梁走线
+    effect(() => {
+      if (!this.isSpectator() || this.currentRoomMode() === GameMode.Single) return;
+      const st = this.rawState() as any;
+      if (!st || !st.players) return;
+
+      const focusId = this.focusedPlayerId();
+      const playersList = Object.values(st.players) as any[];
+      if (playersList.length === 0) return;
+
+      const target = (focusId && playersList.find(p => p.id === focusId)) || playersList[0];
+      if (target) {
+        if (target.bridges) {
+          this.engine.loadBridges(target.bridges);
+        } else {
+          this.engine.loadBridges([]);
+        }
+        this.boardGrid.set([...this.engine.grid]);
+        this.bridges.set([...this.engine.bridges]);
+        this.potentialBridges.set([...this.engine.potentialBridges]);
+        this.islands.set([...this.engine.islands]);
+      }
+    });
   }
 
   // 开始单机关卡
@@ -115,7 +139,7 @@ export class HashiStore extends BaseGameStore {
   private isFinishing = false;
 
   toggleBridge(r1: number, c1: number, r2: number, c2: number) {
-    if (this.localStatus() !== GameStatus.Playing || this.isFinishing) return;
+    if (this.localStatus() !== GameStatus.Playing || this.isFinishing || this.isSpectator()) return;
     
     this.engine.toggleBridge(r1, c1, r2, c2);
     this.syncEngineToState();
@@ -144,7 +168,7 @@ export class HashiStore extends BaseGameStore {
   }
 
   applyHint() {
-    if (this.localStatus() !== GameStatus.Playing) return;
+    if (this.localStatus() !== GameStatus.Playing || this.isSpectator()) return;
 
     const move = this.engine.getHintMove();
     if (!move) {
@@ -169,15 +193,23 @@ export class HashiStore extends BaseGameStore {
     this.potentialBridges.set([...this.engine.potentialBridges]);
     this.islands.set([...this.engine.islands]);
     
-    // Broadcast progress in PK mode
-    if (this.currentRoomMode() !== GameMode.Single && this.localStatus() === GameStatus.Playing) {
-      this.ws.send({ action: 'progress', progress: this.bridges().length });
+    // Broadcast progress and bridges in PK mode
+    if (this.currentRoomMode() !== GameMode.Single && this.localStatus() === GameStatus.Playing && !this.isSpectator()) {
+      this.ws.send({
+        action: 'progress',
+        progress: this.bridges().length,
+        bridges: this.engine.exportBridges()
+      });
     }
   }
 
   // Submit to PK backend
   submitPKFinish() {
-    this.ws.send({ action: 'finish', board: 'verified' });
+    this.ws.send({
+      action: 'finish',
+      board: 'verified',
+      bridges: this.engine.exportBridges()
+    });
   }
 
   override extractPKStatPayload() {

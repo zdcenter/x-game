@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, Input, Output, EventEmitter, inject, signal, computed, input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, input, OnInit, OnDestroy, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';
@@ -9,6 +9,7 @@ import { AudioService } from '../../../core/services/audio.service';
 import { FriendService } from '../../../core/services/friend.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
+import { GameSwitchService } from '../../../core/services/game-switch.service';
 import * as QRCode from 'qrcode';
 
 @Component({
@@ -28,6 +29,30 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   friendService = inject(FriendService);
   toast = inject(ToastService);
   private ws = inject(WebSocketService);
+  private gameSwitchService = inject(GameSwitchService);
+
+  constructor() {
+    effect(() => {
+      const gsDiff = this.ws.gameState()?.difficulty;
+      const wsDiff = this.ws.currentDifficulty();
+      const newDiff = gsDiff || wsDiff;
+      if (newDiff && newDiff !== this.difficulty) {
+        untracked(() => {
+          this.difficulty = newDiff;
+        });
+      }
+    });
+  }
+
+  openSwitchGame() {
+    this.gameSwitchService.open({
+      roomId: this.roomId,
+      currentGameId: this.gameId,
+      currentDifficulty: this.difficulty,
+      currentMode: this.mode,
+      isPkMatch: true
+    });
+  }
 
   @Input({ required: true }) gameId!: string;
   @Input({ required: true }) mode!: string;

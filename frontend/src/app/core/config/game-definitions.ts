@@ -138,6 +138,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
     ],
     recommendations: ['tetris', 'drop2048'],
+    finishFlow: { winAction: 'modal', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
     tutorial: [
       { icon: '🔶', title: 'tutorial.hexa.goal',  description: 'tutorial.hexa.goal_desc' },
       { icon: '👆', title: 'tutorial.hexa.place', description: 'tutorial.hexa.place_desc' },
@@ -274,6 +275,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_block_12x12', desc: '12x12 Board' }
     ],
     recommendations: ['tetris', 'hexa'],
+    finishFlow: { winAction: 'modal', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
     tutorial: [
       { icon: '🟩', title: 'tutorial.block.goal',  description: 'tutorial.block.goal_desc' },
       { icon: '👆', title: 'tutorial.block.place', description: 'tutorial.block.place_desc' },
@@ -322,6 +324,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_watersort_hard', desc: '16 Tubes (14 Colors)' }
     ],
+    finishFlow: { winAction: 'auto_next', loseAction: 'modal', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
     tutorial: [
       { icon: '🧪', title: 'tutorial.watersort.goal',    description: 'tutorial.watersort.goal_desc' },
       { icon: '👆', title: 'tutorial.watersort.select',  description: 'tutorial.watersort.select_desc' },
@@ -443,5 +446,24 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { icon: '👆', title: 'tutorial.hashi.bridge',   description: 'tutorial.hashi.bridge_desc' },
       { icon: '🚫', title: 'tutorial.hashi.cross',    description: 'tutorial.hashi.cross_desc' }
     ]
-  }
+  },
+  {
+    id: GameId.Tilematch,
+    route: '/games/tilematch',
+    titleKey: 'lobby.tilematch',
+    iconEmoji: '🐑',
+    loadComponent: () => import('../../features/games/tilematch/tilematch.component').then(m => m.TilematchComponent),
+    modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: GameMode.Speed, labelKey: 'game.speed_label', descKey: 'game.speed_desc', icon: '⚡', desc: 'Speed PK' }
+    ],
+    multiRound: true,
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: 'Easy' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: 'Medium' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: 'Hard' }
+    ],
+    recommendations: ['minesweeper', 'classic2048'],
+    finishFlow: { winAction: 'auto_next', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 }
+  },
 ];

@@ -18,7 +18,6 @@ import { GameHeaderComponent } from '../../../shared/components/game-header/game
 import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameSpectatingOverlayComponent } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 
 import { WebSocketService } from '../../../core/services/websocket.service';
@@ -33,6 +32,8 @@ import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/
 import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-connect',
   standalone: true,
@@ -40,10 +41,10 @@ import { GameToolbarComponent } from '../../../shared/components/game-toolbar/ga
     CommonModule,
     ConnectBoardComponent,
     ConnectLobbyComponent,
-    GameSpectatingOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent,
-    GameToolbarComponent
+    GameToolbarComponent,
+    GameHandheldHeaderComponent
   ],
   providers: [ConnectStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -101,7 +102,7 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
-      isMe: true,
+      isMe: !this.store.isSpectator(),
       score: prog,
       progress: prog,
       status: isFinished ? GameStatus.Finished : (this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing),
@@ -112,6 +113,7 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   });
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const isSpec = this.store.isSpectator();
     return this.store.opponents().map(opp => {
       const prog = Math.round(opp.progress || 0);
       const isFinished = this.store.winners().includes(opp.id);
@@ -119,7 +121,7 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
         id: opp.id,
         nickname: opp.id,
         isHost: opp.isHost,
-        isMe: false,
+        isMe: !isSpec && opp.id === this.playerId,
         score: prog,
         progress: prog,
         status: isFinished ? GameStatus.Finished : (opp.finished ? GameStatus.Finished : GameStatus.Playing),
@@ -158,11 +160,9 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
       
       const isFin = this.store.isFinished() || status === GameStatus.Finished;
       if (isFin) {
-        this.celebrateVictory();
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
+        if (this.store.isVictory()) {
+          this.celebrateVictory();
+        }
       }
     });
 
@@ -182,10 +182,10 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.store.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
-      if (joinInfo.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '');
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom(joinInfo);
+      } else {
+        this.handleJoinRoom(joinInfo);
       }
     }
   }
@@ -196,22 +196,44 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
     ];
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
+  override handleJoinRoom(event: any) {
     if (this.store.roomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== GameMode.Single) {
+    const action = event.isSpectator ? 'spectate' : 'join';
+    this.wsService.setPendingAction(action);
+    this.store.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false
+    );
+    if (event.mode !== GameMode.Single && !event.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
     this.view.set('play');
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    const roomId = event.name || event.roomId;
+    this.store.joinRoom(
+      roomId,
+      event.mode,
+      event.difficulty,
+      this.playerId,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      false
+    );
     if (event.mode !== GameMode.Single) {
-      this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
+      this.roomLifecycle.saveReconnectInfo(roomId, event.mode, event.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
     this.view.set('play');

@@ -46,7 +46,8 @@ export class SudokuPkSpeedComponent {
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     const myId = this.store.playerId();
-    const players = this.getPlayers().filter(p => p.id !== myId);
+    const isSpec = this.store.isSpectator();
+    const players = this.getPlayers().filter(p => isSpec || p.id !== myId);
     return players.map(p => ({
       id: p.id,
       nickname: p.id,
@@ -112,16 +113,5 @@ export class SudokuPkSpeedComponent {
 
   isLoser(): boolean {
     return (this.store.isFinished() || this.store.gameStatus() === GameStatus.Finished) && !this.isWinner();
-  }
-
-  constructor() {
-    effect((onCleanup) => {
-      if (this.store.isFinished() || this.store.gameStatus() === GameStatus.Finished) {
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
-      }
-    });
   }
 }

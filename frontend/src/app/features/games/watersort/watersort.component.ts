@@ -21,12 +21,14 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { getLiquidTheme, LiquidColorTheme } from './water-colors.util';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-watersort',
   standalone: true,
   imports: [CommonModule, TubeComponent,
     GameToolbarComponent, FormsModule, GameLayoutComponent,
-    GamePkHudComponent],
+    GamePkHudComponent, GameHandheldHeaderComponent],
   templateUrl: './watersort.component.html',
   styles: [`
     .is-receiving {
@@ -119,15 +121,11 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       }
 
       if (status === GameStatus.Finished) {
-        if (this.didIWin()) {
+        if (this.store.isVictory()) {
           this.celebrateVictory();
         } else {
           this.vibrateError();
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
       }
     });
   }
@@ -136,10 +134,10 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     super.ngOnInit();
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this._store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      if (pending.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.handleJoinRoom(pending);
       }
     } else {
       const savedDiff = getSavedDifficulty('watersort', 'easy');
@@ -166,6 +164,9 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   changeSingleDifficulty(diff: string) {
+    if (this._store.currentRoomMode() !== GameMode.Single || this._store.roomId()) {
+      return;
+    }
     setSavedDifficulty('watersort', diff);
     this._store.leaveRoom();
     setTimeout(() => {
@@ -194,19 +195,30 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     return this._store.playersList() as any[];
   }
 
+  activePlayerId(): string {
+    if (!this._store.isSpectator()) return this.myId;
+    const focus = this._store.focusedPlayerId();
+    if (focus && this._store.players()[focus]) return focus;
+    const players = this.playersList();
+    return players[0]?.id || this.myId;
+  }
+
   myTubes() {
-    const player = this._store.players()[this.myId];
+    const targetId = this.activePlayerId();
+    const player = this._store.players()[targetId];
     return player ? player.tubes : [];
   }
 
   myMoves() {
-    const player = this._store.players()[this.myId];
+    const targetId = this.activePlayerId();
+    const player = this._store.players()[targetId];
     return player ? player.moves : 0;
   }
 
   opponentId(): string | null {
+    const activeId = this.activePlayerId();
     const players = this.playersList();
-    const opp = players.find((p: any) => p.id !== this.myId);
+    const opp = players.find((p: any) => p.id !== activeId);
     return opp ? opp.id : null;
   }
 
@@ -254,7 +266,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.isHost(),
-      isMe: true,
+      isMe: !this._store.isSpectator(),
       score: moves,
       progress: progInfo.percent,
       status: isFinished ? GameStatus.Finished : (this.status === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing),
@@ -431,7 +443,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   onTubeClick(index: number) {
-    if (this.status !== GameStatus.Playing) return;
+    if (this.status !== GameStatus.Playing || this._store.isSpectator()) return;
     if (this.pouringState) return; // Prevent clicking while animating
     
     if (this.selectedTubeIndex === null) {
@@ -532,21 +544,17 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
 
 
-  override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}): void {
+  override handleCreateRoom(config: any): void {
     super.handleCreateRoom(config);
-    if (config.password) this.wsService.setPendingPassword(config.password);
-    this._store.joinRoom(config.name, config.mode, config.difficulty, this.myId);
     if (config.mode !== GameMode.Single) {
-      this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty);
+      this.roomLifecycle.saveReconnectInfo(this.store.roomId() || config.name, config.mode, config.difficulty, this.myId);
     }
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}): void {
+  override handleJoinRoom(event: any): void {
     super.handleJoinRoom(event);
-    if (event.password) this.wsService.setPendingPassword(event.password);
-    this._store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== GameMode.Single) {
+    if (event.mode !== GameMode.Single && !event.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);

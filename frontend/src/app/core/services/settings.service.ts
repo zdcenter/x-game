@@ -12,6 +12,7 @@ export interface PublicSettings {
   multiplayer_enabled: string;
   pk_multi_round_enabled: string;
   ad_interstitial_frequency: string;
+  ad_auto_next_frequency: string;
   ad_interstitial_daily_limit: string;
   ad_pc_left_slot: string;
   ad_pc_right_slot: string;
@@ -33,6 +34,7 @@ export class SettingsService {
     multiplayer_enabled: 'true',
     pk_multi_round_enabled: 'true',
     ad_interstitial_frequency: '3',
+    ad_auto_next_frequency: '3',
     ad_interstitial_daily_limit: '3',
     ad_pc_left_slot: '',
     ad_pc_right_slot: '',

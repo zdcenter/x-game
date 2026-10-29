@@ -4,6 +4,7 @@
   [title]="t('lobby.nonogram')() || 'Nonogram'"
   [subtitle]="getSubtitle()"
   icon="🎨"
+  [immersive]="isHandheld()"
   iconGradientClass="from-blue-500 to-indigo-500"
   titleGradientClass="from-blue-400 to-indigo-400"
   shadowClass="shadow-blue-500/20"
@@ -13,7 +14,6 @@
   [hideLeftPanel]="hideLeftPanel()"
   [currentDifficulty]="store.currentDifficulty()"
   (difficultyChange)="changeSingleDifficulty($event)"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [overlayStats]="[
     { label: t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
@@ -31,27 +31,76 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-center my-auto">
+<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-start my-0">
 
-            <!-- Players Info Row (Hidden in Single Player to maximize board height) -->
-            @if (store.currentRoomMode() !== GameMode.Single) {
-              <div class="flex-none py-1 mb-1 shrink-0 w-full">
-                <app-game-pk-hud
-                  [myPlayer]="myPlayerPkStats()"
-                  [opponents]="opponentsPkStats()"
-                  [targetWins]="store.currentRoomTarget()"
-                  [gameMode]="store.currentRoomMode()"
-                  [status]="store.status()"
-                  [elapsedTime]="gameTimer.formatTime(store.timeSpent())">
-                </app-game-pk-hud>
-              </div>
-            }
+  <!-- Integrated Board Header Bar (仅在移动/平板手持端展示，PC 桌面端保持标准统一单顶栏杜绝重复) -->
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'nonogram'"
+      [gameTitle]="t('lobby.nonogram')() || '数织'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()">
 
-            <!-- Main Board (Seamless & Integrated) -->
-            <div class="flex-1 min-h-0 overflow-auto flex flex-col items-stretch p-1 sm:p-2.5 md:p-3 w-full"
-                 [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
-                             <div class="min-w-fit flex flex-col items-center m-auto">
-                <div class="nonogram-board prevent-select"
+      <!-- Center: [🎯 难度选择下拉框 / 关卡说明] (中间区域) -->
+      <div class="flex items-center justify-center mx-2 min-w-0 flex-1">
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <div class="relative group max-w-full">
+            <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] group-hover:border-blue-500/50 shadow-2xs transition-all cursor-pointer truncate">
+              <span class="text-xs sm:text-sm shrink-0">🎯</span>
+              <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] font-mono tracking-tight truncate">{{ currentDifficultyLabel() }}</span>
+              <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-text-muted)] group-hover:text-blue-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+            <!-- Native wheel / popup selector -->
+            <select class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                    [ngModel]="store.currentDifficulty()"
+                    (ngModelChange)="changeSingleDifficulty($event)">
+              @for (diff of predefinedDifficulties; track diff.id) {
+                <option [value]="diff.id">
+                  {{ t(diff.labelKey)() }} ({{ diff.desc }})
+                </option>
+              }
+            </select>
+          </div>
+        } @else {
+          <!-- PK 模式房间信息 -->
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
+            <span class="text-xs sm:text-base">⚔️</span>
+            <span class="truncate">{{ t('lobby.nonogram')() || '数织' }} · PK</span>
+          </div>
+        }
+      </div>
+    </app-game-handheld-header>
+  }
+
+  <!-- Players Info Row (Hidden in Single Player to maximize board height) -->
+  @if (store.currentRoomMode() !== GameMode.Single) {
+    <div class="flex-none py-1 mb-1 shrink-0 w-full">
+      <app-game-pk-hud
+        [myPlayer]="myPlayerPkStats()"
+        [opponents]="opponentsPkStats()"
+        [targetWins]="store.currentRoomTarget()"
+        [gameMode]="store.currentRoomMode()"
+        [status]="store.status()"
+        [isSpectator]="store.isSpectator()"
+        [focusedPlayerId]="store.focusedPlayerId()"
+        (playerSelect)="store.setFocusedPlayer($event)"
+        [elapsedTime]="gameTimer.formatTime(store.timeSpent())">
+      </app-game-pk-hud>
+    </div>
+  }
+
+  <!-- Main Board (Seamless & Integrated) -->
+  <div class="flex-1 min-h-0 overflow-auto flex flex-col items-stretch p-1 sm:p-2 md:p-2.5 w-full"
+       [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
+    <div class="min-w-fit flex flex-col items-center mx-auto my-0 pt-0.5 sm:pt-1">
+
+              <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
                      (mouseleave)="handleMouseLeave()"
                      [style.--cell-size.px]="cellSize()"

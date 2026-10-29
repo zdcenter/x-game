@@ -20,10 +20,12 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
 import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GomokuAI, type GomokuColor } from './store/gomoku-ai';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameLayoutComponent],
+  imports: [CommonModule, GameLayoutComponent, GameHandheldHeaderComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']
@@ -96,7 +98,6 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   playerColors = this.store.playerColors;
   myPlayerId = this.store.playerId;
   lastMove = computed(() => this.store.lastMove());
-  isSpectator = this.store.isSpectator;
 
   // Move counter
   readonly moveCount = computed(() => {
@@ -143,8 +144,11 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
-      this.joinRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 1);
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom(joinInfo);
+      } else {
+        this.handleJoinRoom(joinInfo);
+      }
     } else {
       this.route.queryParams.subscribe(params => {
         if (this.roomId()) {
@@ -165,18 +169,28 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
-  joinRoom(roomId: string, mode: string, difficulty: string, host: string, target: number = 1) {
+  joinRoom(
+    roomId: string,
+    mode: string,
+    difficulty: string,
+    host: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false,
+    action?: string
+  ) {
     if (!roomId) return;
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.roomId.set(roomId);
     this.hostId.set(host);
 
-    const playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    this.store.joinRoom(roomId, mode, difficulty, host, target, password, bounty, isSpectator);
     
-    this.store.joinRoom(roomId, mode, difficulty, host, target);
-    
-    if (mode !== GameMode.Single) {
+    if (mode !== GameMode.Single && !isSpectator) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
     }
   }
@@ -285,10 +299,21 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
 
   override handleCreateRoom(config: any) {
     if (config.password) this.wsService.setPendingPassword(config.password);
-    const roomId = config.name || `gomoku-${Date.now()}`;
+    this.wsService.setPendingAction('create');
+    const roomId = config.name || config.roomId || `gomoku-${Date.now()}`;
     const host = this.myPlayerId();
     const diff = config.difficulty || 'medium';
-    this.joinRoom(roomId, config.mode, diff, host, config.target ?? 1);
+    this.joinRoom(
+      roomId,
+      config.mode,
+      diff,
+      host,
+      config.target ?? 1,
+      config.password || '',
+      config.bountyCoins || 0,
+      false,
+      'create'
+    );
     this.isMobileSidebarOpen.set(false);
   }
 
@@ -296,7 +321,16 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     if (room.password) this.wsService.setPendingPassword(room.password);
     const diff = room.difficulty || 'medium';
     const roomId = room.roomId || room.id;
-    this.joinRoom(roomId, room.mode, diff, room.host, room.target ?? 1);
+    this.joinRoom(
+      roomId,
+      room.mode,
+      diff,
+      room.host,
+      room.target ?? 1,
+      room.password || '',
+      room.bountyCoins || 0,
+      room.isSpectator || false
+    );
     this.isMobileSidebarOpen.set(false);
   }
 

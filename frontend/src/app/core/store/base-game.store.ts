@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Injectable, Signal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { WebSocketService } from '../services/websocket.service';
 import { AuthStore } from '../auth/auth.store';
@@ -13,6 +13,7 @@ import { AudioService } from '../services/audio.service';
 import { LayoutService } from '../services/layout.service';
 import { CoinService } from '../services/coin.service';
 import { LiveActivityService } from '../services/live-activity.service';
+import { CrossGameJoinService } from '../services/cross-game-join.service';
 import { storageGet, storageSet, storageRemove } from '../utils/browser.util';
 
 @Injectable()
@@ -26,6 +27,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly achievementService = inject(AchievementService);
   protected readonly layoutService = inject(LayoutService);
   protected readonly liveActivity = inject(LiveActivityService);
+  protected readonly crossGameJoin = inject(CrossGameJoinService);
 
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
@@ -41,11 +43,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
     // for both room creators and joiners/guests.
     effect(() => {
       const gs = this.ws.gameState() as any;
+      const wsDiff = this.ws.currentDifficulty();
       if (gs?.target > 0) {
         untracked(() => this.currentRoomTarget.set(gs.target));
       }
-      if (gs?.difficulty) {
-        untracked(() => this.currentDifficulty.set(gs.difficulty));
+      const newDiff = gs?.difficulty || wsDiff;
+      if (newDiff) {
+        untracked(() => this.currentDifficulty.set(newDiff));
       }
     });
 
@@ -100,9 +104,51 @@ export abstract class BaseGameStore implements GameStoreInterface {
         }
       }
     });
+
+    // 自动防幽灵状态生命周期契约 (Anti-Ghost State Contract):
+    // 无论是单机还是联机，当状态重置为 Waiting（等待室/重开）或 Starting（倒计时）时，自动触发重置
+    effect(() => {
+      const cur = this.status();
+      if (cur === GameStatus.Waiting || cur === GameStatus.Starting) {
+        untracked(() => this.resetLocalGameState());
+      }
+    });
+
+    // 观战模式智能导播自动焦点跟随：优先跟随房主或领先玩家
+    effect(() => {
+      if (this.isSpectator()) {
+        const players = this.roomPlayers();
+        const currentFocus = this.focusedPlayerId();
+        if (players && players.length > 0) {
+          const exists = players.some(p => (p.id || p.userId) === currentFocus);
+          if (!currentFocus || !exists) {
+            const hostP = players.find(p => p.isHost);
+            const targetId = hostP ? (hostP.id || hostP.userId) : (players[0].id || players[0].userId);
+            if (targetId) {
+              untracked(() => this.focusedPlayerId.set(targetId));
+            }
+          }
+        }
+      }
+    });
   }
 
   readonly roomId = signal<string>('');
+  protected readonly _isSpectator = signal<boolean>(false);
+  readonly isSpectator: Signal<boolean> = computed(() => {
+    if (this._isSpectator()) return true;
+    const st = this.rawState() as any;
+    if (st && this.currentRoomMode() !== GameMode.Single) {
+      if (Array.isArray(st.spectators) && st.spectators.includes(this.playerId())) {
+        return true;
+      }
+      if (Array.isArray(st.players) && st.players.length > 0 && !st.players.some((p: any) => (p.id || p.userId) === this.playerId())) {
+        return true;
+      }
+    }
+    return false;
+  });
+  readonly focusedPlayerId = signal<string>('');
   readonly currentRoomMode = signal<GameModeType | string>(GameMode.Single);
   readonly currentDifficulty = signal<GameDifficultyType | string>(GameDifficulty.Medium);
   readonly currentRoomTarget = signal<number>(1);
@@ -264,6 +310,37 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly isPlaying = computed(() => this.status() === GameStatus.Playing);
   readonly isFinished = computed(() => this.status() === GameStatus.Finished);
 
+  /**
+   * 平台统一终局胜负状态契约 (Universal Game Victory Contract)
+   * 无论单机还是联机，全平台统一推导：
+   * - true: 当前玩家胜利/通关
+   * - false: 失败/惜败/死局
+   */
+  readonly isVictory = computed<boolean>(() => {
+    // 1. 若有明确的 winners 数组（联机对战或重写了 singlePlayerWinners 的单机游戏）
+    const w = this.winners();
+    if (w && w.length > 0) {
+      return w.includes(this.playerId());
+    }
+
+    // 2. 检查子类自定义的 isLocalVictory 信号 (如果有)
+    const self = this as any;
+    if (typeof self.isLocalVictory === 'function') {
+      return !!self.isLocalVictory();
+    }
+
+    // 3. 检查是否有死局/游戏结束标志 (如方块消除、六边形消除等得分类消除游戏)
+    if (self.isDead?.() || self.gameOver?.() || self.isDefeated?.() || self.localEngine?.()?.isDead) {
+      return false;
+    }
+
+    // 4. 单人模式下：若是纯解谜/通关类游戏，status === Finished 默认即代表解谜成功胜利
+    return true;
+  });
+
+  /** 对应失败标志 */
+  readonly isDefeat = computed<boolean>(() => !this.isVictory());
+
   // ── 多局模式 (Multi-Round) ────────────────────────────────────────────────
   /** 各玩家本系列已累积赢局数。只要后端 GetState 包含 wins 字段即可读取。 */
   readonly pkWins = computed<Record<string, number>>(
@@ -289,23 +366,42 @@ export abstract class BaseGameStore implements GameStoreInterface {
     return `${myW} : ${oppW}`;
   });
 
-  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1, password: string = '', bounty: number = 0) {
+  setFocusedPlayer(playerId: string) {
+    if (playerId) {
+      this.focusedPlayerId.set(playerId);
+    }
+  }
+
+  joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1, password: string = '', bounty: number = 0, isSpectator: boolean = false, action: string = '') {
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.currentRoomTarget.set(target);
+    this._isSpectator.set(isSpectator);
+    this.focusedPlayerId.set('');
     this._pkPrevStatus = '';
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
     if (mode !== GameMode.Single) {
-      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, '', password, target, bounty);
+      const explicitAction = action || (isSpectator ? 'spectate' : '');
+      this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, explicitAction, password, target, bounty, isSpectator);
     }
   }
 
   leaveRoom() {
+    this.resetLocalGameState();
     if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single && this.isFinished()) {
       this.clearSinglePlayerSave();
     }
+
+    // 防御跨游戏切换：如果当前正在跨游戏跟随房间切换（crossGameJoin 已经置入该房间号的 pendingJoin），
+    // 此时玩家并未真正离开房间，绝不可向后端发送 LeaveRoom，亦不可提前断开连接或清空房间号！
+    const pending = this.crossGameJoin.pendingJoin();
+    const currentRoom = this.roomId() || this.ws.currentRoomId();
+    if (pending && currentRoom && pending.roomId === currentRoom) {
+      return;
+    }
+
     if (this.currentRoomMode() !== GameMode.Single) {
       this.ws.send({ type: C2SAction.LeaveRoom });
     }
@@ -314,10 +410,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
       this.ws.disconnect(this.gameId);
     }, 100);
     this.roomId.set('');
+    this._isSpectator.set(false);
+    this.focusedPlayerId.set('');
     this.currentRoomMode.set(GameMode.Single);
   }
 
   startGame() {
+    this.resetLocalGameState();
     if (this.currentRoomMode() === GameMode.Single) {
       this.onSinglePlayerStart();
     } else {
@@ -326,6 +425,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   restartGame() {
+    this.resetLocalGameState();
     if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single) {
       this.clearSinglePlayerSave();
     }
@@ -339,12 +439,12 @@ export abstract class BaseGameStore implements GameStoreInterface {
     });
   }
 
-  changeRoomGame(targetGameId: string) {
+  changeRoomGame(targetGameId: string, difficulty?: string, mode?: string) {
     if (this.currentRoomMode() === GameMode.Single) return;
     
     const targetConfig = this.gameRegistry.getConfig(targetGameId);
-    let targetMode = this.currentRoomMode() as string;
-    let targetDiff = this.currentDifficulty() as string;
+    let targetMode = mode || (this.currentRoomMode() as string);
+    let targetDiff = difficulty || (this.currentDifficulty() as string);
     
     if (targetConfig) {
        if (!targetConfig.modes.some(m => m.id === targetMode)) {
@@ -357,12 +457,27 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }
 
     this.ws.send({
+      action: C2SAction.ChangeGame,
       type: C2SAction.ChangeGame,
       game: targetGameId,
       mode: targetMode,
       difficulty: targetDiff
     });
   }
+
+  /**
+   * 统一本地状态清理契约 (Anti-Ghost State Hook)
+   * 供各游戏 Store 子类 override。在以下生命周期自动执行：
+   * 1. 房间进入 Waiting / Starting 状态（新回合/倒计时）；
+   * 2. 调用 startGame() / restartGame()；
+   * 3. 离开房间 leaveRoom()。
+   * 彻底杜绝跨局幽灵状态（如乐观插旗、选中项、临时动画触发器等）残留。
+   */
+  resetLocalGameState(): void {
+    this.onResetLocalGameState();
+  }
+
+  protected onResetLocalGameState(): void {}
 
   // 子类实现单机游戏的开始和重置逻辑
   protected onSinglePlayerStart() {}

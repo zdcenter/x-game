@@ -48,6 +48,8 @@ export interface PendingJoinInfo {
   password?: string;
   target?: number;
   bountyCoins?: number;
+  isSpectator?: boolean;
+  isCreate?: boolean;
 }
 
 export interface RoomLifecycleHandle {
@@ -61,7 +63,7 @@ export interface RoomLifecycleHandle {
    * Save reconnect info to sessionStorage for page refresh recovery.
    * Call this when joining a PK room.
    */
-  saveReconnectInfo(roomId: string, mode: string, difficulty: string, host?: string): void;
+  saveReconnectInfo(roomId: string, mode: string, difficulty: string, host?: string, isSpectator?: boolean): void;
 
   /**
    * Clear reconnect info from sessionStorage.
@@ -95,6 +97,7 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
       sessionStorage.removeItem(`${prefix}_mode`);
       sessionStorage.removeItem(`${prefix}_diff`);
       sessionStorage.removeItem(`${prefix}_host`);
+      sessionStorage.removeItem(`${prefix}_spectator`);
     }
   };
 
@@ -138,9 +141,12 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
 
   return {
     consumePendingOrReconnect(): PendingJoinInfo | null {
+      // 1. First check crossGameJoin (in-memory, e.g. clicking "观战" or "加入" in PK Arena / Lobby)
       const joinInfo = crossGameJoin.consumePendingJoin(config.gameId);
       if (joinInfo) {
-        wsService.setPendingAction(joinInfo.action || 'join');
+        const isSpectator = !!(joinInfo.spectate || joinInfo.action === 'spectate');
+        const action = isSpectator ? 'spectate' : (joinInfo.action || 'join');
+        wsService.setPendingAction(action);
         if (joinInfo.password) {
           wsService.setPendingPassword(joinInfo.password);
         }
@@ -152,43 +158,78 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
           password: joinInfo.password,
           target: joinInfo.target,
           bountyCoins: joinInfo.bountyCoins,
+          isSpectator,
+          isCreate: joinInfo.action === 'create'
         };
       }
 
-      // 2. Check for reconnect from sessionStorage (e.g. page refresh)
+      // 2. Check URL query params (e.g. shared spectator links or direct URLs)
+      if (typeof window !== 'undefined' && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const roomId = params.get('joinRoom') || params.get('room');
+        const mode = params.get('mode');
+        const isSpectator = params.get('spectate') === 'true' || params.get('action') === 'spectate' || params.get('isSpectator') === 'true';
+        if (roomId && mode) {
+          const action = isSpectator ? 'spectate' : 'join';
+          wsService.setPendingAction(action);
+          const password = params.get('password') || params.get('pwd') || undefined;
+          if (password) {
+            wsService.setPendingPassword(password);
+          }
+          return {
+            roomId,
+            mode,
+            difficulty: params.get('diff') || params.get('difficulty') || 'medium',
+            host: params.get('host') || undefined,
+            password,
+            target: params.get('target') ? parseInt(params.get('target')!) : 1,
+            isSpectator
+          };
+        }
+      }
+
+      // 3. Check for reconnect from sessionStorage (e.g. page refresh)
       let room = null;
       let mode = null;
       let diff = null;
       let host = undefined;
+      let isSpectator = false;
       if (typeof sessionStorage !== 'undefined') {
         room = sessionStorage.getItem(`${prefix}_room`);
         mode = sessionStorage.getItem(`${prefix}_mode`);
         diff = sessionStorage.getItem(`${prefix}_diff`);
         host = sessionStorage.getItem(`${prefix}_host`) || undefined;
+        isSpectator = sessionStorage.getItem(`${prefix}_spectator`) === 'true';
       }
 
       if (room && mode) {
         if (mode !== GameMode.Single) {
-          wsService.setPendingAction('join');
+          wsService.setPendingAction(isSpectator ? 'spectate' : 'join');
         }
         return {
           roomId: room,
           mode,
           difficulty: diff || 'medium',
           host,
+          isSpectator
         };
       }
 
       return null;
     },
 
-    saveReconnectInfo(roomId: string, mode: string, difficulty: string, host?: string) {
+    saveReconnectInfo(roomId: string, mode: string, difficulty: string, host?: string, isSpectator: boolean = false) {
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.setItem(`${prefix}_room`, roomId);
         sessionStorage.setItem(`${prefix}_mode`, mode);
         sessionStorage.setItem(`${prefix}_diff`, difficulty);
         if (host) {
           sessionStorage.setItem(`${prefix}_host`, host);
+        }
+        if (isSpectator) {
+          sessionStorage.setItem(`${prefix}_spectator`, 'true');
+        } else {
+          sessionStorage.removeItem(`${prefix}_spectator`);
         }
       }
     },

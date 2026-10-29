@@ -574,7 +574,7 @@ export class SokobanBoardComponent {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (this.readonly) return;
+    if (this.readonly || this.store.isSpectator()) return;
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
 
     switch (event.key) {
@@ -618,7 +618,7 @@ export class SokobanBoardComponent {
   }
 
   onTouchStart(event: TouchEvent) {
-    if (this.readonly) return;
+    if (this.readonly || this.store.isSpectator()) return;
     if (event.touches.length > 0) {
       this.touchStartX = event.touches[0].clientX;
       this.touchStartY = event.touches[0].clientY;
@@ -626,7 +626,7 @@ export class SokobanBoardComponent {
   }
 
   onTouchEnd(event: TouchEvent) {
-    if (this.readonly) return;
+    if (this.readonly || this.store.isSpectator()) return;
     if (event.changedTouches.length > 0) {
       const touchEndX = event.changedTouches[0].clientX;
       const touchEndY = event.changedTouches[0].clientY;
@@ -649,7 +649,7 @@ export class SokobanBoardComponent {
   }
 
   onCellClick(targetR: number, targetC: number) {
-    if (this.readonly) return;
+    if (this.readonly || this.store.isSpectator()) return;
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
 
     this.clearPathfinding();

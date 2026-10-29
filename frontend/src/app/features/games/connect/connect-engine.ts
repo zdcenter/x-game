@@ -11,10 +11,113 @@ export interface Endpoint {
 }
 
 export interface ConnectPuzzleDef {
+  id?: string;
   width: number;
   height: number;
   endpoints: Endpoint[];
   blocks?: Position[];
+}
+
+export function normalizePosition(pos: any): Position {
+  if (Array.isArray(pos)) {
+    // Array format is [col, row] / [x, y]
+    return { c: Number(pos[0]) || 0, r: Number(pos[1]) || 0 };
+  }
+  if (pos && typeof pos === 'object') {
+    if ('r' in pos && 'c' in pos) {
+      return { r: Number(pos.r) || 0, c: Number(pos.c) || 0 };
+    }
+    if ('y' in pos && 'x' in pos) {
+      return { r: Number(pos.y) || 0, c: Number(pos.x) || 0 };
+    }
+    if ('row' in pos && 'col' in pos) {
+      return { r: Number(pos.row) || 0, c: Number(pos.col) || 0 };
+    }
+  }
+  return { r: 0, c: 0 };
+}
+
+export function normalizeConnectPuzzle(input: any): ConnectPuzzleDef {
+  let raw = input;
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      raw = {};
+    }
+  }
+  if (!raw || typeof raw !== 'object') {
+    raw = {};
+  }
+
+  const id = typeof raw.id === 'string' ? raw.id : undefined;
+  const width = Math.max(1, Number(raw.width) || 5);
+  const height = Math.max(1, Number(raw.height) || 5);
+
+  let rawEndpoints = raw.endpoints;
+  if (typeof rawEndpoints === 'string') {
+    try {
+      rawEndpoints = JSON.parse(rawEndpoints);
+    } catch {
+      rawEndpoints = [];
+    }
+  }
+  if (!Array.isArray(rawEndpoints)) {
+    rawEndpoints = [];
+  }
+
+  const endpoints: Endpoint[] = [];
+  if (rawEndpoints.length > 0) {
+    if (rawEndpoints[0].r !== undefined && rawEndpoints[0].c !== undefined) {
+      // Flat format [{"r": r, "c": c, "color": color}, ...]
+      const colorMap = new Map<number, Position[]>();
+      for (const ep of rawEndpoints) {
+        const color = Number(ep.color) || 0;
+        if (!colorMap.has(color)) colorMap.set(color, []);
+        colorMap.get(color)!.push({ r: Number(ep.r) || 0, c: Number(ep.c) || 0 });
+      }
+      for (const [color, pts] of colorMap.entries()) {
+        if (pts.length >= 2) {
+          endpoints.push({ color, p1: pts[0], p2: pts[1] });
+        }
+      }
+    } else {
+      for (const ep of rawEndpoints) {
+        if (!ep) continue;
+        const color = Number(ep.color) || 0;
+        const p1 = normalizePosition(ep.p1);
+        const p2 = normalizePosition(ep.p2);
+        let path: Position[] | undefined;
+        if (Array.isArray(ep.path)) {
+          path = ep.path.map((pt: any) => normalizePosition(pt));
+        }
+        endpoints.push({ color, p1, p2, path });
+      }
+    }
+  }
+
+  let rawBlocks = raw.blocks;
+  if (typeof rawBlocks === 'string') {
+    try {
+      rawBlocks = JSON.parse(rawBlocks);
+    } catch {
+      rawBlocks = [];
+    }
+  }
+  const blocks: Position[] = [];
+  if (Array.isArray(rawBlocks)) {
+    for (const b of rawBlocks) {
+      if (b) blocks.push(normalizePosition(b));
+    }
+  }
+
+  return {
+    id,
+    width,
+    height,
+    endpoints,
+    blocks
+  };
 }
 
 export class ConnectEngine {
@@ -28,23 +131,30 @@ export class ConnectEngine {
   paths: Map<number, Position[]>;
   
   constructor(puzzle: ConnectPuzzleDef) {
-    this.width = puzzle.width;
-    this.height = puzzle.height;
-    this.endpoints = puzzle.endpoints;
-    this.blocks = puzzle.blocks || [];
+    const normalized = normalizeConnectPuzzle(puzzle);
+    this.width = normalized.width;
+    this.height = normalized.height;
+    this.endpoints = normalized.endpoints;
+    this.blocks = normalized.blocks || [];
     this.paths = new Map();
     this.grid = Array.from({ length: this.height }, () => Array(this.width).fill(0));
 
     // Place endpoints
     for (const ep of this.endpoints) {
-      this.grid[ep.p1.r][ep.p1.c] = ep.color;
-      this.grid[ep.p2.r][ep.p2.c] = ep.color;
+      if (this.grid[ep.p1.r] && this.grid[ep.p1.r][ep.p1.c] !== undefined) {
+        this.grid[ep.p1.r][ep.p1.c] = ep.color;
+      }
+      if (this.grid[ep.p2.r] && this.grid[ep.p2.r][ep.p2.c] !== undefined) {
+        this.grid[ep.p2.r][ep.p2.c] = ep.color;
+      }
       this.paths.set(ep.color, [ep.p1]); // initialize path starting at p1
     }
 
     // Place blocks
     for (const b of this.blocks) {
-      this.grid[b.r][b.c] = -1;
+      if (this.grid[b.r] && this.grid[b.r][b.c] !== undefined) {
+        this.grid[b.r][b.c] = -1;
+      }
     }
   }
 
@@ -297,5 +407,55 @@ export class ConnectEngine {
       }
     }
     return color;
+  }
+
+  exportPaths(): Record<number, Position[]> {
+    const res: Record<number, Position[]> = {};
+    for (const [color, path] of this.paths.entries()) {
+      if (path && path.length > 0) {
+        res[color] = path.map(p => ({ r: p.r, c: p.c }));
+      }
+    }
+    return res;
+  }
+
+  loadPaths(pathsData: any) {
+    let parsed = pathsData;
+    if (typeof parsed === 'string') {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch {
+        return;
+      }
+    }
+    if (!parsed || typeof parsed !== 'object') return;
+
+    // Reset grid cells back to 0 except blocks and endpoints
+    for (let r = 0; r < this.height; r++) {
+      for (let c = 0; c < this.width; c++) {
+        if (!this.isBlock(r, c) && !this.isEndpoint(r, c)) {
+          this.grid[r][c] = 0;
+        }
+      }
+    }
+    this.paths.clear();
+    for (const ep of this.endpoints) {
+      this.paths.set(ep.color, [ep.p1]);
+    }
+
+    // Apply paths
+    for (const [colorStr, pts] of Object.entries(parsed)) {
+      const color = Number(colorStr);
+      if (!Array.isArray(pts) || pts.length === 0) continue;
+      const normalizedPath: Position[] = [];
+      for (const pt of pts) {
+        const pos = normalizePosition(pt);
+        normalizedPath.push(pos);
+        if (!this.isEndpoint(pos.r, pos.c) && this.grid[pos.r] && this.grid[pos.r][pos.c] !== undefined) {
+          this.grid[pos.r][pos.c] = color;
+        }
+      }
+      this.paths.set(color, normalizedPath);
+    }
   }
 }

@@ -3,6 +3,7 @@
   [gameId]="'classic2048'"
   [title]="i18n.t('app.title.classic2048')()"
   [subtitle]="getSubtitle()"
+  [immersive]="isHandheld()"
   icon="🔢"
   iconGradientClass="from-yellow-500 to-orange-500"
   titleGradientClass="from-yellow-400 to-orange-400"
@@ -29,11 +30,79 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
-  <div class="relative flex-grow flex flex-col items-center justify-center my-auto min-h-0 overflow-y-auto touch-none p-4 pb-8 w-full gap-2">
+<div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start my-0">
+
+  <!-- Integrated Handheld Header Bar (仅移动/平板手持端展示，PC 桌面端保持标准统一单顶栏杜绝重复) -->
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'classic2048'"
+      [gameTitle]="i18n.t('app.title.classic2048')() || '2048'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()">
+
+      <!-- Center: Score + Best Score + Restart -->
+      @if (store.currentRoomMode() === GameMode.Single) {
+        <div class="flex items-center gap-1.5 sm:gap-3 flex-1 justify-center min-w-0">
+          <!-- SCORE -->
+          <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+               [title]="'SCORE'">
+            <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">SCORE</span>
+            <span class="font-digital text-amber-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+              {{ store.localScore() }}
+            </span>
+          </div>
+
+          <!-- BEST -->
+          <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+               [title]="'BEST'">
+            <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">BEST</span>
+            <span class="font-digital text-emerald-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+              {{ math.max(store.localScore(), bestScore()) }}
+            </span>
+          </div>
+
+          <!-- 😃 经典笑脸重启 -->
+          <button (click)="store.restartGame()"
+                  class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
+                  [title]="i18n.t('game.restart')() || '重新开始'">
+            {{ store.status() === GameStatus.Finished ? '😵' : '😃' }}
+          </button>
+        </div>
+      } @else {
+        <!-- PK 模式头部指示器 -->
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
+          <span class="text-xs sm:text-base">⚔️</span>
+          <span class="truncate">{{ i18n.t('app.title.classic2048')() || '2048' }} · PK</span>
+        </div>
+      }
+    </app-game-handheld-header>
+  }
+
+  <div class="relative flex-grow flex flex-col items-center justify-center my-auto min-h-0 overflow-y-auto touch-none p-2 sm:p-4 pb-4 w-full gap-2">
             
             <!-- TOP HUD & INFO BAR -->
-            @if (store.currentRoomMode() === GameMode.Single) {
+            @if (store.currentRoomMode() !== GameMode.Single) {
+              <!-- Universal PK Battle HUD (Classic 2048) -->
+              <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+                <app-game-pk-hud
+                  [myPlayer]="myPlayerPkStats()"
+                  [opponents]="opponentsPkStats()"
+                  [gameMode]="store.currentRoomMode()"
+                  [status]="store.status()"
+                  [targetWins]="store.currentRoomTarget()"
+                  [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                  [seriesScore]="seriesScore()"
+                  [elapsedTime]="timeDisplay"
+                  [isSpectator]="store.isSpectator()"
+                  [focusedPlayerId]="store.focusedPlayerId()"
+                  (playerSelect)="store.setFocusedPlayer($event)"
+                ></app-game-pk-hud>
+              </div>
+            } @else if (!isHandheld()) {
               <!-- Single Player Modern Jewel Glass Score Capsule HUD -->
               <div class="flex-none px-3 sm:px-6 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md border-b border-[var(--color-border-card)] shrink-0 w-full shadow-sm mb-2">
                 <app-game-score-capsule
@@ -61,6 +130,14 @@
                       <span>🔄 {{ store.localMoves() }}</span>
                     </div>
 
+                    <!-- Combo Badge -->
+                    @if (comboCount() > 1) {
+                      <div class="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] font-black tracking-wide shadow-sm animate-pulse">
+                        <span>🔥</span>
+                        <span>{{ comboCount() }}x COMBO</span>
+                      </div>
+                    }
+
                     <!-- Instant Restart Button -->
                     <button type="button"
                             (click)="store.restartGame()"
@@ -72,31 +149,35 @@
                   </div>
                 </app-game-score-capsule>
               </div>
-            } @else {
-              <!-- Universal PK Battle HUD (Classic 2048) -->
-              <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
-                <app-game-pk-hud
-                  [myPlayer]="myPlayerPkStats()"
-                  [opponents]="opponentsPkStats()"
-                  [gameMode]="store.currentRoomMode()"
-                  [status]="store.status()"
-                  [targetWins]="store.currentRoomTarget()"
-                  [roundFormat]="store.room()?.roundFormat || 'BO3'"
-                  [seriesScore]="seriesScore()"
-                  [elapsedTime]="timeDisplay"
-                ></app-game-pk-hud>
-              </div>
             }
 
             <!-- Game Board -->
             <div class="relative p-2.5 sm:p-4 shrink-0 c2048-board transition-all duration-300 w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] aspect-square mx-auto touch-none select-none rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-[var(--color-border-card)]"
                  [attr.data-theme]="currentTheme()"
                  [class.animate-shake]="store.shakeTrigger() > 0">
+
+              <!-- Floating Combo / Record Texts -->
+              <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+                @for (item of comboFloatItems(); track item.id) {
+                  <div class="absolute font-black c2048-combo-float drop-shadow-2xl whitespace-nowrap"
+                       [class.text-2xl]="item.tier === 1"
+                       [class.text-3xl]="item.tier === 2"
+                       [class.text-4xl]="item.tier === 3"
+                       [class.text-cyan-400]="item.tier === 1"
+                       [class.text-amber-400]="item.tier === 2"
+                       [class.text-yellow-300]="item.tier === 3"
+                       [style.left]="item.xPct + '%'"
+                       style="top: 42%;">
+                    {{ item.text }}
+                  </div>
+                }
+              </div>
+
               <!-- Grid background -->
               <div class="absolute inset-2 md:inset-3 grid gap-2" 
-                   [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
-                   [style.grid-template-rows]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'">
-                @for (row of store.cells().length ? store.cells() : [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]; track $index) {
+                   [style.grid-template-columns]="'repeat(' + (store.displayCells().length || 4) + ', minmax(0, 1fr))'"
+                   [style.grid-template-rows]="'repeat(' + (store.displayCells().length || 4) + ', minmax(0, 1fr))'">
+                @for (row of store.displayCells().length ? store.displayCells() : [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]; track $index) {
                   @for (col of row; track $index) {
                     <div class="w-full h-full c2048-empty-cell transition-colors duration-300"></div>
                   }
@@ -104,9 +185,9 @@
               </div>
               <!-- Tiles -->
               <div class="absolute inset-2 md:inset-3 grid gap-2 c2048-tile-wrapper"
-                   [style.grid-template-columns]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'"
-                   [style.grid-template-rows]="'repeat(' + (store.cells().length || 4) + ', minmax(0, 1fr))'">
-                @for (row of store.cells(); track rIdx; let rIdx = $index) {
+                   [style.grid-template-columns]="'repeat(' + (store.displayCells().length || 4) + ', minmax(0, 1fr))'"
+                   [style.grid-template-rows]="'repeat(' + (store.displayCells().length || 4) + ', minmax(0, 1fr))'">
+                @for (row of store.displayCells(); track rIdx; let rIdx = $index) {
                   @for (cell of row; track cIdx; let cIdx = $index) {
                     <div class="w-full h-full relative">
                       @if (cell > 0) {

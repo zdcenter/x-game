@@ -69,8 +69,10 @@ export class BlockStore extends BaseGameStore {
   opponents = computed<BlockOpponent[]>(() => {
     const st = this.rawState() as any;
     if (!st || !st.players) return [];
+    const isSpec = this.isSpectator();
+    const myId = this.playerId();
     return Object.values(st.players)
-      .filter((p: any) => p.id !== this.playerId())
+      .filter((p: any) => p && (isSpec || p.id !== myId))
       .map((p: any) => ({
         id: p.id,
         score: p.score,
@@ -81,17 +83,55 @@ export class BlockStore extends BaseGameStore {
   });
 
   board = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localBoard();
-    const st = this.rawState() as any;
-    if (!st || !st.players || !st.players[this.playerId()]) return this.localBoard();
-    return st.players[this.playerId()].matrix || this.localBoard();
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.localBoard();
+    }
+    const focus = this.focusedPlayerId();
+    const raw = this.rawState() as any;
+    const players = raw?.players;
+    let targetId = focus;
+    if (!targetId && players) {
+      const keys = Object.keys(players);
+      const oppKey = keys.find(k => k && k !== this.playerId());
+      targetId = oppKey || keys[0] || '';
+    }
+
+    if (targetId && players) {
+      const p = (typeof players === 'object' && !Array.isArray(players))
+        ? (players[targetId] || players[Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase()) || ''])
+        : (Array.isArray(players) ? players.find((x: any) => x?.id === targetId || x?.id?.toLowerCase() === targetId.toLowerCase()) : null);
+      if (p?.matrix && Array.isArray(p.matrix) && p.matrix.length > 0) {
+        return p.matrix as number[][];
+      }
+    }
+
+    return this.localBoard();
   });
 
   score = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) return this.localScore();
-    const st = this.rawState() as any;
-    if (!st || !st.players || !st.players[this.playerId()]) return 0;
-    return st.players[this.playerId()].score;
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.localScore();
+    }
+    const focus = this.focusedPlayerId();
+    const raw = this.rawState() as any;
+    const players = raw?.players;
+    let targetId = focus;
+    if (!targetId && players) {
+      const keys = Object.keys(players);
+      const oppKey = keys.find(k => k && k !== this.playerId());
+      targetId = oppKey || keys[0] || '';
+    }
+
+    if (targetId && players) {
+      const p = (typeof players === 'object' && !Array.isArray(players))
+        ? (players[targetId] || players[Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase()) || ''])
+        : (Array.isArray(players) ? players.find((x: any) => x?.id === targetId || x?.id?.toLowerCase() === targetId.toLowerCase()) : null);
+      if (p && p.score !== undefined) {
+        return Number(p.score || 0);
+      }
+    }
+
+    return this.localScore();
   });
 
   hand = computed(() => {
@@ -156,9 +196,18 @@ export class BlockStore extends BaseGameStore {
 
   bestScore = signal<number>(0);
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, diff: string = GameDifficulty.Medium, hostId: string = '', target: number = 1) {
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    diff: string = GameDifficulty.Medium,
+    hostId: string = '',
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
     this.currentDifficulty.set(diff);
-    super.joinRoom(roomId, mode, diff, hostId, target);
+    super.joinRoom(roomId, mode, diff, hostId, target, password, bounty, isSpectator);
     
     // Set difficulty size
     const size = diff === GameDifficulty.Easy ? 8 : (diff === GameDifficulty.Hard ? 12 : 10);
@@ -205,7 +254,10 @@ export class BlockStore extends BaseGameStore {
           this.audio.playBlock(sound);
         }
       },
-      onSyncState: () => this.syncState(),
+      onSyncState: () => {
+        this.updateSignals();
+        this.syncState();
+      },
       onLinesClear: (c, rows, cols) => {
         this._pendingClearRows = rows;
         this._pendingClearCols = cols;
@@ -216,7 +268,18 @@ export class BlockStore extends BaseGameStore {
     });
   }
 
+  protected override onSinglePlayerStart(): void {
+    this.startLocalGame();
+  }
+
+  protected override onSinglePlayerRestart(): void {
+    this.startLocalGame();
+  }
+
   private startLocalGame(seed?: number) {
+    this._pendingClearRows = [];
+    this._pendingClearCols = [];
+    this.clearTrigger.set(0);
     this.ensureEngineConfigured(GameMode.Single);
     this.engine.initGame({
       mode: GameMode.Single,
@@ -237,6 +300,9 @@ export class BlockStore extends BaseGameStore {
     });
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
+    if (!this.isSpectator()) {
+      this.syncState();
+    }
   }
 
   placeShape(handIndex: number, startRow: number, startCol: number) {
@@ -251,6 +317,7 @@ export class BlockStore extends BaseGameStore {
       startCol
     });
     this.updateSignals();
+    this.syncState();
 
     const gained = this.localScore() - prevScore;
     if (this._pendingClearRows.length > 0 || this._pendingClearCols.length > 0) {
@@ -346,12 +413,13 @@ export class BlockStore extends BaseGameStore {
   }
 
   private syncState() {
-    if (this.currentRoomMode() !== GameMode.Single && !this.isDead()) {
+    if (this.currentRoomMode() !== GameMode.Single && !this.engine.isDead) {
+      const state = this.engine.getState();
       this.ws.send({
         action: C2SAction.Update,
-        score: this.localScore(),
-        matrix: this.localBoard(),
-        hand: this.localHand().map(s => s ? s.id : 0)
+        score: state.score,
+        matrix: state.board,
+        hand: state.hand.map(s => s ? s.id : 0)
       });
     }
   }

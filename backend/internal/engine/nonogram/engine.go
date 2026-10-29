@@ -13,6 +13,7 @@ type Player struct {
 	Progress    float64 `json:"progress"`
 	Errors      int     `json:"errors"`
 	FreezeUntil int64   `json:"freeze_until,omitempty"`
+	Grid        [][]int `json:"grid,omitempty"`
 }
 
 type NonogramEngine struct {
@@ -159,6 +160,7 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 			p.Progress = 0
 			p.Errors = 0
 			p.FreezeUntil = 0
+			p.Grid = nil
 		}
 		e.Winner = ""
 		e.Winners = nil
@@ -185,9 +187,13 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 			var req struct {
 				Progress float64 `json:"progress"`
 				Finished bool    `json:"finished"`
+				Grid     [][]int `json:"grid"`
 			}
 			if err := json.Unmarshal(payload, &req); err == nil {
 				p.Progress = req.Progress
+				if len(req.Grid) > 0 {
+					p.Grid = req.Grid
+				}
 				if req.Finished && e.State != engine.StateFinished {
 					p.Progress = 100
 					e.State = engine.StateFinished

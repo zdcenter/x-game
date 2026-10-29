@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'hashi'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('lobby.hashi')()"
   [subtitle]="''"
   icon="🌉"
@@ -8,7 +9,7 @@
   titleGradientClass="from-blue-400 to-emerald-400"
   shadowClass="shadow-emerald-500/20"
   headerBgClass="dark:bg-gradient-to-r dark:from-blue-900/30 dark:to-emerald-900/30 px-4 lg:px-6 py-2 lg:py-3 mb-0"
-  [showRules]="false"
+  [showRules]="showRules()"
   [hideLeftPanel]="hideLeftPanel()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
@@ -19,6 +20,8 @@
   [customResultTitle]="getOverlayTitle()"
   [customResultSubtitle]="getOverlaySubtitle()"
   [showNextLevel]="store.currentRoomMode() === GameMode.Single"
+  (rulesClosed)="showRules.set(false)"
+  (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
   (playAgain)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
@@ -31,52 +34,113 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-@if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
-        <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
-          (levelSelect)="startLevel($event)">
-        </app-hashi-lobby>
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'hashi'"
+      [gameTitle]="i18n.t('lobby.hashi')() || '数桥'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      @if (view() === 'lobby') {
+        <div class="flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold text-xs sm:text-sm">
+          <span>🌉</span>
+          <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
+        </div>
       } @else {
-        <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
-          
+        <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        @if (store.currentRoomMode() === GameMode.Single) {
+          <!-- 关卡编号 -->
+          <button
+            type="button"
+            (click)="view.set('lobby')"
+            class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 active:scale-95 transition-all cursor-pointer shrink-0"
+            [title]="i18n.t('lobby.select_level')() || '选择关卡'"
+          >
+            <span class="text-xs sm:text-sm">#</span>
+            <span class="text-xs sm:text-base font-black font-mono leading-tight">
+              {{ store.localLevelIndex() + 1 }}
+            </span>
+          </button>
 
-          
-          <!-- Players / Opponents (Top Universal PK HUD) -->
-          @if (store.currentRoomMode() !== GameMode.Single && store.localStatus() !== GameStatus.Waiting) {
-            <div class="flex-none py-1 mb-1 shrink-0 w-full">
-              <app-game-pk-hud
-                [myPlayer]="myPlayerPkStats()"
-                [opponents]="opponentsPkStats()"
-                [targetWins]="store.currentRoomTarget()"
-                [gameMode]="store.currentRoomMode()"
-                [status]="store.localStatus()"
-                [elapsedTime]="formatTime(getElapsedMs(0))">
-              </app-game-pk-hud>
+          <!-- 笑脸重置 -->
+          <button
+            type="button"
+            (click)="store.startSinglePlayer(store.currentPuzzleId(), store.currentPuzzleContent(), store.currentDifficulty(), store.localLevelIndex())"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
+            [title]="i18n.t('game.restart')() || '重新开始'"
+          >
+            {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+          </button>
+
+          <!-- 计时器 -->
+          <div class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
+            <span class="text-xs">⏱️</span>
+            <span class="text-xs sm:text-sm font-mono font-bold text-[var(--color-text-main)]">
+              {{ store.timeSpent() * 1000 | date:'mm:ss' }}
+            </span>
+          </div>
+        } @else {
+          <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
+            <span>⚔️ PK 模式</span>
+          </div>
+        }
+      </div>
+      }
+    </app-game-handheld-header>
+  }
+
+  @if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
+    <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
+      (levelSelect)="startLevel($event)">
+    </app-hashi-lobby>
+  } @else {
+    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
+      
+      <!-- Players / Opponents (Top Universal PK HUD) -->
+      @if (store.currentRoomMode() !== GameMode.Single && store.localStatus() !== GameStatus.Waiting) {
+        <div class="flex-none py-1 mb-1 shrink-0 w-full">
+          <app-game-pk-hud
+            [myPlayer]="myPlayerPkStats()"
+            [opponents]="opponentsPkStats()"
+            [targetWins]="store.currentRoomTarget()"
+            [gameMode]="store.currentRoomMode()"
+            [status]="store.localStatus()"
+            [isSpectator]="store.isSpectator()"
+            [focusedPlayerId]="store.focusedPlayerId()"
+            (playerSelect)="store.setFocusedPlayer($event)"
+            [elapsedTime]="formatTime(getElapsedMs(0))">
+          </app-game-pk-hud>
+        </div>
+      }
+
+      <div class="flex-1 w-full flex flex-col items-center justify-center p-1 sm:p-2 md:p-3 min-h-0 relative">
+        
+        @if (store.currentRoomMode() === GameMode.Single && !isHandheld()) {
+          <div class="mb-3 flex items-center justify-between transition-all duration-300"
+               [style.width]="boardDimensions().width">
+            <!-- Left side: Level -->
+            <div class="flex items-center gap-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl py-1.5 px-3 shadow-xs">
+              <span class="font-bold text-sm lg:text-base text-[var(--color-text-main)] whitespace-nowrap">
+                {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
+              </span>
             </div>
-          }
 
-          <div class="flex-1 w-full flex flex-col items-center justify-center p-1 sm:p-2 md:p-3 min-h-0 relative">
-            
-            @if (store.currentRoomMode() === GameMode.Single) {
-              <div class="mb-3 flex items-center justify-between transition-all duration-300"
-                   [style.width]="boardDimensions().width">
-                <!-- Left side: Level -->
-                <div class="flex items-center gap-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl py-1.5 px-3 shadow-xs">
-                  <span class="font-bold text-sm lg:text-base text-[var(--color-text-main)] whitespace-nowrap">
-                    {{ i18n.t('game.level')() }} {{ store.localLevelIndex() + 1 }}
-                  </span>
-                </div>
+            <!-- Right side: Timer -->
+            <div class="flex items-center gap-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-3 py-1.5 ml-auto shadow-xs">
+              <span class="text-base">⏱️</span>
+              <span class="font-mono font-bold text-base text-[var(--color-text-main)]">{{ store.timeSpent() * 1000 | date:'mm:ss' }}</span>
+            </div>
+          </div>
+        }
 
-                <!-- Right side: Timer -->
-                <div class="flex items-center gap-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl px-3 py-1.5 ml-auto shadow-xs">
-                  <span class="text-base">⏱️</span>
-                  <span class="font-mono font-bold text-base text-[var(--color-text-main)]">{{ store.timeSpent() * 1000 | date:'mm:ss' }}</span>
-                </div>
-              </div>
-            }
-
-            <div class="relative select-none flex items-center justify-center rounded-2xl bg-[var(--color-bg-main)]/50 border border-[var(--color-border-card)] shadow-inner p-2 sm:p-3 transition-all duration-300"
-                 [style.width]="boardDimensions().width"
-                 [style.height]="boardDimensions().height">
+        <div class="relative select-none flex items-center justify-center rounded-2xl bg-[var(--color-bg-main)]/50 border border-[var(--color-border-card)] shadow-inner p-2 sm:p-3 transition-all duration-300"
+             [class.pointer-events-none]="store.isSpectator()"
+             [style.width]="boardDimensions().width"
+             [style.height]="boardDimensions().height">
               
               @if (store.localStatus() !== GameStatus.Starting) {
               <svg class="w-full h-full relative z-10 touch-none" 

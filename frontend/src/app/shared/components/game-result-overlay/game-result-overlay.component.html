@@ -491,6 +491,16 @@
               </span>
             </button>
           }
+
+          <!-- Change Game & Difficulty in PK mode (Host only) -->
+          @if (isHost) {
+            <button (click)="openSwitchGame()"
+              class="w-full py-3 rounded-2xl font-bold text-sm sm:text-base bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-amber-500 hover:text-amber-400 border border-amber-500/40 hover:border-amber-400 shadow-md shadow-amber-500/10 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer mt-1 group">
+              <span class="group-hover:rotate-12 transition-transform text-base sm:text-lg">🎮</span>
+              <span>{{ i18n.t('game.switch_pk_game')() || '更换对战游戏 / 调整难度' }}</span>
+              <span class="text-xs opacity-75">›</span>
+            </button>
+          }
         } @else if (showNextLevel) {
           <button (click)="handleNextLevel()"
             class="w-full py-3.5 sm:py-4 rounded-2xl font-black text-base sm:text-lg bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white shadow-xl shadow-emerald-500/25 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">

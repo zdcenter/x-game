@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'tetris'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('tetris.title')()"
   [subtitle]="getSubtitle()"
   icon="🧱"
@@ -11,7 +12,6 @@
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [overlayStats]="getOverlayStats()"
   [showRevive]="store.currentRoomMode() === GameMode.Single && !store.hasRevived()"
@@ -29,10 +29,91 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  <div class="flex-grow flex flex-col items-center justify-start min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5" #boardArea>
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'tetris'"
+      [gameTitle]="i18n.t('tetris.title')() || '俄罗斯方块'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        <!-- SCORE -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('tetris.score')() || 'SCORE' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-indigo-500 dark:text-indigo-400 font-mono leading-tight">
+            {{ store.score() }}
+          </span>
+        </div>
+
+        <!-- Restart Smiley / Dynamic Action -->
+        <button
+          type="button"
+          (click)="store.startGame()"
+          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+        >
+          {{ store.status() === GameStatus.Finished ? '😵' : (store.comboTrigger() >= 2 ? '🔥' : '😊') }}
+        </button>
+
+        <!-- LINES -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[46px] sm:min-w-[60px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('tetris.lines')() || 'LINES' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-cyan-500 font-mono leading-tight">
+            {{ store.lines() }}
+          </span>
+        </div>
+
+        <!-- BEST -->
+        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
+          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
+            {{ i18n.t('tetris.best')() || 'BEST' }}
+          </span>
+          <span class="text-xs sm:text-base font-black text-[var(--color-text-main)] font-mono leading-tight">
+            {{ store.score() > store.bestScore() ? store.score() : store.bestScore() }}
+          </span>
+        </div>
+
+        <!-- Palette Theme Toggle Button (Handheld) -->
+        <button
+          type="button"
+          (click)="store.cycleColorTheme()"
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-bg-sub)]/80 hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-xs sm:text-sm active:scale-95 transition-all shrink-0 cursor-pointer"
+          [title]="i18n.t('tetris.theme_tooltip')()"
+        >
+          🎨
+        </button>
+      </div>
+    </app-game-handheld-header>
+  }
+
+  <div class="flex-grow flex flex-col items-center justify-center my-auto min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5" #boardArea>
             
-          <!-- Single Player Modern Glass Capsule HUD -->
-          @if (currentRoomMode() === GameMode.Single) {
+          <!-- Universal PK Battle HUD (Tetris) -->
+          @if (currentRoomMode() !== GameMode.Single) {
+            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+              <app-game-pk-hud
+                [myPlayer]="myPlayerPkStats()"
+                [opponents]="opponentsPkStats()"
+                [gameMode]="store.currentRoomMode()"
+                [status]="store.status()"
+                [targetWins]="store.currentRoomTarget()"
+                [roundFormat]="store.room()?.roundFormat || 'BO3'"
+                [seriesScore]="seriesScore()"
+                [isSpectator]="store.isSpectator()"
+                [focusedPlayerId]="store.focusedPlayerId()"
+                (playerSelect)="store.setFocusedPlayer($event)"
+              ></app-game-pk-hud>
+            </div>
+          } @else if (!isHandheld()) {
+            <!-- Single Player Modern Glass Capsule HUD -->
             <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
               <app-game-score-capsule
                 [score]="store.score()"
@@ -81,19 +162,6 @@
                   </button>
                 </div>
               </app-game-score-capsule>
-            </div>
-          } @else {
-            <!-- Universal PK Battle HUD (Tetris) -->
-            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
-              <app-game-pk-hud
-                [myPlayer]="myPlayerPkStats()"
-                [opponents]="opponentsPkStats()"
-                [gameMode]="store.currentRoomMode()"
-                [status]="store.status()"
-                [targetWins]="store.currentRoomTarget()"
-                [roundFormat]="store.room()?.roundFormat || 'BO3'"
-                [seriesScore]="seriesScore()"
-              ></app-game-pk-hud>
             </div>
           }
 
@@ -446,39 +514,46 @@
 
             </div>
 
-            <!-- Mobile Virtual On-Screen Controller (Phone Only) -->
-            <div class="flex md:hidden items-center justify-center gap-2 sm:gap-3 w-full max-w-[360px] px-2 py-1.5 shrink-0 z-20">
-              <!-- Left Move Button -->
-              <button (click)="store.moveLeft()"
-                      class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-cyan-500/20 transition-all select-none"
-                      title="Left">
-                ◀
-              </button>
-              <!-- Rotate Button -->
-              <button (click)="store.rotate()"
-                      class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-lg flex items-center justify-center text-base active:scale-90 transition-all select-none"
-                      title="Rotate">
-                ↻
-              </button>
-              <!-- Soft Drop Button -->
-              <button (click)="store.softDrop()"
-                      class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-amber-500/20 transition-all select-none"
-                      title="Soft Drop">
-                ▼
-              </button>
-              <!-- Right Move Button -->
-              <button (click)="store.moveRight()"
-                      class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-cyan-500/20 transition-all select-none"
-                      title="Right">
-                ▶
-              </button>
-              <!-- Hard Drop Button -->
-              <button (click)="store.hardDrop()"
-                      class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-sm font-black active:scale-90 transition-all select-none"
-                      title="Hard Drop">
-                ⚡
-              </button>
-            </div>
+            <!-- Mobile Virtual On-Screen Controller or Spectator Director Bar -->
+            @if (!store.isSpectator()) {
+              <div class="flex md:hidden items-center justify-center gap-2 sm:gap-3 w-full max-w-[360px] px-2 py-1.5 shrink-0 z-20">
+                <!-- Left Move Button -->
+                <button (click)="store.moveLeft()"
+                        class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                        title="Left">
+                  ◀
+                </button>
+                <!-- Rotate Button -->
+                <button (click)="store.rotate()"
+                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-lg flex items-center justify-center text-base active:scale-90 transition-all select-none"
+                        title="Rotate">
+                  ↻
+                </button>
+                <!-- Soft Drop Button -->
+                <button (click)="store.softDrop()"
+                        class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-amber-500/20 transition-all select-none"
+                        title="Soft Drop">
+                  ▼
+                </button>
+                <!-- Right Move Button -->
+                <button (click)="store.moveRight()"
+                        class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                        title="Right">
+                  ▶
+                </button>
+                <!-- Hard Drop Button -->
+                <button (click)="store.hardDrop()"
+                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-sm font-black active:scale-90 transition-all select-none"
+                        title="Hard Drop">
+                  ⚡
+                </button>
+              </div>
+            } @else {
+              <div class="flex items-center justify-center gap-2 w-full max-w-md mx-auto px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold shadow-sm">
+                <span>👁️</span>
+                <span>{{ i18n.t('game.director_view')() || '导播观战中' }} · {{ store.focusedPlayerId() || '选手视角' }}</span>
+              </div>
+            }
 
           </div>
 

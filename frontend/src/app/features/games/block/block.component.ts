@@ -23,6 +23,8 @@ import { GameScoreCapsuleComponent } from '../../../shared/components/game-score
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-block',
   standalone: true,
@@ -30,7 +32,8 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
     CommonModule,
     GameLayoutComponent,
     GamePkHudComponent,
-    GameScoreCapsuleComponent],
+    GameScoreCapsuleComponent,
+    GameHandheldHeaderComponent],
   templateUrl: './block.component.html',
   styles: [`
     @keyframes block-shake {
@@ -77,11 +80,12 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
+      id: this.playerId,
       playerId: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
-      isMe: true,
+      isMe: !this.store.isSpectator(),
       score: this.store.score(),
       status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
       metrics: [
@@ -98,23 +102,43 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       ? rawPlayers
       : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
 
-    return this.store.playersList()
-      .filter(p => p.id !== this.playerId)
+    const rawState = this.store.rawState() as any;
+    const enginePlayers = rawState?.players || {};
+    const isSpec = this.store.isSpectator();
+    const myId = this.playerId;
+
+    let list = this.store.playersList();
+    if (!list || list.length <= 1) {
+      if (enginePlayers && typeof enginePlayers === 'object') {
+        const epList = Object.keys(enginePlayers).map(k => ({ id: k, ...enginePlayers[k] }));
+        if (epList.length > list.length) {
+          list = epList;
+        }
+      }
+    }
+
+    return list
+      .filter(p => p && (isSpec || p.id !== myId))
       .map(p => {
         const pInfo = players.find((x: any) => x && (x.id === p.id || x.playerId === p.id));
-        const oppScore = this.getOpponentScore(p.id);
-        const oppStatus = this.getOpponentStatus(p.id);
+        const ep = (typeof enginePlayers === 'object' && !Array.isArray(enginePlayers))
+          ? (enginePlayers[p.id] || enginePlayers[String(p.id)])
+          : (Array.isArray(enginePlayers) ? enginePlayers.find((x: any) => x?.id === p.id) : null);
+
+        const oppScore = Number(ep?.score ?? pInfo?.score ?? p.score ?? this.getOpponentScore(p.id) ?? 0);
+        const oppFinished = Boolean(ep?.finished ?? pInfo?.finished ?? p.finished ?? false);
+
         return {
           id: p.id,
           playerId: p.id,
-          nickname: pInfo?.nickname || p.id,
-          avatar: pInfo?.avatar,
+          nickname: pInfo?.nickname || p.nickname || p.id,
+          avatar: pInfo?.avatar || p.avatar,
           isHost: p.id === this.store.hostId(),
-          isMe: false,
+          isMe: !isSpec && p.id === myId,
           score: oppScore,
-          status: oppStatus === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
+          status: oppFinished ? GameStatus.Finished : GameStatus.Playing,
           metrics: [
-            { label: this.i18n.t('game.pk.score')(), value: oppScore, icon: '⭐', colorClass: 'text-amber-500 font-bold' }
+            { label: this.i18n.t('game.pk.score')() || '得分', value: oppScore, icon: '⭐', colorClass: 'text-amber-500 font-bold' }
           ]
         };
       });
@@ -140,7 +164,6 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     return labelKey ? this.i18n.t(labelKey)() : this.i18n.t('game.diff_pk_score_label')();
   }
 
-  adService = inject(AdService);
   override store = inject(BlockStore);
 
   worldRecord = signal<{ bestScore: number; username: string } | null>(null);
@@ -206,6 +229,16 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       this.floatItems.update(items => [...items, item]);
       setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== item.id)), 1250);
 
+      // 局内突破个人最高分专属仪式 (Live High Score Moment)
+      const currentScore = this.store.localScore();
+      const best = this.store.bestScore();
+      if (best > 0 && currentScore > best && currentScore - gain.score <= best) {
+        const recItem = { id: gain.ts + 1, text: `👑 NEW RECORD!`, tier: 3 as const, xPct: 50 };
+        this.floatItems.update(items => [...items, recItem]);
+        this.vibrateSuccess();
+        setTimeout(() => this.floatItems.update(items => items.filter(i => i.id !== recItem.id)), 1500);
+      }
+
       // 全屏爆裂星芒火花
       const colors = ['#fde047', '#fbbf24', '#f59e0b', '#38bdf8', '#c084fc', '#34d399', '#ffffff'];
       const count = gain.lines >= 4 ? 36 : gain.lines >= 2 ? 26 : 18;
@@ -220,14 +253,6 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
       setTimeout(() => this.particles.update(p => p.filter(x => !x.id.startsWith(`${gain.ts}-`))), 950);
     });
 
-    effect((onCleanup) => {
-      if (this.store.status() === GameStatus.Finished) {
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
-      }
-    });
   }
 
   override ngOnInit(): void {
@@ -239,10 +264,10 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      if (pending.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.handleJoinRoom(pending);
       }
     } else {
       if (!this.currentRoomId()) {
@@ -252,16 +277,16 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     }  }
 
 
-  override handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string}) {
+  override handleCreateRoom(event: any) {
     super.handleCreateRoom(event);
     if (event.mode !== GameMode.Single) {
       this.roomLifecycle.saveReconnectInfo(this.currentRoomId() || event.name, event.mode, event.difficulty, this.playerId);
     }
   }
 
-  override handleJoinRoom(params: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+  override handleJoinRoom(params: any) {
     super.handleJoinRoom(params);
-    if (params.mode !== GameMode.Single) {
+    if (params.mode !== GameMode.Single && !params.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
   }
@@ -305,6 +330,9 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   changeSingleDifficulty(diff: string) {
+    if (this.store.currentRoomMode() !== GameMode.Single || this.store.roomId()) {
+      return;
+    }
     setSavedDifficulty('block', diff);
     this.store.joinRoom('', GameMode.Single, diff, this.playerId);
   }
@@ -377,6 +405,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   onCellClick(row: number, col: number) {
+    if (this.store.isSpectator()) return;
     const handIdx = this.selectedHandIndex();
     if (handIdx === null) return;
     const shape = this.store.hand()[handIdx];
@@ -416,7 +445,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   onDragStart(event: MouseEvent | TouchEvent, shape: BlockShape, index: number) {
-    if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
 
     this.audioService.initAudio(); // fire-and-forget
     this.audioService.playBlock('pickup');
@@ -605,7 +634,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     const target = event.target as HTMLElement;
     if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
 
-    if (event.key.toLowerCase() === 'r' && this.store.currentRoomMode() === GameMode.Single) {
+    if ((event.key.toLowerCase() === 'r' || ((event.key === ' ' || event.key === 'Enter') && (this.store.isDead() || this.store.status() === GameStatus.Finished))) && this.store.currentRoomMode() === GameMode.Single) {
       this.store.startGame();
       event.preventDefault();
       return;

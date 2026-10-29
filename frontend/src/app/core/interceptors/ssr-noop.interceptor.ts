@@ -1,5 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { isDevMode } from '@angular/core';
 import { EMPTY } from 'rxjs';
+import { catchError, timeout } from 'rxjs/operators';
 import { isBrowser } from '../utils/browser.util';
 
 /**
@@ -21,10 +23,18 @@ import { isBrowser } from '../utils/browser.util';
  */
 export const ssrNoopInterceptor: HttpInterceptorFn = (req, next) => {
   if (!isBrowser()) {
-    // Static assets (e.g. /assets/blog/*.json) are served by Angular's prerender
-    // server and must go through — only block dynamic API calls.
+    // In dev mode (ng serve), Node SSR cannot reliably fetch local relative URLs without an origin server,
+    // which causes the "Application did not stabilize within 9 seconds" timeout.
+    if (isDevMode()) {
+      return EMPTY;
+    }
+    // During production SSG/prerender, static assets (e.g. /assets/blog/*.json) are served
+    // by Angular's prerender server, but we safeguard with a timeout so it never hangs.
     if (req.url.startsWith('/assets/')) {
-      return next(req);
+      return next(req).pipe(
+        timeout({ each: 3000, with: () => EMPTY }),
+        catchError(() => EMPTY)
+      );
     }
     return EMPTY;
   }

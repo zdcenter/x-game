@@ -91,8 +91,17 @@ export class WatersortStore extends BaseGameStore {
     }
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty: string = GameDifficulty.Easy,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     if (mode === GameMode.Single) {
       this.startGame();
     }

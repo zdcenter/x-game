@@ -245,8 +245,8 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
     return res;
   }
 
-  private checkGameOver(availablePieces: HexPiece[]): boolean {
-    if (availablePieces.length === 0) return false;
+  private checkGameOver(availablePieces: HexPiece[] = this.availablePieces): boolean {
+    if (!availablePieces || availablePieces.length === 0) return false;
 
     for (const piece of availablePieces) {
       for (const cell of this.cells.values()) {

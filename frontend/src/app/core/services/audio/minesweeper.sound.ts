@@ -1,6 +1,11 @@
 import { createOsc, createGain, createNoise, createLpf, createHpf } from './audio-utils';
 
-export function playMinesweeperSound(audioCtx: AudioContext, out: AudioNode, name: 'dig' | 'flag' | 'explosion' | 'win') {
+export function playMinesweeperSound(
+  audioCtx: AudioContext,
+  out: AudioNode,
+  name: 'dig' | 'flag' | 'explosion' | 'win' | 'cascade',
+  cascadeCount: number = 3
+) {
   const t = audioCtx.currentTime;
 
   if (name === 'dig') {
@@ -10,6 +15,27 @@ export function playMinesweeperSound(audioCtx: AudioContext, out: AudioNode, nam
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
     o.connect(g); g.connect(out);
     o.start(t); o.stop(t + 0.1);
+  } else if (name === 'cascade') {
+    // 🌊 扫雷大面积开阔连锁水滴波纹音 (Crystal Ripple Cascade)
+    const scale = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98]; // C5, E5, G5, C6, E6, G6
+    const noteCount = Math.min(Math.max(3, Math.floor(cascadeCount / 2)), scale.length);
+    const noteInterval = 0.038;
+
+    for (let i = 0; i < noteCount; i++) {
+      const freq = scale[i];
+      const startT = t + i * noteInterval;
+      const o = createOsc(audioCtx, 'sine', freq);
+      const g = createGain(audioCtx, 0);
+
+      g.gain.setValueAtTime(0, startT);
+      g.gain.linearRampToValueAtTime(0.22, startT + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.001, startT + 0.16);
+
+      o.connect(g);
+      g.connect(out);
+      o.start(startT);
+      o.stop(startT + 0.18);
+    }
   } else if (name === 'flag') {
     const o1 = createOsc(audioCtx, 'triangle', 600);
     const o2 = createOsc(audioCtx, 'triangle', 400);

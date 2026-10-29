@@ -22,7 +22,10 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
           [opponents]="opponentsPkStats()"
           [targetWins]="totalPuzzles"
           [gameMode]="GameMode.Speed"
-          [status]="store.status()">
+          [status]="store.status()"
+          [isSpectator]="store.isSpectator()"
+          [focusedPlayerId]="store.focusedPlayerId()"
+          (playerSelect)="store.setFocusedPlayer($event)">
         </app-game-pk-hud>
       </div>
 
@@ -73,20 +76,35 @@ export class Math24PkSpeedComponent {
     return this.store.pkTarget() || (this.store.ws.gameState() as any)?.puzzles?.length || 1;
   }
 
+  get effectivePlayerId(): string {
+    if (this.store.isSpectator()) {
+      let targetId = this.store.focusedPlayerId();
+      const players = this.store.players();
+      if (!targetId || !players[targetId]) {
+        const found = Object.keys(players).find(k => k.toLowerCase() === (targetId || '').toLowerCase());
+        targetId = found || Object.keys(players)[0] || this.playerId;
+      }
+      return targetId;
+    }
+    return this.playerId;
+  }
+
   get myProgress(): number {
-    return this.store.players()[this.playerId]?.progress || 0;
+    return this.store.players()[this.effectivePlayerId]?.progress || 0;
   }
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
-    const p = this.store.players()[this.playerId];
-    const isFinished = this.store.winners().includes(this.playerId) || (p?.progress || 0) >= this.totalPuzzles;
+    const isMe = !this.store.isSpectator();
+    const targetId = this.effectivePlayerId;
+    const p = this.store.players()[targetId];
+    const isFinished = this.store.winners().includes(targetId) || (p?.progress || 0) >= this.totalPuzzles;
     const prog = this.totalPuzzles > 0 ? Math.min(100, Math.round(((p?.progress || 0) / this.totalPuzzles) * 100)) : 0;
     return {
-      id: this.playerId,
-      nickname: this.authStore.currentUser()?.nickname || this.playerId,
-      avatar: this.authStore.currentUser()?.avatar,
-      isHost: this.playerId === this.hostId,
-      isMe: true,
+      id: isMe ? this.playerId : targetId,
+      nickname: isMe ? (this.authStore.currentUser()?.nickname || this.playerId) : targetId,
+      avatar: isMe ? this.authStore.currentUser()?.avatar : undefined,
+      isHost: (isMe ? this.playerId : targetId) === this.hostId,
+      isMe: isMe,
       score: p?.progress || 0,
       progress: prog,
       status: this.isFrozen(p) ? 'frozen' : (isFinished ? GameStatus.Finished : GameStatus.Playing),
@@ -97,8 +115,9 @@ export class Math24PkSpeedComponent {
   });
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const isSpec = this.store.isSpectator();
     return Object.entries(this.store.players())
-      .filter(([k]) => k !== this.playerId)
+      .filter(([k]) => isSpec || k !== this.playerId)
       .map(([k, v]: [string, any]) => {
         const isFinished = this.store.winners().includes(k) || (v.progress || 0) >= this.totalPuzzles;
         const prog = this.totalPuzzles > 0 ? Math.min(100, Math.round(((v.progress || 0) / this.totalPuzzles) * 100)) : 0;
@@ -106,7 +125,7 @@ export class Math24PkSpeedComponent {
           id: k,
           nickname: k,
           isHost: k === this.hostId,
-          isMe: false,
+          isMe: !isSpec && k === this.playerId,
           score: v.progress || 0,
           progress: prog,
           status: this.isFrozen(v) ? 'frozen' : (isFinished ? GameStatus.Finished : GameStatus.Playing),
@@ -163,6 +182,7 @@ export class Math24PkSpeedComponent {
   }
 
   isMyPlayerFrozen(): boolean {
+    if (this.store.isSpectator()) return false;
     return this.frozenRemaining() > 0;
   }
 }

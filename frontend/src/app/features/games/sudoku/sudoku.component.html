@@ -3,6 +3,7 @@
   [gameId]="'sudoku'"
   [title]="i18n.t('lobby.sudoku')()"
   [subtitle]="getSubtitle()"
+  [immersive]="isHandheld()"
   icon="🔢"
   iconGradientClass="from-blue-500 to-emerald-500"
   titleGradientClass="from-blue-400 to-emerald-400"
@@ -12,9 +13,8 @@
   (difficultyChange)="changeSingleDifficulty($event)"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
-  [isLobby]="view() === 'lobby'"
+  [isLobby]="view() === 'lobby' && store.currentRoomMode() === GameMode.Single"
   [showNextLevel]="store.currentRoomMode() === GameMode.Single"
   [overlayStats]="getSinglePlayerStats()"
   (rulesClosed)="showRules.set(false)"
@@ -31,6 +31,81 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'sudoku'"
+      [gameTitle]="i18n.t('lobby.sudoku')() || '数独'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()">
+
+      @if (view() === 'lobby') {
+        <div class="flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs sm:text-sm">
+          <span>🔢</span>
+          <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
+        </div>
+      } @else {
+        <!-- Center: [🎯 难度/关卡 ▾] + ⏱️ 计时 + 📝 进度 (中间舒展区) -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 md:gap-4 flex-1 min-w-0">
+          @if (store.currentRoomMode() === GameMode.Single) {
+            <!-- 🎯 难度/关卡选择 -->
+            <div class="relative group max-w-full">
+              <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] group-hover:border-blue-500/50 shadow-2xs transition-all cursor-pointer truncate">
+                <span class="text-xs sm:text-sm shrink-0">🎯</span>
+                <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] font-mono tracking-tight truncate max-w-[120px] sm:max-w-[160px]">
+                  {{ getDifficultyLabel(currentDifficulty()) }} · {{ store.currentPuzzleId() || '01' }}
+                </span>
+                <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-text-muted)] group-hover:text-blue-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <!-- Native selector to change difficulty -->
+              <select class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                      [ngModel]="currentDifficulty()"
+                      (ngModelChange)="changeSingleDifficulty($event)">
+                @for (diff of sudokuDifficulties; track diff.id) {
+                  <option [value]="diff.id">
+                    {{ i18n.t($any(diff.labelKey))() }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <!-- HUD 统计指标: ⏱️ 计时 + 📝 进度 -->
+            <div class="flex items-center gap-1.5 sm:gap-2.5">
+              <!-- ⏱️ 耗时 -->
+              <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                   [title]="i18n.t('game.time')() || '耗时'">
+                <span class="text-xs sm:text-sm opacity-80 select-none">⏱️</span>
+                <span class="font-digital text-cyan-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+                  {{ gameTimer.formatTime(store.timeSpent()) }}
+                </span>
+              </div>
+
+              <!-- 📝 填入数 -->
+              <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                   [title]="i18n.t('sudoku.progress')() || '已填格数'">
+                <span class="text-xs sm:text-sm opacity-80 select-none">📝</span>
+                <span class="font-mono text-emerald-500 font-bold text-xs sm:text-base tracking-tight leading-none">
+                  {{ store.filledCells() }}/81
+                </span>
+              </div>
+            </div>
+          } @else {
+            <!-- PK 模式头部指示器 -->
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
+              <span class="text-xs sm:text-base">⚔️</span>
+              <span class="truncate">{{ i18n.t('lobby.sudoku')() || '数独' }} · PK</span>
+            </div>
+          }
+        </div>
+      }
+    </app-game-handheld-header>
+  }
+
   @if (view() === 'lobby') {
     <app-sudoku-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
       (levelSelect)="startLevel($event)"
@@ -38,13 +113,14 @@
     </app-sudoku-lobby>
   } @else {
     <!-- PLAY VIEW -->
-    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
-      @if (store.currentRoomMode() !== GameMode.Single) {
+    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start my-0">
+
+      @if (store.currentRoomMode() !== GameMode.Single && store.status() !== GameStatus.Waiting) {
         <app-sudoku-pk-speed (openLobby)="navigateToPkArena()"></app-sudoku-pk-speed>
-      } @else {
+      } @else if (store.currentRoomMode() === GameMode.Single) {
         <!-- Single Player -->
-        <div class="flex-none flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-visible relative w-full justify-center my-auto">
-          <div class="flex-none flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-center md:justify-center content-center md:content-center items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto mt-4">
+        <div class="flex-none flex flex-col p-2 md:p-4 gap-2 md:gap-4 overflow-visible relative w-full justify-start my-0">
+          <div class="flex-none flex flex-col md:grid md:grid-cols-[minmax(0,500px)_64px] justify-center md:justify-center content-center md:content-center items-center md:items-start gap-2 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-none mx-auto mt-2">
             <div class="order-1 relative min-w-0 w-full max-w-[min(100%,calc(100vh-360px))] mx-auto" [class.animate-board-shake]="store.isFinished() && store.currentRoomMode() === GameMode.Single">
               <app-sudoku-board class="w-full"></app-sudoku-board>
             </div>

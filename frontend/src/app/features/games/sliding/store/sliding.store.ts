@@ -31,6 +31,16 @@ export class SlidingStore extends BaseGameStore {
       if (!le) return null;
       return { size: le.size, cells: le.cells, emptyIdx: le.emptyIdx, status: le.status, startAt: le.startAt, moves: le.moves };
     }
+    if (this.isSpectator()) {
+      const boards = (this.rawState() as any)?.boards || {};
+      let targetId = this.focusedPlayerId();
+      if (!targetId || !boards[targetId]) {
+        const found = Object.keys(boards).find(k => k.toLowerCase() === targetId.toLowerCase());
+        if (found) targetId = found;
+        else targetId = Object.keys(boards)[0] || '';
+      }
+      return boards[targetId] || null;
+    }
     return this.pkOptimisticBoard() || (this.rawState() as any)?.boards?.[this.playerId()] || null;
   });
 
@@ -71,8 +81,9 @@ export class SlidingStore extends BaseGameStore {
     if (this.currentRoomMode() === GameMode.Single) return [];
     const boards = (this.rawState() as any)?.boards || {};
     const others = [];
+    const isSpec = this.isSpectator();
     for (const [id, board] of Object.entries(boards)) {
-      if (id !== this.playerId()) {
+      if (isSpec || id !== this.playerId()) {
         others.push({ id, board: board as any });
       }
     }
@@ -126,8 +137,17 @@ export class SlidingStore extends BaseGameStore {
     });
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty: string = GameDifficulty.Medium,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
 
     if (mode === GameMode.Single) {
       const engine = new LocalSlidingEngine(difficulty);

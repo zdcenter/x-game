@@ -347,16 +347,21 @@
                     }
                   </button>
 
-                  <div class="grid grid-cols-2 gap-2">
+                  <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
                     <button (click)="leave.emit(); audioService.playClick()"
-                            class="py-2.5 px-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-red-400 hover:border-red-400/40 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-sm">
+                            class="py-2.5 px-2 sm:px-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-red-400 hover:border-red-400/40 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1 shadow-sm">
                       <span>🚪</span>
-                      <span>{{ i18n.t('game.leave')() }}</span>
+                      <span class="truncate">{{ i18n.t('game.leave')() }}</span>
                     </button>
                     <button (click)="changeSettings.emit(); audioService.playClick()"
-                            class="py-2.5 px-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-sm">
+                            class="py-2.5 px-2 sm:px-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1 shadow-sm">
                       <span>⚙️</span>
-                      <span>{{ i18n.t('game.change_settings')() || '设置' }}</span>
+                      <span class="truncate">{{ i18n.t('game.change_settings')() || '设置' }}</span>
+                    </button>
+                    <button (click)="openSwitchGame(); audioService.playClick()"
+                            class="py-2.5 px-2 sm:px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1 shadow-sm">
+                      <span>🎮</span>
+                      <span class="truncate">{{ i18n.t('game.switch_pk_game_short')() || '换游戏' }}</span>
                     </button>
                   </div>
                 </div>

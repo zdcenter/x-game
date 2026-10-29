@@ -90,7 +90,8 @@ export class GomokuStore extends BaseGameStore {
     return Object.keys(players).map(k => ({ id: k, ...players[k] }));
   });
 
-  isSpectator = computed<boolean>(() => {
+  override readonly isSpectator = computed<boolean>(() => {
+    if (this._isSpectator()) return true;
     if (this.currentRoomMode() === GameMode.Single) return false;
     const p = this.playersList().map(pl => pl.id);
     const myId = this.playerId();
@@ -157,8 +158,17 @@ export class GomokuStore extends BaseGameStore {
     }
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty: string = GameDifficulty.Medium,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     if (mode === GameMode.Single) {
       this.startGame();
     } else {

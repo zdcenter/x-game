@@ -7,6 +7,8 @@
     "build": "node scripts/export-blog.js && node scripts/generate-version.js && node scripts/generate-sitemap.js && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:unit": "vitest run",
+    "gen:game": "node scripts/generate-game.js",
     "zh": "ng serve --port 4201 --host 0.0.0.0",
     "en": "ng serve --port 4202 --host 0.0.0.0",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs"

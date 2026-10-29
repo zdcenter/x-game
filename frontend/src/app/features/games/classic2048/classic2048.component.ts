@@ -27,13 +27,15 @@ import { GameRegistryService } from '../../../core/services/game-registry.servic
 
 export type C2048Theme = 'classic' | 'neon' | 'glacier';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-classic2048',
   standalone: true,
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
     GameScoreCapsuleComponent,
-    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
   providers: [Classic2048Store]
@@ -63,7 +65,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     let maxT = 0;
-    const cells = this.store.cells();
+    const cells = this.store.displayCells();
     for (const row of cells) {
       for (const val of row) {
         if (val > maxT) maxT = val;
@@ -75,8 +77,8 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
-      isMe: true,
-      score: this.store.localScore(),
+      isMe: !this.store.isSpectator(),
+      score: this.store.displayScore(),
       status: this.store.status(),
       metrics: [
         ...(maxT > 0 ? [{ label: this.i18n.t('game.pk.max_tile')(), value: maxT, icon: '🏆', colorClass: 'text-amber-500 font-bold' }] : []),
@@ -94,8 +96,9 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       : (rawPlayers && typeof rawPlayers === 'object' ? Object.values(rawPlayers) : []);
     const pkBoards = this.store.pkBoards();
 
+    const isSpec = this.store.isSpectator();
     return this.store.playersList()
-      .filter(p => p.id !== this.playerId)
+      .filter(p => isSpec || p.id !== this.playerId)
       .map(p => {
         const pInfo = players.find((x: any) => x && (x.id === p.id || x.playerId === p.id));
         const board = pkBoards[p.id];
@@ -113,7 +116,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
           nickname: pInfo?.nickname || p.id,
           avatar: pInfo?.avatar,
           isHost: p.id === this.store.hostId(),
-          isMe: false,
+          isMe: !isSpec && p.id === this.playerId,
           score: board?.score || 0,
           status: (board?.status as any) || this.store.status(),
           metrics: [
@@ -134,7 +137,6 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     };
   });
 
-  adService = inject(AdService);
   override store = inject(Classic2048Store);
   private statsService = inject(GameStatsService);
   
@@ -143,6 +145,10 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   showDelta = signal<boolean>(false);
   currentTheme = signal<C2048Theme>('classic');
   private prevScore = 0;
+
+  comboCount = signal<number>(0);
+  private comboTimer: any = null;
+  comboFloatItems = signal<Array<{ id: number; text: string; tier: 1 | 2 | 3; xPct: number }>>([]);
 
   private lifecycle!: RoomLifecycleHandle;
 
@@ -199,11 +205,61 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
         this.scoreDelta.set(delta);
         this.showDelta.set(true);
         setTimeout(() => this.showDelta.set(false), 800);
-        this.audio.playDrop2048('merge');
-        if (delta >= 128) {
-          this.vibrateCombo();
+
+        // 连击计时与步进
+        if (this.comboTimer) {
+          clearTimeout(this.comboTimer);
+          this.comboCount.update(c => Math.min(c + 1, 8));
         } else {
+          this.comboCount.set(1);
+        }
+        this.comboTimer = setTimeout(() => {
+          this.comboCount.set(0);
+          this.comboTimer = null;
+        }, 2200);
+
+        const currentCombo = this.comboCount();
+        this.audio.playDrop2048('merge', currentCombo);
+
+        if (currentCombo >= 3 || delta >= 256) {
+          this.vibrateCombo();
+        } else if (currentCombo >= 2 || delta >= 64) {
           this.vibrateMedium();
+        } else {
+          this.vibrateLight();
+        }
+
+        // 浮空连击/高分特效
+        if (currentCombo >= 2 || delta >= 128) {
+          const tier: 1 | 2 | 3 = (delta >= 512 || currentCombo >= 5) ? 3 : (delta >= 128 || currentCombo >= 3) ? 2 : 1;
+          let text = '';
+          if (delta >= 1024) {
+            text = `🌟 1024+  +${delta}`;
+          } else if (delta >= 512) {
+            text = `⚡ EPIC  +${delta}`;
+          } else if (currentCombo >= 4) {
+            text = `🔥 UNSTOPPABLE ×${currentCombo}  +${delta}`;
+          } else if (currentCombo >= 3) {
+            text = `⚡ SUPER ×${currentCombo}  +${delta}`;
+          } else {
+            text = `✨ COMBO ×${currentCombo}  +${delta}`;
+          }
+          const id = Date.now() + Math.random();
+          const xPct = 50 + (Math.random() * 24 - 12);
+          this.comboFloatItems.update(items => [...items, { id, text, tier, xPct }]);
+          setTimeout(() => {
+            this.comboFloatItems.update(items => items.filter(it => it.id !== id));
+          }, 850);
+        }
+
+        // 局内破个人纪录即时仪式感
+        if (this.prevScore > 0 && this.prevScore <= this.bestScore() && score > this.bestScore()) {
+          const id = Date.now() + Math.random();
+          this.comboFloatItems.update(items => [...items, { id, text: `👑 NEW RECORD!`, tier: 3, xPct: 50 }]);
+          this.vibrateSuccess();
+          setTimeout(() => {
+            this.comboFloatItems.update(items => items.filter(it => it.id !== id));
+          }, 1200);
         }
 
         if (score > this.bestScore()) {
@@ -214,6 +270,11 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
         }
       } else if (score === 0) {
         this.prevScore = 0;
+        this.comboCount.set(0);
+        if (this.comboTimer) {
+          clearTimeout(this.comboTimer);
+          this.comboTimer = null;
+        }
       }
       this.prevScore = score;
     });
@@ -265,7 +326,11 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
     const pending = this.lifecycle.consumePendingOrReconnect();
     if (pending) {
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host ?? '');
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.handleJoinRoom(pending);
+      }
     } else {
       if (this.store.currentRoomMode() === GameMode.Single && this.store.status() === GameStatus.Waiting) {
         this.store.startGame();
@@ -280,7 +345,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   override handleJoinRoom(params: any) {
     super.handleJoinRoom(params);
-    if (params.mode !== GameMode.Single) {
+    if (params.mode !== GameMode.Single && !params.isSpectator) {
       this.lifecycle.saveReconnectInfo(params.roomId, params.mode, params.difficulty, params.host);
     }
   }
@@ -312,7 +377,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
       }
     }
 
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
     
     switch (event.key) {
       case 'ArrowUp':
@@ -352,7 +417,7 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   @HostListener('touchstart', ['$event'])
   onTouchStart(event: TouchEvent) {
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
     this.touchStartX = event.changedTouches[0].screenX;
     this.touchStartY = event.changedTouches[0].screenY;
   }

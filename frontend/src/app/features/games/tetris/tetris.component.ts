@@ -27,10 +27,12 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]
@@ -54,10 +56,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {
       id: this.playerId,
+      playerId: this.playerId,
       nickname: this.authStore.currentUser()?.nickname || this.playerId,
       avatar: this.authStore.currentUser()?.avatar,
       isHost: this.playerId === this.store.hostId(),
-      isMe: true,
+      isMe: !this.store.isSpectator(),
       score: this.store.score(),
       status: this.store.status() === GameStatus.Finished ? GameStatus.Finished : GameStatus.Playing,
       metrics: [
@@ -68,20 +71,24 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     if (this.currentRoomMode() === GameMode.Single) return [];
+    const isSpec = this.store.isSpectator();
+    const myId = this.playerId;
 
-    return this.store.opponents().map(opp => {
-      return {
-        id: opp.id,
-        nickname: opp.id,
-        isHost: opp.id === this.store.hostId(),
-        isMe: false,
-        score: opp.score,
-        status: opp.finished ? GameStatus.Finished : this.store.status(),
-        metrics: [
-          { label: this.i18n.t('game.pk.lines')(), value: opp.lines, icon: '≣', colorClass: 'text-amber-500 font-bold' }
-        ]
-      };
-    });
+    return this.store.opponents()
+      .filter(opp => isSpec || opp.id !== myId)
+      .map(opp => {
+        return {
+          id: opp.id,
+          nickname: opp.id,
+          isHost: opp.id === this.store.hostId(),
+          isMe: !isSpec && opp.id === myId,
+          score: opp.score,
+          status: opp.finished ? GameStatus.Finished : this.store.status(),
+          metrics: [
+            { label: this.i18n.t('game.pk.lines')(), value: opp.lines, icon: '≣', colorClass: 'text-amber-500 font-bold' }
+          ]
+        };
+      });
   });
 
   readonly seriesScore = computed<{ me: number; opponent: number } | undefined>(() => {
@@ -94,7 +101,6 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       opponent: wins[oppId] || 0
     };
   });
-  adService = inject(AdService);
   @ViewChild('boardArea') boardArea!: ElementRef<HTMLDivElement>;
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   override store = inject(TetrisStore);
@@ -164,20 +170,11 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       }
 
       if (status === GameStatus.Finished) {
-        if (this.currentRoomMode() === GameMode.Single) {
-          this.vibrateError();
-          const timer = setTimeout(() => this.showOverlay.set(true), 1000);
-          onCleanup(() => clearTimeout(timer));
+        if (this.store.isVictory()) {
+          this.celebrateVictory();
         } else {
-          if (this.store.winners().includes(this.playerId)) {
-            this.celebrateVictory();
-          } else {
-            this.vibrateError();
-          }
-          this.showOverlay.set(true);
+          this.vibrateError();
         }
-      } else {
-        this.showOverlay.set(false);
       }
     });
 
@@ -259,10 +256,10 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      if (pending.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.handleJoinRoom(pending);
       }
     } else {
       this.store.joinRoom('', GameMode.Single, 'normal', '');
@@ -279,21 +276,43 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
     super.goBack();
   }
 
-  override handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string}) {
+  override handleJoinRoom(event: any) {
     if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== GameMode.Single) {
+    const action = event.isSpectator ? 'spectate' : 'join';
+    this.wsService.setPendingAction(action);
+    this.store.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false
+    );
+    if (event.mode !== GameMode.Single && !event.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(config: {name: string, mode: string, difficulty: string, password?: string}) {
+  override handleCreateRoom(config: any) {
     if (config.password) this.wsService.setPendingPassword(config.password);
-    this.store.joinRoom(config.name, config.mode, config.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    const roomId = config.name || config.roomId;
+    this.store.joinRoom(
+      roomId,
+      config.mode,
+      config.difficulty,
+      this.playerId,
+      config.target ?? 1,
+      config.password || '',
+      config.bountyCoins || 0,
+      false
+    );
     if (config.mode !== GameMode.Single) {
-      this.roomLifecycle.saveReconnectInfo(config.name, config.mode, config.difficulty, this.playerId);
+      this.roomLifecycle.saveReconnectInfo(roomId, config.mode, config.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
   }
@@ -308,7 +327,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
       return;
     }
 
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
     
     switch (event.code) {
       case 'ArrowLeft':
@@ -346,7 +365,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onTouchStart(e: TouchEvent) {
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
     this.touchStartX = e.touches[0].clientX;
     this.touchStartY = e.touches[0].clientY;
     this.lastProcessedX = this.touchStartX;
@@ -422,14 +441,29 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   // Used for rendering the board with classic 3D bevel and ghost piece
   viewGrid = computed(() => {
-    const grid = this.store.grid();
-    const current = this.store.currentPiece();
-    const ghostY = this.store.ghostY();
+    let grid = this.store.grid();
+    let current = this.store.currentPiece();
+    let ghostY = this.store.ghostY();
     const theme = this.store.colorTheme();
     const colors = TETROMINO_THEMES[theme] || this.COLORS;
-    const clearingRows = this.store.clearingRows();
-    const dissolvingRows = this.store.dissolvingRows();
-    const isDissolving = this.store.isDissolving();
+    let clearingRows = this.store.clearingRows();
+    let dissolvingRows = this.store.dissolvingRows();
+    let isDissolving = this.store.isDissolving();
+
+    if (this.store.isSpectator()) {
+      const focus = this.store.focusedPlayerId();
+      const opps = this.store.opponents();
+      const target = (focus ? opps.find(o => o.id === focus) : null) || opps[0];
+      if (target?.matrix && Array.isArray(target.matrix) && target.matrix.length > 0) {
+        grid = target.matrix;
+      }
+      current = null;
+      ghostY = -1;
+      clearingRows = [];
+      dissolvingRows = [];
+      isDissolving = false;
+    }
+
     const minDissolveRow = dissolvingRows.length > 0 ? Math.min(...dissolvingRows) : 0;
     
     const result: {

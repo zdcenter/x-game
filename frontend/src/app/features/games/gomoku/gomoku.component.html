@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'gomoku'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('game.gomoku')()"
   [subtitle]="getSubtitle()"
   icon="⚫⚪"
@@ -28,6 +29,59 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'gomoku'"
+      [gameTitle]="i18n.t('game.gomoku')() || '五子棋'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        <!-- 当前落子方指示 -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
+          <div class="w-4 h-4 rounded-full border border-black/20"
+               [ngClass]="currentTurnColor === 1 ? 'stone-black' : 'stone-white'"></div>
+          <span class="text-xs font-bold text-[var(--color-text-main)]">
+            {{ currentTurnColor === myColor ? (i18n.t('gomoku.turn.yours')() || '你的回合') : (i18n.t('gomoku.thinking')() || '思考中...') }}
+          </span>
+        </div>
+
+        <!-- 步数 -->
+        <div class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
+          <span class="text-xs sm:text-sm font-mono font-bold text-[var(--color-text-secondary)]">
+            {{ moveCountText() }}
+          </span>
+        </div>
+
+        <!-- 单机提示按钮 -->
+        @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing) {
+          <button
+            type="button"
+            (click)="getHint()"
+            [disabled]="!isMyTurn"
+            class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-500 font-bold text-xs active:scale-95 transition-all cursor-pointer disabled:opacity-40"
+            [title]="i18n.t('gomoku.hint')() + ' (H)'"
+          >
+            💡
+          </button>
+
+          <!-- 重新开始 -->
+          <button
+            type="button"
+            (click)="onRestart()"
+            class="w-8 h-8 rounded-lg bg-[var(--color-bg-sub)]/80 hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-xs active:scale-95 transition-all cursor-pointer"
+            [title]="i18n.t('gomoku.restart')() + ' (R)'"
+          >
+            🔄
+          </button>
+        }
+      </div>
+    </app-game-handheld-header>
+  }
           <!-- Main Game Area with Centered Responsive Layout -->
           <main class="flex-1 w-full mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-auto py-2 sm:py-3 min-h-0 overflow-y-auto lg:overflow-hidden select-none">
             

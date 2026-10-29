@@ -12,6 +12,7 @@ import (
 type SpeedPlayer struct {
 	ID       string `json:"id"`
 	Progress int    `json:"progress"` // Number of correct cells (0-81)
+	Board    string `json:"board,omitempty"`
 	Finished bool   `json:"finished"`
 }
 
@@ -117,6 +118,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 		e.Winners = []string{}
 		for _, p := range e.Players {
 			p.Progress = 0
+			p.Board = ""
 			p.Finished = false
 		}
 		// Fetch a new puzzle
@@ -143,11 +145,15 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 
 	if action == "progress" {
 		var req struct {
-			Progress int `json:"progress"`
+			Progress int    `json:"progress"`
+			Board    string `json:"board,omitempty"`
 		}
 		if err := json.Unmarshal(payload, &req); err == nil {
 			if req.Progress >= 0 && req.Progress <= 81 {
 				player.Progress = req.Progress
+			}
+			if len(req.Board) == 81 {
+				player.Board = req.Board
 			}
 		}
 	} else if action == "finish" {

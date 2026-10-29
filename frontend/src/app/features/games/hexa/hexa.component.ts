@@ -13,13 +13,15 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+
 @Component({
   selector: 'app-hexa',
   standalone: true,
   imports: [CommonModule,
     FormsModule,
     HexaBoardComponent,
-    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent],
+    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'
@@ -63,9 +65,21 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
     const rawState = this.store.rawState() as any;
     const enginePlayers = rawState?.players || {};
+    const isSpec = this.store.isSpectator();
+    const myId = this.playerId;
 
-    return this.store.playersList()
-      .filter(p => p && p.id !== this.playerId)
+    let list = this.store.playersList();
+    if (!list || list.length <= 1) {
+      if (enginePlayers && typeof enginePlayers === 'object') {
+        const epList = Object.keys(enginePlayers).map(k => ({ id: k, ...enginePlayers[k] }));
+        if (epList.length > list.length) {
+          list = epList;
+        }
+      }
+    }
+
+    return list
+      .filter(p => p && (isSpec || p.id !== myId))
       .map(p => {
         const pInfo = players.find((x: any) => x && (x.id === p.id || x.playerId === p.id));
         const ep = (typeof enginePlayers === 'object' && !Array.isArray(enginePlayers))
@@ -81,7 +95,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
           nickname: pInfo?.nickname || p.nickname || p.id,
           avatar: pInfo?.avatar || p.avatar,
           isHost: p.id === this.store.hostId(),
-          isMe: false,
+          isMe: !isSpec && p.id === myId,
           score: oppScore,
           status: oppFinished ? GameStatus.Finished : GameStatus.Playing,
           metrics: [
@@ -213,15 +227,11 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       }
       
       if (status === GameStatus.Finished || this.store.gameOver()) {
-        if (this.currentRoomMode() !== GameMode.Single && this.store.winners().includes(this.playerId)) {
+        if (this.store.isVictory()) {
           this.celebrateVictory();
         } else {
           this.vibrateError();
         }
-        const timer = setTimeout(() => this.showOverlay.set(true), 1500);
-        onCleanup(() => clearTimeout(timer));
-      } else {
-        this.showOverlay.set(false);
       }
     });
   }
@@ -235,29 +245,51 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
-      if (pending.password) this.wsService.setPendingPassword(pending.password);
-      this.store.joinRoom(pending.roomId, pending.mode, pending.difficulty, pending.host || '', pending.target ?? 1);
-      if (pending.mode !== GameMode.Single) {
-        this.roomLifecycle.saveReconnectInfo(pending.roomId, pending.mode, pending.difficulty, pending.host || '');
+      if (pending.isCreate) {
+        this.handleCreateRoom(pending);
+      } else {
+        this.handleJoinRoom(pending);
       }
     }
   }
 
-  override handleJoinRoom(event: { roomId: string, mode: string, difficulty: string, host: string, password?: string }) {
+  override handleJoinRoom(event: any) {
     if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host);
-    if (event.mode !== GameMode.Single) {
+    const action = event.isSpectator ? 'spectate' : 'join';
+    this.wsService.setPendingAction(action);
+    this.store.joinRoom(
+      event.roomId,
+      event.mode,
+      event.difficulty,
+      event.host,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      event.isSpectator || false
+    );
+    if (event.mode !== GameMode.Single && !event.isSpectator) {
       this.roomLifecycle.saveReconnectInfo(event.roomId, event.mode, event.difficulty, event.host);
     }
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(event: { name: string, mode: string, difficulty: string, password?: string }) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId);
+    this.wsService.setPendingAction('create');
+    const roomId = event.name || event.roomId;
+    this.store.joinRoom(
+      roomId,
+      event.mode,
+      event.difficulty,
+      this.playerId,
+      event.target ?? 1,
+      event.password || '',
+      event.bountyCoins || 0,
+      false
+    );
     if (event.mode !== GameMode.Single) {
-      this.roomLifecycle.saveReconnectInfo(event.name, event.mode, event.difficulty, this.playerId);
+      this.roomLifecycle.saveReconnectInfo(roomId, event.mode, event.difficulty, this.playerId);
     }
     this.isMobileSidebarOpen.set(false);
   }
@@ -492,7 +524,10 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (event.key.toLowerCase() === 'r' && this.currentRoomMode() === GameMode.Single) {
+    const target = event.target as HTMLElement;
+    if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
+    if ((event.key.toLowerCase() === 'r' || ((event.key === ' ' || event.key === 'Enter') && (this.store.gameOver() || this.store.status() === GameStatus.Finished))) && this.currentRoomMode() === GameMode.Single) {
       this.store.startGame();
       event.preventDefault();
       return;

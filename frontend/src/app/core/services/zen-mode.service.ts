@@ -128,17 +128,16 @@ export class ZenModeService {
   }
 
   private loadPreference(): boolean {
-    if (!isBrowser()) return true;
+    if (!isBrowser()) return false;
     try {
       const stored = localStorage.getItem(ZenModeService.STORAGE_KEY);
       if (stored !== null) {
         return stored === 'true';
       }
-      // Default: In-app zen mode is active by default in all games,
-      // giving players a clean, spacious arena without top nav distractions.
-      return true;
+      // Default: Standard mode with clean in-game header, opt-in zen mode for users who desire complete distraction-free full screen
+      return false;
     } catch {
-      return true;
+      return false;
     }
   }
 }

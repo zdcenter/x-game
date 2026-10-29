@@ -34,6 +34,40 @@ export class Classic2048Store extends BaseGameStore {
 
   private pkInitialized = false;
 
+  readonly displayCells = computed<number[][]>(() => {
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.cells();
+    }
+    const focus = this.focusedPlayerId();
+    const boards = this.pkBoards();
+    let targetId = focus;
+    if (!targetId || !boards[targetId]) {
+      const keys = Object.keys(boards);
+      targetId = keys[0] || '';
+    }
+    if (targetId && boards[targetId]?.cells?.length) {
+      return boards[targetId].cells;
+    }
+    return this.cells();
+  });
+
+  readonly displayScore = computed<number>(() => {
+    if (this.currentRoomMode() === GameMode.Single || !this.isSpectator()) {
+      return this.localScore();
+    }
+    const focus = this.focusedPlayerId();
+    const boards = this.pkBoards();
+    let targetId = focus;
+    if (!targetId || !boards[targetId]) {
+      const keys = Object.keys(boards);
+      targetId = keys[0] || '';
+    }
+    if (targetId && boards[targetId]) {
+      return boards[targetId].score || 0;
+    }
+    return this.localScore();
+  });
+
   constructor() {
     super();
 

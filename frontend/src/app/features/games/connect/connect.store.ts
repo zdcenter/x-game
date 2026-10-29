@@ -4,12 +4,13 @@ import { BaseGameStore } from '../../../core/store/base-game.store';
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { environment } from '../../../../environments/environment';
-import { ConnectEngine, ConnectPuzzleDef } from './connect-engine';
+import { ConnectEngine, ConnectPuzzleDef, normalizeConnectPuzzle } from './connect-engine';
 import { C2SAction } from '../../../core/models/websocket.model';
 
 export interface ConnectPlayerState {
   id: string;
   progress: number;
+  paths?: string;
   finished: boolean;
 }
 
@@ -26,7 +27,7 @@ export interface ConnectGameState {
 })
 export class ConnectStore extends BaseGameStore {
   view = signal<'lobby' | 'play'>('lobby');
-  isSpectator = computed(() => false);
+
 
   override readonly singlePlayerWinners = computed<string[]>(() => {
     return this.singlePlayerStatus() === GameStatus.Finished ? [this.playerId()] : [];
@@ -81,6 +82,18 @@ export class ConnectStore extends BaseGameStore {
       } as ConnectPlayerState;
     }
 
+    if (this.isSpectator()) {
+      const state = this.rawState() as ConnectGameState;
+      if (!state || !state.players) return null;
+      let targetId = this.focusedPlayerId();
+      if (!targetId || !state.players[targetId]) {
+        const found = Object.keys(state.players).find(k => k.toLowerCase() === targetId.toLowerCase());
+        if (found) targetId = found;
+        else targetId = Object.keys(state.players)[0] || '';
+      }
+      return state.players[targetId] || null;
+    }
+
     const state = this.rawState() as ConnectGameState;
     if (!state || !state.players) return null;
     return state.players[this.playerId()];
@@ -127,7 +140,7 @@ export class ConnectStore extends BaseGameStore {
     if (!state || !state.players) return [];
     
     return Object.values(state.players)
-      .filter(p => p.id !== this.playerId())
+      .filter(p => this.isSpectator() || p.id !== this.playerId())
       .map(p => ({
         id: p.id,
         progress: p.progress,
@@ -148,8 +161,17 @@ export class ConnectStore extends BaseGameStore {
     this.startTimer();
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Easy, hostId?: string, target: number = 1) {
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty: string = GameDifficulty.Easy,
+    hostId?: string,
+    target: number = 1,
+    password: string = '',
+    bounty: number = 0,
+    isSpectator: boolean = false
+  ) {
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bounty, isSpectator);
     
     if (mode === GameMode.Single) {
       this.timeSpent.set(0);
@@ -169,20 +191,43 @@ export class ConnectStore extends BaseGameStore {
       const state = this.rawState() as ConnectGameState;
       if (this.currentRoomMode() !== GameMode.Single && state?.puzzle) {
         try {
-          const pDef: ConnectPuzzleDef = JSON.parse(state.puzzle);
-          if (pDef && (!this.localEngine() || this.localEngine()?.width !== pDef.width)) {
-             const pkLevelId = (pDef as any).id || 'pk-level';
-             if (this.currentLevelId() !== pkLevelId) {
-               untracked(() => {
-                 this.currentLevelId.set(pkLevelId);
-                 this.localEngine.set(new ConnectEngine(pDef));
-                 this.singlePlayerFinished.set(false);
-               });
-             }
+          const pDef: ConnectPuzzleDef = normalizeConnectPuzzle(state.puzzle);
+          const pkLevelId = pDef.id || (typeof state.puzzle === 'object' && (state.puzzle as any).id) || 'pk-level';
+          if (!this.localEngine() || this.currentLevelId() !== pkLevelId) {
+            untracked(() => {
+              this.currentLevelId.set(pkLevelId);
+              this.localEngine.set(new ConnectEngine(pDef));
+              this.singlePlayerFinished.set(false);
+              this.boardVersion.update(v => v + 1);
+            });
           }
         } catch (e) {
           console.error('Failed to parse PK puzzle', e);
         }
+      }
+    });
+
+    // Watch for spectator focused player changes and sync board paths
+    effect(() => {
+      if (!this.isSpectator() || this.currentRoomMode() === GameMode.Single) return;
+      const state = this.rawState() as ConnectGameState;
+      const engine = this.localEngine();
+      if (!state?.players || !engine) return;
+
+      const players = state.players;
+      let targetId = this.focusedPlayerId();
+      if (!targetId || !players[targetId]) {
+        const found = Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase());
+        if (found) targetId = found;
+        else targetId = Object.keys(players)[0] || '';
+      }
+      const p = players[targetId];
+      if (p?.paths) {
+        engine.loadPaths(p.paths);
+        this.boardVersion.update(v => v + 1);
+      } else if (p && !p.paths) {
+        engine.resetAll();
+        this.boardVersion.update(v => v + 1);
       }
     });
   }
@@ -191,6 +236,21 @@ export class ConnectStore extends BaseGameStore {
     super.leaveRoom();
     this.stopTimer();
     this.localEngine.set(null);
+    this.currentLevelId.set('');
+  }
+
+  protected override onResetLocalGameState(): void {
+    const state = this.rawState() as ConnectGameState;
+    if (state?.puzzle) {
+      try {
+        const pDef = normalizeConnectPuzzle(state.puzzle);
+        this.localEngine.set(new ConnectEngine(pDef));
+        this.singlePlayerFinished.set(false);
+        this.boardVersion.update(v => v + 1);
+      } catch (e) {
+        console.error('Failed to reset PK connect engine', e);
+      }
+    }
   }
 
   checkSolution() {
@@ -204,8 +264,9 @@ export class ConnectStore extends BaseGameStore {
         this.stopTimer();
         this.submitFinish();
       } else {
-        // Send finish to server for PK
-        this.ws.send({ action: 'finish' });
+        // Send finish to server for PK with final paths
+        const pathsJson = JSON.stringify(engine.exportPaths());
+        this.ws.send({ action: 'finish', paths: pathsJson });
       }
     } else {
       // Send progress update to server in PK
@@ -217,7 +278,8 @@ export class ConnectStore extends BaseGameStore {
             if (engine.grid[r][c] !== 0) filled++;
           }
         }
-        this.ws.send({ action: 'progress', progress: filled });
+        const pathsJson = JSON.stringify(engine.exportPaths());
+        this.ws.send({ action: 'progress', progress: filled, paths: pathsJson });
       }
     }
   }
@@ -272,6 +334,9 @@ export class ConnectStore extends BaseGameStore {
   }
 
   changeSingleDifficulty(diff: string) {
+    if (this.currentRoomMode() !== GameMode.Single || this.roomId()) {
+      return;
+    }
     setSavedDifficulty('connect', diff);
     this.currentDifficulty.set(diff);
     this.fetchLevelsAndLoad(diff);
@@ -297,53 +362,19 @@ export class ConnectStore extends BaseGameStore {
     this.http.get<any>(`${environment.apiUrl}/connect/puzzle/${id}`).subscribe(res => {
       this.currentLevelId.set(res.puzzle.id);
       
-      const parsed = JSON.parse(res.puzzle.endpoints);
-      let endpointsDef: any[] = [];
-      
-      if (parsed.length > 0) {
-        if (parsed[0].r !== undefined) {
-          // Convert flat format [{"r": r, "c": c, "color": color}, ...]
-          const colorMap = new Map<number, {r: number, c: number}[]>();
-          for (const ep of parsed) {
-            if (!colorMap.has(ep.color)) colorMap.set(ep.color, []);
-            colorMap.get(ep.color)!.push({r: ep.r, c: ep.c});
-          }
-          for (const [color, pts] of colorMap.entries()) {
-            if (pts.length === 2) {
-              endpointsDef.push({ color, p1: pts[0], p2: pts[1] });
-            }
-          }
-        } else if (Array.isArray(parsed[0].p1)) {
-          // Convert array format {"color": 1, "p1": [c, r], "p2": [c, r], "path": [[c, r], ...]}
-          endpointsDef = parsed.map((ep: any) => ({
-            color: ep.color,
-            p1: { r: ep.p1[1], c: ep.p1[0] },
-            p2: { r: ep.p2[1], c: ep.p2[0] },
-            path: ep.path ? ep.path.map((pt: any) => ({ r: pt[1], c: pt[0] })) : undefined
-          }));
-        } else {
-          // Assume already correct format {r, c}
-          endpointsDef = parsed;
-        }
-      }
-      
-      let blocksDef: any[] = [];
-      if (typeof res.puzzle.blocks === 'string' && res.puzzle.blocks) {
-        const parsedBlocks = JSON.parse(res.puzzle.blocks);
-        blocksDef = parsedBlocks.map((b: any) => ({ r: b[0], c: b[1] }));
-      }
-      
-      const puzzleDef = {
+      const puzzleDef = normalizeConnectPuzzle({
+        id: res.puzzle.id,
         width: res.puzzle.width,
         height: res.puzzle.height,
-        endpoints: endpointsDef,
-        blocks: blocksDef
-      };
+        endpoints: res.puzzle.endpoints,
+        blocks: res.puzzle.blocks
+      });
       
       this.localEngine.set(new ConnectEngine(puzzleDef));
       this.singlePlayerFinished.set(false);
       this.timeSpent.set(0);
       this.startTimer();
+      this.boardVersion.update(v => v + 1);
     });
   }
 

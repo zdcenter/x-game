@@ -12,7 +12,8 @@ export interface PendingJoin {
   difficulty: string;
   host: string;
   password?: string;  // Optional room password for protected rooms
-  action?: 'create' | 'join';  // Whether this is a room creation or join
+  action?: 'create' | 'join' | 'spectate';  // Whether this is a room creation, join, or spectate
+  spectate?: boolean; // Whether the user is entering as a spectator
   target?: number;   // Number of puzzles/points needed to win (PK modes)
   bountyCoins?: number; // Bounty coins for arena
   inviteUsernames?: string[]; // Automatically invite these users after room creation

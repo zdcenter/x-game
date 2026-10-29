@@ -145,13 +145,63 @@ export class SudokuStore extends BaseGameStore {
         }
       }
     });
+
+    // Effect to auto-sync Speed mode board for spectators
+    effect(() => {
+      if (this.isSpectator() && this.currentRoomMode() === GameMode.Speed) {
+        const raw = this.rawState() as any;
+        const players = raw?.players;
+        if (!players) return;
+        let targetId = this.focusedPlayerId();
+        if (!targetId || !players[targetId]) {
+          const found = Object.keys(players).find(k => k.toLowerCase() === targetId.toLowerCase());
+          if (found) targetId = found;
+          else targetId = Object.keys(players)[0] || '';
+        }
+        const p = players[targetId];
+        const puzzle = raw.puzzle || this.originalPuzzleStr();
+        if (!puzzle) return;
+
+        if (this.board().length === 0) {
+          this.createBoardFromString(puzzle);
+        }
+
+        const b = this.board();
+        if (b.length === 9 && p?.board && typeof p.board === 'string' && p.board.length === 81) {
+          let changed = false;
+          for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+              if (b[r][c].fixed) continue;
+              const ch = p.board[r * 9 + c];
+              const val = (ch >= '1' && ch <= '9') ? parseInt(ch, 10) : 0;
+              if (b[r][c].val !== val) {
+                b[r][c].val = val;
+                changed = true;
+              }
+            }
+          }
+          if (changed) {
+            this.board.set([...b]);
+            this.checkErrors();
+          }
+        }
+      }
+    });
   }
 
   // --- ROOM MANAGEMENT ---
-  // override joinRoom if we want to set 'view' or we can just rely on effect
-  override joinRoom(roomId: string, mode: string, diff: string, hostId?: string, target: number = 1) {
+  override joinRoom(
+    roomId: string,
+    mode: string,
+    diff: string,
+    hostId?: string,
+    target: number = 1,
+    password?: string,
+    bountyCoins?: number,
+    isSpectator?: boolean
+  ) {
     this.view.set('room');
-    super.joinRoom(roomId, mode, diff, hostId, target);
+    super.joinRoom(roomId, mode, diff, hostId, target, password, bountyCoins, isSpectator);
   }
 
   override leaveRoom() {
@@ -297,7 +347,8 @@ export class SudokuStore extends BaseGameStore {
 
     // Speed mode progress tracking
     if (this.currentRoomMode() === GameMode.Speed) {
-      this.ws.send({ action: C2SAction.Progress, progress: this.countFilledCells() });
+      const boardStr = this.board().map(row => row.map(c => c.val || '.').join('')).join('');
+      this.ws.send({ action: C2SAction.Progress, progress: this.countFilledCells(), board: boardStr });
     }
 
     this.triggerSave();

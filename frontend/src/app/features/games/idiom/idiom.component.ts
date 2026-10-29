@@ -7,11 +7,14 @@ import { GameStatus, GameMode, GameResult } from '../../../core/models/game.mode
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { IdiomPKStore } from './store/idiom-pk.store';
 import { IdiomSolitaireEngine, IdiomItem, ChainMode } from './store/idiom-engine';
 import { AudioService } from '../../../core/services/audio.service';
 import { XpService } from '../../../core/services/xp.service';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
+import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
 @Component({
   selector: 'app-idiom',
@@ -20,6 +23,8 @@ import { FloatingTextService } from '../../../core/services/floating-text.servic
   imports: [
     CommonModule,
     GameLayoutComponent,
+    GameHandheldHeaderComponent,
+    GamePkHudComponent
   ],
   templateUrl: './idiom.component.html',
   styles: [`
@@ -102,6 +107,71 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     return parts[3] || tail.lastPinyin;
   });
 
+  readonly myPlayerPkStats = computed<PkPlayerStats | null>(() => {
+    if (this.pkStore.isSpectator()) {
+      return null;
+    }
+    const mySt = this.pkStore.myState();
+    const pid = this.playerId;
+    const wins = this.pkStore.myWins();
+    const target = this.pkStore.target() || 1;
+    const prog = Math.min(100, Math.round((wins / target) * 100));
+    const isWinner = this.pkStore.winners().includes(pid);
+    const isHost = this.pkStore.hostId() === pid;
+
+    return {
+      id: pid,
+      nickname: pid,
+      isHost,
+      isMe: true,
+      score: wins,
+      progress: prog,
+      wins,
+      status: isWinner ? GameStatus.Finished : (mySt?.locked ? GameStatus.Finished : GameStatus.Playing),
+      metrics: [
+        { label: '胜场', value: `${wins}/${target}`, icon: '🐉', colorClass: 'text-amber-500 font-bold' },
+        mySt?.locked
+          ? { label: '状态', value: '禁言', icon: '🔒', colorClass: 'text-rose-500 font-bold' }
+          : { label: '失误', value: `${mySt?.wrong_count || 0}/3`, icon: '⚠️', colorClass: 'text-amber-400 font-medium' }
+      ]
+    };
+  });
+
+  readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
+    const isSpec = this.pkStore.isSpectator();
+    const pid = this.playerId;
+    const target = this.pkStore.target() || 1;
+    const winsMap = this.pkStore.wins();
+    const hostId = this.pkStore.hostId();
+    const winners = this.pkStore.winners();
+
+    const players = this.pkStore.players().filter(p => isSpec || p.id !== pid);
+
+    return players.map(p => {
+      const pWins = winsMap[p.id] || 0;
+      const prog = Math.min(100, Math.round((pWins / target) * 100));
+      const isWinner = winners.includes(p.id);
+      const isHost = p.id === hostId;
+
+      return {
+        id: p.id,
+        nickname: p.id,
+        isHost,
+        isMe: !isSpec && p.id === pid,
+        score: pWins,
+        progress: prog,
+        wins: pWins,
+        status: isWinner ? GameStatus.Finished : (p.locked ? GameStatus.Finished : GameStatus.Playing),
+        metrics: [
+          { label: '胜场', value: `${pWins}/${target}`, icon: '🐉', colorClass: 'text-rose-500 font-bold' },
+          p.locked
+            ? { label: '状态', value: '禁言', icon: '🔒', colorClass: 'text-rose-500 font-bold' }
+            : { label: '失误', value: `${p.wrong_count || 0}/3`, icon: '⚠️', colorClass: 'text-amber-400 font-medium' }
+        ]
+      };
+    });
+  });
+
   constructor() {
     super();
     this.roomLifecycle = setupRoomLifecycle({
@@ -176,7 +246,11 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     // PK room lifecycle: reconnect or join from query params
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
-      this.joinPkRoom(joinInfo.roomId, joinInfo.mode, joinInfo.difficulty, joinInfo.host || '', joinInfo.target ?? 3);
+      if (joinInfo.isCreate) {
+        this.handleCreateRoom(joinInfo);
+      } else {
+        this.handleJoinRoom(joinInfo);
+      }
     } else {
       this.route.queryParams.subscribe(params => {
         if (this.pkRoomId()) return;
@@ -186,7 +260,9 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
         const host = params['host'] || roomId;
         const diff = params['difficulty'] || '';
         const target = params['target'] ? parseInt(params['target']) : 3;
-        this.joinPkRoom(roomId, mode, diff, host, target);
+        const isSpectator = params['spectate'] === 'true' || params['action'] === 'spectate';
+        const action = params['action'] || (isSpectator ? 'spectate' : 'join');
+        this.joinPkRoom(roomId, mode, diff, host, target, params['password'] || '', 0, isSpectator, action);
       });
     }
   }
@@ -433,12 +509,26 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   // PK Mode Logic
   // ==========================================
 
-  joinPkRoom(roomId: string, mode: string, diff: string, host: string, target = 3) {
+  joinPkRoom(
+    roomId: string,
+    mode: string,
+    diff: string,
+    host: string,
+    target = 3,
+    password = '',
+    bounty = 0,
+    isSpectator = false,
+    action?: string
+  ) {
     this.pkRoomId.set(roomId);
     this.pkRoomMode.set(mode);
     this.pkDifficulty.set(diff);
-    this.pkStore.joinRoom(roomId, mode, diff, host, target);
-    this.roomLifecycle.saveReconnectInfo(roomId, mode, diff, host);
+    const finalAction = action || (isSpectator ? 'spectate' : 'join');
+    this.wsService.setPendingAction(finalAction);
+    this.pkStore.joinRoom(roomId, mode, diff, host, target, password, bounty, isSpectator, finalAction);
+    if (!isSpectator) {
+      this.roomLifecycle.saveReconnectInfo(roomId, mode, diff, host);
+    }
   }
 
   leavePkRoom() {
@@ -448,7 +538,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   onPkKeypadPress(char: string, index: number) {
-    if (this.pkKeypadUsed()[index] || this.pkStore.isRoundOver()) return;
+    if (this.pkStore.isSpectator() || this.pkKeypadUsed()[index] || this.pkStore.isRoundOver()) return;
 
     const slots = [...this.pkSlots()];
     const emptyIdx = slots.findIndex(s => !s);
@@ -472,7 +562,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   onPkSlotClick(slotIdx: number) {
-    if (this.pkStore.isRoundOver()) return;
+    if (this.pkStore.isSpectator() || this.pkStore.isRoundOver()) return;
     const char = this.pkSlots()[slotIdx];
     if (!char) return;
 
@@ -493,6 +583,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   clearPkSlots() {
+    if (this.pkStore.isSpectator()) return;
     this.pkSlots.set(['', '', '']);
     this.pkKeypadUsed.set(new Array(this.pkStore.keyboard().length).fill(false));
   }
@@ -516,15 +607,39 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  override handleJoinRoom(event: { roomId: string; mode: string; difficulty: string; host: string; password?: string }) {
+  override handleJoinRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinPkRoom(event.roomId, event.mode, event.difficulty || '', event.host);
+    const isSpec = event.isSpectator || false;
+    const act = isSpec ? 'spectate' : 'join';
+    this.wsService.setPendingAction(act);
+    this.joinPkRoom(
+      event.roomId,
+      event.mode || GameMode.Speed,
+      event.difficulty || '',
+      event.host,
+      event.target ?? 3,
+      event.password || '',
+      event.bountyCoins || 0,
+      isSpec,
+      act
+    );
     this.isMobileSidebarOpen.set(false);
   }
 
-  override handleCreateRoom(event: { name: string; mode: string; difficulty: string; password?: string; target?: number }) {
+  override handleCreateRoom(event: any) {
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.joinPkRoom(event.name, event.mode, event.difficulty || '', this.playerId, event.target ?? 3);
+    this.wsService.setPendingAction('create');
+    this.joinPkRoom(
+      event.name || event.roomId,
+      event.mode || GameMode.Speed,
+      event.difficulty || '',
+      this.playerId,
+      event.target ?? 3,
+      event.password || '',
+      event.bountyCoins || 0,
+      false,
+      'create'
+    );
     this.isMobileSidebarOpen.set(false);
   }
 }

@@ -85,9 +85,21 @@ export class MinesweeperStore extends BaseGameStore {
     }
     
     if (this.currentRoomMode() === GameMode.Speed) {
-      return (s.boards && s.boards[this.playerId()]) ? s.boards[this.playerId()] : null;
+      if (!s.boards) return { cells: [], status: 'waiting', width: 16, height: 16, mines: 40, revealed_cnt: 0, start_at: 0 };
+      let targetId = this.playerId();
+      if (this.isSpectator()) {
+        const focus = this.focusedPlayerId();
+        if (focus) {
+          targetId = focus;
+        } else {
+          const keys = Object.keys(s.boards);
+          targetId = keys[0] || '';
+        }
+      }
+      const boardKey = Object.keys(s.boards).find(k => k === targetId || k.toLowerCase() === targetId.toLowerCase()) || targetId;
+      return s.boards[boardKey] || { cells: [], status: 'waiting', width: 16, height: 16, mines: 40, revealed_cnt: 0, start_at: 0 };
     }
-    return s.board || { cells: [], status: 'waiting', width: 0, height: 0, mines: 0, revealed_cnt: 0, start_at: 0 };
+    return s.board || { cells: [], status: 'waiting', width: 16, height: 16, mines: 40, revealed_cnt: 0, start_at: 0 };
   });
 
   readonly board = computed<Cell[][]>(() => {
@@ -157,9 +169,10 @@ export class MinesweeperStore extends BaseGameStore {
     const s = this.rawState() as any;
     if (!s || !s.boards) return [];
     
-    const opponents = [];
+    const isSpec = this.isSpectator();
+    const opponents: any[] = [];
     for (const [id, board] of Object.entries(s.boards as Record<string, any>)) {
-      if (id === this.playerId()) continue;
+      if (!isSpec && id === this.playerId()) continue;
       if (!board || !board.width) continue;
       
       const totalSafe = (board.width * board.height) - board.mines;
@@ -173,11 +186,11 @@ export class MinesweeperStore extends BaseGameStore {
     return opponents;
   });
 
-  readonly width = computed(() => this.myBoardData().width || 16);
-  readonly height = computed(() => this.myBoardData().height || 16);
-  readonly totalMines = computed(() => this.myBoardData().mines || 40);
+  readonly width = computed(() => this.myBoardData()?.width || 16);
+  readonly height = computed(() => this.myBoardData()?.height || 16);
+  readonly totalMines = computed(() => this.myBoardData()?.mines || 40);
 
-  readonly myRevealedCnt = computed(() => this.myBoardData().revealed_cnt || 0);
+  readonly myRevealedCnt = computed(() => this.myBoardData()?.revealed_cnt || 0);
   readonly totalSafeCells = computed(() => (this.width() * this.height()) - this.totalMines());
   
   readonly myProgress = computed(() => {
@@ -218,6 +231,10 @@ export class MinesweeperStore extends BaseGameStore {
         });
       }
     });
+  }
+
+  protected override onResetLocalGameState(): void {
+    this.optimisticFlags.set({});
   }
 
   startLocalGame(width: number, height: number, mines: number, difficulty: string = GameDifficulty.Medium) {
@@ -283,9 +300,18 @@ export class MinesweeperStore extends BaseGameStore {
     }
   }
 
-  override joinRoom(roomId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId?: string, target: number = 1) {
+  override joinRoom(
+    roomId: string,
+    mode: string = GameMode.Single,
+    difficulty: string = GameDifficulty.Medium,
+    hostId?: string,
+    target: number = 1,
+    password?: string,
+    bountyCoins?: number,
+    isSpectator?: boolean
+  ) {
     this.optimisticFlags.set({});
-    super.joinRoom(roomId, mode, difficulty, hostId, target);
+    super.joinRoom(roomId, mode, difficulty, hostId, target, password, bountyCoins, isSpectator);
   }
 
   override leaveRoom() {

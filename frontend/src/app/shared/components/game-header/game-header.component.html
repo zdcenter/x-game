@@ -39,10 +39,10 @@
           <!-- Main Action Injection (e.g. ⚔️ 联机对战 / ⚡ 迎战) -->
           <ng-content select="[header-right]"></ng-content>
 
-          <!-- Quick Rules Button (Desk/Tablet visible) -->
+          <!-- Quick Rules Button (Desk/Tablet/Mobile visible) -->
           @if (showRulesBtn) {
             <button (click)="rules.emit()"
-                    class="hidden sm:inline-flex p-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-semibold items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
+                    class="inline-flex p-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-semibold items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
                     [title]="i18n.t('game.rules')() || '规则说明'">
               <span class="text-xs">📖</span>
               <span class="hidden md:inline">{{ i18n.t('game.rules')() || '规则' }}</span>

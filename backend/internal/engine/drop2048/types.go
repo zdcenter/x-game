@@ -1,9 +1,10 @@
 package drop2048
 
 type PlayerInfo struct {
-	ID       string `json:"id"`
-	Score    int    `json:"score"`
-	Finished bool   `json:"finished"`
+	ID       string  `json:"id"`
+	Score    int     `json:"score"`
+	Matrix   [][]int `json:"matrix,omitempty"`
+	Finished bool    `json:"finished"`
 }
 
 type GameState struct {
@@ -14,6 +15,7 @@ type GameState struct {
 }
 
 type ActionPayload struct {
-	Action string `json:"action"`
-	Score  int    `json:"score,omitempty"`
+	Action string  `json:"action"`
+	Score  int     `json:"score,omitempty"`
+	Matrix [][]int `json:"matrix,omitempty"`
 }

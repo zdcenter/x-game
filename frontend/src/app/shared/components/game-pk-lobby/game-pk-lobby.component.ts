@@ -40,6 +40,7 @@ export interface PkJoinRoomEvent {
   host: string;
   password?: string;
   bountyCoins?: number;
+  isSpectator?: boolean;
 }
 
 @Component({
@@ -147,6 +148,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   pwPromptMode   = signal('');
   pwPromptDiff   = signal('');
   pwPromptHost   = signal('');
+  pwPromptIsSpectate = signal(false);
   pwInput        = signal('');
 
 
@@ -309,8 +311,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   // ── Room list helpers ─────────────────────────────────────────────────────
-  onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean, bountyCoins?: number) {
-    if (bountyCoins && bountyCoins > 0 && this.coinService.coins() < bountyCoins) {
+  onJoinRoom(roomId: string, game: string, mode: string, difficulty: string, host: string, hasPassword?: boolean, bountyCoins?: number, isSpectator?: boolean) {
+    if (!isSpectator && bountyCoins && bountyCoins > 0 && this.coinService.coins() < bountyCoins) {
       this.toast.show(this.t('game.bounty_insufficient') || '脑力币不足，无法加入该悬赏房间', 'error');
       return;
     }
@@ -320,32 +322,34 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       this.pwPromptMode.set(mode);
       this.pwPromptDiff.set(difficulty);
       this.pwPromptHost.set(host);
+      this.pwPromptIsSpectate.set(!!isSpectator);
       this.pwInput.set('');
       this.pwPromptOpen.set(true);
       return;
     }
-    this.doJoin(roomId, game, mode, difficulty, host, undefined, bountyCoins);
+    this.doJoin(roomId, game, mode, difficulty, host, undefined, bountyCoins, isSpectator);
   }
 
   onConfirmPassword() {
     const pw = this.pwInput();
     if (!pw) return;
     this.pwPromptOpen.set(false);
-    this.doJoin(this.pwPromptRoomId(), this.pwPromptGame(), this.pwPromptMode(), this.pwPromptDiff(), this.pwPromptHost(), pw);
+    this.doJoin(this.pwPromptRoomId(), this.pwPromptGame(), this.pwPromptMode(), this.pwPromptDiff(), this.pwPromptHost(), pw, undefined, this.pwPromptIsSpectate());
   }
 
-  private doJoin(roomId: string, game: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number) {
-    if (bountyCoins && bountyCoins > 0 && this.coinService.coins() < bountyCoins) {
+  private doJoin(roomId: string, game: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number, isSpectator?: boolean) {
+    if (!isSpectator && bountyCoins && bountyCoins > 0 && this.coinService.coins() < bountyCoins) {
       this.toast.show(this.t('game.bounty_insufficient') || '脑力币不足，无法加入该悬赏房间', 'error');
       return;
     }
+    const action = isSpectator ? 'spectate' : 'join';
     if (this.isArena || (game && game !== this.gameId)) {
-      this.cross.setPendingJoin({ game, roomId, mode, difficulty, host, password, bountyCoins });
+      this.cross.setPendingJoin({ game, roomId, mode, difficulty, host, password, bountyCoins, action, spectate: isSpectator });
       const lang = this.router.url.split('/')[1] || 'zh';
       this.router.navigate([`/${lang}/games/${game}`]);
     } else {
-      this.wsService.setPendingAction('join');
-      this.joinRoom.emit({ roomId, mode, difficulty, host, password, bountyCoins });
+      this.wsService.setPendingAction(action);
+      this.joinRoom.emit({ roomId, mode, difficulty, host, password, bountyCoins, isSpectator });
     }
   }
 
@@ -504,7 +508,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   spectatePlayer(player: any) {
     if (player.roomId) {
-      this.onJoinRoom(player.roomId, player.game, player.mode || 'pk', player.diff || 'medium', player.username);
+      this.onJoinRoom(player.roomId, player.game, player.mode || 'pk', player.diff || 'medium', player.username, false, undefined, true);
     } else if (player.game) {
       this.playSameGame(player);
     }

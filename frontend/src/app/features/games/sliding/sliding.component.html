@@ -3,6 +3,7 @@
   [store]="store"
   [title]="t('sliding.title')() || 'Sliding Puzzle'"
   [subtitle]="getSubtitle()"
+  [immersive]="isHandheld()"
   icon="🔲"
   iconGradientClass="from-purple-500 to-pink-500"
   titleGradientClass="from-purple-400 to-pink-400"
@@ -24,51 +25,129 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
+<div class="w-full flex-grow flex flex-col justify-start my-0 items-center relative min-h-0 w-full py-0.5 sm:py-1">
 
-          <!-- Single Player Classic Header -->
-          @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex items-center justify-between px-4 py-3 bg-[var(--color-bg-sub)] rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full shadow-sm mx-auto mb-2 z-10" [style.max-width]="boardSizePx()">
-              
-              <!-- Moves -->
-              <div class="flex items-center gap-1 sm:gap-2">
-                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Moves">🔄</span>
-                <div class="bg-rose-50 dark:bg-[#050505] border-2 border-rose-200 dark:border-[var(--color-border-card)] rounded flex items-center px-1 sm:px-2 py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-20 justify-center transition-colors duration-300">
-                  <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
-                    {{ store.myBoard()?.moves || 0 | number:'3.0-0' }}
-                  </span>
-                </div>
-              </div>
+  <!-- Integrated Board Header Bar (仅手持端展示，PC 桌面端保持标准单一外层 GameHeader，杜绝重复) -->
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'sliding'"
+      [gameTitle]="t('sliding.title')() || '数字华容道'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()">
 
-              <!-- Smiley Reset Button (0ms instant restart like Minesweeper) -->
-              <button (click)="store.startGame()"
-                      class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-md active:scale-95 transition-all text-xl sm:text-2xl select-none cursor-pointer"
-                      [title]="t('game.restart')() || 'Restart'">
-                {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
-              </button>
-
-              <!-- Timer -->
-              <div class="flex items-center gap-1 sm:gap-2">
-                <div class="bg-slate-100 dark:bg-[#050505] border-2 border-slate-300 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-20 sm:min-w-24 justify-center transition-colors duration-300">
-                  <span class="font-digital text-slate-700 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
-                    {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
-                  </span>
-                </div>
-                <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Elapsed Time">⏱️</span>
-              </div>
+      <!-- Center: [🎯 难度 ▾] + 🔄 步数 + 😃 重启 + ⏱️ 耗时 (中间舒展区) -->
+      @if (currentRoomMode() === GameMode.Single) {
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 md:gap-4 flex-1 min-w-0">
+          <!-- 🎯 难度规格下拉飞梭 -->
+          <div class="relative group max-w-full">
+            <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] group-hover:border-amber-500/50 shadow-2xs transition-all cursor-pointer truncate">
+              <span class="text-xs sm:text-sm shrink-0">🎯</span>
+              <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] font-mono tracking-tight truncate max-w-[110px] sm:max-w-[150px]">
+                {{ getDifficultyLabel(store.currentDifficulty()) }}
+              </span>
+              <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-text-muted)] group-hover:text-amber-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
             </div>
-          } @else {
-            <!-- Universal PK Battle HUD (Sliding Puzzle) -->
-            <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
-              <app-game-pk-hud
-                [myStats]="myPlayerPkStats()"
-                [opponents]="opponentsPkStats()"
-                [roundFormat]="store.room()?.roundFormat || 'BO3'"
-                [seriesScore]="seriesScore()"
-                [elapsedTime]="formattedElapsedTime()"
-              ></app-game-pk-hud>
+            <select class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                    [ngModel]="store.currentDifficulty()"
+                    (ngModelChange)="changeSingleDifficulty($event)">
+              @for (diff of difficulties; track diff.id) {
+                <option [value]="diff.id">
+                  {{ t(diff.labelKey)() }} ({{ diff.desc || diff.id }})
+                </option>
+              }
+            </select>
+          </div>
+
+          <!-- 经典三要素 HUD: 🔄 步数 + 😃 重启 + ⏱️ 耗时 -->
+          <div class="flex items-center gap-1.5 sm:gap-2.5">
+            <!-- 🔄 步数 -->
+            <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                 [title]="t('sliding.moves')() || '步数'">
+              <span class="text-xs sm:text-sm opacity-80 select-none">🔄</span>
+              <span class="font-digital text-rose-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+                {{ store.myBoard()?.moves || 0 | number:'3.0-0' }}
+              </span>
             </div>
-          }
+
+            <!-- 😃 经典笑脸重启 -->
+            <button (click)="store.startGame()"
+                    class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
+                    [title]="t('game.restart')() || '重新开始'">
+              {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+            </button>
+
+            <!-- ⏱️ 耗时 -->
+            <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+                 [title]="t('game.time')() || '耗时'">
+              <span class="font-digital text-cyan-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
+                {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
+              </span>
+              <span class="text-xs sm:text-sm opacity-80 select-none">⏱️</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <!-- PK 模式头部指示器 -->
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
+          <span class="text-xs sm:text-base">⚔️</span>
+          <span class="truncate">{{ t('sliding.title')() || '数字华容道' }} · PK</span>
+        </div>
+      }
+    </app-game-handheld-header>
+  }
+
+  <!-- Single Player Classic Header (PC 桌面端展示，手持端已整合入一体化顶梁中) -->
+  @if (!isHandheld() && currentRoomMode() === GameMode.Single) {
+    <div class="flex-none flex items-center justify-between px-4 py-3 bg-[var(--color-bg-sub)] rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full shadow-sm mx-auto mb-2 z-10" [style.max-width]="boardSizePx()">
+      
+      <!-- Moves -->
+      <div class="flex items-center gap-1 sm:gap-2">
+        <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Moves">🔄</span>
+        <div class="bg-rose-50 dark:bg-[#050505] border-2 border-rose-200 dark:border-[var(--color-border-card)] rounded flex items-center px-1 sm:px-2 py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-16 sm:min-w-20 justify-center transition-colors duration-300">
+          <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+            {{ store.myBoard()?.moves || 0 | number:'3.0-0' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Smiley Reset Button (0ms instant restart like Minesweeper) -->
+      <button (click)="store.startGame()"
+              class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-md active:scale-95 transition-all text-xl sm:text-2xl select-none cursor-pointer"
+              [title]="t('game.restart')() || 'Restart'">
+        {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+      </button>
+
+      <!-- Timer -->
+      <div class="flex items-center gap-1 sm:gap-2">
+        <div class="bg-slate-100 dark:bg-[#050505] border-2 border-slate-300 dark:border-[var(--color-border-card)] rounded flex items-center px-2 sm:px-3 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-10 sm:h-12 min-w-20 sm:min-w-24 justify-center transition-colors duration-300">
+          <span class="font-digital text-slate-700 dark:text-red-500 font-bold text-2xl sm:text-3xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)] transition-colors duration-300">
+            {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
+          </span>
+        </div>
+        <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Elapsed Time">⏱️</span>
+      </div>
+    </div>
+  } @else if (currentRoomMode() !== GameMode.Single) {
+    <!-- Universal PK Battle HUD (Sliding Puzzle) -->
+    <div class="flex-none py-1.5 shrink-0 w-full max-w-4xl mx-auto px-2">
+      <app-game-pk-hud
+        [myStats]="myPlayerPkStats()"
+        [opponents]="opponentsPkStats()"
+        [roundFormat]="store.room()?.roundFormat || 'BO3'"
+        [seriesScore]="seriesScore()"
+        [elapsedTime]="formattedElapsedTime()"
+        [isSpectator]="store.isSpectator()"
+        [focusedPlayerId]="store.focusedPlayerId()"
+        (playerSelect)="store.setFocusedPlayer($event)"
+      ></app-game-pk-hud>
+    </div>
+  }
 
           <!-- The Grid Area -->
           <div class="relative flex items-center justify-center w-full py-2 px-2 shrink-0 z-0">

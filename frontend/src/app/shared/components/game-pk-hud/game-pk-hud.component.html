@@ -7,71 +7,100 @@
       <!-- DESKTOP / TABLET (>= sm) -->
       <div class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 sm:py-2">
         
-        <!-- ================= LEFT WING: YOU (LOCAL PLAYER) ================= -->
-        <div class="flex-1 min-w-0 flex flex-col gap-1">
-          <!-- Top Row: Avatar + Name + Badges + Metrics + Big Score -->
-          <div class="flex items-center justify-between gap-1.5">
-            <div class="flex items-center gap-1.5 min-w-0">
-              <!-- Avatar -->
-              <div class="relative shrink-0">
-                <div class="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm bg-gradient-to-br from-blue-500 to-indigo-600 ring-1.5 ring-blue-400/50">
-                  {{ avatarChar(myPlayer.nickname || myPlayer.id) }}
-                </div>
-                @if (myPlayer.isHost) {
-                  <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[7px] font-black px-0.5 rounded shadow-sm border border-amber-200 leading-none">
-                    👑
-                  </span>
-                }
-              </div>
-
-              <!-- Name & Badge -->
-              <div class="flex items-center gap-1 min-w-0">
-                <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[85px] sm:max-w-[110px] lg:max-w-[140px]" [title]="myPlayer.nickname || myPlayer.id">
-                  {{ myPlayer.nickname || myPlayer.id }}
-                </span>
-                <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 shrink-0">
-                  {{ i18n.t('game.pk.me')() || '我' }}
-                </span>
-                @if (myPlayer.isFinished) {
-                  <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
-                    🏁
-                  </span>
-                }
-              </div>
-            </div>
-
-            <!-- Right side of Left Wing: Metrics Chip + Primary Score -->
-            <div class="shrink-0 flex items-center gap-1.5">
-              @if (filterMetrics(myPlayer.metrics).length > 0) {
-                <div class="flex items-center gap-1">
-                  @for (metric of filterMetrics(myPlayer.metrics); track $index) {
-                    <div class="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs"
-                         [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
-                      @if (metric.icon) { <span class="opacity-80 text-[10px]">{{ metric.icon }}</span> }
-                      <span>{{ metric.value }}</span>
-                    </div>
+        <!-- ================= LEFT WING: PLAYER 1 ================= -->
+        @if (duelPlayer1(); as p1) {
+          <div class="flex-1 min-w-0 flex flex-col gap-1 p-1 sm:p-1.5 rounded-xl transition-all duration-300"
+               [class.cursor-pointer]="isSpectator"
+               (click)="onAvatarClick(p1.id)"
+               [ngClass]="{
+                 'bg-gradient-to-r from-amber-500/25 via-amber-500/10 to-transparent border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.35)] scale-[1.01]': isPlayerFocused(p1.id),
+                 'opacity-60 hover:opacity-95 border border-[var(--color-border-card)]/40 hover:border-amber-400/30': isSpectator && !isPlayerFocused(p1.id)
+               }">
+            <!-- Top Row: Avatar + Name + Badges + Metrics + Big Score -->
+            <div class="flex items-center justify-between gap-1.5">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <!-- Avatar -->
+                <div class="relative shrink-0">
+                  <div class="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm bg-gradient-to-br from-blue-500 to-indigo-600 transition-all"
+                       [class.ring-4]="isPlayerFocused(p1.id)"
+                       [class.ring-amber-400]="isPlayerFocused(p1.id)"
+                       [class.scale-110]="isPlayerFocused(p1.id)"
+                       [class.shadow-[0_0_12px_rgba(245,158,11,0.6)]]="isPlayerFocused(p1.id)">
+                    {{ avatarChar(p1.nickname || p1.id) }}
+                  </div>
+                  @if (isPlayerFocused(p1.id)) {
+                    <span class="absolute -top-2 -right-1 text-xs animate-bounce drop-shadow">👁️</span>
+                  }
+                  @if (p1.isHost) {
+                    <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[7px] font-black px-0.5 rounded shadow-sm border border-amber-200 leading-none">
+                      👑
+                    </span>
                   }
                 </div>
-              }
-              <div class="flex items-baseline gap-0.5 font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
-                @if (isScoreBased()) {
-                  <span>{{ myPlayer.score ?? 0 }}</span>
-                  <span class="text-[9px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
-                } @else {
-                  <span>{{ myProgress() }}%</span>
+
+                <!-- Name & Badge -->
+                <div class="flex items-center gap-1 min-w-0">
+                  <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[85px] sm:max-w-[110px] lg:max-w-[140px]" [title]="p1.nickname || p1.id">
+                    {{ p1.nickname || p1.id }}
+                  </span>
+                  @if (isSpectator) {
+                    @if (isPlayerFocused(p1.id)) {
+                      <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shrink-0 flex items-center gap-1 animate-pulse border border-amber-300">
+                        <span class="text-[8px]">🎯</span>
+                        <span>{{ i18n.t('game.director_view')() || '导播锁定中' }}</span>
+                      </span>
+                    } @else {
+                      <button type="button" class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 transition-all flex items-center gap-0.5 shrink-0">
+                        <span>👁️</span>
+                        <span>切视角</span>
+                      </button>
+                    }
+                  } @else {
+                    <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 shrink-0">
+                      {{ i18n.t('game.pk.me')() || '我' }}
+                    </span>
+                  }
+                  @if (p1.isFinished) {
+                    <span class="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
+                      🏁
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Right side of Left Wing: Metrics Chip + Primary Score -->
+              <div class="shrink-0 flex items-center gap-1.5">
+                @if (filterMetrics(p1.metrics).length > 0) {
+                  <div class="flex items-center gap-1">
+                    @for (metric of filterMetrics(p1.metrics); track $index) {
+                      <div class="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs"
+                           [ngClass]="metric.colorClass || 'text-[var(--color-text-main)]'">
+                        @if (metric.icon) { <span class="opacity-80 text-[10px]">{{ metric.icon }}</span> }
+                        <span>{{ metric.value }}</span>
+                      </div>
+                    }
+                  </div>
                 }
+                <div class="flex items-baseline gap-0.5 font-mono font-black text-sm sm:text-base text-blue-600 dark:text-blue-400">
+                  @if (isScoreBased()) {
+                    <span>{{ p1.score ?? 0 }}</span>
+                    <span class="text-[9px] opacity-60 font-semibold uppercase">{{ i18n.t('game.pk.score')() || '分' }}</span>
+                  } @else {
+                    <span>{{ myProgress() }}%</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Row: Animated Sleek Progress Bar -->
+            <div class="relative w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
+              <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 shadow-[0_0_10px_rgba(59,130,246,0.5)] relative overflow-hidden"
+                   [style.width.%]="myProgress()">
+                <div class="absolute inset-0 pk-progress-stripe opacity-40"></div>
               </div>
             </div>
           </div>
-
-          <!-- Bottom Row: Animated Sleek Progress Bar -->
-          <div class="relative w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)] shadow-inner">
-            <div class="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 shadow-[0_0_10px_rgba(59,130,246,0.5)] relative overflow-hidden"
-                 [style.width.%]="myProgress()">
-              <div class="absolute inset-0 pk-progress-stripe opacity-40"></div>
-            </div>
-          </div>
-        </div>
+        }
 
 
         <!-- ================= CENTER HUB: COMPACT VS & SERIES & TIMER ================= -->
@@ -88,7 +117,7 @@
             }
           </div>
 
-          <!-- Row 2: Timer + Differential Pill inline -->
+          <!-- Row 2: Timer + Differential Pill inline + Switch Game Button -->
           <div class="flex items-center gap-1 mt-1">
             @if (elapsedTime) {
               <span class="text-[9px] sm:text-[10px] font-mono font-bold text-[var(--color-text-muted)] whitespace-nowrap">
@@ -98,20 +127,34 @@
             @if (leadDeltaText()) {
               <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold leading-tight shrink-0 whitespace-nowrap"
                     [ngClass]="{
-                      'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': leadState() === 'lead',
-                      'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': leadState() === 'behind',
-                      'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]': leadState() === 'tied'
+                      'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10': leadState() === 'lead',
+                      'text-rose-600 dark:text-rose-400 bg-rose-500/10': leadState() === 'behind',
+                      'text-[var(--color-text-muted)]': leadState() === 'tied'
                     }">
                 {{ leadDeltaText() }}
               </span>
+            }
+            @if (canSwitchGame()) {
+              <button (click)="openSwitchGame($event)"
+                      class="px-1.5 py-0.5 rounded-md text-[9px] font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 transition-all flex items-center gap-0.5 active:scale-95 cursor-pointer ml-0.5"
+                      [title]="i18n.t('game.switch_pk_game')() || '更换对战游戏'">
+                <span>🎮</span>
+                <span class="hidden lg:inline">{{ i18n.t('game.switch_pk_game_short')() || '换' }}</span>
+              </button>
             }
           </div>
         </div>
 
 
-        <!-- ================= RIGHT WING: OPPONENT ================= -->
-        @if (primaryOpponent(); as opp) {
-          <div class="flex-1 min-w-0 flex flex-col gap-1">
+        <!-- ================= RIGHT WING: PLAYER 2 ================= -->
+        @if (duelPlayer2(); as opp) {
+          <div class="flex-1 min-w-0 flex flex-col gap-1 p-1 sm:p-1.5 rounded-xl transition-all duration-300"
+               [class.cursor-pointer]="isSpectator"
+               (click)="onAvatarClick(opp.id)"
+               [ngClass]="{
+                 'bg-gradient-to-l from-amber-500/25 via-amber-500/10 to-transparent border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_20px_rgba(245,158,11,0.35)] scale-[1.01]': isPlayerFocused(opp.id),
+                 'opacity-60 hover:opacity-95 border border-[var(--color-border-card)]/40 hover:border-amber-400/30': isSpectator && !isPlayerFocused(opp.id)
+               }">
             <!-- Top Row: Primary Score + Metrics + Badges + Name + Avatar -->
             <div class="flex items-center justify-between gap-1.5">
               <!-- Left side of Right Wing: Primary Score + Metrics Chip -->
@@ -145,6 +188,19 @@
                       🏁
                     </span>
                   }
+                  @if (isSpectator) {
+                    @if (isPlayerFocused(opp.id)) {
+                      <span class="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shrink-0 flex items-center gap-1 animate-pulse border border-amber-300">
+                        <span class="text-[8px]">🎯</span>
+                        <span>{{ i18n.t('game.director_view')() || '导播锁定中' }}</span>
+                      </span>
+                    } @else {
+                      <button type="button" class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 hover:bg-amber-500/25 text-amber-500 border border-amber-500/30 transition-all flex items-center gap-0.5 shrink-0">
+                        <span>👁️</span>
+                        <span>切视角</span>
+                      </button>
+                    }
+                  }
                   <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[85px] sm:max-w-[110px] lg:max-w-[140px]" [title]="opp.nickname || opp.id">
                     {{ opp.nickname || opp.id }}
                   </span>
@@ -152,9 +208,16 @@
 
                 <!-- Avatar -->
                 <div class="relative shrink-0">
-                  <div class="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm bg-gradient-to-br from-rose-500 to-amber-600 ring-1.5 ring-rose-400/50">
+                  <div class="w-6.5 h-6.5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs text-white shadow-sm bg-gradient-to-br from-rose-500 to-amber-600 transition-all"
+                       [class.ring-4]="isPlayerFocused(opp.id)"
+                       [class.ring-amber-400]="isPlayerFocused(opp.id)"
+                       [class.scale-110]="isPlayerFocused(opp.id)"
+                       [class.shadow-[0_0_12px_rgba(245,158,11,0.6)]]="isPlayerFocused(opp.id)">
                     {{ avatarChar(opp.nickname || opp.id) }}
                   </div>
+                  @if (isPlayerFocused(opp.id)) {
+                    <span class="absolute -top-2 -right-1 text-xs animate-bounce drop-shadow">👁️</span>
+                  }
                   @if (opp.isHost) {
                     <span class="absolute -bottom-1 -right-1 bg-amber-400 text-slate-900 text-[7px] font-black px-0.5 rounded shadow-sm border border-amber-200 leading-none">
                       👑
@@ -181,21 +244,43 @@
       <div class="block sm:hidden p-2">
         <!-- Row 1: Player VS Opponent Header -->
         <div class="flex items-center justify-between gap-1 mb-1.5">
-          <!-- Left: My Player Mini -->
-          <div class="flex items-center gap-1.5 min-w-0 flex-1">
-            <div class="w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] text-white shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-blue-400">
-              {{ avatarChar(myPlayer.nickname || myPlayer.id) }}
+          <!-- Left: Player 1 Mini -->
+          @if (duelPlayer1(); as p1) {
+            <div class="flex items-center gap-1.5 min-w-0 flex-1 p-1 rounded-xl transition-all"
+                 [class.cursor-pointer]="isSpectator"
+                 (click)="onAvatarClick(p1.id)"
+                 [ngClass]="{
+                   'bg-amber-500/25 border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-md scale-[1.02]': isPlayerFocused(p1.id),
+                   'opacity-60 hover:opacity-95 border border-[var(--color-border-card)]/40': isSpectator && !isPlayerFocused(p1.id)
+                 }">
+              <div class="relative shrink-0">
+                <div class="w-6.5 h-6.5 rounded-full flex items-center justify-center font-black text-[10px] text-white bg-gradient-to-br from-blue-500 to-indigo-600 transition-all"
+                     [class.ring-2]="isPlayerFocused(p1.id)"
+                     [class.ring-amber-400]="isPlayerFocused(p1.id)">
+                  {{ avatarChar(p1.nickname || p1.id) }}
+                </div>
+                @if (isPlayerFocused(p1.id)) {
+                  <span class="absolute -top-1.5 -right-1 text-[9px] animate-bounce drop-shadow">👁️</span>
+                }
+              </div>
+              <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-0.5">
+                  <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[55px]">
+                    {{ p1.nickname || p1.id }}
+                  </span>
+                  @if (isPlayerFocused(p1.id)) {
+                    <span class="text-[7px] font-black px-1 py-0.2 rounded bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs border border-amber-300">🎯导播</span>
+                  }
+                </div>
+              </div>
+              <span class="font-mono font-black text-xs text-blue-600 dark:text-blue-400 shrink-0 ml-auto">
+                {{ isScoreBased() ? (p1.score ?? 0) : (myProgress() + '%') }}
+              </span>
             </div>
-            <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[70px]">
-              {{ myPlayer.nickname || myPlayer.id }}
-            </span>
-            <span class="font-mono font-black text-xs text-blue-600 dark:text-blue-400 shrink-0">
-              {{ isScoreBased() ? (myPlayer.score ?? 0) : (myProgress() + '%') }}
-            </span>
-          </div>
+          }
 
           <!-- Center: VS / Lead Pill -->
-          <div class="flex items-center gap-1 shrink-0 px-1.5">
+          <div class="flex items-center gap-1 shrink-0 px-1">
             @if (targetWins > 1) {
               <span class="font-mono font-black text-xs text-blue-500">{{ myWins() }}</span>
               <span class="text-[10px] font-black text-amber-500">VS</span>
@@ -210,29 +295,46 @@
                 {{ elapsedTime }}
               </span>
             }
-            @if (leadDeltaText()) {
-              <span class="text-[9px] font-bold px-1 rounded"
-                    [ngClass]="{
-                      'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10': leadState() === 'lead',
-                      'text-rose-600 dark:text-rose-400 bg-rose-500/10': leadState() === 'behind',
-                      'text-[var(--color-text-muted)]': leadState() === 'tied'
-                    }">
-                {{ leadDeltaText() }}
-              </span>
+            @if (canSwitchGame()) {
+              <button (click)="openSwitchGame($event)"
+                      class="px-1 py-0.2 rounded text-[8px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/30 transition-all flex items-center gap-0.5 active:scale-95 cursor-pointer"
+                      [title]="i18n.t('game.switch_pk_game')() || '更换对战游戏'">
+                <span>🎮</span>
+              </button>
             }
           </div>
 
-          <!-- Right: Opponent Mini -->
-          @if (primaryOpponent(); as opp) {
-            <div class="flex items-center gap-1.5 min-w-0 flex-1 justify-end">
-              <span class="font-mono font-black text-xs text-rose-500 dark:text-rose-400 shrink-0">
+          <!-- Right: Player 2 Mini -->
+          @if (duelPlayer2(); as opp) {
+            <div class="flex items-center gap-1.5 min-w-0 flex-1 justify-end p-1 rounded-xl transition-all"
+                 [class.cursor-pointer]="isSpectator"
+                 (click)="onAvatarClick(opp.id)"
+                 [ngClass]="{
+                   'bg-amber-500/25 border-2 border-amber-400 ring-2 ring-amber-400/50 shadow-md scale-[1.02]': isPlayerFocused(opp.id),
+                   'opacity-60 hover:opacity-95 border border-[var(--color-border-card)]/40': isSpectator && !isPlayerFocused(opp.id)
+                 }">
+              <span class="font-mono font-black text-xs text-rose-500 dark:text-rose-400 shrink-0 mr-auto">
                 {{ isScoreBased() ? (opp.score ?? 0) : (opponentProgress() + '%') }}
               </span>
-              <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[70px]">
-                {{ opp.nickname || opp.id }}
-              </span>
-              <div class="w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] text-white shrink-0 bg-gradient-to-br from-rose-500 to-amber-600 ring-1 ring-rose-400">
-                {{ avatarChar(opp.nickname || opp.id) }}
+              <div class="flex flex-col min-w-0 items-end">
+                <div class="flex items-center gap-0.5">
+                  @if (isPlayerFocused(opp.id)) {
+                    <span class="text-[7px] font-black px-1 py-0.2 rounded bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs border border-amber-300">🎯导播</span>
+                  }
+                  <span class="text-xs font-black truncate text-[var(--color-text-main)] max-w-[55px]">
+                    {{ opp.nickname || opp.id }}
+                  </span>
+                </div>
+              </div>
+              <div class="relative shrink-0">
+                <div class="w-6.5 h-6.5 rounded-full flex items-center justify-center font-black text-[10px] text-white bg-gradient-to-br from-rose-500 to-amber-600 transition-all"
+                     [class.ring-2]="isPlayerFocused(opp.id)"
+                     [class.ring-amber-400]="isPlayerFocused(opp.id)">
+                  {{ avatarChar(opp.nickname || opp.id) }}
+                </div>
+                @if (isPlayerFocused(opp.id)) {
+                  <span class="absolute -top-1.5 -right-1 text-[9px] animate-bounce drop-shadow">👁️</span>
+                }
               </div>
             </div>
           }
@@ -240,12 +342,12 @@
 
         <!-- Row 2: Symmetrical Duel Progress Bars facing each other -->
         <div class="grid grid-cols-2 gap-1.5">
-          <!-- Left Bar (You) -->
+          <!-- Left Bar (P1) -->
           <div class="w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
             <div class="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-cyan-500 to-blue-600"
                  [style.width.%]="myProgress()"></div>
           </div>
-          <!-- Right Bar (Opponent) -->
+          <!-- Right Bar (P2) -->
           <div class="w-full h-2 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
             <div class="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-amber-500 to-rose-600 ml-auto"
                  [style.width.%]="opponentProgress()"></div>
@@ -262,9 +364,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
       @for (player of allPlayersSorted(); track player.id; let idx = $index) {
         <div class="relative flex items-center gap-2.5 p-2 rounded-xl border transition-all duration-200 overflow-hidden shadow-sm"
+             [class.cursor-pointer]="isSpectator"
+             (click)="onAvatarClick(player.id)"
+             [title]="isSpectator ? (i18n.t('game.click_avatar_to_switch')() || '点击切换视角') : ''"
              [ngClass]="{
-               'border-blue-500/40 bg-blue-500/10 dark:bg-blue-900/20 ring-1 ring-blue-500/20': player.isMe,
-               'border-[var(--color-border-card)] bg-[var(--color-bg-card)]/80': !player.isMe,
+               'border-amber-400 ring-2 ring-amber-400/50 bg-amber-500/10': isSpectator && player.id === focusedPlayerId,
+               'border-blue-500/40 bg-blue-500/10 dark:bg-blue-900/20 ring-1 ring-blue-500/20': !isSpectator && player.isMe,
+               'border-[var(--color-border-card)] bg-[var(--color-bg-card)]/80': !(isSpectator && player.id === focusedPlayerId) && !(!isSpectator && player.isMe),
                'border-emerald-500/50 bg-emerald-500/10': player.isFinished
              }">
           
@@ -285,7 +391,7 @@
           <!-- Avatar -->
           <div class="relative shrink-0">
             <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-inner"
-                 [ngClass]="player.isMe ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-slate-600 to-slate-800'">
+                 [ngClass]="(isSpectator ? player.id === focusedPlayerId : player.isMe) ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-gradient-to-br from-slate-600 to-slate-800'">
               {{ avatarChar(player.nickname || player.id) }}
             </div>
             @if (player.isHost) {
@@ -298,14 +404,16 @@
             <div class="flex items-center justify-between gap-1">
               <span class="text-xs font-bold truncate text-[var(--color-text-main)]" [title]="player.nickname || player.id">
                 {{ player.nickname || player.id }}
-                @if (player.isMe) {
+                @if (isSpectator && player.id === focusedPlayerId) {
+                  <span class="text-[9px] text-amber-500 font-bold ml-1">👁️ {{ i18n.t('game.director_view')() || '导播' }}</span>
+                } @else if (!isSpectator && player.isMe) {
                   <span class="text-[9px] text-blue-500 font-normal">({{ i18n.t('game.pk.me')() || '我' }})</span>
                 }
               </span>
 
               <!-- Value -->
               <span class="font-mono font-black text-xs"
-                    [ngClass]="player.isMe ? 'text-blue-500' : 'text-[var(--color-text-main)]'">
+                    [ngClass]="(isSpectator ? player.id === focusedPlayerId : player.isMe) ? 'text-amber-500' : 'text-[var(--color-text-main)]'">
                 {{ isScoreBased() ? (player.score ?? 0) : ((player.progress ?? 0) + '%') }}
               </span>
             </div>
@@ -313,7 +421,7 @@
             <!-- Mini Progress Bar -->
             <div class="w-full h-1.5 bg-[var(--color-bg-main)] rounded-full overflow-hidden border border-[var(--color-border-card)]">
               <div class="h-full rounded-full transition-all duration-300"
-                   [ngClass]="player.isMe ? 'bg-blue-500' : 'bg-amber-500'"
+                   [ngClass]="(isSpectator ? player.id === focusedPlayerId : player.isMe) ? 'bg-amber-500' : 'bg-blue-500'"
                    [style.width.%]="getPlayerBarWidth(player)"></div>
             </div>
           </div>

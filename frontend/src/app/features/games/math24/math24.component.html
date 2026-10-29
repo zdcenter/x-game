@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'math24'"
+  [immersive]="isHandheld()"
   [title]="i18n.t('lobby.math24')()"
   [subtitle]="getSubtitle()"
   icon="🃏"
@@ -12,9 +13,8 @@
   (difficultyChange)="onDifficultyChange($event)"
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
-  [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished && showOverlay()"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
-  [isLobby]="view() === 'lobby'"
+  [isLobby]="view() === 'lobby' && store.currentRoomMode() === GameMode.Single"
   [customResultTitle]="getGameResultTitle()"
   [overlayStats]="getStats()"
   [showNextLevel]="store.currentRoomMode() === GameMode.Single"
@@ -31,6 +31,71 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  @if (isHandheld()) {
+    <app-game-handheld-header
+      [gameId]="'math24'"
+      [gameTitle]="i18n.t('lobby.math24')() || '24点'"
+      [showBack]="true"
+      [showRules]="true"
+      [showPk]="store.currentRoomMode() === GameMode.Single"
+      (back)="goBack()"
+      (rules)="showRules.set(true)"
+      (pk)="navigateToPkArena()"
+    >
+      @if (view() === 'lobby') {
+        <div class="flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs sm:text-sm">
+          <span>🎯</span>
+          <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
+        </div>
+      } @else {
+        <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+          @if (store.currentRoomMode() === GameMode.Single) {
+            <!-- 关卡编号 -->
+            <button
+              type="button"
+              (click)="view.set('lobby')"
+              class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-500 active:scale-95 transition-all cursor-pointer shrink-0"
+              [title]="i18n.t('lobby.select_level')() || '选择关卡'"
+            >
+              <span class="text-xs sm:text-sm">#</span>
+              <span class="text-xs sm:text-base font-black font-mono leading-tight">
+                {{ store.localLevelIndex() + 1 }}
+              </span>
+            </button>
+
+            <!-- 目标指示 24 -->
+            <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono font-black text-xs sm:text-sm">
+              <span>🎯</span>
+              <span>24</span>
+            </div>
+
+            <!-- 笑脸重置 / 下一题 -->
+            <button
+              type="button"
+              (click)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
+              [title]="i18n.t('game.restart')() || '重新开始'"
+            >
+              {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+            </button>
+
+            <!-- 耗时 -->
+            <div class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
+              <span class="text-xs">⏱️</span>
+              <span class="text-xs sm:text-sm font-mono font-bold text-[var(--color-text-main)]">
+                {{ store.timeSpent() * 1000 | date:'mm:ss' }}
+              </span>
+            </div>
+          } @else {
+            <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
+              <span>⚔️ PK 模式</span>
+            </div>
+          }
+        </div>
+      }
+    </app-game-handheld-header>
+  }
+
   @if (view() === 'lobby') {
     <app-math24-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
       (levelSelect)="startLevel($event)"
@@ -38,8 +103,8 @@
     </app-math24-lobby>
   } @else {
     <!-- PLAY VIEW -->
-    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start">
-      <div class="flex-1 overflow-y-auto relative p-2 lg:p-4 h-full flex flex-col items-center justify-start w-full"
+    <div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-center my-auto">
+      <div class="flex-1 overflow-y-auto relative p-2 lg:p-4 h-full flex flex-col items-center justify-center my-auto w-full"
            style="touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
         <!-- PK Steal Mode -->
         @if (store.currentRoomMode() === GameMode.Steal && store.status() !== GameStatus.Waiting) {
@@ -53,7 +118,7 @@
 
         <!-- Single Player Mode -->
         @if (store.currentRoomMode() === GameMode.Single) {
-          <app-math24-board class="w-full"></app-math24-board>
+          <app-math24-board class="w-full flex-grow flex flex-col justify-center my-auto"></app-math24-board>
         }
       </div>
     </div>
