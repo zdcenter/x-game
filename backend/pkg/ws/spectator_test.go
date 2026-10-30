@@ -113,7 +113,7 @@ func TestSpectatorRoomCleanupWhenContestantsLeave(t *testing.T) {
 	room.AddClient(spectator, "")
 
 	// p1 leaves via action
-	room.HandleMessage("p1", []byte(`{"type":"`+string(domain.ActionLeaveRoom)+`"}`))
+	room.HandleMessage("p1", []byte(`{"action":"`+string(domain.ActionLeaveRoom)+`"}`))
 
 	// Since only spectator remained (0 contestants), the room should be destroyed
 	mu.Lock()
@@ -147,7 +147,7 @@ func TestSpectatorDoesNotBlockStartGame(t *testing.T) {
 	room.AddClient(cctv, "")
 
 	// testPlayer sends ready
-	room.HandleMessage("test", []byte(`{"type":"`+string(domain.ActionReady)+`"}`))
+	room.HandleMessage("test", []byte(`{"action":"`+string(domain.ActionReady)+`"}`))
 	if !testPlayer.IsReady {
 		t.Fatalf("expected test player to be ready")
 	}
@@ -183,7 +183,7 @@ func TestSpectatorDoesNotBlockStartGameAfterChangeGame(t *testing.T) {
 	room.AddClient(cctv, "")
 
 	// Host changes game to sliding
-	changePayload := []byte(`{"type":"` + string(domain.ActionChangeGame) + `","game":"sliding","mode":"speed","difficulty":"easy"}`)
+	changePayload := []byte(`{"action":"` + string(domain.ActionChangeGame) + `","game":"sliding","mode":"speed","difficulty":"easy"}`)
 	room.HandleMessage("admin", changePayload)
 
 	// Verify cctv is NOT added as a contestant in the new sliding engine
@@ -192,7 +192,7 @@ func TestSpectatorDoesNotBlockStartGameAfterChangeGame(t *testing.T) {
 	}
 
 	// test sends ready
-	room.HandleMessage("test", []byte(`{"type":"`+string(domain.ActionReady)+`"}`))
+	room.HandleMessage("test", []byte(`{"action":"`+string(domain.ActionReady)+`"}`))
 
 	// admin sends start
 	room.HandleMessage("admin", []byte(`{"action":"`+string(domain.ActionStartGame)+`"}`))

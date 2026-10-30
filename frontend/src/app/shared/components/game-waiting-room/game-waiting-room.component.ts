@@ -10,6 +10,7 @@ import { FriendService } from '../../../core/services/friend.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
+import { C2SAction } from '../../../core/models/websocket.model';
 import * as QRCode from 'qrcode';
 
 @Component({
@@ -87,7 +88,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     this.difficulty = newDiff;
     this.difficultyChange.emit(newDiff);
     this.ws.send({
-      type: 'change_game',
+      action: C2SAction.ChangeGame,
       roomId: this.roomId,
       game: this.gameId,
       mode: this.mode,

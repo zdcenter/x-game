@@ -67,16 +67,9 @@ func (e *Engine) InitGame(options interface{}) error {
 	e.GlobalStartAt = 0
 	e.Cards = make([]Card, 0)
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok && diff != "" {
-			e.Difficulty = diff
-		}
-		if t, ok := opts["target"].(float64); ok && int(t) > 0 {
-			e.Target = int(t)
-		} else if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
+	e.Target = opts.Target
 
 	return nil
 }
@@ -131,7 +124,7 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 		// 后端单点权威生成牌局，彻底杜绝多端异步或 PRNG 不一致
 		e.Cards = GenerateCards(totalCards, e.Difficulty, e.Seed)
 		e.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			for _, p := range e.Players {
 				p.Score = 0
 				p.Progress = 0

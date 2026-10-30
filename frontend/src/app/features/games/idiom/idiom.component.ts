@@ -276,6 +276,14 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
   // Single Player Solitaire Logic
   // ==========================================
 
+  handleRestartGame() {
+    if (this.pkStore.currentRoomMode() !== GameMode.Single && this.pkRoomId()) {
+      this.pkStore.restartGame();
+    } else {
+      this.startNewSolitaireGame();
+    }
+  }
+
   startNewSolitaireGame() {
     if (!this.engine.loaded) return;
     try {

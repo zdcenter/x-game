@@ -6,7 +6,7 @@ import { CrossGameJoinService } from './cross-game-join.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
 import { GameRegistryService } from './game-registry.service';
-import { S2CEvent, WSErrorCode, WsQueryParam } from '../models/websocket.model';
+import { C2SAction, S2CEvent, WSErrorCode, WsQueryParam, WSActionMessage } from '../models/websocket.model';
 import { createWebSocket, isBrowser } from '../utils/browser.util';
 import { LobbyActivity } from '../models/activity.model';
 
@@ -268,9 +268,9 @@ export class WebSocketService {
           const diffText = this.i18n.t('game.difficulty')() || '游戏难度';
           this.toastService.show(`${diffText}: ${diffName} ✓`, 'info');
         }
-      } else if (msg.type === 'game' && msg.event === S2CEvent.EmojiBroadcast) {
+      } else if (msg.type === S2CEvent.EmojiBroadcast) {
         this.emojiReceivedEvent.set(msg.payload);
-      } else if (msg.type === 'game' && msg.event === S2CEvent.ChatBroadcast) {
+      } else if (msg.type === S2CEvent.ChatBroadcast) {
         this.roomChatReceivedEvent.set(msg.payload);
       } else if (msg.type === S2CEvent.StartRejected) {
         // Host tried to start but was rejected (player not ready / not enough players)
@@ -435,7 +435,11 @@ export class WebSocketService {
     };
   }
 
-  send(action: any) {
+  send(action: WSActionMessage) {
+    if (!action || !action.action) {
+      console.warn('WS send rejected: missing required action field', action);
+      return;
+    }
     if (this.socket && this.isConnected()) {
       this.socket.send(JSON.stringify(action));
     } else {
@@ -444,11 +448,11 @@ export class WebSocketService {
   }
 
   sendEmoji(emoji: string) {
-    this.send({ type: 'game', action: 'emoji', payload: { emoji: emoji } });
+    this.send({ action: C2SAction.Emoji, payload: { emoji: emoji } });
   }
 
   sendRoomChat(text: string) {
-    this.send({ type: 'game', action: 'chat', payload: { text: text } });
+    this.send({ action: C2SAction.Chat, payload: { text: text } });
   }
 
   sendLobby(action: any) {
@@ -519,7 +523,7 @@ export class WebSocketService {
     this.gameHeartbeatInterval = setInterval(() => {
       if (this.socket && this.isConnected()) {
         try {
-          this.socket.send(JSON.stringify({ type: 'ping' }));
+          this.socket.send(JSON.stringify({ action: C2SAction.Ping }));
         } catch {
           // Will be caught by onclose
         }

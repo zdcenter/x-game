@@ -142,28 +142,18 @@ func init() {
 	})
 }
 
-// InitGame 初始化房间对局状态
+// InitGame 初始化房间对局状态 (使用官方标准强类型解析器 engine.ParseGameOptions)
 func (e *Engine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
+	opts := engine.ParseGameOptions(options)
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*Player)
 	e.Winners = make([]string, 0)
 	e.Wins = make(map[string]int)
-	e.Target = 1
-	e.Difficulty = "medium"
-
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok && diff != "" {
-			e.Difficulty = diff
-		}
-		if t, ok := opts["target"].(float64); ok && int(t) > 0 {
-			e.Target = int(t)
-		} else if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		}
-	}
+	e.Target = opts.Target
+	e.Difficulty = string(opts.Difficulty)
 
 	return nil
 }
@@ -205,9 +195,9 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
-	// 1. 通用房主动作处理：开始对局（触发统一 3 秒倒计时）
-	if action == "start" && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+	// 1. 通用房主动作处理：开始对局（使用 BaseEngine.TriggerCountdown 触发统一 3 秒倒计时）
+	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
+		e.TriggerCountdown(func() {
 			// 3 秒倒计时结束、正式变为 StatePlaying 时执行的初始化
 			for _, p := range e.Players {
 				p.Score = 0
@@ -220,7 +210,7 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 	}
 
 	// 2. 通用再来一局动作
-	if action == "restart_game" && e.State == engine.StateFinished {
+	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		// 如果有人已达到 Target，重置大比分；否则保持 wins 累加
 		seriesOver := false
 		for _, w := range e.Wins {
@@ -287,18 +277,12 @@ func (e *Engine) CheckGameOver() (bool, []string) {
 }
 
 // GetState 序列化给全房间客户端广播的状态
+// 推荐直接调用 BaseEngine.StandardStateMap 自动组装标准信封与业务数据
 func (e *Engine) GetState() interface{} {
-	e.Mu.RLock()
-	defer e.Mu.RUnlock()
-
-	return map[string]interface{}{
-		"status":     e.State,
-		"players":    e.Players, // 🚨 确保此为 map 格式
-		"winners":    e.Winners,
-		"wins":       e.Wins,
-		"target":     e.Target,
+	return e.StandardStateMap(e.Players, e.Winners, e.Wins, e.Target, map[string]interface{}{
 		"difficulty": e.Difficulty,
-	}
+		// 挂载新游戏特有的私有数据（如 board, cards, puzzle 等）
+	})
 }
 ```
 
@@ -564,10 +548,17 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
 
 ---
 
+---
+
 ## 六、避坑铁律与发布前核对清单 (Checklist)
 
 | 检查项 | 为什么如此严格？ | 正确操作 |
 |---|---|---|
+| **上行指令单一 `action` 契约** | 严禁模棱两可或混用 `type` 与 `action`；客户端向服务端发送的所有指令必须 100% 统一使用 `action: C2SAction` 字段。 | 客户端必须发送 `{ action: C2SAction.xxx, ... }`；`WebSocketService.send()` 强制强类型守卫校验；服务端 `manager.go` 统一基于 `action` 分发。 |
+| **元数据模式与难度非空契约** | 若 `modes` 或 `difficulties` 留空，局内换游戏、创建房间或等候室解析 `difficulties[0].id` 将触发底层 `TypeError` 崩溃。 | 必须配置至少 1 个 `modes`（必须包含 Single 与至少 1 个 PK 模式）以及至少 1 个 `difficulties`；系统已配置 `GameRegistryService` 黄金守卫防线与 `game-definitions.spec.ts` 自动化单测守护。 |
+| **起跑线棋盘绝对同构** | 若各自独立生成随机种子（如经典 2048），两名选手开局棋盘不同，违背竞技公平。 | 服务端维护 `InitialBoard`，在 `start` 与 `restart_game` 统一生成基准盘面并深拷贝给双方。 |
+| **观战实时镜像与输入阻断** | 若仅上传进度数字 `progress: 3`，观战者看到的棋盘将完全空白或静止；且观战者误触棋盘会干扰视角。 | `LocalEngine` 必须实现 `exportBoardState()` / `loadBoardState(data)`，Store 监听 `focusedPlayerBoardState()` 实时重绘；棋盘容器加 `[class.pointer-events-none]="store.isSpectator()"`。 |
+| **局内棋盘与大厅双向开房** | 玩家在单机棋盘上点击 `⚔️ PK` 时，必须直接唤醒在房抽屉并秒级进入等候室，绝不可报错或跳出页面。 | 模板无条件传 `[store]="store"` 并绑定 `(joinRoom)` 与 `(createRoom)`；`BaseGameComponent` 自动透传 `action: 'create'`。 |
 | **后端 Players 字段格式** | 若使用 `[]string` 切片，前端 `Object.keys()` 会把数组下标 (`0`, `1`) 当作玩家 ID，导致等候室头像错位与皇冠丢失。 | 必须使用 `map[string]*Player` 映射。 |
 | **Blank Import 生成** | 若手动改 `main.go` 容易造成冲突或被覆盖。 | 运行 `cd backend && go generate ./cmd/api/...`。 |
 | **等候室 `[target]` 传递** | 若未向等候室传递 `[target]="store.currentRoomTarget()"`，多人房间的胜局目标（BO3/BO5）无法正常显示。 | 模板必须绑定 `[target]`。 |
@@ -575,3 +566,4 @@ export class MyGameComponent extends BaseGameComponent implements OnInit, OnDest
 | **单机终局存档安全** | 严禁将失败或 Finished 状态的坏局写入本地存储，否则下次进入将出现死局弹窗。 | 状态管理交由 `BaseGameStore` 自动清理。 |
 | **移动端触控防抖** | 棋盘拖拽等手势若无容器约束容易拉动整页。 | 外层外壳交由 `GameLayoutComponent`，舞台在等待时启用 `touch-pan-y`，游玩时由 `BaseGameComponent` 锁定。 |
 | **文档与构建验证** | 每次增加新游戏后必须确保系统文档同步与构建 100% 成功。 | 运行 `cd frontend && npm run build` 以及 `cd backend && go build ./cmd/api/...`。 |
+

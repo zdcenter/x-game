@@ -46,18 +46,23 @@ export class GameSwitchService {
       let targetDiff = difficulty || opts.currentDifficulty || 'medium';
 
       if (targetConfig) {
-        if (!targetConfig.modes.some(m => m.id === targetMode)) {
-          const mpMode = targetConfig.modes.find(m => m.id !== GameMode.Single);
-          targetMode = mpMode ? mpMode.id : targetConfig.modes[0].id;
+        if (targetConfig.modes && targetConfig.modes.length > 0) {
+          if (!targetConfig.modes.some(m => m.id === targetMode)) {
+            const mpMode = targetConfig.modes.find(m => m.id !== GameMode.Single);
+            targetMode = mpMode ? mpMode.id : targetConfig.modes[0].id;
+          }
         }
-        if (!targetConfig.difficulties.some(d => d.id === targetDiff)) {
-          targetDiff = targetConfig.difficulties[0].id;
+        if (targetConfig.difficulties && targetConfig.difficulties.length > 0) {
+          if (!targetConfig.difficulties.some(d => d.id === targetDiff)) {
+            targetDiff = targetConfig.difficulties[0].id;
+          }
+        } else {
+          targetDiff = difficulty || 'medium';
         }
       }
 
       this.ws.send({
         action: C2SAction.ChangeGame,
-        type: C2SAction.ChangeGame,
         roomId: opts.roomId || this.ws.currentRoomId() || this.ws.gameState()?.roomId,
         game: targetGameId,
         mode: targetMode,

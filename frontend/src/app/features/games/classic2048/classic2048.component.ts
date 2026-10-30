@@ -10,7 +10,6 @@ import { GameMode, GameStatus } from '../../../core/models/game.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
-import { GameStatsService } from '../../../core/services/game-stats.service';
 import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
@@ -138,7 +137,6 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   });
 
   override store = inject(Classic2048Store);
-  private statsService = inject(GameStatsService);
   
   bestScore = signal<number>(0);
   scoreDelta = signal<number>(0);
@@ -461,14 +459,10 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
   submitScore() {
     if (this.store.currentRoomMode() === GameMode.Single) {
-      this.statsService.submitStat('classic2048', {
-        mode: GameMode.Single,
-        difficulty: this.store.currentDifficulty(),
+      this.store.finishLocalGame({
         score: this.store.localScore(),
         time: this.timeSeconds,
         won: true
-      }).subscribe(res => {
-        this.store.lastStatResult.set(res);
       });
     }
   }

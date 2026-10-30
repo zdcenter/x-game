@@ -1,12 +1,11 @@
 package watersort
 
 import (
-	"github.com/x-game/backend/internal/domain"
 	"encoding/json"
 	"math/rand"
-	"sync"
 	"time"
 
+	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
 )
 
@@ -36,13 +35,11 @@ type WatersortState struct {
 }
 
 type WatersortEngine struct {
-	mu          sync.Mutex
-	state       *WatersortState
-	difficulty  string
-	mode        string
-	status      engine.GameState
-	startTime   time.Time
-	broadcastFn func()
+	engine.BaseEngine
+	state      *WatersortState
+	difficulty string
+	mode       string
+	startTime  time.Time
 }
 
 func init() {
@@ -52,36 +49,27 @@ func init() {
 }
 
 func NewEngine(mode string) *WatersortEngine {
-	return &WatersortEngine{
+	e := &WatersortEngine{
 		state: &WatersortState{
 			Players: make(map[string]*PlayerState),
 			Status:  "waiting",
 			Winners: []string{},
 		},
-		mode:   mode,
-		status: engine.StateWaiting,
+		mode: mode,
 	}
+	e.State = engine.StateWaiting
+	return e
 }
 
 func (e *WatersortEngine) GetState() interface{} {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	return e.state
 }
 
-func (e *WatersortEngine) GetStatus() engine.GameState {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	return e.status
-}
-
-func (e *WatersortEngine) SetBroadcaster(b func()) {
-	e.broadcastFn = b
-}
-
 func (e *WatersortEngine) AddPlayer(playerID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	if _, exists := e.state.Players[playerID]; !exists {
 		p := &PlayerState{
 			ID:    playerID,
@@ -99,32 +87,27 @@ func (e *WatersortEngine) AddPlayer(playerID string) {
 }
 
 func (e *WatersortEngine) RemovePlayer(playerID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	delete(e.state.Players, playerID)
 }
 
 func (e *WatersortEngine) HasPlayer(playerID string) bool {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 	_, exists := e.state.Players[playerID]
 	return exists
 }
 
 func (e *WatersortEngine) InitGame(options interface{}) error {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 
-	diff := string(domain.DiffEasy)
-	if opts, ok := options.(map[string]interface{}); ok {
-		if d, ok := opts["difficulty"].(string); ok {
-			diff = d
-		}
-	}
-	e.difficulty = diff
+	opts := engine.ParseGameOptions(options)
+	e.difficulty = opts.DiffStr()
 
 	numColors := 5
-	switch diff {
+	switch opts.DiffStr() {
 	case string(domain.DiffEasy):
 		numColors = 5
 	case string(domain.DiffMedium):
@@ -152,11 +135,11 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 
 	if e.mode == string(domain.ModeSingle) {
 		e.state.Status = "playing"
-		e.status = engine.StatePlaying
+		e.State = engine.StatePlaying
 		e.state.Winners = []string{}
 		e.startTime = time.Now()
 	} else {
-		engine.StartWithCountdown(&e.mu, &e.status, e.broadcastFn, func() {
+		e.TriggerCountdown(func() {
 			e.state.Status = "playing"
 			e.state.Winners = []string{}
 			e.startTime = time.Now()
@@ -167,17 +150,24 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 }
 
 func (e *WatersortEngine) CheckGameOver() (bool, []string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	return e.status == engine.StateFinished, e.state.Winners
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	return e.State == engine.StateFinished, e.state.Winners
 }
 
 func (e *WatersortEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
 
-		if engine.HandleLifecycle(&e.status, action, func() {
-		engine.StartWithCountdown(&e.mu, &e.status, e.broadcastFn, func() {
+	var baseReq struct {
+		Action string `json:"action"`
+	}
+	if err := json.Unmarshal(payload, &baseReq); err == nil && baseReq.Action != "" {
+		action = baseReq.Action
+	}
+
+	if engine.HandleLifecycle(&e.State, action, func() {
+		e.TriggerCountdown(func() {
 			e.state.Status = "playing"
 			e.state.Winners = []string{}
 			e.startTime = time.Now()
@@ -185,7 +175,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 	}, func() {
 		e.state.Winners = []string{}
 
-		numColors := 3
+		numColors := 5
 		switch e.difficulty {
 		case string(domain.DiffEasy):
 			numColors = 5
@@ -212,26 +202,24 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		}
 
 		if e.mode == string(domain.ModeSingle) {
-			e.status = engine.StatePlaying
+			e.State = engine.StatePlaying
 			e.state.Status = "playing"
 			e.startTime = time.Now()
 		} else {
-			e.status = engine.StateWaiting
+			e.State = engine.StateWaiting
 			e.state.Status = "waiting"
 		}
 
-		if e.broadcastFn != nil {
-			e.broadcastFn()
-		}
+		e.Broadcast()
 	}) {
-		return e.status, nil
+		return e.State, nil
 	}
 
-	if e.status != engine.StatePlaying {
-		return e.status, nil
+	if e.State != engine.StatePlaying {
+		return e.State, nil
 	}
 
-	if action == "pour" {
+	if action == string(domain.ActionPour) || action == "pour" {
 		var req struct {
 			From int `json:"from"`
 			To   int `json:"to"`
@@ -243,7 +231,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		e.handleRestart(playerID)
 	} else if action == string(domain.ActionForfeit) {
 		e.state.Status = "finished"
-		e.status = engine.StateFinished
+		e.State = engine.StateFinished
 		for id := range e.state.Players {
 			if id != playerID {
 				e.state.Winners = append(e.state.Winners, id)
@@ -251,7 +239,7 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		}
 	}
 
-	return e.status, nil
+	return e.State, nil
 }
 
 func (e *WatersortEngine) handlePour(clientID string, from, to int) {
@@ -296,13 +284,13 @@ func (e *WatersortEngine) handlePour(clientID string, from, to int) {
 			player.Finished = true
 			if e.mode == string(domain.ModeSingle) {
 				e.state.Status = "finished"
-				e.status = engine.StateFinished
+				e.State = engine.StateFinished
 				e.state.Winners = append(e.state.Winners, clientID)
 			} else {
 				if len(e.state.Winners) == 0 {
 					e.state.Winners = append(e.state.Winners, clientID)
 					e.state.Status = "finished"
-					e.status = engine.StateFinished
+					e.State = engine.StateFinished
 				}
 			}
 		}

@@ -58,13 +58,8 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Players = make(map[string]*SpeedPlayer)
 	e.Winners = make([]string, 0)
 
-	e.Difficulty = string(domain.ConnectDifficultyMedium)
-
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
 
 	e.fetchPuzzle()
 
@@ -121,7 +116,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

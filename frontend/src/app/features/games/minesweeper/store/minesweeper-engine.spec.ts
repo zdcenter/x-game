@@ -80,4 +80,23 @@ describe('LocalMinesweeperEngine', () => {
     expect(engine.status).toBe(GameStatus.Finished);
     expect(engine.revealedCnt).toBe(23);
   });
+
+  it('performs Chording correctly when surrounding flags match cell neighbors', () => {
+    // Use tutorial board: mines at (1,1) and (3,2)
+    engine.initTutorialBoard();
+    // Reveal (0,0), neighbors = 1 (since mine is at 1,1)
+    engine.handleAction({ type: MinesweeperActionType.Reveal, x: 0, y: 0 });
+    expect(engine.cells[0][0].state).toBe(CellState.Revealed);
+    expect(engine.cells[0][0].neighbors).toBe(1);
+
+    // Flag the mine at (1,1)
+    engine.handleAction({ type: MinesweeperActionType.Flag, x: 1, y: 1 });
+    expect(engine.cells[1][1].state).toBe(CellState.Flagged);
+
+    // Now neighbors count around (0,0) is 1, and flagged count is 1
+    // Clicking/chording on (0,0) should sweep (1,0) and (0,1)
+    engine.handleAction({ type: MinesweeperActionType.Reveal, x: 0, y: 0 });
+    expect(engine.cells[0][1].state).toBe(CellState.Revealed);
+    expect(engine.cells[1][0].state).toBe(CellState.Revealed);
+  });
 });

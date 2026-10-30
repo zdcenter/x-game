@@ -125,7 +125,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		e.PlayerColors[e.Players[1]] = White
 		e.CurrentTurn = e.Players[0]
 
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

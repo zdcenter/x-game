@@ -625,7 +625,7 @@ export class SudokuStore extends BaseGameStore {
       else if (match[1].includes(GameDifficulty.Hard)) diff = GameDifficulty.Hard;
     }
 
-    this.liveActivity.reportGameResult('sudoku', true, GameMode.Single, diff, undefined, this.timeSpent());
+    this.liveActivity.reportGameResult(this.gameId, true, GameMode.Single, diff, undefined, this.timeSpent());
 
     this.http.post<any>(`${environment.apiUrl}/sudoku/puzzle/${this.currentPuzzleId()}/finish`, {
       time_spent: this.timeSpent(),

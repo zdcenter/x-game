@@ -44,18 +44,9 @@ func (e *LightsoutEngine) InitGame(options interface{}) error {
 	e.Difficulty = string(domain.DiffMedium)
 	e.Size = 5
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-		}
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		} else {
-			e.Target = 1
-		}
-	} else {
-		e.Target = 1
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
+	e.Target = opts.Target
 
 	switch e.Difficulty {
 	case string(domain.DiffEasy):
@@ -164,7 +155,7 @@ func (e *LightsoutEngine) HandleAction(playerID string, action string, payload [
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

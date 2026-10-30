@@ -32,8 +32,65 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
+  <!-- Cockpit Left Wing: Custom board button in standardized difficulty card -->
+  @if (currentRoomMode() === GameMode.Single) {
+    <button cockpit-difficulty-extra
+            (click)="openCustomDialog()"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none"
+            [ngClass]="isCustomDifficulty() ? 'bg-amber-500 text-white shadow-xs' : 'bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)]'">
+      <div class="flex items-center gap-2">
+        <span class="text-base">🛠️</span>
+        <span>{{ i18n.t('game.custom')() || '自定义规格' }}</span>
+      </div>
+      <span class="text-xs font-mono opacity-80">W × H</span>
+    </button>
+  }
+
+  <!-- Cockpit Right Wing: Minesweeper Pro Controls Cheat Sheet (Desktop xl+) -->
+  <div cockpit-right class="flex flex-col gap-3">
+    @if (currentRoomMode() === GameMode.Single) {
+      <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
+        <div class="flex items-center justify-between pb-2 border-b border-[var(--color-border-card)]/60">
+          <span class="text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
+            <span>🖱️</span>
+            <span>{{ i18n.t('minesweeper.controls_title')() || '扫雷操作速查' }}</span>
+          </span>
+          <span class="text-xs font-bold text-cyan-500 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+            {{ i18n.t('minesweeper.quick_chording')() || '双击连扫' }}
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+            <span class="text-lg shrink-0">⛏️</span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-bold text-[var(--color-text-main)]">{{ i18n.t('minesweeper.control_reveal')() || '左键 / 点击' }}</div>
+              <div class="text-xs text-[var(--color-text-muted)] leading-relaxed mt-0.5">{{ i18n.t('minesweeper.control_reveal_desc')() || '翻开安全格，大片空白自动连锁扩展' }}</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+            <span class="text-lg shrink-0">🚩</span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-bold text-[var(--color-text-main)]">{{ i18n.t('minesweeper.control_flag')() || '右键 / 长按' }}</div>
+              <div class="text-xs text-[var(--color-text-muted)] leading-relaxed mt-0.5">{{ i18n.t('minesweeper.control_flag_desc')() || '插旗标记地雷，防止误触翻开' }}</div>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+            <span class="text-lg shrink-0">⚡</span>
+            <div class="min-w-0 flex-1">
+              <div class="text-sm font-bold text-amber-500">{{ i18n.t('minesweeper.control_chord')() || '双击数字 (Chording)' }}</div>
+              <div class="text-xs text-[var(--color-text-secondary)] leading-relaxed mt-0.5">{{ i18n.t('minesweeper.control_chord_desc')() || '周围红旗数达标时，瞬间排开周围未知格！' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
   <div
-    class="relative flex-grow flex flex-col items-center justify-start my-0 min-h-0 overflow-hidden w-full py-0.5 sm:py-1 gap-1"
+    class="relative flex-grow flex flex-col items-center justify-start my-0 min-h-0 overflow-hidden w-full h-full max-h-full py-0.5 sm:py-1 gap-1"
     [class.animate-gold-pulse]="store.status() === GameStatus.Finished && !isDefeat()"
     [class.animate-red-pulse]="store.status() === GameStatus.Finished && isDefeat()">
 
@@ -179,22 +236,40 @@
                 </button>
               </div>
 
-              <!-- Board Zoom Controls (Responsive) -->
-              <div class="flex items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs text-xs font-bold">
+              <!-- Board Zoom Controls (Magnifying Glass Metaphor) -->
+              <div class="flex items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+                <!-- Zoom Out (Magnifying glass with minus) -->
                 <button (click)="zoomOut()" [disabled]="cellSize() <= minCellSize"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
-                        [title]="i18n.t('minesweeper.zoom_out')()">
-                  −
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+                        [title]="i18n.t('minesweeper.zoom_out')() || '缩小棋盘'">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10.5" cy="10.5" r="7"></circle>
+                    <line x1="21" y1="21" x2="15.8" y2="15.8"></line>
+                    <line x1="7.5" y1="10.5" x2="13.5" y2="10.5"></line>
+                  </svg>
                 </button>
+
+                <!-- Zoom Reset & Level Display (Magnifying glass + Percentage) -->
                 <button (click)="resetZoom()"
-                        class="px-2 h-7 rounded-lg flex items-center justify-center font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 transition-all"
-                        [title]="i18n.t('minesweeper.zoom_reset')()">
-                  {{ cellSize() }}px
+                        class="px-2 h-7 rounded-lg flex items-center gap-1 font-mono text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 transition-all cursor-pointer"
+                        [title]="i18n.t('minesweeper.zoom_reset')() || '重置为 100% 原始视野'">
+                  <svg class="w-3.5 h-3.5 text-amber-500 opacity-90 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <span>{{ zoomPercentage() }}%</span>
                 </button>
+
+                <!-- Zoom In (Magnifying glass with plus) -->
                 <button (click)="zoomIn()" [disabled]="cellSize() >= maxCellSize"
-                        class="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
-                        [title]="i18n.t('minesweeper.zoom_in')()">
-                  +
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--color-text-main)] hover:bg-[var(--color-cell-hover)] active:scale-95 disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+                        [title]="i18n.t('minesweeper.zoom_in')() || '放大棋盘'">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="10.5" cy="10.5" r="7"></circle>
+                    <line x1="21" y1="21" x2="15.8" y2="15.8"></line>
+                    <line x1="10.5" y1="7.5" x2="10.5" y2="13.5"></line>
+                    <line x1="7.5" y1="10.5" x2="13.5" y2="10.5"></line>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -247,7 +322,7 @@
 
             <!-- Seamless Game Stage (No nested boxes) -->
             <div #boardContainer
-              class="w-full flex-1 min-h-0 overflow-auto flex p-2 sm:p-4 custom-scrollbar select-none overscroll-contain"
+              class="w-full flex-1 min-h-0 overflow-auto flex p-1 sm:p-2 custom-scrollbar select-none overscroll-contain"
               style="-webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom;"
               (touchstart)="onContainerTouchStart($event)"
               (touchmove)="onContainerTouchMove($event)"
@@ -273,7 +348,7 @@
             </div>
 
             <!-- Actions Toolbar -->
-            <div class="flex-none w-full max-w-[600px] mx-auto relative z-10 shrink-0">
+            <div class="flex-none w-full max-w-[600px] mx-auto relative z-10 shrink-0 pb-0.5 sm:pb-1">
               <app-game-toolbar
                 [layoutStyle]="'compact'"
                 [showPrev]="false"

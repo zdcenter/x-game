@@ -2,6 +2,7 @@
   class="ms-cell-btn flex items-center justify-center font-black select-none focus:outline-none relative"
   [ngClass]="cellClass"
   (click)="onLeftClick($event)"
+  (dblclick)="onDoubleClick($event)"
   (contextmenu)="onRightClick($event)"
   (touchstart)="onTouchStart($event)"
   (touchend)="onTouchEnd($event)"
@@ -10,14 +11,14 @@
 >
   @if (cell.state === CellState.Revealed) {
     @if (cell.neighbors > 0) {
-      <span class="pointer-events-none select-none font-mono font-black leading-none drop-shadow-xs" [ngStyle]="{ 'color': neighborColor }">{{ cell.neighbors }}</span>
+      <span class="pointer-events-none select-none font-sans font-black leading-none drop-shadow-xs tracking-tight" [ngStyle]="{ 'color': neighborColor }">{{ cell.neighbors }}</span>
     }
   } @else if (cell.state === CellState.Exploded) {
-    <span class="animate-bounce pointer-events-none select-none leading-none">💣</span>
+    <span class="animate-bounce pointer-events-none select-none leading-none drop-shadow-md">💣</span>
   } @else if (cell.state === CellState.Flagged) {
-    <span class="drop-shadow-md z-10 pointer-events-none select-none leading-none">🚩</span>
+    <span class="drop-shadow-md z-10 pointer-events-none select-none leading-none ms-flag-icon">🚩</span>
     @if (cell.owner) {
-       <div class="absolute inset-0 bg-green-500/20 animate-pulse pointer-events-none"></div>
+       <div class="absolute inset-0 bg-green-500/20 animate-pulse pointer-events-none rounded-[3px]"></div>
        <span class="absolute -bottom-0.5 right-0.5 text-[9px] font-mono leading-none text-green-300 z-20 pointer-events-none" style="text-shadow: 0 1px 2px black;">
          {{ (cell.owner | slice:0:3) }}
        </span>

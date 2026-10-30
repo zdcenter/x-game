@@ -40,55 +40,48 @@ type PKSpeedStateResponse struct {
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
 	width, height, mines := 16, 16, 40
+	opts := engine.ParseGameOptions(options)
+	e.Target = opts.Target
+	e.PenaltyMs = 3000
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if penalty, ok := opts["penaltySeconds"].(float64); ok {
-			e.PenaltyMs = int64(penalty * 1000)
-		} else if penalty, ok := opts["penaltySeconds"].(int); ok {
-			e.PenaltyMs = int64(penalty * 1000)
-		} else {
-			e.PenaltyMs = 3000
+	if penaltyVal, ok := opts.Raw["penaltySeconds"]; ok {
+		switch p := penaltyVal.(type) {
+		case float64:
+			e.PenaltyMs = int64(p * 1000)
+		case int:
+			e.PenaltyMs = int64(p * 1000)
 		}
+	}
 
-		if diff, ok := opts["difficulty"].(string); ok {
-			if strings.HasPrefix(diff, "custom_") {
-				parts := strings.Split(diff, "_")
-				if len(parts) == 4 {
-					if w, err := strconv.Atoi(parts[1]); err == nil && w > 0 {
-						width = w
-					}
-					if h, err := strconv.Atoi(parts[2]); err == nil && h > 0 {
-						height = h
-					}
-					if m, err := strconv.Atoi(parts[3]); err == nil && m > 0 {
-						mines = m
-					}
-				}
-			} else {
-				switch diff {
-				case string(domain.DiffEasy), "beginner":
-					width, height, mines = 9, 9, 10
-				case string(domain.DiffMedium), "intermediate":
-					width, height, mines = 16, 16, 40
-				case string(domain.DiffHard), "advanced":
-					width, height, mines = 30, 16, 99
-				case string(domain.DiffExpert):
-					width, height, mines = 30, 20, 160
-				case string(domain.DiffMaster):
-					width, height, mines = 30, 24, 230
-				default:
-					width, height, mines = 16, 16, 40
-				}
+	diff := string(opts.Difficulty)
+	if strings.HasPrefix(diff, "custom_") {
+		parts := strings.Split(diff, "_")
+		if len(parts) == 4 {
+			if w, err := strconv.Atoi(parts[1]); err == nil && w > 0 {
+				width = w
+			}
+			if h, err := strconv.Atoi(parts[2]); err == nil && h > 0 {
+				height = h
+			}
+			if m, err := strconv.Atoi(parts[3]); err == nil && m > 0 {
+				mines = m
 			}
 		}
-
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		} else {
-			e.Target = 1
-		}
 	} else {
-		e.Target = 1
+		switch diff {
+		case string(domain.DiffEasy), "beginner":
+			width, height, mines = 9, 9, 10
+		case string(domain.DiffMedium), "intermediate":
+			width, height, mines = 16, 16, 40
+		case string(domain.DiffHard), "advanced":
+			width, height, mines = 30, 16, 99
+		case string(domain.DiffExpert):
+			width, height, mines = 30, 20, 160
+		case string(domain.DiffMaster):
+			width, height, mines = 30, 24, 230
+		default:
+			width, height, mines = 16, 16, 40
+		}
 	}
 
 	e.BaseBoard = NewBoard(width, height, mines)
@@ -185,7 +178,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 				b.StartAt = time.Now().Add(3 * time.Second).UnixMilli()
 			}
 
-			engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+			e.TriggerCountdown(func() {
 				now := time.Now().UnixMilli()
 				x, y := e.BaseBoard.FindSafeStartPoint()
 				for _, b := range e.Boards {
@@ -271,8 +264,15 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 
 	cell := board.Cells[action.Y][action.X]
 
-	if action.Type == "flag" && cell.State == CellFlagged {
+	if action.Action == domain.ActionFlag && cell.State == CellFlagged {
 		cell.State = CellHidden
+		e.Broadcast()
+		return e.State, nil
+	}
+
+	if action.Action == domain.ActionReveal && cell.State == CellRevealed && cell.Neighbors > 0 {
+		e.chordCell(board, playerID, action.X, action.Y)
+		e.checkWinCondition(playerID)
 		e.Broadcast()
 		return e.State, nil
 	}
@@ -281,8 +281,8 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		return e.State, errors.New("cell already processed")
 	}
 
-	switch action.Type {
-	case "reveal":
+	switch action.Action {
+	case domain.ActionReveal:
 		if cell.IsMine {
 			cell.State = CellExploded
 			e.Errors[playerID]++
@@ -291,7 +291,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		} else {
 			e.revealCell(board, action.X, action.Y)
 		}
-	case "flag":
+	case domain.ActionFlag:
 		if cell.IsMine {
 			cell.State = CellFlagged
 			// Fix: Do not increment RevealedCnt on flag, otherwise players win early
@@ -330,6 +330,53 @@ func (e *SpeedEngine) revealCell(b *Board, x, y int) {
 			if b.isValid(nx, ny) {
 				e.revealCell(b, nx, ny)
 			}
+		}
+	}
+}
+
+func (e *SpeedEngine) chordCell(b *Board, playerID string, x, y int) {
+	cell := b.Cells[y][x]
+	if cell.State != CellRevealed || cell.Neighbors <= 0 {
+		return
+	}
+
+	dirs := []struct{ dx, dy int }{
+		{-1, -1}, {0, -1}, {1, -1},
+		{-1, 0}, {1, 0},
+		{-1, 1}, {0, 1}, {1, 1},
+	}
+
+	flaggedCount := 0
+	type point struct{ x, y int }
+	var hiddenNeighbors []point
+
+	for _, d := range dirs {
+		nx, ny := x+d.dx, y+d.dy
+		if b.isValid(nx, ny) {
+			neighbor := b.Cells[ny][nx]
+			if neighbor.State == CellFlagged {
+				flaggedCount++
+			} else if neighbor.State == CellHidden {
+				hiddenNeighbors = append(hiddenNeighbors, point{nx, ny})
+			}
+		}
+	}
+
+	if flaggedCount == cell.Neighbors && len(hiddenNeighbors) > 0 {
+		hasExploded := false
+		for _, pt := range hiddenNeighbors {
+			neighbor := b.Cells[pt.y][pt.x]
+			if neighbor.IsMine {
+				neighbor.State = CellExploded
+				hasExploded = true
+			} else {
+				e.revealCell(b, pt.x, pt.y)
+			}
+		}
+		if hasExploded {
+			e.Errors[playerID]++
+			penalty := e.PenaltyMs + int64(e.Errors[playerID]-1)*2000
+			e.Cooldowns[playerID] = time.Now().UnixMilli() + penalty
 		}
 	}
 }

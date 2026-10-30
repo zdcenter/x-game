@@ -125,17 +125,16 @@ export class WindowSizeService {
     }
 
     const docEl = document.documentElement;
-    const body = document.body;
 
-    const winW = window.innerWidth || 0;
-    const docW = docEl?.clientWidth || 0;
-    const bodyW = body?.clientWidth || 0;
-    const w = Math.max(winW, docW, bodyW) || 1024;
+    // Use window.visualViewport if available (authoritative visible area on iOS/iPadOS Safari & Android Chrome)
+    // Fall back to window.innerWidth / window.innerHeight, then docEl.clientWidth / docEl.clientHeight.
+    // CRITICAL: NEVER include body.clientHeight or docEl.scrollHeight as they represent scrollable content!
+    const vp = window.visualViewport;
+    const winW = (vp && vp.width > 0) ? Math.round(vp.width) : (window.innerWidth || docEl?.clientWidth || 1024);
+    const winH = (vp && vp.height > 0) ? Math.round(vp.height) : (window.innerHeight || docEl?.clientHeight || 768);
 
-    const winH = window.innerHeight || 0;
-    const docH = docEl?.clientHeight || 0;
-    const bodyH = body?.clientHeight || 0;
-    const h = Math.max(winH, docH, bodyH) || 768;
+    const w = Math.max(200, winW);
+    const h = Math.max(200, winH);
 
     return { w, h };
   }

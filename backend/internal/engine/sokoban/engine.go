@@ -86,15 +86,9 @@ func (e *SokobanEngine) InitGame(options interface{}) error {
 
 	e.State = engine.StateWaiting
 
-	opts, ok := options.(map[string]interface{})
-	if ok {
-		if m, ok := opts["mode"].(string); ok {
-			e.Mode = m
-		}
-		if d, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = d
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Mode = opts.ModeStr()
+	e.Difficulty = opts.DiffStr()
 
 	if e.Difficulty == "" {
 		e.Difficulty = string(domain.DiffEasy)
@@ -168,9 +162,9 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 		return e.State, fmt.Errorf("player not found")
 	}
 
-	if actionType == "start" && e.State == engine.StateWaiting {
+	if actionType == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
 		e.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			e.GlobalStartAt = time.Now().UnixMilli()
 			for _, player := range e.Players {
 				player.Board = copyBoard(e.LevelMap)

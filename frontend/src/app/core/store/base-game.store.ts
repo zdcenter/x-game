@@ -248,6 +248,30 @@ export abstract class BaseGameStore implements GameStoreInterface {
   });
 
   /**
+   * 导播当前焦点的选手对象 (PlayerInfo)
+   */
+  readonly focusedPlayer = computed<any>(() => {
+    const focusId = this.focusedPlayerId();
+    const map = this.roomPlayersMap();
+    if (focusId && map[focusId]) {
+      return map[focusId];
+    }
+    const list = this.roomPlayers();
+    return list.length > 0 ? list[0] : null;
+  });
+
+  /**
+   * 导播当前焦点选手的棋盘/走法/连线状态数据 (State / Board / Bridges / Paths)
+   * 供观战视图一键载入镜像，实现全平台统一的毫秒级观战同步
+   */
+  readonly focusedPlayerBoardState = computed<any>(() => {
+    const p = this.focusedPlayer();
+    if (!p) return null;
+    return p.state ?? p.board ?? p.paths ?? p.bridges ?? null;
+  });
+
+
+  /**
    * 统一房间快照：将 room.players 强制规范化为标准数组，同时挂载 room.playersMap 提供 O(1) 检索
    */
   readonly room = computed<any>(() => {
@@ -403,7 +427,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }
 
     if (this.currentRoomMode() !== GameMode.Single) {
-      this.ws.send({ type: C2SAction.LeaveRoom });
+      this.ws.send({ action: C2SAction.LeaveRoom });
     }
     // Give it a tiny delay to ensure the message is sent before the connection closes
     setTimeout(() => {
@@ -434,7 +458,6 @@ export abstract class BaseGameStore implements GameStoreInterface {
       return;
     }
     this.ws.send({
-      type: MessageType.Room,
       action: C2SAction.RestartGame
     });
   }
@@ -447,18 +470,17 @@ export abstract class BaseGameStore implements GameStoreInterface {
     let targetDiff = difficulty || (this.currentDifficulty() as string);
     
     if (targetConfig) {
-       if (!targetConfig.modes.some(m => m.id === targetMode)) {
-         const mpMode = targetConfig.modes.find(m => m.id !== GameMode.Single);
-         targetMode = mpMode ? mpMode.id : targetConfig.modes[0].id;
-       }
-       if (!targetConfig.difficulties.some(d => d.id === targetDiff)) {
-         targetDiff = targetConfig.difficulties[0].id;
-       }
+      if (targetConfig.modes && targetConfig.modes.length > 0 && !targetConfig.modes.some(m => m.id === targetMode)) {
+        const mpMode = targetConfig.modes.find(m => m.id !== GameMode.Single);
+        targetMode = mpMode ? mpMode.id : targetConfig.modes[0].id;
+      }
+      if (targetConfig.difficulties && targetConfig.difficulties.length > 0 && !targetConfig.difficulties.some(d => d.id === targetDiff)) {
+        targetDiff = targetConfig.difficulties[0].id;
+      }
     }
 
     this.ws.send({
       action: C2SAction.ChangeGame,
-      type: C2SAction.ChangeGame,
       game: targetGameId,
       mode: targetMode,
       difficulty: targetDiff
@@ -484,20 +506,20 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected onSinglePlayerRestart() {}
 
   dismissRoom() {
-    this.ws.send({ type: C2SAction.DismissRoom });
+    this.ws.send({ action: C2SAction.DismissRoom });
     this.leaveRoom();
   }
 
   ready() {
-    this.ws.send({ type: C2SAction.Ready });
+    this.ws.send({ action: C2SAction.Ready });
   }
 
   cancelReady() {
-    this.ws.send({ type: C2SAction.CancelReady });
+    this.ws.send({ action: C2SAction.CancelReady });
   }
 
   kickPlayer(playerId: string) {
-    this.ws.send({ type: C2SAction.KickPlayer, target: playerId });
+    this.ws.send({ action: C2SAction.KickPlayer, target: playerId });
   }
 
   // ── 统计辅助方法 ──────────────────────────────────────────────────────────
@@ -508,10 +530,10 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   /**
-   * 提交单机模式统计，自动填入 gameId / mode / difficulty。
+   * 提交单机模式统计并结算，自动填入 gameId / mode / difficulty。
    * 子类只需传入游戏特有的 score / time / won。
    */
-  protected submitSingleStat(payload: { score?: number; time?: number; won?: boolean } = {}): Observable<SubmitStatResponse> {
+  submitSingleStat(payload: { score?: number; time?: number; won?: boolean } = {}): Observable<SubmitStatResponse> {
     this.lastStatResult.set(null);
     const won = payload.won ?? true;
 
@@ -542,6 +564,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
         }
       })
     );
+  }
+
+  /**
+   * 标准化结束本地单机游戏：自动提交单机成绩、更新成就和代币。
+   */
+  finishLocalGame(payload: { score?: number; time?: number; won?: boolean } = {}): void {
+    this.submitSingleStat(payload).subscribe();
   }
 
   /**

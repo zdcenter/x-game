@@ -77,7 +77,7 @@ func TestChangeGameCrossGameReconnect(t *testing.T) {
 	room.HandleMessage("host-user", changeMsg)
 
 	// Both clients unmount from old page and trigger RemoveClient or ActionLeaveRoom
-	room.HandleMessage("guest-user", []byte(`{"type":"leave_game"}`))
+	room.HandleMessage("guest-user", []byte(`{"action":"leave_game"}`))
 	room.RemoveClient(guestClient)
 	room.RemoveClient(hostClient)
 

@@ -1,7 +1,7 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
 import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
-import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -47,6 +47,14 @@ export class SokobanLobbyComponent implements OnInit {
 
   @Output() openLobby = new EventEmitter<void>();
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, difficulty: string, levelNum: number}>();
+  @Output() difficultyChange = new EventEmitter<string>();
+
+  @Input() set currentDifficulty(val: string | undefined) {
+    if (val && val !== this.activeTab()) {
+      this.activeTab.set(val);
+      this.loadLevels(val);
+    }
+  }
 
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_sokoban_beginner', desc: 'A gentle start' },
@@ -66,6 +74,7 @@ export class SokobanLobbyComponent implements OnInit {
   selectDifficulty(diff: string) {
     setSavedDifficulty('sokoban', diff);
     this.activeTab.set(diff);
+    this.difficultyChange.emit(diff);
     this.loadLevels(diff);
   }
 

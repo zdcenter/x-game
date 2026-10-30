@@ -30,31 +30,30 @@ func init() {
 
 // Action structure for incoming payloads
 type PlayerAction struct {
-	Type string `json:"type"` // "reveal" or "flag"
-	X    int    `json:"x"`
-	Y    int    `json:"y"`
+	Action domain.C2SAction `json:"action"` // unified domain.C2SAction type
+	X      int              `json:"x"`
+	Y      int              `json:"y"`
 }
 
 func (e *MinesweeperEngine) InitGame(options interface{}) error {
 	// Default to medium
 	width, height, mines := 16, 16, 40
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if modeOpt, ok := opts["mode"].(string); ok {
-			e.Mode = modeOpt
-		} else {
-			e.Mode = string(domain.ModeSingle)
-		}
-		if penalty, ok := opts["penaltySeconds"].(float64); ok {
-			e.PenaltyMs = int64(penalty * 1000)
-		} else if penalty, ok := opts["penaltySeconds"].(int); ok {
-			e.PenaltyMs = int64(penalty * 1000)
-		} else {
-			e.PenaltyMs = 3000
-		}
+	opts := engine.ParseGameOptions(options)
+	e.Mode = string(opts.Mode)
+	e.PenaltyMs = 3000
 
-		if diff, ok := opts["difficulty"].(string); ok {
-			if strings.HasPrefix(diff, "custom_") {
+	if penaltyVal, ok := opts.Raw["penaltySeconds"]; ok {
+		switch p := penaltyVal.(type) {
+		case float64:
+			e.PenaltyMs = int64(p * 1000)
+		case int:
+			e.PenaltyMs = int64(p * 1000)
+		}
+	}
+
+	diff := string(opts.Difficulty)
+	if strings.HasPrefix(diff, "custom_") {
 				parts := strings.Split(diff, "_")
 				if len(parts) == 4 {
 					if w, err := strconv.Atoi(parts[1]); err == nil && w > 0 {
@@ -83,8 +82,6 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 					width, height, mines = 16, 16, 40
 				}
 			}
-		}
-	}
 
 	e.Board = NewBoard(width, height, mines)
 	e.Scores = make(map[string]int)
@@ -92,12 +89,10 @@ func (e *MinesweeperEngine) InitGame(options interface{}) error {
 	e.Errors = make(map[string]int)
 
 	// Determine if we should start in waiting mode
-	if opts, ok := options.(map[string]interface{}); ok {
-		if mode, ok := opts["mode"].(string); ok && mode != string(domain.ModeSingle) {
-			e.State = engine.StateWaiting
-			e.Board.Status = engine.StateWaiting // Keep Board status sync
-			e.Board.GenerateMines(-1, -1)
-		}
+	if opts.Mode != domain.ModeSingle {
+		e.State = engine.StateWaiting
+		e.Board.Status = engine.StateWaiting // Keep Board status sync
+		e.Board.GenerateMines(-1, -1)
 	}
 
 	return nil
@@ -115,7 +110,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 	}
 	if err := json.Unmarshal(payload, &baseAction); err == nil {
 		if baseAction.Action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-			engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+			e.TriggerCountdown(func() {
 				e.Board.Status = engine.StatePlaying
 				e.Board.StartAt = time.Now().UnixMilli()
 				x, y := e.Board.FindSafeStartPoint()
@@ -173,7 +168,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 
 	cell := e.Board.Cells[action.Y][action.X]
 
-	if action.Type == "flag" && cell.State == CellFlagged {
+	if action.Action == domain.ActionFlag && cell.State == CellFlagged {
 		if e.Mode == string(domain.ModeSingle) || cell.Owner == playerID {
 			cell.State = CellHidden
 			if cell.Owner == playerID && e.Scores[playerID] > 0 {
@@ -190,8 +185,8 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 		return e.State, errors.New("cell already processed")
 	}
 
-	switch action.Type {
-	case "reveal":
+	switch action.Action {
+	case domain.ActionReveal:
 		if !e.Board.IsMinesPlaced && e.Mode == string(domain.ModeSingle) {
 			e.Board.GenerateMines(action.X, action.Y)
 		}
@@ -213,7 +208,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 		} else {
 			e.revealCell(action.X, action.Y)
 		}
-	case "flag":
+	case domain.ActionFlag:
 		if cell.IsMine {
 			// Successfully defused a mine!
 			cell.State = CellFlagged

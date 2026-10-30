@@ -68,22 +68,24 @@ import (
 	"github.com/x-game/backend/internal/engine"
 )
 
-// Player 玩家实时竞技状态
+// Player 玩家实时竞技状态与观战镜像数据
 type Player struct {
-	ID       string \`json:"id"\`
-	Score    int    \`json:"score"\`
-	Progress int    \`json:"progress"\`
-	Finished bool   \`json:"finished"\`
+	ID       string      \`json:"id"\`
+	Score    int         \`json:"score"\`
+	Progress int         \`json:"progress"\`
+	Finished bool        \`json:"finished"\`
+	State    interface{} \`json:"state,omitempty"\` // 供观战者实时镜像同步的棋盘/走法数据
 }
 
 // Engine 组合嵌入 BaseEngine
 type Engine struct {
 	engine.BaseEngine
-	Players    map[string]*Player \`json:"players"\`
-	Difficulty string             \`json:"difficulty"\`
-	Winners    []string           \`json:"winners"\`
-	Wins       map[string]int     \`json:"wins"\`
-	Target     int                \`json:"target"\`
+	Players      map[string]*Player \`json:"players"\`
+	InitialBoard interface{}        \`json:"initial_board,omitempty"\` // 权威公平初始发牌基准
+	Difficulty   string             \`json:"difficulty"\`
+	Winners      []string           \`json:"winners"\`
+	Wins         map[string]int     \`json:"wins"\`
+	Target       int                \`json:"target"\`
 }
 
 func init() {
@@ -100,23 +102,13 @@ func (e *Engine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
+	opts := engine.ParseGameOptions(options)
 	e.State = engine.StateWaiting
 	e.Players = make(map[string]*Player)
 	e.Winners = make([]string, 0)
 	e.Wins = make(map[string]int)
-	e.Target = 1
-	e.Difficulty = "medium"
-
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok && diff != "" {
-			e.Difficulty = diff
-		}
-		if t, ok := opts["target"].(float64); ok && int(t) > 0 {
-			e.Target = int(t)
-		} else if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		}
-	}
+	e.Target = opts.Target
+	e.Difficulty = string(opts.Difficulty)
 
 	return nil
 }
@@ -131,6 +123,7 @@ func (e *Engine) AddPlayer(playerID string) {
 			Score:    0,
 			Progress: 0,
 			Finished: false,
+			State:    e.InitialBoard,
 		}
 	}
 	if _, exists := e.Wins[playerID]; !exists {
@@ -158,13 +151,16 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
-	// 1. 房主点击开始对战：触发统一 3 秒倒计时
-	if action == "start" && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+	// 1. 房主点击开始对战：触发统一 3 秒倒计时，并权威统一分发相同初始盘面
+	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
+		e.TriggerCountdown(func() {
+			fairBoard := map[string]interface{}{"seed": 100}
+			e.InitialBoard = fairBoard
 			for _, p := range e.Players {
 				p.Score = 0
 				p.Progress = 0
 				p.Finished = false
+				p.State = fairBoard
 			}
 			e.Winners = make([]string, 0)
 		})
@@ -172,24 +168,18 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 	}
 
 	// 2. 再来一局 (Rematch) 动作
-	if action == "restart_game" && e.State == engine.StateFinished {
-		seriesOver := false
-		for _, w := range e.Wins {
-			if w >= e.Target {
-				seriesOver = true
-				break
-			}
-		}
-		if seriesOver {
-			for p := range e.Wins {
-				e.Wins[p] = 0
-			}
+	if action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
+		if over, _ := engine.CheckSeriesWinner(e.Wins, e.Target); over {
+			engine.ResetSeriesWins(e.Wins)
 		}
 
+		fairBoard := map[string]interface{}{"seed": 200}
+		e.InitialBoard = fairBoard
 		for _, p := range e.Players {
 			p.Score = 0
 			p.Progress = 0
 			p.Finished = false
+			p.State = fairBoard
 		}
 		e.Winners = make([]string, 0)
 		e.State = engine.StateWaiting
@@ -199,13 +189,17 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 	// 3. 对战进行中动作
 	if e.State == engine.StatePlaying {
 		switch action {
-		case "move":
+		case "move", "progress":
 			var req struct {
-				Delta int \`json:"delta"\`
+				Delta int         \`json:"delta"\`
+				State interface{} \`json:"state"\`
 			}
 			if err := json.Unmarshal(payload, &req); err == nil {
 				if p, exists := e.Players[playerID]; exists {
 					p.Score += req.Delta
+					if req.State != nil {
+						p.State = req.State
+					}
 					if p.Score >= 100 {
 						p.Finished = true
 						e.Winners = []string{playerID}
@@ -236,19 +230,12 @@ func (e *Engine) CheckGameOver() (bool, []string) {
 	return e.State == engine.StateFinished, e.Winners
 }
 
-// GetState 状态序列化广播
+// GetState 状态序列化广播 (基于 BaseEngine.StandardStateMap 标准信封组装)
 func (e *Engine) GetState() interface{} {
-	e.Mu.RLock()
-	defer e.Mu.RUnlock()
-
-	return map[string]interface{}{
-		"status":     e.State,
-		"players":    e.Players,
-		"winners":    e.Winners,
-		"wins":       e.Wins,
-		"target":     e.Target,
-		"difficulty": e.Difficulty,
-	}
+	return e.StandardStateMap(e.Players, e.Winners, e.Wins, e.Target, map[string]interface{}{
+		"initial_board": e.InitialBoard,
+		"difficulty":    e.Difficulty,
+	})
 }
 `;
   fs.writeFileSync(backendEngineFile, engineGoContent, 'utf-8');
@@ -315,6 +302,21 @@ export class Local${pascalName}Engine implements ILocalEngine<any, ${pascalName}
 
   getState() {
     return this;
+  }
+
+  /** 导出当前棋盘/选手数据，供 WebSocket 上报与观战广播 */
+  exportBoardState() {
+    return {
+      score: this.score,
+      moves: this.moves
+    };
+  }
+
+  /** 载入外部选手的棋盘数据，供观战模式毫秒级实时镜像 */
+  loadBoardState(data: any): void {
+    if (!data) return;
+    if (typeof data.score === 'number') this.score = data.score;
+    if (typeof data.moves === 'number') this.moves = data.moves;
   }
 }
 `;
@@ -399,6 +401,21 @@ export class ${pascalName}Store extends BaseGameStore {
     return eng && eng.status === GameStatus.Finished && eng.score >= 100 ? [this.playerId()] : [];
   });
 
+  constructor() {
+    super();
+
+    // 观战实时镜像同步：自动跟随导播焦点选手盘面
+    effect(() => {
+      if (this.isSpectator()) {
+        const boardState = this.focusedPlayerBoardState();
+        if (boardState && this.localEngine()) {
+          this.localEngine()?.loadBoardState?.(boardState);
+          this.tick.update(t => t + 1);
+        }
+      }
+    });
+  }
+
   protected override onResetLocalGameState(): void {
     // 自动清理本地临时状态（防幽灵状态契约）
   }
@@ -429,19 +446,23 @@ export class ${pascalName}Store extends BaseGameStore {
   }
 
   makeMove(delta = 10) {
-    if (this.status() !== GameStatus.Playing) return;
+    if (this.status() !== GameStatus.Playing || this.isSpectator()) return;
 
-    if (this.currentRoomMode() === GameMode.Single) {
-      const eng = this.localEngine();
-      if (eng) {
-        eng.handleAction({ type: 'move', delta });
-        this.tick.set(this.tick() + 1);
-        if (eng.status === GameStatus.Finished) {
-          this.submitSingleStat({ score: eng.score, won: true }).subscribe();
-        }
+    const eng = this.localEngine();
+    if (eng) {
+      eng.handleAction({ type: 'move', delta });
+      this.tick.set(this.tick() + 1);
+      if (this.currentRoomMode() === GameMode.Single && eng.status === GameStatus.Finished) {
+        this.submitSingleStat({ score: eng.score, won: true }).subscribe();
       }
-    } else {
-      this.ws.send({ type: C2SAction.Move, delta });
+    }
+
+    if (this.currentRoomMode() !== GameMode.Single) {
+      this.ws.send({
+        action: C2SAction.Progress,
+        delta,
+        state: this.localEngine()?.exportBoardState?.()
+      });
     }
   }
 }
@@ -594,7 +615,15 @@ if (!fs.existsSync(htmlFile)) {
     }
 
     <!-- Game Core Board Area -->
-    <div class="relative flex-grow flex flex-col items-center justify-center my-auto min-h-0 w-full max-w-md p-6 bg-[var(--color-bg-card)] rounded-3xl border border-[var(--color-border-card)] shadow-xl">
+    <div class="relative flex-grow flex flex-col items-center justify-center my-auto min-h-0 w-full max-w-md p-6 bg-[var(--color-bg-card)] rounded-3xl border border-[var(--color-border-card)] shadow-xl"
+         [class.pointer-events-none]="store.isSpectator()">
+      @if (store.isSpectator()) {
+        <div class="mb-3 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+          <span>👁️</span>
+          <span>{{ i18n.t('game.spectating')() || '观战视角 · 实时同步中' }}</span>
+        </div>
+      }
+
       <div class="text-6xl mb-4 select-none animate-bounce">${iconEmoji}</div>
       <div class="text-xl font-bold text-[var(--color-text-main)] mb-2">
         {{ i18n.t('lobby.${gameId}')() }}
@@ -603,12 +632,14 @@ if (!fs.existsSync(htmlFile)) {
         Score: {{ store.localScore() }} | Moves: {{ store.localMoves() }}
       </div>
 
-      <button
-        type="button"
-        (click)="store.makeMove(10); vibrateLight()"
-        class="w-full py-4 rounded-2xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-lg shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
-        Tap to Play (+10)
-      </button>
+      @if (!store.isSpectator()) {
+        <button
+          type="button"
+          (click)="store.makeMove(10); vibrateLight()"
+          class="w-full py-4 rounded-2xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-black text-lg shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer">
+          Tap to Play (+10)
+        </button>
+      }
     </div>
 
     <!-- Bottom Toolbar -->

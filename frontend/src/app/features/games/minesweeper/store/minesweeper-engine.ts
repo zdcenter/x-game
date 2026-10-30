@@ -90,6 +90,10 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     }
 
     const cell = this.cells[y][x] as any; // Type casting to access internal isMine
+    if (cell.state === CellState.Revealed && cell.neighbors > 0) {
+      this.chordCell(x, y);
+      return;
+    }
     if (cell.state !== CellState.Hidden) {
       return;
     }
@@ -110,6 +114,59 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
 
     this.floodFillReveal(x, y);
     this.checkWinCondition();
+  }
+
+  chordCell(x: number, y: number) {
+    if (this.status === GameStatus.Finished || !this.isValid(x, y)) {
+      return;
+    }
+
+    const cell = this.cells[y][x];
+    if (cell.state !== CellState.Revealed || cell.neighbors <= 0) {
+      return;
+    }
+
+    let flaggedCount = 0;
+    const hiddenNeighbors: { x: number; y: number }[] = [];
+
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = x + dx;
+        const ny = y + dy;
+        if (this.isValid(nx, ny)) {
+          const neighbor = this.cells[ny][nx];
+          if (neighbor.state === CellState.Flagged) {
+            flaggedCount++;
+          } else if (neighbor.state === CellState.Hidden) {
+            hiddenNeighbors.push({ x: nx, y: ny });
+          }
+        }
+      }
+    }
+
+    // Only chord if flagged count matches neighbor number and there are hidden cells to sweep
+    if (flaggedCount === cell.neighbors && hiddenNeighbors.length > 0) {
+      let exploded = false;
+      for (const pos of hiddenNeighbors) {
+        const neighbor = this.cells[pos.y][pos.x] as any;
+        if (neighbor.isMine) {
+          neighbor.state = CellState.Exploded;
+          this.lastFailedCell = { x: pos.x, y: pos.y };
+          exploded = true;
+        } else {
+          this.floodFillReveal(pos.x, pos.y);
+        }
+      }
+
+      if (exploded) {
+        this.status = GameStatus.Finished;
+        this.revealAllMines();
+        return;
+      }
+
+      this.checkWinCondition();
+    }
   }
 
   toggleFlag(x: number, y: number) {

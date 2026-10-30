@@ -65,12 +65,26 @@ export class CellComponent {
         // Safe unflag: clicking a flagged cell with mouse removes the flag without revealing!
         this.flag.emit();
         this.haptic.vibrateSnap();
+      } else if (this.cell.state === CellState.Revealed) {
+        // Clicking a revealed number: trigger chord if satisfied
+        this.reveal.emit();
+        if (this.cell.neighbors > 0) {
+          this.haptic.vibrateLight();
+        }
       } else if (this.actionMode === 'flag') {
         this.flag.emit();
         this.haptic.vibrateSnap();
       } else {
         this.reveal.emit();
       }
+    }
+  }
+
+  onDoubleClick(event: MouseEvent) {
+    event.preventDefault();
+    if (this.cell.state === CellState.Revealed && this.cell.neighbors > 0) {
+      this.reveal.emit();
+      this.haptic.vibrateLight();
     }
   }
 
@@ -163,6 +177,10 @@ export class CellComponent {
         // 短按已插旗格子：安全取消插旗
         this.flag.emit();
         this.haptic.vibrateSnap();
+      } else if (this.cell.state === CellState.Revealed) {
+        // 短按已翻开数字格：触发双击/连击排雷 (Chording)
+        this.reveal.emit();
+        this.haptic.vibrateLight();
       } else if (this.actionMode === 'flag') {
         // 插旗模式下短按未翻开格子：插旗
         this.flag.emit();

@@ -606,55 +606,62 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		return
 	}
 
-	if senderClient.IsSpectator {
-		var baseMsg map[string]interface{}
-		if err := json.Unmarshal(payload, &baseMsg); err == nil {
-			msgType, _ := baseMsg["type"].(string)
-			act, _ := baseMsg["action"].(string)
+	var baseMsg map[string]interface{}
+	if err := json.Unmarshal(payload, &baseMsg); err != nil {
+		log.Printf("Invalid JSON payload from %s: %v", clientID, err)
+		return
+	}
 
-			if msgType == string(domain.ActionPing) {
-				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
-				return
-			}
-			if msgType == string(domain.ActionLeaveRoom) {
-				delete(r.Clients, clientID)
-				senderClient.Close()
-				r.BroadcastStateLocked()
-				go Lobby.BroadcastLobbyUpdate()
-				return
-			}
-			if act == string(domain.ActionEmoji) || msgType == string(domain.ActionEmoji) {
-				var emojiMsg struct {
-					Payload struct {
-						Emoji string `json:"emoji"`
-					} `json:"payload"`
-				}
-				if err := json.Unmarshal(payload, &emojiMsg); err == nil {
-					broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "emoji": "%s"}}`,
-						"game", domain.EventEmoji, clientID, emojiMsg.Payload.Emoji))
-					for _, c := range r.Clients {
-						c.WriteMessage(websocket.TextMessage, broadcastMsg)
-					}
-				}
-				return
-			}
-			if act == string(domain.ActionChat) || msgType == string(domain.ActionChat) {
-				var chatMsg struct {
-					Payload struct {
-						Text string `json:"text"`
-					} `json:"payload"`
-				}
-				if err := json.Unmarshal(payload, &chatMsg); err == nil {
-					broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "text": "%s"}}`,
-						"game", domain.EventChat, clientID, chatMsg.Payload.Text))
-					for _, c := range r.Clients {
-						c.WriteMessage(websocket.TextMessage, broadcastMsg)
-					}
-				}
-				return
-			}
+	// 统一协议标准：所有客户端上行指令必须严格使用 action 字段
+	action, _ := baseMsg["action"].(string)
+	if action == "" {
+		log.Printf("Ignored non-compliant message without action field from %s", clientID)
+		return
+	}
+
+	if senderClient.IsSpectator {
+		if action == string(domain.ActionPing) {
+			senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
+			return
 		}
-		log.Printf("Spectator %s attempted restricted action in room %s", clientID, r.ID)
+		if action == string(domain.ActionLeaveRoom) {
+			delete(r.Clients, clientID)
+			senderClient.Close()
+			r.BroadcastStateLocked()
+			go Lobby.BroadcastLobbyUpdate()
+			return
+		}
+		if action == string(domain.ActionEmoji) {
+			var emojiMsg struct {
+				Payload struct {
+					Emoji string `json:"emoji"`
+				} `json:"payload"`
+			}
+			if err := json.Unmarshal(payload, &emojiMsg); err == nil {
+				broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "payload": {"senderId": "%s", "emoji": "%s"}}`,
+					domain.EventEmoji, clientID, emojiMsg.Payload.Emoji))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, broadcastMsg)
+				}
+			}
+			return
+		}
+		if action == string(domain.ActionChat) {
+			var chatMsg struct {
+				Payload struct {
+					Text string `json:"text"`
+				} `json:"payload"`
+			}
+			if err := json.Unmarshal(payload, &chatMsg); err == nil {
+				broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "payload": {"senderId": "%s", "text": "%s"}}`,
+					domain.EventChat, clientID, chatMsg.Payload.Text))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, broadcastMsg)
+				}
+			}
+			return
+		}
+		log.Printf("Spectator %s attempted restricted action in room %s: %s", clientID, r.ID, action)
 		return
 	}
 
@@ -668,272 +675,268 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		}
 	}()
 
-	var baseMsg map[string]interface{}
-	if err := json.Unmarshal(payload, &baseMsg); err == nil {
-		msgType, _ := baseMsg["type"].(string)
-		act, _ := baseMsg["action"].(string)
-		if msgType == "" {
-			msgType = act
+	// 1. 处理房间级公共指令 (均基于统一的 action 驱动)
+	if action == string(domain.ActionPing) {
+		senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
+		return
+	}
+
+	if action == string(domain.ActionRestartGame) {
+		log.Printf("Restarting room %s via engine (triggered by %s)", r.ID, clientID)
+		r.Engine.HandleAction(clientID, string(domain.ActionRestartGame), payload)
+
+		activePlayers := 0
+		for _, c := range r.Clients {
+			if !c.IsSpectator {
+				activePlayers++
+			}
 		}
-		if msgType != "" {
-			// Respond to application-level ping with pong
-			if msgType == string(domain.ActionPing) {
-				if c, ok := r.Clients[clientID]; ok {
-					c.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
+		if activePlayers >= 2 && r.Mode != "single" {
+			for _, c := range r.Clients {
+				if !c.IsSpectator {
+					c.IsReady = true
 				}
-				return
+			}
+			r.Engine.HandleAction(r.Host, string(domain.ActionStartGame), []byte(`{"action":"start"}`))
+		} else {
+			for _, c := range r.Clients {
+				c.IsReady = false
+			}
+		}
+		r.BroadcastStateLocked()
+		return
+	}
+
+	if action == string(domain.ActionDismissRoom) {
+		if clientID == r.Host {
+			go DismissRoom(r.ID, clientID)
+		}
+		return
+	}
+
+	if action == string(domain.ActionLeaveRoom) {
+		isSwitching := time.Now().Unix()-r.GameChangedAt < 30
+		if isSwitching {
+			return
+		}
+
+		leavingClient, exists := r.Clients[clientID]
+		if exists {
+			delete(r.Clients, clientID)
+			if r.Engine != nil {
+				r.Engine.RemovePlayer(clientID)
+			}
+			leavingClient.Close()
+		}
+
+		activeCount := 0
+		for _, c := range r.Clients {
+			if !c.IsSpectator {
+				activeCount++
+			}
+		}
+
+		if activeCount == 0 {
+			roomID := r.ID
+			mu.Lock()
+			delete(Rooms, roomID)
+			mu.Unlock()
+			go Lobby.BroadcastLobbyUpdate()
+
+			msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+			for _, c := range r.Clients {
+				c.WriteMessage(websocket.TextMessage, msg)
+				c.Close()
+			}
+			r.Clients = make(map[string]*Client)
+			return
+		}
+
+		if clientID == r.Host {
+			var newHost string
+			for id, c := range r.Clients {
+				if !c.IsSpectator {
+					newHost = id
+					break
+				}
+			}
+			if newHost != "" {
+				r.Host = newHost
+				log.Printf("Room %s: host transferred from %s to %s on leave", r.ID, clientID, newHost)
+				msg := []byte(fmt.Sprintf(`{"type": "%s", "newHost": "%s", "oldHost": "%s"}`, domain.EventHostChanged, newHost, clientID))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, msg)
+				}
+			}
+		}
+
+		r.BroadcastStateLocked()
+		go Lobby.BroadcastLobbyUpdate()
+		return
+	}
+
+	if action == string(domain.ActionChangeGame) {
+		c, ok := r.Clients[clientID]
+		if ok && !c.IsSpectator && clientID == r.Host {
+			gameId, _ := baseMsg["game"].(string)
+			mode, _ := baseMsg["mode"].(string)
+			diff, _ := baseMsg["difficulty"].(string)
+			if mode == "" {
+				mode = "speed"
+			}
+			if diff == "" {
+				diff = "medium"
 			}
 
-			if msgType == string(domain.ActionRestartGame) || act == string(domain.ActionRestartGame) {
-				log.Printf("Restarting room %s via engine (triggered by %s)", r.ID, clientID)
-				r.Engine.HandleAction(clientID, string(domain.ActionRestartGame), payload)
+			if gameId != "" {
+				log.Printf("Host %s changing game in room %s to %s (mode: %s, diff: %s)", clientID, r.ID, gameId, mode, diff)
 
-				activePlayers := 0
-				for _, c := range r.Clients {
-					if !c.IsSpectator {
-						activePlayers++
-					}
-				}
-				if activePlayers >= 2 && r.Mode != "single" {
-					// Direct Fast-Path Rematch: keep players in room, auto-ready, and launch countdown directly!
-					for _, c := range r.Clients {
-						if !c.IsSpectator {
-							c.IsReady = true
-						}
-					}
-					r.Engine.HandleAction(r.Host, string(domain.ActionStartGame), []byte(`{"action":"start"}`))
-				} else {
-					for _, c := range r.Clients {
-						c.IsReady = false
-					}
-				}
-				r.BroadcastStateLocked()
-				return
-			} else if msgType == string(domain.ActionDismissRoom) {
-				if clientID == r.Host {
-					go DismissRoom(r.ID, clientID)
-				}
-				return
-			} else if msgType == string(domain.ActionLeaveRoom) {
-				isSwitching := time.Now().Unix()-r.GameChangedAt < 30
-				if isSwitching {
-					// Client is transitioning games with the room; do not treat component unmount as abandoning room
+				eng, resolvedMode, err := engine.ResolveEngine(gameId, mode)
+				if err != nil {
+					log.Printf("Failed to resolve engine for %s (mode: %s): %v", gameId, mode, err)
 					return
 				}
+				mode = resolvedMode
 
-				leavingClient, exists := r.Clients[clientID]
-				if exists {
-					delete(r.Clients, clientID)
-					if r.Engine != nil {
-						r.Engine.RemovePlayer(clientID)
+				r.Game = domain.GameId(gameId)
+				r.Mode = domain.GameMode(mode)
+				r.Difficulty = domain.GameDifficulty(diff)
+				if bountyVal, ok := baseMsg["bountyCoins"].(float64); ok && bountyVal >= 0 {
+					r.BountyCoins = int(bountyVal)
+				}
+				r.GameChangedAt = time.Now().Unix()
+
+				eng.InitGame(getGameOptions(gameId, mode, diff, r.Target))
+
+				for id, client := range r.Clients {
+					if !client.IsSpectator {
+						eng.AddPlayer(id)
 					}
-					leavingClient.Close()
 				}
 
-				activeCount := 0
+				if asyncEng, ok := eng.(interface{ SetBroadcaster(func()) }); ok {
+					asyncEng.SetBroadcaster(r.BroadcastState)
+				}
+
+				r.Engine = eng
+
 				for _, c := range r.Clients {
-					if !c.IsSpectator {
-						activeCount++
-					}
+					c.IsReady = false
 				}
 
-				if activeCount == 0 {
-					roomID := r.ID
-					mu.Lock()
-					delete(Rooms, roomID)
-					mu.Unlock()
-					go Lobby.BroadcastLobbyUpdate()
-
-					msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
-					for _, c := range r.Clients {
-						c.WriteMessage(websocket.TextMessage, msg)
-						c.Close()
-					}
-					r.Clients = make(map[string]*Client)
-					return
-				}
-
-				if clientID == r.Host {
-					var newHost string
-					for id, c := range r.Clients {
-						if !c.IsSpectator {
-							newHost = id
-							break
-						}
-					}
-					if newHost != "" {
-						r.Host = newHost
-						log.Printf("Room %s: host transferred from %s to %s on leave", r.ID, clientID, newHost)
-						msg := []byte(fmt.Sprintf(`{"type": "%s", "newHost": "%s", "oldHost": "%s"}`, domain.EventHostChanged, newHost, clientID))
-						for _, c := range r.Clients {
-							c.WriteMessage(websocket.TextMessage, msg)
-						}
-					}
+				msg := []byte(fmt.Sprintf(`{"type": "%s", "game": "%s", "mode": "%s", "difficulty": "%s", "roomId": "%s", "host": "%s"}`, domain.EventRoomGameChanged, gameId, mode, diff, r.ID, r.Host))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, msg)
 				}
 
 				r.BroadcastStateLocked()
 				go Lobby.BroadcastLobbyUpdate()
-				return
-			} else if msgType == string(domain.ActionChangeGame) || act == string(domain.ActionChangeGame) {
-				c, ok := r.Clients[clientID]
-				if ok && !c.IsSpectator && clientID == r.Host {
-					gameId, _ := baseMsg["game"].(string)
-					mode, _ := baseMsg["mode"].(string)
-					diff, _ := baseMsg["difficulty"].(string)
-
-					if gameId != "" {
-						log.Printf("Host %s changing game in room %s to %s (mode: %s, diff: %s)", clientID, r.ID, gameId, mode, diff)
-
-						eng, resolvedMode, err := engine.ResolveEngine(gameId, mode)
-						if err != nil {
-							log.Printf("Failed to resolve engine for %s (mode: %s): %v", gameId, mode, err)
-							return
-						}
-						mode = resolvedMode
-
-						r.Game = domain.GameId(gameId)
-						r.Mode = domain.GameMode(mode)
-						r.Difficulty = domain.GameDifficulty(diff)
-						if bountyVal, ok := baseMsg["bountyCoins"].(float64); ok && bountyVal >= 0 {
-							r.BountyCoins = int(bountyVal)
-						}
-						r.GameChangedAt = time.Now().Unix()
-
-						eng.InitGame(getGameOptions(gameId, mode, diff, r.Target))
-
-						for id, client := range r.Clients {
-							if !client.IsSpectator {
-								eng.AddPlayer(id)
-							}
-						}
-
-						if asyncEng, ok := eng.(interface{ SetBroadcaster(func()) }); ok {
-							asyncEng.SetBroadcaster(r.BroadcastState)
-						}
-
-						r.Engine = eng
-
-						// Reset all ready states on game change
-						for _, c := range r.Clients {
-							c.IsReady = false
-						}
-
-						msg := []byte(fmt.Sprintf(`{"type": "%s", "game": "%s", "mode": "%s", "difficulty": "%s", "roomId": "%s", "host": "%s"}`, domain.EventRoomGameChanged, gameId, mode, diff, r.ID, r.Host))
-						for _, c := range r.Clients {
-							c.WriteMessage(websocket.TextMessage, msg)
-						}
-
-						r.BroadcastStateLocked()
-						go Lobby.BroadcastLobbyUpdate()
-					}
-				}
-				return
-			} else if msgType == string(domain.ActionReady) {
-				log.Printf("Received ready from %s in room %s", clientID, r.ID)
-				if c, ok := r.Clients[clientID]; ok {
-					c.IsReady = true
-					r.BroadcastStateLocked()
-				}
-				return
-			} else if msgType == string(domain.ActionCancelReady) {
-				if c, ok := r.Clients[clientID]; ok {
-					c.IsReady = false
-					r.BroadcastStateLocked()
-				}
-				return
-			} else if msgType == string(domain.ActionKickPlayer) {
-				if clientID == r.Host {
-					if targetID, ok := baseMsg["target"].(string); ok && targetID != "" && targetID != r.Host {
-						if targetClient, exists := r.Clients[targetID]; exists {
-							// Record kick timestamp for cooldown
-							r.KickedPlayers[targetID] = time.Now()
-							targetClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventKicked)))
-							delete(r.Clients, targetID)
-							if r.Engine != nil {
-								r.Engine.RemovePlayer(targetID)
-							}
-							targetClient.Close()
-							r.BroadcastStateLocked()
-							go Lobby.BroadcastLobbyUpdate()
-						}
-					}
-				}
-				return
 			}
 		}
+		return
 	}
 
-	// Intercept "start" action to enforce readiness in PK modes
-	var actionMsg struct {
-		Action string `json:"action"`
+	if action == string(domain.ActionReady) {
+		log.Printf("Received ready from %s in room %s", clientID, r.ID)
+		if c, ok := r.Clients[clientID]; ok {
+			c.IsReady = true
+			r.BroadcastStateLocked()
+		}
+		return
 	}
-	if err := json.Unmarshal(payload, &actionMsg); err == nil {
-		if actionMsg.Action == string(domain.ActionEmoji) {
-			var emojiMsg struct {
-				Payload struct {
-					Emoji string `json:"emoji"`
-				} `json:"payload"`
-			}
-			if err := json.Unmarshal(payload, &emojiMsg); err == nil {
-				broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "emoji": "%s"}}`,
-					"game", domain.EventEmoji, clientID, emojiMsg.Payload.Emoji))
-				for _, c := range r.Clients {
-					c.WriteMessage(websocket.TextMessage, broadcastMsg)
+
+	if action == string(domain.ActionCancelReady) {
+		if c, ok := r.Clients[clientID]; ok {
+			c.IsReady = false
+			r.BroadcastStateLocked()
+		}
+		return
+	}
+
+	if action == string(domain.ActionKickPlayer) {
+		if clientID == r.Host {
+			if targetID, ok := baseMsg["target"].(string); ok && targetID != "" && targetID != r.Host {
+				if targetClient, exists := r.Clients[targetID]; exists {
+					r.KickedPlayers[targetID] = time.Now()
+					targetClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventKicked)))
+					delete(r.Clients, targetID)
+					if r.Engine != nil {
+						r.Engine.RemovePlayer(targetID)
+					}
+					targetClient.Close()
+					r.BroadcastStateLocked()
+					go Lobby.BroadcastLobbyUpdate()
 				}
 			}
+		}
+		return
+	}
+
+	if action == string(domain.ActionEmoji) {
+		var emojiMsg struct {
+			Payload struct {
+				Emoji string `json:"emoji"`
+			} `json:"payload"`
+		}
+		if err := json.Unmarshal(payload, &emojiMsg); err == nil {
+			broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "payload": {"senderId": "%s", "emoji": "%s"}}`,
+				domain.EventEmoji, clientID, emojiMsg.Payload.Emoji))
+			for _, c := range r.Clients {
+				c.WriteMessage(websocket.TextMessage, broadcastMsg)
+			}
+		}
+		return
+	}
+
+	if action == string(domain.ActionChat) {
+		var chatMsg struct {
+			Payload struct {
+				Text string `json:"text"`
+			} `json:"payload"`
+		}
+		if err := json.Unmarshal(payload, &chatMsg); err == nil {
+			broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "payload": {"senderId": "%s", "text": "%s"}}`,
+				domain.EventChat, clientID, chatMsg.Payload.Text))
+			for _, c := range r.Clients {
+				c.WriteMessage(websocket.TextMessage, broadcastMsg)
+			}
+		}
+		return
+	}
+
+	if action == string(domain.ActionStartGame) {
+		if clientID != r.Host {
+			log.Printf("Non-host %s tried to start the game", clientID)
 			return
 		}
-
-		if actionMsg.Action == string(domain.ActionChat) {
-			var chatMsg struct {
-				Payload struct {
-					Text string `json:"text"`
-				} `json:"payload"`
-			}
-			if err := json.Unmarshal(payload, &chatMsg); err == nil {
-				broadcastMsg := []byte(fmt.Sprintf(`{"type": "%s", "event": "%s", "payload": {"senderId": "%s", "text": "%s"}}`,
-					"game", domain.EventChat, clientID, chatMsg.Payload.Text))
-				for _, c := range r.Clients {
-					c.WriteMessage(websocket.TextMessage, broadcastMsg)
+		if r.Mode != "single" {
+			activePlayers := 0
+			for _, c := range r.Clients {
+				if !c.IsSpectator {
+					activePlayers++
 				}
 			}
-			return
-		}
-
-		if actionMsg.Action == string(domain.ActionStartGame) {
-			if clientID != r.Host {
-				log.Printf("Non-host %s tried to start the game", clientID)
+			if activePlayers < 2 {
+				log.Printf("Cannot start multiplayer game with fewer than 2 players in room %s", r.ID)
+				if hostClient, ok := r.Clients[clientID]; ok {
+					hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"error","message":"%s"}`, domain.ErrNotEnoughPlayers)))
+				}
 				return
 			}
-			if r.Mode != "single" {
-				activePlayers := 0
-				for _, c := range r.Clients {
-					if !c.IsSpectator {
-						activePlayers++
-					}
-				}
-				if activePlayers < 2 {
-					log.Printf("Cannot start multiplayer game with fewer than 2 players in room %s", r.ID)
+			for _, c := range r.Clients {
+				if !c.IsSpectator && c.ID != r.Host && !c.IsReady {
+					log.Printf("Cannot start game: player %s is not ready", c.ID)
 					if hostClient, ok := r.Clients[clientID]; ok {
-						hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"error","message":"%s"}`, domain.ErrNotEnoughPlayers)))
+						hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"start_rejected","reason":"player_not_ready","player":"%s"}`, c.ID)))
 					}
 					return
 				}
-				for _, c := range r.Clients {
-					if !c.IsSpectator && c.ID != r.Host && !c.IsReady {
-						log.Printf("Cannot start game: player %s is not ready", c.ID)
-						if hostClient, ok := r.Clients[clientID]; ok {
-							hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"start_rejected","reason":"player_not_ready","player":"%s"}`, c.ID)))
-						}
-						return
-					}
-				}
 			}
 		}
 	}
 
-	// Handle game action
-	_, err := r.Engine.HandleAction(clientID, actionMsg.Action, payload)
+	// 2. 将对局动作分发给游戏引擎
+	_, err := r.Engine.HandleAction(clientID, action, payload)
 	if err != nil {
 		log.Printf("Action Error from %s: %v", clientID, err)
 		return

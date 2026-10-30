@@ -81,6 +81,10 @@ export enum C2SAction {
   Pour = 'pour',
   /** 特定游戏：解答 */
   Solve = 'solve',
+  /** 特定游戏：扫雷翻开 */
+  Reveal = 'reveal',
+  /** 特定游戏：扫雷插旗 */
+  Flag = 'flag',
   /** 发送表情/嘲讽快捷语 */
   Emoji = 'emoji',
   /** 发送文字聊天 */
@@ -121,15 +125,26 @@ export enum S2CEvent {
 }
 
 /**
+ * 客户端上行标准动作消息封装
+ * 全系统强制统一规范：客户端向服务端发送的所有指令，必须使用且仅使用 action 字段！
+ */
+export interface WSActionMessage {
+  /** 具体的上行动作指令 (C2SAction 枚举或特定游戏动作字符串) */
+  action: C2SAction | string;
+  [key: string]: any;
+}
+
+/**
  * 客户端上行消息标准封装结构
  */
 export interface WSMessageC2S {
-  /** 消息大分类 */
-  type: MessageType;
   /** 具体请求操作指令 */
-  action: C2SAction;
+  action: C2SAction | string;
+  /** 消息大分类 (可选) */
+  type?: MessageType | string;
   /** 操作携带的具体数据载荷 (Payload) */
   payload?: any;
+  [key: string]: any;
 }
 
 /**
@@ -162,7 +177,10 @@ export enum WSErrorCode {
   GameAlreadyStarted = 'err_game_started',
   WrongPassword = 'err_wrong_password',
   KickCooldown = 'err_kick_cooldown',
-  MultiplayerDisabled = 'err_multiplayer_disabled'
+  MultiplayerDisabled = 'err_multiplayer_disabled',
+  HostRoomLimit = 'err_host_room_limit',
+  NotEnoughPlayers = 'err_not_enough_players',
+  PlayerNotReady = 'err_player_not_ready',
 }
 
 /**

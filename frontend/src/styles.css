@@ -42,23 +42,23 @@
     --color-hexa-piece-dark: #b45309;
     --color-hexa-empty: #f1f5f9; /* slate-100 */
     --color-hexa-empty-stroke: #e2e8f0;
-    --color-ms-1: #0000ff;
-    --color-ms-2: #008000;
-    --color-ms-3: #ff0000;
-    --color-ms-4: #000080;
-    --color-ms-5: #800000;
-    --color-ms-6: #008080;
-    --color-ms-7: #000000;
-    --color-ms-8: #808080;
-    --color-ms-board-bg: #bdbdbd;
-    --color-ms-cell-bg: #c0c0c0;
-    --color-ms-cell-hover: #cdcdcd;
-    --color-ms-cell-active: #b4b4b4;
+    --color-ms-1: #2563eb;
+    --color-ms-2: #059669;
+    --color-ms-3: #dc2626;
+    --color-ms-4: #7c3aed;
+    --color-ms-5: #d97706;
+    --color-ms-6: #0891b2;
+    --color-ms-7: #334155;
+    --color-ms-8: #9333ea;
+    --color-ms-board-bg: #cbd5e1;
+    --color-ms-cell-bg: #e2e8f0;
+    --color-ms-cell-hover: #cbd5e1;
+    --color-ms-cell-active: #94a3b8;
     --color-ms-bevel-light: #ffffff;
-    --color-ms-bevel-dark: #7b7b7b;
-    --color-ms-revealed-border: #7b7b7b;
-    --color-ms-revealed-bg: #bdbdbd;
-    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.28);
+    --color-ms-bevel-dark: #94a3b8;
+    --color-ms-revealed-border: #cbd5e1;
+    --color-ms-revealed-bg: #f8fafc;
+    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.12);
     --color-danger-bg: rgba(239, 68, 68, 0.1);
     --color-danger-border: rgba(239, 68, 68, 0.3);
     /* Sliding Puzzle - Sage Morandi Theme */
@@ -131,22 +131,22 @@
     --color-hexa-piece-dark: #d97706;
     --color-hexa-empty: #2c2c2e;
     --color-hexa-empty-stroke: #48484a;
-    --color-ms-1: #60a5fa;
+    --color-ms-1: #38bdf8;
     --color-ms-2: #34d399;
     --color-ms-3: #f87171;
-    --color-ms-4: #818cf8;
-    --color-ms-5: #fb923c;
-    --color-ms-6: #2dd4bf;
-    --color-ms-7: #c084fc;
-    --color-ms-8: #a1a1aa;
-    --color-ms-board-bg: #18181b;
-    --color-ms-cell-bg: #2a2a2e;
-    --color-ms-cell-hover: #36363c;
-    --color-ms-cell-active: #1e1e22;
-    --color-ms-bevel-light: #52525b;
-    --color-ms-bevel-dark: #09090b;
-    --color-ms-revealed-border: #27272a;
-    --color-ms-revealed-bg: #18181b;
+    --color-ms-4: #a78bfa;
+    --color-ms-5: #fbbf24;
+    --color-ms-6: #22d3ee;
+    --color-ms-7: #e2e8f0;
+    --color-ms-8: #f472b6;
+    --color-ms-board-bg: #090d16;
+    --color-ms-cell-bg: #1e293b;
+    --color-ms-cell-hover: #334155;
+    --color-ms-cell-active: #0f172a;
+    --color-ms-bevel-light: rgba(255, 255, 255, 0.16);
+    --color-ms-bevel-dark: rgba(0, 0, 0, 0.6);
+    --color-ms-revealed-border: #1e293b;
+    --color-ms-revealed-bg: #0b1120;
     --color-ms-sunken-shadow: rgba(0, 0, 0, 0.65);
     --color-danger-bg: rgba(239, 68, 68, 0.2);
     --color-danger-border: rgba(239, 68, 68, 0.5);
@@ -205,23 +205,23 @@
     --color-hexa-empty: #f1f5f9;
     --color-hexa-empty-stroke: #e2e8f0;
     --color-block-board: #f1f5f9;
-    --color-ms-1: #0000ff;
-    --color-ms-2: #008000;
-    --color-ms-3: #ff0000;
-    --color-ms-4: #000080;
-    --color-ms-5: #800000;
-    --color-ms-6: #008080;
-    --color-ms-7: #000000;
-    --color-ms-8: #808080;
-    --color-ms-board-bg: #bdbdbd;
-    --color-ms-cell-bg: #c0c0c0;
-    --color-ms-cell-hover: #cdcdcd;
-    --color-ms-cell-active: #b4b4b4;
+    --color-ms-1: #2563eb;
+    --color-ms-2: #059669;
+    --color-ms-3: #dc2626;
+    --color-ms-4: #7c3aed;
+    --color-ms-5: #d97706;
+    --color-ms-6: #0891b2;
+    --color-ms-7: #334155;
+    --color-ms-8: #9333ea;
+    --color-ms-board-bg: #cbd5e1;
+    --color-ms-cell-bg: #e2e8f0;
+    --color-ms-cell-hover: #cbd5e1;
+    --color-ms-cell-active: #94a3b8;
     --color-ms-bevel-light: #ffffff;
-    --color-ms-bevel-dark: #7b7b7b;
-    --color-ms-revealed-border: #7b7b7b;
-    --color-ms-revealed-bg: #bdbdbd;
-    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.28);
+    --color-ms-bevel-dark: #94a3b8;
+    --color-ms-revealed-border: #cbd5e1;
+    --color-ms-revealed-bg: #f8fafc;
+    --color-ms-sunken-shadow: rgba(0, 0, 0, 0.12);
     --color-danger-bg: rgba(239, 68, 68, 0.1);
     --color-danger-border: rgba(239, 68, 68, 0.3);
     /* Sliding Puzzle - Sage Morandi Light Theme */
@@ -704,4 +704,33 @@
 .animate-slide-in-right {
   animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ============================================================
+   Modern Gaming UI & Micro-interactions (Plan A Aesthetics)
+   ============================================================ */
+
+/* 弹性按压物理动效 (Spring Physics Press) */
+.spring-press {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, filter 0.2s ease;
+}
+.spring-press:active {
+  transform: scale(0.93) translateY(1px);
+}
+
+/* 桌面微立体主机台座 (Game Stage Pedestal) */
+.game-stage-pedestal {
+  box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.22),
+              0 0 0 1px rgba(255, 255, 255, 0.08),
+              inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+/* 棋盘背部柔和环境光晕 (Ambient Glow) */
+.game-cockpit-glow {
+  background: radial-gradient(ellipse 65% 55% at 50% 40%, rgba(59, 130, 246, 0.14), transparent 75%);
+}
+
+.theme-dark .game-cockpit-glow {
+  background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(96, 165, 250, 0.16), transparent 75%);
+}
+
 

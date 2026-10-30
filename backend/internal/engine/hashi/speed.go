@@ -3,7 +3,6 @@ package hashi
 import (
 	"encoding/json"
 	"math/rand"
-	"strings"
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
@@ -46,18 +45,9 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Difficulty = string(domain.DiffMedium)
 	e.Target = 1
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-			// Default sizes or handling for Hashi
-			if strings.HasPrefix(diff, "custom_") {
-				// Not supported for now, fallback to medium
-			}
-		}
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
+	e.Target = opts.Target
 
 	e.fetchNewPuzzle()
 	return nil
@@ -130,7 +120,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

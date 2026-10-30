@@ -87,10 +87,10 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to solve wins!' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc', desc: 'Beginner' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium_desc', desc: 'Intermediate' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard_desc', desc: 'Advanced' },
-      { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert_desc', desc: 'Professional' }
+      { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc', desc: '9x9 (40+)' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium_desc', desc: '9x9 (30+)' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard_desc', desc: '9x9 (25+)' },
+      { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert_desc', desc: '9x9 (20+)' }
     ],
     recommendations: ['minesweeper', 'math24'],
     tutorial: [
@@ -364,9 +364,14 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     iconEmoji: '📖',
     loadComponent: () => import('../../features/games/idiom/idiom.component').then(m => m.IdiomComponent),
     modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player Solitaire' },
       { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'idiom.pk_speed_desc', icon: '⚡', desc: 'Same idiom. First to answer correctly wins!' },
     ],
-    difficulties: [],
+    difficulties: [
+      { id: GameDifficulty.Easy,   labelKey: 'game.diff_easy',   descKey: 'game.diff_easy_desc',   desc: 'Easy' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium_desc', desc: 'Medium' },
+      { id: GameDifficulty.Hard,   labelKey: 'game.diff_hard',   descKey: 'game.diff_hard_desc',   desc: 'Hard' },
+    ],
     recommendations: ['sudoku', 'math24', 'codebreaker'],
     multiRound: true, coverImage: "og-minesweeper.png",
     tutorial: [

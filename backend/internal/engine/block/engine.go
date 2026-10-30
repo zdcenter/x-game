@@ -82,7 +82,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 		}
 		e.state.Winners = []string{}
 
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			e.state.GlobalStartAt = time.Now().UnixMilli()
 		})
 

@@ -3,6 +3,7 @@ import { WebSocketService } from './websocket.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
 import { EditRoomConfig } from '../../shared/components/edit-room-overlay/edit-room-overlay.component';
+import { C2SAction } from '../models/websocket.model';
 
 @Injectable({ providedIn: 'root' })
 export class EditRoomService {
@@ -32,7 +33,7 @@ export class EditRoomService {
 
   apply(cfg: EditRoomConfig) {
     this.ws.send({
-      type: 'change_game',
+      action: C2SAction.ChangeGame,
       roomId: this.roomId,
       game: cfg.gameId,
       mode: cfg.mode,

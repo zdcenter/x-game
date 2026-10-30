@@ -41,18 +41,14 @@ func (e *StealEngine) InitGame(options interface{}) error {
 	e.Players = make(map[string]*StealPlayer)
 	e.Winners = make([]string, 0)
 
-	e.Difficulty = string(domain.DiffMedium)
 	e.PenaltySeconds = 3
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-		}
-		if penalty, ok := opts["penaltySeconds"].(float64); ok {
-			e.PenaltySeconds = int(penalty)
-		} else if penalty, ok := opts["penaltySeconds"].(int); ok {
-			e.PenaltySeconds = penalty
-		}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
+	if penalty, ok := opts.Raw["penaltySeconds"].(float64); ok {
+		e.PenaltySeconds = int(penalty)
+	} else if penalty, ok := opts.Raw["penaltySeconds"].(int); ok {
+		e.PenaltySeconds = penalty
 	}
 
 	// Fetch a random puzzle from DB
@@ -124,7 +120,7 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

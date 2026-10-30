@@ -93,7 +93,7 @@ export class FriendListComponent implements OnInit {
 
         if (config) {
           const mpMode = config.modes.find(m => m.id !== 'single');
-          targetMode = context?.mode && context.mode !== 'single' ? context.mode : (mpMode ? mpMode.id : config.modes[0].id);
+          targetMode = context?.mode && context.mode !== 'single' ? context.mode : (mpMode ? mpMode.id : (config.modes[0]?.id || 'multi'));
           targetDiff = context?.difficulty ? context.difficulty : (config.difficulties.length > 0 ? config.difficulties[0].id : 'medium');
         }
 

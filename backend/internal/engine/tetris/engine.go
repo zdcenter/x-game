@@ -17,14 +17,8 @@ func (e *PKAttackEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
-	target := 1
-	if opts, ok := options.(map[string]interface{}); ok {
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			target = t
-		} else if tf, ok := opts["target"].(float64); ok && tf > 0 {
-			target = int(tf)
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	target := opts.Target
 
 	e.state = &GameState{
 		Players: make(map[string]*PlayerInfo),
@@ -105,7 +99,7 @@ func (e *PKAttackEngine) HandleAction(playerID string, actionType string, payloa
 		}
 		e.state.Winners = []string{}
 
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			e.state.GlobalStartAt = time.Now().UnixMilli()
 		})
 

@@ -1,6 +1,7 @@
 import { Directive, inject, signal, computed, effect, Injector, OnInit, OnDestroy, HostBinding, ViewChild, HostListener } from '@angular/core';
 import confetti from 'canvas-confetti';
 import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
+import { C2SAction } from '../models/websocket.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
@@ -249,7 +250,20 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     // Game-specific cleanup should be handled in the subclass.
   }
 
+  openPkDrawer() {
+    if (this.gameLayout) {
+      this.gameLayout.togglePkDrawer(true);
+    } else {
+      this.navigateToPkArena();
+    }
+  }
+
   navigateToPkArena() {
+    // 棋盘局内直接唤醒 PK Drawer，无缝开房/迎战，不脱离当前棋盘舞台
+    if (this.gameLayout && this.store.currentRoomMode() === GameMode.Single) {
+      this.gameLayout.togglePkDrawer(true);
+      return;
+    }
     this.store.leaveRoom();
     let gameId = '';
     const urlPath = this._baseRouter.url.split('?')[0];
@@ -269,7 +283,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     const action = event.isSpectator ? 'spectate' : 'join';
     this.wsService.setPendingAction(action);
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host, 1, event.password || '', event.bountyCoins ?? 0, event.isSpectator || false);
+    this.store.joinRoom(event.roomId, event.mode, event.difficulty, event.host, 1, event.password || '', event.bountyCoins ?? 0, event.isSpectator || false, action);
   }
 
   handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number, bountyCoins?: number}) {
@@ -279,12 +293,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     }
     this.wsService.setPendingAction('create');
     if (event.password) this.wsService.setPendingPassword(event.password);
-    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1, event.password || '', event.bountyCoins ?? 0, false);
+    this.store.joinRoom(event.name, event.mode, event.difficulty, this.playerId, event.target ?? 1, event.password || '', event.bountyCoins ?? 0, false, 'create');
   }
 
   handleDismissRoom() {
     if (this.store.currentRoomMode() === GameMode.Single) return;
-    this.wsService.send({ type: 'dismiss_room' });
+    this.wsService.send({ action: C2SAction.DismissRoom });
     this.store.leaveRoom();
   }
 

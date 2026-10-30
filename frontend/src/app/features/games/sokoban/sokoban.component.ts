@@ -54,6 +54,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   private roomLifecycle!: RoomLifecycleHandle;
 
   @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(SokobanLobbyComponent) sokobanLobby?: SokobanLobbyComponent;
   showLobby = signal(true);
 
   private windowSize = inject(WindowSizeService);
@@ -217,6 +218,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       this.showLobby.set(false);
     } else {
       const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
+      this.store.currentDifficulty.set(savedDiff);
       this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
     }
   }
@@ -226,11 +228,19 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       super.goBack();
     } else {
       if (this.store.currentRoomMode() === GameMode.Single) {
-        this.showLobby.set(true);
+        this.openLobbyView();
       } else {
         super.goBack();
       }
     }
+  }
+
+  openLobbyView() {
+    this.showLobby.set(true);
+    const currentDiff = this.store.currentDifficulty() || getSavedDifficulty('sokoban', GameDifficulty.Easy);
+    setTimeout(() => {
+      this.sokobanLobby?.selectDifficulty(currentDiff);
+    }, 0);
   }
 
   getModeName() {
@@ -246,7 +256,15 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   }
 
   changeSingleDifficulty(diff: string) {
-    this.store.changeSingleDifficulty(diff);
+    this.store.currentDifficulty.set(diff);
+    setSavedDifficulty('sokoban', diff);
+    if (this.showLobby()) {
+      if (this.sokobanLobby?.activeTab() !== diff) {
+        this.sokobanLobby?.selectDifficulty(diff);
+      }
+    } else {
+      this.store.changeSingleDifficulty(diff);
+    }
   }
 
   onLevelSelect(level: {id: string, puzzle: string, difficulty: string, levelNum: number}) {

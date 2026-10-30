@@ -76,6 +76,9 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   private route = inject(ActivatedRoute);
   private pendingDailyChallengeId = signal<string | null>(null);
   @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
+  @ViewChild(SudokuLobbyComponent) sudokuLobby?: SudokuLobbyComponent;
+
+  readonly activeDifficulty = signal<string>(getSavedDifficulty('sudoku', GameDifficulty.Easy));
 
   sudokuDifficulties = sudokuDifficulties;
 
@@ -166,23 +169,32 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   currentDifficulty() {
-    // Determine from store if available, or fallback to storage
+    if (this.store.currentRoomMode() === GameMode.Single) {
+      return this.activeDifficulty();
+    }
     const rState = this.store.rawState() as any;
     if (rState && rState.difficulty) {
       return rState.difficulty;
     }
-    return getSavedDifficulty('sudoku', GameDifficulty.Easy);
+    return this.activeDifficulty();
   }
 
   changeSingleDifficulty(diff: string) {
+    this.activeDifficulty.set(diff);
+    this.store.currentDifficulty.set(diff);
+    setSavedDifficulty('sudoku', diff);
     if (this.store.currentRoomMode() !== GameMode.Single || this.store.roomId()) {
       return;
     }
-    setSavedDifficulty('sudoku', diff);
+    if (this.view() === 'lobby') {
+      if (this.sudokuLobby?.activeTab() !== diff) {
+        this.sudokuLobby?.selectDifficulty(diff);
+      }
+      return;
+    }
     // Find next unsolved level for this diff
     this.http.get<any[]>(`${environment.apiUrl}/sudoku/levels/${diff}`).subscribe({
       next: (levels) => {
-        // Find first unsolved or just take the first one
         let nextLevel = levels.find(l => l.progress?.status !== 'completed');
         if (!nextLevel && levels.length > 0) {
           nextLevel = levels[0];
@@ -286,8 +298,14 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
 
   startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}) {
     this.view.set('play');
+    const match = level.id.match(/^([a-zA-Z]+)-/);
+    if (match && match[1]) {
+      this.activeDifficulty.set(match[1]);
+      setSavedDifficulty('sudoku', match[1]);
+    }
     this.store.currentPuzzleId.set(level.id);
-    this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);  }
+    this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);
+  }
   playNextLevel() {
     const currentId = this.store.currentPuzzleId();
     if (!currentId) return;
@@ -297,9 +315,13 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       return;
     }
     const prefix = match[1];
+    const diff = prefix.replace(/^sudoku-/, '');
     const numStr = match[2];
     const nextNum = parseInt(numStr, 10) + 1;
     const nextId = `${prefix}-${nextNum.toString().padStart(numStr.length, '0')}`;
+    this.activeDifficulty.set(diff);
+    this.store.currentDifficulty.set(diff);
+    setSavedDifficulty('sudoku', diff);
     
     this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${nextId}`).subscribe({
       next: (res) => {

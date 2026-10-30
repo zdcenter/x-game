@@ -12,6 +12,7 @@
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
+  (difficultyChange)="changeSingleDifficulty($event)"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [hideDefaultDifficulty]="true"
   [isLobby]="showLobby() && store.currentRoomMode() === GameMode.Single"
@@ -23,7 +24,7 @@
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
-  (back)="showLobby() ? goBack() : showLobby.set(true)"
+  (back)="showLobby() ? goBack() : openLobbyView()"
   (playAgain)="handleRestart()"
   (restart)="handleRestart()"
   (rematch)="handleRematch()"
@@ -41,7 +42,7 @@
       [showBack]="true"
       [showRules]="true"
       [showPk]="store.currentRoomMode() === GameMode.Single"
-      (back)="showLobby() ? goBack() : showLobby.set(true)"
+      (back)="showLobby() ? goBack() : openLobbyView()"
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()"
     >
@@ -55,7 +56,7 @@
         <!-- 关卡编号 -->
         <button
           type="button"
-          (click)="showLobby.set(true)"
+          (click)="openLobbyView()"
           class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 active:scale-95 transition-all cursor-pointer shrink-0"
           [title]="i18n.t('lobby.select_level')() || '选择关卡'"
         >
@@ -102,8 +103,10 @@
   <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
     @if (showLobby()) {
       <app-sokoban-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
+                         [currentDifficulty]="store.currentDifficulty()"
                          (openLobby)="navigateToPkArena()"
-                         (levelSelect)="onLevelSelect($event)">
+                         (levelSelect)="onLevelSelect($event)"
+                         (difficultyChange)="changeSingleDifficulty($event)">
       </app-sokoban-lobby>
     } @else {
 

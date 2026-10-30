@@ -73,7 +73,7 @@ func (e *PKScoreEngine) HandleAction(playerID string, actionType string, payload
 		e.state.Seed = time.Now().UnixMilli()
 		e.state.GlobalStartAt = time.Now().Add(3 * time.Second).UnixMilli()
 
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			e.state.GlobalStartAt = time.Now().UnixMilli()
 
 			// Start Game Timer when Playing

@@ -1,6 +1,6 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
 
-import { Component, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -24,10 +24,10 @@ interface LevelResponse {
 }
 
 export const sudokuDifficulties = [
-  { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc' },
-  { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium_desc' },
-  { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard_desc' },
-  { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert_desc' }
+  { id: 'easy', labelKey: 'game.diff_sudoku_easy', descKey: 'game.diff_sudoku_easy_desc', desc: '9x9 (40+)' },
+  { id: GameDifficulty.Medium, labelKey: 'game.diff_sudoku_medium', descKey: 'game.diff_sudoku_medium_desc', desc: '9x9 (30+)' },
+  { id: GameDifficulty.Hard, labelKey: 'game.diff_sudoku_hard', descKey: 'game.diff_sudoku_hard_desc', desc: '9x9 (25+)' },
+  { id: GameDifficulty.Expert, labelKey: 'game.diff_sudoku_expert', descKey: 'game.diff_sudoku_expert_desc', desc: '9x9 (20+)' }
 ];
 
 @Component({
@@ -52,6 +52,14 @@ export class SudokuLobbyComponent implements OnInit {
 
   @Output() openLobby = new EventEmitter<void>();
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}>();
+  @Output() difficultyChange = new EventEmitter<string>();
+
+  @Input() set currentDifficulty(val: string | undefined) {
+    if (val && val !== this.activeTab()) {
+      this.activeTab.set(val);
+      this.loadLevels(val);
+    }
+  }
 
   sudokuModes = [
     { id: GameMode.Steal, labelKey: 'game.sudoku_same_pk_steal_label', icon: '⚡', descKey: 'game.sudoku_same_pk_steal_desc' },
@@ -71,6 +79,7 @@ export class SudokuLobbyComponent implements OnInit {
   selectDifficulty(diff: string) {
     setSavedDifficulty('sudoku', diff);
     this.activeTab.set(diff);
+    this.difficultyChange.emit(diff);
     this.loadLevels(diff);
   }
 

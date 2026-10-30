@@ -125,33 +125,25 @@ func MigrateModesAndDifficulties(db *gorm.DB) {
 }
 
 func Seed() {
-	var games []domain.GameConfig
 	registeredEngines := engine.GetAllRegisteredGames()
 	for _, engineID := range registeredEngines {
-		games = append(games, domain.GameConfig{
-			ID:       engineID,
-			Config:   "{}",
-			IsActive: true,
-		})
-	}
-
-	for _, game := range games {
-		var count int64
-		DB.Model(&domain.GameConfig{}).Where("id = ?", game.ID).Count(&count)
-		if count == 0 {
-			// Does not exist, create it
-			if err := DB.Create(&game).Error; err != nil {
-				log.Printf("Failed to create game %s: %v", game.ID, err)
+		var existing domain.GameConfig
+		err := DB.Where("id = ?", engineID).First(&existing).Error
+		if err != nil {
+			// Game does not exist in DB yet, create it with default config
+			newGame := domain.GameConfig{
+				ID:       engineID,
+				Config:   "{}",
+				IsActive: true,
 			}
-		} else {
-			// Exists, update the configuration fields while leaving dynamic stats like VisitCount intact.
-			if err := DB.Model(&domain.GameConfig{}).Where("id = ?", game.ID).Updates(map[string]interface{}{
-				"config":    game.Config,
-				"is_active": game.IsActive,
-			}).Error; err != nil {
-				log.Printf("Failed to update game %s: %v", game.ID, err)
+			if err := DB.Create(&newGame).Error; err != nil {
+				log.Printf("Failed to create game %s: %v", engineID, err)
 			}
+		} else if existing.Config == "" || existing.Config == "null" {
+			// Exists but config was completely blank, initialize to empty JSON object without overwriting valid data
+			DB.Model(&domain.GameConfig{}).Where("id = ?", engineID).Update("config", "{}")
 		}
+		// Existing game configurations (e.g. finishFlow, multiRound, modes, etc.) configured by admin are strictly preserved!
 	}
 
 	var userCount int64

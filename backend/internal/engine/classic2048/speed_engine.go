@@ -42,35 +42,26 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.BoardSize = 4 // Default
 	e.WinTarget = 2048
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			if strings.HasPrefix(diff, "custom_") {
-				parts := strings.Split(diff, "_")
-				if len(parts) >= 2 {
-					if s, err := strconv.Atoi(parts[1]); err == nil && s >= 3 && s <= 8 {
-						e.BoardSize = s
-					}
-				}
-			} else {
-				switch diff {
-				case string(domain.DiffEasy):
-					e.BoardSize = 5
-				case string(domain.DiffMedium):
-					e.BoardSize = 4
-				case string(domain.DiffHard):
-					e.BoardSize = 3
-				}
+	opts := engine.ParseGameOptions(options)
+	diff := opts.DiffStr()
+	if strings.HasPrefix(diff, "custom_") {
+		parts := strings.Split(diff, "_")
+		if len(parts) >= 2 {
+			if s, err := strconv.Atoi(parts[1]); err == nil && s >= 3 && s <= 8 {
+				e.BoardSize = s
 			}
 		}
-
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		} else {
-			e.Target = 1
-		}
 	} else {
-		e.Target = 1
+		switch diff {
+		case string(domain.DiffEasy):
+			e.BoardSize = 5
+		case string(domain.DiffMedium):
+			e.BoardSize = 4
+		case string(domain.DiffHard):
+			e.BoardSize = 3
+		}
 	}
+	e.Target = opts.Target
 
 	e.Boards = make(map[string]*Board)
 	e.Winners = make([]string, 0)
@@ -153,7 +144,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			b.StartAt = startAt
 		}
 
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			now := time.Now().UnixMilli()
 			e.GlobalStartAt = now
 			for _, b := range e.Boards {
@@ -164,7 +155,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		return e.State, nil
 	}
 
-	if (actionType == string(domain.ActionRestartGame) || baseAction.Action == string(domain.ActionRestartGame)) && e.State == engine.StateFinished {
+	if baseAction.Action == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		// Reset Wins only when someone has won the series
 		seriesOver := false
 		for _, w := range e.Wins {

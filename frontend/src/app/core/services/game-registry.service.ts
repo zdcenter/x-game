@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { GameMode, GameDifficulty } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
+import { GameMode, GameDifficulty } from '../models/game.model';
 import { GAME_DEFINITIONS } from '../config/game-definitions';
 import { isBrowser } from '../utils/browser.util';
 
@@ -11,6 +11,21 @@ export interface GameFinishFlowConfig {
   loseAction?: 'modal' | 'board_overlay' | 'auto_restart';
   autoNextAdFreq?: number; // -1: inherit global, 0: disabled, >0: custom
   autoNextDelayMs?: number; // default 1500
+}
+
+export interface GameModeConfig {
+  id: string;
+  labelKey: string;
+  descKey?: string;
+  desc?: string;
+  icon?: string;
+}
+
+export interface GameDifficultyConfig {
+  id: string;
+  labelKey: string;
+  descKey?: string;
+  desc?: string;
 }
 
 export interface GameConfig {
@@ -23,9 +38,9 @@ export interface GameConfig {
   /** Emoji icon for display */
   iconEmoji: string;
   /** Available PK modes */
-  modes: GameMode[];
+  modes: GameModeConfig[];
   /** Available difficulty levels */
-  difficulties: GameDifficulty[];
+  difficulties: GameDifficultyConfig[];
   /** Recommended games to show on the result screen */
   recommendations?: string[];
   /** Whether this game's engine supports multi-round PK series (Wins tracking). */
@@ -72,8 +87,20 @@ export class GameRegistryService {
 
   /**
    * Register a game's metadata. Safe to call multiple times (idempotent).
+   * 黄金守卫 (Golden Guard): 强制防御性规范化，确保 modes 与 difficulties 绝非空数组，从根源杜绝未捕获异常。
    */
   register(config: GameConfig): void {
+    if (!config.modes || config.modes.length === 0) {
+      config.modes = [
+        { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+        { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '⚡', desc: 'Speed PK' }
+      ];
+    }
+    if (!config.difficulties || config.difficulties.length === 0) {
+      config.difficulties = [
+        { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium_desc', desc: 'Normal' }
+      ];
+    }
     this.registry.set(config.id, config);
   }
 

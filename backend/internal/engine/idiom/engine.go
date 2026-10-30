@@ -86,14 +86,9 @@ func (e *IdiomPKEngine) InitGame(options interface{}) error {
 	e.Display = make([]string, 0)
 	e.Keyboard = make([]string, 0)
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		}
-		if d, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = d
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Target = opts.Target
+	e.Difficulty = opts.DiffStr()
 
 	return nil
 }
@@ -154,7 +149,7 @@ func (e *IdiomPKEngine) HandleAction(playerID string, action string, payload []b
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			e.startNewChain()
 			e.RoundNum = 1
 		})

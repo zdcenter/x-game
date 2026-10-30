@@ -38,13 +38,8 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	e.Players = make(map[string]*SpeedPlayer)
 	e.Winners = make([]string, 0)
 
-	e.Difficulty = string(domain.DiffMedium)
-
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-		}
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
 
 	var puzzles []domain.SudokuPuzzle
 	if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
@@ -109,7 +104,7 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

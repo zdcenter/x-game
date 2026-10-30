@@ -43,6 +43,8 @@ const (
 	ActionToggle    C2SAction = "toggle"
 	ActionPour      C2SAction = "pour"
 	ActionSolve     C2SAction = "solve"
+	ActionReveal    C2SAction = "reveal"
+	ActionFlag      C2SAction = "flag"
 	ActionEmoji     C2SAction = "emoji"
 	ActionChat      C2SAction = "chat"
 

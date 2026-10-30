@@ -249,21 +249,25 @@ export class GameSwitchModalComponent {
     const cfg = this.gameRegistry.getConfig(gameId);
     if (!cfg) return;
 
-    if (preferredDiff && cfg.difficulties.some(d => d.id === preferredDiff)) {
+    if (preferredDiff && cfg.difficulties?.some(d => d.id === preferredDiff)) {
       this.selectedDifficulty.set(preferredDiff);
-    } else if (cfg.difficulties.length > 0) {
+    } else if (cfg.difficulties && cfg.difficulties.length > 0) {
       // Prefer medium if exists, else first
       const med = cfg.difficulties.find(d => d.id === 'medium');
       this.selectedDifficulty.set(med ? med.id : cfg.difficulties[0].id);
+    } else {
+      this.selectedDifficulty.set(preferredDiff || 'medium');
     }
 
-    const mpModes = cfg.modes.filter(m => m.id !== GameMode.Single);
+    const mpModes = cfg.modes ? cfg.modes.filter(m => m.id !== GameMode.Single) : [];
     if (preferredMode && mpModes.some(m => m.id === preferredMode)) {
       this.selectedMode.set(preferredMode);
     } else if (mpModes.length > 0) {
       this.selectedMode.set(mpModes[0].id);
-    } else if (cfg.modes.length > 0) {
+    } else if (cfg.modes && cfg.modes.length > 0) {
       this.selectedMode.set(cfg.modes[0].id);
+    } else {
+      this.selectedMode.set(preferredMode || GameMode.Speed);
     }
   }
 

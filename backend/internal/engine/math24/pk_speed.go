@@ -30,14 +30,9 @@ func (e *PKSpeedEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
 
-	opts, _ := options.(map[string]interface{})
-	diff, _ := opts["difficulty"].(string)
-	e.Difficulty = diff
-	if t, ok := opts["target"].(int); ok && t > 0 {
-		e.Target = t
-	} else {
-		e.Target = 1
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
+	e.Target = opts.Target
 	e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target)
 	e.State = engine.StateWaiting
 	return nil
@@ -80,7 +75,7 @@ func (e *PKSpeedEngine) HandleAction(playerID string, actionType string, payload
 	}
 
 	if e.State == engine.StateWaiting && actionType == string(domain.ActionStartGame) {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 

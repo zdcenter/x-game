@@ -1,5 +1,5 @@
 import { GameDifficulty, GameId, GameMode, GameResult, GameResultType, GameStatus } from '../../../core/models/game.model';
-import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty, isBrowser } from '../../../core/utils/browser.util';
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -66,9 +66,14 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   // Dynamic cell sizing & smooth zoom
   cellSize = signal<number>(34);
+  baseCellSize = signal<number>(34);
   readonly minCellSize = 22;
   readonly maxCellSize = 52;
   readonly defaultCellSize = 34;
+  zoomPercentage = computed(() => {
+    const base = this.baseCellSize() || this.defaultCellSize;
+    return Math.round((this.cellSize() / base) * 100);
+  });
 
   zoomIn() {
     this.cellSize.update(size => Math.min(this.maxCellSize, size + 4));
@@ -79,8 +84,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   resetZoom() {
-    this.cellSize.set(this.defaultCellSize);
+    this.cellSize.set(this.baseCellSize());
   }
+
+  private lastOrientationLandscape?: boolean;
 
   // Two-finger pinch-to-zoom tracking
   private initialPinchDistance = 0;
@@ -133,6 +140,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       this.mobileActionMode.update(m => m === 'reveal' ? 'flag' : 'reveal');
       event.preventDefault();
     }
+  }
+
+  @HostListener('window:resize')
+  @HostListener('window:orientationchange')
+  handleViewportResizeOrOrientation() {
+    this.windowSizeService.scheduleMultiRefresh();
+    this.updateAdaptiveCellSize(true);
   }
   
   showCustomDialog = signal(false);
@@ -269,6 +283,17 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   constructor() {
     super();
+
+    // Reactive orientation & window resize calibration (handles tablet landscape/portrait rotation seamlessly)
+    effect(() => {
+      const size = this.windowSizeService.size();
+      if (!isBrowser()) return;
+      const isLandscape = size.w > size.h;
+      const orientationChanged = this.lastOrientationLandscape !== undefined && this.lastOrientationLandscape !== isLandscape;
+      this.lastOrientationLandscape = isLandscape;
+
+      this.updateAdaptiveCellSize(orientationChanged);
+    });
 
     effect(() => {
       const status = this.store.status();
@@ -573,34 +598,82 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.currentRoomMode.set(GameMode.Single);
     this.store.startLocalGame(width, height, mines, diff);
 
-    this.cellSize.set(this.calculateAdaptiveCellSize(width));
+    this.updateAdaptiveCellSize(true);
   }
 
-  calculateAdaptiveCellSize(cols: number): number {
-    if (typeof window === 'undefined') return this.defaultCellSize;
-    const screenW = window.innerWidth;
-    const isMobile = screenW < 640;
-    const isTablet = screenW >= 640 && screenW < 1024;
-
-    if (cols <= 9) {
-      if (isMobile) {
-        const ideal = Math.floor((screenW - 28) / 9);
-        return Math.max(36, Math.min(48, ideal));
-      }
-      if (isTablet) return 46;
-      return 42;
-    } else if (cols <= 16) {
-      if (isMobile) return 32;
-      if (isTablet) {
-        const ideal = Math.floor((screenW - 48) / 16);
-        return Math.max(34, Math.min(42, ideal));
-      }
-      return 36;
-    } else {
-      if (isMobile) return 26;
-      if (isTablet) return 28;
-      return 30;
+  getBoardDimensions(): { cols: number; rows: number } {
+    const board = this.store.board();
+    if (board && board.length > 0 && board[0]?.length > 0) {
+      return { cols: board[0].length, rows: board.length };
     }
+    const diff = this.currentDifficulty();
+    if (diff.startsWith('custom_')) {
+      const parts = diff.split('_');
+      return { cols: parseInt(parts[1], 10) || 16, rows: parseInt(parts[2], 10) || 16 };
+    }
+    switch (diff) {
+      case 'easy': return { cols: 9, rows: 9 };
+      case 'medium': return { cols: 16, rows: 16 };
+      case 'hard': return { cols: 30, rows: 16 };
+      case 'expert': return { cols: 30, rows: 20 };
+      case 'master': return { cols: 30, rows: 24 };
+      default: return { cols: 16, rows: 16 };
+    }
+  }
+
+  updateAdaptiveCellSize(forceReset = false) {
+    const dims = this.getBoardDimensions();
+    const newBase = this.calculateAdaptiveCellSize(dims.cols, dims.rows);
+    const oldBase = this.baseCellSize();
+    this.baseCellSize.set(newBase);
+
+    const current = this.cellSize();
+    const wasDefault = Math.abs(current - oldBase) <= 1;
+    if (forceReset || wasDefault || current === 0) {
+      this.cellSize.set(newBase);
+    }
+  }
+
+  /**
+   * Dual-axis screen auto-fit: calculates the optimal cell size (px)
+   * so the entire board comfortably fits within both the viewport width AND height
+   * across mobile phones, tablets (portrait & landscape), and desktop monitors.
+   */
+  calculateAdaptiveCellSize(cols?: number, rows?: number): number {
+    if (!isBrowser()) return this.defaultCellSize;
+
+    // Direct reading from visualViewport or WindowSizeService for guaranteed latest dimensions
+    const vp = window.visualViewport;
+    const directW = (vp && vp.width > 0) ? Math.round(vp.width) : window.innerWidth;
+    const directH = (vp && vp.height > 0) ? Math.round(vp.height) : window.innerHeight;
+    const svcSize = this.windowSizeService.size();
+    const screenW = directW || svcSize.w || 1024;
+    const screenH = directH || svcSize.h || 768;
+
+    const dims = this.getBoardDimensions();
+    const boardCols = cols || dims.cols || 16;
+    const boardRows = rows || dims.rows || 16;
+
+    const isHandheld = this.isHandheld();
+    const isMobile = screenW < 640;
+
+    // Available board area width (deducting horizontal margins/paddings)
+    const hPad = isMobile ? 16 : (isHandheld ? 32 : 64);
+    const availW = Math.max(160, screenW - hPad);
+
+    // Available board area height (deducting headers, zoom pill, action toggles, toolbar)
+    // On tablet / iPad: header ~76px (md: min-h-[68px] with py-3.5), zoom pill ~38px, toolbar ~56px, board padding ~16px, board border ~6px, gaps ~16px = ~208px
+    const chromeH = isMobile ? 220 : (isHandheld ? 208 : 240);
+    const availH = Math.max(160, screenH - chromeH);
+
+    const cellFromW = Math.floor(availW / boardCols);
+    const cellFromH = Math.floor(availH / boardRows);
+
+    const ideal = Math.min(cellFromW, cellFromH);
+
+    // Dynamic upper bound based on board complexity
+    const upperLimit = boardCols <= 9 ? 48 : (boardCols <= 16 ? 42 : 36);
+    return Math.max(this.minCellSize, Math.min(upperLimit, ideal));
   }
 
   getDifficultyDisplayName(): string {

@@ -8,6 +8,7 @@ import { AdService } from '../../../../core/services/ad.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
+import { C2SAction } from '../../../../core/models/websocket.model';
 
 export enum CellState {
   Hidden = 0,
@@ -343,17 +344,17 @@ export class MinesweeperStore extends BaseGameStore {
             const timeSec = engine.startAt > 0 ? Math.round((Date.now() - engine.startAt) / 1000) : 0;
             this.submitSingleStat({ time: timeSec, won: true }).subscribe();
           } else {
-            this.liveActivity.reportGameResult(
-              'minesweeper',
-              false,
-              GameMode.Single,
-              this.currentDifficulty() as string
-            );
+            this.submitSingleStat({ won: false }).subscribe();
           }
         }
       }
     } else {
-      this.ws.send(action);
+      const act = action.type === MinesweeperActionType.Reveal ? C2SAction.Reveal : C2SAction.Flag;
+      this.ws.send({
+        action: act,
+        x: action.x,
+        y: action.y
+      });
     }
   }
 

@@ -58,18 +58,9 @@ func (e *NonogramEngine) InitGame(options interface{}) error {
 	e.Winner = ""
 	e.Winners = nil
 	
-	opts, ok := options.(map[string]interface{})
-	if ok {
-		if t, ok := opts["target"].(float64); ok && int(t) > 0 {
-			e.Target = int(t)
-		}
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-		}
-	}
-	if e.Target <= 0 {
-		e.Target = 1
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Target = opts.Target
+	e.Difficulty = opts.DiffStr()
 
 	e.setupBoard()
 	return nil
@@ -140,7 +131,7 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 	defer e.Mu.Unlock()
 
 	if engine.HandleLifecycle(&e.State, action, func() {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 	}, func() {
 		// Restart logic
 		seriesOver := false

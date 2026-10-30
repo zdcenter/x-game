@@ -2,6 +2,263 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.113] - 2026-10-30
+
+### 后端重启时游戏配置与流转参数持久化防覆盖重构 (Fix GameConfig & FinishFlow Wiped Out on Backend Restart in Seed Routine)
+- **核心痛点解决 (用户语音反馈：目前有个问题是什么问题呢？就是说管理员在后台里面配置游戏参数的配置，在那里等于说是通关流转还是失败流转的这里，有问题。就是说弹窗，比如说你玩游戏单机的时候出现是否是弹窗结算还是直接自动下一关，这里是可以配置的也可以修改数据库，但是后端在重启的时候，就会出现数据库的那个配置信息，游戏的配置信息全部被清空了！等于说我的通关流转的话就已经全部没有了，你要帮我解决一下这个问题。是保存了，但是你重启了后端，那个配置信息又丢了。我已经看过数据库了，你看一下怎么解决这个问题。)**：
+  - **根本原因深度剖析**：
+    1. **`backend/pkg/db/postgres.go` 中 `Seed()` 存在毁灭性覆写逻辑**：
+       - `Seed()` 函数在服务器每次冷启动或热重启时都会被执行一次；
+       - 函数内部构造了一个包含全部注册引擎的默认切片，每一项的 `Config` 字段硬编码赋值为 `"{}"`；
+       - 在遍历写入数据库时，原代码逻辑为：若记录已存在（`count != 0`），执行了 `DB.Model(&domain.GameConfig{}).Where("id = ?", game.ID).Updates(map[string]interface{}{ "config": game.Config, "is_active": game.IsActive })`；
+       - 这导致管理员在后台数据看板（`AdminGamesComponent`）中精心配置并已成功保存入库的 `finishFlow`（通关流转 `winAction: 'modal' | 'auto_next'`、失败流转 `loseAction`、广告频控 `autoNextAdFreq`、流转延迟 `autoNextDelayMs`、多回合对战 `multiRound`、图标等），在后端服务每次重启的那一瞬间，被 `Seed()` 的更新语句无情强行覆盖成了空 JSON 字符串 `"{}"`！
+  - **系统级平台重构方案**：
+    1. **拔除 `Seed()` 针对已有游戏配置的破坏性更新**：
+       - 重构 `postgres.go` 中的 `Seed()` 逻辑，遵循“纯增量初始化、绝对不污染存量数据”的数据库种子契约；
+       - 对于已在 `gm_game_configs` 表中存在的游戏记录，**绝对禁止覆盖其 `config` 与 `is_active` 字段**；
+       - 仅当数据库中不存在该游戏时（首次上线或新增游戏引擎），才插入默认记录；
+       - 仅当存量记录的 `config` 字段完全为 NULL 或空串时，才安全初始化为 `"{}"`；
+    2. **管理员配置永固持久化闭环**：
+       - 管理员在后台修改的任一游戏的流转动作（如通关自动跳下一关、失败原地覆层重开、广告间隔）、上架状态与对战模式，将安全稳固地持久化在 PostgreSQL 中，历经无数次后端重启、容器重建与代码热发布，配置数据坚如磐石、永不丢失。
+
+## [v3.2.112] - 2026-10-30
+
+### 数独棋盘全端绝对居中对齐、推箱子选关大厅表格难度强制同频与混合题库闭环 (Sudoku Board Full-Viewport Centering, Sokoban & Sudoku Lobby Table Auto-Sync & Hybrid Engine Verification)
+- **核心痛点解决 (用户语音反馈：那就实现一下数独的推荐混合构架。等于说PK的时候就是随机生成，或者就按照上面的方法去做，就行了。还有一个问题，就是数独的棋盘在平板或者在其他地方好像是不居中显示的，最好是居中显示，那个棋盘就看起来舒服些。还有就是数独推荐混合构架，帮我完善一下，看现在是否是那样的。还有一个就是推箱子，我选择某个难关，它应该像数独一样，比如说我选择中级，那它就应该在选关大厅那里，那就是中级的那个table，这样就比较好一些。)**：
+  - **根本原因深度剖析**：
+    1. **数独棋盘在平板与宽屏下未居中显示 (偏顶/偏左失衡)**：
+       - `sudoku.component.html` 外部舞台容器历史类名为 `justify-start my-0` 和 `mt-2`，将整个对战舞台死死吸附在屏幕极顶；内部栅格使用了 `md:items-start`，在平板和 PC 桌面端导致棋盘向上靠齐，未能垂直居中；
+       - `app-sudoku-board.component.html` 内部网格包装器缺少 `mx-auto`，当列宽被父容器扩展时，棋盘本体向左靠齐，在 iPad 等平板设备上产生明显的向左偏置与上下失衡，观感不佳；
+    2. **推箱子返回大厅或选难度时大厅表格未联动切换至对应 Tab**：
+       - 之前推箱子返回大厅时仅仅执行 `showLobby.set(true)`，未将当前游戏难度通知大厅内部组件；
+       - `SokobanLobbyComponent` 缺少 `@Input() set currentDifficulty`，当父级传入最新选中难度时，大厅表格无法响应式感知并加载对应级别的关卡列表；
+    3. **数独关卡流转难度标识前缀 Bug**：
+       - `playNextLevel()` 中解析 `sudoku-easy-1` 关卡 ID 时，正则提取前缀直接取了 `'sudoku-easy'`，导致难度被错误赋值为非法字符串，污染后续状态。
+  - **系统级平台重构方案**：
+    1. **数独棋盘全平台双轴极致居中美学**：
+       - 重构 `sudoku.component.html` 单人实战舞台容器，注入 `w-full flex-grow flex flex-col relative min-h-0 items-center justify-center my-auto` 与内部 `flex-1 justify-center items-center my-auto`；
+       - 优化平板与桌面端栅格布局为 `justify-center items-center md:items-center gap-3 md:gap-6 min-h-0 w-full max-w-[500px] md:max-w-[580px] mx-auto my-auto`；
+       - `sudoku-board.component.html` 注入显式 `mx-auto`，确保棋盘本体在手机、iPad 竖屏、iPad 横屏和 PC 桌面宽屏下**四方均等对称、双轴绝对居中**，呈现典雅舒适的视觉体验；
+    2. **推箱子与数独选关大厅表格与难度无缝互锁 (`openLobbyView`)**：
+       - `SokobanLobbyComponent` 与 `SudokuLobbyComponent` 统一实现 `@Input() set currentDifficulty(val)` 响应式拦截器，当父级难度变化时即刻自动驱动 `activeTab.set(val)` 与 `loadLevels(val)`；
+       - `SokobanComponent` 封装 `openLobbyView()` 标准方法，所有从局内返回大厅、手持端点击关卡编号切关卡、点击左侧座舱难度的操作，统一自动定位并激活对应难度的关卡表格；
+    3. **数独混合架构体系验证与关卡流转自愈**：
+       - 校验并确认混合架构已完全生效：1) **单机关卡闯关**：从数据库 800 道精选题库（初级/中级/高级/专家各 200 关）依序闯关，记录进度与星级；2) **联机 PK 对战 (Speed & Steal 模式)**：由 Go 后端服务端引擎动态从当前选中难度的题库中随机抽取同构唯一解题目，胜者结算重开时自动获取全新随机题目，实现无限对决且双方绝对公平；
+       - 修复 `playNextLevel()` 前缀解析缺陷：`diff = prefix.replace(/^sudoku-/, '')`，保证进入下一关时难度值永远纯净有效。
+
+## [v3.2.111] - 2026-10-30
+
+### PC 桌面端左侧座舱难度高亮修复、推箱子与数独选关大厅双向联动与题库架构策略落地 (Left Cockpit Difficulty Highlight Fix, Sokoban & Sudoku Lobby Real-Time Sync & Question Bank Strategy Standard)
+- **核心痛点解决 (用户语音反馈：刚才我看了下数独和推箱子，在PC端我选左边其他等级的时候，它没有变成黄色，也就是说我选择它并没有变色；而且推箱子点的话在选关大厅它也不会相对应出现选中的某个级别的练习。我想问一下数独这些游戏有4个等级，是否要生成题库还是选了等级之后给它自动生成自己的题库？像推箱子可能一定需要自己的题库，还有24点，不知道数独有没有必要生成题库还是按难易程度随机生成？)**：
+  - **根本原因深度剖析**：
+    1. **座舱高亮状态未响应变色 (未变黄色)**：
+       - `GameLayoutComponent` 内的 `effectiveDifficulty` 计算属性中，由于历史代码优先判断了 `storeDiff = (this.store as any)?.currentDifficulty?.()`；
+       - `BaseGameStore` 默认初始化时将 `currentDifficulty` 赋初值为 `'medium'`；
+       - 当用户在 PC 桌面端左侧座舱点击其他等级（如简单或困难）时，`storeDiff` 始终固定抢先返回旧值 `'medium'`，屏蔽了用户即时点击设置的 `currentDifficultySignal`，导致高亮类名 `[ngClass]="effectiveDifficulty() === diff.id ? 'bg-amber-500 text-white shadow-xs' : ..."` 判定失败，按钮无法变亮变黄；
+    2. **推箱子选关大厅与左侧座舱失去联动**：
+       - `sokoban.component.html` 中 `<app-game-layout>` 漏配了 `(difficultyChange)` 事件监听；
+       - `sokoban.component.ts` 未声明 `@ViewChild(SokobanLobbyComponent)`，且组件内的 `changeSingleDifficulty(diff)` 只更新了本地单局状态，在选关大厅激活时未通知 `sokobanLobby.selectDifficulty(diff)`，导致左侧切了难度而选关大厅的关卡列表完全未切换；
+       - `sokoban-lobby` 与 `sudoku-lobby` 内部切换 Tab 时也未向外冒泡 `difficultyChange`，导致座舱卡片与大厅标签无法双向同频。
+  - **系统级平台重构方案**：
+    1. **`GameLayoutComponent` 难度响应式状态治理**：
+       - 在 `effectiveDifficulty` 计算属性中，优先提取由用户点击/外部直接输入的 `currentDifficultySignal()`，其次回退至 `storeDiff` 与本地持久化记忆；
+       - 在 `onDifficultyChange(newDiff)` 中，同时响应式更新 `this.store.currentDifficulty.set(newDiff)` 与 `setSavedDifficulty(this.gameId, newDiff)`；
+       - 在 `ngOnInit()` 中针对初始无输入状态进行自愈校准，确保 PC 宽屏进入游戏第一时刻和后续每一次点击，对应难度按钮 100% 亮起明亮琥珀金黄光辉（`bg-amber-500 text-white shadow-xs`）；
+    2. **推箱子与数独选关大厅双向实时联动**：
+       - `SokobanComponent` 注入 `@ViewChild(SokobanLobbyComponent)`，在 `changeSingleDifficulty(diff)` 中精准感知大厅模式，直接调用 `sokobanLobby.selectDifficulty(diff)` 即时加载对应级别的关卡列表；
+       - `SokobanLobbyComponent` 与 `SudokuLobbyComponent` 新增 `@Output() difficultyChange = new EventEmitter<string>()`，在大厅内部点击难度 Tab 时同步向外派发事件，形成“左侧座舱 ↔ 选关大厅 ↔ 游戏局内”三位一体 100% 实时双向同频；
+    3. **三大益智游戏题库生成与存储架构权威定调**：
+       - **推箱子 (Sokoban)**：**必须采用离线手工/精品验证题库**。纯随机算法推导推箱子地图极易产生死锁或枯燥无解废图，目前数据库已内置各难度阶梯式精巧关卡；
+       - **数独 (Sudoku)**：**推荐混合架构 (Hybrid)**。关卡晋级模式采用数据库现有 800 道精选独解题库（每难度 200 关，记录星级与进度）；自由练习/无尽模式与联机 PK 采用本地/服务端唯一解回溯打洞算法，实现无限解谜；
+       - **24点 (Math 24)**：**全穷举离线验证题库 (1362 道可解组合)**。24点属于有限数学组合空间（1~13 四张牌组合总数仅 1820 种，可解组合仅 1362 种），按基础运算/带括号/分数除法精确分级最稳定高效。
+
+## [v3.2.110] - 2026-10-30
+
+### PC 桌面端左侧座舱难度规格与 PK 对战卡片平台级通用封装标准 (Encapsulated Standard Desktop Cockpit Left-Wing: Dedicated Difficulty Specs Matrix & PK Hub for Sudoku and All Games)
+- **核心痛点解决 (用户反馈：扫雷做得非常好像扫雷的话在PC端有游戏等级的选择，包括它是每一个等级它是独占一行，而且左边是... 比如说简单多少成多少的都能够一目了然。而且呢，这个游戏等级下面就是一些PK的相干相关选择信息，我觉得非常棒。但我看到个数独，数独的话都没有这样去列。并数独应该或者其他游戏应该有一个游戏等级的卡片在左边，还有一个PK房间的相关选择难等级的PK信息，等于说仿照那个扫雷那样去做，那就是最好的了。看一下把其他游戏也给我完善一下吧。把它封装，放到一边先。)**：
+  - **根本原因深度剖析**：
+    1. **历史实现各自为政与公共组件封装缺失（违反准则第6条“任何通用的要考虑封装”）**：
+       - 之前扫雷在自己的 `minesweeper.component.html` 中通过 `<div cockpit-left>` 手动堆砌了专属卡片，其他游戏（数独、数织、华容道、点灯等）均未单独编写；
+       - `GameLayoutComponent` 历史默认仅在选手档案卡片内部挤入了一个极其简陋的 2 列微缩按钮矩阵（无图标、无 `多少乘多少` 规格参数、无独立标题与当前选中徽章），且数独处于选关大厅视图时因受限于 `!isLobbyEffective()` 判定，整个 PC 左翼被完全隐藏；
+    2. **数独等多关卡游戏缺乏左侧全局难度与选关大厅联动**：在数独大厅或对局中，PC 宽屏用户无法直观在左侧一览“初级 9x9 (40+) / 中级 9x9 (30+) / 高级 9x9 (25+) / 专家 9x9 (20+)”，无法像扫雷一样一键切难度开新局或直接从侧翼发起同难度 PK。
+  - **系统级平台标准封装方案（一次封装，全平台 18 款游戏全面受惠）**：
+    1. **`<app-game-layout>` 内置标准第一卡片：🎯 难度规格 / 游戏等级 (Game Difficulty Card)**：
+       - 当单机模式且 `availableDifficulties.length > 0` 时，自动于 PC 桌面宽屏（`xl:` / `2xl:`）左翼生成标准卡片；
+       - **独占一行规格清单 (Single Row per Difficulty)**：采用 `grid grid-cols-1 gap-2`，每行左侧呈现层级专属 Emoji（🌱 简单/入门、⚡ 中等/标准、🔥 困难/进阶、😈 专家/职业、👑 大师/地狱、🛠️ 自定义）与国际化难度名称，右侧等宽呈现精准规格（扫雷 `9x9 (10)`、数独 `9x9 (40+)`、数织 `5x5 / 10x10`、华容道 `4x4 / 5x5` 等），一览无余；
+       - **选中高亮态**：激活难度赋予 `bg-amber-500 text-white shadow-xs`，未选中项严格遵循全局 CSS 变量 `bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] border-[var(--color-border-card)]`，完美契合 Light/Dark 双模主题；
+       - **高扩展插槽 (`[cockpit-difficulty-extra]`)**：扫雷等游戏的 `🛠️ 自定义规格 W × H` 等特殊入口通过该插槽自然融入同一卡片底部，彻底清除扫雷模板中的重复代码；
+    2. **`<app-game-layout>` 内置标准第二卡片：👤 选手档案 & ⚔️ PK 对决 (Player Profile & Combat Specs)**：
+       - 整合玩家头像、昵称、🪙 脑力金币、Lv. 等级与当前游戏模式、难度、对局状态（🔥 挑战中 / ✨ 就绪）；
+       - **实时对决探测与极速应战**：检测到全服有其他玩家发起当前游戏的对战（`waitingRoomForThisGame()`）时，以琥珀色微光脉冲卡片显著提示“⚔️ 发现对战房间！”，并提供【⚡ 快速应战】直达通道；
+       - **当前难度极速开房**：下方提供全宽【⚔️ 发起对决】按钮，一键携当前选中的难度参数极速开房；
+    3. **选关与大厅解封与双向自愈响应**：
+       - 将 PC 左翼展示条件升级为 `@if (!isImmersiveEffective())`，消除 `!isLobbyEffective()` 的误伤，让数独、24点等游戏在选关大厅视图下 PC 宽屏左翼依然完整呈现；
+       - 数独组件深度适配：在 `view === 'lobby'` 时点击左侧难度直接切换大厅对应难度关卡标签；在 `view === 'play'` 时点击立即开启该难度下一关未解谜题；
+    4. **8 国语言多语言全面覆盖**：同步新增 `pk.waiting_room_alert`、补齐数独各级 `desc` 规格，所有文本严格由 `i18n.service.ts` 驱动。
+
+## [v3.2.109] - 2026-10-30
+
+### 平板横竖屏动态旋转自适应与双轴满屏视口校准旗舰打样 (Dual-Axis Viewport Auto-Fit on Tablet Orientation Change, Fullscreen Immersive Strict Container & Minesweeper Exemplar Standard)
+- **核心痛点解决 (用户反馈：这是我在平板上转动的时候出现的问题。就是横向，假如我是纵向，那就一点问题没有，那我把它变成横向了，以后就出现这个……棋盘就出现这个问题，这个它没有自适应，这个移动端的转动的时候变成全屏的模式。看一下这个怎么解决。到时可能其他游戏会有这种问题，我们先解决这个上来，把这个样板打样出来，我们再做其他游戏)**：
+  - **根本原因深度剖析**：
+    1. **单轴计算缺陷与 WindowSizeService 测算污染（核心罪魁祸首）**：
+       - `WindowSizeService.measure()` 历史遗留了 `Math.max(winH, docH, bodyH)` 代码。在 Web 标准中，`body.clientHeight` 代表**整个页面内容的滚动高度**，并非**视口可视高度**！在平板由纵向转为横向瞬间，由于内容尚未重新缩放，`body.clientHeight` 依然高达 1080px，导致 `Math.max` 测算出的视口高度始终卡在 1080px（产生只大不小的棘轮效应），棋盘计算永远误以为垂直空间极大；
+       - 原 `calculateAdaptiveCellSize` 预留的扣高仅 168px，而平板端手持顶梁、缩放栏、工具箱及内边距的实际物理占高为 208~210px，造成可用高度估算偏大；
+    2. **缺少旋转与视口响应式重排监听**：单格尺寸 `cellSize` 仅在切换难度时计算一次，平板物理旋转（从纵向转横向）时没有任何事件触发重新计算，棋盘始终维持纵向计算出的 42px（显示为放大的 `🔍 124%`）；
+    3. **外层容器高度约束缺失引发溢出脱节**：`game-layout.component.ts` 在手持沉浸模式下外层仅声明了 `min-h-[100dvh]`，缺乏显式 `h-[100dvh] max-h-[100dvh] overflow-hidden` 强约束。在 CSS Flexbox 规范中，`min-height` 无法为子元素百分比高度提供确定基准，导致内部 `flex-grow` 舞台无限向下伸展撑出滚动条；
+    4. **缩放基准死锁**：缩放百分比 `zoomPercentage` 硬编码基于 `34px` 计算，导致在平板自适应到 42px 时一开局就显示为异常的 `124%`，且点击缩放重置无法复原至适合当前屏幕的最佳满屏比例。
+  - **系统级旗舰标杆打样重构方案**：
+    1. **拔除 `WindowSizeService.measure()` 滚动内容高度污染**：
+       - 彻底删除 `Math.max(..., bodyH)`，优先直读原生 `window.visualViewport`（iOS/iPadOS Safari 权威可视区域），次选 `window.innerHeight` 与 `docEl.clientHeight`，物理级保证平板旋转横屏时视口高度准确汇报为真实的 ~550px；
+    2. **双轴动态满屏自适应算法 (`calculateAdaptiveCellSize`)**：
+       - 全面重构为同时输入 `cols` 与 `rows`：直读 `visualViewport` 与 `WindowSizeService.size()` 中的 `screenW` 与 `screenH`；
+       - 精确扣除顶部手持顶梁（~76px）、缩放飞梭条（~38px）、底栏工具箱（~56px）、边框与内边距（~24px）、间隙（~16px）的真实占高（平板端精确校准为 208px）；
+       - 双轴取小：`ideal = Math.min(availW / boardCols, availH / boardRows)`，并在 `[minCellSize, upperLimit]` 间平滑钳位，保证 16×16 中等难度在 iPad 横屏下精确自适应至 22~24px 满屏无裁切呈现；
+    3. **双重事件自愈：Angular Signals `effect()` + 原生 `@HostListener`**：
+       - 组件直接挂载 `@HostListener('window:resize')` 与 `@HostListener('window:orientationchange')`，在平板物理旋转瞬间 0ms 触发 `updateAdaptiveCellSize(true)`；
+       - 协同 `WindowSizeService` 的阶梯刷新定时器（50ms/150ms/300ms/500ms），完美覆盖 WebKit 旋转动画过程中的尺寸滞后；
+    4. **自适应基准信号与智能视野重置 (`baseCellSize`)**：
+       - 新增动态信号 `baseCellSize = signal<number>(34)`，将自适应算出的尺寸作为当前视口下的 **100% 原始视野**；
+       - `zoomPercentage = computed(() => Math.round((cellSize() / baseCellSize()) * 100))`，横屏和竖屏初始呈现均为标准的 `🔍 100%`；
+       - 点击【重置视野】按钮立即复原到当前屏幕的最佳自适应尺寸；
+    5. **`game-layout` 全局底层满屏物理锁死 (`h-[100dvh] max-h-[100dvh] overflow-hidden`)**：
+       - 在手持沉浸模式（`isImmersiveEffective()`）下，外层根节点、`main` 区域、座舱网格容器、中央核心舞台、游戏台座全链路统一注入 `h-full max-h-full overflow-hidden`；
+       - `showHandheldDock` 补充 `!this.isImmersiveEffective()` 拦截，消除沉浸模式下手持悬浮 Dock 带来的不必要 `pb-16` 占位；
+       - 确保全站 18 款游戏在手持沉浸模式下顶梁紧贴上方、底栏稳固钉在底部安全区、中间棋盘滚动区严格撑满剩余高度，为后续所有游戏建立坚不可摧的“打样标准”。
+
+## [v3.2.108] - 2026-10-30
+
+### 真·成语接龙局内切游戏与开局死锁修复及游戏元数据完整性黄金守卫体系 (Fix Idiom Game Switching & Launch Deadlock, Game Definitions Golden Guard & Architecture Hardening)
+- **核心痛点解决 (用户反馈：那个成语接龙那里有一个问题。就是说你，如果玩家在其他游戏，或者在成语接龙这个游戏的棋盘里面，然后选择等候的那个换，换游戏，然后选择真·成语接龙的时候，是“确定切换并开局”，这个是用不了的。但是你可以切换到其他游戏都可以，“确定切换并开局”都可以，就是成语接龙不行。但是如果你是在那个PK等候大厅那里切换那个成语接龙，但是又可以。只有在游戏界面下的那个“换游戏”那个对话框那里，选择成语接龙，那就不行。这不能，选择真·成语接龙也不能开局，不知道你理解我的意思没有？所以这个也要统一起来。那你看一下还有什么地方需要改进、优化或者封装的吗？为了以后更好的维护、更好的使用、有更好的一套标准，而不要出现新加游戏的时候出现这样那样的问题。包括布局，还有算法，还有封装之类等等都要考虑好)**：
+  - **根本原因深度剖析**：
+    1. **成语接龙配置缺失难度定义**：在 `frontend/src/app/core/config/game-definitions.ts` 中，成语接龙（`idiom`）最初未配置 `difficulties: []`，且模式仅配置了 `GameMode.Speed`，缺少单人模式与标准难度级别定义；
+    2. **局内切游戏服务未作空数组防守抛错**：当玩家在游戏界面（棋盘/结算/顶栏工具箱）点击【换游戏】呼出 `GameSwitchModal` 并选择成语接龙点击【确认切换并开局】时，`GameSwitchService.executeSwitch()` 内部直接执行了 `targetConfig.difficulties[0].id`。当 `difficulties` 为空数组时，`targetConfig.difficulties[0]` 返回 `undefined`，直接触发底层运行时异常 `TypeError: Cannot read properties of undefined (reading 'id')`，导致后续的 WebSocket `change_game` 消息被异常阻断、弹窗无法关闭且无法开局；
+    3. **为何在 PK 等候大厅可以切换**：PK 等候大厅（`GameLobbyPanelComponent`）早已有防守检查 `config.difficulties.length > 0 ? config.difficulties[0].id : 'medium'`，因此从大厅切换成语接龙能正常回退到默认难度，而局内切游戏弹窗、`BaseGameStore.changeRoomGame` 和部分底层链路缺乏空数组防护。
+  - **系统级修复与三大架构封装体系增强**：
+    1. **对齐成语接龙标准配置基准与多语言合规**：
+       - 在 `game-definitions.ts` 中为 `idiom` 完整补齐 `GameMode.Single` 与标准难度档位 `[Easy, Medium, Hard]`，彻底与全平台其他 18 款益智游戏对齐；
+       - `idiom.component.html` 标题与终局文案彻底去除硬编码，全面对齐 `i18n.t('lobby.idiom')` 与国际化词条；
+       - `idiom.component.ts` 新增 `handleRestartGame()`，无缝支持单人神龙接龙重置与多人 PK 房间再来一局双分支；
+    2. **`GameRegistryService` 注入“黄金守卫 (Golden Guard)”防御性规范化**：
+       - 在 `GameRegistryService.register(config)` 注入自动补全熔断器：若任何新游戏在注册或从数据库加载时缺失 `modes` 或 `difficulties`，服务层自动强制注入标准单人/竞速模式与标准难度，物理级保证 `config.difficulties[0]` 永远合法存在；
+       - 修复 `GameRegistryService` 中 `GameMode` / `GameDifficulty` 的循环依赖引用（统一从 `models/game.model` 导入），杜绝打包顺序造成的模块 undefined 隐患；
+    3. **元数据完整性自动化测试守护 (`game-definitions.spec.ts`)**：
+       - 全新配置单测套件，覆盖全站 19 款游戏的 ID 唯一性、路由规范性、组件异步加载器、单人模式与 PK 模式必备性、难度档位合法性；
+       - 只要有任何新游戏定义不满足契约，Vitest 单测瞬时阻断报错，杜绝不合规配置流入生产；
+    4. **服务端 WebSocket 网关健壮性加固 (`manager.go`)**：
+       - 观战者消息分发分支增加 `msgType` 与 `act` 的双向兼容解析，彻底根除观战者发送 `{ action: 'leave' }` 时被误判定为非法动作的隐患；
+       - 房间切换游戏动作（`ActionChangeGame`）增加模式与难度的服务端自动默认值兜底（`mode = "speed"`, `diff = "medium"`），杜绝空字符串配置导致的游戏引擎初始化异常；
+    5. **开发指南与脚手架更新 (`HOW_TO_ADD_GAME.md` & `generate-game.js`)**：
+       - 发布前核对清单新增【上行指令单一 action 契约】与【元数据模式与难度非空契约】；
+       - 脚手架代码生成模板彻底固化单一标准的 `action: C2SAction.Progress`；
+    6. **全系统通信协议标准化：绝对零容忍彻底清理残留历史债务 (Zero-Tolerance Legacy Cleanup: C2S Single Action Standard)**：
+       - 彻底废除客户端上行混用 `type` 与 `action` 的历史债务，坚决不向“旧客户端残留代码”妥协降级；
+       - 前端定义 `WSActionMessage` 强类型守卫并注入 `WebSocketService.send()`，移除任何对 `type` 的回退映射，在编译期与运行时物理级杜绝遗留调用；
+       - 清理重构 `BaseGameStore`、`BaseGameComponent`、`GameSwitchService`、`EditRoomService` 与 `minesweeper.store` 等全量前端业务逻辑；
+       - 后端 `backend/pkg/ws/manager.go` 严格执行单一标准 `action` 字段分发，无 `action` 的不合规报文直接忽略并告警，坚决移除任何对 `type` 的向后兼容回退；
+       - 后端扫雷引擎结构体（`PlayerAction`）与 `SpeedEngine` 彻底删除 `Type` 字段，全链路统一使用 `Action` 驱动；
+       - 对齐 Go 后端单元测试（`spectator_test.go`、`change_game_test.go`），全量单测与 TS 类型检测 100% 绿灯。
+    7. **全链路拔除魔术字符串：全面实行强类型与枚举契约体系 (Zero Magic Strings: End-to-End Strong Typing Standard)**：
+       - 坚决杜绝在业务与协议逻辑中随意硬编码裸字符串（如 `"reveal"`、`"flag"` 等）；
+       - 后端在 `internal/domain/action.go` 扩充 `ActionReveal` 与 `ActionFlag`，`PlayerAction.Action` 类型严格声明为 `domain.C2SAction` 强类型别名；
+       - 前端在 `models/websocket.model.ts` 的 `C2SAction` 中同步补齐 `Reveal` 与 `Flag` 枚举，`minesweeper.store.ts` 上行派发全面改为 `C2SAction.Reveal` / `C2SAction.Flag`，获得完整的 IDE 自动补全与编译期安全守卫。
+    8. **前后端架构对称与标准化进阶体系 (S2C Envelope Standardization, Safe Option Parser & Local Engine Action Symmetry)**：
+       - **S2C 下行广播信封彻底扁平统一**：拔除表情与聊天消息中历史多余的 `{"type": "game", "event": "emoji"}` 冗余嵌套，所有下行广播 100% 统一为 `{ "type": S2CEvent, "payload": ... }`，与 C2S 上行 `action` 形成镜像对称，彻底消除前端接收消息的心智负担；
+       - **游戏选项强类型零崩溃解析器 (`engine.ParseGameOptions`)**：在 Go 后端 `internal/engine/base.go` 封装通用解析器，提供难度、模式、目标胜场、悬赏金币与随机种子的非空健壮默认值兜底，彻底终结新加游戏在 `InitGame` 中手动做泛型类型断言引发 panic 的隐患；同步升级脚手架代码生成模板 `generate-game.js` 与 `HOW_TO_ADD_GAME.md`；
+       - **单机动作模型对称 (`ILocalAction`)**：升级 `local-engine.interface.ts`，定义具备 `C2SAction` 动作语义对称的 `ILocalAction`，解决单机用 `type`、联机用 `action` 的概念割裂；
+       - **全端错误码与拒绝原因严格对齐**：补充前端 `WSErrorCode`（`HostRoomLimit`、`NotEnoughPlayers`、`PlayerNotReady`），与后端 `domain.ErrorCode` 100% 保持一一映射。
+    9. **引擎级标准倒计时与广播信封封装及死代码清理 (Engine Level Countdown & State Envelope Encapsulation, Dead Code Elimination)**：
+       - **开局 3 秒倒计时通用基类化 (`BaseEngine.TriggerCountdown`)**：在 `internal/engine/base.go` 中封装 `TriggerCountdown(onStartPlaying)`，自动统筹并发安全锁、`StateStarting` 广播、3 秒延时、`StatePlaying` 迁移与开局回调执行，新加游戏无需重复编写 goroutine 倒计时；
+       - **标准广播状态信封工具 (`BaseEngine.StandardStateMap`)**：为 `GetState()` 提供开箱即用的标准信封封装，统一输出 `status`, `players`, `winners`, `wins`, `target` 与业务数据，保证房间广播与前端 PK HUD / 观战镜像 100% 稳定读取；
+       - **脚手架与指南全面同步**：`frontend/scripts/generate-game.js` 与 `docs/HOW_TO_ADD_GAME.md` 模板全面采用 `e.TriggerCountdown` 与 `e.StandardStateMap`；
+       - **彻底清理废弃子组件**：彻底删除历史遗留且未被任何模块引用的 `sudoku-room.component`（HTML/CSS/TS），保持前端目录树与组件体系的极致纯净。
+    10. **既有存量引擎向新标准同构收敛 (Legacy Engines Convergence to Unified Architecture)**：
+        - **数字华容道同构改造 (`sliding/speed_engine.go`)**：在 `PKSpeedStateResponse` 中补齐标准的 `Players map[string]*engine.BasePlayer` 字典，终结此前由于缺乏 `players` 字段导致 `manager.go` 需要多层反射探测的弊端；`InitGame` 改用 `ParseGameOptions`，开局倒计时接入 `TriggerCountdown`；
+        - **扫雷引擎全量改造 (`validator.go` & `speed_engine.go`)**：`InitGame` 全面接入 `engine.ParseGameOptions`，消除冗余类型断言，开局倒计时接入 `TriggerCountdown`；
+        - **前端 Store 单机统计统一由基类托管**：修复数独与扫雷 Store 中的硬编码与直接调用，完全统一由 `BaseGameStore.submitSingleStat()` 接管胜负、全服动态广播与资产经验结算。
+    11. **全平台既有存量老游戏全量向全新标准升级收敛 (Full Legacy Engine Migration to BaseEngine & Standard Lifecycle)**：
+        - **水排序 (`watersort`) 结构性蜕变**：彻底废弃早期自行维护锁和广播函数的旧模式，全面继承 `engine.BaseEngine`，`InitGame` 采用 `ParseGameOptions`，局内动作与生命周期接入 `e.TriggerCountdown` 与 `e.State`，彻底杜绝孤岛实现；
+        - **全量引擎 InitGame 选项标准化**：`codebreaker`, `idiom`, `sudoku/speed`, `sudoku/steal`, `nonogram`, `math24/pk_speed`, `math24/pk_steal`, `lightsout`, `tetris`, `sokoban`, `hashi`, `connect`, `tilematch`, `classic2048` 全量彻底清除手写 `options.(map[string]interface{})` 重复断言，统一接入强类型 `engine.ParseGameOptions(options)` 与 `opts.DiffStr()` / `opts.ModeStr()`；
+        - **开局倒计时全量收敛到基类 `e.TriggerCountdown`**：全量消除分散在各个老游戏中的 `engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, ...)` 重复调用，统一由引擎基类管理开局 3 秒锁、广播与状态迁移（包括 `block`, `drop2048`, `gomoku`, `hexa` 等）；
+        - **前端 `BaseGameStore.finishLocalGame` 标准化交付**：在基类中公开 `submitSingleStat` 并新增一站式 `finishLocalGame(payload)`，`classic2048.component.ts` 彻底拔除直接依赖 `GameStatsService` 的历史旁路，全平台老游戏单机结算与成就、代币、动态广播全数收拢至基类；
+        - **全栈回归测试 100% 绿灯**：Go 后端全引擎测试套件通过（0 errors），TypeScript 类型检查通过（0 errors），前端 Vitest 9 套测试 36 个用例全部通过。
+    12. **全平台多端布局美学重构与移动拇指底座及 SEO 权威增强 (Modern Gaming Ergonomics, Handheld Floating Dock & Uncompromised SEO Architecture)**：
+        - **移动手持端拇指黄金区浮动底座 (Ergonomic Handheld Floating Dock)**：彻底解决大屏手机单手持机操作“顶栏够不着、大拇指手酸”的痛点；在手持设备局中自动悬浮毛玻璃底座，将最高频的【↺ 极速重玩 / 再来一局】、【⚔️ 联机PK / 🎮 换游戏】以及直达【📖 玩法与SEO攻略】沉浸式下沉至拇指黄金触手区；
+        - **桌面端主机级座舱微立体与环境光 (Desktop Console Pedestal & Ambient Glow)**：宽屏桌面引入微立体主机台座阴影（`.game-stage-pedestal`）与暗部背景柔和径向聚光灯（`.game-cockpit-glow`），配合弹性阻尼按压物理动效（`.spring-press`），视觉呈现由扁平管理系统升级为沉浸式专业游戏台；
+        - **全平台 SEO 与搜索引擎爬虫零妥协守卫 (Uncompromised SEO & Mobile-First Indexing Guard)**：
+          - 严格遵守 Google 移动端优先索引（Mobile-First Indexing）标准，在移动端、平板与 PC 全端 DOM 中 100% 真实渲染深度玩法攻略区（`#strategy-guide`），严禁任何 `display: none` 抹除隐患；
+          - 注入 Schema.org `VideoGame` 结构化微数据（自动携带 `gamePlatform`, `applicationCategory`, `name` 等元标签），显著强化搜索引擎富媒体摘要与权重评级；
+          - 移动端浮动底座内置 `scrollToStrategyGuide()` 平滑滚动锚点，玩家可随时无缝跳阅官方教程，SEO 文章自然融入心流。
+    13. **棋盘舞台模板语法闭合修复与全语种 `game.custom` 词条补齐 (Game Stage Template Syntax Fix & Multi-language Custom Translation)**：
+        - 修复 `game-layout.component.ts` 中舞台容器 `<div>` 标签因环境光插入位置过早导致闭合标签 `>` 提前闭合、将剩余响应式尺寸属性当做纯文本字符直接渲染在页面的语法排版缺陷；
+        - 在全平台 8 种语言字典（`zh`, `en`, `ja`, `ko`, `de`, `fr`, `es`, `pt`）中完整补全 `"game.custom"` 词条，彻底根除扫雷自定义难度时控制台抛出的 `Missing translation for 'game.custom'` 告警。
+    14. **PC 端宽屏三栏式竞技座舱与扫雷全场景标杆打样 (PC Wide Screen 3-Column Cockpit & Minesweeper Plan B Flagship Prototype)**：
+        - **PC 宽屏三栏竞技座舱布局 (Cockpit 3-Column Architecture)**：
+          - 在 `GameLayoutComponent` 中为桌面宽屏（`xl:` / `2xl:`，>=1280px）构建三栏对称竞技座舱，彻底终结宽屏显示器下中间棋盘局促、左右大面积空旷留白的视觉失衡；
+          - **左侧翼 (`[cockpit-left]`)**：内嵌玩家战备档案卡片（段位、等级、脑力金币、对局模式与状态速查），并开放给各游戏投影专属难度矩阵与关卡选择器；
+          - **中间核心舞台**：集成聚光环境光（`.game-cockpit-glow`）与微立体台座（`.game-stage-pedestal`），保持对决视线沉浸聚焦；
+          - **右侧翼 (`[cockpit-right]`)**：内嵌桌面端高频快捷键速查（`R` 极速重开、`Ctrl+Z` 撤销、`H` 锦囊）与一键专注禅模式切换，并开放各游戏投影专属高阶操作指南；
+          - **全端自适应响应**：手持移动端/平板端（`<1280px`）自动保持纯净单列流式与底部悬浮控制台，不破坏移动端单手操作与流畅度；
+        - **全平台 SEO 与搜索引擎爬虫零妥协守卫 (Uncompromised SEO)**：
+          - 攻略与玩法手册（`#strategy-guide`）以及 Schema.org `VideoGame` 结构化微数据在手机端、平板端与 PC 桌面端 DOM 中保持 100% 真实同构渲染，符合 Google Mobile-First Indexing 爬虫抓取准则，杜绝任何爬虫降权隐患；
+        - **扫雷方案 B 核心盘面与交互体验现代化标杆打样 (Minesweeper Modernization Showcase)**：
+          - **微立体晶体触感方块 (Tactile Soft-Beveled Crystal Tiles)**：彻底摒弃老旧 Win95 灰块，采用 3px 柔和微倒角、微落阴影与高光内嵌（`box-shadow: 0 1px 2px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.25)`），鼠标悬浮与点击具备下压压缩与微回弹物理动效；
+          - **现代高辨识度宝石数字字体 (Gemstone Typography)**：重新调校 1~8 数字配色（1号蓝宝石、2号祖母绿、3号珊瑚绯红、4号皇家紫水晶、5号暖金琥珀、6号深海青、7号冷灰、8号粉紫），采用高对比度无衬线字体；
+          - **灵动微动效体系**：翻开格子触发 `msCellRevealPop` 弹性扩散动效，插旗触发 `msFlagFlutter` 升腾弹跳微摇曳，踩雷触发危险脉冲警示；
+          - **定制扫雷双侧翼投影**：左侧翼即时切换初/中/高/大师/自定义规格，右侧翼集成左键翻开、右键插旗与双击数字（Chording 连环扫）极速排雷秘籍速查；
+          - **编译器诊断与插槽投射零告警加固**：拆分插槽投射根节点消除 Angular NG8011 警告，修正 `AuthStore.currentUser` 与 `ZenModeService.toggle` 类型引用，全量构建 513 条路由预渲染 100% 成功。
+    15. **座舱侧翼字体级别增大、放大镜视野操控重构与全语言国际化词条补齐 (Cockpit Font Sizing, Magnifying Glass Zoom Controls & Comprehensive i18n Guard)**：
+        - **全语种国际化词条全面补齐与动态加载守护**：
+          - 针对用户反馈的控制台缺少多语言词条警告，在全平台 8 种语言字典（`zh.json`, `en.json`, `ja.json`, `ko.json`, `de.json`, `fr.json`, `es.json`, `pt.json`）中完整补充 `auth.guest`（游客挑战者）、`game.mode_single`（单机休闲）、`game.mode_pk`（实时对战）、`game.status`（对局状态）、`game.status_playing`（🔥 挑战中）、`game.status_waiting`（⏳ 等待中）、`game.status_ready`（✨ 就绪）、`game.hotkeys`（快捷操作）、`game.key_restart`（极速重开）、`game.key_undo`（智能撤销）、`game.key_hint`（锦囊提示）、`game.key_rules`（速查攻略）、`game.view_rules`（📖 查看）、`game.zen_mode`（专注全屏模式）、`game.zen_mode_exit`（退出沉浸）、`game.ghost_arena`（幽灵擂台）以及扫雷专属操控词条（`minesweeper.controls_title`, `minesweeper.quick_chording`, `minesweeper.control_reveal`, `minesweeper.control_reveal_desc`, `minesweeper.control_flag`, `minesweeper.control_flag_desc`, `minesweeper.control_chord`, `minesweeper.control_chord_desc`, `minesweeper.zoom_in`, `minesweeper.zoom_out`, `minesweeper.zoom_reset`）；
+          - 彻底根除控制台 `Missing translation for ...` 报警，全链路文本实现 0 处写死（遵循 AI 核心准则第2条）；
+        - **PC 桌面竞技座舱侧翼字体级别调大与阅读体验升级**：
+          - 响应用户关于“左右两边字体是否需要调大一个级别”的设计建议，将 `GameLayoutComponent` 与扫雷独立侧翼的文本层级由 `text-xs` (12px) 升档至 `text-sm` (14px)，卡片标题与玩家昵称强化为 `text-sm font-black`，状态/金币/等级/Kbd 按键指示标签由 `text-[10px]` 升档至 `text-xs`；
+          - 侧翼宽度由 `w-64 2xl:w-72` 自适应拓宽为 `w-64 xl:w-72 2xl:w-80`，配合 14px 主字号，在宽屏与 2K/4K 高分屏下呈现出极具秩序感与专业竞技质感的座舱阅读视觉；
+        - **棋盘视野操控“放大镜与百分比隐喻”专业级重构**：
+          - 彻底废除原始生硬的开发者像素文本（如 `36px`）与裸字符加减号；
+          - 引入国际主流设计软件（Figma、Apple Photos、Maps）标准放大镜交互模型：左侧为矢量 SVG 缩小放大镜（带减号横线）、右侧为矢量 SVG 放大放大镜（带十字加号）；
+          - 中间显示当前棋盘真实缩放百分比胶囊（如 `🔍 100%`、`112%`），点击即可一键重置为 100% 原始舒适视野；
+        - **扫雷核心技巧 Chording（双击连扫）深度科普与速查指南强化**：
+          - 详细解答用户关于“双击数字周围红旗数达标时瞬间排开周围未知格”的疑问：明确其为国际扫雷标准竞速核心杀招（Chording），当数字周围已插旗数等于该数字时，双击或点击该数字可 0ms 瞬间一次性扫开周围所有未标记方块，极大节省操作手速；对于普通休闲玩家可正常单点排查，无需强记；对于进阶玩家则为提速 3 倍的关键利器。
+    16. **扫雷双击连扫排雷 (Chording) 全端落地与顶栏/座舱难度选择架构解耦分离 (Chording Implementation & Separation of Difficulty Selection Architecture)**：
+        - **双击数字周围红旗数达标瞬间排开 (Chording) 全端引擎落地**：
+          - 迅速响应用户发现“双击数字功能尚未实现”的精准反馈，在客户端本地引擎 `LocalMinesweeperEngine.revealCell` 补齐对 `CellState.Revealed` 数字格的检测：当其周围已插红旗数与自身数字严格相等时，瞬间触发 `chordCell(x, y)` 扩散翻开全部周围未知格；若错插红旗则触雷引爆，若全对则连锁扩展并安全胜利；
+          - 在 `CellComponent` 中全面打通鼠标左键单点已翻开数字、鼠标双击 `(dblclick)="onDoubleClick($event)"` 以及移动手持端短按轻抬 `onTouchEnd`，全端实现高灵敏度、零延迟的 Chording 双击连扫体验；
+          - 在 Go 后端 `backend/internal/engine/minesweeper/speed_engine.go` 同步落地 `chordCell`，联机多人 PK 模式无缝享有同等专业级极速连扫体验；在 `minesweeper-engine.spec.ts` 补充专项单元测试，Vitest 全量绿灯通过；
+        - **顶栏平台导航与局内难度选择器职责解耦分离 (Separation of Navigation & Game Difficulty Selection)**：
+          - 针对用户提出“顶部导航属于平台通用信息，既放游戏信息又放难度选择显得突兀，PC 端左侧已有难度卡片导致重复，移动端也需更合理安放”的深度设计见解；
+          - **PC 宽屏端 (xl:，>=1280px)**：顶栏 `app-game-header` 彻底移除 `<app-difficulty-selector>`（添加 `xl:hidden` 阻断），使顶栏恢复为纯净的“平台导航工具箱（返回、标题、换游戏、再来一局、全功能控制）”，彻底消除突兀感与两地重复；
+          - **PC 端权威归属地迁移**：将难度选择的权威控制中心 100% 收拢至 **PC 左侧翼竞技座舱 (`[cockpit-left]`)**：定制游戏（如扫雷）展示专属矩阵大卡片，通用游戏在默认座舱卡片内自动生成双列难度切换胶囊，统一视觉语义；
+          - **移动手持端布局体系**：沉浸式游戏由棋盘一体化 Header 承载；标准游戏在移动端视口保留精简选择，未来可平滑迁移至底部悬浮控制台抽屉（Floating Dock Drawer），彻底解决不同视口下的信息层次失衡。
+
+---
+
+## [v3.2.107] - 2026-10-29
+
+### 全平台联机 PK 与实时观战三大统一架构封装体系 (Unified PK Lifecycle, Board Synchronization & Spectator Mirroring Architecture)
+- **核心痛点解决 (用户反馈：你看，我们为了实现各种游戏能够可以多用户进行PK，并且棋盘要能够统一，而且观看着还能够实时观看他们的PK情况。我们做了这么多的修改和优化，所以说，能否把这些方案或者这些所做的修改把它封装起来，作为一个等于说一个规定或者是一个统一的接口。这样那我们做下一个游戏的时候就遵守这些规定，就不会出现PK PK不了，观看看不了的这些种种问题。你看需要怎么做，怎么才能合理的方便的进行封装，同时在增加游戏的时候能做到一个标准上的统一。要实现在不同的地方都能够进行PK的唤醒或者是各个方面，要做到不要在大厅上可以开PK，但是在棋盘上就不可以)**：
+  - **根本原因深度剖析**：
+    1. **棋盘发牌同构机制分散**：此前各游戏 PK 初始化各自为战，有的各自随机生成棋盘，导致同场竞技选手起点不公；
+    2. **观战数据上报与镜像缺乏标准接口**：观战者同步选手画面需要选手上报盘面数据，但早期仅有数字计数（`progress: int`），各游戏字段名不一（`board`、`paths`、`bridges`），缺乏统一导出与载入标准；
+    3. **局内棋盘与大厅唤醒链路差异**：大厅建房能正常唤醒，但在局内棋盘点击 PK 时，若组件模板状态为 Waiting 曾误遮蔽 PK 按钮，且 `handleCreateRoom` 漏透传 `action: 'create'` 参数，导致局内建房容易失败或被迫跳出当前页面。
+  - **体系化封装与三大统一标准落地**：
+    1. **标准一：起跑线棋盘绝对同构基准封装 (Identical Initial Board Contract)**：
+       - 在 `backend/internal/engine/base.go` 抽象 `BasePlayer`（内聚 `ID`, `Score`, `Progress`, `Finished`, `State interface{}`），提供 `CheckSeriesWinner` 与 `ResetSeriesWins` 多局制公共仲裁；
+       - 规范所有 PK 引擎统一维护 `InitialBoard` 权威基准；在开局倒计时结束与再来一局时由服务端权威统一分发 `fairBoard`，保证对战各方在数字、障碍、棋盘位置上 100% 绝对一致。
+    2. **标准二：观战实时镜像与导播自动化 (Universal Spectator Mirroring Protocol)**：
+       - 在前端 `ILocalEngine` 接口中统一规范 `exportBoardState?(): any` 与 `loadBoardState?(data: any): void` 标准接口；
+       - `BaseGameStore` 核心新增 `focusedPlayer` 与 `focusedPlayerBoardState` 响应式计算信号；当处于观战模式时，全自动跟随导播镜头，监听焦点选手数据变动并一键驱动本地引擎重载渲染，实现 0 延迟实时盘面镜像；
+       - 全端统一规范 `[class.pointer-events-none]="store.isSpectator()"`，观战席物理级阻断点击拖拽，杜绝误触。
+    3. **标准三：棋盘局内与大厅双向无缝唤醒 PK 链路 (In-Game & Lobby Seamless PK Wakeup)**：
+       - `BaseGameComponent` 的 `handleCreateRoom` 与 `handleJoinRoom` 100% 显式透传 `action: 'create' | 'spectate' | 'join'`，杜绝参数丢失；
+       - `navigateToPkArena` 增加局内棋盘检测：当玩家正在单机棋盘游玩并点击 `⚔️ PK` 时，优先唤醒局内抽屉（`togglePkDrawer(true)`），直接在当前棋盘页面完成开房或迎战，无需切出页面；
+       - `GameLayoutComponent` 解除对单机 `Waiting` 状态的误拦截，确保在棋盘任何阶段均能瞬间唤醒 PK。
+    4. **脚手架与开发指南全自动继承 (Scaffolder & Documentation)**：
+       - 升级 `frontend/scripts/generate-game.js`：以后运行 `npm run gen:game <id>` 生成的新游戏，前后端自动 100% 自带上述三大标准；
+       - 更新 `docs/HOW_TO_ADD_GAME.md`：在避坑铁律清单与架构规范中深度固化该标准。
+
+---
+
 ## [v3.2.106] - 2026-10-29
 
 ### 数桥 (Hashi) 观战实时搭桥同步与经典 2048 PK 初始同盘生成机制 (Hashi Real-Time Spectator Bridge Sync & Classic 2048 PK Identical Initial Board)

@@ -31,7 +31,7 @@ import { GameStartingOverlayComponent } from '../game-starting-overlay/game-star
 import { GameResultOverlayComponent } from '../game-result-overlay/game-result-overlay.component';
 import { GameSwitchModalComponent } from '../game-switch-modal/game-switch-modal.component';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
-import { getOrigin, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { getOrigin, setSavedDifficulty, getSavedDifficulty } from '../../../core/utils/browser.util';
 import { AdService } from '../../../core/services/ad.service';
 
 @Component({
@@ -57,7 +57,7 @@ import { AdService } from '../../../core/services/ad.service';
   ],
   template: `
 <div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none"
-     [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-[var(--color-bg-base)]' : (deviceService.isHandheld() ? 'min-h-[100dvh] bg-transparent p-0 m-0' : 'min-h-[calc(100dvh-64px)] bg-[var(--color-bg-base)]')">
+     [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-[var(--color-bg-base)]' : (isImmersiveEffective() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-transparent p-0 m-0' : (deviceService.isHandheld() ? 'min-h-[100dvh] bg-transparent p-0 m-0' : 'min-h-[calc(100dvh-64px)] bg-[var(--color-bg-base)]'))">
   <!-- Offline Mode Banner -->
   @if (!zenService.isZenMode() && !isImmersiveEffective()) {
     <app-offline-banner></app-offline-banner>
@@ -84,11 +84,14 @@ import { AdService } from '../../../core/services/ad.service';
 
           <ng-container header-center>
             @if (effectiveRoomMode() === GameMode.Single && !hideDefaultDifficulty && availableDifficulties.length > 1) {
-              <app-difficulty-selector 
-                [availableDifficulties]="availableDifficulties"
-                [currentDifficulty]="effectiveDifficulty()"
-                (difficultyChange)="onDifficultyChange($event)">
-              </app-difficulty-selector>
+              <!-- PC 端（xl+ 宽屏）：由左侧专属座舱接管难度选择，顶栏彻底去除突兀堆叠，保持平台级纯净纯粹；仅在移动/平板端展示 -->
+              <div class="xl:hidden">
+                <app-difficulty-selector 
+                  [availableDifficulties]="availableDifficulties"
+                  [currentDifficulty]="effectiveDifficulty()"
+                  (difficultyChange)="onDifficultyChange($event)">
+                </app-difficulty-selector>
+              </div>
             }
             <ng-content select="[header-center]"></ng-content>
           </ng-container>
@@ -97,7 +100,7 @@ import { AdService } from '../../../core/services/ad.service';
             <div class="flex items-center gap-1 sm:gap-2">
               <ng-content select="[header-right]"></ng-content>
 
-              @if (effectiveRoomMode() === GameMode.Single && effectiveStatus() !== GameStatus.Waiting && settingsService.settings().multiplayer_enabled === 'true') {
+              @if (effectiveRoomMode() === GameMode.Single && settingsService.settings().multiplayer_enabled === 'true') {
                 @if (waitingRoomForThisGame(); as targetRoom) {
                   <button (click)="onQuickJoinTargetRoom(targetRoom)"
                           class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all animate-pulse shrink-0 cursor-pointer pointer-events-auto"
@@ -155,199 +158,438 @@ import { AdService } from '../../../core/services/ad.service';
   }
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
-  <main class="flex-grow flex flex-col min-h-0"
-        [ngClass]="isImmersiveEffective() ? 'w-full h-full p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
-        [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()">
+  <main class="flex-grow flex flex-col min-h-0 relative transition-all duration-300"
+        [ngClass]="isImmersiveEffective() ? 'w-full h-full max-h-full overflow-hidden p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
+        [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
+        [class.pb-16]="showHandheldDock()">
     
-    <!-- Guest Playing in PK Room Badge (Unranked play) -->
-    @if (effectiveRoomId() && !authStore.isAuthenticated()) {
-      <div class="mb-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-bold flex items-center gap-1.5 shadow-sm animate-fade-in">
-        <span>👀</span>
-        <span>{{ i18n.t('pk.guest_badge')() }}</span>
-      </div>
-    }
+    <!-- Cockpit Grid Wrapper (Single-column on mobile/tablet, 3-column on PC xl+) -->
+    <div class="w-full flex-grow flex flex-col xl:flex-row items-center xl:items-start justify-center gap-4 2xl:gap-6 min-h-0"
+         [class.h-full]="isImmersiveEffective()"
+         [class.max-h-full]="isImmersiveEffective()"
+         [class.overflow-hidden]="isImmersiveEffective()">
 
-    <!-- Active Ghost Challenge Banner -->
-    @if (ghostChallenge(); as ch) {
-      <div class="w-full mb-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-md animate-pulse">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <span class="text-xl">⚔️</span>
-          <div class="text-xs">
-            <span class="font-bold text-amber-400">{{ i18n.t('challenge.ghost_title')() }}: 正在挑战 {{ ch.challenger_name }} 的战绩！</span>
-            <span class="text-[var(--color-text-muted)] ml-2">
-              目标:
-              @if (ch.target_time > 0) {
-                <b class="text-[var(--color-text-main)] font-mono">{{ formatChallengeTime(ch.target_time) }}</b>
-              } @else {
-                <b class="text-[var(--color-text-main)] font-mono">{{ ch.target_score }} 分</b>
+      <!-- Left Cockpit Wing (PC Wide Screen: xl+) -->
+      @if (!isImmersiveEffective()) {
+        <aside class="hidden xl:flex flex-col gap-3 w-64 xl:w-72 2xl:w-80 shrink-0 animate-fade-in self-start sticky top-20">
+          
+          <!-- Card 1: 🎯 难度规格 / 游戏等级 (Game Difficulty Card, Standardized for all games) -->
+          @if (effectiveRoomMode() === GameMode.Single && availableDifficulties.length > 0) {
+            <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
+              <div class="flex items-center justify-between pb-2 border-b border-[var(--color-border-card)]/60">
+                <span class="text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
+                  <span>🎯</span>
+                  <span>{{ i18n.t('game.difficulty')() || '难度规格' }}</span>
+                </span>
+                <span class="text-xs font-mono font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                  {{ getDifficultyLabel(effectiveDifficulty()) }}
+                </span>
+              </div>
+
+              <!-- Difficulty Rows: One row per level (独占一行) -->
+              <div class="grid grid-cols-1 gap-2">
+                @for (diff of availableDifficulties; track diff.id) {
+                  <button (click)="onDifficultyChange(diff.id)"
+                          class="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none"
+                          [ngClass]="effectiveDifficulty() === diff.id ? 'bg-amber-500 text-white shadow-xs' : 'bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)]'">
+                    <div class="flex items-center gap-2">
+                      <span class="text-base">{{ getDifficultyEmoji(diff.id) }}</span>
+                      <span>{{ diff.labelKey ? (i18n.t(diff.labelKey)() || diff.id) : diff.id }}</span>
+                    </div>
+                    @if (diff.desc || diff.descKey) {
+                      <span class="text-xs font-mono opacity-80" [title]="diff.descKey ? (i18n.t(diff.descKey)() || diff.desc || '') : (diff.desc || '')">
+                        {{ diff.desc || (diff.descKey ? (i18n.t(diff.descKey)()) : '') }}
+                      </span>
+                    }
+                  </button>
+                }
+
+                <!-- Extra difficulty slots (e.g. Minesweeper custom WxH button) -->
+                <ng-content select="[cockpit-difficulty-extra]"></ng-content>
+              </div>
+            </div>
+          }
+
+          <!-- Custom Left Wing Extension Slot (for any extra game-specific widget) -->
+          <ng-content select="[cockpit-left]"></ng-content>
+
+          <!-- Card 2: 👤 选手档案 & ⚔️ PK对决 (Player Profile & Combat Specs) -->
+          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
+            <div class="flex items-center gap-3 pb-3 border-b border-[var(--color-border-card)]/60">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+                {{ icon || '🎮' }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-sm font-black text-[var(--color-text-main)] truncate">
+                  {{ authStore.currentUser()?.nickname || authStore.currentUser()?.username || (i18n.t('auth.guest')() || '挑战者') }}
+                </div>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    🪙 {{ authStore.currentUser()?.brain_coins ?? 0 }}
+                  </span>
+                  <span class="text-xs text-[var(--color-text-muted)] font-mono">
+                    Lv.{{ authStore.currentUser()?.level ?? 1 }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Game Quick Specs -->
+            <div class="flex flex-col gap-2 text-sm">
+              <div class="flex items-center justify-between text-[var(--color-text-muted)]">
+                <span>{{ i18n.t('game.mode')() || '游戏模式' }}</span>
+                <span class="font-bold text-[var(--color-text-main)] capitalize">
+                  {{ effectiveRoomMode() === GameMode.Single ? (i18n.t('game.mode_single')() || '单机休闲') : (i18n.t('game.mode_pk')() || '实时对战') }}
+                </span>
+              </div>
+              @if (effectiveDifficulty()) {
+                <div class="flex items-center justify-between text-[var(--color-text-muted)]">
+                  <span>{{ i18n.t('game.difficulty')() || '当前难度' }}</span>
+                  <span class="font-bold text-amber-500 capitalize">
+                    {{ getDifficultyLabel(effectiveDifficulty()) }}
+                  </span>
+                </div>
               }
+              <div class="flex items-center justify-between text-[var(--color-text-muted)]">
+                <span>{{ i18n.t('game.status')() || '对局状态' }}</span>
+                <span class="font-bold text-emerald-500">
+                  {{ effectiveStatus() === GameStatus.Playing ? (i18n.t('game.status_playing')() || '🔥 挑战中') : (effectiveStatus() === GameStatus.Waiting ? (i18n.t('game.status_waiting')() || '⏳ 等待中') : (i18n.t('game.status_ready')() || '✨ 就绪')) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- PK Match Hub in Left Wing -->
+            @if (effectiveRoomMode() === GameMode.Single && settingsService.settings().multiplayer_enabled === 'true') {
+              <div class="pt-2 border-t border-[var(--color-border-card)]/60 flex flex-col gap-2">
+                <!-- If there's an active waiting room, highlight quick challenge -->
+                @if (waitingRoomForThisGame(); as wr) {
+                  <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col gap-1.5 animate-pulse">
+                    <div class="flex items-center justify-between text-xs font-bold text-amber-500">
+                      <span class="flex items-center gap-1">
+                        <span>⚔️</span>
+                        <span>{{ i18n.t('pk.waiting_room_alert')() || '发现对战房间！' }}</span>
+                      </span>
+                      <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20">
+                        {{ getDifficultyLabel(wr.difficulty) }}
+                      </span>
+                    </div>
+                    <button (click)="onQuickJoinTargetRoom(wr)"
+                            class="w-full py-1.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer">
+                      <span>⚡</span>
+                      <span>{{ i18n.t('lobby.quick_join')() || '快速应战' }}</span>
+                    </button>
+                  </div>
+                }
+
+                <!-- Fast Create / PK Arena button -->
+                <button (click)="quickCreatePkRoom()"
+                        class="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer spring-press">
+                  <span>⚔️</span>
+                  <span>{{ i18n.t('game.quick_pk')() || '发起对决' }}</span>
+                </button>
+              </div>
+            }
+          </div>
+        </aside>
+      }
+
+      <!-- Center Cockpit Stage (Main Arena) -->
+      <div class="flex-1 min-w-0 max-w-4xl flex flex-col items-center justify-start self-stretch"
+           [class.h-full]="isImmersiveEffective()"
+           [class.max-h-full]="isImmersiveEffective()"
+           [class.overflow-hidden]="isImmersiveEffective()">
+        <!-- Guest Playing in PK Room Badge (Unranked play) -->
+        @if (effectiveRoomId() && !authStore.isAuthenticated()) {
+          <div class="mb-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-bold flex items-center gap-1.5 shadow-sm animate-fade-in">
+            <span>👀</span>
+            <span>{{ i18n.t('pk.guest_badge')() }}</span>
+          </div>
+        }
+
+        <!-- Active Ghost Challenge Banner -->
+        @if (ghostChallenge(); as ch) {
+          <div class="w-full mb-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 backdrop-blur-md flex items-center justify-between gap-3 shadow-md animate-pulse">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="text-xl">⚔️</span>
+              <div class="text-xs">
+                <span class="font-bold text-amber-400">{{ i18n.t('challenge.ghost_title')() }}: 正在挑战 {{ ch.challenger_name }} 的战绩！</span>
+                <span class="text-[var(--color-text-muted)] ml-2">
+                  目标:
+                  @if (ch.target_time > 0) {
+                    <b class="text-[var(--color-text-main)] font-mono">{{ formatChallengeTime(ch.target_time) }}</b>
+                  } @else {
+                    <b class="text-[var(--color-text-main)] font-mono">{{ ch.target_score }} 分</b>
+                  }
+                </span>
+              </div>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap">
+              {{ i18n.t('game.ghost_arena')() || '幽灵擂台' }}
             </span>
           </div>
-        </div>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap">
-          幽灵擂台
-        </span>
-      </div>
-    }
+        }
 
-    <!-- Universal Spectator Director Bar (Option 1) -->
-    @if (isSpectatorActive()) {
-      <div class="w-full mb-2 px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 border border-amber-500/40 shadow-lg flex items-center justify-between gap-2 backdrop-blur-md animate-fade-in shrink-0">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="flex h-2.5 w-2.5 relative shrink-0">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-          </span>
-          <span class="text-xs font-black text-amber-500 dark:text-amber-400 flex items-center gap-1 shrink-0">
-            👁️ {{ i18n.t('game.spectator_mode')() || '观战模式' }}
-          </span>
-          <span class="text-xs font-semibold text-[var(--color-text-muted)] truncate">
-            {{ i18n.t('game.watching_player')() || '正在观看' }}:
-            <b class="text-[var(--color-text-main)] font-bold">{{ focusedPlayerName() }}</b>
-            <span class="text-[10px] opacity-75 ml-1 hidden md:inline">({{ i18n.t('game.click_avatar_to_switch')() || '点击选手头像秒切视角' }})</span>
-          </span>
-        </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <!-- Player Switcher Pills -->
-          <div class="flex items-center gap-1.5">
-            @for (p of spectatorContestants(); track (p.id || p.userId)) {
-              <button (click)="selectFocusPlayer(p.id || p.userId)"
-                      class="px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      [ngClass]="isPlayerFocused(p.id || p.userId) ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-2 ring-amber-400 shadow-md scale-105' : 'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:border-amber-400/50 border border-[var(--color-border-card)]'">
-                @if (isPlayerFocused(p.id || p.userId)) {
-                  <span class="text-[10px] animate-pulse">🎯</span>
+        <!-- Universal Spectator Director Bar (Option 1) -->
+        @if (isSpectatorActive()) {
+          <div class="w-full mb-2 px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 border border-amber-500/40 shadow-lg flex items-center justify-between gap-2 backdrop-blur-md animate-fade-in shrink-0">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="flex h-2.5 w-2.5 relative shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+              </span>
+              <span class="text-xs font-black text-amber-500 dark:text-amber-400 flex items-center gap-1 shrink-0">
+                👁️ {{ i18n.t('game.spectator_mode')() || '观战模式' }}
+              </span>
+              <span class="text-xs font-semibold text-[var(--color-text-muted)] truncate">
+                {{ i18n.t('game.watching_player')() || '正在观看' }}:
+                <b class="text-[var(--color-text-main)] font-bold">{{ focusedPlayerName() }}</b>
+                <span class="text-[10px] opacity-75 ml-1 hidden md:inline">({{ i18n.t('game.click_avatar_to_switch')() || '点击选手头像秒切视角' }})</span>
+              </span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <!-- Player Switcher Pills -->
+              <div class="flex items-center gap-1.5">
+                @for (p of spectatorContestants(); track (p.id || p.userId)) {
+                  <button (click)="selectFocusPlayer(p.id || p.userId)"
+                          class="px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          [ngClass]="isPlayerFocused(p.id || p.userId) ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-2 ring-amber-400 shadow-md scale-105' : 'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:border-amber-400/50 border border-[var(--color-border-card)]'">
+                    @if (isPlayerFocused(p.id || p.userId)) {
+                      <span class="text-[10px] animate-pulse">🎯</span>
+                    }
+                    <span class="truncate max-w-[65px] sm:max-w-[100px]">{{ p.nickname || p.id || p.userId }}</span>
+                    @if (isPlayerFocused(p.id || p.userId)) {
+                      <span class="text-[8px] bg-white/25 px-1 py-0.2 rounded font-black tracking-tight">锁定</span>
+                    }
+                    @if (p.isHost) { <span class="text-[9px]">👑</span> }
+                  </button>
                 }
-                <span class="truncate max-w-[65px] sm:max-w-[100px]">{{ p.nickname || p.id || p.userId }}</span>
-                @if (isPlayerFocused(p.id || p.userId)) {
-                  <span class="text-[8px] bg-white/25 px-1 py-0.2 rounded font-black tracking-tight">锁定</span>
-                }
-                @if (p.isHost) { <span class="text-[9px]">👑</span> }
+              </div>
+              <!-- Leave spectate button -->
+              <button (click)="back.emit()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 transition-all cursor-pointer flex items-center gap-1 shrink-0">
+                <span>🚪</span>
+                <span class="hidden sm:inline">{{ i18n.t('game.leave_spectate')() || '退出观战' }}</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Auto-managed Multiplayer Waiting Room (When store is provided) -->
+        @if (isAutoWaitingRoomVisible()) {
+          <div class="w-full flex-grow flex flex-col min-h-0 overflow-hidden p-2 lg:p-4">
+            <app-game-waiting-room
+              [gameId]="gameId"
+              [mode]="effectiveRoomMode()"
+              [roomId]="effectiveRoomId() || ''"
+              [difficulty]="effectiveDifficulty()"
+              [players]="effectivePlayers()"
+              [hostId]="effectiveHostId()"
+              [currentUserId]="storePlayerId()"
+              [readyPlayers]="effectiveReadyPlayers()"
+              [target]="effectiveTarget()"
+              (start)="onWaitingRoomStart()"
+              (leave)="back.emit()"
+              (changeSettings)="openChangeSettingsGlobal()"
+              (ready)="onWaitingRoomReady()"
+              (cancelReady)="onWaitingRoomCancelReady()"
+              (kick)="onWaitingRoomKick($event)"
+              (difficultyChange)="onWaitingRoomDifficultyChange($event)"
+            ></app-game-waiting-room>
+          </div>
+        } @else {
+          <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
+          <div class="w-full flex-grow flex flex-col relative transition-all duration-300"
+               [class.pointer-events-none]="isSpectatorActive()"
+               [ngClass]="isImmersiveEffective() ? 'h-full max-h-full overflow-hidden min-h-0 p-0 m-0 border-0 rounded-none bg-transparent shadow-none' : 'game-stage-pedestal border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-md sm:shadow-xl p-1 sm:p-2.5'"
+               [class.min-h-[320px]]="!isLobbyEffective() && !isImmersiveEffective()"
+               [class.sm:min-h-[420px]]="!isLobbyEffective() && !isImmersiveEffective()"
+               [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
+               [class.justify-center]="!isLobbyEffective() && !isImmersiveEffective()"
+               [class.justify-start]="isLobbyEffective() || isImmersiveEffective()"
+               [class.min-h-[520px]]="isLobbyEffective() && !isImmersiveEffective()"
+               [class.sm:min-h-[620px]]="isLobbyEffective() && !isImmersiveEffective()"
+               [class.lg:min-h-[680px]]="isLobbyEffective() && !isImmersiveEffective()"
+               [class.h-[72vh]]="isLobbyEffective() && !isImmersiveEffective()"
+               [class.max-h-[840px]]="isLobbyEffective() && !isImmersiveEffective()"
+               [class.items-stretch]="isLobbyEffective()"
+               [class.overflow-hidden]="isLobbyEffective()"
+               [class.touch-none]="!isLobbyEffective() && !allowScroll && effectiveStatus() !== GameStatus.Waiting"
+               [class.overscroll-none]="!isLobbyEffective() && !allowScroll && effectiveStatus() !== GameStatus.Waiting"
+               [class.touch-pan-y]="isLobbyEffective() || allowScroll || effectiveStatus() === GameStatus.Waiting"
+               [class.overflow-y-auto]="!isLobbyEffective() && (allowScroll || effectiveStatus() === GameStatus.Waiting)"
+               [class.h-full]="!isLobbyEffective() && (allowScroll || effectiveStatus() === GameStatus.Waiting)"
+               [style.overscroll-behavior]="(isLobbyEffective() || allowScroll || effectiveStatus() === GameStatus.Waiting) ? 'contain' : 'none'"
+               [style.touch-action]="(isLobbyEffective() || allowScroll || effectiveStatus() === GameStatus.Waiting) ? 'pan-y' : 'none'">
+
+            <!-- Ambient Console Spotlight (Desktop only, subtle & gorgeous) -->
+            @if (!isImmersiveEffective()) {
+              <div class="hidden lg:block pointer-events-none absolute -inset-6 sm:-inset-10 game-cockpit-glow blur-2xl -z-10 opacity-70"></div>
+            }
+            <!-- Project custom game components here -->
+            <ng-content></ng-content>
+
+            <!-- 轻量极速自动流转提示胶囊 (Auto Next Banner) -->
+            @if (isAutoNextNoticeVisible()) {
+              <div class="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-bg-card)]/95 border border-[var(--color-accent-from)] shadow-xl backdrop-blur-md animate-bounce-in text-xs sm:text-sm font-bold text-[var(--color-text-main)] pointer-events-auto">
+                <span class="animate-spin text-sm">⏳</span>
+                <span>{{ i18n.t('game.auto_next_title')() }}</span>
+                <button (click)="proceedAutoNextNow()" class="ml-1 px-3 py-1 rounded-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-extrabold hover:brightness-110 active:scale-95 transition-all shadow-sm">
+                  {{ i18n.t('game.auto_next_btn')() }}
+                </button>
+              </div>
+            }
+
+            <!-- Auto-managed 3s Countdown Overlay -->
+            @if (isAutoStartingVisible()) {
+              <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
+            }
+
+            <!-- Auto-managed Game Finished Result Overlay -->
+            @if (isAutoResultVisible()) {
+              <app-game-result-overlay
+                [currentGameId]="gameId"
+                [status]="resultStatus()"
+                [title]="resultTitle()"
+                [subtitle]="customResultSubtitle"
+                [stats]="overlayStats || []"
+                [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
+                [opponentInfo]="resultOpponent()"
+                [pkSeriesScore]="resultPkSeriesScore()"
+                [pkRoundFormat]="resultPkRoundFormat()"
+                [xpResult]="resultXpResult()"
+                [isNewRecord]="resultIsNewRecord()"
+                [showLeave]="true"
+                [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
+                [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+                [showRevive]="effectiveShowRevive()"
+                [showNextLevel]="showNextLevel"
+                (rematch)="onResultRematch()"
+                (leave)="back.emit()"
+                (restart)="onResultRestart()"
+                (dismiss)="onResultDismiss()"
+                (revive)="onResultRevive()"
+                (nextLevel)="nextLevel.emit()"
+                [enableChangeRoomGame]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+                [isHost]="effectiveIsHost()"
+                (changeRoomGame)="onResultChangeRoomGame($event)"
+              ></app-game-result-overlay>
+            }
+          </div>
+        }
+
+        <!-- Emoji Broadcast Bar (When inside multiplayer room) -->
+        @if (effectiveRoomId()) {
+          <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
+            @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
+              <button (click)="sendEmoji(em)" class="w-9 h-9 sm:w-11 sm:h-11 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-lg sm:text-xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
+                {{ em }}
               </button>
             }
           </div>
-          <!-- Leave spectate button -->
-          <button (click)="back.emit()" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 transition-all cursor-pointer flex items-center gap-1 shrink-0">
-            <span>🚪</span>
-            <span class="hidden sm:inline">{{ i18n.t('game.leave_spectate')() || '退出观战' }}</span>
-          </button>
-        </div>
+        }
       </div>
-    }
 
-    <!-- Auto-managed Multiplayer Waiting Room (When store is provided) -->
-    @if (isAutoWaitingRoomVisible()) {
-      <div class="w-full flex-grow flex flex-col min-h-0 overflow-hidden p-2 lg:p-4">
-        <app-game-waiting-room
-          [gameId]="gameId"
-          [mode]="effectiveRoomMode()"
-          [roomId]="effectiveRoomId() || ''"
-          [difficulty]="effectiveDifficulty()"
-          [players]="effectivePlayers()"
-          [hostId]="effectiveHostId()"
-          [currentUserId]="storePlayerId()"
-          [readyPlayers]="effectiveReadyPlayers()"
-          [target]="effectiveTarget()"
-          (start)="onWaitingRoomStart()"
-          (leave)="back.emit()"
-          (changeSettings)="openChangeSettingsGlobal()"
-          (ready)="onWaitingRoomReady()"
-          (cancelReady)="onWaitingRoomCancelReady()"
-          (kick)="onWaitingRoomKick($event)"
-          (difficultyChange)="onWaitingRoomDifficultyChange($event)"
-        ></app-game-waiting-room>
-      </div>
-    } @else {
-      <!-- The Game Stage (Canvas / Board Container - Seamless & Integrated) -->
-      <div class="w-full flex-grow flex flex-col relative transition-all duration-300"
-           [class.pointer-events-none]="isSpectatorActive()"
-           [ngClass]="isImmersiveEffective() ? 'h-full min-h-0 p-0 m-0 border-0 rounded-none bg-transparent shadow-none' : 'border border-[var(--color-border-card)] bg-[var(--color-bg-card)] rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm p-1 sm:p-2.5'"
-           [class.min-h-[320px]]="!isLobbyEffective() && !isImmersiveEffective()"
-           [class.sm:min-h-[420px]]="!isLobbyEffective() && !isImmersiveEffective()"
-           [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
-           [class.justify-center]="!isLobbyEffective() && !isImmersiveEffective()"
-           [class.justify-start]="isLobbyEffective() || isImmersiveEffective()"
-           [class.min-h-[520px]]="isLobbyEffective() && !isImmersiveEffective()"
-           [class.sm:min-h-[620px]]="isLobbyEffective() && !isImmersiveEffective()"
-           [class.lg:min-h-[680px]]="isLobbyEffective() && !isImmersiveEffective()"
-           [class.h-[72vh]]="isLobbyEffective() && !isImmersiveEffective()"
-           [class.max-h-[840px]]="isLobbyEffective() && !isImmersiveEffective()"
-           [class.items-stretch]="isLobbyEffective()"
-           [class.overflow-hidden]="isLobbyEffective()"
-           [class.touch-none]="!isLobbyEffective() && !allowScroll && effectiveStatus() !== GameStatus.Waiting"
-           [class.overscroll-none]="!isLobbyEffective() && !allowScroll && effectiveStatus() !== GameStatus.Waiting"
-           [class.touch-pan-y]="isLobbyEffective() || allowScroll || effectiveStatus() === GameStatus.Waiting"
-           [class.overflow-y-auto]="!isLobbyEffective() && (allowScroll || effectiveStatus() === GameStatus.Waiting)"
-           [class.h-full]="!isLobbyEffective() && (allowScroll || effectiveStatus() === GameStatus.Waiting)"
-           [style.overscroll-behavior]="(isLobbyEffective() || allowScroll || effectiveStatus() === GameStatus.Waiting) ? 'contain' : 'none'"
-           [style.touch-action]="(isLobbyEffective() || allowScroll || effectiveStatus() === GameStatus.Waiting) ? 'pan-y' : 'none'">
-        <!-- Project custom game components here -->
-        <ng-content></ng-content>
+      <!-- Right Cockpit Wing (PC Wide Screen: xl+) -->
+      @if (!isLobbyEffective() && !isImmersiveEffective()) {
+        <aside class="hidden xl:flex flex-col gap-3 w-64 xl:w-72 2xl:w-80 shrink-0 animate-fade-in self-start sticky top-20">
+          <ng-content select="[cockpit-right]"></ng-content>
+          <!-- Desktop Hotkey & Pro Cheatsheet Card -->
+          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--color-border-card)]/60">
+              <span class="text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
+                <span>⌨️</span>
+                <span>{{ i18n.t('game.hotkeys')() || '快捷操作' }}</span>
+              </span>
+              <span class="text-xs font-mono font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded border border-[var(--color-border-card)]">Pro</span>
+            </div>
 
-        <!-- 轻量极速自动流转提示胶囊 (Auto Next Banner) -->
-        @if (isAutoNextNoticeVisible()) {
-          <div class="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-bg-card)]/95 border border-[var(--color-accent-from)] shadow-xl backdrop-blur-md animate-bounce-in text-xs sm:text-sm font-bold text-[var(--color-text-main)] pointer-events-auto">
-            <span class="animate-spin text-sm">⏳</span>
-            <span>{{ i18n.t('game.auto_next_title')() }}</span>
-            <button (click)="proceedAutoNextNow()" class="ml-1 px-3 py-1 rounded-full bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] font-extrabold hover:brightness-110 active:scale-95 transition-all shadow-sm">
-              {{ i18n.t('game.auto_next_btn')() }}
+            <div class="flex flex-col gap-2.5 text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_restart')() || '极速重开' }}</span>
+                <kbd class="px-2.5 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-[var(--color-text-main)] shadow-2xs">R / Space</kbd>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_undo')() || '智能撤销' }}</span>
+                <kbd class="px-2.5 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-[var(--color-text-main)] shadow-2xs">Ctrl + Z</kbd>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_hint')() || '锦囊提示' }}</span>
+                <kbd class="px-2.5 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-[var(--color-text-main)] shadow-2xs">H</kbd>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_rules')() || '速查攻略' }}</span>
+                <button (click)="scrollToStrategyGuide()"
+                        class="px-2.5 py-1 rounded-md bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-amber-500 shadow-2xs cursor-pointer active:scale-95 transition-all">
+                  {{ i18n.t('game.view_rules')() || '📖 查看' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Focus / Zen Mode Shortcut -->
+            <button (click)="zenService.toggle()"
+                    class="w-full mt-1.5 py-2 px-3.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer">
+              <span>🧘</span>
+              <span>{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出沉浸') : (i18n.t('game.zen_mode')() || '专注全屏模式') }}</span>
             </button>
           </div>
-        }
+        </aside>
+      }
 
-        <!-- Auto-managed 3s Countdown Overlay -->
-        @if (isAutoStartingVisible()) {
-          <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
-        }
-
-        <!-- Auto-managed Game Finished Result Overlay -->
-        @if (isAutoResultVisible()) {
-          <app-game-result-overlay
-            [currentGameId]="gameId"
-            [status]="resultStatus()"
-            [title]="resultTitle()"
-            [subtitle]="customResultSubtitle"
-            [stats]="overlayStats || []"
-            [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
-            [opponentInfo]="resultOpponent()"
-            [pkSeriesScore]="resultPkSeriesScore()"
-            [pkRoundFormat]="resultPkRoundFormat()"
-            [xpResult]="resultXpResult()"
-            [isNewRecord]="resultIsNewRecord()"
-            [showLeave]="true"
-            [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
-            [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
-            [showRevive]="effectiveShowRevive()"
-            [showNextLevel]="showNextLevel"
-            (rematch)="onResultRematch()"
-            (leave)="back.emit()"
-            (restart)="onResultRestart()"
-            (dismiss)="onResultDismiss()"
-            (revive)="onResultRevive()"
-            (nextLevel)="nextLevel.emit()"
-            [enableChangeRoomGame]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
-            [isHost]="effectiveIsHost()"
-            (changeRoomGame)="onResultChangeRoomGame($event)"
-          ></app-game-result-overlay>
-        }
-      </div>
-    }
-
-    <!-- Emoji Broadcast Bar (When inside multiplayer room) -->
-    @if (effectiveRoomId()) {
-      <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
-        @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
-          <button (click)="sendEmoji(em)" class="w-9 h-9 sm:w-11 sm:h-11 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-lg sm:text-xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
-            {{ em }}
-          </button>
-        }
-      </div>
-    }
+    </div>
 
   </main>
 
-  <!-- In-depth Strategy & SEO Section (Moved Gracefully Below Arena) -->
+  <!-- Ergonomic Handheld Floating Dock (Thumb Zone Mastery) -->
+  @if (showHandheldDock()) {
+    <aside class="fixed bottom-[calc(0.6rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 z-40 px-3 w-full max-w-sm pointer-events-none flex justify-center">
+      <div class="pointer-events-auto backdrop-blur-xl bg-[var(--color-bg-card)]/95 border border-[var(--color-border-card)] shadow-2xl rounded-2xl p-1.5 flex items-center justify-between gap-1.5 w-full ring-1 ring-black/5 dark:ring-white/10 animate-slide-up">
+        <!-- 1. Quick Restart / Play Again Button (Thumb hotspot) -->
+        @if (effectiveShowPlayAgain() || effectiveStatus() === GameStatus.Playing) {
+          <button (click)="onPlayAgainClicked()"
+                  class="flex-1 py-2 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer spring-press">
+            <span class="text-sm">↺</span>
+            <span>{{ effectiveStatus() === GameStatus.Playing ? (i18n.t('game.restart')() || '重玩') : (i18n.t('game.play_again')() || '再来一局') }}</span>
+          </button>
+        }
+
+        <!-- 2. Slot for Game-Specific Dock Actions (Undo, Hint, etc.) -->
+        <ng-content select="[handheld-dock]"></ng-content>
+
+        <!-- 3. PK / Switch Game -->
+        @if (effectiveRoomMode() === GameMode.Single && settingsService.settings().multiplayer_enabled === 'true') {
+          <button (click)="quickCreatePkRoom()"
+                  class="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 font-bold text-xs border border-amber-500/30 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 spring-press"
+                  [title]="i18n.t('game.quick_pk')() || '开房PK'">
+            <span>⚔️</span>
+            <span>{{ i18n.t('game.quick_pk')() || '联机' }}</span>
+          </button>
+        } @else if (effectiveRoomMode() !== GameMode.Single && effectiveIsHost()) {
+          <button (click)="openSwitchGame()"
+                  class="py-2 px-3 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-400 font-bold text-xs border border-purple-500/30 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 spring-press"
+                  [title]="i18n.t('game.switch_pk_game')() || '换游戏'">
+            <span>🎮</span>
+            <span>{{ i18n.t('game.switch_pk_game_short')() || '换游戏' }}</span>
+          </button>
+        }
+
+        <!-- 4. Scroll to SEO & Strategy Guide Button -->
+        <button (click)="scrollToStrategyGuide()"
+                class="w-9 h-8 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-[var(--color-text-secondary)] border border-[var(--color-border-card)] flex items-center justify-center text-xs active:scale-95 transition-all cursor-pointer shrink-0"
+                [title]="i18n.t('game.strategy_guide_title')() || '查看完整玩法与SEO攻略'">
+          <span>📖</span>
+        </button>
+      </div>
+    </aside>
+  }
+
+  <!-- In-depth Strategy & SEO Section (100% Crawlable & Accessible across all platforms) -->
   @if (!zenService.isZenMode()) {
-    <section id="strategy-guide" class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 mt-6 sm:mt-10 pb-12">
+    <section id="strategy-guide"
+             itemscope
+             itemtype="https://schema.org/VideoGame"
+             class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 mt-6 sm:mt-10 pb-16">
+      <meta itemprop="name" [content]="title" />
+      <meta itemprop="gamePlatform" content="Web, Mobile, PC, Tablet, iOS, Android" />
+      <meta itemprop="applicationCategory" content="PuzzleGame" />
       <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-card)]">
           <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">
@@ -582,14 +824,35 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   readonly isLobbyEffective = computed(() => {
     return this.isLobbySignal() && this.effectiveRoomMode() === GameMode.Single;
   });
+
+  readonly showHandheldDock = computed(() => {
+    return this.deviceService.isHandheld() &&
+      !this.zenService.isZenMode() &&
+      !this.isImmersiveEffective() &&
+      !this.isAutoWaitingRoomVisible() &&
+      !this.isSpectatorActive() &&
+      !this.isLobbyEffective();
+  });
+
+  scrollToStrategyGuide() {
+    const el = document.getElementById('strategy-guide');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
   @Input({ transform: booleanAttribute }) allowScroll: boolean = false;
   
   @Input() seoDescKey?: string;
 
   @Input() showPlayAgainBtn: boolean = false;
   @Input() showLeaveBtn: boolean = false;
-
-  @Input() currentDifficulty: string = '';
+  readonly currentDifficultySignal = signal<string>('');
+  @Input() set currentDifficulty(val: string) {
+    this.currentDifficultySignal.set(val || '');
+  }
+  get currentDifficulty(): string {
+    return this.currentDifficultySignal();
+  }
 
   @Output() rulesClosed = new EventEmitter<void>();
   @Output() rulesOpen = new EventEmitter<void>();
@@ -637,9 +900,14 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   });
 
   readonly effectiveDifficulty = computed(() => {
+    const directDiff = this.currentDifficultySignal();
+    if (directDiff) return directDiff;
     const storeDiff = (this.store as any)?.currentDifficulty?.() || (this.store as any)?.difficulty?.();
     if (storeDiff) return storeDiff;
-    return this.currentDifficulty || 'medium';
+    if (this.gameId) {
+      return getSavedDifficulty(this.gameId, this.availableDifficulties[0]?.id || 'medium');
+    }
+    return this.availableDifficulties[0]?.id || 'medium';
   });
 
   readonly effectivePlayers = computed(() => {
@@ -931,7 +1199,7 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   GameMode = GameMode;
   GameStatus = GameStatus;
 
-  availableDifficulties: { id: string, labelKey: string, descKey?: string, desc?: string }[] = [];
+  @Input() availableDifficulties: { id: string, labelKey: string, descKey?: string, desc?: string }[] = [];
 
   ngOnInit() {
     if (this.deviceService.isHandheld() && this.immersive) {
@@ -939,10 +1207,19 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       this.layoutService.setImmersiveGame(true);
     }
 
-    if (this.gameId) {
+    if (this.gameId && this.availableDifficulties.length === 0) {
       const config = this.gameRegistry.getConfig(this.gameId);
       if (config && config.difficulties) {
         this.availableDifficulties = config.difficulties;
+      }
+    }
+
+    if (!this.currentDifficultySignal()) {
+      const saved = this.gameId ? getSavedDifficulty(this.gameId, '') : '';
+      const storeDiff = (this.store as any)?.currentDifficulty?.() || (this.store as any)?.difficulty?.();
+      const initial = saved || storeDiff || this.availableDifficulties[0]?.id || 'medium';
+      if (initial) {
+        this.currentDifficultySignal.set(initial);
       }
     }
 
@@ -962,6 +1239,33 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     return `${m}:${s}`;
   }
 
+  getDifficultyLabel(diff?: string): string {
+    if (!diff) return '';
+    if (diff === 'custom') {
+      return this.i18n.t('game.custom')() || '自定义';
+    }
+    const found = this.availableDifficulties.find(d => d.id === diff);
+    if (found?.labelKey) {
+      const translated = this.i18n.t(found.labelKey)();
+      if (translated) return translated;
+    }
+    return this.i18n.t(`game.diff_${diff}`)() || diff;
+  }
+
+  getDifficultyEmoji(diffId?: string): string {
+    if (!diffId) return '🎯';
+    const id = diffId.toLowerCase();
+    if (id.includes('easy') || id.includes('beginner') || id.includes('3x3') || id.includes('casual')) return '🌱';
+    if (id.includes('medium') || id.includes('normal') || id.includes('intermediate') || id.includes('4x4') || id.includes('timer')) return '⚡';
+    if (id.includes('hard') || id.includes('advanced') || id.includes('5x5') || id.includes('speed')) return '🔥';
+    if (id.includes('expert') || id.includes('professional') || id.includes('6x6') || id.includes('10x10')) return '😈';
+    if (id.includes('master') || id.includes('8x8') || id.includes('12x12') || id.includes('25x25')) return '👑';
+    if (id.includes('custom')) return '🛠️';
+    if (id.includes('zen')) return '🧘';
+    if (id.includes('classic')) return '📜';
+    return '🎯';
+  }
+
   ngOnDestroy() {
     this.clearAutoNextTimers();
     this.layoutService.setImmersiveGame(false);
@@ -970,6 +1274,12 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['currentRoomId'] && changes['currentRoomId'].currentValue) {
       this.togglePkDrawer(false);
+    }
+    if (changes['gameId'] && this.gameId && this.availableDifficulties.length === 0) {
+      const config = this.gameRegistry.getConfig(this.gameId);
+      if (config && config.difficulties) {
+        this.availableDifficulties = config.difficulties;
+      }
     }
   }
 
@@ -997,7 +1307,10 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onDifficultyChange(newDiff: string) {
-    this.currentDifficulty = newDiff;
+    this.currentDifficultySignal.set(newDiff);
+    if ((this.store as any)?.currentDifficulty?.set) {
+      (this.store as any).currentDifficulty.set(newDiff);
+    }
     if (this.gameId) {
       setSavedDifficulty(this.gameId, newDiff);
     }
@@ -1007,7 +1320,7 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onWaitingRoomDifficultyChange(newDiff: string) {
-    this.currentDifficulty = newDiff;
+    this.currentDifficultySignal.set(newDiff);
     if (this.gameId) {
       setSavedDifficulty(this.gameId, newDiff);
     }
@@ -1049,7 +1362,7 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       roomId: data.id || data.roomId || this.currentRoomId || '',
       gameId: data.game || data.gameId || this.gameId,
       mode: data.mode || '',
-      difficulty: data.difficulty || this.currentDifficulty,
+      difficulty: data.difficulty || this.effectiveDifficulty(),
       target: data.target ?? 1
     });
   }
@@ -1071,7 +1384,7 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       name,
       gameId: this.gameId,
       mode: pkMode.id,
-      difficulty: this.currentDifficulty,
+      difficulty: this.effectiveDifficulty(),
       target: 1
     });
   }

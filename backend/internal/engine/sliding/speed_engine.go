@@ -27,45 +27,37 @@ func init() {
 }
 
 type PKSpeedStateResponse struct {
-	Boards        map[string]*Board `json:"boards"`
-	Winners       []string          `json:"winners"`
-	Wins          map[string]int    `json:"wins"`
-	Target        int               `json:"target"`
-	Status        engine.GameState  `json:"status"`
-	GlobalStartAt int64             `json:"globalStartAt"`
+	Boards        map[string]*Board            `json:"boards"`
+	Players       map[string]*engine.BasePlayer `json:"players"`
+	Winners       []string                     `json:"winners"`
+	Wins          map[string]int               `json:"wins"`
+	Target        int                          `json:"target"`
+	Status        engine.GameState             `json:"status"`
+	GlobalStartAt int64                        `json:"globalStartAt"`
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
 	size := 4 // Default
+	opts := engine.ParseGameOptions(options)
+	e.Target = opts.Target
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			if strings.HasPrefix(diff, "custom_") {
-				parts := strings.Split(diff, "_")
-				if len(parts) >= 2 {
-					if s, err := strconv.Atoi(parts[1]); err == nil && s >= 3 && s <= 10 {
-						size = s
-					}
-				}
-			} else {
-				switch diff {
-				case string(domain.DiffEasy), "beginner":
-					size = 4
-				case string(domain.DiffMedium), "intermediate":
-					size = 5
-				case string(domain.DiffHard), "advanced":
-					size = 6
-				}
+	diff := string(opts.Difficulty)
+	if strings.HasPrefix(diff, "custom_") {
+		parts := strings.Split(diff, "_")
+		if len(parts) >= 2 {
+			if s, err := strconv.Atoi(parts[1]); err == nil && s >= 3 && s <= 10 {
+				size = s
 			}
 		}
-
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		} else {
-			e.Target = 1
-		}
 	} else {
-		e.Target = 1
+		switch diff {
+		case string(domain.DiffEasy), "beginner":
+			size = 4
+		case string(domain.DiffMedium), "intermediate":
+			size = 5
+		case string(domain.DiffHard), "advanced":
+			size = 6
+		}
 	}
 
 	e.BaseBoard = NewBoard(size)
@@ -109,8 +101,20 @@ func (e *SpeedEngine) HasPlayer(playerID string) bool {
 func (e *SpeedEngine) GetState() interface{} {
 	e.Mu.RLock()
 	defer e.Mu.RUnlock()
+
+	players := make(map[string]*engine.BasePlayer, len(e.Boards))
+	for id, b := range e.Boards {
+		players[id] = &engine.BasePlayer{
+			ID:       id,
+			Score:    b.Moves,
+			Finished: b.Status == engine.StateFinished,
+			State:    b,
+		}
+	}
+
 	return PKSpeedStateResponse{
 		Boards:        e.Boards,
+		Players:       players,
 		Winners:       e.Winners,
 		Wins:          e.Wins,
 		Target:        e.Target,
@@ -139,7 +143,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 			b.StartAt = startAt
 		}
 
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, func() {
+		e.TriggerCountdown(func() {
 			now := time.Now().UnixMilli()
 			e.GlobalStartAt = now
 			for _, b := range e.Boards {

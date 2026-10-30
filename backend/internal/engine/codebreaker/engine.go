@@ -51,18 +51,9 @@ func (e *CodebreakerEngine) InitGame(options interface{}) error {
 	e.Difficulty = string(domain.DiffMedium)
 	e.DigitLength = 4
 
-	if opts, ok := options.(map[string]interface{}); ok {
-		if diff, ok := opts["difficulty"].(string); ok {
-			e.Difficulty = diff
-		}
-		if t, ok := opts["target"].(int); ok && t > 0 {
-			e.Target = t
-		} else {
-			e.Target = 1
-		}
-	} else {
-		e.Target = 1
-	}
+	opts := engine.ParseGameOptions(options)
+	e.Difficulty = opts.DiffStr()
+	e.Target = opts.Target
 
 	// Calculate digit length based on difficulty
 	switch e.Difficulty {
@@ -137,7 +128,7 @@ func (e *CodebreakerEngine) HandleAction(playerID string, action string, payload
 	}
 
 	if action == string(domain.ActionStartGame) && e.State == engine.StateWaiting {
-		engine.StartWithCountdown(&e.Mu, &e.State, e.Broadcast, nil)
+		e.TriggerCountdown(nil)
 		return e.State, nil
 	}
 
