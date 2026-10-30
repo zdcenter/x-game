@@ -95,40 +95,68 @@
     <!-- 🔥 Live Waiting Rooms Deck -->
     <app-live-waiting-rooms></app-live-waiting-rooms>
 
+    <!-- 🕒 最近常玩 (Recently Played Quick-Launch Bar) -->
+    @if (recentGames().length > 0) {
+      <section class="flex flex-col gap-2 pt-1 animate-fade-in">
+        <div class="flex items-center justify-between text-xs font-bold text-[var(--color-text-secondary)]">
+          <span class="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+            <span>🕒</span>
+            <span>{{ i18n.t('lobby.recent_played')() || '最近常玩' }}</span>
+          </span>
+          <button (click)="clearRecentGamesList()" class="text-[10px] opacity-50 hover:opacity-100 hover:text-red-400 transition-colors cursor-pointer flex items-center gap-1">
+            <span>✕</span>
+            <span>{{ i18n.t('lobby.clear_history')() || '清空' }}</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+          @for (rg of recentGames(); track rg.id) {
+            <a [routerLink]="rg.route"
+               class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] text-xs font-bold shrink-0 transition-all shadow-sm hover:shadow active:scale-95 group">
+              <span class="text-base group-hover:scale-110 transition-transform">{{ rg.emoji }}</span>
+              <span class="truncate max-w-[100px] sm:max-w-none">{{ rg.title }}</span>
+              @if (rg.isPk) {
+                <span class="text-[9px] font-extrabold px-1 py-0.2 rounded bg-amber-500/15 text-amber-500 border border-amber-500/30">PK</span>
+              }
+            </a>
+          }
+        </div>
+      </section>
+    }
+
     <!-- Filters & Search Toolbar -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
       <!-- Category Pills -->
       <div class="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
         <button (click)="selectedCategory.set('all')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
                 [style.background]="selectedCategory() === 'all' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'all' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'all' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.all')() || '全部游戏' }}
         </button>
         <button (click)="selectedCategory.set('hot')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
                 [style.background]="selectedCategory() === 'hot' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'hot' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'hot' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.hot')() || '🔥 热门榜' }}
         </button>
         <button (click)="selectedCategory.set('pk')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
                 [style.background]="selectedCategory() === 'pk' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'pk' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'pk' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.pk')() || '⚔️ 实时联机PK' }}
         </button>
         <button (click)="selectedCategory.set('logic')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
                 [style.background]="selectedCategory() === 'logic' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'logic' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'logic' ? 'transparent' : 'var(--color-border-card)'">
           {{ i18n.t('lobby.filter.logic')() || '🔢 数字推理' }}
         </button>
         <button (click)="selectedCategory.set('puzzle')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border"
+                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
                 [style.background]="selectedCategory() === 'puzzle' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'puzzle' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'puzzle' ? 'transparent' : 'var(--color-border-card)'">
@@ -136,21 +164,54 @@
         </button>
       </div>
 
-      <!-- Quick Switcher Trigger (Direct Action) -->
-      <div class="relative shrink-0 quick-switcher-container">
-        <button (click)="toggleQuickSwitcher($event)"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 group"
-                [class.border-[var(--color-accent-from)]]="isQuickSwitcherOpen()"
-                [class.ring-2]="isQuickSwitcherOpen()"
-                [class.ring-[var(--color-accent-from)]/20]="isQuickSwitcherOpen()"
-                [title]="i18n.t('lobby.quick_select_title')()">
-          <span class="text-base group-hover:scale-110 transition-transform">🎯</span>
-          <span>{{ i18n.t('lobby.quick_select_btn')() || '快速直达' }}</span>
-          <span class="px-1.5 py-0.2 rounded-full bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)] text-[10px] sm:text-xs font-mono font-bold">
-            {{ games().length }}
-          </span>
-          <span class="text-xs transition-transform duration-200 opacity-60 group-hover:opacity-100" [class.rotate-180]="isQuickSwitcherOpen()">▾</span>
-        </button>
+      <!-- Right Toolbar Tools: Sort Switcher & Quick Switcher -->
+      <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+        <!-- Sort Switcher -->
+        <div class="flex items-center gap-1 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] p-1 rounded-xl shadow-sm">
+          <button (click)="sortMode.set('recommended')"
+                  [title]="i18n.t('lobby.sort_recommended')() || '综合推荐'"
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  [class.bg-[var(--color-accent-from)]]="sortMode() === 'recommended'"
+                  [class.text-white]="sortMode() === 'recommended'"
+                  [class.text-[var(--color-text-secondary)]]="sortMode() !== 'recommended'">
+            <span>🔥</span>
+            <span class="hidden md:inline">{{ i18n.t('lobby.sort_recommended')() || '综合推荐' }}</span>
+          </button>
+          <button (click)="sortMode.set('visit')"
+                  [title]="i18n.t('lobby.sort_visit')() || '热门排行'"
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  [class.bg-[var(--color-accent-from)]]="sortMode() === 'visit'"
+                  [class.text-white]="sortMode() === 'visit'"
+                  [class.text-[var(--color-text-secondary)]]="sortMode() !== 'visit'">
+            <span>👁️</span>
+            <span class="hidden md:inline">{{ i18n.t('lobby.sort_visit')() || '热门排行' }}</span>
+          </button>
+          <button (click)="sortMode.set('name')"
+                  [title]="i18n.t('lobby.sort_name')() || '名称排序'"
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  [class.bg-[var(--color-accent-from)]]="sortMode() === 'name'"
+                  [class.text-white]="sortMode() === 'name'"
+                  [class.text-[var(--color-text-secondary)]]="sortMode() !== 'name'">
+            <span>🔤</span>
+            <span class="hidden md:inline">{{ i18n.t('lobby.sort_name')() || '名称' }}</span>
+          </button>
+        </div>
+
+        <!-- Quick Switcher Trigger (Direct Action) -->
+        <div class="relative shrink-0 quick-switcher-container">
+          <button (click)="toggleQuickSwitcher($event)"
+                  class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 group"
+                  [class.border-[var(--color-accent-from)]]="isQuickSwitcherOpen()"
+                  [class.ring-2]="isQuickSwitcherOpen()"
+                  [class.ring-[var(--color-accent-from)]/20]="isQuickSwitcherOpen()"
+                  [title]="i18n.t('lobby.quick_select_title')()">
+            <span class="text-base group-hover:scale-110 transition-transform">🎯</span>
+            <span>{{ i18n.t('lobby.quick_select_btn')() || '快速直达' }}</span>
+            <span class="px-1.5 py-0.2 rounded-full bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)] text-[10px] sm:text-xs font-mono font-bold">
+              {{ games().length }}
+            </span>
+            <span class="text-xs transition-transform duration-200 opacity-60 group-hover:opacity-100" [class.rotate-180]="isQuickSwitcherOpen()">▾</span>
+          </button>
 
         <!-- PC端下拉面板 (Desktop Dropdown) -->
         @if (isQuickSwitcherOpen()) {
@@ -211,6 +272,7 @@
             </div>
           </div>
         }
+        </div>
       </div>
     </section>
 
@@ -343,6 +405,14 @@
                 <!-- Subtle Gradient Accent Overlay -->
                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"
                      style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))"></div>
+
+                <!-- Admin Recommended Pin Badge -->
+                @if (getGamePriority(game.id) > 0) {
+                  <div class="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md flex items-center gap-1 animate-pulse pointer-events-none">
+                    <span>⭐</span>
+                    <span>{{ i18n.t('lobby.pinned_badge')() || '置顶' }}</span>
+                  </div>
+                }
                 
                 <!-- Game Icon SVG - Edge-to-Edge Hero Presence -->
                 <div class="absolute inset-0 flex items-center justify-center p-1.5 sm:p-2 overflow-hidden">

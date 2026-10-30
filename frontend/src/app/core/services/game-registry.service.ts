@@ -47,6 +47,8 @@ export interface GameConfig {
   multiRound?: boolean;
   /** Custom open graph cover image (filename in assets or public folder) */
   coverImage?: string;
+  /** Admin recommendation / pin priority (higher values appear first in lobby) */
+  priority?: number;
   /** Post-game finish flow orchestration (modal vs auto_next, in-board overlay, ad frequency) */
   finishFlow?: GameFinishFlowConfig;
 }
@@ -78,6 +80,7 @@ export class GameRegistryService {
         if (meta.modes?.length)         entry.modes = meta.modes;
         if (meta.difficulties?.length)  entry.difficulties = meta.difficulties;
         if (meta.multiRound != null)    entry.multiRound = meta.multiRound;
+        if (meta.priority != null)      entry.priority = Number(meta.priority);
         if (meta.finishFlow) {
           entry.finishFlow = { ...entry.finishFlow, ...meta.finishFlow };
         }

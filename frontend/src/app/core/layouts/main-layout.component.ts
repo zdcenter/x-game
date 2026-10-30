@@ -305,7 +305,7 @@ import { DeviceService } from '../services/device.service';
             [class.overflow-y-auto]="!zenService.isZenMode()"
             [class.overflow-hidden]="zenService.isZenMode()"
             style="overflow-anchor: none;">
-        <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode()">
+        <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode() || isFullImmersion()">
           <router-outlet></router-outlet>
         </div>
         @if (!zenService.isZenMode()) {

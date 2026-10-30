@@ -7,7 +7,7 @@ import { GameTimerService } from '../services/game-timer.service';
 import { WebSocketService } from '../services/websocket.service';
 import { GameService } from '../services/game.service';
 import { SettingsService } from '../services/settings.service';
-import { isBrowser } from './browser.util';
+import { isBrowser, addRecentGame } from './browser.util';
 import { GameStoreInterface } from '../interfaces/game-store.interface';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameLayoutComponent } from '../../shared/components/game-layout/game-layout.component';
@@ -150,6 +150,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       });
 
       if (isBrowser()) {
+        addRecentGame(gameId);
         setTimeout(() => {
           if (this.store && this.store.currentRoomMode() === GameMode.Single) {
             const storeAny = this.store as any;

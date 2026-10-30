@@ -10,6 +10,7 @@ interface ParsedMeta {
   penaltySeconds?: number;
   icon?: string;
   multiRound?: boolean;
+  priority?: number;
   modesJson?: string;
   difficultiesJson?: string;
   winAction?: 'modal' | 'auto_next';
@@ -164,6 +165,7 @@ interface AdminGame extends GameConfig {
               <tr class="border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50 text-[var(--color-text-main)] uppercase tracking-wider font-extrabold text-[11px] opacity-75">
                 <th class="py-3.5 px-4 min-w-[200px]">{{ i18n.t('admin.games.th_game')() }}</th>
                 <th class="py-3.5 px-3 text-center min-w-[80px]">{{ i18n.t('admin.games.th_status')() }}</th>
+                <th class="py-3.5 px-3 text-center min-w-[95px]">{{ i18n.t('admin.games.priority')() }}</th>
                 <th class="py-3.5 px-3 text-center min-w-[90px]">{{ i18n.t('admin.games.th_multi_round')() }}</th>
                 <th class="py-3.5 px-3 min-w-[170px]">{{ i18n.t('admin.games.th_win_action')() }}</th>
                 <th class="py-3.5 px-3 min-w-[170px]">{{ i18n.t('admin.games.th_lose_action')() }}</th>
@@ -185,6 +187,9 @@ interface AdminGame extends GameConfig {
                       <div class="min-w-0">
                         <div class="font-bold text-sm text-[var(--color-text-main)] truncate flex items-center gap-1.5">
                           <span>{{ getGameName(game.id) }}</span>
+                          @if ((game.parsedConfig.priority || 0) > 0) {
+                            <span class="text-[10px] font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">⭐ {{ game.parsedConfig.priority }}</span>
+                          }
                         </div>
                         <div class="text-[11px] font-mono opacity-50 uppercase tracking-wider truncate">
                           #{{ game.id }}
@@ -208,6 +213,20 @@ interface AdminGame extends GameConfig {
                     </button>
                     <div class="text-[10px] font-bold mt-0.5" [class.text-emerald-400]="game.isActive" [class.text-red-400]="!game.isActive">
                       {{ game.isActive ? 'Active' : 'Offline' }}
+                    </div>
+                  </td>
+
+                  <!-- 置顶权重 (Priority) -->
+                  <td class="py-3 px-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                      <input type="number" [(ngModel)]="game.parsedConfig.priority"
+                             (blur)="saveGame(game)" (keydown.enter)="saveGame(game)"
+                             min="0" max="999" placeholder="0"
+                             [title]="i18n.t('admin.games.priority_hint')()"
+                             class="w-14 bg-[var(--color-bg-main)] border rounded-xl py-1.5 px-1.5 text-xs font-mono font-bold focus:outline-none focus:border-[var(--color-accent-to)] transition-all text-center"
+                             [class.border-amber-400]="(game.parsedConfig.priority || 0) > 0"
+                             [class.text-amber-400]="(game.parsedConfig.priority || 0) > 0"
+                             [class.border-[var(--color-border-card)]]="!(game.parsedConfig.priority && game.parsedConfig.priority > 0)">
                     </div>
                   </td>
 
@@ -300,7 +319,7 @@ interface AdminGame extends GameConfig {
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="8" class="text-center py-12 text-slate-500">
+                  <td colspan="9" class="text-center py-12 text-slate-500">
                     {{ i18n.t('admin.games.no_games')() }}
                   </td>
                 </tr>
@@ -320,7 +339,12 @@ interface AdminGame extends GameConfig {
                 <input type="text" [(ngModel)]="game.parsedConfig.icon" (blur)="saveGame(game)"
                        class="w-9 h-9 text-lg text-center bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-xl shrink-0 outline-none">
                 <div class="truncate">
-                  <div class="font-bold text-sm text-[var(--color-text-main)] truncate">{{ getGameName(game.id) }}</div>
+                  <div class="font-bold text-sm text-[var(--color-text-main)] truncate flex items-center gap-1">
+                    <span>{{ getGameName(game.id) }}</span>
+                    @if ((game.parsedConfig.priority || 0) > 0) {
+                      <span class="text-[10px] text-amber-400 font-bold">⭐</span>
+                    }
+                  </div>
                   <div class="text-[10px] font-mono opacity-50 uppercase">#{{ game.id }}</div>
                 </div>
               </div>
@@ -347,17 +371,31 @@ interface AdminGame extends GameConfig {
                 <span class="text-[10px] font-bold opacity-60 mb-1">多局制 PK</span>
                 <button (click)="toggleMultiRound(game)"
                         class="flex items-center justify-between w-full font-bold">
-                  <span>{{ game.parsedConfig.multiRound ? 'BO3/BO5' : '单局决胜' }}</span>
+                  <span>{{ game.parsedConfig.multiRound ? 'BO3/BO5' : '单局' }}</span>
                   <span class="w-3 h-3 rounded-full" [class.bg-[var(--color-accent-to)]]="game.parsedConfig.multiRound" [class.bg-slate-700]="!game.parsedConfig.multiRound"></span>
                 </button>
               </div>
 
-              <!-- 流转延时 -->
+              <!-- 置顶权重 -->
               <div class="bg-[var(--color-bg-main)] p-2.5 rounded-xl border border-[var(--color-border-card)] flex flex-col justify-between">
-                <span class="text-[10px] font-bold opacity-60 mb-1">流转延时 (ms)</span>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold opacity-60 mb-1">{{ i18n.t('admin.games.priority')() }}</span>
+                  @if ((game.parsedConfig.priority || 0) > 0) {
+                    <span class="text-xs text-amber-400 font-bold">⭐</span>
+                  }
+                </div>
+                <input type="number" [(ngModel)]="game.parsedConfig.priority" (blur)="saveGame(game)"
+                       placeholder="0" min="0" max="999"
+                       class="w-full bg-transparent font-mono font-bold text-xs outline-none"
+                       [class.text-amber-400]="(game.parsedConfig.priority || 0) > 0">
+              </div>
+
+              <!-- 流转延时 -->
+              <div class="col-span-2 bg-[var(--color-bg-main)] p-2.5 rounded-xl border border-[var(--color-border-card)] flex items-center justify-between">
+                <span class="text-[10px] font-bold opacity-60">流转延时 (ms)</span>
                 <input type="number" [(ngModel)]="game.parsedConfig.autoNextDelayMs" (blur)="saveGame(game)"
                        placeholder="1500" step="100"
-                       class="w-full bg-transparent font-mono font-bold text-xs outline-none">
+                       class="w-24 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg p-1 text-center font-mono font-bold text-xs outline-none">
               </div>
 
               <!-- 通关流转 -->
@@ -480,6 +518,7 @@ export class AdminGamesComponent implements OnInit {
                   penaltySeconds: c.penaltySeconds,
                   icon: c.icon || '',
                   multiRound: !!c.multiRound,
+                  priority: c.priority !== undefined ? Number(c.priority) : 0,
                   winAction: c.finishFlow?.winAction || 'modal',
                   loseAction: c.finishFlow?.loseAction || 'modal',
                   autoNextAdFreq: c.finishFlow?.autoNextAdFreq !== undefined ? c.finishFlow.autoNextAdFreq : -1,
@@ -514,9 +553,10 @@ export class AdminGamesComponent implements OnInit {
     game.isSaving = true;
     let merged: Record<string, any> = {};
     try { merged = JSON.parse(game.rawConfigText || '{}'); } catch(e) {}
-    if (game.parsedConfig.icon !== undefined)       merged['icon'] = game.parsedConfig.icon;
-    if (game.parsedConfig.multiRound !== undefined) merged['multiRound'] = game.parsedConfig.multiRound;
+    if (game.parsedConfig.icon !== undefined)           merged['icon'] = game.parsedConfig.icon;
+    if (game.parsedConfig.multiRound !== undefined)     merged['multiRound'] = game.parsedConfig.multiRound;
     if (game.parsedConfig.penaltySeconds !== undefined) merged['penaltySeconds'] = game.parsedConfig.penaltySeconds;
+    if (game.parsedConfig.priority !== undefined)       merged['priority'] = Number(game.parsedConfig.priority);
 
     merged['finishFlow'] = {
       winAction: game.parsedConfig.winAction || 'modal',

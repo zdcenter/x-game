@@ -31,7 +31,7 @@ func GetGames(c fiber.Ctx) error {
 
 	var games []domain.GameConfig
 	if err := db.DB.Where("is_active = ?", true).
-		Order("visit_count DESC").
+		Order("COALESCE((config->>'priority')::int, 0) DESC, visit_count DESC").
 		Limit(limit).Offset(offset).
 		Find(&games).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
@@ -48,8 +48,8 @@ func GetGames(c fiber.Ctx) error {
 
 func GetAdminGames(c fiber.Ctx) error {
 	var games []domain.GameConfig
-	// Admin gets all games, sorted
-	if err := db.DB.Order("visit_count DESC").Find(&games).Error; err != nil {
+	// Admin gets all games, sorted by priority and visit count
+	if err := db.DB.Order("COALESCE((config->>'priority')::int, 0) DESC, visit_count DESC").Find(&games).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch games"})
 	}
 	return c.JSON(games)

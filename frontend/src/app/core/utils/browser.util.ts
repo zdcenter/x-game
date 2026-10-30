@@ -129,3 +129,23 @@ export const buildUrl = (base: string, params: Record<string, string>): string =
   Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
   return u.toString();
 };
+
+const RECENT_GAMES_KEY = 'xgame_recent_games';
+
+export const getRecentGames = (): string[] => {
+  const raw = storageGet(RECENT_GAMES_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const addRecentGame = (gameId: string): void => {
+  if (!gameId || !isBrowser()) return;
+  const list = getRecentGames().filter(id => id !== gameId);
+  list.unshift(gameId);
+  storageSet(RECENT_GAMES_KEY, JSON.stringify(list.slice(0, 6)));
+};

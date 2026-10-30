@@ -57,7 +57,7 @@ import { AdService } from '../../../core/services/ad.service';
   ],
   template: `
 <div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none"
-     [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-[var(--color-bg-base)]' : (isImmersiveEffective() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-transparent p-0 m-0' : (deviceService.isHandheld() ? 'min-h-[100dvh] bg-transparent p-0 m-0' : 'min-h-[calc(100dvh-64px)] bg-[var(--color-bg-base)]'))">
+     [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-[var(--color-bg-base)]' : (deviceService.isHandheld() ? 'min-h-[100dvh] bg-transparent p-0 m-0' : 'min-h-[calc(100dvh-64px)] bg-[var(--color-bg-base)]')">
   <!-- Offline Mode Banner -->
   @if (!zenService.isZenMode() && !isImmersiveEffective()) {
     <app-offline-banner></app-offline-banner>
@@ -159,7 +159,7 @@ import { AdService } from '../../../core/services/ad.service';
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
   <main class="flex-grow flex flex-col min-h-0 relative transition-all duration-300"
-        [ngClass]="isImmersiveEffective() ? 'w-full h-full max-h-full overflow-hidden p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
+        [ngClass]="isImmersiveEffective() ? 'w-full h-[100dvh] max-h-[100dvh] flex-none overflow-hidden p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
         [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
         [class.pb-16]="showHandheldDock()">
     

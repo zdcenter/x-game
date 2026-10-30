@@ -25,7 +25,7 @@ import { LiveActivityTickerComponent } from '../../shared/components/live-activi
 import { LiveRoomService } from '../../core/services/live-room.service';
 import { AuthModalService } from '../../core/services/auth-modal.service';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
-import { isBrowser, getOrigin } from '../../core/utils/browser.util';
+import { isBrowser, getOrigin, getRecentGames } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 const PAGE_SIZE = 8;
 
@@ -64,8 +64,37 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   // Active category filter: 'all' | 'hot' | 'pk' | 'logic' | 'puzzle'
   selectedCategory = signal<'all' | 'hot' | 'pk' | 'logic' | 'puzzle'>('all');
+  sortMode = signal<'recommended' | 'visit' | 'name'>('recommended');
   searchQuery = signal<string>('');
   isQuickSwitcherOpen = signal<boolean>(false);
+
+  recentGameIds = signal<string[]>([]);
+  recentGames = computed(() => {
+    const ids = this.recentGameIds();
+    const lang = this.i18n.currentLang();
+    return ids.map(id => {
+      const def = GAME_DEFINITIONS.find(d => d.id === id);
+      if (!def) return null;
+      return {
+        id: def.id,
+        title: this.getGameTitle(def.id),
+        emoji: def.iconEmoji || this.getGameEmoji(def.id),
+        route: ['/', lang, 'games', def.id],
+        isPk: this.hasMultiplayer(def.id)
+      };
+    }).filter((g): g is NonNullable<typeof g> => g !== null);
+  });
+
+  clearRecentGamesList() {
+    if (isBrowser()) {
+      localStorage.removeItem('xgame_recent_games');
+      this.recentGameIds.set([]);
+    }
+  }
+
+  getGamePriority(id: string): number {
+    return this.gameRegistry.getConfig(id)?.priority || 0;
+  }
 
   allQuickGames = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
@@ -147,6 +176,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   filteredGames = computed(() => {
     let list = [...this.games()];
     const cat = this.selectedCategory();
+    const sort = this.sortMode();
     const q = this.searchQuery().trim().toLowerCase();
 
     if (cat === 'hot') {
@@ -167,6 +197,27 @@ export class LobbyComponent implements OnInit, OnDestroy {
         const desc = this.getGameDesc(g.id).toLowerCase();
         return title.includes(q) || desc.includes(q) || g.id.toLowerCase().includes(q);
       });
+    }
+
+    // Apply sorting when not hard-locked to hot filter
+    if (cat !== 'hot') {
+      if (sort === 'recommended') {
+        list.sort((a, b) => {
+          const priorityA = this.getGamePriority(a.id);
+          const priorityB = this.getGamePriority(b.id);
+          const scoreA = (priorityA * 100000) + (a.visitCount || 0);
+          const scoreB = (priorityB * 100000) + (b.visitCount || 0);
+          return scoreB - scoreA;
+        });
+      } else if (sort === 'visit') {
+        list.sort((a, b) => (b.visitCount || 0) - (a.visitCount || 0));
+      } else if (sort === 'name') {
+        list.sort((a, b) => {
+          const titleA = this.getGameTitle(a.id);
+          const titleB = this.getGameTitle(b.id);
+          return titleA.localeCompare(titleB, this.i18n.currentLang());
+        });
+      }
     }
 
     return list;
@@ -219,6 +270,11 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Populate recently played games from client storage
+    if (isBrowser()) {
+      this.recentGameIds.set(getRecentGames());
+    }
+
     // Load dynamic game stats (visitCounts) and merge without reordering
     this.loadGamesStats();
 

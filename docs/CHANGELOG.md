@@ -2,6 +2,53 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.115] - 2026-10-30
+
+### 移动端与平板端游戏棋盘显示即消失（高度坍塌至 0）核心缺陷修复 (Fix Mobile/Tablet Game Board Disappearing & Height Collapsing into Strategy Guide)
+- **核心痛点解决 (用户语音指令：目前有一个比较严重的问题，就是说在移动端或者在手机端，如图，就会出现棋盘没有显示。就是进入的时候显示一下，然后马上就自己消失了，就变成只有玩法、规则、操作指南了。等于说你看一下是怎么回事。)**：
+  - **根本原因深度剖析**：
+    1. **Flex 弹性收缩导致游戏主舞台被压瘪至 0 像素**：
+       - 在 `GameLayoutComponent` 中，为手持端（`isImmersiveEffective()`）设计的外部根容器被设置了 `h-[100dvh] max-h-[100dvh] overflow-hidden`，属于定高强行截断的弹性列布局（`flex flex-col`）；
+       - 内部包含两个子元素：包含游戏棋盘的 `<main>`（配置了 `min-h-0` 与 `flex-grow`）以及位于其下的 SEO 攻略与玩法手册 `<section id="strategy-guide">`（高度约 2000px，未设置 `min-h-0`）；
+       - 依据 W3C CSS Flexbox 规范，当弹性容器内子元素总高度超出容器定高时，具有 `min-h-0` 的 `<main>` 会被无底线挤压收缩，而下方未设 `min-h-0` 的攻略区保持其内容内在高度（Intrinsic Content Size），导致 `<main>` 在攻略渲染完成的瞬间直接被挤瘪到 `height: 0px`；
+       - 这导致用户在手机、iPad Pro 等移动端进入游戏时，棋盘仅在初始帧闪现一下，随后立刻完全消失，整屏被下方攻略卡片完全侵占，且因为外层 `overflow-hidden` 连滑动恢复都无法做到。
+    2. **外层布局容器多余的底部内边距堆叠**：
+       - `MainLayoutComponent` 的 `<router-outlet>` 外层容器设置了默认的 `pb-12 sm:pb-16`，导致手持沉浸游戏在 100dvh 计算时产生额外的垂直间隙。
+  - **系统级平台重构方案**：
+    1. **手持沉浸主舞台防挤压加固 (`GameLayoutComponent`)**：
+       - 将 `<main>` 游戏主舞台样式强化为 `w-full h-[100dvh] max-h-[100dvh] flex-none overflow-hidden p-0 m-0 max-w-none`，赋予强制 `flex-none`，任何下层元素均绝对无法压缩游戏主舞台的物理高度；
+       - 外层根容器在手持端保持 `min-h-[100dvh] bg-transparent p-0 m-0`，杜绝定高截断与不当 `overflow-hidden`；
+    2. **SEO 与攻略区自适应平滑顺延**：
+       - `<section id="strategy-guide">` 保持完整 SEO 爬虫可见性，自然排布在 100dvh 游戏舞台的正下方，不遮挡、不挤压游戏主屏；
+       - 手持端玩家首屏 100% 呈现完整、纯净、无任何拉伸与遮挡的棋盘与操作栏，需要查看深度攻略时顺畅下滑即可阅读；
+    3. **主布局沉浸状态内边距动态清空 (`MainLayoutComponent`)**：
+       - 动态绑定 `[class.pb-0]="zenService.isZenMode() || isFullImmersion()"`，确保进入手持游戏时完全去除外部多余 padding。
+
+## [v3.2.114] - 2026-10-30
+
+### 游戏大厅加权推荐体系、置顶权重配置与最近常玩快捷直达 (Weighted Tiered Recommendation System, Admin Priority Boosting & Recently Played Quick Bar)
+- **核心痛点解决 (用户语音指令：那就按你刚才上面所说的... 最好的那种方法来做吧。)**：
+  - **业务痛点剖析**：
+    1. **平台游戏排序单一化**：原游戏大厅仅按访问量（`visitCount`）被动升降，无法兼顾运营主推、新游戏扶持与精品置顶需求；
+    2. **老玩家重返游戏操作繁琐**：每次进入大厅都需要在 19 款游戏中肉眼搜寻最近正在玩的游戏，缺少个性化快捷入口；
+    3. **缺少自主排序控制权**：玩家在大厅缺少灵活的排序方式切换（推荐/热门/字母排序）。
+  - **系统级平台重构方案**：
+    1. **分层加权推荐算法体系 (Weighted Tiered Ranking)**：
+       - 采用业内最佳的“置顶权重 + 热度热力”综合评分公式：`Score = (Priority * 100000) + VisitCount`；
+       - 管理员可在后台为任意游戏配置 `priority` 权重（0~999，0 为默认自然排名）；
+       - 权重为高优先级的游戏强制置顶并呈现专属金光 ⭐ 推荐徽章，同权重区间内自然按照玩家真实访问热度（`VisitCount`）平滑排布；
+    2. **数据库零迁移免侵入扩展**：
+       - 利用 PostgreSQL 原生 JSONB 特性，将 `priority` 扩展至 `gm_game_configs.config` 字典，服务端 SQL 采用 `COALESCE((config->>'priority')::int, 0) DESC, visit_count DESC` 排序，实现 0 表结构变更的无感升级；
+    3. **后台全景看板置顶权重可视化维护 (`AdminGamesComponent`)**：
+       - 桌面表格与移动端卡片全面增设【置顶权重 (Priority)】编辑项与失焦即时保存，配置大于 0 自动高亮金星微标；
+    4. **【🕒 最近常玩 (Recently Played)】专属快捷胶囊栏**：
+       - 在 `BaseGameComponent` 生命周期内自动记录玩家最近游玩的 6 款游戏，写入客户端极速缓存（`localStorage: xgame_recent_games`）；
+       - 大厅顶部在有历史记录时自动平滑淡入最近常玩胶囊栏，支持 1 键极速直达与一键清空；
+    5. **大厅工具栏多维排序器 (Sort Switcher)**：
+       - 大厅筛选栏集成【🔥 综合推荐】、【👁️ 热门排行】与【🔤 名称排序】快速切换，手机端精致紧凑图标呈现，桌面端展开完整语义，全端响应式完美适配；
+    6. **国际化与多语言完备适配**：
+       - 8 国语言全量注入 `lobby.recent_played`、`lobby.clear_history`、`lobby.sort_recommended`、`lobby.sort_visit`、`lobby.sort_name`、`lobby.pinned_badge`、`admin.games.priority` 与 `admin.games.priority_hint`，严守开发准则第 2 条。
+
 ## [v3.2.113] - 2026-10-30
 
 ### 后端重启时游戏配置与流转参数持久化防覆盖重构 (Fix GameConfig & FinishFlow Wiped Out on Backend Restart in Seed Routine)
