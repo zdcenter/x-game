@@ -2,6 +2,17 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.141] - 2026-11-01
+
+### 全端游戏局内“开房PK”一致性与手持端等候大厅修复 (Universal In-Game "Create PK Room" Alignment & Handheld Waiting Room Fix)
+- **核心痛点解决 (用户语音反馈：在移动/平板端进入游戏后，只有帐篷与树顶部的“开房PK”能正常唤出对战等候大厅，其他游戏如扫雷、数织点击后无任何反应；且其他游戏只显示简写“PK”，希望统一文案为“开房PK”)**：
+  1. **手持端局内发起对战空操作漏洞修复 (`BaseGameComponent.navigateToPkArena` & `openPkDrawer`)**：
+     - **根因分析**：在单人单机模式下点击手持端顶梁的 PK 按钮时，基类 `navigateToPkArena()` 原先调用了 `this.gameLayout.togglePkDrawer(true)`；然而 `GameLayoutComponent` 中并未实现侧边 PK Drawer 的 UI 模板，导致点击事件直接被提前 return 阻断，既未创建房间亦未唤起等候大厅，呈现“完全无反应”的假死状态；
+     - **对齐成熟开房流转**：将 `navigateToPkArena()` 与 `openPkDrawer()` 在单机模式下的逻辑全面对齐 `this.gameLayout.quickCreatePkRoom()`；点击后自动触发登录态校验、根据当前游戏配置动态生成对战房间，并通过 WebSocket 瞬间将局内舞台切换为高颜值 `<app-game-waiting-room>`（PK 等候大厅），与帐篷与树的极速开房体验完全一致；
+  2. **顶梁与全端 PK 按钮文案全量统一 (`GameHandheldHeaderComponent` & `GameLayoutComponent`)**：
+     - **手持端顶栏文案统一**：彻底拔除 `<app-game-handheld-header>` 中硬编码的 `<span ...>PK</span>`，升级为响应式多语言调用 `{{ i18n.t('game.quick_pk')() || '开房PK' }}`，在平板（iPad）及手机端均舒展展示“⚔️ 开房PK”，杜绝视觉简略不一致；
+     - **全端 fallback 规范收敛**：统一 `GameLayoutComponent` 顶栏及手持端悬浮 Dock 中的 fallback 词条为统一的 `'开房PK'`，8 国语言国际化字典 100% 自动映射。
+
 ## [v3.2.140] - 2026-10-31
 
 ### PK 对战等候大厅重构升级：去虚胖电竞双翼擂台、按钮防截断与全端自适应 (PK Waiting Room Arena Redesign: Compact Combat Pods & Uncut Actions)

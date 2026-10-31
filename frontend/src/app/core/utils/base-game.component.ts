@@ -253,16 +253,16 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
   openPkDrawer() {
     if (this.gameLayout) {
-      this.gameLayout.togglePkDrawer(true);
+      this.gameLayout.quickCreatePkRoom();
     } else {
       this.navigateToPkArena();
     }
   }
 
   navigateToPkArena() {
-    // 棋盘局内直接唤醒 PK Drawer，无缝开房/迎战，不脱离当前棋盘舞台
+    // 棋盘局内直接一键开房进入等候大厅，无缝开房/迎战，不脱离当前棋盘舞台
     if (this.gameLayout && this.store.currentRoomMode() === GameMode.Single) {
-      this.gameLayout.togglePkDrawer(true);
+      this.gameLayout.quickCreatePkRoom();
       return;
     }
     this.store.leaveRoom();

@@ -114,9 +114,9 @@ import { AdService } from '../../../core/services/ad.service';
                 } @else {
                   <button (click)="quickCreatePkRoom()"
                           class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 group shrink-0 cursor-pointer"
-                          [title]="i18n.t('game.quick_pk')() || '联机对战'">
+                          [title]="i18n.t('game.quick_pk')() || '开房PK'">
                     <span class="group-hover:scale-110 transition-transform">⚔️</span>
-                    <span>{{ i18n.t('game.quick_pk')() || '联机对战' }}</span>
+                    <span>{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
                   </button>
                 }
               }
@@ -560,7 +560,7 @@ import { AdService } from '../../../core/services/ad.service';
                   class="py-2 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-500 font-bold text-xs border border-amber-500/30 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 spring-press"
                   [title]="i18n.t('game.quick_pk')() || '开房PK'">
             <span>⚔️</span>
-            <span>{{ i18n.t('game.quick_pk')() || '联机' }}</span>
+            <span>{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
           </button>
         } @else if (effectiveRoomMode() !== GameMode.Single && effectiveIsHost()) {
           <button (click)="openSwitchGame()"

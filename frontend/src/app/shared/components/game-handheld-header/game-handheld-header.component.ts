@@ -57,7 +57,7 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
                   class="h-9 sm:h-11 md:h-12 px-2.5 sm:px-4 rounded-xl sm:rounded-2xl bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/30 flex items-center gap-1 sm:gap-1.5 shadow-xs active:scale-95 transition-all text-xs sm:text-sm font-bold cursor-pointer shrink-0"
                   [title]="i18n.t('game.quick_pk')() || '开房PK'">
             <span class="text-xs sm:text-base">⚔️</span>
-            <span class="text-xs sm:text-sm font-bold">PK</span>
+            <span class="text-xs sm:text-sm font-bold whitespace-nowrap">{{ i18n.t('game.quick_pk')() || '开房PK' }}</span>
           </button>
         }
 
