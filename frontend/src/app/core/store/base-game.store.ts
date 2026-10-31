@@ -14,7 +14,7 @@ import { LayoutService } from '../services/layout.service';
 import { CoinService } from '../services/coin.service';
 import { LiveActivityService } from '../services/live-activity.service';
 import { CrossGameJoinService } from '../services/cross-game-join.service';
-import { storageGet, storageSet, storageRemove } from '../utils/browser.util';
+import { storageGet, storageSet, storageRemove, getSavedDifficulty, setSavedDifficulty, getSavedLevel, setSavedLevel } from '../utils/browser.util';
 
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
@@ -128,6 +128,36 @@ export abstract class BaseGameStore implements GameStoreInterface {
               untracked(() => this.focusedPlayerId.set(targetId));
             }
           }
+        }
+      }
+    });
+
+    // 自动接管单机难度等级持久化契约：
+    // 当在单机模式下，currentDifficulty 发生变化时，全自动持久化到本地 localStorage，
+    // 杜绝任何单机游戏零散编写持久化逻辑。
+    effect(() => {
+      const mode = this.currentRoomMode();
+      const diff = this.currentDifficulty();
+      const gid = this.gameId;
+      if (mode === GameMode.Single && diff && gid) {
+        untracked(() => {
+          setSavedDifficulty(gid, String(diff));
+        });
+      }
+    });
+
+    // 自动在进入单机模式时初次对齐本地已保存的难度（如果尚未被显式赋值过）
+    let initialDiffRestored = false;
+    effect(() => {
+      const mode = this.currentRoomMode();
+      const gid = this.gameId;
+      if (!initialDiffRestored && mode === GameMode.Single && gid) {
+        initialDiffRestored = true;
+        const saved = getSavedDifficulty(gid, '');
+        if (saved && saved !== untracked(() => this.currentDifficulty())) {
+          untracked(() => {
+            this.currentDifficulty.set(saved);
+          });
         }
       }
     });
@@ -714,5 +744,53 @@ export abstract class BaseGameStore implements GameStoreInterface {
    */
   public clearSinglePlayerSave(): void {
     storageRemove(this.getSinglePlayerSaveKey());
+  }
+
+  /**
+   * 从本地持久化缓存中安全读取上次选择的难度等级。
+   * @param defaultDiff 若本地无记录时使用的默认难度，缺省为 GameDifficulty.Easy
+   */
+  public getStoredDifficulty(defaultDiff: string = GameDifficulty.Easy): string {
+    if (!this.gameId) return defaultDiff;
+    return getSavedDifficulty(this.gameId, defaultDiff);
+  }
+
+  /**
+   * 将当前或指定的难度等级安全持久化到本地。
+   */
+  public saveDifficulty(diff?: string): void {
+    const targetDiff = diff || this.currentDifficulty();
+    if (this.gameId && targetDiff) {
+      setSavedDifficulty(this.gameId, String(targetDiff));
+    }
+  }
+
+  /**
+   * 从本地缓存恢复游戏难度，并同步更新 currentDifficulty 信号。
+   * 返回恢复后的难度值。
+   */
+  public restoreSavedDifficulty(defaultDiff: string = GameDifficulty.Easy): string {
+    const saved = this.getStoredDifficulty(defaultDiff);
+    if (saved && saved !== this.currentDifficulty()) {
+      this.currentDifficulty.set(saved);
+    }
+    return saved;
+  }
+
+  /**
+   * 从本地持久化缓存中安全读取上次选择的关卡索引（针对选关类游戏）。
+   */
+  public getStoredLevel(defaultLevel: number = 0): number {
+    if (!this.gameId) return defaultLevel;
+    return getSavedLevel(this.gameId, defaultLevel);
+  }
+
+  /**
+   * 将当前关卡索引安全持久化到本地。
+   */
+  public saveLevel(level: number): void {
+    if (this.gameId && typeof level === 'number') {
+      setSavedLevel(this.gameId, level);
+    }
   }
 }

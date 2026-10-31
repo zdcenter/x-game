@@ -27,12 +27,20 @@ import { AuthModalService } from '../../core/services/auth-modal.service';
 import { BlogService, BlogPostMeta } from '../../core/services/blog.service';
 import { isBrowser, getOrigin, getRecentGames } from '../../core/utils/browser.util';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
+import { SiteRecommendModalComponent } from '../../shared/components/site-recommend-modal/site-recommend-modal.component';
 const PAGE_SIZE = 8;
+
+export interface GameBadge {
+  type: 'pinned' | 'new' | 'hot';
+  icon: string;
+  label: string;
+  gradientClass: string;
+}
 
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent, LiveActivityTickerComponent],
+  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent, LiveActivityTickerComponent, SiteRecommendModalComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })
@@ -94,6 +102,52 @@ export class LobbyComponent implements OnInit, OnDestroy {
 
   getGamePriority(id: string): number {
     return this.gameRegistry.getConfig(id)?.priority || 0;
+  }
+
+  getGameBadge(id: string): GameBadge | null {
+    const config = this.gameRegistry.getConfig(id);
+    const badgeType = config?.badgeType;
+    const priority = config?.priority || 0;
+
+    if (badgeType === 'new') {
+      return {
+        type: 'new',
+        icon: '✨',
+        label: this.i18n.t('badge.new')() || 'NEW',
+        gradientClass: 'from-emerald-500 to-teal-500 text-white shadow-emerald-500/30 border-emerald-300/40'
+      };
+    }
+    if (badgeType === 'hot') {
+      return {
+        type: 'hot',
+        icon: '🔥',
+        label: this.i18n.t('badge.hot')() || 'HOT',
+        gradientClass: 'from-rose-500 to-amber-500 text-white shadow-rose-500/30 border-rose-300/40'
+      };
+    }
+    if (badgeType === 'pinned') {
+      return {
+        type: 'pinned',
+        icon: '⭐',
+        label: this.i18n.t('badge.pinned')() || '置顶',
+        gradientClass: 'from-amber-500 to-orange-500 text-white shadow-amber-500/30 border-amber-300/40'
+      };
+    }
+    if (badgeType === 'none') {
+      return null;
+    }
+
+    // 向下兼容历史数据：未配置 badgeType 且 priority > 0
+    if (priority > 0) {
+      return {
+        type: 'pinned',
+        icon: '⭐',
+        label: this.i18n.t('badge.pinned')() || '置顶',
+        gradientClass: 'from-amber-500 to-orange-500 text-white shadow-amber-500/30 border-amber-300/40'
+      };
+    }
+
+    return null;
   }
 
   allQuickGames = computed(() => {

@@ -6,20 +6,24 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <!-- Google AdSense -->
-    <ins class="adsbygoogle"
-         style="display:block"
-         [attr.data-ad-client]="parsedClient"
-         [attr.data-ad-slot]="parsedSlot"
-         [attr.data-ad-format]="adFormat"
-         [attr.data-full-width-responsive]="fullWidthResponsive"></ins>
+    @if (isValidSlot) {
+      <!-- Google AdSense Unit -->
+      <ins class="adsbygoogle"
+           style="display:block"
+           [attr.data-ad-client]="parsedClient"
+           [attr.data-ad-slot]="parsedSlot"
+           [attr.data-ad-format]="adFormat"
+           [attr.data-full-width-responsive]="fullWidthResponsive"></ins>
+    }
   `,
   styles: [`
     :host { 
       display: block; 
       text-align: center; 
-      margin: 10px 0; 
-      min-height: 50px; /* 防止布局抖动 */
+    }
+    :host:has(ins) {
+      margin: 10px 0;
+      min-height: 50px;
     }
   `]
 })
@@ -41,13 +45,17 @@ export class AdsenseComponent implements AfterViewInit {
     if (this.adSlot && this.adSlot.includes('/')) {
       return this.adSlot.split('/')[1];
     }
-    return this.adSlot;
+    return this.adSlot?.trim() || '';
+  }
+
+  get isValidSlot(): boolean {
+    return !!(this.parsedSlot && this.parsedSlot.length > 0);
   }
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngAfterViewInit() {
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.isValidSlot && isPlatformBrowser(this.platformId)) {
       try {
         (window as any).adsbygoogle = (window as any).adsbygoogle || [];
         (window as any).adsbygoogle.push({});

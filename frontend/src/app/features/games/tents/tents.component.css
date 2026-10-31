@@ -1,0 +1,165 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ───────────────────────────────────────────────────────────── */
+/* 图1标杆数字体系：巨大饱满、圆润厚重、高对比度 */
+/* ───────────────────────────────────────────────────────────── */
+.tents-clue-btn {
+  font-family: 'Fredoka', 'Nunito', 'Arial Rounded MT Bold', 'Trebuchet MS', 'PingFang SC', system-ui, -apple-system, sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 5vmin, 2.25rem);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  letter-spacing: -0.02em;
+}
+
+.tents-clue-btn:hover {
+  transform: scale(1.12);
+}
+
+.tents-clue-zero {
+  color: #c26e1b !important; /* 图1纯正琥珀焦糖暖棕 */
+}
+
+.tents-clue-nonzero {
+  color: #2b4f1b !important; /* 图1纯正深邃森林苔藓绿 */
+}
+
+.tents-clue-satisfied {
+  color: #1e7019 !important;
+  transform: scale(1.05);
+}
+
+.tents-clue-over {
+  color: #dc2626 !important;
+}
+
+/* 暗色模式适配 */
+:host-context(.dark) .tents-clue-zero {
+  color: #f59e0b !important;
+}
+
+:host-context(.dark) .tents-clue-nonzero {
+  color: #86efac !important;
+}
+
+:host-context(.dark) .tents-clue-satisfied {
+  color: #4ade80 !important;
+}
+
+/* ───────────────────────────────────────────────────────────── */
+/* 单元格方砖质感体系 (100% 还原图1大圆角、象牙白底、抹茶草地) */
+/* ───────────────────────────────────────────────────────────── */
+.tents-tile {
+  border-radius: clamp(12px, 2.6vmin, 18px);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.tents-tile:active {
+  transform: scale(0.95);
+}
+
+/* 空白格与树木格：图1温润象牙白方砖 */
+.tents-tile-empty, .tents-tile-tree {
+  background-color: #faf8f0;
+  border: 1.5px solid #e3dcce;
+}
+
+.tents-tile-empty:hover {
+  background-color: #ffffff;
+  border-color: #b5db97;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* 草地格：图1清新抹茶草绿 */
+.tents-tile-grass {
+  background-color: #cae2a6 !important;
+  border: 1.5px solid #b2d585 !important;
+}
+
+/* 帐篷格：图1暖白米黄温润底 */
+.tents-tile-tent {
+  background-color: #faf2dc !important;
+  border: 1.5px solid #ebd49e !important;
+}
+
+.tents-tile-conflict {
+  background-color: #fee2e2 !important;
+  border: 2px solid #ef4444 !important;
+  animation: pulse 1s infinite;
+}
+
+/* 暗色模式适配 */
+:host-context(.dark) .tents-tile-empty, :host-context(.dark) .tents-tile-tree {
+  background-color: #233524;
+  border-color: #385239;
+}
+
+:host-context(.dark) .tents-tile-grass {
+  background-color: #223d24 !important;
+  border-color: #325635 !important;
+}
+
+:host-context(.dark) .tents-tile-tent {
+  background-color: #382d1c !important;
+  border-color: #d97706 !important;
+}
+
+/* 动画效果 */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.15s ease-out forwards;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border-card);
+  border-radius: 9999px;
+}
+

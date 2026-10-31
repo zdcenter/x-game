@@ -20,13 +20,14 @@ import { ShareImageService, ProfileCardData } from '../../core/services/share-im
 import { getOrigin, isBrowser } from '../../core/utils/browser.util';
 
 import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
+import { ChangePasswordModalComponent } from '../../shared/components/change-password-modal/change-password-modal.component';
 
 type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, LevelBadgeComponent, AvatarFrameComponent, BrainRadarComponent, CoinIconComponent],
+  imports: [CommonModule, RouterLink, LevelBadgeComponent, AvatarFrameComponent, BrainRadarComponent, CoinIconComponent, ChangePasswordModalComponent],
   template: `
     <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] py-4 md:py-8">
       <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex flex-col gap-6">
@@ -100,13 +101,25 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
                 </span>
               </div>
 
-              <button (click)="shareProfile()"
-                class="mt-3 flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] font-bold text-xs transition-all active:scale-95 self-center sm:self-start">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                {{ i18n.t('share.profile_card')() }}
-              </button>
+              <div class="flex items-center gap-2 mt-3 flex-wrap justify-center sm:justify-start">
+                <button (click)="shareProfile()"
+                  class="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] font-bold text-xs transition-all active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  {{ i18n.t('share.profile_card')() }}
+                </button>
+
+                @if (authStore.currentUser()?.role !== 'guest') {
+                  <button (click)="isPasswordModalOpen.set(true)"
+                    class="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)]/50 text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] font-bold text-xs transition-all active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    {{ i18n.t('auth.change_password.title')() }}
+                  </button>
+                }
+              </div>
             }
           </div>
         </div>
@@ -467,10 +480,17 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
         }
 
       </div>
+
+      <!-- Change Password Modal -->
+      <app-change-password-modal
+        [isOpen]="isPasswordModalOpen()"
+        (closed)="isPasswordModalOpen.set(false)"
+      />
     </div>
   `
 })
 export class ProfileComponent implements OnInit {
+  isPasswordModalOpen = signal(false);
   GameMode = GameMode;
   i18n = inject(I18nService);
   authStore = inject(AuthStore);

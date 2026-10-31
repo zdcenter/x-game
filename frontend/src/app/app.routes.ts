@@ -33,10 +33,6 @@ const adminRoute: Route = {
     { path: 'leaderboard', loadComponent: () => import('./features/admin/admin-leaderboard.component').then(m => m.AdminLeaderboardComponent) },
     { path: 'xp-config', loadComponent: () => import('./features/admin/admin-xp-config.component').then(m => m.AdminXpConfigComponent) },
     { path: 'images', loadComponent: () => import('./features/admin/admin-images.component').then(m => m.AdminImagesComponent) },
-    { path: 'blog', loadComponent: () => import('./features/admin/admin-blog.component').then(m => m.AdminBlogComponent) },
-    { path: 'idioms', loadComponent: () => import('./features/admin/admin-idiom.component').then(m => m.AdminIdiomComponent) },
-    { path: 'distribute', loadComponent: () => import('./features/admin/admin-distribute.component').then(m => m.AdminDistributeComponent) },
-    { path: 'articles', loadComponent: () => import('./features/admin/admin-articles.component').then(m => m.AdminArticlesComponent) },
     { path: 'feedbacks', loadComponent: () => import('./features/admin/admin-feedback.component').then(m => m.AdminFeedbackComponent) },
     { path: 'database', loadComponent: () => import('./features/admin/admin-database.component').then(m => m.AdminDatabaseComponent) }
   ]
@@ -71,7 +67,7 @@ const langChildren: Routes = [
       },
       {
         path: 'blog',
-        loadComponent: () => import('./features/blog/blog-list/blog-list.component').then(m => m.BlogListComponent),
+        loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent),
         data: { seo: { titleKey: 'seo.blog.title', descKey: 'seo.blog.desc', keywordsKey: 'seo.blog.keywords' } }
       },
       {

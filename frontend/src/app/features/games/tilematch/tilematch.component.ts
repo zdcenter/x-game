@@ -10,6 +10,8 @@ import { TILE_EMOJIS, TileCard } from './store/tilematch-engine';
 import { DeviceService } from '../../../core/services/device.service';
 import { ZenModeService } from '../../../core/services/zen-mode.service';
 
+import { TileIconComponent } from './components/tile-icon/tile-icon.component';
+
 interface FloatingFeedback {
   id: number;
   text: string;
@@ -39,7 +41,8 @@ export interface ClearingMatchEvent {
   imports: [
     CommonModule,
     GameLayoutComponent,
-    GamePkHudComponent
+    GamePkHudComponent,
+    TileIconComponent
   ],
   providers: [TilematchStore],
   templateUrl: './tilematch.component.html',
@@ -95,6 +98,13 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
     const d = new Date();
     return `${d.getMonth() + 1}月${d.getDate()}日`;
   });
+
+  scrollToStrategy() {
+    if (typeof document !== 'undefined') {
+      const el = document.getElementById('strategy-guide');
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 
   // 单人通关无缝下一局倒计时气泡提示 (心流无界，杜绝大黑框打断)
   victoryNotice = signal<{ score: number; moves: number } | null>(null);

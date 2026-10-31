@@ -6,7 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 
 export type Lang = 'en' | 'zh' | 'es' | 'ja' | 'ko' | 'pt' | 'fr' | 'de';
 
-export const SUPPORTED_LANGS: { code: Lang; name: string; flag: string }[] = [
+export const ALL_SUPPORTED_LANGS: { code: Lang; name: string; flag: string }[] = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
   { code: 'zh', name: '中文', flag: '🇨🇳' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -16,6 +16,16 @@ export const SUPPORTED_LANGS: { code: Lang; name: string; flag: string }[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
 ];
+
+/**
+ * 集中语言控制开关 (AdSense 审核合规模式)
+ * 审核期间锁定为 ['en', 'zh']，消除机器翻译疑虑与跨语种重复内容判定；
+ * 审核通过后，可随时将数组扩充为全部 8 门语言一键生效。
+ */
+export const ACTIVE_LANG_CODES: Lang[] = ['en', 'zh'];
+
+export const SUPPORTED_LANGS: { code: Lang; name: string; flag: string }[] =
+  ALL_SUPPORTED_LANGS.filter(l => ACTIVE_LANG_CODES.includes(l.code));
 
 /** schema.org inLanguage value per supported language (BCP-47). */
 export const LANG_LOCALES: Record<Lang, string> = {

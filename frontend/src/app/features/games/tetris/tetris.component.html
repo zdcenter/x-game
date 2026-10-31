@@ -113,7 +113,7 @@
               ></app-game-pk-hud>
             </div>
           } @else if (!isHandheld()) {
-            <!-- Single Player Modern Glass Capsule HUD -->
+            <!-- Single Player Modern Glass Capsule HUD (纯净统计数据流：得分 / 消行 / 连击 / 个人最佳 / 全网纪录) -->
             <div class="flex-none px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-xl rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-2xl shadow-lg z-10 mx-auto">
               <app-game-score-capsule
                 [score]="store.score()"
@@ -122,12 +122,12 @@
                 [worldRecordHolder]="worldRecord()?.username"
                 scoreIcon="🧱"
               >
-                <!-- Center: Lines Cleared, Dynamic Combo Badge & Theme Palette Button -->
-                <div class="flex items-center gap-1.5 sm:gap-2.5">
-                  <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
+                <!-- Center: Lines Cleared & Dynamic Combo Surge Badge (纯净数据呈现，操作解耦移至侧翼) -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
                     <span class="text-xs sm:text-sm font-bold text-cyan-500">≣</span>
                     <div class="flex flex-col">
-                      <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('tetris.lines')() }}</span>
+                      <span class="text-[8px] sm:text-[9px] font-bold text-[var(--color-text-muted)] uppercase leading-none">{{ i18n.t('tetris.lines')() || '消行' }}</span>
                       <span class="font-black font-mono text-xs sm:text-base text-cyan-500 dark:text-cyan-400 leading-none">
                         {{ store.lines() }}
                       </span>
@@ -135,31 +135,11 @@
                   </div>
 
                   @if (store.comboTrigger() >= 2) {
-                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-[11px] sm:text-xs font-black animate-pulse">
+                    <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-500/40 text-amber-500 text-xs font-black animate-pulse shadow-xs">
                       <span>🔥</span>
                       <span>x{{ store.comboTrigger() }}</span>
                     </div>
                   }
-
-                  <!-- Instant Restart Button -->
-                  <button (click)="store.startGame()"
-                          class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-cyan-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1 cursor-pointer"
-                          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
-                    <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
-                    <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
-                      {{ i18n.t('game.restart')() || '重开' }}
-                    </span>
-                  </button>
-
-                  <!-- Palette Switcher Button -->
-                  <button (click)="store.cycleColorTheme()"
-                          class="p-1 sm:p-1.5 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-amber-400/50 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 group flex items-center gap-1"
-                          [title]="i18n.t('tetris.theme_tooltip')()">
-                    <span class="text-xs sm:text-sm group-hover:rotate-12 transition-transform">🎨</span>
-                    <span class="text-[10px] font-bold text-[var(--color-text-muted)] group-hover:text-[var(--color-text-main)] hidden md:inline">
-                      {{ getThemeName(store.colorTheme()) }}
-                    </span>
-                  </button>
                 </div>
               </app-game-score-capsule>
             </div>
@@ -454,7 +434,7 @@
                 <!-- Stats / Streak Card -->
                 <div class="tetris-wing-card p-2 sm:p-2.5 rounded-2xl flex items-center justify-between w-full px-3">
                   <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest leading-none">
-                    {{ i18n.t('tetris.streak')() }}
+                    {{ i18n.t('tetris.streak')() || '连击' }}
                   </span>
                   <div class="flex items-center gap-1">
                     <span class="text-amber-500 font-black text-sm sm:text-base font-mono">
@@ -463,6 +443,34 @@
                     <span class="text-xs text-amber-500">🔥</span>
                   </div>
                 </div>
+
+                <!-- Action Controls & Palette Theme Card (🕹️ 快捷控制与方块皮肤外观面板) -->
+                @if (currentRoomMode() === GameMode.Single) {
+                  <div class="tetris-wing-card p-2 sm:p-2.5 rounded-2xl flex flex-col gap-1.5 w-full select-none shadow-xs">
+                    <!-- Instant Restart Button -->
+                    <button (click)="store.startGame()"
+                            type="button"
+                            class="w-full py-1.5 px-2 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] hover:border-cyan-400/50 text-[var(--color-text-main)] hover:text-cyan-500 transition-all duration-200 active:scale-95 group flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                            [title]="(i18n.t('game.restart')() || '再来一局') + ' (快捷键: R)'">
+                      <span class="text-xs group-hover:rotate-180 transition-transform duration-300">🔄</span>
+                      <span class="text-xs font-bold whitespace-nowrap">
+                        {{ i18n.t('game.restart')() || '再来一局' }}
+                      </span>
+                      <span class="text-[9px] font-mono text-[var(--color-text-muted)] opacity-70 ml-0.5">R</span>
+                    </button>
+
+                    <!-- Theme / Style Switcher Button -->
+                    <button (click)="store.cycleColorTheme()"
+                            type="button"
+                            class="w-full py-1.5 px-2 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] hover:border-amber-400/50 text-[var(--color-text-main)] hover:text-amber-500 transition-all duration-200 active:scale-95 group flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                            [title]="i18n.t('tetris.theme_tooltip')() || '切换方块样式'">
+                      <span class="text-xs group-hover:rotate-12 transition-transform">🎨</span>
+                      <span class="text-xs font-bold truncate">
+                        {{ getThemeName(store.colorTheme()) }}
+                      </span>
+                    </button>
+                  </div>
+                }
 
                 <!-- OPPONENT MATRIX CARD (INTEGRATED DIRECTLY IN RIGHT WING FOR CLEAN 3-COLUMN TABLET LAYOUT) -->
                 @if (currentRoomMode() !== GameMode.Single) {

@@ -2,15 +2,16 @@ const fs = require('fs');
 const path = require('path');
 
 const domain = 'https://www.puzzlepk.com';
-const langs = ['en', 'zh', 'es', 'ja', 'ko', 'pt', 'fr', 'de'];
+const allLangs = ['en', 'zh', 'es', 'ja', 'ko', 'pt', 'fr', 'de'];
 const defaultLang = 'en';
 const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
 // ──────────────────────────────────────────────────────────────────────
-// Sitemap languages — temporarily limited to en/zh for AdSense approval.
-// After AdSense approval, change this back to `langs` to include all 8.
+// Active languages for sitemap.xml & Angular SSG prerender routes.txt
+// AdSense Review Compliance: locked to ['en', 'zh'] to eliminate thin/duplicate content penalties.
+// Post-approval: change this back to `allLangs` to immediately re-enable all 8 languages.
 // ──────────────────────────────────────────────────────────────────────
-const sitemapLangs = ['en', 'zh'];
+const activeLangs = ['en', 'zh'];
 
 // Auto-discover games
 const gamesDir = path.join(__dirname, '../src/app/features/games');
@@ -68,8 +69,8 @@ function urlEntry(p, changefreq, priority, lastmod, lang) {
   let xml = `  <url>\n`;
   xml += `    <loc>${domain}/${lang}/${p}</loc>\n`;
   xml += `    <lastmod>${lastmod}</lastmod>\n`;
-  // hreflang alternates always point to all available languages
-  for (const altLang of sitemapLangs) {
+  // hreflang alternates always point to all available active languages
+  for (const altLang of activeLangs) {
     xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${domain}/${altLang}/${p}"/>\n`;
   }
   xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domain}/${defaultLang}/${p}"/>\n`;
@@ -85,7 +86,7 @@ let xml = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 
 for (const [p, changefreq, priority, lastmod] of sitemapPaths) {
-  for (const lang of sitemapLangs) {
+  for (const lang of activeLangs) {
     xml += urlEntry(p, changefreq, priority, lastmod, lang);
   }
 }
@@ -96,11 +97,11 @@ const outDir = path.join(__dirname, '../public');
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
 fs.writeFileSync(path.join(outDir, 'sitemap.xml'), xml, 'utf-8');
-console.log(`sitemap.xml generated — ${sitemapPaths.length * sitemapLangs.length} URLs (${sitemapLangs.join(',')} only)`);
+console.log(`sitemap.xml generated — ${sitemapPaths.length * activeLangs.length} URLs (${activeLangs.join(',')} only)`);
 
-// Routes for Angular SSG prerender — all 8 languages, all routes (unchanged)
+// Routes for Angular SSG prerender — strictly aligned with activeLangs
 const routesContent = prerenderPaths
-  .flatMap(([p]) => langs.map(lang => `/${lang}/${p}`))
+  .flatMap(([p]) => activeLangs.map(lang => `/${lang}/${p}`))
   .join('\n') + '\n';
 fs.writeFileSync(path.join(__dirname, '../routes.txt'), routesContent, 'utf-8');
-console.log(`routes.txt generated — ${prerenderPaths.length * langs.length} prerender routes`);
+console.log(`routes.txt generated — ${prerenderPaths.length * activeLangs.length} prerender routes`);

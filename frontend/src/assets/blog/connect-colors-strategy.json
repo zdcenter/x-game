@@ -1,0 +1,33 @@
+{
+  "id": "connect-colors-strategy",
+  "date": "2026-10-31",
+  "published": true,
+  "en": {
+    "title": "Connect Colors Flow Guide: The 'Hug the Wall' Trick & Zero-Dead-End Rules",
+    "description": "Master numberlink and color connect puzzles with simple kindergarten-friendly visual tricks: hug the walls, protect corners, and leave zero empty squares behind.",
+    "keywords": "Connect Colors, Numberlink, flow puzzle, line connect, logic puzzle for kids, brain games",
+    "readTime": "5 min read",
+    "author": "Puzzle PK Team",
+    "tags": [
+      "Connect Colors",
+      "Logic",
+      "Kids",
+      "Beginners"
+    ],
+    "content": "# Connect Colors Flow Guide: The 'Hug the Wall' Trick & Zero-Dead-End Rules\n\nConnect Colors (also known as Numberlink or Flow) looks like a coloring book: you just draw pipes connecting matching colored dots. Red to Red, Blue to Blue, Yellow to Yellow.\n\nSounds so simple that even a 5-year-old can play, right? But then you reach the 8x8 or 10x10 boards, and suddenly your lines cross over each other, you trap dots in dead ends, or you leave empty white squares that make the game refuse to clear!\n\nDo not panic. You only need **three golden rules** to become a master plumber!\n\n---\n\n> ### ⚡ 30-Second Pipe Master Rhymes\n> 1. **Hug the Perimeter Wall**: Connect outer edge dots along the outer boundary wall first! Never cut through the middle on move one.\n> 2. **Never Cut Off a Corner**: Every single square must be visited by a pipe. An empty corner cell MUST be passed through!\n> 3. **Leave No Island Behind**: Never build a wall that seals off a lonely square with nowhere to escape.\n\n---\n\n## 1. Rule #1: The \"Hug the Wall\" Law (Perimeter First)\n\nImagine you are laying water pipes in a house. If you run your very first pipe straight through the center of the living room, you divide the whole house into two halves. Now, dots on the left can never reach dots on the right without crossing!\n\n* **The Secret**: Always look for color pairs that sit along the outer perimeter edges.\n* Wrap the line tightly along the outside fence of the board. By hugging the perimeter, you leave the entire middle room wide open for the other colors to dance around freely!\n\n---\n\n## 2. Rule #2: Corners Have Only One Job\n\nLook at the four extreme corners of any board. A corner square only has **two neighbors** (one vertical, one horizontal).\n* That means if a pipe enters a corner, it has only ONE way to exit!\n* **The Trick**: If a dot is in a corner, its line must immediately exit along the wall. If a corner is empty, a nearby pipe MUST turn right through that corner to prevent leaving it blank. In Puzzle PK Connect, 100% board coverage is required to win!\n\n---\n\n## 3. Rule #3: The \"Snake Trail\" without Trapping\n\nThink of your drawn lines as growing snakes. As your snake grows, its body becomes a solid brick wall that other colors cannot jump over.\n* Before you draw a bold line, ask yourself: *\"Did I just trap that green dot inside a closed box?\"*\n* Keep your lines flexible and let them glide like gentle rivers.\n\n---\n\n## 4. Test Your Flow Speed!\n\nReady to paint the board with zero crossed pipes? [Play Connect Colors on Puzzle PK right now](/games/connect) — clear levels solo or race friends in real-time speed duels!"
+  },
+  "zh": {
+    "title": "彩色一笔画通关秘籍：手把手教你“贴墙走”与无死角连线大白话法则",
+    "description": "彩色点点连线老是交叉撞车？教你最灵巧的“贴墙走水管”与“角落必转弯”大白话诀窍。简单三步，把看似乱糟糟的棋盘梳理得整整齐齐，小朋友一学就会！",
+    "keywords": "一笔画, 连线游戏, 颜色连接, Connect Colors, 益智连线, 儿童专注力训练, 逻辑思维",
+    "readTime": "5 分钟阅读",
+    "author": "Puzzle PK 团队",
+    "tags": [
+      "一笔画",
+      "益智解谜",
+      "儿童思维",
+      "新手入门"
+    ],
+    "content": "# 彩色一笔画通关秘籍：手把手教你“贴墙走”与无死角连线大白话法则\n\n一笔画连线（Connect Colors）是全世界小朋友最喜欢的益智游戏之一。规则简单到一秒钟就能看懂：红点连红点，蓝点连蓝点，黄点连黄点，把相同颜色的点点用彩色的水管接起来。\n\n可是，一到了稍微大一点的棋盘，很多同学就手忙脚乱了：\n* 红色线把蓝色线挡住了，线与线撞车打架；\n* 好不容易全连上了，棋盘上却孤零零空出了两三个白格子，游戏提示“盘面未完全填满，无法通关”！\n\n别着急，只要记住修水管工人的 **三大保命法则**，你就能像丝滑流水一样，瞬间破解复杂迷宫！\n\n---\n\n> ### ⚡ 30秒小水管工必背口诀\n> 1. **贴墙走不穿堂**：凡是靠着边缘的小圆点，顺着外围墙壁绕着连，绝不横穿大客厅！\n> 2. **角落格子必转弯**：四个死角没有退路，只要旁边有线经过，一定要顺手钻进角落拐个弯，消灭盲肠格！\n> 3. **留条生路不画圈**：千万不要让一条线自己把自己绕成死胡同，给其他颜色留出通畅走廊！\n\n---\n\n## 一、法则一：“贴墙走”原则（别把大客厅切成两半）\n\n想象一下，你正在房间里铺设自来水管。如果你把第一根红色的粗水管大摇大摆地直接横穿客厅中央铺过去，客厅就被一分为二了！左边房间的蓝水管想去找右边房间的蓝水管，就只能眼睁睁被红水管挡死。\n\n* **正确做法**：先找那些**靠近棋盘边缘**的同色点。\n* 让他们贴着最外层的围墙边缘走。把边缘填得严严实实，把最宽阔、最舒服的中央大马路留给里面的复杂颜色！\n* 只要边缘搞定了，你会发现里面的小水管迎刃而解，根本不会撞车！\n\n---\n\n## 二、法则二：角落格子的“直角拐弯秘密”\n\n棋盘的四个角（左上、左下、右上、右下）是整个地图中最特殊的位置。因为普通的格子有上下左右 4 个邻居，而角落里的格子**只有 2 个邻居**！\n\n* **这意味着什么？** 如果水管要经过角落，它进来的那一格是入口，剩下的另一格就是它唯一的出口，根本没有第三条路可选！\n* **必胜技巧**：如果一个角落刚好坐落着一个红点，那么它的线只能沿着边缘走出来；如果角落是空的，那么离它最近的那条线必须拐进去“占领角落”，否则那个角落就会变成谁也进不去的“无用废格”，导致无法达成 100% 满格通关！\n\n---\n\n## 三、法则三：像贪吃蛇一样灵活，千万别画封闭圈\n\n画线的时候，不要一根筋只顾着“两点之间线段最短”。\n很多小朋友一看到两个黄点离得很近，顺手连了一条直线。结果这条直线刚好把旁边的绿色小点封死在墙角里，绿点直接哭了！\n\n* 连线前瞄一眼：我的这条线，会不会把别的伙伴关进死牢房？\n* 遇到被挡住的同伴，主动绕个小弯，大家互让一步，整张地图的水管就能同时顺畅通水！\n\n---\n\n## 四、成为连线小大师\n\n按照：**先贴外墙 -> 再补角落 -> 顺滑通中间** 这三部曲，不管是 5x5 的小地图还是 10x10 的巨型迷宫，你都能一气呵成！\n\n准备好了吗？[立刻打开 Puzzle PK 一笔画连线专区](/games/connect)，不仅能自己锻炼空间脑力，还能在联机竞速房间里和小伙伴比拼谁的连线速度最惊人！"
+  }
+}

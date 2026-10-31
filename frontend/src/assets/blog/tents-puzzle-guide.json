@@ -1,0 +1,33 @@
+{
+  "id": "tents-puzzle-guide",
+  "date": "2026-10-31",
+  "published": true,
+  "en": {
+    "title": "Tents and Trees Puzzle Guide: 4 Simple Rhymes Every Kid Can Master",
+    "description": "Learn how to solve Tents and Trees like a pro camping scout! Master zero-rows, neighbor-block rules, and pair deductions using plain, kid-friendly logic.",
+    "keywords": "Tents and Trees, logic puzzles, camping puzzle, brain games, kids logic, deduction guide",
+    "readTime": "6 min read",
+    "author": "Puzzle PK Team",
+    "tags": [
+      "Tents",
+      "Logic",
+      "Beginners",
+      "Kids"
+    ],
+    "content": "# Tents and Trees Puzzle Guide: 4 Simple Rhymes Every Kid Can Master\n\nImagine you are a scout leader organizing a camping trip in a beautiful sunny forest. Every tree in the park wants shade and companion from exactly **one tent**. But there are two strict camp rules:\n1. A tent must pitch right next to its tree (horizontally or vertically — no diagonals!).\n2. Campers value their privacy: **no two tents may touch each other, not even diagonally!**\n\nSounds fun, right? At first, the grid might look like a scary math matrix. But once you learn four easy detective rhymes, even third graders can solve expert camping maps in under three minutes!\n\n---\n\n> ### ⚡ 30-Second Scout Camping Rhymes\n> 1. **Zero Row, Green Grass Grow**: If a row or column says '0', paint the entire line with safe green grass!\n> 2. **Campers Need Personal Space**: The moment you pitch a tent, draw an 8-cell grass bubble around it!\n> 3. **Tree Corner Lock**: A tree trapped in a corner or surrounded by grass only has one place for its tent!\n> 4. **Number Counting Clamp**: When an empty row needs 2 tents and only has 2 spaces left, fill them both!\n\n---\n\n## 1. Step 1: The Easiest Step (The Zero Law)\n\nLook at the numbers on the edges of the board. They tell you exactly how many tents belong in that specific row or column.\n* If a row shows **0**: Congratulations, that is free points! Not a single tent is allowed here. Fill every empty square in that row with grass (or crosses).\n* **Why this matters**: Every grass cell you mark eliminates wrong choices for neighboring trees, instantly shrinking the puzzle down to size!\n\n---\n\n## 2. Step 2: The Tent \"Privacy Bubble\"\n\nCampers do not want anyone bumping into their tent at night. \nWhenever you place a tent:\n* **The 8-cell rule**: A tent radiates a 3x3 square zone around itself. All 8 neighboring squares (top, bottom, left, right, and all 4 corners!) **CANNOT** contain another tent.\n* Mark those surrounding squares with grass immediately. This prevents accidental illegal tents and often reveals where the next tent *must* go!\n\n---\n\n## 3. Step 3: Corner Trees and Lonely Trees\n\nLook for trees that have very few open squares around them:\n* A tree on the edge might only have 2 or 3 open spots.\n* If 3 sides of a tree are already filled with grass or water, **its tent has only one possible home left**!\n* You don't have to guess. Point your finger and pitch the tent there with 100% confidence.\n\n---\n\n## 4. Step 4: The Row & Column Balance\n\nAlways keep your eyes on the border numbers:\n* If a column says **3**, and you have already pitched 3 tents in that column, every other square in that column must be grass!\n* If a row says **2**, and exactly two open cells remain, both must be tents!\n\n---\n\n## 5. Play Like a Scout Master\n\nDon't guess randomly — that's how campers get lost in the woods! Follow the clues step-by-step: Zero rows first, privacy bubbles second, lonely trees third, and count totals last.\n\nReady for camp? [Play Tents and Trees on Puzzle PK now](/games/tents) and see how many forest levels you can conquer!"
+  },
+  "zh": {
+    "title": "露营帐篷解谜通关宝典：和小树做朋友的 4 句大白话口诀",
+    "description": "露营帐篷不会玩？用最接地气的侦探口诀搞定每一棵小树！零行全填草、帐篷隐私圈、孤单小树法，小学生初中生一读就懂的森林露营推理秘籍。",
+    "keywords": "露营帐篷, Tents, 逻辑解谜, 益智游戏, 数理思维, 儿童数理, 益智攻略",
+    "readTime": "6 分钟阅读",
+    "author": "Puzzle PK 团队",
+    "tags": [
+      "帐篷",
+      "益智解谜",
+      "新手入门",
+      "思维训练"
+    ],
+    "content": "# 露营帐篷解谜通关宝典：和小树做朋友的 4 句大白话口诀\n\n想象一下，你是一位森林营地的超级小营长。营地里种着许多可爱的小树，每棵小树都想拥有一顶属于自己的**露营帐篷**来乘凉。\n\n但是，露营地有两条铁的纪律：\n1. **搭档纪律**：每顶帐篷必须紧挨着属于它的小树（横着挨或竖着挨，斜角不算）。\n2. **邻里纪律**：帐篷之间要保持安静隐私——**任何两顶帐篷绝对不能挨在一起，就连斜角对角线碰到也不行！**\n\n看懂了这两条纪律，再记住下面 4 句顺口溜，哪怕是小学二三年级的小朋友，也能像名侦探柯南一样，不用乱猜就能百分之百通关！\n\n---\n\n> ### ⚡ 30秒小营长必背口诀\n> 1. **见零整行全画草**：数字标为 0 的那一行或那一列，一顶帐篷都没有，痛痛快快全铺满绿草！\n> 2. **帐篷自带隐私圈**：只要确定了一顶帐篷，它周围一整圈 8 个格子立刻画草封死！\n> 3. **孤单小树没得选**：如果一棵小树三面都是草，剩下的那一格必定是帐篷，闭眼点！\n> 4. **缺几补几刚刚好**：这一行需要 2 顶帐篷，刚好只剩 2 个空位，全搭帐篷不犹豫！\n\n---\n\n## 一、第一步：捡便宜的“见 0 画草法”\n\n开局千万不要急着在树旁边乱搭帐篷！先看棋盘四周边缘上的红色和蓝色数字。数字代表那一行或那一列必须有几顶帐篷。\n\n* 只要看到数字是 **0**，恭喜你，捡到大便宜了！\n* 这代表这一整行或者一整列，连一顶帐篷的影子都不允许有。拿起你的小草方块，从头到尾把它铺满！\n* **为什么这一步最重要？** 因为草地一铺，很多小树原本有 4 个方向可以搭帐篷，现在被草地堵死了 2 个甚至 3 个方向，答案立刻浮出水面！\n\n---\n\n## 二、第二步：帐篷的“3×3 结界”（隐私法则）\n\n很多同学玩的时候老犯规，就是因为把两顶帐篷贴在一起了。\n* 营地里的帐篷都是有“结界”的：一旦你在某个格子里扎下了一顶帐篷，以它为中心的 **九宫格（周围横、竖、斜共 8 个相邻格）** 绝对不能再有别的帐篷！\n* 养成一个好习惯：每搭好一顶帐篷，顺手把周围挨着的空格全都点上绿草。这样不仅绝对不会违规，还能帮你把周围其他树的搭档逼出来！\n\n---\n\n## 三、第三步：寻找“孤单受委屈的小树”\n\n把棋盘上的小树扫视一遍，看看哪棵小树最“孤立无援”：\n* 有的小树长在地图角落里，或者左右都被绿草封住了，只剩下上方一个格子可以搭帐篷。\n* 那还有什么好犹豫的？这棵小树唯一的依靠就是这格了！立刻把帐篷扎上去！\n* **口诀**：小树四面看一看，三面堵死剩下一面必定是帐篷！\n\n---\n\n## 四、第四步：算术数数“查漏补缺”\n\n当时局进入中盘，学会看边上的数字做简单的加减法：\n* **满员封锁**：如果一列数字是 2，而你已经在这列扎好了 2 顶帐篷，那这列剩下的所有空格一律点上绿草，绝不再搭！\n* **全员上阵**：如果一行数字是 3，现在只剩下 3 个能搭帐篷的空格，不用想了，这 3 个空位全都是帐篷！\n\n---\n\n## 五、森林小营长的胜利法则\n\n下棋时千万别乱猜，露营帐篷是百分之百可以用纯逻辑推出来的解谜游戏。从 0 行开始，到孤单小树，再到帐篷隐私圈，步步为营！\n\n准备好了吗？[立刻打开 Puzzle PK 露营帐篷](/games/tents) 挑战初级与大师森林，和小伙伴们比比谁的营地搭得又快又完美！"
+  }
+}

@@ -11,6 +11,7 @@ interface ParsedMeta {
   icon?: string;
   multiRound?: boolean;
   priority?: number;
+  badgeType?: 'none' | 'pinned' | 'new' | 'hot';
   modesJson?: string;
   difficultiesJson?: string;
   winAction?: 'modal' | 'auto_next';
@@ -32,7 +33,7 @@ interface AdminGame extends GameConfig {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="w-full max-w-7xl mx-auto flex flex-col gap-6 transition-colors duration-300 pb-12">
+    <div class="w-full flex flex-col gap-6 transition-colors duration-300 pb-12">
       <!-- 页面顶栏 -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -166,6 +167,7 @@ interface AdminGame extends GameConfig {
                 <th class="py-3.5 px-4 min-w-[200px]">{{ i18n.t('admin.games.th_game')() }}</th>
                 <th class="py-3.5 px-3 text-center min-w-[80px]">{{ i18n.t('admin.games.th_status')() }}</th>
                 <th class="py-3.5 px-3 text-center min-w-[95px]">{{ i18n.t('admin.games.priority')() }}</th>
+                <th class="py-3.5 px-3 text-center min-w-[110px]">{{ i18n.t('admin.games.th_badge')() }}</th>
                 <th class="py-3.5 px-3 text-center min-w-[90px]">{{ i18n.t('admin.games.th_multi_round')() }}</th>
                 <th class="py-3.5 px-3 min-w-[170px]">{{ i18n.t('admin.games.th_win_action')() }}</th>
                 <th class="py-3.5 px-3 min-w-[170px]">{{ i18n.t('admin.games.th_lose_action')() }}</th>
@@ -187,7 +189,22 @@ interface AdminGame extends GameConfig {
                       <div class="min-w-0">
                         <div class="font-bold text-sm text-[var(--color-text-main)] truncate flex items-center gap-1.5">
                           <span>{{ getGameName(game.id) }}</span>
-                          @if ((game.parsedConfig.priority || 0) > 0) {
+                          @if (game.parsedConfig.badgeType && game.parsedConfig.badgeType !== 'none') {
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border"
+                                  [class.bg-emerald-500/15]="game.parsedConfig.badgeType === 'new'"
+                                  [class.text-emerald-400]="game.parsedConfig.badgeType === 'new'"
+                                  [class.border-emerald-500/30]="game.parsedConfig.badgeType === 'new'"
+                                  [class.bg-rose-500/15]="game.parsedConfig.badgeType === 'hot'"
+                                  [class.text-rose-400]="game.parsedConfig.badgeType === 'hot'"
+                                  [class.border-rose-500/30]="game.parsedConfig.badgeType === 'hot'"
+                                  [class.bg-amber-500/15]="game.parsedConfig.badgeType === 'pinned'"
+                                  [class.text-amber-400]="game.parsedConfig.badgeType === 'pinned'"
+                                  [class.border-amber-500/30]="game.parsedConfig.badgeType === 'pinned'">
+                              @if (game.parsedConfig.badgeType === 'new') { ✨ NEW }
+                              @else if (game.parsedConfig.badgeType === 'hot') { 🔥 HOT }
+                              @else { ⭐ {{ game.parsedConfig.priority || i18n.t('badge.pinned')() }} }
+                            </span>
+                          } @else if ((game.parsedConfig.priority || 0) > 0) {
                             <span class="text-[10px] font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">⭐ {{ game.parsedConfig.priority }}</span>
                           }
                         </div>
@@ -228,6 +245,27 @@ interface AdminGame extends GameConfig {
                              [class.text-amber-400]="(game.parsedConfig.priority || 0) > 0"
                              [class.border-[var(--color-border-card)]]="!(game.parsedConfig.priority && game.parsedConfig.priority > 0)">
                     </div>
+                  </td>
+
+                  <!-- 卡片角标 (Badge) -->
+                  <td class="py-3 px-3 text-center">
+                    <select [(ngModel)]="game.parsedConfig.badgeType"
+                            (change)="saveGame(game)"
+                            [title]="i18n.t('admin.games.badge')()"
+                            class="bg-[var(--color-bg-main)] border rounded-xl py-1.5 px-2 text-xs font-bold focus:outline-none focus:border-[var(--color-accent-to)] transition-all cursor-pointer"
+                            [class.border-emerald-500]="game.parsedConfig.badgeType === 'new'"
+                            [class.text-emerald-400]="game.parsedConfig.badgeType === 'new'"
+                            [class.border-rose-500]="game.parsedConfig.badgeType === 'hot'"
+                            [class.text-rose-400]="game.parsedConfig.badgeType === 'hot'"
+                            [class.border-amber-400]="game.parsedConfig.badgeType === 'pinned'"
+                            [class.text-amber-400]="game.parsedConfig.badgeType === 'pinned'"
+                            [class.border-[var(--color-border-card)]]="!game.parsedConfig.badgeType || game.parsedConfig.badgeType === 'none'"
+                            [class.opacity-60]="!game.parsedConfig.badgeType || game.parsedConfig.badgeType === 'none'">
+                      <option value="none">{{ i18n.t('badge.none')() }}</option>
+                      <option value="pinned">⭐ {{ i18n.t('badge.pinned')() }}</option>
+                      <option value="new">✨ {{ i18n.t('badge.new')() }}</option>
+                      <option value="hot">🔥 {{ i18n.t('badge.hot')() }}</option>
+                    </select>
                   </td>
 
                   <!-- 多局制 PK -->
@@ -390,6 +428,21 @@ interface AdminGame extends GameConfig {
                        [class.text-amber-400]="(game.parsedConfig.priority || 0) > 0">
               </div>
 
+              <!-- 卡片角标 (Badge) -->
+              <div class="col-span-2 bg-[var(--color-bg-main)] p-2.5 rounded-xl border border-[var(--color-border-card)] flex items-center justify-between">
+                <span class="text-[10px] font-bold opacity-60">{{ i18n.t('admin.games.badge')() }}</span>
+                <select [(ngModel)]="game.parsedConfig.badgeType" (change)="saveGame(game)"
+                        class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg py-1 px-2 font-bold text-xs outline-none cursor-pointer"
+                        [class.text-emerald-400]="game.parsedConfig.badgeType === 'new'"
+                        [class.text-rose-400]="game.parsedConfig.badgeType === 'hot'"
+                        [class.text-amber-400]="game.parsedConfig.badgeType === 'pinned'">
+                  <option value="none">{{ i18n.t('badge.none')() }}</option>
+                  <option value="pinned">⭐ {{ i18n.t('badge.pinned')() }}</option>
+                  <option value="new">✨ {{ i18n.t('badge.new')() }}</option>
+                  <option value="hot">🔥 {{ i18n.t('badge.hot')() }}</option>
+                </select>
+              </div>
+
               <!-- 流转延时 -->
               <div class="col-span-2 bg-[var(--color-bg-main)] p-2.5 rounded-xl border border-[var(--color-border-card)] flex items-center justify-between">
                 <span class="text-[10px] font-bold opacity-60">流转延时 (ms)</span>
@@ -519,6 +572,7 @@ export class AdminGamesComponent implements OnInit {
                   icon: c.icon || '',
                   multiRound: !!c.multiRound,
                   priority: c.priority !== undefined ? Number(c.priority) : 0,
+                  badgeType: c.badgeType !== undefined ? c.badgeType : (c.priority && Number(c.priority) > 0 ? 'pinned' : 'none'),
                   winAction: c.finishFlow?.winAction || 'modal',
                   loseAction: c.finishFlow?.loseAction || 'modal',
                   autoNextAdFreq: c.finishFlow?.autoNextAdFreq !== undefined ? c.finishFlow.autoNextAdFreq : -1,
@@ -557,6 +611,7 @@ export class AdminGamesComponent implements OnInit {
     if (game.parsedConfig.multiRound !== undefined)     merged['multiRound'] = game.parsedConfig.multiRound;
     if (game.parsedConfig.penaltySeconds !== undefined) merged['penaltySeconds'] = game.parsedConfig.penaltySeconds;
     if (game.parsedConfig.priority !== undefined)       merged['priority'] = Number(game.parsedConfig.priority);
+    if (game.parsedConfig.badgeType !== undefined)      merged['badgeType'] = game.parsedConfig.badgeType;
 
     merged['finishFlow'] = {
       winAction: game.parsedConfig.winAction || 'modal',

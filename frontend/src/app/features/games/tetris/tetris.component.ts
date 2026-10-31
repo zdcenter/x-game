@@ -262,7 +262,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.handleJoinRoom(pending);
       }
     } else {
-      this.store.joinRoom('', GameMode.Single, 'normal', '');
+      this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium, '');
     }
   }
 

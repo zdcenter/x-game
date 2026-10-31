@@ -1,0 +1,260 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- 棋盘整体立体柔和落阴影 -->
+    <filter id="boardShadow" x="-8%" y="-8%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- 单元格微立体浅阴影 -->
+    <filter id="tileShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+
+    <!-- 帐篷屋顶南瓜橙渐变 -->
+    <linearGradient id="tentRoof" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#ff8c26"/>
+      <stop offset="45%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#b43403"/>
+    </linearGradient>
+
+    <!-- 帐篷门帘鲜橙渐变 -->
+    <linearGradient id="tentFlap" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff7900"/>
+      <stop offset="100%" stop-color="#9a3412"/>
+    </linearGradient>
+
+    <!-- 松树主干渐变 -->
+    <linearGradient id="trunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#542505"/>
+      <stop offset="30%" stop-color="#78350b"/>
+      <stop offset="100%" stop-color="#3e1a02"/>
+    </linearGradient>
+
+    <!-- 象牙奶油方砖定义 (w=74, h=74, rx=14) -->
+    <g id="tileEmpty">
+      <rect width="74" height="74" rx="14" fill="#faf8f0" stroke="#e3dcce" stroke-width="2" filter="url(#tileShadow)"/>
+    </g>
+
+    <!-- 抹茶草地方砖定义 (w=74, h=74, rx=14) -->
+    <g id="tileGrass">
+      <rect width="74" height="74" rx="14" fill="#cae2a6" stroke="#b2d585" stroke-width="2" filter="url(#tileShadow)"/>
+    </g>
+
+    <!-- 100% 像素级复刻：肥美饱满 5 层卡通松树 (居中 74x74 格子，以 64x64 为基准等比缩放) -->
+    <g id="treeEntity">
+      <g transform="translate(5, 5) scale(1)">
+        <!-- 根部地面柔和椭圆软阴影 -->
+        <ellipse cx="32" cy="58" rx="16" ry="4" fill="#000000" fill-opacity="0.22" />
+        <!-- 粗实圆柱深红棕树干 -->
+        <rect x="27" y="44" width="10" height="13" rx="3" fill="url(#trunkGrad)" />
+        <rect x="28.5" y="44" width="3.5" height="13" rx="1.5" fill="#a16207" opacity="0.6" />
+        <!-- 底部第 5 层树冠 (最宽) -->
+        <path d="M10 47 C13 47 16 44 19 44 C22 46 25 43 28 43 C32 45 36 45 40 43 C43 43 46 46 49 44 C52 44 55 47 54 47 C51 36 43 35 32 30 C21 35 13 36 10 47 Z" fill="#114223" />
+        <path d="M11.5 46 C15 44 20 41 26 40 C30 41 34 41 38 40 C44 41 49 44 52.5 46 C49 37 42 35 32 31 C22 35 15 37 11.5 46 Z" fill="#15803d" />
+        <path d="M13 45 C18 43 24 40 32 39 C40 40 46 43 51 45 C48 38 41 36 32 32 C23 36 16 38 13 45 Z" fill="#22c55e" />
+        <path d="M15 44 L19 42 M24 41 L28 40 M36 40 L40 41 M45 42 L49 44" stroke="#86efac" stroke-width="1.3" stroke-linecap="round" />
+        <!-- 第 4 层树冠 -->
+        <path d="M13 39 C16 39 19 37 22 36 C25 38 29 36 32 36 C35 36 39 38 42 36 C45 37 48 39 51 39 C49 29 42 27 32 23 C22 27 15 29 13 39 Z" fill="#114223" />
+        <path d="M14.5 38 C18 36 23 34 32 33 C41 34 46 36 49.5 38 C47 30 41 28 32 24 C23 28 17 30 14.5 38 Z" fill="#16a34a" />
+        <path d="M16 37 C20 35 25 33 32 32 C39 33 44 35 48 37 C45 31 40 29 32 25 C24 29 19 31 16 37 Z" fill="#22c55e" />
+        <path d="M19 36 L23 34 M41 34 L45 36" stroke="#86efac" stroke-width="1.3" stroke-linecap="round" />
+        <!-- 第 3 层树冠 -->
+        <path d="M17 30 C20 30 23 28 26 27 C29 29 35 29 38 27 C41 28 44 30 47 30 C45 22 39 20 32 16 C25 20 19 22 17 30 Z" fill="#14532d" />
+        <path d="M18.5 29 C22 27 26 25 32 24 C38 25 42 27 45.5 29 C43 23 38 21 32 17 C26 21 21 23 18.5 29 Z" fill="#16a34a" />
+        <path d="M20 28 C23 26 27 24 32 23 C37 24 41 26 44 28 C42 23 37 21 32 18 C27 21 22 23 20 28 Z" fill="#22c55e" />
+        <!-- 第 2 层树冠 -->
+        <path d="M20 21 C23 22 26 20 29 19 C31 20 33 20 35 19 C38 20 41 22 44 21 C42 14 38 10 32 8 C26 10 22 14 20 21 Z" fill="#14532d" />
+        <path d="M21.5 20 C24 19 27 17 32 16 C37 17 40 19 42.5 20 C40 15 36 11 32 9 C28 11 24 15 21.5 20 Z" fill="#22c55e" />
+        <path d="M23 19 C25 18 28 16 32 15 C36 16 39 18 41 19 C39 15 35 12 32 10 C29 12 25 15 23 19 Z" fill="#38c21a" />
+        <!-- 第 1 层树梢尖顶与金色高光 -->
+        <path d="M25 14 C27 13 29 11 32 11 C35 11 37 13 39 14 C37 9 34 5 32 5 C30 5 27 9 25 14 Z" fill="#38c21a" />
+        <path d="M28 12 C29 10 30.5 9 32 9 C33.5 9 35 10 36 12" stroke="#bef264" stroke-width="1.6" stroke-linecap="round" />
+      </g>
+    </g>
+
+    <!-- 100% 像素级复刻：3D 等轴测南瓜橙露营帐篷 -->
+    <g id="tentEntity">
+      <g transform="translate(5, 5) scale(1)">
+        <!-- 地面椭圆柔和投影 -->
+        <ellipse cx="33" cy="50" rx="23" ry="5.5" fill="#000000" fill-opacity="0.22" />
+        <!-- 系风绳与地钉 -->
+        <line x1="22" y1="16" x2="6" y2="48" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="47" y1="22" x2="59" y2="44" stroke="#fef08a" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="32" y1="47" x2="36" y2="52" stroke="#fde68a" stroke-width="1.3" stroke-linecap="round" />
+        <line x1="5" y1="46" x2="7" y2="51" stroke="#5c2908" stroke-width="2.6" stroke-linecap="round" />
+        <line x1="58" y1="42" x2="60" y2="47" stroke="#5c2908" stroke-width="2.6" stroke-linecap="round" />
+        <line x1="35" y1="50" x2="37" y2="54" stroke="#5c2908" stroke-width="2.2" stroke-linecap="round" />
+        <!-- 侧面倾斜屋顶 -->
+        <path d="M22 16 L47 22 L55 42 L32 47 Z" fill="url(#tentRoof)" />
+        <path d="M30 18 L39 45" stroke="#fed7aa" stroke-opacity="0.45" stroke-width="1.2" stroke-linecap="round" />
+        <path d="M38 20 L47 43" stroke="#7c2d12" stroke-opacity="0.35" stroke-width="1.2" stroke-linecap="round" />
+        <!-- 前门洞深黑内衬 -->
+        <path d="M22 16 L10 44 L32 47 Z" fill="#1c0b02" />
+        <!-- 正面左掀门帘 -->
+        <path d="M22 16 L10 44 L17 45 L22 23 Z" fill="url(#tentFlap)" />
+        <!-- 正面右门帘 -->
+        <path d="M22 16 L22 23 L26 46 L32 47 Z" fill="#ea580c" />
+        <!-- 顶部脊梁亮白金高光线 -->
+        <line x1="22" y1="16" x2="47" y2="22" stroke="#fef9c3" stroke-width="2.2" stroke-linecap="round" />
+        <line x1="22" y1="16" x2="10" y2="44" stroke="#fed7aa" stroke-width="1.6" stroke-linecap="round" />
+        <circle cx="22" cy="16" r="1.6" fill="#fef9c3" />
+        <circle cx="47" cy="22" r="1.3" fill="#fed7aa" />
+      </g>
+    </g>
+
+    <!-- 100% 像素级复刻：五叶水灵饱满小草丛 -->
+    <g id="grassEntity">
+      <g transform="translate(5, 5) scale(1)">
+        <ellipse cx="32" cy="53" rx="14" ry="3.2" fill="#000000" fill-opacity="0.16" />
+        <!-- 1. 左外侧低垂叶 -->
+        <path d="M30 52 C23 46 13 43 9 36 C15 42 24 47 28 52 Z" fill="#14532d" />
+        <path d="M29 51 C23 47 14 43 11 37 C15 42 23 46 27 51 Z" fill="#22c55e" />
+        <path d="M28 50 C23 47 16 44 13 39" stroke="#86efac" stroke-width="0.9" stroke-linecap="round" />
+        <!-- 2. 左内侧挺立叶 -->
+        <path d="M31 52 C26 42 19 32 17 23 C23 32 28 42 30 52 Z" fill="#166534" />
+        <path d="M30 51 C26 43 21 33 19 24 C23 33 27 42 29 51 Z" fill="#4ade80" />
+        <path d="M29 50 C26 43 22 34 20 26" stroke="#bbf7d0" stroke-width="0.9" stroke-linecap="round" />
+        <!-- 3. 中央直立主叶 -->
+        <path d="M30.5 52 C30.5 38 29.5 22 27.5 13 C32.5 21 33.5 37 32.5 52 Z" fill="#14532d" />
+        <path d="M31 52 C31 38 30.5 22 28.5 14 C32.5 22 33 38 32 52 Z" fill="#22c55e" />
+        <path d="M31.5 46 L29.5 16" stroke="#86efac" stroke-width="1.1" stroke-linecap="round" />
+        <!-- 4. 右内侧挺立叶 -->
+        <path d="M33 52 C38 42 45 32 47 23 C41 32 36 42 34 52 Z" fill="#166534" />
+        <path d="M34 51 C38 43 43 33 45 24 C41 33 37 42 35 51 Z" fill="#4ade80" />
+        <path d="M35 50 C38 43 42 34 44 26" stroke="#bbf7d0" stroke-width="0.9" stroke-linecap="round" />
+        <!-- 5. 右外侧低垂叶 -->
+        <path d="M34 52 C41 46 51 43 55 36 C49 42 40 47 36 52 Z" fill="#14532d" />
+        <path d="M35 51 C41 47 50 43 53 37 C49 42 41 46 37 51 Z" fill="#22c55e" />
+        <path d="M36 50 C41 47 48 44 51 39" stroke="#86efac" stroke-width="0.9" stroke-linecap="round" />
+      </g>
+    </g>
+  </defs>
+
+  <!-- 1. 标志性浅草奶绿大底板 (100% 像素级对齐棋盘 #dce9cd) -->
+  <g filter="url(#boardShadow)">
+    <rect x="24" y="24" width="452" height="452" rx="34" fill="#dce9cd" stroke="#c7dab4" stroke-width="3.5"/>
+  </g>
+
+  <!-- 2. 左上角露营微缩指南针/营地微勋章 (极具露营探索氛围) -->
+  <g transform="translate(54, 52)">
+    <circle cx="20" cy="20" r="18" fill="#cde0bc" stroke="#b5cca2" stroke-width="1.5" />
+    <path d="M20 7 L24 20 L20 18 L16 20 Z" fill="#ea580c" />
+    <path d="M20 33 L24 20 L20 22 L16 20 Z" fill="#2b4f1b" opacity="0.75" />
+    <circle cx="20" cy="20" r="2.5" fill="#ffffff" />
+  </g>
+
+  <!-- 3. 上方列提示数字 (超粗圆润厚体 font-weight: 900) -->
+  <!-- Col 0 (x=141), Col 1 (x=223), Col 2 (x=305), Col 3 (x=387) -->
+  <g font-family="system-ui, -apple-system, 'SF Pro Rounded', 'Arial Rounded MT Bold', sans-serif" font-size="28" font-weight="900" text-anchor="middle">
+    <!-- 列0: 1 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="141" y="82" fill="#2b4f1b">1</text>
+    <!-- 列1: 1 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="223" y="82" fill="#2b4f1b">1</text>
+    <!-- 列2: 1 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="305" y="82" fill="#2b4f1b">1</text>
+    <!-- 列3: 1 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="387" y="82" fill="#2b4f1b">1</text>
+  </g>
+
+  <!-- 4. 左侧行提示数字 (超粗圆润厚体 font-weight: 900) -->
+  <!-- Row 0 (y=151), Row 1 (y=233), Row 2 (y=315), Row 3 (y=397) -->
+  <g font-family="system-ui, -apple-system, 'SF Pro Rounded', 'Arial Rounded MT Bold', sans-serif" font-size="28" font-weight="900" text-anchor="middle">
+    <!-- 行0: 1 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="74" y="151" fill="#2b4f1b">1</text>
+    <!-- 行1: 1 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="74" y="233" fill="#2b4f1b">1</text>
+    <!-- 行2: 0 顶帐篷 -> 标志性焦糖暖棕 #c26e1b -->
+    <text x="74" y="315" fill="#c26e1b">0</text>
+    <!-- 行3: 2 顶帐篷 -> 森林墨绿 #2b4f1b -->
+    <text x="74" y="397" fill="#2b4f1b">2</text>
+  </g>
+
+  <!-- 5. 棋盘主网格阵列 (4x4, 格子大小 74x74, 间隔 8px, 象牙白与抹茶草地) -->
+
+  <!-- ══ 行 0 (y=104) ══ -->
+  <!-- (0,0): ⛺ 帐篷 -->
+  <g transform="translate(104, 104)">
+    <use href="#tileEmpty" />
+    <use href="#tentEntity" />
+  </g>
+  <!-- (0,1): 🌲 树 (正交与 (0,0) 帐篷配对) -->
+  <g transform="translate(186, 104)">
+    <use href="#tileEmpty" />
+    <use href="#treeEntity" />
+  </g>
+  <!-- (0,2): 🌿 草丛 -->
+  <g transform="translate(268, 104)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+  <!-- (0,3): 🌿 草丛 -->
+  <g transform="translate(350, 104)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+
+  <!-- ══ 行 1 (y=186) ══ -->
+  <!-- (1,0): 🌿 草丛 -->
+  <g transform="translate(104, 186)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+  <!-- (1,1): 象牙方砖 -->
+  <g transform="translate(186, 186)">
+    <use href="#tileEmpty" />
+  </g>
+  <!-- (1,2): ⛺ 帐篷 -->
+  <g transform="translate(268, 186)">
+    <use href="#tileEmpty" />
+    <use href="#tentEntity" />
+  </g>
+  <!-- (1,3): 🌲 树 (正交与 (1,2) 帐篷配对) -->
+  <g transform="translate(350, 186)">
+    <use href="#tileEmpty" />
+    <use href="#treeEntity" />
+  </g>
+
+  <!-- ══ 行 2 (y=268, 该行为 0 顶帐篷，呈现整洁草地与树木) ══ -->
+  <!-- (2,0): 🌿 草丛 -->
+  <g transform="translate(104, 268)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+  <!-- (2,1): 🌲 树 (正交与 (3,1) 帐篷配对) -->
+  <g transform="translate(186, 268)">
+    <use href="#tileEmpty" />
+    <use href="#treeEntity" />
+  </g>
+  <!-- (2,2): 🌿 草丛 -->
+  <g transform="translate(268, 268)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+  <!-- (2,3): 🌲 树 (正交与 (3,3) 帐篷配对) -->
+  <g transform="translate(350, 268)">
+    <use href="#tileEmpty" />
+    <use href="#treeEntity" />
+  </g>
+
+  <!-- ══ 行 3 (y=350, 该行为 2 顶帐篷) ══ -->
+  <!-- (3,0): 🌿 草丛 -->
+  <g transform="translate(104, 350)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+  <!-- (3,1): ⛺ 帐篷 -->
+  <g transform="translate(186, 350)">
+    <use href="#tileEmpty" />
+    <use href="#tentEntity" />
+  </g>
+  <!-- (3,2): 🌿 草丛 -->
+  <g transform="translate(268, 350)">
+    <use href="#tileGrass" />
+    <use href="#grassEntity" />
+  </g>
+  <!-- (3,3): ⛺ 帐篷 -->
+  <g transform="translate(350, 350)">
+    <use href="#tileEmpty" />
+    <use href="#tentEntity" />
+  </g>
+</svg>

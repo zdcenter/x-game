@@ -12,6 +12,7 @@ import { playSudokuSound } from './audio/sudoku.sound';
 import { playPuzzleSound } from './audio/puzzle.sound';
 import { playIdiomSound } from './audio/idiom.sound';
 import { playTileMatchSound, TileMatchSoundType } from './audio/tilematch.sound';
+import { playTentsSound, TentsSoundType } from './audio/tents.sound';
 import { storageGet, storageSet, createAudioContext } from '../utils/browser.util';
 
 @Injectable({
@@ -267,6 +268,15 @@ export class AudioService {
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
       playTileMatchSound(this.audioCtx, this.masterGain, name, combo);
+    }
+  }
+
+  // --- Tents & Trees (帐篷与树) Sounds ---
+  async playTents(name: TentsSoundType) {
+    if (this.isMuted()) return;
+    await this.initWebAudio();
+    if (this.audioCtx && this.masterGain) {
+      playTentsSound(this.audioCtx, this.masterGain, name);
     }
   }
 }

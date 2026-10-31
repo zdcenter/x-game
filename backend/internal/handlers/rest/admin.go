@@ -9,6 +9,7 @@ import (
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
 	"github.com/x-game/backend/pkg/simulator"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ToggleStatusRequest struct {
@@ -118,6 +119,38 @@ func ToggleUserStatus(c fiber.Ctx) error {
 	db.DB.Save(&user)
 
 	return c.JSON(fiber.Map{"message": "User status updated", "user": user})
+}
+
+type AdminResetPasswordRequest struct {
+	NewPassword string `json:"new_password"`
+}
+
+func AdminResetPassword(c fiber.Ctx) error {
+	id := c.Params("id")
+	var req AdminResetPasswordRequest
+	if err := c.Bind().Body(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if len(req.NewPassword) < 6 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Password must be at least 6 characters"})
+	}
+
+	var user domain.User
+	if err := db.DB.First(&user, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to hash password"})
+	}
+
+	if err := db.DB.Model(&user).Update("password", string(hashedPassword)).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to reset password"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Password reset successfully"})
 }
 
 func GetSimulatorStatus(c fiber.Ctx) error {

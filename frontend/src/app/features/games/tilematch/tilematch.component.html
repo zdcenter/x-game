@@ -254,7 +254,7 @@
               (click)="onStashCardClick(card, $event)"
               class="tile-card tile-card-interactive"
               title="点击放回收集槽">
-              <span class="tile-emoji">{{ TILE_EMOJIS[card.type] || '❓' }}</span>
+              <app-tile-icon [type]="card.type" [fallbackEmoji]="TILE_EMOJIS[card.type] || '❓'"></app-tile-icon>
             </button>
           }
         </div>
@@ -276,7 +276,7 @@
             class="tile-card"
             [class.tile-card-interactive]="!card.isBlocked"
             [title]="card.isBlocked ? (i18n.t('tilematch.blocked_tip')() || '上层卡牌遮挡中，请先消除压在上方的卡牌') : (i18n.t('tilematch.select_tip')() || '点击放入底部卡槽')">
-            <span class="tile-emoji">{{ TILE_EMOJIS[card.type] || '❓' }}</span>
+            <app-tile-icon [type]="card.type" [fallbackEmoji]="TILE_EMOJIS[card.type] || '❓'"></app-tile-icon>
             @if (card.isBlocked) {
               <div class="tile-shadow-overlay"></div>
             }
@@ -351,7 +351,7 @@
                    [class.tile-clearing-left]="getClearingDirection(index) === 'left'"
                    [class.tile-clearing-center]="getClearingDirection(index) === 'center'"
                    [class.tile-clearing-right]="getClearingDirection(index) === 'right'">
-                <span class="tile-emoji">{{ TILE_EMOJIS[card.type] || '❓' }}</span>
+                <app-tile-icon [type]="card.type" [fallbackEmoji]="TILE_EMOJIS[card.type] || '❓'"></app-tile-icon>
                 @if (isSlotClearing(index)) {
                   <div class="tile-clearing-shine"></div>
                 }
@@ -430,7 +430,7 @@
         [style.top.px]="fly.startY"
         [style.--target-x]="(fly.targetX - fly.startX) + 'px'"
         [style.--target-y]="(fly.targetY - fly.startY) + 'px'">
-        <span class="tile-emoji">{{ TILE_EMOJIS[fly.type] || '❓' }}</span>
+        <app-tile-icon [type]="fly.type" [fallbackEmoji]="TILE_EMOJIS[fly.type] || '❓'"></app-tile-icon>
       </div>
     }
 
@@ -479,11 +479,11 @@
     <!-- 移动端与平板端：图文攻略与新手秘籍快速跳转胶囊 (非全屏 Zen 模式下显示，引导玩家查阅并为 Google 爬虫提供显式锚点) -->
     @if (!zenService.isZenMode() && deviceService.isHandheld()) {
       <div class="flex-none w-full flex justify-center py-1 z-20">
-        <a href="#strategy-guide" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-white bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 shadow-xs transition-all active:scale-95 cursor-pointer">
+        <button type="button" (click)="scrollToStrategy()" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-white bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 shadow-xs transition-all active:scale-95 cursor-pointer">
           <span>📖</span>
           <span>{{ i18n.t('game.strategy_guide_title')() || '玩法规则与进阶攻略' }}</span>
           <span class="animate-bounce">▾</span>
-        </a>
+        </button>
       </div>
     }
 

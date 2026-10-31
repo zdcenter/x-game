@@ -261,14 +261,14 @@ export class DocsComponent {
       icon: '🧩',
       titleKey: 'docs.cat.logic',
       defaultTitle: '空间与逻辑',
-      gameIds: ['hashi', 'connect', 'nonogram', 'sokoban', 'watersort', 'lightsout']
+      gameIds: ['tents', 'hashi', 'connect', 'nonogram', 'sokoban', 'watersort', 'lightsout']
     },
     {
       id: 'board',
       icon: '⚔️',
       titleKey: 'docs.cat.board',
       defaultTitle: '棋盘与消除',
-      gameIds: ['gomoku', 'hexa', 'tetris', 'block']
+      gameIds: ['tilematch', 'gomoku', 'hexa', 'tetris', 'block']
     },
     {
       id: 'deduction',

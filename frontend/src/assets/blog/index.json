@@ -1,0 +1,1680 @@
+[
+  {
+    "id": "idiom-battle-strategy",
+    "date": "2026-10-31",
+    "en": {
+      "title": "Idiom Solitaire & Crossword Tactics: 4 Game-Winning Tricks for Students and Puzzle Fans",
+      "description": "Master Chinese Idiom Solitaire and vocabulary battles with 4 smart tricks: phoneme pivot shifts, common deadlock escapes, loop chaining, and student-friendly memory hooks.",
+      "keywords": "Idiom Solitaire, Chinese idioms, vocabulary games, word puzzle, educational games, kids language training",
+      "readTime": "6 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Idiom",
+        "Language",
+        "Education",
+        "Students"
+      ]
+    },
+    "zh": {
+      "title": "成语接龙怎么成为常胜将军？中小学生必备的四大破局绝招与词汇闭环技巧",
+      "description": "成语接龙老是词穷卡壳？教你中小学生一学就会的四大实战破局绝招：万能数字跳板法、同音字借道术、避开致命死胡同与经典循环套路，助你轻松拿下PK胜利！",
+      "keywords": "成语接龙, 成语对战, 中小学生语文, 词汇积累, 益智文字游戏, 学习技巧, 记忆口诀",
+      "readTime": "6 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "成语接龙",
+        "语文素养",
+        "学生必看",
+        "脑力竞技"
+      ]
+    }
+  },
+  {
+    "id": "connect-colors-strategy",
+    "date": "2026-10-31",
+    "en": {
+      "title": "Connect Colors Flow Guide: The 'Hug the Wall' Trick & Zero-Dead-End Rules",
+      "description": "Master numberlink and color connect puzzles with simple kindergarten-friendly visual tricks: hug the walls, protect corners, and leave zero empty squares behind.",
+      "keywords": "Connect Colors, Numberlink, flow puzzle, line connect, logic puzzle for kids, brain games",
+      "readTime": "5 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Connect Colors",
+        "Logic",
+        "Kids",
+        "Beginners"
+      ]
+    },
+    "zh": {
+      "title": "彩色一笔画通关秘籍：手把手教你“贴墙走”与无死角连线大白话法则",
+      "description": "彩色点点连线老是交叉撞车？教你最灵巧的“贴墙走水管”与“角落必转弯”大白话诀窍。简单三步，把看似乱糟糟的棋盘梳理得整整齐齐，小朋友一学就会！",
+      "keywords": "一笔画, 连线游戏, 颜色连接, Connect Colors, 益智连线, 儿童专注力训练, 逻辑思维",
+      "readTime": "5 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "一笔画",
+        "益智解谜",
+        "儿童思维",
+        "新手入门"
+      ]
+    }
+  },
+  {
+    "id": "tents-puzzle-guide",
+    "date": "2026-10-31",
+    "en": {
+      "title": "Tents and Trees Puzzle Guide: 4 Simple Rhymes Every Kid Can Master",
+      "description": "Learn how to solve Tents and Trees like a pro camping scout! Master zero-rows, neighbor-block rules, and pair deductions using plain, kid-friendly logic.",
+      "keywords": "Tents and Trees, logic puzzles, camping puzzle, brain games, kids logic, deduction guide",
+      "readTime": "6 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tents",
+        "Logic",
+        "Beginners",
+        "Kids"
+      ]
+    },
+    "zh": {
+      "title": "露营帐篷解谜通关宝典：和小树做朋友的 4 句大白话口诀",
+      "description": "露营帐篷不会玩？用最接地气的侦探口诀搞定每一棵小树！零行全填草、帐篷隐私圈、孤单小树法，小学生初中生一读就懂的森林露营推理秘籍。",
+      "keywords": "露营帐篷, Tents, 逻辑解谜, 益智游戏, 数理思维, 儿童数理, 益智攻略",
+      "readTime": "6 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "帐篷",
+        "益智解谜",
+        "新手入门",
+        "思维训练"
+      ]
+    }
+  },
+  {
+    "id": "tilematch-strategy",
+    "date": "2026-10-31",
+    "en": {
+      "title": "Tile Match & Sheep Mastery: The 'Burger Stacking' Secret & 3 Golden Rules Even Kids Can Learn",
+      "description": "Stuck on Level 2? Discover the fun, easy-to-understand 'Burger Layer' strategy, slot safety redlines, and 3 golden rules that make triple-tile puzzles a breeze for students and parents alike.",
+      "keywords": "Tile Match, Sheep Game, match 3 puzzle, puzzle strategy, brain training, kids guide, logic games",
+      "readTime": "6 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tile Match",
+        "Puzzle",
+        "Beginners",
+        "Kids"
+      ]
+    },
+    "zh": {
+      "title": "羊了个羊通关秘籍：小学生也能懂的“吃汉堡法则”与三大保命口诀",
+      "description": "第二关老是过不去？不用害怕！用最接地气的大白话揭秘“叠层汉堡规律”、5格保命红线与副牌留底技巧。简单三句顺口溜，小学生初中生看完都能轻松通关！",
+      "keywords": "羊了个羊, 叠层消除, 3D三消, 通关秘籍, 益智游戏, 儿童思维训练, 消除技巧",
+      "readTime": "6 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "羊了个羊",
+        "益智解谜",
+        "新手入门",
+        "思维训练"
+      ]
+    }
+  },
+  {
+    "id": "gomoku-strategy-guide",
+    "date": "2026-06-16",
+    "en": {
+      "title": "Gomoku Strategy Guide: From Random Play to Winning Consistently",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    },
+    "zh": {
+      "title": "五子棋策略指南：从随机落子到稳定制胜",
+      "description": "掌握五子棋核心战术形态——活四、双三、跳三——并学习区分新手与强手的全局布局概念。",
+      "keywords": "五子棋, 策略指南, 棋盘游戏, 战术, 双三, 活四",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "五子棋",
+        "策略",
+        "棋盘游戏"
+      ]
+    },
+    "es": {
+      "title": "Guía de Estrategia de Gomoku: De Jugar al Azar a Ganar Consistentemente",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    },
+    "ja": {
+      "title": "五目並べ戦略ガイド：ランダムプレイから安定した勝利まで",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    },
+    "ko": {
+      "title": "오목 전략 가이드: 랜덤 플레이에서 꾸준한 승리까지",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    },
+    "pt": {
+      "title": "Guia de Estratégia de Gomoku: Do Jogo Aleatório à Vitória Consistente",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    },
+    "fr": {
+      "title": "Guide de stratégie du Gomoku : du jeu aléatoire à la victoire constante",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    },
+    "de": {
+      "title": "Gomoku-Strategiehandbuch: Vom zufälligen Spielen zum konstanten Gewinnen",
+      "description": "Master Five in a Row with essential tactical patterns — open fours, double-threes, broken sequences — and learn the positional concepts that separate beginners from strong players.",
+      "keywords": "gomoku, five in a row, strategy guide, board game, tactics, double three, open four",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Gomoku",
+        "Strategy",
+        "Board Games"
+      ]
+    }
+  },
+  {
+    "id": "nonogram-strategy",
+    "date": "2026-07-19",
+    "en": {
+      "title": "Nonogram Strategy: Step-by-Step Guide to Solving Puzzles",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "zh": {
+      "title": "数织 (Nonogram) 详细攻略：一步一步教你解题",
+      "description": "这是一篇从入门到进阶的数织（Nonogram/Picross）详细解题攻略，通过图文并茂的实例，一步步教你如何运用逻辑和技巧完成解谜。",
+      "keywords": "数织, nonogram, picross, 攻略, 解题思路, 逻辑解谜",
+      "readTime": "12 分钟阅读",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "数织",
+        "攻略",
+        "解密"
+      ]
+    },
+    "es": {
+      "title": "Estrategia para Nonogramas: Guía Paso a Paso para Resolver Rompecabezas",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "ja": {
+      "title": "ノノグラムの戦略：パズルを解くためのステップバイステップガイド",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "ko": {
+      "title": "논그램 전략: 퍼즐 해결을 위한 단계별 가이드",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "pt": {
+      "title": "Estratégia de Nonogram: Guia Passo a Passo para Resolver Quebra-Cabeças",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "fr": {
+      "title": "Stratégie pour Nonogramme : Guide étape par étape pour résoudre des puzzles",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    },
+    "de": {
+      "title": "Nonogramm-Strategie: Schritt-für-Schritt-Anleitung zum Lösen von Rätseln",
+      "description": "A detailed step-by-step tutorial on how to solve Nonogram (Picross) puzzles using logic and constraints, from basic overlaps to advanced techniques.",
+      "keywords": "nonogram, picross, strategy, tutorial, logic puzzle, guide",
+      "readTime": "12 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Nonogram",
+        "Strategy",
+        "Tutorial"
+      ]
+    }
+  },
+  {
+    "id": "water-sort-puzzle-guide",
+    "date": "2026-06-14",
+    "en": {
+      "title": "Water Sort Puzzle: The Complete Beginner-to-Expert Guide",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "水管排序攻略：从新手到高手的完整指南",
+      "description": "从基础倒水规则到高级死锁回避策略——关于水管颜色排序的一切，帮你攻克每一个关卡。",
+      "keywords": "水管排序, 颜色排序, 策略攻略, 逻辑游戏, 益智技巧",
+      "readTime": "8 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "水管排序",
+        "策略",
+        "益智"
+      ]
+    },
+    "es": {
+      "title": "Puzzle de Clasificación de Agua: La Guía Completa de Principiante a Experto",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    },
+    "ja": {
+      "title": "ウォーターソートパズル：初心者から上級者までの完全ガイド",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    },
+    "ko": {
+      "title": "물 정렬 퍼즐: 초보자부터 전문가까지의 완전 가이드",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    },
+    "pt": {
+      "title": "Quebra-Cabeça de Classificação de Água: O Guia Completo do Iniciante ao Especialista",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    },
+    "fr": {
+      "title": "Puzzle de tri de l'eau : Le guide complet du débutant à l'expert",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    },
+    "de": {
+      "title": "Wasser-Sortier-Rätsel: Der vollständige Anfänger-zu-Experten-Leitfaden",
+      "description": "From the basic pour rule to advanced deadlock-avoidance strategies — everything you need to master every level of Water Sort Puzzle.",
+      "keywords": "water sort puzzle, color sort, strategy guide, logic game, puzzle tips",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Water Sort",
+        "Strategy",
+        "Puzzle"
+      ]
+    }
+  },
+  {
+    "id": "tetris-battle-strategy",
+    "date": "2026-06-12",
+    "en": {
+      "title": "Tetris Battle Strategy: How to Dominate in PK Mode",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    },
+    "zh": {
+      "title": "方块对战策略：如何在PK模式中占据主导",
+      "description": "学习平整叠块维护、I形块管理、T-Spin设置和垃圾行读取策略，在多人方块对战模式中稳定获胜。",
+      "keywords": "方块对战, 俄罗斯方块策略, PK模式, T-Spin, 叠块管理, 竞技方块",
+      "readTime": "8 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "俄罗斯方块",
+        "策略",
+        "多人对战"
+      ]
+    },
+    "es": {
+      "title": "Estrategia de Batalla de Tetris: Cómo Dominar en el Modo PK",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    },
+    "ja": {
+      "title": "テトリスバトル戦略：PKモードで支配する方法",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    },
+    "ko": {
+      "title": "테트리스 배틀 전략: PK 모드에서 지배하는 방법",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    },
+    "pt": {
+      "title": "Estratégia de Batalha de Tetris: Como Dominar no Modo PK",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    },
+    "fr": {
+      "title": "Stratégie de Tetris Battle : Comment dominer en mode PK",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    },
+    "de": {
+      "title": "Tetris-Kampfstrategie: Wie man im PK-Modus dominiert",
+      "description": "Learn flat stack maintenance, I-piece management, T-spin setups, and garbage reading strategies that will help you win consistently in multiplayer Tetris battle modes.",
+      "keywords": "tetris battle, tetris strategy, PK mode, T-spin, stack management, competitive tetris",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Tetris",
+        "Strategy",
+        "Multiplayer"
+      ]
+    }
+  },
+  {
+    "id": "sokoban-strategy",
+    "date": "2026-06-10",
+    "en": {
+      "title": "Sokoban: From Beginner to Master — The Complete Strategy Guide",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    },
+    "zh": {
+      "title": "推箱子：从入门到精通的完整策略指南",
+      "description": "学习推箱子游戏的核心策略与高阶技巧——包括死锁图案识别、逆向推导思维和影响力分析，彻底告别卡关。",
+      "keywords": "推箱子, 益智游戏, 攻略, 技巧, 死锁",
+      "readTime": "8 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "推箱子",
+        "攻略",
+        "技巧"
+      ]
+    },
+    "es": {
+      "title": "Sokoban: De principiante a maestro — La guía completa de estrategia",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    },
+    "ja": {
+      "title": "倉庫番：初心者から達人まで — 完全攻略ガイド",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    },
+    "ko": {
+      "title": "소코반: 초보자에서 마스터까지 — 완전 전략 가이드",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    },
+    "pt": {
+      "title": "Sokoban: Do Iniciante ao Mestre — O Guia Completo de Estratégia",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    },
+    "fr": {
+      "title": "Sokoban : Du débutant au maître — Le guide stratégique complet",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    },
+    "de": {
+      "title": "Sokoban: Vom Anfänger zum Meister — Der vollständige Strategie-Guide",
+      "description": "Learn the fundamental strategies and advanced techniques to conquer any Sokoban puzzle without getting stuck — including deadlock patterns, reverse thinking, and influence analysis.",
+      "keywords": "Sokoban, puzzle, strategy, guide, logic game, deadlock, box pushing",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sokoban",
+        "Guide",
+        "Strategy"
+      ]
+    }
+  },
+  {
+    "id": "minesweeper-logic",
+    "date": "2026-06-08",
+    "en": {
+      "title": "The Hidden Logic of Minesweeper: A Complete Strategy Guide",
+      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
+      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    },
+    "zh": {
+      "title": "扫雷背后的隐藏逻辑：完整策略指南",
+      "description": "扫雷不是靠猜的——掌握1-1、1-2、1-2-1图案，学习概率估算，发现PK模式的速度技巧。",
+      "keywords": "扫雷, 逻辑, 概率, 益智游戏, 策略",
+      "readTime": "7 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "扫雷",
+        "逻辑",
+        "数学"
+      ]
+    },
+    "es": {
+      "title": "La Lógica Oculta del Buscaminas: Una Guía Completa de Estrategia",
+      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
+      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    },
+    "ja": {
+      "title": "マインスイーパーの隠れた論理：完全攻略ガイド",
+      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
+      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    },
+    "ko": {
+      "title": "지뢰 찾기의 숨겨진 논리: 완전 전략 가이드",
+      "description": "Minesweeper is not about guessing. Master the 1-1, 1-2, and 1-2-1 patterns, learn probability estimation, and discover speed techniques for PK mode.",
+      "keywords": "Minesweeper, logic, probability, puzzle, strategy, PK mode",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    },
+    "pt": {
+      "title": "A Lógica Oculta do Campo Minado: Um Guia Completo de Estratégia",
+      "description": "Campo Minado não é sobre adivinhar. Domine os padrões 1-1, 1-2 e 1-2-1, aprenda a estimar probabilidades e descubra técnicas de velocidade para o modo PK.",
+      "keywords": "Campo Minado, lógica, probabilidade, quebra-cabeça, estratégia, modo PK",
+      "readTime": "7 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    },
+    "fr": {
+      "title": "La logique cachée du Démineur : un guide stratégique complet",
+      "description": "Le Démineur n'est pas une question de hasard. Maîtrisez les motifs 1-1, 1-2 et 1-2-1, apprenez à estimer les probabilités et découvrez les techniques de vitesse pour le mode PK.",
+      "keywords": "Démineur, logique, probabilité, casse-tête, stratégie, mode PK",
+      "readTime": "7 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    },
+    "de": {
+      "title": "Die verborgene Logik von Minesweeper: Ein vollständiger Strategie-Guide",
+      "description": "Bei Minesweeper geht es nicht um Raten. Meistere die 1-1-, 1-2- und 1-2-1-Muster, lerne, Wahrscheinlichkeiten einzuschätzen, und entdecke Geschwindigkeitstechniken für den PK-Modus.",
+      "keywords": "Minesweeper, Logik, Wahrscheinlichkeit, Puzzle, Strategie, PK-Modus",
+      "readTime": "7 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Minesweeper",
+        "Logic",
+        "Math"
+      ]
+    }
+  },
+  {
+    "id": "1a2b-bulls-cows",
+    "date": "2026-06-07",
+    "en": {
+      "title": "Mastering 1A2B (Bulls and Cows): Strategy, Algorithms, and Deduction",
+      "description": "A deep dive into the information-theoretic approach to solving the classic code-breaking game 1A2B efficiently — from digit identification to minimax algorithms.",
+      "keywords": "1A2B, Bulls and Cows, codebreaker, algorithm, strategy, information theory",
+      "readTime": "8 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    },
+    "zh": {
+      "title": "精通 1A2B（猜数字）：策略、算法与演绎推理的艺术",
+      "description": "深入解析如何用信息论思维和极小极大算法，高效破解经典密码战游戏1A2B——从数字识别阶段到位置确定的完整方法。",
+      "keywords": "1A2B, 猜数字, 密码战, 算法, 策略, 信息论",
+      "readTime": "8 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "1A2B",
+        "算法",
+        "密码战"
+      ]
+    },
+    "es": {
+      "title": "Dominando el 1A2B (Bulls and Cows): Estrategia, Algoritmos y la Ciencia de la Deducción",
+      "description": "Una inmersión profunda en el enfoque basado en la teoría de la información para resolver de forma eficiente el clásico juego de descifrar códigos 1A2B: desde la identificación de dígitos hasta los algoritmos minimax.",
+      "keywords": "1A2B, Bulls and Cows, juego de adivinar números, algoritmo, estrategia, teoría de la información",
+      "readTime": "8 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    },
+    "ja": {
+      "title": "1A2B（ブルズアンドカウズ）を極める：戦略、アルゴリズム、そして推理の科学",
+      "description": "古典的なコードブレイクゲーム1A2Bを情報理論の視点から攻略する完全ガイド。数字の特定からミニマックスアルゴリズムまで、効率的に解く方法を深掘りします。",
+      "keywords": "1A2B, ブルズアンドカウズ, 数字当てゲーム, アルゴリズム, 攻略, 情報理論",
+      "readTime": "8 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    },
+    "ko": {
+      "title": "1A2B(불스 앤 카우스) 마스터하기: 전략, 알고리즘, 그리고 추론의 과학",
+      "description": "고전적인 코드 추측 게임 1A2B를 정보 이론적 접근으로 효율적으로 푸는 방법을 깊이 있게 다룹니다 — 숫자 식별부터 미니맥스 알고리즘까지.",
+      "keywords": "1A2B, 불스 앤 카우스, 숫자 추측 게임, 알고리즘, 전략, 정보 이론",
+      "readTime": "8분 소요",
+      "author": "Puzzle PK 팀",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    },
+    "pt": {
+      "title": "Dominando o 1A2B (Bulls and Cows): Estratégia, Algoritmos e a Ciência da Dedução",
+      "description": "Um mergulho profundo na abordagem baseada na teoria da informação para resolver com eficiência o clássico jogo de decifrar códigos 1A2B — da identificação de dígitos aos algoritmos minimax.",
+      "keywords": "1A2B, Bulls and Cows, jogo de adivinhar números, algoritmo, estratégia, teoria da informação",
+      "readTime": "8 minutos de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    },
+    "fr": {
+      "title": "Maîtriser le 1A2B (Bulls and Cows) : Stratégie, Algorithmes et la Science de la Déduction",
+      "description": "Une plongée approfondie dans l'approche fondée sur la théorie de l'information pour résoudre efficacement le jeu classique de décodage 1A2B — de l'identification des chiffres aux algorithmes minimax.",
+      "keywords": "1A2B, Bulls and Cows, jeu de déduction de nombres, algorithme, stratégie, théorie de l'information",
+      "readTime": "8 minutes de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    },
+    "de": {
+      "title": "1A2B (Bullen und Kühe) meistern: Strategie, Algorithmen und die Wissenschaft der Deduktion",
+      "description": "Ein tiefer Einblick in den informationstheoretischen Ansatz, um das klassische Codeknacker-Spiel 1A2B effizient zu lösen — von der Ziffernidentifikation bis zu Minimax-Algorithmen.",
+      "keywords": "1A2B, Bulls and Cows, Zahlenratespiel, Algorithmus, Strategie, Informationstheorie",
+      "readTime": "8 Minuten Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "1A2B",
+        "Algorithms",
+        "Codebreaker"
+      ]
+    }
+  },
+  {
+    "id": "sudoku-benefits",
+    "date": "2026-06-05",
+    "en": {
+      "title": "Why Playing Sudoku Every Day is Good for Your Brain",
+      "description": "Discover the scientific benefits of playing Sudoku daily — from strengthening working memory and logical reasoning to reducing stress and potentially delaying cognitive decline.",
+      "keywords": "Sudoku, brain training, memory, cognitive health, stress reduction, logic",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    },
+    "zh": {
+      "title": "为什么每天玩数独对大脑有益？科学解答",
+      "description": "探索每天玩数独的科学益处：从强化工作记忆、建立逻辑推理能力，到减轻压力，乃至可能延缓认知衰退。",
+      "keywords": "数独, 大脑训练, 记忆力, 认知健康, 减压, 逻辑",
+      "readTime": "7 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "数独",
+        "大脑健康",
+        "教育"
+      ]
+    },
+    "es": {
+      "title": "Por qué jugar Sudoku todos los días es bueno para tu cerebro",
+      "description": "Descubre los beneficios científicos de jugar Sudoku a diario: desde fortalecer la memoria de trabajo y el razonamiento lógico hasta reducir el estrés y, posiblemente, retrasar el deterioro cognitivo.",
+      "keywords": "Sudoku, beneficios del Sudoku, entrenamiento cerebral, memoria, salud cognitiva, reducir el estrés, razonamiento lógico",
+      "readTime": "7 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    },
+    "ja": {
+      "title": "毎日数独をすることが脳に良い理由",
+      "description": "毎日数独をプレイすることの科学的な効果をご紹介。ワーキングメモリの強化や論理的思考力の向上から、ストレス軽減、認知機能低下の遅延まで、数独が脳に与える影響を詳しく解説します。",
+      "keywords": "数独, 数独の効果, 脳トレ, 記憶力, 認知機能, ストレス解消, 論理的思考",
+      "readTime": "7 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    },
+    "ko": {
+      "title": "매일 스도쿠를 하는 것이 두뇌에 좋은 이유",
+      "description": "매일 스도쿠를 플레이할 때 얻는 과학적 이점을 알아보세요. 작업 기억력 강화와 논리적 사고력 향상부터 스트레스 감소와 인지 기능 저하 지연까지, 스도쿠가 두뇌에 미치는 영향을 자세히 소개합니다.",
+      "keywords": "스도쿠, 스도쿠 효과, 두뇌 훈련, 기억력, 인지 건강, 스트레스 해소, 논리적 사고",
+      "readTime": "7분 분량",
+      "author": "Puzzle PK 팀",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    },
+    "pt": {
+      "title": "Por que Jogar Sudoku Todos os Dias é Bom para o Seu Cérebro",
+      "description": "Descubra os benefícios científicos de jogar Sudoku diariamente — do fortalecimento da memória de trabalho e do raciocínio lógico à redução do estresse e ao possível retardo do declínio cognitivo.",
+      "keywords": "Sudoku, benefícios do Sudoku, treino cerebral, memória, saúde cognitiva, reduzir o estresse, raciocínio lógico",
+      "readTime": "7 minutos de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    },
+    "fr": {
+      "title": "Pourquoi jouer au Sudoku tous les jours est bon pour votre cerveau",
+      "description": "Découvrez les bienfaits scientifiques du Sudoku quotidien — du renforcement de la mémoire de travail et du raisonnement logique à la réduction du stress et au ralentissement potentiel du déclin cognitif.",
+      "keywords": "Sudoku, bienfaits du Sudoku, entraînement cérébral, mémoire, santé cognitive, réduire le stress, logique",
+      "readTime": "7 minutes de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    },
+    "de": {
+      "title": "Warum das tägliche Sudoku-Spielen gut für Ihr Gehirn ist",
+      "description": "Entdecken Sie die wissenschaftlichen Vorteile des täglichen Sudoku-Spielens — von der Stärkung des Arbeitsgedächtnisses und des logischen Denkens bis hin zu weniger Stress und einem möglicherweise langsameren kognitiven Abbau.",
+      "keywords": "Sudoku, Sudoku Vorteile, Gehirntraining, Gedächtnis, kognitive Gesundheit, Stressabbau, logisches Denken",
+      "readTime": "7 Minuten Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sudoku",
+        "Brain Health",
+        "Education"
+      ]
+    }
+  },
+  {
+    "id": "why-math24-is-the-best-brain-training-game-for-kids",
+    "date": "2026-06-04",
+    "en": {
+      "title": "Why Math 24 is the Best Brain Training Game for Elementary Students",
+      "description": "Discover how the classic Math 24 puzzle can dramatically improve your child's mental arithmetic, logic, and problem-solving skills in a fun, competitive way.",
+      "keywords": "math 24, brain training, educational games for kids, elementary math, mental arithmetic",
+      "readTime": "5 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    },
+    "zh": {
+      "title": "为什么24点是小学生最好的脑力训练游戏",
+      "description": "发现经典的24点游戏如何通过竞技的方式大幅提升孩子的口算和逻辑思维能力。",
+      "keywords": "24点游戏, 脑力训练, 儿童教育游戏, 小学数学, 口算能力",
+      "readTime": "5分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "教育",
+        "数学",
+        "育儿"
+      ]
+    },
+    "es": {
+      "title": "Por qué Math 24 es el mejor juego de entrenamiento cerebral para estudiantes de primaria",
+      "description": "Descubre cómo el clásico rompecabezas Math 24 puede mejorar de forma espectacular el cálculo mental, la lógica y la capacidad de resolver problemas de tu hijo, todo de una manera divertida y competitiva.",
+      "keywords": "math 24, entrenamiento cerebral, juegos educativos para niños, matemáticas de primaria, cálculo mental",
+      "readTime": "5 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    },
+    "ja": {
+      "title": "なぜ『Math 24』は小学生に最適な脳トレゲームなのか",
+      "description": "定番の数字パズル『Math 24』が、遊び感覚の対戦形式でお子さまの暗算力・論理的思考・問題解決力をぐんぐん伸ばしてくれる理由をご紹介します。小学生・中学生を持つ親御さんにこそ読んでほしい、楽しく続けられる脳トレゲームの選び方ガイドです。",
+      "keywords": "マス24, 24ゲーム, 脳トレ, 子ども向け知育ゲーム, 小学生の算数, 暗算",
+      "readTime": "5 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    },
+    "ko": {
+      "title": "매스 24, 초등학생을 위한 최고의 두뇌 훈련 게임",
+      "description": "고전 퍼즐 매스 24가 아이의 암산 실력과 논리력, 문제 해결 능력을 재미있고 경쟁적인 방식으로 눈에 띄게 향상시켜 주는 비결을 지금 확인해 보세요.",
+      "keywords": "매스 24, 두뇌 훈련, 어린이 교육 게임, 초등 수학, 암산",
+      "readTime": "5분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    },
+    "pt": {
+      "title": "Por que o Math 24 é o Melhor Jogo de Treinamento Cerebral para Estudantes do Ensino Fundamental",
+      "description": "Descubra como o clássico puzzle Math 24 pode melhorar de forma drástica o cálculo mental, a lógica e a capacidade de resolução de problemas do seu filho — de uma forma divertida e competitiva.",
+      "keywords": "math 24, treinamento cerebral, jogos educativos para crianças, matemática do ensino fundamental, cálculo mental",
+      "readTime": "5 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    },
+    "fr": {
+      "title": "Pourquoi Math 24 est le meilleur jeu d'entraînement cérébral pour les élèves du primaire",
+      "description": "Découvrez comment le célèbre casse-tête Math 24 peut améliorer de façon spectaculaire le calcul mental, la logique et les capacités de résolution de problèmes de votre enfant, de manière ludique et compétitive.",
+      "keywords": "math 24, entraînement cérébral, jeux éducatifs pour enfants, maths primaire, calcul mental",
+      "readTime": "5 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    },
+    "de": {
+      "title": "Warum Math 24 das beste Gehirntraining-Spiel für Grundschüler ist",
+      "description": "Entdecke, wie das klassische Math-24-Rätsel die Kopfrechen-, Logik- und Problemlösungsfähigkeiten deines Kindes auf spielerische und wettbewerbsorientierte Weise deutlich verbessern kann.",
+      "keywords": "math 24, Gehirntraining, Lernspiele für Kinder, Grundschulmathe, Kopfrechnen",
+      "readTime": "5 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Education",
+        "Math",
+        "Parenting"
+      ]
+    }
+  },
+  {
+    "id": "sudoku-for-kids-a-beginners-guide",
+    "date": "2026-06-03",
+    "en": {
+      "title": "Sudoku for Kids: How to Introduce Logic Puzzles to Your Children",
+      "description": "A step-by-step guide for parents to introduce Sudoku to kids — why it builds deductive reasoning, how to start without frustration, and where to find the best free puzzles.",
+      "keywords": "sudoku for kids, logic puzzles, brain games, child development, deductive reasoning",
+      "readTime": "6 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    },
+    "zh": {
+      "title": "儿童数独入门：如何无痛引导孩子爱上逻辑推理",
+      "description": "一份写给家长的儿童数独入门指南——了解为什么它能建立演绎推理能力、如何无痛入门、在哪里找到最好的免费谜题。",
+      "keywords": "儿童数独, 逻辑谜题, 益智游戏, 儿童发展, 演绎推理",
+      "readTime": "6 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "逻辑",
+        "数独",
+        "入门"
+      ]
+    },
+    "es": {
+      "title": "Sudoku para Niños: Cómo Introducir Rompecabezas Lógicos a Tus Hijos",
+      "description": "Una guía paso a paso para padres que quieren introducir el Sudoku a sus hijos: por qué desarrolla el razonamiento deductivo, cómo empezar sin frustraciones y dónde encontrar los mejores rompecabezas gratuitos.",
+      "keywords": "sudoku para niños, rompecabezas de lógica, juegos de lógica para niños, desarrollo infantil, razonamiento deductivo",
+      "readTime": "6 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    },
+    "ja": {
+      "title": "子ども向け数独：子どもに論理パズルを紹介する方法",
+      "description": "子どもに数独を紹介するためのステップバイステップガイド。演繹的推論が身につく理由、ストレスなく始める方法、そしておすすめの無料パズルが見つかる場所まで解説します。",
+      "keywords": "子ども向け数独, 数独 子ども, 論理パズル, 頭の体操, 子どもの発達, 演繹的推論",
+      "readTime": "6 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    },
+    "ko": {
+      "title": "어린이를 위한 스도쿠: 아이들에게 논리 퍼즐을 소개하는 방법",
+      "description": "아이에게 스도쿠를 소개하는 부모를 위한 단계별 가이드. 연역적 추리가 길러지는 이유, 좌절 없이 시작하는 방법, 최고의 무료 퍼즐을 찾을 수 있는 곳까지 알려드려요.",
+      "keywords": "어린이 스도쿠, 아이 스도쿠, 논리 퍼즐, 두뇌 게임, 아이 두뇌 발달, 연역적 추리",
+      "readTime": "6분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    },
+    "pt": {
+      "title": "Sudoku para Crianças: Como Introduzir Quebra-Cabeças Lógicos para Seus Filhos",
+      "description": "Um guia passo a passo para pais que querem apresentar o Sudoku às crianças: por que ele desenvolve o raciocínio dedutivo, como começar sem frustração e onde encontrar os melhores quebra-cabeças gratuitos.",
+      "keywords": "sudoku para crianças, quebra-cabeças de lógica, jogos de raciocínio, desenvolvimento infantil, raciocínio dedutivo",
+      "readTime": "6 minutos de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    },
+    "fr": {
+      "title": "Sudoku pour enfants : comment initier vos enfants aux casse-têtes logiques",
+      "description": "Un guide pas à pas pour les parents qui veulent initier leurs enfants au Sudoku : pourquoi il développe le raisonnement déductif, comment commencer sans frustration et où trouver les meilleures grilles gratuites.",
+      "keywords": "sudoku pour enfants, casse-têtes logiques, jeux de logique, développement de l'enfant, raisonnement déductif",
+      "readTime": "6 minutes de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    },
+    "de": {
+      "title": "Sudoku für Kinder: Wie man Logikrätsel den eigenen Kindern näherbringt",
+      "description": "Eine Schritt-für-Schritt-Anleitung für Eltern, die Kindern Sudoku näherbringen möchten — warum es deduktives Denken fördert, wie man ohne Frustration startet und wo man die besten kostenlosen Rätsel findet.",
+      "keywords": "Sudoku für Kinder, Logikrätsel, Denkspiele, kindliche Entwicklung, deduktives Denken",
+      "readTime": "6 Minuten Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Logic",
+        "Sudoku",
+        "Beginners"
+      ]
+    }
+  },
+  {
+    "id": "benefits-of-multiplayer-educational-games",
+    "date": "2026-06-02",
+    "en": {
+      "title": "The Hidden Benefits of Multiplayer Educational Games for Kids",
+      "description": "Co-op and competitive puzzle games build skills no single-player app can — from emotional regulation to collaborative problem-solving. Here is the science behind it.",
+      "keywords": "multiplayer educational games, co-op puzzle games, competitive learning, kids gaming, cognitive skills",
+      "readTime": "7 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    },
+    "zh": {
+      "title": "双人互动益智游戏：被家长忽视的隐藏教育红利",
+      "description": "合作与竞技类解谜游戏能培养单机App无法提供的能力——从情绪调节到协作解决问题。以下是背后的科学依据。",
+      "keywords": "双人教育游戏, 合作解谜游戏, 竞技学习, 儿童游戏, 认知能力",
+      "readTime": "7 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "多人游戏",
+        "社交技能",
+        "教育"
+      ]
+    },
+    "es": {
+      "title": "Los beneficios ocultos de los juegos educativos multijugador para niños",
+      "description": "Los juegos de puzzle cooperativos y competitivos desarrollan habilidades que ninguna app de un solo jugador puede ofrecer: desde la regulación emocional hasta la resolución colaborativa de problemas. Esta es la ciencia que hay detrás.",
+      "keywords": "juegos educativos multijugador, juegos de puzzle cooperativos, aprendizaje competitivo, juegos para niños, habilidades cognitivas",
+      "readTime": "7 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    },
+    "ja": {
+      "title": "子供向けマルチプレイヤー教育ゲームの隠れた利点",
+      "description": "協力型・競争型のパズルゲームは、シングルプレイのアプリでは身につかないスキルを育みます——感情のコントロールから協力して問題を解く力まで。その科学的な根拠をご紹介します。",
+      "keywords": "マルチプレイ教育ゲーム, 協力型パズルゲーム, 競争型学習, 子供向けゲーム, 認知能力",
+      "readTime": "7 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    },
+    "ko": {
+      "title": "아이들을 위한 멀티플레이어 교육 게임의 숨은 이점",
+      "description": "협동 및 경쟁 퍼즐 게임은 싱글플레이어 앱으로는 기를 수 없는 능력——감정 조절부터 협력적 문제 해결까지——을 길러 줍니다. 그 과학적 근거를 소개합니다.",
+      "keywords": "멀티플레이어 교육 게임, 협동 퍼즐 게임, 경쟁 학습, 어린이 게임, 인지 능력",
+      "readTime": "7분 분량",
+      "author": "Puzzle PK 팀",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    },
+    "pt": {
+      "title": "Os Benefícios Ocultos dos Jogos Educativos Multijogador para Crianças",
+      "description": "Jogos de puzzle cooperativos e competitivos desenvolvem habilidades que nenhum app de um jogador consegue — da regulação emocional à resolução colaborativa de problemas. Veja a ciência por trás disso.",
+      "keywords": "jogos educativos multijogador, jogos de puzzle cooperativos, aprendizagem competitiva, jogos para crianças, habilidades cognitivas",
+      "readTime": "7 minutos de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    },
+    "fr": {
+      "title": "Les avantages cachés des jeux éducatifs multijoueurs pour les enfants",
+      "description": "Les jeux de puzzle coopératifs et compétitifs développent des compétences qu'aucune appli solo ne peut offrir — de la régulation émotionnelle à la résolution collaborative de problèmes. Voici la science qui se cache derrière.",
+      "keywords": "jeux éducatifs multijoueurs, jeux de puzzle coopératifs, apprentissage compétitif, jeux pour enfants, compétences cognitives",
+      "readTime": "7 minutes de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    },
+    "de": {
+      "title": "Die verborgenen Vorteile von Mehrspieler-Bildungsspielen für Kinder",
+      "description": "Kooperative und kompetitive Puzzlespiele fördern Fähigkeiten, die keine Singleplayer-App bieten kann – von emotionaler Regulation bis zur gemeinsamen Problemlösung. Das ist die Wissenschaft dahinter.",
+      "keywords": "Mehrspieler-Bildungsspiele, kooperative Puzzlespiele, kompetitives Lernen, Kinderspiele, kognitive Fähigkeiten",
+      "readTime": "7 Minuten Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Multiplayer",
+        "Social Skills",
+        "Education"
+      ]
+    }
+  },
+  {
+    "id": "block-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Block Puzzle Strategy: 10 Tips to Survive Longer and Score Higher",
+      "description": "10 proven Block Puzzle tips: keep the board flat, read the piece queue, time your combos, avoid early-game mistakes. Practice in Endless and PK modes.",
+      "keywords": "block puzzle strategy, block puzzle tips, wood block puzzle, block blast strategy, high score tips",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Block Puzzle",
+        "Strategy",
+        "Tips"
+      ]
+    },
+    "zh": {
+      "title": "方块拼图策略：10 个技巧，让你活得更久、分数更高",
+      "description": "10 个经过验证的方块拼图技巧：保持棋盘平整、读懂积木队列、把握连击时机、避开提前出局的常见错误。在 Puzzle PK 的无限模式与 PK 模式中反复练习，分数自然更高。",
+      "keywords": "方块拼图, 木块拼图技巧, 消方块攻略, 益智游戏, 高分技巧",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "方块拼图",
+        "策略",
+        "技巧"
+      ]
+    },
+    "es": {
+      "title": "Estrategia de Block Puzzle: 10 consejos para durar más y sumar más puntos",
+      "description": "10 consejos probados de Block Puzzle: mantén el tablero plano, lee la cola de piezas, elige el momento de tus combos y evita los errores de las primeras partidas. Practica en los modos Endless y PK.",
+      "keywords": "estrategia de block puzzle, consejos de block puzzle, puzzle de bloques de madera, estrategia de block blast, trucos para puntuación alta",
+      "readTime": "9 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ブロックパズル攻略：長く生き延びて高得点を狙う10のコツ",
+      "description": "実証済みのブロックパズルのコツ10選：盤面を平らに保つ、ピースの並びを読む、コンボのタイミングを計る、序盤のミスを避ける。エンドレスモードとPKモードで練習しよう。",
+      "keywords": "ブロックパズル 攻略, ブロックパズル コツ, ウッドブロックパズル, ブロックブラスト 攻略, 高得点 コツ",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "블록 퍼즐 전략: 더 오래 살아남고 더 높은 점수를 받는 10가지 팁",
+      "description": "검증된 블록 퍼즐 팁 10가지: 보드를 평평하게 유지하고, 조각 큐를 읽고, 콤보 타이밍을 맞추고, 초반 실수를 피하세요. 엔들리스 모드와 PK 모드에서 연습하세요.",
+      "keywords": "블록 퍼즐 전략, 블록 퍼즐 팁, 우드 블록 퍼즐, 블록 블라스트 전략, 고득점 팁",
+      "readTime": "9분 소요",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia de Block Puzzle: 10 dicas para durar mais e pontuar mais alto",
+      "description": "10 dicas comprovadas de Block Puzzle: mantenha o tabuleiro plano, leia a fila de peças, escolha o momento dos seus combos e evite erros de início de partida. Pratique nos modos Endless e PK.",
+      "keywords": "estratégia de block puzzle, dicas de block puzzle, puzzle de blocos de madeira, estratégia de block blast, dicas de pontuação alta",
+      "readTime": "9 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie de Block Puzzle : 10 astuces pour survivre plus longtemps et marquer plus de points",
+      "description": "10 astuces éprouvées de Block Puzzle : gardez le plateau plat, lisez la file de pièces, choisissez le moment de vos combos et évitez les erreurs de début de partie. Entraînez-vous dans les modes Endless et PK.",
+      "keywords": "stratégie block puzzle, astuces block puzzle, puzzle de blocs de bois, stratégie block blast, astuces pour un score élevé",
+      "readTime": "9 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Block-Puzzle-Strategie: 10 Tipps, um länger zu überleben und höhere Punktzahlen zu erreichen",
+      "description": "10 bewährte Block-Puzzle-Tipps: Halte das Spielfeld eben, lies die Steine-Reihenfolge, wähle den Zeitpunkt deiner Combos und vermeide Anfängerfehler. Trainiere im Endlos- und PK-Modus.",
+      "keywords": "Block-Puzzle-Strategie, Block-Puzzle-Tipps, Holzblock-Puzzle, Block-Blast-Strategie, Tipps für hohe Punktzahlen",
+      "readTime": "9 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  },
+  {
+    "id": "classic2048-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "2048 Strategy: How to Reach 2048, 4096 and Beyond",
+      "description": "Master Classic 2048 with the corner strategy, chain building, snake patterns and Speed PK tactics. A complete guide to reaching 2048, 4096 and beyond.",
+      "keywords": "2048 strategy, how to beat 2048, 2048 tips and tricks, 2048 corner strategy, reach 4096",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "2048",
+        "Strategy",
+        "Tips"
+      ]
+    },
+    "zh": {
+      "title": "2048攻略：如何合成2048、4096甚至更高",
+      "description": "掌握角落策略、阶梯搭建、蛇形布局与竞速PK战术，从0到2048、4096的完整攻略，含常见错误与四周练习计划。",
+      "keywords": "2048攻略, 2048技巧, 2048怎么玩, 2048合成, 益智游戏",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "2048",
+        "策略",
+        "技巧"
+      ]
+    },
+    "es": {
+      "title": "Estrategia del 2048: cómo llegar a 2048, 4096 y más allá",
+      "description": "Domina el 2048 clásico con la estrategia de la esquina, la construcción de cadenas, los patrones de serpiente y las tácticas de Speed PK. Una guía completa para llegar a 2048, 4096 y más allá.",
+      "keywords": "estrategia 2048, cómo ganar al 2048, trucos y consejos para 2048, estrategia de la esquina en 2048, llegar a 4096",
+      "readTime": "9 minutos de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "2048 戦略: 2048、4096、そしてその先へ到達する方法",
+      "description": "コーナー戦略、チェーン構築、スネークパターン、Speed PK の戦術で Classic 2048 を極めよう。2048、4096、そしてその先へ到達するための完全ガイド。",
+      "keywords": "2048 戦略、2048 のクリア方法、2048 のコツと裏技、2048 コーナー戦略、4096 に到達する方法",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "2048 전략: 2048, 4096과 그 이상에 도달하는 방법",
+      "description": "코너 전략, 체인 만들기, 스네이크 패턴, Speed PK 전술로 클래식 2048을 마스터하세요. 2048, 4096과 그 이상에 도달하는 완벽한 가이드입니다.",
+      "keywords": "2048 전략, 2048 이기는 법, 2048 팁과 요령, 2048 코너 전략, 4096 도달",
+      "readTime": "9분 분량",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia do 2048: como chegar ao 2048, 4096 e além",
+      "description": "Domine o 2048 Clássico com a estratégia do canto, a construção de cadeias, os padrões cobra e as táticas de Speed PK. Um guia completo para chegar ao 2048, 4096 e além.",
+      "keywords": "estratégia 2048, como vencer no 2048, dicas e truques do 2048, estratégia do canto 2048, chegar ao 4096",
+      "readTime": "9 minutos de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie 2048 : comment atteindre 2048, 4096 et au-delà",
+      "description": "Maîtrisez le 2048 classique avec la stratégie du coin, la construction de chaînes, le motif serpent et les tactiques Speed PK. Un guide complet pour atteindre 2048, 4096 et au-delà.",
+      "keywords": "stratégie 2048, comment battre 2048, astuces et conseils 2048, stratégie du coin 2048, atteindre 4096",
+      "readTime": "9 minutes de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "2048-Strategie: So erreichst du 2048, 4096 und mehr",
+      "description": "Meistere das klassische 2048 mit der Eck-Strategie, dem Kettenaufbau, Schlangenmustern und Speed-PK-Taktiken. Ein kompletter Leitfaden, um 2048, 4096 und mehr zu erreichen.",
+      "keywords": "2048 Strategie, 2048 schlagen, 2048 Tipps und Tricks, 2048 Eck-Strategie, 4096 erreichen",
+      "readTime": "9 Minuten Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  },
+  {
+    "id": "hashi-bridges-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Hashi (Bridges) Puzzle Strategy: From Beginner to Expert",
+      "description": "Learn Hashi (Bridges): rules, corner and edge patterns, 8- and 6-islands, forced pairs, connectivity, a solved 7x7 example, and Speed PK tips.",
+      "keywords": "hashi puzzle, bridges puzzle strategy, hashi solver tips, bridge logic puzzle, how to play hashi",
+      "readTime": "10 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Hashi",
+        "Bridges",
+        "Strategy",
+        "Logic Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "桥梁谜题（Hashi）从入门到精通：完整攻略",
+      "description": "从五条规则到专家级技巧，学会玩桥梁谜题（Hashi）：角落与边缘规律、8 与 6 的处理、强制配对、连通性推理、完整 7×7 解题演示，还有竞速对战（Speed PK）的实战建议。",
+      "keywords": "桥梁谜题, 岛桥谜题, 数桥游戏, 桥梁攻略, 逻辑谜题",
+      "readTime": "10 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "桥梁谜题",
+        "数桥",
+        "策略",
+        "逻辑谜题"
+      ]
+    },
+    "es": {
+      "title": "Estrategia del puzzle Hashi (Puentes): de principiante a experto",
+      "description": "Aprende Hashi (Puentes): reglas, patrones de esquinas y bordes, islas 8 y 6, pares forzados, conectividad, un ejemplo resuelto de 7×7 y consejos para Speed PK.",
+      "keywords": "puzzle hashi, estrategia puzzle de puentes, trucos para resolver hashi, puzzle lógico de puentes, cómo jugar a hashi",
+      "readTime": "10 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ハシ（橋）パズル攻略：初心者から上級者まで",
+      "description": "ハシ（橋）パズルを学ぼう：ルール、角と辺のパターン、8と6の島、強制ペア、連結性、解ききった7×7の例題、スピードPKのコツ。",
+      "keywords": "ハシパズル, 橋パズル 攻略, ハシ 解き方 コツ, 橋 ロジックパズル, ハシパズルの遊び方",
+      "readTime": "10分で読了",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "하시(다리) 퍼즐 전략: 초보자부터 고수까지",
+      "description": "하시(다리) 퍼즐 배우기: 규칙, 모서리·가장자리 패턴, 8과 6 섬, 강제 페어, 연결성, 풀이된 7×7 예제, 스피드 PK 팁.",
+      "keywords": "하시 퍼즐, 다리 퍼즐 전략, 하시 퍼즐 풀이 팁, 다리 연결 논리 퍼즐, 하시 퍼즐 하는 법",
+      "readTime": "10분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia do puzzle Hashi (Pontes): do iniciante ao especialista",
+      "description": "Aprenda Hashi (Pontes): regras, padrões de cantos e bordas, ilhas 8 e 6, pares forçados, conectividade, um exemplo resolvido de 7×7 e dicas de Speed PK.",
+      "keywords": "puzzle hashi, estratégia de puzzle de pontes, dicas para resolver hashi, puzzle lógico de pontes, como jogar hashi",
+      "readTime": "10 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie du puzzle Hashi (Ponts) : du débutant à l'expert",
+      "description": "Apprenez le Hashi (Ponts) : règles, motifs de coins et de bords, îles 8 et 6, paires forcées, connectivité, un exemple résolu de 7×7 et des conseils pour le Speed PK.",
+      "keywords": "puzzle hashi, stratégie puzzle de ponts, astuces pour résoudre le hashi, puzzle logique de ponts, comment jouer au hashi",
+      "readTime": "10 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Hashi-Strategie (Brücken-Rätsel): vom Anfänger zum Experten",
+      "description": "Lerne Hashi (Brücken): Regeln, Ecken- und Randmuster, 8er- und 6er-Inseln, Zwangspaare, Konnektivität, ein gelöstes 7×7-Beispiel und Speed-PK-Tipps.",
+      "keywords": "Hashi-Rätsel, Brückenrätsel Strategie, Hashi-Lösungstipps, Brücken-Logikrätsel, wie spielt man Hashi",
+      "readTime": "10 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  },
+  {
+    "id": "hexa-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Hexa Puzzle Strategy: 12 Tips to Clear Lines and Score Higher",
+      "description": "Master Hexa Puzzle with 12 tips: keep the board flat, avoid isolated holes, plan 2-3 moves ahead, clear multiple lines, and win PK battles on Puzzle PK.",
+      "keywords": "hexa puzzle strategy, hexa block puzzle tips, hexa puzzle high score, block puzzle strategy, hex grid puzzle",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Hexa Puzzle",
+        "Strategy",
+        "Block Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "六角拼图高分攻略：12 个消除与得分技巧",
+      "description": "掌握六角拼图的 12 个实用技巧：保持棋盘平整、避开孤立空格、提前两三步规划、一次消除多行，还能在 Puzzle PK 的 PK 对战模式中赢下比赛。",
+      "keywords": "六角拼图, 六边形拼图技巧, 方块拼图攻略, 益智游戏, 高分技巧",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "六角拼图",
+        "策略",
+        "方块拼图"
+      ]
+    },
+    "es": {
+      "title": "Estrategia de Hexa Puzzle: 12 consejos para eliminar líneas y conseguir más puntos",
+      "description": "Domina Hexa Puzzle con 12 consejos: mantén el tablero plano, evita los huecos aislados, planifica 2-3 movimientos por adelantado, elimina varias líneas a la vez y gana las batallas PK en Puzzle PK.",
+      "keywords": "estrategia hexa puzzle, consejos hexa puzzle bloques, hexa puzzle puntuación alta, estrategia puzzle de bloques, puzzle de cuadrícula hexagonal",
+      "readTime": "9 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ヘキサパズル攻略：ラインを消して高得点を狙う12のコツ",
+      "description": "12のコツでヘキサパズルをマスター：盤面を平らに保ち、孤立した穴を避け、2〜3手先を読んで、複数ラインを同時に消し、Puzzle PKでPKバトルに勝利しよう。",
+      "keywords": "ヘキサパズル 攻略, ヘキサブロックパズル コツ, ヘキサパズル ハイスコア, ブロックパズル 攻略, 六角グリッドパズル",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "헥사 퍼즐 공략: 라인을 지우고 더 높은 점수를 얻는 12가지 팁",
+      "description": "12가지 팁으로 헥사 퍼즐을 마스터하세요: 보드를 평평하게 유지하고, 고립된 구멍을 피하고, 2~3수 앞을 계획하고, 여러 줄을 한 번에 지우고, Puzzle PK에서 PK 배틀에서 승리하세요.",
+      "keywords": "헥사 퍼즐 공략, 헥사 블록 퍼즐 팁, 헥사 퍼즐 고득점, 블록 퍼즐 공략, 육각 그리드 퍼즐",
+      "readTime": "9분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia de Hexa Puzzle: 12 dicas para eliminar linhas e pontuar mais",
+      "description": "Domine o Hexa Puzzle com 12 dicas: mantenha o tabuleiro plano, evite buracos isolados, planeje 2-3 jogadas à frente, elimine várias linhas e vença as batalhas PK no Puzzle PK.",
+      "keywords": "estratégia hexa puzzle, dicas de hexa block puzzle, hexa puzzle pontuação alta, estratégia de puzzle de blocos, puzzle de grade hexagonal",
+      "readTime": "9 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie Hexa Puzzle : 12 conseils pour effacer des lignes et marquer plus de points",
+      "description": "Maîtrisez Hexa Puzzle grâce à 12 conseils : gardez le plateau plat, évitez les trous isolés, anticipez de 2 à 3 coups, effacez plusieurs lignes à la fois et gagnez les batailles PK sur Puzzle PK.",
+      "keywords": "stratégie hexa puzzle, conseils hexa block puzzle, hexa puzzle score élevé, stratégie puzzle de blocs, puzzle grille hexagonale",
+      "readTime": "9 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Hexa-Puzzle-Strategie: 12 Tipps zum Auflösen von Linien für höhere Punktzahlen",
+      "description": "Meistere Hexa Puzzle mit 12 Tipps: halte das Spielfeld eben, vermeide isolierte Löcher, plane 2-3 Züge im Voraus, löse mehrere Linien auf und gewinne PK-Kämpfe auf Puzzle PK.",
+      "keywords": "Hexa-Puzzle-Strategie, Hexa-Block-Puzzle Tipps, Hexa-Puzzle Highscore, Block-Puzzle-Strategie, Hexagon-Grid-Puzzle",
+      "readTime": "9 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  },
+  {
+    "id": "lights-out-puzzle-guide",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Lights Out Puzzle: The Complete Solver Guide & Strategy",
+      "description": "Master the Lights Out chase method: tap rules, corner and edge toggles, parity, and bottom-row correction. Solve any 4x4–8x8 board, then race in Speed PK.",
+      "keywords": "lights out puzzle, lights out solver, lights out strategy, how to solve lights out, toggle puzzle",
+      "readTime": "10 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Lights Out",
+        "Strategy",
+        "Logic Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "关灯游戏全攻略：从追光法到竞速对决的完整解法指南",
+      "description": "掌握追光法：点灯规则、边角翻转、奇偶性与末行修正技巧，轻松解出 4×4 到 8×8 的任意棋盘，再在竞速对决中一较高下。",
+      "keywords": "关灯游戏, 关灯攻略, 关灯技巧, 灭灯游戏解法, 逻辑谜题",
+      "readTime": "10 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "关灯游戏",
+        "策略",
+        "逻辑谜题"
+      ]
+    },
+    "es": {
+      "title": "Lights Out Puzzle: la guía completa de soluciones y estrategia",
+      "description": "Domina el método de persecución de Lights Out: reglas de pulsación, alternancia en esquinas y bordes, paridad y corrección de la fila inferior. Resuelve cualquier tablero de 4×4 a 8×8 y compite en Speed PK.",
+      "keywords": "lights out puzzle, solucionador lights out, estrategia lights out, cómo resolver lights out, puzzle de alternancia",
+      "readTime": "10 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ライツアウト完全攻略ガイド：解法と戦略",
+      "description": "チェイス法（追光法）を極めよう：タップのルール、隅と端の反転、パリティ、最下段の修正まで。4×4〜8×8 のどんな盤面も解いて、Speed PK で競おう。",
+      "keywords": "ライツアウト パズル, ライツアウト 攻略, ライツアウト 解き方, ライツアウト 解法, トグルパズル",
+      "readTime": "10 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "라이트 아웃 퍼즐: 완벽한 해법 가이드와 전략",
+      "description": "라이트 아웃 체이스(chase) 기법 마스터하기: 탭 규칙, 모서리와 가장자리 토글, 패리티, 마지막 줄 보정까지. 4×4~8×8 보드를 모두 풀고 Speed PK에서 경쟁하세요.",
+      "keywords": "라이트 아웃 퍼즐, 라이트 아웃 해법, 라이트 아웃 전략, 라이트 아웃 푸는 법, 토글 퍼즐",
+      "readTime": "10분 소요",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Lights Out Puzzle: guia completo de soluções e estratégia",
+      "description": "Domine o método da perseguição do Lights Out: regras de toque, alternância nos cantos e bordas, paridade e correção da última linha. Resolva qualquer tabuleiro de 4×4 a 8×8 e corra no Speed PK.",
+      "keywords": "lights out puzzle, solucionador de lights out, estratégia lights out, como resolver lights out, puzzle de alternância",
+      "readTime": "10 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Lights Out Puzzle : le guide complet de solutions et de stratégie",
+      "description": "Maîtrisez la méthode de la chasse de Lights Out : règles de tap, bascules dans les coins et sur les bords, parité et correction de la rangée du bas. Résolvez n'importe quelle grille de 4×4 à 8×8, puis affrontez-vous en Speed PK.",
+      "keywords": "lights out puzzle, solveur lights out, stratégie lights out, comment résoudre lights out, puzzle à bascule",
+      "readTime": "10 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Lights Out Puzzle: Der komplette Lösungs- und Strategie-Guide",
+      "description": "Meistere die Chase-Methode von Lights Out: Tipp-Regeln, Umschalten an Ecken und Kanten, Parität und die Korrektur der untersten Reihe. Löse jedes Brett von 4×4 bis 8×8 und tritt dann im Speed PK an.",
+      "keywords": "lights out puzzle, lights out lösung, lights out strategie, wie löst man lights out, toggle puzzle",
+      "readTime": "10 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  },
+  {
+    "id": "sliding-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Sliding Puzzle Strategy: How to Solve Any 4x4, 5x5 or 6x6 Board",
+      "description": "Master the sliding puzzle: row-by-row method, corner and two-row techniques, parity check, and Speed PK tips. Solve any 4x4, 5x5, or 6x6 board every time.",
+      "keywords": "sliding puzzle strategy, solve sliding puzzle, 15 puzzle solution, sliding tile puzzle tips, 4x4 sliding puzzle",
+      "readTime": "10 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Sliding Puzzle",
+        "Strategy",
+        "Logic Puzzle"
+      ]
+    },
+    "zh": {
+      "title": "数字华容道攻略：如何破解任意 4x4、5x5 或 6x6 棋盘",
+      "description": "掌握逐行解法、角块技巧与双行技巧，学会奇偶性检查与空格路线规划，从此任何 4x4、5x5、6x6 数字华容道棋盘都能一次解开，还能在 Speed PK 对战里领先对手！",
+      "keywords": "数字华容道, 华容道技巧, 拼图攻略, 滑动拼图, 益智游戏",
+      "readTime": "10 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "数字华容道",
+        "策略",
+        "逻辑谜题"
+      ]
+    },
+    "es": {
+      "title": "Estrategia del Rompecabezas Deslizante: Cómo Resolver Cualquier Tablero de 4x4, 5x5 o 6x6",
+      "description": "Domina el rompecabezas deslizante: el método fila por fila, las técnicas de esquina y de dos filas, la verificación de paridad y consejos para Speed PK. Resuelve cualquier tablero de 4x4, 5x5 o 6x6, siempre.",
+      "keywords": "estrategia rompecabezas deslizante, cómo resolver rompecabezas deslizante, solución puzzle 15, trucos rompecabezas deslizante, rompecabezas deslizante 4x4",
+      "readTime": "10 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "スライドパズルの攻略法：4x4、5x5、6x6の盤面をすべて解く方法",
+      "description": "スライドパズルをマスターしよう。行ごとの解法、角と2行のテクニック、パリティチェック、Speed PKのコツ。4x4、5x5、6x6の盤面なら、どんなときも確実に解けます。",
+      "keywords": "スライドパズル 攻略, スライドパズル 解き方, 15パズル 解法, スライドパズル コツ, 4x4 スライドパズル",
+      "readTime": "10分で読める",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "슬라이딩 퍼즐 공략법: 4x4, 5x5, 6x6 보드를 모두 푸는 방법",
+      "description": "슬라이딩 퍼즐을 마스터하세요: 행 단위 해법, 코너·두 줄 테크닉, 패리티 확인, Speed PK 팁까지. 4x4, 5x5, 6x6 보드를 언제나 확실하게 풀 수 있습니다.",
+      "keywords": "슬라이딩 퍼즐 공략, 슬라이딩 퍼즐 푸는 법, 15 퍼즐 풀이, 슬라이딩 타일 퍼즐 팁, 4x4 슬라이딩 퍼즐",
+      "readTime": "10분 읽기",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia do Quebra-Cabeça Deslizante: Como Resolver Qualquer Tabuleiro 4x4, 5x5 ou 6x6",
+      "description": "Domine o quebra-cabeça deslizante: o método linha por linha, as técnicas de canto e de duas linhas, a verificação de paridade e dicas de Speed PK. Resolva qualquer tabuleiro 4x4, 5x5 ou 6x6, sempre.",
+      "keywords": "estratégia quebra-cabeça deslizante, como resolver quebra-cabeça deslizante, solução 15 puzzle, dicas quebra-cabeça deslizante, quebra-cabeça deslizante 4x4",
+      "readTime": "10 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie du Puzzle à Glissière : Comment Résoudre N'importe Quel Plateau 4x4, 5x5 ou 6x6",
+      "description": "Maîtrisez le puzzle à glissière : la méthode rangée par rangée, les techniques du coin et des deux rangées, la vérification de parité et des conseils Speed PK. Résolvez n'importe quel plateau 4x4, 5x5 ou 6x6, à chaque fois.",
+      "keywords": "stratégie puzzle à glissière, résoudre puzzle à glissière, solution 15 puzzle, astuces puzzle à glissière, puzzle à glissière 4x4",
+      "readTime": "10 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Schiebepuzzle-Strategie: So löst du jedes 4x4-, 5x5- oder 6x6-Brett",
+      "description": "Meistere das Schiebepuzzle: die Reihen-für-Reihe-Methode, Eck- und Zwei-Reihen-Techniken, die Paritätsprüfung und Tipps für Speed PK. Löse jedes 4x4-, 5x5- oder 6x6-Brett – jedes Mal.",
+      "keywords": "Schiebepuzzle Strategie, Schiebepuzzle lösen, 15-Puzzle Lösung, Schiebepuzzle Tipps, 4x4 Schiebepuzzle",
+      "readTime": "10 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  }
+]

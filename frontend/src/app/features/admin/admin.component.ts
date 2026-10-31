@@ -12,7 +12,7 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
   imports: [CommonModule, FormsModule, CoinIconComponent],
   providers: [DatePipe],
   template: `
-    <div class="w-full max-w-7xl mx-auto flex flex-col gap-6 transition-colors duration-300">
+    <div class="w-full flex flex-col gap-6 transition-colors duration-300">
       
       <!-- Top Title and Asset Statistics Summary -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -1,5 +1,5 @@
 import { Component, inject, signal, ViewChild, ElementRef, computed } from '@angular/core';
-import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -23,7 +23,7 @@ import { DeviceService } from '../services/device.service';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
@@ -40,17 +40,25 @@ import { DeviceService } from '../services/device.service';
                 Puzzle PK
               </span>
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" 
+               routerLinkActive="bg-[var(--color-bg-main)] text-[var(--color-accent-from)] font-black border border-[var(--color-border-card)] shadow-xs"
+               class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               🏆 {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'daily']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']" 
+               routerLinkActive="bg-[var(--color-bg-main)] text-[var(--color-accent-from)] font-black border border-[var(--color-border-card)] shadow-xs"
+               class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📅 {{ i18n.t('daily.title')() || 'Daily' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'docs']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
-              📖 {{ i18n.t('nav.docs')() || 'Docs' }}
-            </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'blog']" class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+            <a [routerLink]="['/', i18n.currentLang(), 'blog']" 
+               routerLinkActive="bg-[var(--color-bg-main)] text-[var(--color-accent-from)] font-black border border-[var(--color-border-card)] shadow-xs"
+               class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
               📝 {{ i18n.t('nav.blog')() || 'Blog' }}
+            </a>
+            <a [routerLink]="['/', i18n.currentLang(), 'docs']" 
+               routerLinkActive="bg-[var(--color-bg-main)] text-[var(--color-accent-from)] font-black border border-[var(--color-border-card)] shadow-xs"
+               class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+              📖 {{ i18n.t('nav.docs')() || 'Docs' }}
             </a>
           </div>
 
@@ -254,17 +262,25 @@ import { DeviceService } from '../services/device.service';
                 }
               </button>
             }
-            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+            <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" 
+               routerLinkActive="bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black border border-[var(--color-accent-from)]/30"
+               (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-xl">🏆</span> {{ i18n.t('leaderboard.title')() || 'Leaderboard' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'daily']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']" 
+               routerLinkActive="bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black border border-[var(--color-accent-from)]/30"
+               (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-xl">📅</span> {{ i18n.t('daily.title')() || 'Daily' }}
             </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'docs']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
-              <span class="text-xl">📖</span> {{ i18n.t('nav.docs')() || 'Docs' }}
-            </a>
-            <a [routerLink]="['/', i18n.currentLang(), 'blog']" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+            <a [routerLink]="['/', i18n.currentLang(), 'blog']" 
+               routerLinkActive="bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black border border-[var(--color-accent-from)]/30"
+               (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
               <span class="text-xl">📝</span> {{ i18n.t('nav.blog')() || 'Blog' }}
+            </a>
+            <a [routerLink]="['/', i18n.currentLang(), 'docs']" 
+               routerLinkActive="bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black border border-[var(--color-accent-from)]/30"
+               (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
+              <span class="text-xl">📖</span> {{ i18n.t('nav.docs')() || 'Docs' }}
             </a>
 
             <!-- Mobile Quick Settings: Theme & Language (sm-) -->

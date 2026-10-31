@@ -471,4 +471,22 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     recommendations: ['minesweeper', 'classic2048'],
     finishFlow: { winAction: 'auto_next', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 }
   },
+  {
+    id: GameId.Tents,
+    route: '/games/tents',
+    titleKey: 'lobby.tents',
+    iconEmoji: '⛺',
+    loadComponent: () => import('../../features/games/tents/tents.component').then(m => m.TentsComponent),
+    modes: [
+      { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
+      { id: GameMode.Speed, labelKey: 'game.speed_label', descKey: 'game.speed_desc', icon: '⚡', desc: 'Speed PK' }
+    ],
+    multiRound: true,
+    difficulties: [
+      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_easy', desc: 'Easy' },
+      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_medium', desc: 'Medium' },
+      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: 'Hard' }
+    ],
+    recommendations: ['minesweeper', 'classic2048']
+  },
 ];

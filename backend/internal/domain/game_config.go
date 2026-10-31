@@ -17,7 +17,8 @@ type GameConfig struct {
 // Fields here are managed via Admin UI and served by GET /api/v1/games/meta.
 // Engine-specific params (e.g. penaltySeconds) live alongside these fields.
 type GameMetaConfig struct {
-	Priority     int                   `json:"priority,omitempty"` // 推荐/置顶权重 (0..99，越大越靠前)
+	Priority     int                   `json:"priority,omitempty"`  // 推荐/置顶权重 (0..99，越大越靠前)
+	BadgeType    string                `json:"badgeType,omitempty"` // 角标标识: "" | "none" | "pinned" | "new" | "hot"
 	Icon         string                `json:"icon,omitempty"`
 	MultiRound   bool                  `json:"multiRound,omitempty"`
 	Modes        []GameModeInfo        `json:"modes,omitempty"`

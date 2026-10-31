@@ -31,7 +31,7 @@ interface ActiveRoom {
   imports: [CommonModule],
   providers: [DatePipe],
   template: `
-    <div class="w-full max-w-6xl mx-auto flex flex-col transition-colors duration-300 space-y-8">
+    <div class="w-full flex flex-col gap-6 transition-colors duration-300">
       
       <!-- Header -->
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

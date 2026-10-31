@@ -65,6 +65,7 @@ func main() {
 	v1.Post("/register", rest.Register)
 	v1.Post("/login", rest.Login)
 	v1.Post("/guest-login", rest.GuestLogin)
+	v1.Put("/auth/password", middleware.Protected(), rest.ChangePassword)
 
 	// Public config and active settings
 	v1.Get("/settings", rest.GetPublicSettings)
@@ -176,6 +177,7 @@ func main() {
 	admin.Use(middleware.AdminProtected())
 	admin.Get("/users", rest.GetUsers)
 	admin.Put("/users/:id/status", rest.ToggleUserStatus)
+	admin.Put("/users/:id/password", rest.AdminResetPassword)
 	admin.Get("/games", rest.GetAdminGames)
 	admin.Put("/games/:id", rest.UpdateGame)
 	admin.Get("/settings", rest.GetAdminSettings)

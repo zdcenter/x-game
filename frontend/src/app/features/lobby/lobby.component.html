@@ -406,11 +406,11 @@
                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"
                      style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))"></div>
 
-                <!-- Admin Recommended Pin Badge -->
-                @if (getGamePriority(game.id) > 0) {
-                  <div class="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md flex items-center gap-1 animate-pulse pointer-events-none">
-                    <span>⭐</span>
-                    <span>{{ i18n.t('lobby.pinned_badge')() || '置顶' }}</span>
+                <!-- Admin Dynamic Card Badge (NEW / HOT / PINNED) -->
+                @if (getGameBadge(game.id); as badge) {
+                  <div class="absolute top-2 left-2 z-10 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r {{ badge.gradientClass }} shadow-md flex items-center gap-1 animate-pulse pointer-events-none backdrop-blur-sm">
+                    <span class="text-[11px] leading-none">{{ badge.icon }}</span>
+                    <span class="tracking-wide uppercase leading-none">{{ badge.label }}</span>
                   </div>
                 }
                 
@@ -610,5 +610,8 @@
       </div>
     </div>
   }
+
+  <!-- Site Recommendation & Viral Pitch Modal Floating Button & Dialog -->
+  <app-site-recommend-modal />
 
 </div>

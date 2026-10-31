@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, ViewChild, OnInit, OnCh
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
-import { GameMode, GameStatus, GameResultType } from '../../../core/models/game.model';
+import { GameMode, GameStatus, GameResultType, GameDifficulty } from '../../../core/models/game.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
 import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
@@ -245,7 +245,7 @@ import { AdService } from '../../../core/services/ad.service';
               @if (effectiveDifficulty()) {
                 <div class="flex items-center justify-between text-[var(--color-text-muted)]">
                   <span>{{ i18n.t('game.difficulty')() || '当前难度' }}</span>
-                  <span class="font-bold text-amber-500 capitalize">
+                  <span class="font-bold text-amber-500">
                     {{ getDifficultyLabel(effectiveDifficulty()) }}
                   </span>
                 </div>
@@ -1244,12 +1244,57 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     if (diff === 'custom') {
       return this.i18n.t('game.custom')() || '自定义';
     }
-    const found = this.availableDifficulties.find(d => d.id === diff);
+
+    // 1. 清理可能带有的前缀并规范化
+    let clean = diff.trim();
+    if (clean.startsWith('game.diff_')) clean = clean.replace('game.diff_', '');
+    const cleanLower = clean.toLowerCase();
+
+    // 2. 映射常用别名
+    let normalized = clean;
+    if (cleanLower === 'normal' || cleanLower === 'intermediate' || cleanLower === 'standard') {
+      normalized = GameDifficulty.Medium;
+    } else if (cleanLower === 'beginner' || cleanLower === 'casual') {
+      normalized = GameDifficulty.Easy;
+    } else if (cleanLower === 'advanced') {
+      normalized = GameDifficulty.Hard;
+    }
+
+    // 3. 在当前游戏的可用难度中寻找（兼容原始与规范化后的 id）
+    const found = this.availableDifficulties.find(d => 
+      d.id === diff || d.id === clean || d.id === normalized || d.id.toLowerCase() === cleanLower
+    );
     if (found?.labelKey) {
       const translated = this.i18n.t(found.labelKey)();
-      if (translated) return translated;
+      if (translated && translated !== found.labelKey) return translated;
     }
-    return this.i18n.t(`game.diff_${diff}`)() || diff;
+
+    // 4. 通用字典 key 尝试
+    const translatedNormal = this.i18n.t(`game.diff_${normalized}`)();
+    if (translatedNormal && translatedNormal !== `game.diff_${normalized}`) return translatedNormal;
+
+    const translatedClean = this.i18n.t(`game.diff_${clean}`)();
+    if (translatedClean && translatedClean !== `game.diff_${clean}`) return translatedClean;
+
+    // 5. 兜底常见难度中文/英文
+    switch (cleanLower) {
+      case 'easy':
+      case 'beginner':
+        return this.i18n.t('game.diff_easy')() || '简单';
+      case 'medium':
+      case 'normal':
+      case 'intermediate':
+        return this.i18n.t('game.diff_medium')() || '中等';
+      case 'hard':
+      case 'advanced':
+        return this.i18n.t('game.diff_hard')() || '困难';
+      case 'expert':
+        return this.i18n.t('game.diff_expert')() || '专家';
+      case 'master':
+        return this.i18n.t('game.diff_master')() || '大师';
+      default:
+        return diff;
+    }
   }
 
   getDifficultyEmoji(diffId?: string): string {
@@ -1349,8 +1394,10 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     classic2048: 'classic2048-strategy',
     hashi: 'hashi-bridges-strategy',
     drop2048: 'classic2048-strategy',
-    connect: 'gomoku-strategy-guide',
-    idiom: 'benefits-of-multiplayer-educational-games',
+    connect: 'connect-colors-strategy',
+    idiom: 'idiom-battle-strategy',
+    tilematch: 'tilematch-strategy',
+    tents: 'tents-puzzle-guide',
   };
 
   get relatedGuideSlug(): string | null {

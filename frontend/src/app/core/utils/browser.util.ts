@@ -100,6 +100,32 @@ export const setSavedDifficulty = (gameId: string, diff: string): void => {
   } catch {}
 };
 
+/**
+ * Safely retrieve the player's last selected level for a game.
+ */
+export const getSavedLevel = (gameId: string, defaultLevel: number = 0): number => {
+  if (!isBrowser()) return defaultLevel;
+  try {
+    const val = localStorage.getItem(`${gameId}_single_level`);
+    if (val !== null && !isNaN(Number(val))) {
+      return Number(val);
+    }
+    return defaultLevel;
+  } catch {
+    return defaultLevel;
+  }
+};
+
+/**
+ * Safely persist the player's selected level for a game.
+ */
+export const setSavedLevel = (gameId: string, level: number): void => {
+  if (!isBrowser() || !gameId) return;
+  try {
+    localStorage.setItem(`${gameId}_single_level`, String(level));
+  } catch {}
+};
+
 export const getNavigatorLanguage = (): string | null =>
   isBrowser() ? navigator.language : null;
 

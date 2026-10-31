@@ -49,6 +49,8 @@ export interface GameConfig {
   coverImage?: string;
   /** Admin recommendation / pin priority (higher values appear first in lobby) */
   priority?: number;
+  /** Visual badge status in lobby card: 'none' | 'pinned' | 'new' | 'hot' */
+  badgeType?: 'none' | 'pinned' | 'new' | 'hot';
   /** Post-game finish flow orchestration (modal vs auto_next, in-board overlay, ad frequency) */
   finishFlow?: GameFinishFlowConfig;
 }
@@ -81,6 +83,7 @@ export class GameRegistryService {
         if (meta.difficulties?.length)  entry.difficulties = meta.difficulties;
         if (meta.multiRound != null)    entry.multiRound = meta.multiRound;
         if (meta.priority != null)      entry.priority = Number(meta.priority);
+        if (meta.badgeType !== undefined) entry.badgeType = meta.badgeType;
         if (meta.finishFlow) {
           entry.finishFlow = { ...entry.finishFlow, ...meta.finishFlow };
         }

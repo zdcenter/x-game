@@ -81,89 +81,63 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
 
           <!-- Divider -->
           <div class="border-t border-[var(--color-border-card)] my-2 opacity-40"></div>
-          <p class="px-4 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] opacity-50 mb-1">Content</p>
+          <p class="px-4 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] opacity-50 mb-1">System & Assets</p>
 
           <a routerLink="/admin/images" routerLinkActive="bg-violet-500/20 text-violet-400 border-violet-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>🖼</span>
+            <span>🖼️</span>
             <span>图片管理</span>
           </a>
-          <a routerLink="/admin/blog" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>📝</span>
-            <span>Blog</span>
-          </a>
-          <a routerLink="/admin/idioms" routerLinkActive="bg-teal-500/20 text-teal-400 border-teal-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>📖</span>
-            <span>成语词库</span>
-          </a>
-          <a routerLink="/admin/articles" routerLinkActive="bg-cyan-500/20 text-cyan-400 border-cyan-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>📣</span>
-            <span>{{ i18n.t('admin.menu.articles')() }}</span>
-          </a>
-          <a routerLink="/admin/distribute" routerLinkActive="bg-purple-500/20 text-purple-400 border-purple-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>📡</span>
-            <span>内容分发</span>
-          </a>
-
-          <!-- Divider -->
-          <div class="border-t border-[var(--color-border-card)] my-2 opacity-40"></div>
-          <p class="px-4 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] opacity-50 mb-1">System</p>
-
           <a routerLink="/admin/database" routerLinkActive="bg-cyan-500/20 text-cyan-400 border-cyan-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🗄️</span>
             <span>数据库管理</span>
           </a>
         </nav>
 
-        <!-- Current User Info -->
-        <div class="p-4 border-t border-[var(--color-border-card)]">
-          <div class="flex items-center space-x-3 mb-4 px-2">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold">
-              {{ authStore.currentUser()?.username?.charAt(0)?.toUpperCase() }}
-            </div>
-            <div>
-              <div class="text-sm font-bold text-inherit">{{ authStore.currentUser()?.username }}</div>
-              <div class="text-xs text-purple-400 uppercase tracking-widest">{{ authStore.currentUser()?.role }}</div>
-            </div>
-          </div>
-          <button (click)="logout()" class="w-full py-2 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400 text-inherit opacity-80 hover:opacity-100 rounded-lg text-sm font-bold transition-colors">
-            {{ i18n.t('auth.logout')() }}
-          </button>
+        <!-- Sidebar Bottom Footer: Clean Brand / Return Lobby -->
+        <div class="p-3.5 border-t border-[var(--color-border-card)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+          <a routerLink="/lobby" class="hover:text-[var(--color-text-main)] transition-colors flex items-center gap-1.5 font-bold">
+            <span>🎮</span>
+            <span>{{ i18n.t('admin.back_to_lobby')() || '返回大厅' }}</span>
+          </a>
+          <span class="font-mono text-[11px] opacity-50">v3.2</span>
         </div>
       </aside>
 
       <!-- Main Content Area -->
       <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top Header -->
-        <header class="h-16 bg-[var(--color-bg-card)] backdrop-blur-md border-b border-[var(--color-border-card)] flex items-center justify-between px-8">
-          <div class="text-sm font-medium opacity-70">
-            Puzzle PK Platform / <span class="font-bold">{{ i18n.t('admin.header.breadcrumb')() }}</span>
+        <header class="h-16 bg-[var(--color-bg-card)] backdrop-blur-md border-b border-[var(--color-border-card)] flex items-center justify-between px-6 sm:px-8 flex-shrink-0">
+          <div class="text-sm font-medium opacity-70 flex items-center gap-2">
+            <span>Puzzle PK Platform</span>
+            <span class="opacity-40">/</span>
+            <span class="font-bold text-[var(--color-text-main)]">{{ i18n.t('admin.header.breadcrumb')() }}</span>
           </div>
           
-          <div class="flex items-center space-x-2 sm:space-x-4">
+          <div class="flex items-center gap-2 sm:gap-3">
             <!-- Theme Toggle -->
             <button (click)="theme.cycleTheme()" 
-                    class="p-1.5 sm:p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
+                    class="p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] rounded-xl transition-colors border border-[var(--color-border-card)]/50 hover:border-[var(--color-border-card)]"
                     title="Toggle Theme">
               @if (theme.currentTheme() === 'dark') {
-                <span class="text-xl leading-none block">☀️</span>
+                <span class="text-lg leading-none block">☀️</span>
               } @else {
-                <span class="text-xl leading-none block">🌙</span>
+                <span class="text-lg leading-none block">🌙</span>
               }
             </button>
 
             <!-- Language Dropdown -->
             <div class="relative">
               <button (click)="isLangMenuOpen.set(!isLangMenuOpen())"
-                      class="p-1.5 sm:p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] rounded-lg transition-colors border border-transparent hover:border-[var(--color-border-card)]"
+                      class="p-2 text-slate-400 hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] rounded-xl transition-colors border border-[var(--color-border-card)]/50 hover:border-[var(--color-border-card)]"
                       title="Select Language">
-                <span class="text-xl leading-none block">{{ currentLangFlag() }}</span>
+                <span class="text-lg leading-none block">{{ currentLangFlag() }}</span>
               </button>
               
               @if (isLangMenuOpen()) {
                 <!-- Invisible backdrop -->
                 <div class="fixed inset-0 z-[90]" (click)="isLangMenuOpen.set(false)"></div>
                 
-                <div class="absolute right-0 mt-2 w-40 rounded-xl shadow-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] py-2 z-[100] animate-fade-in-down" (click)="isLangMenuOpen.set(false)">
+                <div class="absolute right-0 mt-2 w-40 rounded-xl shadow-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] py-2 z-[100] animate-fade-in-down" (click)="isLangMenuOpen.set(false)">
                   @for (lang of supportedLangs; track lang.code) {
                     <button (click)="i18n.setLang(lang.code)" 
                             class="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-border-card)] text-[var(--color-text-main)] flex items-center gap-3 transition-colors"
@@ -174,6 +148,31 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
                   }
                 </div>
               }
+            </div>
+
+            <!-- Divider -->
+            <div class="h-6 w-px bg-[var(--color-border-card)] opacity-60 mx-1"></div>
+
+            <!-- Current User Badge & Logout in Top Right -->
+            <div class="flex items-center gap-2.5 bg-[var(--color-bg-main)]/60 border border-[var(--color-border-card)] pl-1.5 pr-2.5 py-1 rounded-xl">
+              <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-sm shrink-0">
+                {{ authStore.currentUser()?.username?.charAt(0)?.toUpperCase() || 'A' }}
+              </div>
+              <div class="flex flex-col text-left leading-tight">
+                <span class="text-xs font-bold text-[var(--color-text-main)] truncate max-w-[100px] sm:max-w-[130px]">
+                  {{ authStore.currentUser()?.username || 'Admin' }}
+                </span>
+                <span class="text-[9px] font-mono font-extrabold text-purple-400 uppercase tracking-widest">
+                  {{ authStore.currentUser()?.role || 'ADMIN' }}
+                </span>
+              </div>
+              <button (click)="logout()" 
+                      [title]="i18n.t('auth.logout')()" 
+                      class="ml-1 p-1.5 text-xs text-[var(--color-text-muted)] hover:text-red-400 hover:bg-red-500/15 rounded-lg border border-transparent hover:border-red-500/30 transition-all flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
             </div>
           </div>
         </header>

@@ -24,7 +24,7 @@ type AdminDbTab = 'backup' | 'restore' | 'history';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-<div class="p-6 max-w-5xl mx-auto flex flex-col gap-6">
+<div class="w-full flex flex-col gap-6">
 
   <!-- Header -->
   <div class="flex items-center gap-3">

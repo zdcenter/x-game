@@ -28,4 +28,11 @@ export class AuthService {
   guestLogin(): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/guest-login`, {});
   }
+
+  changePassword(oldPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${this.baseUrl}/auth/password`, {
+      old_password: oldPassword,
+      new_password: newPassword
+    });
+  }
 }
