@@ -7,23 +7,31 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
   imports: [CommonModule],
   template: `
     @if (isValidSlot) {
-      <!-- Google AdSense Unit -->
-      <ins class="adsbygoogle"
-           style="display:block"
-           [attr.data-ad-client]="parsedClient"
-           [attr.data-ad-slot]="parsedSlot"
-           [attr.data-ad-format]="adFormat"
-           [attr.data-full-width-responsive]="fullWidthResponsive"></ins>
+      <div class="adsense-container w-full flex flex-col items-center justify-center my-3 sm:my-4 py-1">
+        @if (showLabel) {
+          <span class="text-[9px] sm:text-[10px] tracking-widest uppercase opacity-40 font-mono select-none mb-1 text-[var(--color-text-muted)]">
+            ADVERTISEMENT
+          </span>
+        }
+        <!-- Google AdSense Unit -->
+        <ins class="adsbygoogle w-full"
+             style="display:block"
+             [attr.data-ad-client]="parsedClient"
+             [attr.data-ad-slot]="parsedSlot"
+             [attr.data-ad-format]="adFormat"
+             [attr.data-full-width-responsive]="fullWidthResponsive"></ins>
+      </div>
     }
   `,
   styles: [`
     :host { 
       display: block; 
       text-align: center; 
+      width: 100%;
     }
-    :host:has(ins) {
-      margin: 10px 0;
+    .adsense-container {
       min-height: 50px;
+      box-sizing: border-box;
     }
   `]
 })
@@ -33,6 +41,7 @@ export class AdsenseComponent implements AfterViewInit {
   @Input() adSlot: string = ''; 
   @Input() adFormat: string = 'auto';
   @Input() fullWidthResponsive: boolean = true;
+  @Input() showLabel: boolean = true;
 
   get parsedClient(): string {
     if (this.adSlot && this.adSlot.includes('/')) {

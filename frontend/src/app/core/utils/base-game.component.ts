@@ -461,6 +461,18 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       }
     }
 
+    // M: Toggle audio mute
+    if ((event.key === 'm' || event.key === 'M') && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      this.audio.toggleMute();
+      const isMuted = this.audio.isMuted();
+      const toastMsg = isMuted
+        ? (this.i18n.t('game.muted_toast')() || '🔇 音效已静音 (按 M 取消)')
+        : (this.i18n.t('game.unmuted_toast')() || '🔊 音效已开启 (按 M 静音)');
+      this.toast.info(toastMsg);
+      event.preventDefault();
+      return;
+    }
+
     // R: Restart game
     if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.metaKey && !event.altKey) {
       if (this.store && this.store.currentRoomMode() === GameMode.Single) {

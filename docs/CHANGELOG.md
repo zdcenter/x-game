@@ -2,6 +2,69 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.140] - 2026-10-31
+
+### PK 对战等候大厅重构升级：去虚胖电竞双翼擂台、按钮防截断与全端自适应 (PK Waiting Room Arena Redesign: Compact Combat Pods & Uncut Actions)
+- **核心痛点解决 (用户语音与截图反馈：1. 头像卡片区域傻大傻空，占用大片空白；2. 开始游戏下方的 3 个按钮全被截断成省略号“返.../切.../换...”，不知道是什么东西；3. 要求针对 PC/移动全端重新设计，专业、好看、吸引人且一目了然)**：
+  1. **告别虚胖呆卡座，重塑紧凑电竞双翼擂台 (`Combat Pods`)**：
+     - **比例协调优化**：彻底废除原先动辄 `min-h-[220px]` 的傻大空白卡座与 90px 臃肿大头像，调整为适中精致的 `w-14 sm:w-16` 竞技头像，卡座采用紧凑自适应微拟物卡片；
+     - **蓝红对决仪式感**：房主蓝紫霓虹电竞光环 + 金色尊荣皇冠 `👑 房主`；挑战者橙粉烈焰环绕 + 实时就绪指示；中间金光圆核 `VS` 徽章跃动相连；
+     - **虚位待战席轻巧化**：未入席时呈现科技感半透明雷达脉冲小卡座与亲切标语，并列提供【👥 呼叫好友】与【🔗 邀请PK】快捷通道；
+     - **底部追加激励指南**：新增 `🏆 胜者荣获 +25 脑力金币与排位胜场 BO1`，全面提升开战期待感；
+  2. **战备管理控制栏彻底终结文字截断 (Uncut Command Console)**：
+     - **层级分明的两层网格重组**：彻底清退原先强行塞在单行导致全成省略号的 `grid-cols-3`；
+     - **双列充足空间**：上方第一行由【🎮 更换游戏】（琥珀金）与【⚙️ 房间设置】（冰川蓝）双列均分（每列宽度达 130px+），文字 100% 完完整整呈现，永不截断；
+     - **优雅防误触退房通道**：下方单列全宽配置【🚪 退出房间】，语义准确直观，有效防止手滑误触；
+     - **复制链接与扫码体验**：右上方【🔗 复制邀请链接】占据充裕全宽，点击即刻变【✓ 链接已复制！】，文字大方舒展；
+  3. **平板与 PC 宽屏断点升级 (`md:grid-cols-12`) 与 8 门语言全量对齐**：
+     - 断点由 `lg:` 下放至 `md:`，让 iPad、平板与中屏笔记本电脑均能畅享左右对称的双翼竞技台；手机端竖屏自适应平滑流动；
+     - 8 门语言字典全量补齐 `game.room_settings`、`game.leave_room`、`game.switch_pk_game_btn`、`game.duel_mode` 与 `game.duel_reward_tip`，零硬编码。
+
+## [v3.2.139] - 2026-10-31
+
+### 官方 X (@PuzzlePK_com) 全站品牌对齐、全语种关于我们升级、全局一键静音 (M) 与结算弹窗极速开局 (Space/Enter) (Official Brand Alignment, About Us Refresh & Keyboard Fluency Suite)
+- **核心优化落地 (全方位交互细节与玩家操作流畅度提升)**：
+  1. **全站官方 X (Twitter) 品牌标识升级为 `@PuzzlePK_com`**：
+     - **全语种关于我们 (About Us) 与联系页面同步直达**：在 8 门语言（中、英、德、西、法、日、韩、葡）字典中将官方展示账号及外链全量同步为 `[@PuzzlePK_com](https://x.com/PuzzlePK_com)`，并更新收录游戏规模至 20 款独立益智游戏；
+     - **全站 SEO 与社交元数据校准**：更新 `index.html` 中的 `twitter:site` 与 `twitter:creator` 为 `@PuzzlePK_com`，并在 `SeoService` 动态元标签中完成对齐，全面增强社交媒体分享与搜索引擎信任度；
+  2. **Cookie 合规弹窗多语言路由跳转修复 (`CookieConsentComponent`)**：
+     - 隐私政策链接改造为响应当前用户语言前缀的动态路由 `[routerLink]="['/', i18n.currentLang(), 'legal', 'privacy']"`，确保非中文语种用户点击“隐私政策”时维持对应语种环境，无意外语言跳出；
+  3. **全局一键静音快捷键 (`M` 键) 触达全游戏 (`BaseGameComponent`)**：
+     - 在 `BaseGameComponent` 的桌面键盘流畅处理中心增加 `M` / `m` 键监听；
+     - 触发后即刻调用 `AudioService.toggleMute()` 切换音效状态，并弹出轻量 Toast 友好提示（`🔇 音效已静音 (按 M 取消)` / `🔊 音效已开启 (按 M 静音)`）；
+     - 8 门语言全量提供多语言词条 `game.muted_toast` 与 `game.unmuted_toast`；自带输入框/文本域焦点防误触过滤；
+  4. **结算弹窗键盘极速开局 (`Space` / `Enter` 键) (`GameResultOverlayComponent`)**：
+     - 结算弹窗开启时，桌面端用户敲击 `Space`、`Enter` 或 `R` 键即可秒级触发“下一关”或“再来一局/重新挑战”，自动拦截默认页面滚动；
+     - 在“下一关”主按钮中新增优雅微型提示徽标 `[Space / ↵]`，极大提升连续闯关与极客键盘操作体验；
+  5. **管理后台路由优先级与玩家反馈中心升级**：
+     - 解决路由空路径抢占问题，管理员后台 `/zh/admin/realtime` 与 `/zh/admin/feedbacks` 顺畅访问；
+     - 补齐反馈中心【💼 商务合作 / 广告】专属高光徽章与类型筛选；
+     - 彻底补齐 8 国语言字典中的 `leaderboard.tab_plays` 与 `leaderboard.tab_wins` 缺失词条。
+
+## [v3.2.138] - 2026-10-31
+
+### 趣味益智 404 引导页上线、联系页面交互表单增强、移动端防误触与 AdSense 合规加固 (Interactive 404 Guide, Contact Form Upgrade & Mobile AdSense Safety Isolation)
+- **核心痛点解决 (用户语音指令反馈：404 引导页、联系页面交互反馈增强，以及从 404 到移动端操作防误触安全隔离与体验完善)**：
+  - **404 趣味益智引导页 (NotFoundComponent & 路由集成)**：
+    1. **告别软404盲跳**：彻底重构路由未匹配规则，将此前简单重定向回大厅升级为专门的 `NotFoundComponent`，兼顾 Googlebot 爬虫的 HTTP 状态识别与真实用户的防迷路引导；
+    2. **益智拼图特色美学设计**：中心配置生动的“拼图缺了一角”动态视觉图标与专属 404 状态徽章，支持深浅色主题自适应；
+    3. **双重行动呼吁与热门游戏试玩**：提供【返回游戏大厅】与【返回上一页】快捷操作，并内置“迷路了？不妨先来一把解密热身”卡片矩阵（经典扫雷、五子棋、数独、帐篷与树、推箱子、下落2048），点击秒级开局，将跳出率转化为高留存试玩；
+  - **“联系我们 (Contact Us)”页面交互式表单重磅增强 (LegalComponent)**：
+    1. **告别单一静态文本**：在保留原官方邮箱与 Twitter 渠道展示的同时，下半区新增内嵌式企业级在线留言与即时反馈表单；
+    2. **四大业务咨询分类支持**：支持选择【💼 商务合作 / 广告投放】、【💡 功能与体验建议】、【🐞 漏洞与异常反馈】与【💬 其它交流与咨询】；
+    3. **与运营后台打通并具备完整校验**：用户填写的称呼、联系方式与留言内容通过 `FeedbackService` 直接同步至后台数据库（管理员可在 `/admin/feedbacks` 集中查阅与跟进），提交过程具备 Loading 状态保护与成功的友好反馈；极大增强 Google AdSense 审核中的 E-E-A-T 真实运营主体信任度；
+  - **移动端触控体验与 AdSense 防误触安全隔离加固 (Mobile Safe Layout & Anti-Accidental Click)**：
+    1. **AdSense 规范化合规标签与安全隔离**：在 `AdsenseComponent` 顶部统一增加居中浅灰“ADVERTISEMENT”微型官方合规标识，容器上下保留充足的物理安全缓冲空间（`my-3 sm:my-4`），严防手指连击误触引发 AdSense 违规限制；
+    2. **移动端底部游戏操作栏触控热区升级**：在 `GameToolbarComponent` compact 模式中为按钮赋予 `min-h-[46px] sm:min-h-[50px]` 舒适触控高度，并注入 `touch-manipulation` 与 `select-none` 样式，彻底杜绝手机端双击导致的视口意外缩放与误触。
+  - **全站官方 X (Twitter) 账号升级为 `@PuzzlePK_com` 并打通外链**：
+    1. **全语种联系页面同步直达**：将中、英、德、西、法、日、韩、葡 8 门语言字典中的 Twitter 账号全量更新为 `[@PuzzlePK_com](https://x.com/PuzzlePK_com)`，支持点击新标签页直达官方主页；
+    2. **SEO 与 Twitter Card 权威元数据对齐**：在 `index.html` 与 `SeoService` 中补齐 `twitter:site` 与 `twitter:creator` 为 `@PuzzlePK_com`，提升 Google 爬虫与社交媒体抓取对站点真实主体的认定权重。
+  - **管理后台路由优先级修复与反馈中心商务合作标签补齐**：
+    1. **路由优先级修复**：将 `adminRoute` 提升至最高优先级的绝对第一顺位，彻底根除前台空路径通配符对 `/zh/admin/**` 路由的劫持与误报 404；
+    2. **玩家反馈与留言管理强化**：管理后台全面支持对【💼 商务合作 / 广告】及【✉️ 官方联系页留言】的专属高光徽章呈现与独立类型筛选；
+  - **补齐排行榜与档案缺失翻译词条**：为 8 门语言全面补齐 `leaderboard.tab_plays`（总局数）与 `leaderboard.tab_wins`（胜场数），彻底终结控制台 Missing translation 警告。
+  - **全语种多语言全覆盖**：所有新增的 404 引导与 Contact 留言表单文案 100% 抽离至 8 种语言的 i18n 字典，零硬编码。
+
 ## [v3.2.137] - 2026-10-31
 
 ### 游戏说明 (Docs) 剔除公式乱码与通俗化重构、补齐露营帐篷指南、导航激活态修复 (Docs Formulas Decoupled & Friendly Rewrite, Tents Added & Navbar Active State Fix)

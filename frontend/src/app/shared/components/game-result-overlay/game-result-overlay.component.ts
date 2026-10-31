@@ -210,9 +210,10 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (event.code === 'Space' || event.code === 'KeyR') {
+    if (this.isTemporarilyDismissed()) return;
+    if (event.code === 'Space' || event.code === 'Enter' || event.code === 'KeyR') {
       const activeEl = document.activeElement;
-      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || (activeEl as HTMLElement).isContentEditable)) return;
       event.preventDefault();
       if (this.isPkMatch) {
         this.handleRematch();

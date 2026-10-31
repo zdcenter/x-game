@@ -54,8 +54,8 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
             <span>{{ i18n.t('admin.menu.settings')() }}</span>
           </a>
           <a routerLink="/admin/feedbacks" routerLinkActive="bg-rose-500/20 text-rose-400 border-rose-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
-            <span>🐞</span>
-            <span>玩家反馈 & Bug</span>
+            <span>📬</span>
+            <span>玩家反馈与留言</span>
           </a>
 
           <!-- Divider -->

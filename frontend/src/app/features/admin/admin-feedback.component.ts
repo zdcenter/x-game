@@ -65,6 +65,7 @@ interface FeedbackItem {
           <select [(ngModel)]="filterType" (change)="applyFilters()"
                   class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] rounded-xl px-2.5 py-1.5 font-semibold focus:outline-none cursor-pointer">
             <option value="">全部类型</option>
+            <option value="business">💼 商务合作 / 广告</option>
             <option value="bug">🐛 Bug 报告</option>
             <option value="suggestion">💡 体验建议</option>
             <option value="wrong_answer">⚠️ 题目有误</option>
@@ -109,10 +110,11 @@ interface FeedbackItem {
                   <!-- Type Badge -->
                   <span class="px-2 py-0.5 rounded-md font-bold"
                         [ngClass]="{
+                          'bg-purple-500/20 text-purple-400 border border-purple-500/40': item.type === 'business',
                           'bg-red-500/15 text-red-400 border border-red-500/30': item.type === 'bug',
                           'bg-amber-500/15 text-amber-400 border border-amber-500/30': item.type === 'wrong_answer',
                           'bg-blue-500/15 text-blue-400 border border-blue-500/30': item.type === 'suggestion',
-                          'bg-purple-500/15 text-purple-400 border border-purple-500/30': item.type === 'other'
+                          'bg-slate-500/15 text-slate-400 border border-slate-500/30': item.type === 'other'
                         }">
                     {{ formatType(item.type) }}
                   </span>
@@ -120,12 +122,12 @@ interface FeedbackItem {
                   <!-- Game & Level Badge -->
                   @if (item.game_id) {
                     <span class="px-2 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-bold text-[var(--color-text-main)]">
-                      🎮 {{ item.game_id }}
+                      {{ item.game_id === 'contact_page' ? '✉️ 官方联系页留言' : ('🎮 ' + item.game_id) }}
                     </span>
                   }
                   @if (item.level) {
                     <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 font-bold">
-                      🎯 {{ item.level }}
+                      {{ item.game_id === 'contact_page' ? ('称呼: ' + item.level) : ('🎯 ' + item.level) }}
                     </span>
                   }
 
@@ -277,6 +279,7 @@ export class AdminFeedbackComponent implements OnInit {
 
   formatType(type: string): string {
     switch (type) {
+      case 'business': return '💼 商务合作';
       case 'bug': return '🐛 游戏Bug';
       case 'suggestion': return '💡 体验建议';
       case 'wrong_answer': return '⚠️ 题目有误';

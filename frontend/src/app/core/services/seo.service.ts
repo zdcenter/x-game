@@ -109,6 +109,8 @@ export class SeoService {
 
       // Twitter Card
       this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+      this.meta.updateTag({ name: 'twitter:site', content: '@PuzzlePK_com' });
+      this.meta.updateTag({ name: 'twitter:creator', content: '@PuzzlePK_com' });
       this.meta.updateTag({ name: 'twitter:title', content: pageTitle });
       this.meta.updateTag({ name: 'twitter:description', content: desc });
       this.meta.updateTag({ name: 'twitter:image', content: fullImageUrl });

@@ -55,6 +55,9 @@ const langChildren: Routes = [
     data: { seo: { titleKey: 'seo.register.title', descKey: 'seo.register.desc', keywordsKey: 'seo.register.keywords' } }
   },
 
+  // -- Admin Facing Routes -- (Must precede Player Facing empty path to avoid wildcard hijacking)
+  adminRoute,
+
   // -- Player Facing Routes --
   {
     path: '',
@@ -129,14 +132,19 @@ const langChildren: Routes = [
         path: 'pk-arena',
         loadComponent: () => import('./features/pk-arena/pk-arena.component').then(m => m.PkArenaComponent),
         data: { seo: { titleKey: 'seo.pk_arena.title', descKey: 'seo.pk_arena.desc', keywordsKey: 'seo.pk_arena.keywords' } }
+      },
+      {
+        path: '404',
+        loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent),
+        data: { seo: { titleKey: 'seo.not_found.title', descKey: 'seo.not_found.desc', keywordsKey: 'seo.not_found.keywords' } }
+      },
+      {
+        path: '**',
+        loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent),
+        data: { seo: { titleKey: 'seo.not_found.title', descKey: 'seo.not_found.desc', keywordsKey: 'seo.not_found.keywords' } }
       }
     ]
-  },
-
-  // -- Admin Facing Routes --
-  adminRoute,
-
-  { path: '**', redirectTo: 'lobby' }
+  }
 ];
 
 export const routes: Routes = [
