@@ -1,5 +1,5 @@
 // X-Game Production PWA Service Worker
-const CACHE_NAME = 'xgame-offline-v2026.11.01.1813';
+const CACHE_NAME = 'xgame-offline-v2026.11.01.2012';
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -10,17 +10,21 @@ const PRECACHE_ASSETS = [
   '/pwa-icon.svg',
   '/assets/icons/icon-192x192.png',
   '/assets/icons/icon-512x512.png',
-  '/assets/i18n/zh.json',
-  '/assets/i18n/en.json'
+  '/assets/docs/index.json'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[SW] Pre-cache initial error:', err);
-      });
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Use resilient per-asset caching so one failing asset does not abort the rest
+      await Promise.allSettled(
+        PRECACHE_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.warn(`[SW] Pre-cache skipped for ${asset}:`, err);
+          })
+        )
+      );
     })
   );
 });
@@ -81,24 +85,49 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Navigation requests (HTML pages) -> Network-First with Cache Fallback for SPA routing
+  // 3. Navigation requests (HTML pages) -> Fast-Timeout Network with Immediate Cache Fallback
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
+      (async () => {
+        const networkFetch = fetch(req).then((res) => {
           if (res && res.status === 200) {
             const copy = res.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
           }
           return res;
-        })
-        .catch(async () => {
-          const cached = await caches.match(req);
-          if (cached) return cached;
-          const rootFallback = await caches.match('/');
-          if (rootFallback) return rootFallback;
-          return caches.match('/index.html');
-        })
+        });
+
+        const cached =
+          (await caches.match(req)) ||
+          (await caches.match('/')) ||
+          (await caches.match('/index.html'));
+
+        // If we have a cached offline shell, race network with a 1500ms timeout
+        // to prevent 30~60s white-screen hangs on weak/flaky networks
+        if (cached) {
+          let timeoutId;
+          const timeoutFallback = new Promise((resolve) => {
+            timeoutId = setTimeout(() => {
+              console.warn('[SW] Navigation network timeout (1500ms), serving cached SPA shell');
+              resolve(cached);
+            }, 1500);
+          });
+
+          try {
+            const winner = await Promise.race([networkFetch, timeoutFallback]);
+            clearTimeout(timeoutId);
+            return winner;
+          } catch {
+            clearTimeout(timeoutId);
+            return cached;
+          }
+        }
+
+        // If no cached copy exists, wait for network or try root fallback
+        return networkFetch.catch(async () => {
+          return (await caches.match('/')) || (await caches.match('/index.html'));
+        });
+      })()
     );
     return;
   }

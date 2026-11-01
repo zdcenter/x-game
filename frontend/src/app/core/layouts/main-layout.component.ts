@@ -19,11 +19,12 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
 import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 import { FriendService } from '../services/friend.service';
 import { DeviceService } from '../services/device.service';
+import { OfflineBannerComponent } from '../../shared/components/offline-banner/offline-banner.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent, OfflineBannerComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
@@ -321,6 +322,7 @@ import { DeviceService } from '../services/device.service';
             [class.overflow-y-auto]="!zenService.isZenMode() && !isArenaRoute()"
             [class.overflow-hidden]="zenService.isZenMode() || isArenaRoute()"
             style="overflow-anchor: none;">
+        <app-offline-banner></app-offline-banner>
         <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode() || isFullImmersion() || isArenaRoute()">
           <router-outlet></router-outlet>
         </div>

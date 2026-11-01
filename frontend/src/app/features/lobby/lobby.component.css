@@ -1,0 +1,10 @@
+/* Content Visibility Optimization for off-screen rendering bypass */
+.game-card-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 320px;
+}
+
+.blog-card-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 160px;
+}

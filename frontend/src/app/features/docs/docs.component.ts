@@ -321,6 +321,9 @@ export class DocsComponent {
     return this.games().find(g => g.id === this.currentGameId()) || null;
   });
 
+  // Current game rules document (loaded on demand)
+  currentRulesDoc = signal<GameDoc | null>(null);
+
   // Rendered HTML
   parsedContent = signal<SafeHtml>('');
   
@@ -338,6 +341,18 @@ export class DocsComponent {
       const id = data['gameId'];
       if (id) {
         this.currentGameId.set(id);
+      }
+    });
+
+    // Auto-fetch rules chunk for current game
+    effect(() => {
+      const id = this.currentGameId();
+      if (id) {
+        this.gameService.getGameDoc(id).subscribe(doc => {
+          this.currentRulesDoc.set(doc);
+        });
+      } else {
+        this.currentRulesDoc.set(null);
       }
     });
 
@@ -362,12 +377,14 @@ export class DocsComponent {
       }
     });
 
-    // Re-render content + update SEO when current game or language changes
+    // Re-render content + update SEO when current game, rulesDoc, or language changes
     effect(() => {
       const game = this.currentGame();
+      const rulesDoc = this.currentRulesDoc();
       const lang = this.i18n.currentLang();
       if (game) {
-        const md = getLocalizedField(game.rules, lang);
+        const rawRules = (rulesDoc && rulesDoc.id === game.id ? rulesDoc.rules : '') || game.rules || '';
+        const md = getLocalizedField(rawRules, lang);
         this.renderMarkdown(md);
 
         // Per-page SEO: unique title/description/canonical for each game docs page

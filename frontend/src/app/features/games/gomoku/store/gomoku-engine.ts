@@ -95,38 +95,64 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
       }
 
       this.currentTurn = 'AI';
+      if (this.onAiMove) this.onAiMove();
       
-      // AI Move
-      setTimeout(() => {
-        if (this.status === GameStatus.Playing && this.ai) {
-          const [aiY, aiX] = this.ai.getBestMove(this.board);
-          if (aiY !== -1) {
-            this.board[aiY][aiX] = this.playerColors['AI'];
-            this.lastMove = [aiY, aiX];
-            
-            const aiWinLine = this.checkWin(aiY, aiX, this.board[aiY][aiX]);
-            if (aiWinLine) {
-              this.winningLine = aiWinLine;
-              this.status = GameStatus.Finished;
-              this.winner = 'AI';
-              if (this.onGameOver) this.onGameOver(false);
-              if (this.onAiMove) this.onAiMove();
-              return;
-            }
+      // AI Move: offloaded to Web Worker to keep main UI thread locked at 60fps
+      this.computeBestMove(this.board).then(([aiY, aiX]) => {
+        if (this.status !== GameStatus.Playing) return;
 
-            if (this.checkDraw()) {
-              this.status = GameStatus.Finished;
-              this.winner = 'tie';
-              if (this.onGameOver) this.onGameOver(false);
-              if (this.onAiMove) this.onAiMove();
-              return;
-            }
+        if (aiY !== -1) {
+          this.board[aiY][aiX] = this.playerColors['AI'];
+          this.lastMove = [aiY, aiX];
+          
+          const aiWinLine = this.checkWin(aiY, aiX, this.board[aiY][aiX]);
+          if (aiWinLine) {
+            this.winningLine = aiWinLine;
+            this.status = GameStatus.Finished;
+            this.winner = 'AI';
+            if (this.onGameOver) this.onGameOver(false);
+            if (this.onAiMove) this.onAiMove();
+            return;
           }
-          this.currentTurn = this.playerId;
-          if (this.onAiMove) this.onAiMove();
+
+          if (this.checkDraw()) {
+            this.status = GameStatus.Finished;
+            this.winner = 'tie';
+            if (this.onGameOver) this.onGameOver(false);
+            if (this.onAiMove) this.onAiMove();
+            return;
+          }
         }
-      }, 100);
+        this.currentTurn = this.playerId;
+        if (this.onAiMove) this.onAiMove();
+      });
     }
+  }
+
+  private computeBestMove(board: GomokuColor[][]): Promise<[number, number]> {
+    if (typeof Worker !== 'undefined') {
+      try {
+        const worker = new Worker(new URL('./gomoku-ai.worker.ts', import.meta.url), { type: 'module' });
+        return new Promise((resolve) => {
+          worker.onmessage = ({ data }) => {
+            worker.terminate();
+            resolve(data.bestMove);
+          };
+          worker.onerror = () => {
+            worker.terminate();
+            resolve(this.ai ? this.ai.getBestMove(board) : [-1, -1]);
+          };
+          worker.postMessage({
+            board,
+            myColor: 2,
+            difficulty: this.aiDifficulty
+          });
+        });
+      } catch {
+        // Fallback if Worker construction is restricted
+      }
+    }
+    return Promise.resolve(this.ai ? this.ai.getBestMove(board) : [-1, -1]);
   }
 
   private checkWin(y: number, x: number, color: GomokuColor): number[][] | null {

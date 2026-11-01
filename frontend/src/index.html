@@ -42,15 +42,176 @@
 
   gtag('config', 'G-S0JB094KY4');
 </script>
-<!-- Google AdSense -->
+  <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8428944074138941" 
      crossorigin="anonymous"></script>
   <script>
     window.adsbygoogle = window.adsbygoogle || [];
     var adbreak = adConfig = function(o) { adsbygoogle.push(o); }
   </script>
+
+  <!-- PWA Anti-White-Screen Shield & Theme Pre-sync -->
+  <script>
+    (function() {
+      // 1. Theme Pre-Sync to prevent white flash in dark mode
+      try {
+        var savedTheme = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add('theme-dark');
+          document.documentElement.style.backgroundColor = '#0f172a';
+        } else {
+          document.documentElement.style.backgroundColor = '#f8fafc';
+        }
+      } catch (e) {}
+
+      // 2. ChunkLoadError / Dynamic Module Error Self-Healing Recovery
+      function handleChunkError(errStr) {
+        var lower = (errStr || '').toLowerCase();
+        if (
+          lower.indexOf('loading chunk') !== -1 ||
+          lower.indexOf('failed to fetch dynamically imported module') !== -1 ||
+          lower.indexOf('importing a module script failed') !== -1
+        ) {
+          console.warn('[PWA Shield] Recovering from chunk load error:', lower);
+          var lastRecover = sessionStorage.getItem('pwa_chunk_recover_ts');
+          var now = Date.now();
+          if (!lastRecover || (now - parseInt(lastRecover, 10)) > 8000) {
+            sessionStorage.setItem('pwa_chunk_recover_ts', now.toString());
+            if ('caches' in window) {
+              caches.keys().then(function(keys) {
+                return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+              }).finally(function() {
+                window.location.reload();
+              });
+            } else {
+              window.location.reload();
+            }
+          }
+        }
+      }
+
+      window.addEventListener('error', function(e) {
+        var msg = e.message || (e.error && e.error.message) || '';
+        handleChunkError(msg);
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(e) {
+        var reason = (e.reason && (e.reason.message || e.reason.toString())) || '';
+        handleChunkError(reason);
+      });
+
+      // 3. Fallback recovery helper function callable from splash button
+      window.pwaForceRecover = function() {
+        if ('caches' in window) {
+          caches.keys().then(function(keys) {
+            return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+          }).finally(function() {
+            window.location.reload();
+          });
+        } else {
+          window.location.reload();
+        }
+      };
+    })();
+  </script>
+
+  <style>
+    /* PWA 0ms Instant Brand Splash Screen (Never Pure White) */
+    .pwa-splash-wrapper {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f8fafc;
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      z-index: 999999;
+      user-select: none;
+      transition: opacity 0.3s ease;
+    }
+    .theme-dark .pwa-splash-wrapper {
+      background-color: #0f172a;
+      color: #f1f5f9;
+    }
+    .pwa-splash-icon {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 20px;
+      animation: pwa-pulse 1.8s ease-in-out infinite;
+    }
+    .pwa-splash-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .pwa-splash-spinner {
+      margin-top: 14px;
+      width: 24px;
+      height: 24px;
+      border: 2.5px solid rgba(59, 130, 246, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: pwa-spin 0.75s linear infinite;
+    }
+    .pwa-splash-fallback {
+      margin-top: 24px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #64748b;
+      animation: pwa-fadein 0.5s ease-out forwards;
+    }
+    .pwa-splash-fallback button {
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #3b82f6;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    @keyframes pwa-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.92; }
+      50% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.45)); }
+    }
+    @keyframes pwa-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pwa-fadein {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div class="pwa-splash-wrapper" id="pwa-splash">
+      <img src="favicon.svg" alt="Puzzle PK Logo" class="pwa-splash-icon" width="72" height="72">
+      <div class="pwa-splash-title">Puzzle PK</div>
+      <div class="pwa-splash-spinner"></div>
+      <div class="pwa-splash-fallback" id="pwa-splash-fallback">
+        <span>加载遇到网络波动？</span>
+        <button type="button" onclick="pwaForceRecover()">点击刷新应用 (Reload)</button>
+      </div>
+      <script>
+        // If Angular hasn't replaced app-root inner content after 5s, reveal reload action
+        setTimeout(function() {
+          var el = document.getElementById('pwa-splash-fallback');
+          if (el) el.style.display = 'flex';
+        }, 5000);
+      </script>
+    </div>
+  </app-root>
 </body>
 </html>

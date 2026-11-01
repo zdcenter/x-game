@@ -398,7 +398,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
           @for (game of filteredGames(); track game.id; let i = $index) {
             <!-- Ultra-Clean Action-Oriented Game Card -->
-            <div class="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-[var(--color-accent-from)]/30">
+            <div class="game-card-cv group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-[var(--color-accent-from)]/30">
               
               <!-- Card Top: Thumbnail Banner -->
               <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="w-full relative shrink-0 overflow-hidden bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)] cursor-pointer block" style="padding-top: 80%;">
@@ -558,7 +558,7 @@
         
         <div class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           @for (post of displayBlogs(); track post.id) {
-            <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]" class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col h-full">
+            <a [routerLink]="['/', i18n.currentLang(), 'blog', post.id]" class="blog-card-cv bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-4 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col h-full">
               <div class="flex flex-wrap gap-1.5 mb-2">
                 @for (tag of (post.meta.tags || []).slice(0, 2); track tag) {
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400">

@@ -58,6 +58,13 @@ async function main() {
     const rulesLen = (g.rules || '').length;
     console.log(`  ${g.id}: rules=${rulesLen} chars`);
   });
+
+  try {
+    const { generateDocsChunks } = require('./generate-docs-chunks');
+    generateDocsChunks();
+  } catch (err) {
+    console.warn(`[export-games-docs] Failed to split docs chunks: ${err.message}`);
+  }
 }
 
 main().catch(e => {

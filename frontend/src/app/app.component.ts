@@ -19,6 +19,7 @@ import { FriendListComponent } from './shared/components/friend-list/friend-list
 import { InGameChallengeBannerComponent } from './shared/components/in-game-challenge-banner/in-game-challenge-banner.component';
 import { AuthModalOverlayComponent } from './shared/components/auth-modal-overlay/auth-modal-overlay.component';
 import { PwaUpdatePromptComponent } from './shared/components/pwa-update-prompt/pwa-update-prompt.component';
+import { IdlePrefetchService } from './core/services/idle-prefetch.service';
 
 @Component({
   selector: 'app-root',
@@ -73,6 +74,7 @@ export class AppComponent implements OnInit {
   private toastService = inject(ToastService);
   private i18n = inject(I18nService);
   editRoomService = inject(EditRoomService);
+  private idlePrefetch = inject(IdlePrefetchService);
 
   private getLangRe() {
     const codes = SUPPORTED_LANGS.map(l => l.code).join('|');
@@ -97,6 +99,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.settingsService.loadSettings().subscribe();
     this.authStore.refreshProfile();
+    this.idlePrefetch.init();
   }
 
   canBypassMaintenance(): boolean {

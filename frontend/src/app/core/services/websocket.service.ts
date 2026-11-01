@@ -43,6 +43,25 @@ export class WebSocketService {
   private gameDisconnectIntentional = false;
   private lobbyDisconnectIntentional = false;
 
+  private lastGameConnectConfig: {
+    gameId: string;
+    roomId: string;
+    playerId: string;
+    mode: string;
+    difficulty: string;
+    hostId: string;
+    action: string;
+    password: string;
+    target: number;
+    bounty: number;
+    isSpectator: boolean;
+  } | null = null;
+
+  private lastLobbyConfig: {
+    playerId: string;
+    username: string;
+  } | null = null;
+
   // Pending password for the next connect() call (set by lobby panel, consumed by connect)
   private _pendingPassword = '';
   private _pendingAction = '';
@@ -94,6 +113,51 @@ export class WebSocketService {
   
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
+
+  constructor() {
+    if (isBrowser()) {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.handleWakeUpResume();
+        }
+      });
+      window.addEventListener('pageshow', () => {
+        this.handleWakeUpResume();
+      });
+      window.addEventListener('online', () => {
+        this.handleWakeUpResume();
+      });
+    }
+  }
+
+  private handleWakeUpResume(): void {
+    // If inside a room and socket is disconnected or hung, trigger immediate reconnect
+    if (this.currentRoomId() && !this.gameDisconnectIntentional && this.lastGameConnectConfig) {
+      if (!this.socket || this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+        console.log('[WS] Mobile foreground resume: game socket disconnected, triggering immediate reconnect...');
+        if (this.reconnectTimeout) {
+          clearTimeout(this.reconnectTimeout);
+          this.reconnectTimeout = null;
+        }
+        const cfg = this.lastGameConnectConfig;
+        this.connect(cfg.gameId, cfg.roomId, cfg.playerId, cfg.mode, cfg.difficulty, cfg.hostId, 'join', cfg.password, cfg.target, cfg.bounty, cfg.isSpectator);
+      } else if (this.socket.readyState === WebSocket.OPEN) {
+        try {
+          this.socket.send(JSON.stringify({ type: 'ping' }));
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    // Check lobby socket
+    if (!this.lobbyDisconnectIntentional && this.lastLobbyConfig) {
+      if (!this.lobbySocket || this.lobbySocket.readyState === WebSocket.CLOSED || this.lobbySocket.readyState === WebSocket.CLOSING) {
+        console.log('[WS] Mobile foreground resume: lobby socket disconnected, triggering immediate reconnect...');
+        this.connectLobby(this.lastLobbyConfig.playerId, this.lastLobbyConfig.username);
+      }
+    }
+  }
 
   connect(gameId: string, roomId: string, playerId: string, mode: string = GameMode.Single, difficulty: string = GameDifficulty.Medium, hostId: string = '', action: string = '', password: string = '', target: number = 1, bounty: number = 0, isSpectator: boolean = false) {
     // Auto-consume pendingPassword if no explicit password provided
@@ -151,6 +215,9 @@ export class WebSocketService {
     this.isCurrentSpectator.set(isSpectator || action === 'spectate');
 
     const cleanHostId = hostId === 'undefined' || hostId === undefined ? '' : hostId;
+    this.lastGameConnectConfig = {
+      gameId, roomId, playerId, mode, difficulty, hostId: cleanHostId, action, password, target, bounty, isSpectator
+    };
     let url = `${environment.wsUrl}/ws/join/${encodeURIComponent(roomId)}?${WsQueryParam.Game}=${encodeURIComponent(gameId)}&${WsQueryParam.PlayerId}=${encodeURIComponent(playerId)}&${WsQueryParam.Mode}=${encodeURIComponent(mode)}&${WsQueryParam.Difficulty}=${encodeURIComponent(difficulty)}&${WsQueryParam.HostId}=${encodeURIComponent(cleanHostId)}&${WsQueryParam.Target}=${target}`;
     if (action) {
       url += `&${WsQueryParam.Action}=${encodeURIComponent(action)}`;
@@ -299,15 +366,16 @@ export class WebSocketService {
         return;
       }
       
-      // Unexpected disconnect: reconnect with exponential backoff
+      // Unexpected disconnect: reconnect with exponential backoff + random jitter
       this.unexpectedDisconnectEvent.update(v => v + 1);
-      const delay = Math.min(2000 * Math.pow(2, this.gameReconnectAttempts), 30000);
+      const jitter = Math.random() * 800;
+      const delay = Math.min(1000 * Math.pow(1.8, this.gameReconnectAttempts) + jitter, 25000);
       this.gameReconnectAttempts++;
       
       this.reconnectTimeout = setTimeout(() => {
         if (!this.isConnected() && !this.gameDisconnectIntentional) {
           const reconnectAction = isSpectator ? 'spectate' : (action || 'join');
-          this.connect(gameId, roomId, playerId, mode, difficulty, hostId, reconnectAction, password, target, bounty, isSpectator);
+          this.connect(gameId, roomId, playerId, mode, difficulty, cleanHostId, reconnectAction, password, target, bounty, isSpectator);
         }
       }, delay);
     };
@@ -333,6 +401,7 @@ export class WebSocketService {
 
     this.lobbyReconnectAttempts = 0;
     this.lobbyDisconnectIntentional = false;
+    this.lastLobbyConfig = { playerId, username };
 
     if (!isBrowser()) return;
     
@@ -422,11 +491,12 @@ export class WebSocketService {
         return;
       }
       
-      // Reconnect with exponential backoff
-      const delay = Math.min(2000 * Math.pow(2, this.lobbyReconnectAttempts), 30000);
+      // Reconnect with exponential backoff + random jitter
+      const jitter = Math.random() * 800;
+      const delay = Math.min(1000 * Math.pow(1.8, this.lobbyReconnectAttempts) + jitter, 25000);
       this.lobbyReconnectAttempts++;
       
-      console.log(`Lobby WS reconnecting in ${delay}ms (attempt ${this.lobbyReconnectAttempts})`);
+      console.log(`Lobby WS reconnecting in ${delay.toFixed(0)}ms (attempt ${this.lobbyReconnectAttempts})`);
       this.lobbyReconnectTimeout = setTimeout(() => {
         if (!this.isLobbyConnected() && !this.lobbyDisconnectIntentional) {
           this.connectLobby(playerId, username);
@@ -496,11 +566,13 @@ export class WebSocketService {
       this.currentDifficulty.set('');
       this.isCurrentSpectator.set(false);
     }
+    this.lastGameConnectConfig = null;
     this.gameState.set(null);
   }
 
   disconnectLobby() {
     this.lobbyDisconnectIntentional = true;
+    this.lastLobbyConfig = null;
     this.clearLobbyHeartbeat();
 
     if (this.lobbyReconnectTimeout) {

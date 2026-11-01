@@ -25,6 +25,20 @@
   ],
   "shortcuts": [
     {
+      "name": "Classic Minesweeper",
+      "short_name": "Minesweeper",
+      "description": "Play classic minesweeper puzzle",
+      "url": "/games/minesweeper",
+      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "PK Arena",
+      "short_name": "Battle",
+      "description": "Join live online 1v1 multiplayer puzzle battle",
+      "url": "/pk-arena",
+      "icons": [{ "src": "assets/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
       "name": "Daily Challenge",
       "short_name": "Daily",
       "description": "Play today's daily puzzle challenge",

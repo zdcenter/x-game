@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { I18nService } from '../../../core/i18n/i18n.service';
-import { getLocalizedField } from '../../../core/services/game.service';
+import { GameService, getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { RouterLink } from '@angular/router';
@@ -75,7 +75,7 @@ import { RouterLink } from '@angular/router';
 })
 export class GameRulesModalComponent implements OnChanges {
   i18n = inject(I18nService);
-  private http = inject(HttpClient);
+  private gameService = inject(GameService);
   private sanitizer = inject(DomSanitizer);
 
   @Input({ required: true }) gameId!: string;
@@ -106,7 +106,7 @@ export class GameRulesModalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isOpen'] && this.isOpen && !this.loaded) {
-      // 只有在没有针对当前游戏的 i18n quickGuide 时才需要去请求 games-docs.json
+      // 只有在没有针对当前游戏的 i18n quickGuide 时才需要去请求单个规则文件
       const quickGuideKey = `game.${this.gameId}.seo_desc`;
       const quickGuide = this.i18n.t(quickGuideKey)();
       if (!quickGuide || quickGuide === quickGuideKey) {
@@ -116,9 +116,8 @@ export class GameRulesModalComponent implements OnChanges {
   }
 
   private loadRules() {
-    this.http.get<any[]>('/assets/games-docs.json').subscribe({
-      next: (docs) => {
-        const doc = docs.find(d => d.id === this.gameId);
+    this.gameService.getGameDoc(this.gameId).subscribe({
+      next: (doc) => {
         if (doc && doc.rules) {
           this.rawGameRules.set(doc.rules);
         } else {

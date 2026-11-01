@@ -1,0 +1,142 @@
+[
+  {
+    "id": "sliding",
+    "name": "{\"en\":\"Puzzle PK Sliding\",\"zh\":\"Puzzle PK 华容道\",\"es\":\"Puzzle PK Sliding\",\"ja\":\"パズルPKスライディング\",\"ko\":\"퍼즐 PK 슬라이딩\",\"pt\":\"Quebra-cabeça PK Deslizante\",\"fr\":\"Puzzle PK Glissant\",\"de\":\"Puzzle PK Schiebend\"}",
+    "overview": "{\"en\":\"Classic 15-puzzle. Slide tiles to order them.\",\"zh\":\"经典数字滑块拼图。打乱后复原它。\",\"es\":\"Rompecabezas clásico de 15 piezas. Desliza las fichas para ordenarlas.\",\"ja\":\"クラシックな15パズル。タイルをスライドさせて順番に並べます。\",\"ko\":\"클래식 15 퍼즐. 타일을 이동하여 순서를 맞추세요.\",\"pt\":\"Quebra-cabeça clássico de 15 peças. Deslize as peças para organizá-las.\",\"fr\":\"Casse-tête classique 15 pièces. Faites glisser les tuiles pour les ordonner.\",\"de\":\"Klassisches 15-Puzzle. Verschiebe die Kacheln, um sie zu ordnen.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "sudoku",
+    "name": "{\"en\":\"Puzzle PK Sudoku\",\"zh\":\"Puzzle PK 数独\",\"es\":\"Rompecabezas PK Sudoku\",\"ja\":\"パズルPK数独\",\"ko\":\"퍼즐 PK 스도쿠\",\"pt\":\"Quebra-cabeça PK Sudoku\",\"fr\":\"Puzzle PK Sudoku\",\"de\":\"Puzzle PK Sudoku\"}",
+    "overview": "{\"en\":\"The classic numbers puzzle. Play solo or race against friends.\",\"zh\":\"经典数字逻辑游戏。单机闯关或好友联机竞速。\",\"es\":\"El clásico rompecabezas de números. Juega solo o compite contra amigos.\",\"ja\":\"クラシックな数字パズル。ソロで遊ぶことも、友達と競うこともできます。\",\"ko\":\"고전 숫자 퍼즐. 혼자 플레이하거나 친구와 경쟁하세요.\",\"pt\":\"O clássico quebra-cabeça de números. Jogue sozinho ou corra contra amigos.\",\"fr\":\"Le célèbre casse-tête des nombres. Jouez en solo ou faites la course contre des amis.\",\"de\":\"Das klassische Zahlenrätsel. Allein spielen oder gegen Freunde antreten.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "hexa",
+    "name": "{\"en\":\"Hexa Puzzle\",\"zh\":\"六边形消除\",\"es\":\"Rompecabezas Hexa\",\"ja\":\"ヘキサパズル\",\"ko\":\"헥사 퍼즐\",\"pt\":\"Quebra-cabeça Hexa\",\"fr\":\"Puzzle Hexa\",\"de\":\"Hexa-Puzzle\"}",
+    "overview": "{\"en\":\"Place hex blocks to clear lines in 3 directions.\",\"zh\":\"拖拽六边形方块，填满任意直线即可消除得分。\",\"es\":\"Coloca bloques hexagonales para despejar líneas en 3 direcciones.\",\"ja\":\"ヘックスブロックを配置して、3方向のラインをクリアしましょう。\",\"ko\":\"헥사 블록을 놓아 3방향의 줄을 지우세요.\",\"pt\":\"Coloque blocos hexagonais para limpar linhas em 3 direções.\",\"fr\":\"Placez des blocs hexagonaux pour nettoyer des lignes dans 3 directions.\",\"de\":\"Platziere Hex-Blöcke, um Linien in 3 Richtungen zu löschen.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "minesweeper",
+    "name": "{\"en\":\"Minesweeper\",\"zh\":\"扫雷\",\"es\":\"Buscaminas\",\"ja\":\"マインスイーパー\",\"ko\":\"지뢰찾기\",\"pt\":\"Campo Minado\",\"fr\":\"Démineur\",\"de\":\"Minesuchgerät\"}",
+    "overview": "{\"en\":\"A classic puzzle game. Tap to dig, Long press to flag.\",\"zh\":\"经典逻辑益智游戏。点击挖开，长按插旗。\",\"es\":\"Un juego de rompecabezas clásico. Toca para cavar, mantén presionado para colocar una bandera.\",\"ja\":\"クラシックなパズルゲーム。タップで掘る、長押しで旗を立てる。\",\"ko\":\"고전 퍼즐 게임. 탭하여 파고, 길게 눌러 깃발을 표시하세요.\",\"pt\":\"Um jogo de quebra-cabeça clássico. Toque para cavar, pressione longamente para marcar.\",\"fr\":\"Un jeu de puzzle classique. Appuyez pour creuser, appui long pour marquer.\",\"de\":\"Ein klassisches Puzzlespiel. Tippen zum Graben, lang drücken zum Markieren.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "gomoku",
+    "name": "{\"en\":\"Gomoku\",\"zh\":\"五子棋\",\"es\":\"Gomoku\",\"ja\":\"五目並べ\",\"ko\":\"오목\",\"pt\":\"Gomoku\",\"fr\":\"Gomoku\",\"de\":\"Gomoku\"}",
+    "overview": "{\"en\":\"Classic 5-in-a-row strategy game. Challenge the AI or play online.\",\"zh\":\"经典的五子连珠策略游戏。单机挑战 AI 或联机对战。\",\"es\":\"Clásico juego de estrategia de 5 en línea. Desafía a la IA o juega en línea.\",\"ja\":\"クラシックな五目並べ戦略ゲーム。AIに挑戦するか、オンラインでプレイしよう。\",\"ko\":\"고전 오목 전략 게임. AI에 도전하거나 온라인으로 플레이하세요.\",\"pt\":\"Jogo clássico de estratégia 5 em linha. Desafie a IA ou jogue online.\",\"fr\":\"Jeu de stratégie classique 5 en ligne. Affrontez l'IA ou jouez en ligne.\",\"de\":\"Klassisches 5-in-einer-Reihe Strategiespiel. Fordere die KI heraus oder spiele online.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "math24",
+    "name": "{\"en\":\"Math 24\",\"zh\":\"24点\",\"es\":\"Puzzle PK 24 (Math 24)\",\"ja\":\"24点（計算パズル）\",\"ko\":\"수학 24\",\"pt\":\"Matemática 24\",\"fr\":\"Math 24\",\"de\":\"Mathe 24\"}",
+    "overview": "{\"en\":\"Use all 4 cards and arithmetic operators to get exactly 24.\",\"zh\":\"使用4张扑克牌和加减乘除，算出24。\",\"es\":\"Usa las 4 cartas y los operadores aritméticos para obtener exactamente 24.\",\"ja\":\"4枚のカードと算術演算子を使って、ちょうど24を作りなさい。\",\"ko\":\"모든 4장의 카드와 산술 연산자를 사용하여 정확히 24를 만드세요.\",\"pt\":\"Use todas as 4 cartas e operadores aritméticos para obter exatamente 24.\",\"fr\":\"Utilisez les 4 cartes et les opérateurs arithmétiques pour obtenir exactement 24.\",\"de\":\"Verwende alle 4 Karten und arithmetische Operatoren, um genau 24 zu erhalten.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "tetris",
+    "name": "{\"en\":\"Tetris Battle\",\"zh\":\"俄罗斯方块对战\",\"es\":\"Batalla de Tetris\",\"ja\":\"テトリスバトル\",\"ko\":\"테트리스 배틀\",\"pt\":\"Batalha de Tetris\",\"fr\":\"Tetris Bataille\",\"de\":\"Tetris-Kampf\"}",
+    "overview": "{\"zh\":\"经典俄罗斯方块（Tetris）现代准则大师指南，涵盖 7-Bag 盲盒发牌原理、SRS 超级旋转系统、9-0/6-3 堆叠建筑学、T-Spin 双旋/三旋神技、40行极速冲刺与联机垃圾行对冲机制。\",\"en\":\"Comprehensive Tetris Masterclass covering modern Guideline mechanics: 7-Bag Randomizer, SRS wall kicks, 9-0 & 6-3 stacking architectures, T-Spin Double setups, 40-line sprint finesse, and multiplayer garbage line cancellation.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "drop2048",
+    "name": "{\"en\":\"Drop 2048\",\"zh\":\"2048下落合成\",\"es\":\"Soltar 2048\",\"ja\":\"ドロップ2048\",\"ko\":\"드롭 2048\",\"pt\":\"Solte 2048\",\"fr\":\"Lâcher 2048\",\"de\":\"Drop 2048\"}",
+    "overview": "{\"zh\":\"下落2048（Drop 2048）全阶通关宝典与级联几何全书，涵盖 5×7 拓扑学、单调递减链建筑学、多段级联多米诺连锁、彩虹方块妙用、双手牌预判与多人联机对战胜负策略。\",\"en\":\"Comprehensive Drop 2048 Masterclass covering 5×7 cascade topologies, monotonic stair-step architectures, multi-tier chain reaction combos, rainbow wildcard logistics, and multiplayer battle PK warfare.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "codebreaker",
+    "name": "{\"en\":\"Codebreaker\",\"zh\":\"1A2B 密码破译\",\"es\":\"Descifrador de códigos\",\"ja\":\"暗号解読者\",\"ko\":\"암호 해독자\",\"pt\":\"Decifrador de códigos\",\"fr\":\"Décodeur\",\"de\":\"Codeknacker\"}",
+    "overview": "{\"en\":\"Logic deduction game. Find the secret numbers by matching A and B clues.\",\"zh\":\"经典逻辑推导游戏。根据A和B的提示推理出正确的数字密码。\",\"es\":\"Juego de deducción lógica. Encuentra los números secretos coincidiendo las pistas A y B.\",\"ja\":\"論理推論ゲーム。AとBの手がかりを照らし合わせて秘密の数字を見つけてください。\",\"ko\":\"논리 추리 게임. A와 B 단서를 맞춰 비밀 숫자를 찾아보세요.\",\"pt\":\"Jogo de dedução lógica. Encontre os números secretos combinando as pistas A e B.\",\"fr\":\"Jeu de déduction logique. Trouvez les numéros secrets en associant les indices A et B.\",\"de\":\"Logik-Deduktionsspiel. Finde die geheimen Zahlen, indem du die A- und B-Hinweise kombinierst.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "sokoban",
+    "name": "{\"en\":\"Sokoban\",\"zh\":\"推箱子\",\"es\":\"Sokoban\",\"ja\":\"倉庫番\",\"ko\":\"소코반\",\"pt\":\"Sokoban\",\"fr\":\"Sokoban\",\"de\":\"Sokoban\"}",
+    "overview": "{\"en\":\"Classic box-pushing puzzle game. Can you solve it?\",\"zh\":\"经典的推箱子解谜游戏。你能在限定空间里完成挑战吗？\",\"es\":\"Clásico juego de rompecabezas de empujar cajas. ¿Puedes resolverlo?\",\"ja\":\"クラシックな箱押しパズルゲームです。あなたは解けますか？\",\"ko\":\"고전 박스 밀기 퍼즐 게임. 당신은 해결할 수 있나요?\",\"pt\":\"Jogo clássico de quebra-cabeça de empurrar caixas. Você consegue resolvê-lo?\",\"fr\":\"Jeu de puzzle classique où il faut pousser des caisses. Pouvez-vous le résoudre ?\",\"de\":\"Klassisches Schiebekasten-Puzzlespiel. Kannst du es lösen?\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "watersort",
+    "name": "{\"en\":\"Water Sort Puzzle\",\"zh\":\"水管分色\",\"es\":\"Rompecabezas de Clasificación de Agua\",\"ja\":\"ウォーターソートパズル\",\"ko\":\"물 정리 퍼즐\",\"pt\":\"Quebra-Cabeça de Classificação de Água\",\"fr\":\"Puzzle de tri de l'eau\",\"de\":\"Wasser-Sortier-Rätsel\"}",
+    "overview": "{\"en\":\"Sort the colored liquids into the tubes. A highly addictive brain teaser!\",\"zh\":\"将颜色杂乱的液体倒水归类，直到每个试管只有一种颜色。\",\"es\":\"Clasifica los líquidos de colores en los tubos. ¡Un rompecabezas altamente adictivo!\",\"ja\":\"色付きの液体をチューブに仕分けしてください。非常に中毒性のある脳トレです！\",\"ko\":\"색깔 있는 액체를 시험관에 분류하세요. 매우 중독성 있는 두뇌 게임!\",\"pt\":\"Classifique os líquidos coloridos nos tubos. Um quebra-cabeça altamente viciante!\",\"fr\":\"Trier les liquides colorés dans les tubes. Un casse-tête très addictif !\",\"de\":\"Sortiere die gefärbten Flüssigkeiten in die Röhrchen. Ein stark süchtig machendes Gehirnspiel!\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "block",
+    "name": "{\"en\":\"Block Puzzle\",\"zh\":\"方块消除\",\"es\":\"Rompecabezas de bloques\",\"ja\":\"ブロックパズル\",\"ko\":\"블록 퍼즐\",\"pt\":\"Quebra-cabeça de blocos\",\"fr\":\"Puzzle de blocs\",\"de\":\"Blockrätsel\"}",
+    "overview": "{\"en\":\"Place blocks to clear lines. Simple but addictive!\",\"zh\":\"拖拽方块，填满行列即可消除得分。\",\"es\":\"Coloca bloques para despejar líneas. ¡Simple pero adictivo!\",\"ja\":\"ブロックを置いてラインを消そう。シンプルだけど中毒性がある！\",\"ko\":\"블록을 놓아 줄을 지워보세요. 간단하지만 중독성 있어요!\",\"pt\":\"Coloque blocos para limpar linhas. Simples, mas viciante!\",\"fr\":\"Placez des blocs pour dégager des lignes. Simple mais addictif !\",\"de\":\"Platziere Blöcke, um Linien zu räumen. Einfach, aber süchtig machend!\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "lightsout",
+    "name": "{\"en\":\"Lights Out\",\"zh\":\"点灯\",\"es\":\"Luces fuera\",\"ja\":\"明かりを消す\",\"ko\":\"불 끄기\",\"pt\":\"Luzes apagadas\",\"fr\":\"Extinction des lumières\",\"de\":\"Licht aus\"}",
+    "overview": "{\"en\":\"Click to flip orthogonal lights. Supports dual modes: [All Lit] and [All Out].\",\"zh\":\"点击翻转十字相邻灯泡，支持【全盘点亮】与【全盘熄灭】双向目标模式。\",\"es\":\"Apaga todas las luces haciendo clic en ellas.\",\"ja\":\"すべてのライトをクリックして消してください。\",\"ko\":\"모든 전등을 클릭하여 끄세요.\",\"pt\":\"Desligue todas as luzes clicando nelas.\",\"fr\":\"Éteignez toutes les lumières en cliquant dessus.\",\"de\":\"Schalten Sie alle Lichter aus, indem Sie darauf klicken.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "idiom",
+    "name": "{\"en\":\"Idiom Quiz\",\"zh\":\"成语益智\",\"es\":\"Prueba de modismos\",\"ja\":\"慣用句クイズ\",\"ko\":\"관용구 퀴즈\",\"pt\":\"Quiz de Expressões Idiomáticas\",\"fr\":\"Quiz d'expressions idiomatiques\",\"de\":\"Redewendungsquiz\"}",
+    "overview": "{\"en\":\"Learn Chinese idioms through fill-in-blank challenges and a daily Wordle-style quiz. Spaced repetition keeps the right words coming back at the right time.\",\"zh\":\"通过填空闯关与每日猜词两种方式学习成语。间隔复习算法让你不断巩固薄弱词，每天挑战全球同一道题目并分享战绩。\",\"es\":\"Aprende modismos chinos a través de retos de completar espacios en blanco y un cuestionario diario al estilo Wordle. La repetición espaciada hace que las palabras correctas vuelvan en el momento adecuado.\",\"ja\":\"穴埋めチャレンジや毎日のWordle風クイズを通して中国のことわざを学びましょう。間隔反復法により、適切な単語が適切なタイミングで再び出てきます。\",\"ko\":\"빈칸 채우기 도전과 일일 워들 스타일 퀴즈를 통해 중국어 관용구를 배우세요. 간격 반복 학습은 적절한 시기에 올바른 단어가 다시 나올 수 있도록 합니다.\",\"pt\":\"Aprenda idioms chineses através de desafios de completar lacunas e um quiz diário no estilo Wordle. A repetição espaçada faz com que as palavras certas voltem na hora certa.\",\"fr\":\"Apprenez des idiomes chinois grâce à des défis à remplir et à un quiz quotidien de style Wordle. La répétition espacée permet aux bons mots de revenir au bon moment.\",\"de\":\"Lerne chinesische Redewendungen durch Lückentext-Herausforderungen und ein tägliches Quiz im Stil von Wordle. Die verteilte Wiederholung sorgt dafür, dass die richtigen Wörter zur richtigen Zeit wieder auftauchen.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "nonogram",
+    "name": "{\"en\":\"Nonogram\",\"zh\":\"数织\",\"es\":\"Nonograma\",\"ja\":\"ノノグラム\",\"ko\":\"논그램\",\"pt\":\"Nonograma\",\"fr\":\"Nonogramme\",\"de\":\"Nonogramm\"}",
+    "overview": "{\"en\":\"Classic logic puzzle. Fill in the grid to reveal a hidden picture.\",\"zh\":\"经典逻辑解谜游戏，通过数字提示涂黑方块来揭示隐藏图案。\",\"es\":\"Rompecabezas lógico clásico. Rellena la cuadrícula para revelar una imagen oculta.\",\"ja\":\"クラシックな論理パズル。グリッドを埋めて隠された絵を明らかにします。\",\"ko\":\"고전 논리 퍼즐. 그리드를 채워 숨겨진 그림을 드러내세요.\",\"pt\":\"Quebra-cabeça lógico clássico. Preencha a grade para revelar uma imagem oculta.\",\"fr\":\"Puzzle logique classique. Remplissez la grille pour révéler une image cachée.\",\"de\":\"Klassisches Logikrätsel. Füllen Sie das Raster aus, um ein verstecktes Bild zu enthüllen.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "classic2048",
+    "name": "{\"en\":\"Classic 2048\",\"zh\":\"经典 2048\",\"es\":\"Clásico 2048\",\"ja\":\"クラシック2048\",\"ko\":\"클래식 2048\",\"pt\":\"Clássico 2048\",\"fr\":\"Classique 2048\",\"de\":\"Klassisch 2048\"}",
+    "overview": "{\"en\":\"The classic 4x4 sliding merge game.\",\"zh\":\"最经典的 4x4 滑动合并游戏。\",\"es\":\"El clásico juego de fusión deslizante 4x4.\",\"ja\":\"クラシックな4x4スライドマージゲーム。\",\"ko\":\"클래식 4x4 슬라이딩 병합 게임.\",\"pt\":\"O clássico jogo de fusão deslizante 4x4.\",\"fr\":\"Le classique jeu de fusion coulissante 4x4.\",\"de\":\"Das klassische 4x4-Schiebemerge-Spiel.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "connect",
+    "name": "{\"en\":\"Number Connect\",\"zh\":\"数字连线\",\"es\":\"Conectar Números\",\"ja\":\"ナンバーコネクト\",\"ko\":\"넘버 커넥트\",\"pt\":\"Conectar Números\",\"fr\":\"Connexion de nombres\",\"de\":\"Nummern verbinden\"}",
+    "overview": "{\"en\":\"A highly addictive logic puzzle where you must connect matching numbers.\",\"zh\":\"一款极具魔力的逻辑解谜游戏，你需要在不交叉的情况下连接所有相同的数字，并填满整个网格。\",\"es\":\"Un rompecabezas lógico altamente adictivo donde debes conectar números iguales.\",\"ja\":\"同じ数字をつなげなければならない、非常に中毒性の高い論理パズル。\",\"ko\":\"같은 숫자를 연결해야 하는 매우 중독성 있는 논리 퍼즐입니다.\",\"pt\":\"Um quebra-cabeça lógico altamente viciante onde você deve conectar números iguais.\",\"fr\":\"Un casse-tête logique très addictif où vous devez relier des nombres correspondants.\",\"de\":\"Ein hochgradig süchtig machendes Logikrätsel, bei dem Sie passende Zahlen verbinden müssen.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "hashi",
+    "name": "{\"en\":\"Bridges\",\"zh\":\"桥梁谜题\",\"es\":\"Puentes\",\"ja\":\"橋\",\"ko\":\"다리\",\"pt\":\"Pontes\",\"fr\":\"Ponts\",\"de\":\"Brücken\"}",
+    "overview": "{\"en\":\"Connect all islands with bridges. The number on each island indicates how many bridges are connected to it.\",\"zh\":\"用桥梁将所有岛屿连通在一起！岛屿上的数字代表连接到该岛的桥梁总数。\",\"es\":\"Conecta todas las islas con puentes. El número en cada isla indica cuántos puentes están conectados a ella.\",\"ja\":\"すべての島を橋でつなぎなさい。各島の数字は、その島に接続される橋の数を示しています。\",\"ko\":\"모든 섬을 다리로 연결하세요. 각 섬에 있는 숫자는 그 섬에 연결된 다리의 수를 나타냅니다.\",\"pt\":\"Conecte todas as ilhas com pontes. O número em cada ilha indica quantas pontes estão conectadas a ela.\",\"fr\":\"Connectez toutes les îles avec des ponts. Le nombre sur chaque île indique combien de ponts y sont connectés.\",\"de\":\"Verbinde alle Inseln mit Brücken. Die Zahl auf jeder Insel gibt an, wie viele Brücken mit ihr verbunden sind.\"}",
+    "isActive": true,
+    "sortOrder": 999
+  },
+  {
+    "id": "tilematch",
+    "name": "{\"zh\":\"羊了个羊 (叠层三消)\",\"en\":\"Sheep A Sheep (Tile Match)\",\"es\":\"Sheep A Sheep (Tile Match)\",\"ja\":\"羊了个羊 (タイルマッチ)\",\"ko\":\"양을 세어라 (타일 매칭)\",\"pt\":\"Sheep A Sheep (Tile Match)\",\"fr\":\"Sheep A Sheep (Tile Match)\",\"de\":\"Sheep A Sheep (Tile Match)\"}",
+    "overview": "{\"zh\":\"风靡全网的叠层三消益智游戏。移出、撤销与洗牌三大锦囊破局，单机冲关或联机竞速！\",\"en\":\"The viral layered match-3 puzzle game. Master AABB occlusion, tray management, and power-ups in solo or PK!\"}",
+    "isActive": true,
+    "sortOrder": 190
+  },
+  {
+    "id": "tents",
+    "name": "{\"zh\":\"露营帐篷 (帐篷与树)\",\"en\":\"Tents and Trees\",\"es\":\"Tiendas y Árboles\",\"ja\":\"テントと木\",\"ko\":\"텐트와 나무\",\"pt\":\"Tendas e Árvores\",\"fr\":\"Tentes et Arbres\",\"de\":\"Zelte und Bäume\"}",
+    "overview": "{\"zh\":\"在森林里为每棵树搭建一个专属帐篷。帐篷互不挨碰，遵循行列配额指标！\",\"en\":\"Pitch a tent next to each tree in the forest. Tents must never touch, respecting row and column quotas!\"}",
+    "isActive": true,
+    "sortOrder": 15
+  }
+]
