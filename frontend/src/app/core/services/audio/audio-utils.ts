@@ -1,10 +1,16 @@
+let cachedNoiseBuffer: AudioBuffer | null = null;
+let cachedNoiseSampleRate = 0;
+
 export function createNoise(ctx: AudioContext, duration: number) {
-  const bufferSize = Math.ceil(ctx.sampleRate * duration);
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const minLen = Math.ceil(ctx.sampleRate * Math.max(duration, 0.5));
+  if (!cachedNoiseBuffer || cachedNoiseBuffer.length < minLen || cachedNoiseSampleRate !== ctx.sampleRate) {
+    cachedNoiseBuffer = ctx.createBuffer(1, minLen, ctx.sampleRate);
+    const data = cachedNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < minLen; i++) data[i] = Math.random() * 2 - 1;
+    cachedNoiseSampleRate = ctx.sampleRate;
+  }
   const src = ctx.createBufferSource();
-  src.buffer = buffer;
+  src.buffer = cachedNoiseBuffer;
   return src;
 }
 

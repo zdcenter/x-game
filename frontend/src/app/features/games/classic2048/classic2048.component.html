@@ -30,7 +30,7 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-start my-0">
+<div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-between my-auto">
 
   <!-- Integrated Handheld Header Bar (仅移动/平板手持端展示，PC 桌面端保持标准统一单顶栏杜绝重复) -->
   @if (isHandheld()) {
@@ -152,7 +152,7 @@
             }
 
             <!-- Game Board -->
-            <div class="relative p-2.5 sm:p-4 shrink-0 c2048-board transition-all duration-300 w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] aspect-square mx-auto touch-none select-none rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-[var(--color-border-card)]"
+            <div class="relative p-2.5 sm:p-4 shrink-0 c2048-board transition-all duration-300 w-full max-w-[min(94vw,460px)] sm:max-w-[520px] md:max-w-[560px] aspect-square mx-auto my-auto touch-none select-none rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-[var(--color-border-card)]"
                  [attr.data-theme]="currentTheme()"
                  [class.animate-shake]="store.shakeTrigger() > 0">
 
@@ -221,7 +221,7 @@
               </div>
               
               @if (store.currentRoomMode() === GameMode.Single) {
-                <div class="w-full max-w-[440px] sm:max-w-[480px] md:max-w-[500px] mx-auto z-10 shrink-0 mt-3">
+                <div class="w-full max-w-[min(94vw,460px)] sm:max-w-[520px] md:max-w-[560px] mx-auto z-10 shrink-0 mt-3 mb-2">
                   <app-game-toolbar
                     [layoutStyle]="'compact'"
                     [showRestart]="true"

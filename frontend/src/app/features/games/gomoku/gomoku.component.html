@@ -15,6 +15,7 @@
   (difficultyChange)="changeDifficulty($event)"
   [showPlayAgainBtn]="store.currentRoomMode() === GameMode.Single && store.status() === GameStatus.Finished "
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
+  [showOverlay]="showResultOverlay()"
   [customResultTitle]="winnerText"
   [isDefeat]="store.winner() !== myPlayerId()"
   (rulesClosed)="showRules.set(false)"
@@ -178,6 +179,33 @@
 
               <!-- The 15x15 Gomoku Grid -->
               <div class="grid grid-cols-[repeat(15,_minmax(0,_1fr))] grid-rows-[repeat(15,_minmax(0,_1fr))] w-full h-full relative select-none">
+                <!-- SVG Glowing Laser Winning Line connecting the 5 stones (aligned to grid cell centers) -->
+                @if (winningLineCoords()) {
+                  <svg class="absolute inset-0 w-full h-full pointer-events-none z-30 overflow-visible">
+                    <defs>
+                      <filter id="gomoku-glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <!-- Outer wide golden glow halo -->
+                    <line [attr.x1]="winningLineCoords()!.x1 + '%'"
+                          [attr.y1]="winningLineCoords()!.y1 + '%'"
+                          [attr.x2]="winningLineCoords()!.x2 + '%'"
+                          [attr.y2]="winningLineCoords()!.y2 + '%'"
+                          stroke="#f59e0b" stroke-linecap="round" opacity="0.85" filter="url(#gomoku-glow)"
+                          class="animate-laser-line" />
+                    <!-- Inner shining white laser core -->
+                    <line [attr.x1]="winningLineCoords()!.x1 + '%'"
+                          [attr.y1]="winningLineCoords()!.y1 + '%'"
+                          [attr.x2]="winningLineCoords()!.x2 + '%'"
+                          [attr.y2]="winningLineCoords()!.y2 + '%'"
+                          stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" />
+                  </svg>
+                }
                 @for (row of board(); track $index; let y = $index) {
                   @for (cell of row; track $index; let x = $index) {
                     <div class="relative flex items-center justify-center cursor-pointer group"
@@ -202,6 +230,13 @@
                                isWinningPiece(y, x) ? 'z-30 animate-winning-glow ring-4 ring-amber-400' : 'z-10'
                              ]">
                           
+                          <!-- Numbered Badge for Winning 5-in-a-row (1, 2, 3, 4, 5) -->
+                          @if (getWinningIndex(y, x) > 0) {
+                            <div class="absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 text-white font-black text-[9px] sm:text-xs flex items-center justify-center shadow-lg border border-white z-40 animate-bounce">
+                              {{ getWinningIndex(y, x) }}
+                            </div>
+                          }
+
                           <!-- Last Move Indicator: High-Visibility Sonar Wave + Red Target Dot -->
                           @if (lastMove() && lastMove()![0] === y && lastMove()![1] === x) {
                             <div class="absolute -inset-1 rounded-full border-2 border-amber-400 pointer-events-none animate-sonar-ripple z-20"></div>

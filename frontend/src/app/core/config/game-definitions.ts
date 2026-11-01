@@ -138,7 +138,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_hexa_standard', desc: 'Normal Board' }
     ],
     recommendations: ['tetris', 'drop2048'],
-    finishFlow: { winAction: 'modal', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
+    finishFlow: { winAction: 'modal', loseAction: 'modal', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
     tutorial: [
       { icon: '🔶', title: 'tutorial.hexa.goal',  description: 'tutorial.hexa.goal_desc' },
       { icon: '👆', title: 'tutorial.hexa.place', description: 'tutorial.hexa.place_desc' },
@@ -183,6 +183,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
     ],
     recommendations: ['codebreaker', 'minesweeper'],
+    finishFlow: { winAction: 'modal', loseAction: 'modal', autoNextAdFreq: -1, autoNextDelayMs: 2500 },
     tutorial: [
       { icon: '⚫', title: 'tutorial.gomoku.goal',    description: 'tutorial.gomoku.goal_desc' },
       { icon: '🎯', title: 'tutorial.gomoku.turn',    description: 'tutorial.gomoku.turn_desc' },
@@ -275,7 +276,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_block_12x12', desc: '12x12 Board' }
     ],
     recommendations: ['tetris', 'hexa'],
-    finishFlow: { winAction: 'modal', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
+    finishFlow: { winAction: 'modal', loseAction: 'modal', autoNextAdFreq: -1, autoNextDelayMs: 1500 },
     tutorial: [
       { icon: '🟩', title: 'tutorial.block.goal',  description: 'tutorial.block.goal_desc' },
       { icon: '👆', title: 'tutorial.block.place', description: 'tutorial.block.place_desc' },
@@ -469,7 +470,7 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_hard', desc: 'Hard' }
     ],
     recommendations: ['minesweeper', 'classic2048'],
-    finishFlow: { winAction: 'auto_next', loseAction: 'board_overlay', autoNextAdFreq: -1, autoNextDelayMs: 1500 }
+    finishFlow: { winAction: 'modal', loseAction: 'modal', autoNextAdFreq: -1, autoNextDelayMs: 1500 }
   },
   {
     id: GameId.Tents,

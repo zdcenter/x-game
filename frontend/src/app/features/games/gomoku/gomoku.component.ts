@@ -72,13 +72,19 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
           this.audio.playLose(); // fallback for tie or surrender
           this.vibrateMedium();
         }
-        setTimeout(() => this.showResultOverlay.set(true), 2000);
+        if (this.overlayTimer) clearTimeout(this.overlayTimer);
+        this.overlayTimer = setTimeout(() => this.showResultOverlay.set(true), 2200);
       } else {
+        if (this.overlayTimer) {
+          clearTimeout(this.overlayTimer);
+          this.overlayTimer = null;
+        }
         this.showResultOverlay.set(false);
       }
     });
   }
 
+  private overlayTimer: any = null;
   showResultOverlay = signal(false);
   hintMove = signal<[number, number] | null>(null);
 
@@ -230,6 +236,35 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     const line = this.store.winningLine();
     if (!line) return false;
     return line.some(p => p[0] === y && p[1] === x);
+  }
+
+  // Sorted winning points to number them 1..5 in order
+  readonly sortedWinningPoints = computed<number[][] | null>(() => {
+    const line = this.store.winningLine();
+    if (!line || line.length < 5) return null;
+    return [...line].sort((a, b) => (a[0] !== b[0] ? a[0] - b[0] : a[1] - b[1]));
+  });
+
+  // Calculate SVG line percentage coordinates from first stone to last stone
+  readonly winningLineCoords = computed<{ x1: number; y1: number; x2: number; y2: number } | null>(() => {
+    const pts = this.sortedWinningPoints();
+    if (!pts || pts.length === 0) return null;
+    const first = pts[0];
+    const last = pts[pts.length - 1];
+    const cellSizePct = 100 / 15;
+    return {
+      x1: (first[1] + 0.5) * cellSizePct,
+      y1: (first[0] + 0.5) * cellSizePct,
+      x2: (last[1] + 0.5) * cellSizePct,
+      y2: (last[0] + 0.5) * cellSizePct
+    };
+  });
+
+  getWinningIndex(y: number, x: number): number {
+    const pts = this.sortedWinningPoints();
+    if (!pts) return 0;
+    const idx = pts.findIndex(p => p[0] === y && p[1] === x);
+    return idx >= 0 ? idx + 1 : 0;
   }
 
   onCellClick(y: number, x: number) {

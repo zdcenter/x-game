@@ -146,12 +146,12 @@
   }
 
           <!-- Unified Game Stage: Board + Compact Hand Shapes (紧凑相连，操作顺手) -->
-          <div class="w-full flex-grow flex flex-col items-center justify-center min-h-0 py-1 sm:py-2 select-none overflow-hidden">
-            <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,500px)] mx-auto gap-2 sm:gap-3 shrink-0">
+          <div class="w-full flex-grow flex flex-col items-center justify-center min-h-0 py-1 sm:py-2 select-none overflow-hidden my-auto">
+            <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,560px)] md:max-w-[min(94vw,620px)] mx-auto gap-2 sm:gap-3 shrink-0">
               <!-- 棋盘绝对物理尺寸，留出下方手牌舒适空间 -->
               <div class="relative flex items-center justify-center shrink-0"
                    [class.block-shake]="isShaking()"
-                   style="width: min(calc(100vw - 16px), calc(100dvh - 200px), 500px); height: min(calc(100vw - 16px), calc(100dvh - 200px), 500px);">
+                   style="width: min(calc(100vw - 16px), calc(100dvh - 200px), 540px); height: min(calc(100vw - 16px), calc(100dvh - 200px), 540px);">
 
               <!-- Score Float-up Texts -->
               <div class="absolute inset-0 pointer-events-none z-30 overflow-hidden">
@@ -243,45 +243,6 @@
                     </div>
                   }
                 </div>
-                
-                <!-- Single Player In-Board Game Over & Instant Restart Overlay -->
-                @if (store.currentRoomMode() === GameMode.Single && (store.isDead() || store.status() === GameStatus.Finished)) {
-                  <div class="absolute inset-0 z-40 flex flex-col items-center justify-center p-4 rounded-xl bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] animate-fade-in text-center select-none shadow-2xl">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl mb-2 bg-rose-500/15 border border-rose-500/30 text-rose-500 shadow-lg animate-bounce">
-                      😵
-                    </div>
-                    <h3 class="text-lg sm:text-2xl font-black text-[var(--color-text-main)] mb-1 tracking-tight">
-                      {{ i18n.t('game.game_over')() || '游戏结束' }}
-                    </h3>
-                    <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] mb-3">
-                      {{ i18n.t('game.no_moves_left')() || '无可用放置空间' }}
-                    </p>
-
-                    <!-- Score Stats -->
-                    <div class="flex items-center gap-3 mb-4">
-                      <div class="flex flex-col items-center px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs min-w-[64px]">
-                        <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase">SCORE</span>
-                        <span class="text-sm sm:text-lg font-black text-blue-500 font-digital">{{ store.score() }}</span>
-                      </div>
-                      <div class="flex flex-col items-center px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs min-w-[64px]">
-                        <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase">BEST</span>
-                        <span class="text-sm sm:text-lg font-black text-emerald-500 font-digital">{{ store.bestScore() }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Direct Restart Button -->
-                    <button
-                      type="button"
-                      (click)="store.startGame()"
-                      class="px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/30 active:scale-95 transition-all flex items-center gap-2 cursor-pointer group">
-                      <span class="group-hover:rotate-180 transition-transform duration-300">🔄</span>
-                      <span>{{ i18n.t('game.play_again')() || i18n.t('game.restart')() || '重新开始' }}</span>
-                      <span class="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded bg-black/20 text-white/80 border border-white/20">
-                        Space / R
-                      </span>
-                    </button>
-                  </div>
-                }
 
                 <!-- Spectating Overlay -->
                 @if (store.currentRoomMode() !== GameMode.Single && store.status() === GameStatus.Playing && store.isDead()) {

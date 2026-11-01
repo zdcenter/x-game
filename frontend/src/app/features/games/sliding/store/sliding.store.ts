@@ -165,14 +165,19 @@ export class SlidingStore extends BaseGameStore {
 
   override startGame() {
     if (this.currentRoomMode() === GameMode.Single) {
-      const le = this.localEngine();
-      if (le) {
-        le.status = GameStatus.Playing;
-        le.startAt = Date.now();
-        this.localEngine.set(Object.assign(new LocalSlidingEngine(this.currentDifficulty() as string), le));
-      }
+      const engine = new LocalSlidingEngine(this.currentDifficulty() as string);
+      this.localEngine.set(engine);
     } else {
       super.startGame();
+    }
+  }
+
+  override restartGame() {
+    if (this.currentRoomMode() === GameMode.Single) {
+      const engine = new LocalSlidingEngine(this.currentDifficulty() as string);
+      this.localEngine.set(engine);
+    } else {
+      super.restartGame();
     }
   }
 

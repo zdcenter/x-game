@@ -96,9 +96,9 @@
   }
 
   <!-- Main Board (Seamless & Integrated) -->
-  <div class="flex-1 min-h-0 overflow-auto flex flex-col items-stretch p-1 sm:p-2 md:p-2.5 w-full"
+  <div class="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center p-1 sm:p-2 md:p-2.5 w-full"
        [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
-    <div class="min-w-fit flex flex-col items-center mx-auto my-0 pt-0.5 sm:pt-1">
+    <div class="min-w-fit flex flex-col items-center mx-auto my-auto pt-0.5 sm:pt-1">
 
               <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"

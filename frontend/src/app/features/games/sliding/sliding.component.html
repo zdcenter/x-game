@@ -19,13 +19,13 @@
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"
   (back)="goBack()"
-  (playAgain)="store.startGame()"
+  (playAgain)="store.playAgain()"
   (navigateToPk)="navigateToPkArena()"
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col justify-start my-0 items-center relative min-h-0 w-full py-0.5 sm:py-1">
+<div class="w-full flex-grow flex flex-col items-center justify-between min-h-0 relative select-none w-full py-0.5 sm:py-1">
 
   <!-- Integrated Board Header Bar (仅手持端展示，PC 桌面端保持标准单一外层 GameHeader，杜绝重复) -->
   @if (isHandheld()) {
@@ -149,58 +149,62 @@
     </div>
   }
 
-          <!-- The Grid Area -->
-          <div class="relative flex items-center justify-center w-full py-2 px-2 shrink-0 z-0">
+  <!-- Centered Interactive Play Stage (Board + Controls Vertically & Horizontally Balanced in Viewport) -->
+  <div class="flex-1 w-full flex flex-col items-center justify-center my-auto min-h-0 py-1 sm:py-3">
 
-            <!-- Aspect Square Board -->
-            <div
-              class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-sliding-board-bg)] rounded-2xl lg:rounded-3xl p-2 sm:p-3 shadow-inner border-2 border-[var(--color-sliding-board-border)] flex-shrink-0 touch-none select-none overscroll-contain aspect-square"
-              [style.width]="boardSizePx()"
-              [style.height]="boardSizePx()"
-                (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)"
-                style="container-type: inline-size;">
+    <!-- The Grid Area -->
+    <div class="relative flex items-center justify-center w-full px-2 shrink-0 z-0">
 
-              <!-- Tiles -->
-              <div class="w-full h-full relative">
-                @for (tile of tiles(); track tile.val) {
-                <div class="absolute p-1 sm:p-1.5 transition-transform duration-100 ease-out will-change-transform top-0 left-0" [style.width]="(100 / tile.size) + '%'"
-                  [style.height]="(100 / tile.size) + '%'" [style.transform]="'translate(' + (tile.col * 100) + '%, ' + (tile.row * 100) + '%)'">
-                  <button (click)="onTileClick(tile)" [disabled]="store.status() !== GameStatus.Playing"
-                    class="w-full h-full rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center font-black font-mono tracking-tight transition-all duration-150 select-none focus:outline-none drop-shadow-xs"
-                    [style.font-size]="'calc(100cqi / ' + tile.size + ' * 0.48)'"
-                    [ngClass]="{
-                        'bg-[var(--color-sliding-tile-bg)] hover:bg-[var(--color-sliding-tile-hover)] active:bg-[var(--color-sliding-tile-active)] text-[var(--color-sliding-tile-text)] shadow-sm active:scale-[0.98]': hintTarget() !== tile.val,
-                        'bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse active:scale-[0.98]': hintTarget() === tile.val,
-                        'cursor-pointer': store.status() === GameStatus.Playing,
-                        'cursor-default opacity-90': store.status() !== GameStatus.Playing
-                      }">
-                    {{ tile.val }}
-                  </button>
-                </div>
-                }
-              </div>
+      <!-- Aspect Square Board -->
+      <div
+        class="relative flex flex-col items-center justify-start mx-auto bg-[var(--color-sliding-board-bg)] rounded-2xl lg:rounded-3xl p-2 sm:p-3 shadow-inner border-2 border-[var(--color-sliding-board-border)] flex-shrink-0 touch-none select-none overscroll-contain aspect-square"
+        [style.width]="boardSizePx()"
+        [style.height]="boardSizePx()"
+        (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)"
+        style="container-type: inline-size;">
 
-            </div>
-
+        <!-- Tiles -->
+        <div class="w-full h-full relative">
+          @for (tile of tiles(); track tile.val) {
+          <div class="absolute p-1 sm:p-1.5 transition-transform duration-100 ease-out will-change-transform top-0 left-0" [style.width]="(100 / tile.size) + '%'"
+            [style.height]="(100 / tile.size) + '%'" [style.transform]="'translate(' + (tile.col * 100) + '%, ' + (tile.row * 100) + '%)'">
+            <button (click)="onTileClick(tile)" [disabled]="store.status() !== GameStatus.Playing"
+              class="w-full h-full rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center font-black font-mono tracking-tight transition-all duration-150 select-none focus:outline-none drop-shadow-xs"
+              [style.font-size]="'calc(100cqi / ' + tile.size + ' * 0.48)'"
+              [ngClass]="{
+                  'bg-[var(--color-sliding-tile-bg)] hover:bg-[var(--color-sliding-tile-hover)] active:bg-[var(--color-sliding-tile-active)] text-[var(--color-sliding-tile-text)] shadow-sm active:scale-[0.98]': hintTarget() !== tile.val,
+                  'bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse active:scale-[0.98]': hintTarget() === tile.val,
+                  'cursor-pointer': store.status() === GameStatus.Playing,
+                  'cursor-default opacity-90': store.status() !== GameStatus.Playing
+                }">
+              {{ tile.val }}
+            </button>
           </div>
-          
-          <!-- Single Player Actions -->
-          @if (currentRoomMode() === GameMode.Single) {
-            <div class="flex-none flex justify-center items-center gap-4 py-2 w-full mx-auto relative z-10 shrink-0 mt-2" [style.max-width]="boardSizePx()">
-
-              <app-game-toolbar
-                [layoutStyle]="'compact'"
-                [showPrev]="false"
-                [showNext]="false"
-                [showUndo]="false"
-                [showRestart]="true"
-                [showHint]="true"
-                hintLayout="sudoku"
-                (restart)="store.playAgain()"
-                (hintApplied)="applyHint()"
-                class="flex-1 min-w-[200px]"
-              ></app-game-toolbar>
-            </div>
           }
         </div>
+
+      </div>
+
+    </div>
+    
+    <!-- Single Player Actions -->
+    @if (currentRoomMode() === GameMode.Single) {
+      <div class="flex-none flex justify-center items-center gap-4 py-2 w-full mx-auto relative z-10 shrink-0 mt-2 sm:mt-3" [style.max-width]="boardSizePx()">
+
+        <app-game-toolbar
+          [layoutStyle]="'compact'"
+          [showPrev]="false"
+          [showNext]="false"
+          [showUndo]="false"
+          [showRestart]="true"
+          [showHint]="true"
+          hintLayout="sudoku"
+          (restart)="store.playAgain()"
+          (hintApplied)="applyHint()"
+          class="flex-1 min-w-[200px]"
+        ></app-game-toolbar>
+      </div>
+    }
+  </div>
+</div>
 </app-game-layout>

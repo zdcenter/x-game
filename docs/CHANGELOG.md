@@ -2,7 +2,53 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
-## [v3.2.151] - 2026-11-01
+## [v3.2.153] - 2026-11-01
+
+### 多语言补全、五子棋对局闪烁五连光效与棋盘落子音频高并发零丢音修复 (I18n game.bot Localization, Gomoku Flashing 5-in-a-Row Laser & High-Concurrency Board Audio Fix)
+- **核心痛点解决 (用户反馈：1. 缺失翻译 `Missing translation for 'game.bot'`；2. 五子棋五连珠时连线需闪烁高光代表成功且需延迟1~2秒再弹结算，避免对手/自己看不清怎么赢的；3. 棋盘单机快速点击时经常没有声音，而PK大厅MP3有声音)**：
+  1. **【全语种多语言补齐】补齐 8 国语言 `'game.bot'` (`zh, en, ja, ko, es, fr, de, pt`)**：
+     - 在全部 8 套 i18n 语言文件中精准补全 `"game.bot"` 对应翻译（中文“电脑”、英文“Bot”、日文“ボット”、韩文“봇”等），彻底根除控制台 `Missing translation for 'game.bot'` 警告，严格遵循核心准则第 2 条。
+  2. **【五子棋 5 连珠激光闪烁动效与坐标像素级校准】(`gomoku.component.html`, `gomoku.component.css`, `game-layout.component.ts`)**：
+     - **根因一（SVG 坐标错位）**：原 SVG 覆层位于含 `p-3 sm:p-5 md:p-6` 内边距的外层木框中，导致百分比坐标未与 15×15 棋盘格子对齐，连线偏离棋子；
+     - **根因二（结算弹窗瞬间弹出无过渡）**：`GameLayoutComponent` 中 `showOverlaySignal` 默认初始化为 `true`，导致 `isAutoResultVisible` 在终局 0ms 瞬间求值为 `true`，完全绕过了 `finishFlow.autoNextDelayMs` 的 2.5 秒延时定时器；
+     - **修复措施**：
+       - 将 SVG 激光连线挂载移入 15×15 网格内部，百分比坐标 `(x + 0.5) * (100 / 15)%` 1:1 绝对像素级正中贯穿 5 颗胜势棋子；
+       - 为激光连线增加 `@keyframes laserGlow` 脉冲光效与多重投影（`animate-laser-line`），实现金光霓虹闪烁（“闪闪的代表成功了”）；
+       - 修复 `GameLayoutComponent.showOverlaySignal` 初始值与空值合并逻辑，在单机与 PK 对战模式下均严格保障 2.2~2.5 秒平滑过渡期，让对手和自己清晰看清胜负手后再从容弹出结算单。
+  3. **【棋盘快速落子音频高并发零丢音彻底根治】(`AudioService`, `audio-utils.ts`, `gomoku.sound.ts`, `gomoku-engine.ts`)**：
+     - **根因一（回调混淆双重播音）**：`LocalGomokuEngine` 中在玩家落子后误触发了 `onAiMove()`，导致玩家单次落子在同一毫秒内被重复触发两次音效；
+     - **根因二（Web Audio 时间戳竞态与 0 增益指数渐变异常）**：原 `playGomokuSound` 使用 `exponentialRampToValueAtTime` 且初始增益为 0，当微秒级时间戳 `<= currentTime` 时会抛出 `DOMException` 导致静音；
+     - **根因三（微任务延迟与异步阻塞）**：原 `AudioService.playGomoku` 使用 `async/await initWebAudio()`，打断了用户手势调用栈并在快速点击时引发微任务堆叠；且 `unlock` 监听器带 `once: true`，偶发权限未授权时后续不再重试；
+     - **根治措施**：
+       - `LocalGomokuEngine` 区分 `onStateChange` 与 `onAiMove`，杜绝重复触发；
+       - `createNoise` 引入全局 AudioBuffer 缓存，避免快速连击时高频 GC 和主线程计算卡顿；
+       - `playGomokuSound` 引入 `+0.005s` 安全时间缓冲，增益初始化设为起始值并采用健壮线性衰减（`linearRampToValueAtTime`），彻底消灭静默异常；
+       - `playGomoku` 改为纯同步派发，同时在后台无感唤醒挂起的 `AudioContext`，无论是单机闪电连点还是 PK 联机对弈，落子音效均 100% 灵敏瞬发，清脆悦耳！
+
+## [v3.2.152] - 2026-11-01
+
+### 结算空白广告框自愈折叠、五子棋激光连线复盘与平板端全视口居中体验升级 (Ad Blank Box Elimination, Gomoku Laser Winning Line & Tablet Full-Viewport Centering)
+- **核心痛点解决 (用户指派：1. 线上生产机结算界面广告白屏空方框；2. 五子棋失败/结束时无 5 子连线且弹窗过快体验不友好；3. 平板玩数字华容道等游戏棋盘不居中靠上留白过大)**：
+  1. **【广告空白方框彻底消灭】未填充/受阻广告无缝自愈折叠 (`AdsenseComponent` & `GameResultOverlayComponent`)**：
+     - **根因分析**：生产服务器配置了 `result_bottom` 广告位，但在 AdSense 审核期、无填充（`unfilled`）或被浏览器隐私/广告拦截器屏蔽时，Google 会将 `<ins>` 置空；而原结算浮层外层给 `<app-adsense>` 硬编码了 `bg-[var(--color-bg-main)] border min-h-[50px]`，导致页面下方始终残留一个突兀刺眼的空白色方形方框。
+     - **根治措施**：在 [`adsense.component.ts`](file:///home/zd/x-game/frontend/src/app/shared/components/adsense/adsense.component.ts) 中引入 `MutationObserver` 动态监听 `data-ad-status` 属性；一旦为 `unfilled` 或加载异常，宿主自动向外折叠隐藏（`display: none !important; isUnfilled = true`）；同时在 [`game-result-overlay.component.html`](file:///home/zd/x-game/frontend/src/app/shared/components/game-result-overlay/game-result-overlay.component.html) 中移除固化背景与边框，确保广告未真实加载时绝对 0 像素占位、0 白框残留！
+  2. **【五子棋五子连线激光光效 & 从容复盘】五子高光金线贯穿与 1~5 序号徽章 (`GomokuComponent` & `game-definitions.ts`)**：
+     - **根因分析**：AI 走第 5 子分出胜负时，此前缺少醒目的几何连线与序号，用户视线稍有偏差就会误以为“只有 4 个子连着怎么就输了”；且游戏结算弹窗出现过快（默认仅 1.5 秒），棋盘瞬间被覆层遮挡，导致玩家来不及复盘 AI 的绝杀步法。
+     - **根治措施**：
+       - 在 [`gomoku.component.html`](file:///home/zd/x-game/frontend/src/app/features/games/gomoku/gomoku.component.html) 中新增 **SVG 激光连线高光动效 (Golden Laser Beam)**：终局时自适应推导首尾棋子百分比坐标，渲染双层辉光激光线贯穿获胜 5 子；
+       - 在获胜的 5 枚棋子右上角动态展示金色脉冲角标 **1、2、3、4、5**，连珠逻辑一目了然，绝无歧义；
+       - 在 [`game-definitions.ts`](file:///home/zd/x-game/frontend/src/app/core/config/game-definitions.ts) 中为五子棋专项注入 `finishFlow: { autoNextDelayMs: 2500 }`，预留足足 2.5 秒从容无阻挡的棋盘复盘时间，体验质感全面升级。
+  3. **【平板/iPad 视口完美居中】数字华容道等棋盘上下居中舒展 (`SlidingComponent`)**：
+     - **根因分析**：在 iPad、Android 平板等 4:3 / 3:2 宽高比大屏设备上，手持顶栏下方未设置弹性垂直居中中枢，`justify-start` 导致棋盘强行贴近顶栏，下方大面积空旷留白（如用户截图所示）。
+     - **根治措施**：在 [`sliding.component.html`](file:///home/zd/x-game/frontend/src/app/features/games/sliding/sliding.component.html) 中将棋盘与底部控制台统合包裹于 `flex-1 w-full flex flex-col items-center justify-center my-auto min-h-0` 中枢容器内，棋盘与工具条在手持平板和 PC 桌面全场景下自动计算剩余视口并精确居中垂直居中，视觉饱满平衡。
+  4. **【数字华容道胜局重开打乱】彻底修复通关后无法重新洗牌缺陷 (`SlidingStore` & `SlidingComponent`)**：
+     - **根因分析**：在 `SlidingStore.startGame()` 中，单人模式下曾调用 `Object.assign(new LocalSlidingEngine(...), le)`，将上一局已经拼好的终局数组 `[1..15, 0]` 覆写到新实例上，导致用户点击再来一局或笑脸重启时棋盘依然是排好的状态。
+     - **根治措施**：重构 `startGame()`、`restartGame()` 与 `playAgain()`，单机模式下始终实例化全新的 `LocalSlidingEngine`，确保每次开局 100% 重新打乱洗牌，即开即玩。
+  5. **【全平台游戏结算界面统一化收敛】消除不统一体验，全量接入标准结算浮层 (`game-definitions.ts`, `BlockComponent`, `HexaComponent`)**：
+     - **根因分析**：方块消除 (`block`) 与六边形消除 (`hexa`) 此前配置了 `loseAction: 'board_overlay'` 并在盘面内部绘制了简陋的局域 Game Over 框，导致与五子棋等其它益智游戏的标准大弹窗结算体验严重割裂。
+     - **根治措施**：在 `game-definitions.ts` 中将方块消除、六边形消除、羊了个羊等游戏流转动作统一设置为 `winAction: 'modal', loseAction: 'modal'`；移除盘内局部小框，统一由 `<app-game-layout>` 调度标准 `<app-game-result-overlay>`，统一度量胜负状态、多巴胺胜利礼炮、分数与最佳纪录、排行榜直通与【再来一局】。
+  6. **【全平台棋盘垂直与水平黄金居中】视口宽度最大化与居中平衡 (`Sliding`, `Block`, `Hexa`, `Classic2048`, `Drop2048`, `Nonogram`)**：
+     - 全面梳理并升级各游戏的核心舞台布局，在保证最大化可用宽度（如 iPad 平板大屏棋盘放大至 540px~720px）的前提下，通过 `flex-1 my-auto justify-center items-center` 弹性居中容器统合，彻底消除由于贴顶导致的下方空旷突兀感。
 
 ### 桌面端/移动端 PWA 白屏三大根因彻底根治与全生命周期自愈防御体系 (PWA Anti-White-Screen Shield & Triple-Tier Self-Healing Architecture)
 - **核心痛点解决 (用户反馈：PWA 放在桌面访问时频繁白屏，表现为“有时候白屏很久、有时候根本就不动完全卡死、有时候一下子闪一下”，深度根因定位与全链路彻底根治)**：

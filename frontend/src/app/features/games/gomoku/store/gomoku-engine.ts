@@ -24,12 +24,14 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
   private ai: GomokuAI | null = null;
   private aiDifficulty: string = GameDifficulty.Medium;
   private playerId: string = '';
+  private onStateChange?: () => void;
   private onAiMove?: () => void;
   private onGameOver?: (win: boolean) => void;
 
-  initGame(config: { playerId: string, difficulty: string, onAiMove?: () => void, onGameOver?: (win: boolean) => void }) {
+  initGame(config: { playerId: string, difficulty: string, onStateChange?: () => void, onAiMove?: () => void, onGameOver?: (win: boolean) => void }) {
     this.playerId = config.playerId;
     this.aiDifficulty = config.difficulty;
+    this.onStateChange = config.onStateChange;
     this.onAiMove = config.onAiMove;
     this.onGameOver = config.onGameOver;
 
@@ -95,7 +97,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
       }
 
       this.currentTurn = 'AI';
-      if (this.onAiMove) this.onAiMove();
+      if (this.onStateChange) this.onStateChange();
       
       // AI Move: offloaded to Web Worker to keep main UI thread locked at 60fps
       this.computeBestMove(this.board).then(([aiY, aiX]) => {
@@ -104,6 +106,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
         if (aiY !== -1) {
           this.board[aiY][aiX] = this.playerColors['AI'];
           this.lastMove = [aiY, aiX];
+          if (this.onAiMove) this.onAiMove();
           
           const aiWinLine = this.checkWin(aiY, aiX, this.board[aiY][aiX]);
           if (aiWinLine) {
@@ -111,7 +114,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
             this.status = GameStatus.Finished;
             this.winner = 'AI';
             if (this.onGameOver) this.onGameOver(false);
-            if (this.onAiMove) this.onAiMove();
+            if (this.onStateChange) this.onStateChange();
             return;
           }
 
@@ -119,12 +122,12 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
             this.status = GameStatus.Finished;
             this.winner = 'tie';
             if (this.onGameOver) this.onGameOver(false);
-            if (this.onAiMove) this.onAiMove();
+            if (this.onStateChange) this.onStateChange();
             return;
           }
         }
         this.currentTurn = this.playerId;
-        if (this.onAiMove) this.onAiMove();
+        if (this.onStateChange) this.onStateChange();
       });
     }
   }

@@ -40,30 +40,41 @@ export class AudioService {
       const unlock = () => {
         if (this.hasUnlockedAudio) return;
         this.initWebAudioSync();
-        if (this.audioCtx && this.audioCtx.state === 'suspended') {
-          this.audioCtx.resume().then(() => {
-            // Play a silent buffer to unlock audio on iOS
-            const buffer = this.audioCtx!.createBuffer(1, 1, 22050);
-            const source = this.audioCtx!.createBufferSource();
-            source.buffer = buffer;
-            source.connect(this.audioCtx!.destination);
-            source.start(0);
+        if (this.audioCtx) {
+          if (this.audioCtx.state === 'running') {
+            this.hasUnlockedAudio = true;
+            cleanup();
+            return;
+          }
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume().then(() => {
+              // Play a silent buffer to unlock audio on iOS
+              const buffer = this.audioCtx!.createBuffer(1, 1, 22050);
+              const source = this.audioCtx!.createBufferSource();
+              source.buffer = buffer;
+              source.connect(this.audioCtx!.destination);
+              source.start(0);
 
-            if (this.audioCtx!.state === 'running') {
-              this.hasUnlockedAudio = true;
-              window.removeEventListener('pointerup', unlock);
-              window.removeEventListener('touchend', unlock);
-              window.removeEventListener('keydown', unlock);
-              window.removeEventListener('click', unlock);
-            }
-          }).catch(e => console.warn('Audio resume blocked:', e));
+              if (this.audioCtx!.state === 'running') {
+                this.hasUnlockedAudio = true;
+                cleanup();
+              }
+            }).catch(e => console.warn('Audio resume blocked:', e));
+          }
         }
       };
+
+      const cleanup = () => {
+        window.removeEventListener('pointerup', unlock);
+        window.removeEventListener('touchend', unlock);
+        window.removeEventListener('keydown', unlock);
+        window.removeEventListener('click', unlock);
+      };
       
-      window.addEventListener('pointerup', unlock, { once: true, passive: true });
-      window.addEventListener('touchend', unlock, { once: true, passive: true });
-      window.addEventListener('keydown', unlock, { once: true, passive: true });
-      window.addEventListener('click', unlock, { once: true, passive: true });
+      window.addEventListener('pointerup', unlock, { passive: true });
+      window.addEventListener('touchend', unlock, { passive: true });
+      window.addEventListener('keydown', unlock, { passive: true });
+      window.addEventListener('click', unlock, { passive: true });
     }
   }
 
@@ -187,11 +198,22 @@ export class AudioService {
   }
 
   // --- Gomoku Sounds ---
-  async playGomoku(name: 'stoneDrop' | 'stoneWin') {
+  playGomoku(name: 'stoneDrop' | 'stoneWin') {
     if (this.isMuted()) return;
-    await this.initWebAudio();
-    if (this.audioCtx && this.masterGain) {
-      playGomokuSound(this.audioCtx, this.masterGain, name);
+    this.initWebAudioSync();
+    if (this.audioCtx) {
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume().then(() => {
+          this.hasUnlockedAudio = true;
+        }).catch(() => {});
+      }
+      if (this.masterGain) {
+        try {
+          playGomokuSound(this.audioCtx, this.masterGain, name);
+        } catch (e) {
+          console.warn('Gomoku sound error:', e);
+        }
+      }
     }
   }
 

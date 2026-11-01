@@ -137,9 +137,11 @@ export class GomokuStore extends BaseGameStore {
     engine.initGame({
       playerId: this.playerId(),
       difficulty: difficulty,
+      onStateChange: () => {
+        this.tick.set(this.tick() + 1);
+      },
       onAiMove: () => {
         this.audio.playGomoku('stoneDrop');
-        this.tick.set(this.tick() + 1);
       },
       onGameOver: (win: boolean) => {
         this.submitSinglePlayerStats(win);

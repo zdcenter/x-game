@@ -766,11 +766,11 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     return this.isDefeatSignal();
   }
 
-  readonly showOverlaySignal = signal<boolean>(true);
-  @Input() set showOverlay(val: boolean) {
+  readonly showOverlaySignal = signal<boolean | undefined>(undefined);
+  @Input() set showOverlay(val: boolean | undefined) {
     this.showOverlaySignal.set(val);
   }
-  get showOverlay(): boolean {
+  get showOverlay(): boolean | undefined {
     return this.showOverlaySignal();
   }
   @Input({ transform: booleanAttribute }) showRevive: boolean = false;
@@ -1007,8 +1007,8 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       if (isWin && flow.winAction === 'auto_next') return false;
       if (!isWin && (flow.loseAction === 'board_overlay' || flow.loseAction === 'auto_restart')) return false;
     }
-    // 母版内部延时就绪，或外部显式传入了 showOverlay=true，弹窗均能 100% 顺畅挂载
-    return this.isInternalModalReady() || this.showOverlaySignal();
+    // 母版内部延时就绪，或外部显式传入了 showOverlay=true/false，均能精准控制弹窗展示时机
+    return this.showOverlaySignal() ?? this.isInternalModalReady();
   });
 
   readonly resultTitle = computed(() => {
@@ -1129,8 +1129,8 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       const status = this.effectiveStatus();
       const mode = this.effectiveRoomMode();
       if (status === GameStatus.Finished) {
+        const flow = this.currentFinishFlow();
         if (mode === GameMode.Single) {
-          const flow = this.currentFinishFlow();
           const isWin = this.resultStatus() === 'win';
           if (isWin && flow.winAction === 'auto_next') {
             this.isAutoNextNoticeVisible.set(true);
@@ -1153,7 +1153,11 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
             }, delay);
           }
         } else {
-          this.isInternalModalReady.set(true);
+          // 对战/PK模式：同样根据配置延时弹出结算，确保玩家看清终局连线与特效
+          const delay = flow.autoNextDelayMs !== undefined ? flow.autoNextDelayMs : 2000;
+          this.modalDelayTimer = setTimeout(() => {
+            this.isInternalModalReady.set(true);
+          }, delay);
         }
       } else {
         this.clearAutoNextTimers();
