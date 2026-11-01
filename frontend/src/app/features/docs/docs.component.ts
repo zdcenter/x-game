@@ -6,6 +6,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { GameService, GameDoc, getLocalizedField } from '../../core/services/game.service';
 import { marked } from 'marked';
 import { getOrigin } from '../../core/utils/browser.util';
+import { optimizeMetaTitle, optimizeMetaDescription } from '../../core/utils/seo.util';
 import { GameRegistryService } from '../../core/services/game-registry.service';
 import { GameStepPlayerComponent } from './components/game-step-player/game-step-player.component';
 import { ALL_DEMO_CONFIGS } from './data/demo-configs';
@@ -370,11 +371,20 @@ export class DocsComponent {
         this.renderMarkdown(md);
 
         // Per-page SEO: unique title/description/canonical for each game docs page
+        const docsKey = `seo.docs.${game.id}.title`;
+        const docsTitle = this.i18n.t(docsKey)();
+        const appName = this.i18n.t('app.title')();
         const gameTitle = this.getGameTitle(game.id);
         const gameDesc = this.getGameDesc(game.id);
-        const pageTitle = lang === 'zh'
-          ? `${gameTitle} 玩法教程与规则攻略 - ${this.i18n.t('app.title')()}`
-          : `How to Play ${gameTitle} - Rules & Advanced Tutorial | ${this.i18n.t('app.title')()}`;
+        let pageTitle = '';
+        if (docsTitle && docsTitle !== docsKey) {
+          pageTitle = docsTitle;
+        } else {
+          pageTitle = lang === 'zh'
+            ? `${gameTitle} 玩法教程与规则攻略 - ${appName}`
+            : `How to Play ${gameTitle} - Rules & Guide | ${appName}`;
+        }
+
         const desc = gameDesc || (lang === 'zh'
           ? `全面学习如何游玩 ${gameTitle}，查看详细的规则说明、进阶高分策略与保姆级通关教程。`
           : `Learn how to play ${gameTitle}. Read the comprehensive rules, advanced strategies, and step-by-step visual tutorials.`);
@@ -383,10 +393,13 @@ export class DocsComponent {
         const altLang = lang === 'en' ? 'zh' : 'en';
         const altUrl = `${origin}/${altLang}/docs/${game.id}`;
 
-        this.titleService.setTitle(pageTitle);
-        this.metaService.updateTag({ name: 'description', content: desc });
-        this.metaService.updateTag({ property: 'og:title', content: pageTitle });
-        this.metaService.updateTag({ property: 'og:description', content: desc });
+        const finalTitle = optimizeMetaTitle(pageTitle, appName);
+        const finalDesc = optimizeMetaDescription(desc, lang);
+
+        this.titleService.setTitle(finalTitle);
+        this.metaService.updateTag({ name: 'description', content: finalDesc });
+        this.metaService.updateTag({ property: 'og:title', content: finalTitle });
+        this.metaService.updateTag({ property: 'og:description', content: finalDesc });
         this.metaService.updateTag({ property: 'og:url', content: canonicalUrl });
 
         this.setLinkTag('canonical', canonicalUrl);
@@ -479,12 +492,13 @@ export class DocsComponent {
   private renderMarkdown(md: string) {
     // 1. Generate HTML using marked
     const rawHtml = marked.parse(md, { async: false }) as string;
+    const cleanHtml = rawHtml.replace(/<h1(\s|>)/gi, '<h2$1').replace(/<\/h1>/gi, '</h2>');
     
     // 2. Extract TOC and inject IDs into headings
     const tocItems: TocItem[] = [];
     let idCounter = 0;
     
-    const htmlWithIds = rawHtml.replace(/<h([23])>(.*?)<\/h\1>/g, (_match, levelStr, text) => {
+    const htmlWithIds = cleanHtml.replace(/<h([23])>(.*?)<\/h\1>/g, (_match, levelStr, text) => {
       const level = parseInt(levelStr, 10);
       const id = `heading-${idCounter++}`;
       // Clean up text (remove internal HTML tags if any)

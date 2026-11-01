@@ -41,9 +41,9 @@ import { ToastService } from '../../core/services/toast.service';
             </div>
           </div>
 
-          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-emerald-400 text-center">
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-emerald-400 text-center">
             {{ i18n.t('auth.register.title')() }}
-          </h2>
+          </h1>
           <p class="text-[var(--color-text-muted)] text-center mb-8 font-medium tracking-wide text-sm sm:text-base">{{ i18n.t('auth.register.subtitle')() }}</p>
 
           <form (ngSubmit)="onSubmit()" class="space-y-6">

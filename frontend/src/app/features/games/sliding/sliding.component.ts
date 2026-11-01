@@ -54,7 +54,6 @@ export class SlidingComponent extends BaseGameComponent {
   private windowSize = inject(WindowSizeService);
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
-  zenService = inject(ZenModeService);
   pwaService = inject(PwaService);
   feedbackService = inject(FeedbackService);
   private elementRef = inject(ElementRef);

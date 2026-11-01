@@ -22,6 +22,7 @@ import { HapticService } from '../services/haptic.service';
 import { GameRegistryService } from '../services/game-registry.service';
 import { LeaderboardService } from '../services/leaderboard.service';
 import { DeviceService } from '../services/device.service';
+import { ZenModeService } from '../services/zen-mode.service';
 import { AdService } from '../services/ad.service';
 
 /**
@@ -57,6 +58,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public gameRegistry = inject(GameRegistryService);
   public leaderboardService = inject(LeaderboardService);
   public deviceService = inject(DeviceService);
+  public zenService = inject(ZenModeService);
   public adService = inject(AdService);
   readonly isHandheld = this.deviceService.isHandheld;
   protected _injector = inject(Injector);

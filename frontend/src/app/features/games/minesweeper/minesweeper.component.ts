@@ -52,7 +52,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   override store = inject(MinesweeperStore);
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
-  zenService = inject(ZenModeService);
   pwaService = inject(PwaService);
   feedbackService = inject(FeedbackService);
   private elementRef = inject(ElementRef);

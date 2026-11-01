@@ -33,8 +33,8 @@
 >
 <div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-start my-0">
 
-  <!-- Integrated Board Header Bar (仅在移动/平板手持端展示，PC 桌面端保持标准统一单顶栏杜绝重复) -->
-  @if (isHandheld()) {
+  <!-- Integrated Board Header Bar (手持移动/平板端 或 专注全屏沉浸模式时展示) -->
+  @if (isHandheld() || zenService.isZenMode()) {
     <app-game-handheld-header
       [gameId]="'nonogram'"
       [gameTitle]="t('lobby.nonogram')() || '数织'"

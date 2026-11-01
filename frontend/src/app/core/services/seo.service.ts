@@ -4,6 +4,7 @@ import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { I18nService, SUPPORTED_LANGS, LANG_LOCALES, LANG_OG_LOCALES } from '../i18n/i18n.service';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import { getOrigin, getHref, isBrowser } from '../utils/browser.util';
+import { optimizeMetaTitle, optimizeMetaDescription } from '../utils/seo.util';
 import { GameRegistryService } from './game-registry.service';
 
 /** Production domain used as fallback when origin is unavailable (SSR/SSG). */
@@ -93,14 +94,18 @@ export class SeoService {
       }
       const fullImageUrl = `${origin}/${ogImageFile}`;
 
+      const appName = this.i18n.t('app.title')();
+      const finalTitle = optimizeMetaTitle(pageTitle, appName);
+      const finalDesc = optimizeMetaDescription(desc, lang);
+
       // ===== Apply meta tags =====
-      this.title.setTitle(pageTitle);
-      this.meta.updateTag({ name: 'description', content: desc });
+      this.title.setTitle(finalTitle);
+      this.meta.updateTag({ name: 'description', content: finalDesc });
       this.meta.updateTag({ name: 'keywords', content: keywords });
 
       // Open Graph
-      this.meta.updateTag({ property: 'og:title', content: pageTitle });
-      this.meta.updateTag({ property: 'og:description', content: desc });
+      this.meta.updateTag({ property: 'og:title', content: finalTitle });
+      this.meta.updateTag({ property: 'og:description', content: finalDesc });
       this.meta.updateTag({ property: 'og:image', content: fullImageUrl });
       this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
       this.meta.updateTag({ property: 'og:type', content: 'website' });

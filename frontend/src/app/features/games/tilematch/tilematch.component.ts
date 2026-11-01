@@ -50,7 +50,6 @@ export interface ClearingMatchEvent {
 })
 export class TilematchComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(TilematchStore);
-  zenService = inject(ZenModeService);
 
   readonly isImmersionActive = computed(() => {
     return this.deviceService.isHandheld() || this.zenService.isZenMode();

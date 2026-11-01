@@ -31,7 +31,8 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-  @if (isHandheld()) {
+  <!-- Integrated Board Header Bar (手持移动/平板端 或 专注全屏沉浸模式时展示) -->
+  @if (isHandheld() || zenService.isZenMode()) {
     <app-game-handheld-header
       [gameId]="'sudoku'"
       [gameTitle]="i18n.t('lobby.sudoku')() || '数独'"

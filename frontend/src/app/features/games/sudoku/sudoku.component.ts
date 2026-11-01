@@ -61,7 +61,6 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   http = inject(HttpClient);
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
-  zenService = inject(ZenModeService);
   pwaService = inject(PwaService);
   feedbackService = inject(FeedbackService);
   private elementRef = inject(ElementRef);

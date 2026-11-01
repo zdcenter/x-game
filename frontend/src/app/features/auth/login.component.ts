@@ -40,9 +40,9 @@ import { I18nService } from '../../core/i18n/i18n.service';
             </div>
           </div>
 
-          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 text-center">
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 text-center">
             {{ i18n.t('auth.login.title')() }}
-          </h2>
+          </h1>
           <p class="text-[var(--color-text-muted)] text-center mb-8 font-medium tracking-wide text-sm sm:text-base">{{ i18n.t('auth.login.subtitle')() }}</p>
 
           <form (ngSubmit)="onSubmit()" class="space-y-6">

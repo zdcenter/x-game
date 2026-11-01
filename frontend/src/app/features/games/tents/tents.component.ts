@@ -4,6 +4,7 @@ import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TentsStore } from './store/tents.store';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
+import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
@@ -15,7 +16,8 @@ import { TentsCellState } from './store/tents-engine';
   imports: [
     CommonModule,
     GameLayoutComponent,
-    GamePkHudComponent
+    GamePkHudComponent,
+    GameHandheldHeaderComponent
   ],
   providers: [TentsStore],
   templateUrl: './tents.component.html',

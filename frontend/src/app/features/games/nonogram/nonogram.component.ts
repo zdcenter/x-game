@@ -44,7 +44,6 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   override store = inject(NonogramStore);
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
-  zenService = inject(ZenModeService);
   pwaService = inject(PwaService);
   feedbackService = inject(FeedbackService);
   private elementRef = inject(ElementRef);

@@ -18,7 +18,7 @@ import * as QRCode from 'qrcode';
   standalone: true,
   imports: [CommonModule],
   host: {
-    'class': 'flex w-full h-full min-h-0'
+    'class': 'flex w-full sm:h-full min-h-0 flex-col'
   },
   templateUrl: './game-waiting-room.component.html',
 })

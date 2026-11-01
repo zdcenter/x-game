@@ -77,37 +77,41 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
           <div class="absolute right-0 top-full mt-2 w-60 sm:w-64 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl p-2.5 z-50 flex flex-col gap-1 backdrop-blur-xl animate-scale-up"
                (click)="$event.stopPropagation()">
             <!-- 更换对战游戏 / 难度 (在联机对战中且为房主) -->
+            <!-- 更换对战游戏 / 难度 (在联机对战中且为房主) -->
             @if (canSwitchGame()) {
-              <button (click)="openSwitchGame(); closeToolsMenu()"
-                      class="w-full flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm font-semibold text-purple-400 hover:bg-purple-500/10 transition-colors cursor-pointer border-b border-[var(--color-border-card)]/60 pb-2 mb-0.5">
-                <span class="flex items-center gap-2">
+              <button type="button"
+                      (click)="openSwitchGame(); closeToolsMenu(); audio.playClick(); haptic.light()"
+                      class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-purple-400 hover:bg-purple-500/10 active:bg-purple-500/20 active:scale-[0.98] transition-all cursor-pointer border-b border-[var(--color-border-card)]/60 pb-2 mb-0.5 select-none">
+                <span class="flex items-center gap-2 pointer-events-none">
                   <span>🎮</span>
                   <span>{{ i18n.t('game.switch_pk_game')() || '更换对战游戏' }}</span>
                 </span>
-                <span class="text-xs opacity-75">›</span>
+                <span class="text-xs opacity-75 pointer-events-none">›</span>
               </button>
             }
 
             <!-- 脑力金币 -->
             @if (coinService.isAuthenticated()) {
-              <button (click)="coinGuideService.open(); closeToolsMenu()"
-                      class="w-full flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer border-b border-[var(--color-border-card)]/60 pb-2 mb-0.5">
-                <span class="flex items-center gap-2">
+              <button type="button"
+                      (click)="coinGuideService.open(); closeToolsMenu(); audio.playClick(); haptic.light()"
+                      class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] active:bg-[var(--color-border-card)]/50 active:scale-[0.98] transition-all cursor-pointer border-b border-[var(--color-border-card)]/60 pb-2 mb-0.5 select-none">
+                <span class="flex items-center gap-2 pointer-events-none">
                   <app-coin-icon size="xs" />
                   <span>{{ i18n.t('game.coins_balance')() || '脑力金币' }}</span>
                 </span>
-                <span class="font-mono text-amber-500 font-bold">{{ coinService.coins() }}</span>
+                <span class="font-mono text-amber-500 font-bold pointer-events-none">{{ coinService.coins() }}</span>
               </button>
             }
 
-            <!-- 音效开关 -->
-            <button (click)="audio.toggleMute()"
-                    class="w-full flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
-              <span class="flex items-center gap-2">
+            <!-- 音效开关 (整行有效点击) -->
+            <button type="button"
+                    (click)="audio.toggleMute(); audio.playClick(); haptic.light()"
+                    class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] active:bg-[var(--color-border-card)]/50 active:scale-[0.98] transition-all cursor-pointer select-none">
+              <span class="flex items-center gap-2 pointer-events-none">
                 <span>{{ audio.isMuted() ? '🔇' : '🔊' }}</span>
                 <span>{{ i18n.t('audio.sound_effects')() || '音效开关' }}</span>
               </span>
-              <span class="text-[10px] sm:text-xs px-1.5 py-0.5 rounded font-mono"
+              <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono pointer-events-none"
                     [class.bg-emerald-500/15]="!audio.isMuted()"
                     [class.text-emerald-500]="!audio.isMuted()"
                     [class.bg-red-500/15]="audio.isMuted()"
@@ -116,14 +120,15 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
               </span>
             </button>
 
-            <!-- 触感震动 -->
-            <button (click)="haptic.toggleVibration()"
-                    class="w-full flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
-              <span class="flex items-center gap-2">
+            <!-- 触感震动 (整行有效点击) -->
+            <button type="button"
+                    (click)="haptic.toggleVibration(); audio.playClick(); haptic.light()"
+                    class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] active:bg-[var(--color-border-card)]/50 active:scale-[0.98] transition-all cursor-pointer select-none">
+              <span class="flex items-center gap-2 pointer-events-none">
                 <span>📳</span>
                 <span>{{ i18n.t('audio.vibration')() || '触感震动' }}</span>
               </span>
-              <span class="text-[10px] sm:text-xs px-1.5 py-0.5 rounded font-mono"
+              <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono pointer-events-none"
                     [class.bg-emerald-500/15]="haptic.isVibrationEnabled()"
                     [class.text-emerald-500]="haptic.isVibrationEnabled()"
                     [class.bg-gray-500/15]="!haptic.isVibrationEnabled()"
@@ -132,26 +137,28 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
               </span>
             </button>
 
-            <!-- 全屏沉浸 -->
-            <button (click)="toggleZen(); closeToolsMenu()"
-                    class="w-full flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
-              <span class="flex items-center gap-2">
+            <!-- 全屏沉浸 (整行有效点击) -->
+            <button type="button"
+                    (click)="toggleZen(); closeToolsMenu(); audio.playClick(); haptic.light()"
+                    class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] active:bg-[var(--color-border-card)]/50 active:scale-[0.98] transition-all cursor-pointer select-none">
+              <span class="flex items-center gap-2 pointer-events-none">
                 <span>🧘</span>
                 <span>{{ zenService.isZenMode() ? (i18n.t('game.exit_zen_mode')() || '退出全屏') : (i18n.t('game.zen_mode')() || '全屏沉浸') }}</span>
               </span>
-              <span class="text-[10px] sm:text-xs px-1.5 py-0.5 rounded font-mono bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+              <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded font-mono bg-[var(--color-bg-main)] border border-[var(--color-border-card)] pointer-events-none">
                 {{ zenService.isZenMode() ? 'Exit' : 'Enter' }}
               </span>
             </button>
 
             <!-- 意见建议与 Bug 反馈 -->
-            <button (click)="feedbackService.open({ gameId: gameId, gameTitle: gameTitle }); closeToolsMenu()"
-                    class="w-full flex items-center justify-between p-2 rounded-xl text-xs sm:text-sm font-semibold text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer border-t border-[var(--color-border-card)]/50 pt-2 mt-0.5">
-              <span class="flex items-center gap-2">
+            <button type="button"
+                    (click)="feedbackService.open({ gameId: gameId, gameTitle: gameTitle }); closeToolsMenu(); audio.playClick(); haptic.light()"
+                    class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-amber-500 hover:bg-amber-500/10 active:bg-amber-500/20 active:scale-[0.98] transition-all cursor-pointer border-t border-[var(--color-border-card)]/50 pt-2 mt-0.5 select-none">
+              <span class="flex items-center gap-2 pointer-events-none">
                 <span>🐞</span>
                 <span>{{ i18n.t('feedback.tooltip')() || '意见建议与 Bug 反馈' }}</span>
               </span>
-              <span class="text-xs">›</span>
+              <span class="text-xs pointer-events-none">›</span>
             </button>
           </div>
         }

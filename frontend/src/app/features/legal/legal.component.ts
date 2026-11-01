@@ -233,8 +233,10 @@ export class LegalComponent {
     effect(() => {
       const raw = this.content();
       if (raw) {
-         const html = marked.parse(raw) as string;
-         const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, html) || '';
+         let markdownStr = raw.replace(/^\s*#\s+[^\r\n]+(?:\r?\n|$)/, '');
+         const html = marked.parse(markdownStr) as string;
+         const noH1Html = html.replace(/<h1(\s|>)/gi, '<h2$1').replace(/<\/h1>/gi, '</h2>');
+         const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, noH1Html) || '';
          this.contentHtml.set(safeHtml);
       }
     });

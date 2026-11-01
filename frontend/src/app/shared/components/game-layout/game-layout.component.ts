@@ -375,7 +375,7 @@ import { AdService } from '../../../core/services/ad.service';
 
         <!-- Auto-managed Multiplayer Waiting Room (When store is provided) -->
         @if (isAutoWaitingRoomVisible()) {
-          <div class="w-full flex-grow flex flex-col min-h-0 overflow-hidden p-2 lg:p-4">
+          <div class="w-full flex-grow flex flex-col min-h-0 overflow-y-auto sm:overflow-hidden p-1.5 sm:p-2 lg:p-4 overscroll-contain">
             <app-game-waiting-room
               [gameId]="gameId"
               [mode]="effectiveRoomMode()"
@@ -478,7 +478,7 @@ import { AdService } from '../../../core/services/ad.service';
 
         <!-- Emoji Broadcast Bar (When inside multiplayer room) -->
         @if (effectiveRoomId()) {
-          <div class="w-full flex justify-center gap-2 mt-3 animate-fade-in">
+          <div class="w-full flex justify-center gap-2 mt-2 sm:mt-3 mb-3 sm:mb-2 animate-fade-in shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
             @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
               <button (click)="sendEmoji(em)" class="w-9 h-9 sm:w-11 sm:h-11 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-lg sm:text-xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">
                 {{ em }}

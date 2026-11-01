@@ -45,6 +45,11 @@ export class HapticService {
     this.triggerVibrate(15);
   }
 
+  /** Alias for vibrateLight() */
+  light() {
+    this.vibrateLight();
+  }
+
   /**
    * Moderate vibration. Ideal for placing blocks or merging.
    */

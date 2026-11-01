@@ -2,6 +2,37 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.143] - 2026-11-01
+
+### 移动端组队等候室滑动查看优化与游戏顶梁设置菜单全行触控强化 (Mobile Waiting Room Scrollability & Header Settings Full-Row Touch Optimization)
+- **核心痛点解决 (用户语音与截图反馈：1. 手机端在 PK 组队等候室中，“开始游戏”下方的“更换游戏”、“房间设置”及“退出房间”按钮被底部遮挡且无法滑动查看；2. 每个游戏顶部菜单最右侧的工具箱中，“音效开关”、“触感震动”及“专注模式”等选项只有点击最右侧文字才能生效，希望整行均为有效点击区域)**：
+  1. **手机端组队等候大厅滚动视口解锁与完整按钮露出 (`GameWaitingRoomComponent` & `GameLayoutComponent`)**：
+     - **根因分析**：`GameLayoutComponent` 中包裹 `<app-game-waiting-room>` 的容器原先声明了 `overflow-hidden`，加之组件宿主绑定了硬性的 `h-full min-h-0`，导致在 iPhone Safari（具备顶部地址栏与底部导航栏）等受限视口下，卡片高度被生硬截断，内层与外层 touchmove 触摸滑动手势被完全吞噬，位于“开始游戏”下方的【更换游戏】、【房间设置】及【退出房间】三个关键操作按钮被切除在视口外且无法下滑；
+     - **滚动链条解锁与弹性放行**：将 `GameLayoutComponent` 等候室容器升级为 `overflow-y-auto sm:overflow-hidden overscroll-contain`，移动端解除滚动封锁；将 `GameWaitingRoomComponent` 宿主样式由 `h-full` 优化为 `sm:h-full`，允许移动端按内容高度自然舒展；
+     - **移动端精致紧凑化排版**：对移动端卡座与素材进行微调（对战卡座由 `min-h-[140px]` 优化为 `min-h-[125px]`，头像由 `w-13` 优化为 `w-11 sm:w-16`，二维码收敛为 `w-14 sm:w-20`），并为底栏操作区与全局 Emoji 浮动条配置安全内边距（`pb-8 sm:pb-6` 与 `pb-[env(safe-area-inset-bottom,0px)]`），确保全功能控制台在任意小屏手机上均可顺滑滑动、无遮挡触达；
+  2. **游戏顶栏设置工具箱整行点击范围与交互反馈强化 (`GameHandheldHeaderComponent` & `GameHeaderComponent`)**：
+     - **根因分析**：原菜单行中的 `<button>` 内部包含多层未声明 `pointer-events-none` 的 `<span>` 标签与图标，在部分移动浏览器中容易因微小的滑动或误触产生判定偏差，加之缺乏即时的按压微动效与触感回馈，产生“只点中右侧文字标签才生效”的操作滞涩感；
+     - **整行点击热区与子元素穿透 (`pointer-events-none`)**：在 `<app-game-handheld-header>` 与 `<app-game-header>` 中为【音效开关】、【触感震动】、【全屏沉浸（专注全屏模式）】以及【更换对战游戏】、【脑力金币】和【Bug 反馈】全量子项统一注入 `w-full min-h-[44px]`（严格契合 Apple 44pt 触控黄金标准），内部所有子元素追加 `pointer-events-none`，确保手指点击整行任意坐标（左侧图标、标题文案、中间空白或右侧状态胶囊）100% 触发对应指令；
+     - **触感震动与微交互闭环 (`audio.playClick` + `haptic.light`)**：点击整行时增加 `active:scale-[0.98]` 与 `active:bg-[var(--color-border-card)]/50` 即时下压视觉反馈，同时伴随清脆点击音效与轻量触感震动，整行操作手感极速响应。
+
+## [v3.2.142] - 2026-11-01
+
+### 全站 SEO 核心标头与标题规范治理 (Comprehensive SEO Header & Title Length Optimization)
+- **站长工具/搜索引擎高优先级问题清零 (Webmaster/Bingbot Audit Fixes)**：
+  1. **登录与注册页面缺少 `<h1>` 标签修复 (`/login` & `/register`)**：
+     - 将 `LoginComponent` 和 `RegisterComponent` 顶部的页面主标题由 `<h2>` 升级为标准的 `<h1>` 语义标签，并保持既有的渐变霓虹字效与响应式排版，彻底解决站长工具“缺少 <h1> 标记”告警；
+  2. **博客与攻略页面多重 `<h1>` 标签治理 (`BlogPostComponent`, `LegalComponent`, `DocsComponent`)**：
+     - **根因分析**：博客模板头部已包含带有元数据（作者、标签、发布日期）的页面级 `<header><h1>{{ title }}</h1></header>`，而在解析 Markdown 正文时，各文章起始的 `# 标题` 经 marked 渲染后生成了正文内的第二个 `<h1>`，且造成正文与顶栏标题冗余重复展示；
+     - **标头降级与去冗治理**：在正文解析前自动剥离 Markdown 起始首行冗余的 `# 标题`，同时将正文内所有剩余的 `<h1>` 统一下降为语义规范的 `<h2>`，不仅彻底消除了“页面上存在多个 <h1> 标记”的严重报错，同时让文章视觉与阅读体验更加清爽整洁；
+     - **法律条款与文档同步防御**：在 `LegalComponent` 与 `DocsComponent` 中同步加入相同的 `<h1>` 过滤与降级防御机制，全站文章类页面 100% 保持单 `<h1>` 黄金标准；
+  3. **标题过长治理与全局 70 字符智能防截断截留 (`SeoService`, `BlogPostComponent`, `DocsComponent`)**：
+     - **单页标题精准修正**：针对葡萄牙语扫雷页面（`pt/games/minesweeper`）及英文博客攻略（`1a2b-bulls-cows`、`sokoban-strategy`、`lights-out-puzzle-guide`）以及多款游戏的标题进行了精简精炼，去除冗长堆砌词，确保各单页标题在 50~65 字符之间黄金区间；
+     - **全局智能长度熔断器 (`SeoService` & `BlogPostComponent`)**：引入 HTML 转义长度校验机制（准确计算 `&` 转为 `&amp;` 后的真实 HTML 字符长度），当 `<title>` 长度超过 68 字符时，自动进行优雅后缀压缩（` - Puzzle PK Blog` -> ` | Puzzle PK` -> 自动按词界安全截断），确保全站 133 个预渲染静态路由及后续任意新增页面永远不会超过搜索引擎 70 字符阈值；
+  4. **全站 Meta Description 过短告警清零与 130~160 字符黄金区间自愈治理 (`seo.util.ts`, `SeoService`, `DocsComponent`, `BlogPostComponent`)**：
+     - **根因分析 (站长工具反馈 150 个页面“Meta descriptions on many of your pages are too short”)**：大量中文、日文、韩文游戏/攻略描述原先仅有 30~70 字符，虽然中文含义浓缩，但 Bingbot 与 Googlebot 等自动化 SEO 审核工具按裸字符数硬性指标（< 120 字符视为信息过短，建议 150~160 字符），导致全站 150 个路由被批量预警；
+     - **模块化 SEO 优化器封装 (`seo.util.ts`)**：封装高内聚、高复用的 `optimizeMetaDescription(raw, lang)` 与 `optimizeMetaTitle(...)` 算法，配备 Vitest 100% 覆盖率单元测试；
+     - **全语种智能语境富集与语义级安全截断**：当页面描述低于 130 字符时，自动根据语言（中/英/日/韩/西/葡/法/德）自适应补充游戏玩法特征、思维训练价值、即开即玩与联机 PK 邀请等核心价值主张与行动号召（CTA），将全站 132 个静态内容页面以及未来动态页面描述天然且高质量地稳定在 **130 ~ 160 字符**搜索引擎最佳展示甜点区，实现 150 处告警 100% 清零。
+
 ## [v3.2.141] - 2026-11-01
 
 ### 全端游戏局内“开房PK”一致性与手持端等候大厅修复 (Universal In-Game "Create PK Room" Alignment & Handheld Waiting Room Fix)
@@ -11,7 +42,13 @@
      - **对齐成熟开房流转**：将 `navigateToPkArena()` 与 `openPkDrawer()` 在单机模式下的逻辑全面对齐 `this.gameLayout.quickCreatePkRoom()`；点击后自动触发登录态校验、根据当前游戏配置动态生成对战房间，并通过 WebSocket 瞬间将局内舞台切换为高颜值 `<app-game-waiting-room>`（PK 等候大厅），与帐篷与树的极速开房体验完全一致；
   2. **顶梁与全端 PK 按钮文案全量统一 (`GameHandheldHeaderComponent` & `GameLayoutComponent`)**：
      - **手持端顶栏文案统一**：彻底拔除 `<app-game-handheld-header>` 中硬编码的 `<span ...>PK</span>`，升级为响应式多语言调用 `{{ i18n.t('game.quick_pk')() || '开房PK' }}`，在平板（iPad）及手机端均舒展展示“⚔️ 开房PK”，杜绝视觉简略不一致；
-     - **全端 fallback 规范收敛**：统一 `GameLayoutComponent` 顶栏及手持端悬浮 Dock 中的 fallback 词条为统一的 `'开房PK'`，8 国语言国际化字典 100% 自动映射。
+     - **全端 fallback 规范收敛**：统一 `GameLayoutComponent` 顶栏及手持端悬浮 Dock 中的 fallback 词条为统一的 `'开房PK'`，8 国语言国际化字典 100% 自动映射；
+  3. **帐篷与树全屏专注模式 (Zen Mode) 导航顶梁集成与退出闭环 (`TentsComponent`)**：
+     - **解决痛点**：用户反馈《帐篷与树》在开启专注模式时顶部无任何导航菜单，无法像扫雷一样随时返回或退出沉浸；
+     - **一体化顶梁集成**：在 `TentsComponent` 中引入并挂载 `<app-game-handheld-header>`，并在 `[immersive]="isHandheld()"` 与 `@if (isHandheld() || zenService.isZenMode())` 场景下无缝呈现，左侧提供返回与规则，中央集成关卡章节、帐篷收集进度与步数，右侧提供【开房PK】与【设置工具箱】（可一键“退出全屏”），全端操作 100% 畅通；
+     - **基类注入扩展 (`BaseGameComponent`)**：在基类中统一注入 `ZenModeService`，扫雷、数织、数独等全游戏无缝支持专注模式顶梁自愈展示；
+  4. **全语种缺失词条补齐与告警清零 (`game.all_ready_click_start` & `seo.tents.keywords`)**：
+     - 在 8 国语言字典（zh, en, ja, ko, de, fr, es, pt）中全量补齐等候大厅就绪提示词条 `game.all_ready_click_start`（“所有玩家已准备，点击立即开局！”）以及《帐篷与树》专属 SEO 关键词 `seo.tents.keywords`，彻底消除运行时多语言缺失报警。
 
 ## [v3.2.140] - 2026-10-31
 

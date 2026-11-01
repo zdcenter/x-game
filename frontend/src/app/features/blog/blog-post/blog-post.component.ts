@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { BlogService, BlogPostMeta, BlogLanguageMeta } from '../../../core/services/blog.service';
 import { I18nService, LANG_LOCALES } from '../../../core/i18n/i18n.service';
+import { optimizeMetaTitle, optimizeMetaDescription } from '../../../core/utils/seo.util';
 import { marked } from 'marked';
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
@@ -619,11 +620,15 @@ export class BlogPostComponent implements OnInit {
       if (!meta || !raw) return;
 
       untracked(() => {
-        this.titleService.setTitle(`${meta.title} - ${this.i18n.t('app.title')()} Blog`);
-        this.metaService.updateTag({ name: 'description', content: meta.description });
+        const appName = this.i18n.t('app.title')();
+        const finalTitle = optimizeMetaTitle(meta.title || '', appName, ` - ${appName} Blog`);
+        const finalDesc = optimizeMetaDescription(meta.description, lang);
+
+        this.titleService.setTitle(finalTitle);
+        this.metaService.updateTag({ name: 'description', content: finalDesc });
         this.metaService.updateTag({ name: 'keywords', content: meta.keywords });
-        this.metaService.updateTag({ property: 'og:title', content: `${meta.title} - ${this.i18n.t('app.title')()} Blog` });
-        this.metaService.updateTag({ property: 'og:description', content: meta.description });
+        this.metaService.updateTag({ property: 'og:title', content: finalTitle });
+        this.metaService.updateTag({ property: 'og:description', content: finalDesc });
 
         const origin = (typeof window !== 'undefined' && window.location?.origin) || PROD_ORIGIN;
         const coverImg = raw.cover_image ? raw.cover_image : `${origin}/og-cover.png`;
@@ -634,7 +639,7 @@ export class BlogPostComponent implements OnInit {
           headline: meta.title,
           description: meta.description,
           author: { '@type': 'Organization', name: meta.author || 'Puzzle PK Team' },
-          publisher: { '@type': 'Organization', name: this.i18n.t('app.title')(), logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` } },
+          publisher: { '@type': 'Organization', name: appName, logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` } },
           datePublished: raw.date,
           dateModified: raw.date,
           url: `${origin}/${lang}/blog/${raw.id}`,
@@ -644,9 +649,13 @@ export class BlogPostComponent implements OnInit {
           inLanguage: LANG_LOCALES[lang],
         });
 
-        const markdownStr = meta.content ?? '';
+        let markdownStr = meta.content ?? '';
+        // Strip the leading H1 markdown title since <header><h1> already renders the canonical article title
+        markdownStr = markdownStr.replace(/^\s*#\s+[^\r\n]+(?:\r?\n|$)/, '');
         const rawHtml = marked.parse(markdownStr) as string;
-        const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, rawHtml) || '';
+        // Demote any remaining <h1> tags in markdown to <h2> so there is strictly one <h1> on the page
+        const singleH1Html = rawHtml.replace(/<h1(\s|>)/gi, '<h2$1').replace(/<\/h1>/gi, '</h2>');
+        const safeHtml = this.sanitizer.sanitize(SecurityContext.HTML, singleH1Html) || '';
         this.contentHtml.set(safeHtml);
         this.loading.set(false);
       });

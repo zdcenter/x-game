@@ -94,8 +94,8 @@
     [class.animate-gold-pulse]="store.status() === GameStatus.Finished && !isDefeat()"
     [class.animate-red-pulse]="store.status() === GameStatus.Finished && isDefeat()">
 
-    <!-- Integrated Board Header Bar (仅手持端展示，PC 桌面端保持标准单一外层 GameHeader，杜绝重复) -->
-    @if (isHandheld()) {
+    <!-- Integrated Board Header Bar (手持移动/平板端 或 开启专注全屏沉浸模式时展示) -->
+    @if (isHandheld() || zenService.isZenMode()) {
       <app-game-handheld-header
         [gameId]="'minesweeper'"
         [gameTitle]="i18n.t('lobby.minesweeper')() || '扫雷'"
@@ -172,8 +172,8 @@
       </app-game-handheld-header>
     }
 
-    <!-- Single Player Modern HUD Capsule (PC 桌面端展示，手持端已整合入一体化顶梁中) -->
-    @if (!isHandheld() && currentRoomMode() === GameMode.Single) {
+    <!-- Single Player Modern HUD Capsule (PC 桌面端非专注模式展示，手持端及专注模式已整合入一体化顶梁中) -->
+    @if (!isHandheld() && !zenService.isZenMode() && currentRoomMode() === GameMode.Single) {
       <div class="flex-none flex items-center justify-between px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-[480px] shadow-sm z-10 mx-auto">
 
         <!-- Mines Remaining -->
