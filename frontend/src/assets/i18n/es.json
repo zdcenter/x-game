@@ -1015,6 +1015,7 @@
   "game.reset": "Restablecer",
   "game.restart": "Jugar de nuevo",
   "game.retry": "Reintentar",
+  "game.back_to_lobby": "Volver a la Lista de Salas",
   "game.return_lobby": "Regresar al vestíbulo",
   "game.revive_coins_action": "Revivir con {{coins}} Monedas",
   "game.revive_coins_btn": "Revivir (-50 Monedas)",

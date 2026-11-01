@@ -27,7 +27,8 @@ import * as QRCode from 'qrcode';
 
     <!-- Modal Backdrop & Dialog -->
     @if (recommendService.isOpen()) {
-      <div class="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      <div class="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-5 overflow-hidden"
+           style="overscroll-behavior: contain;">
         <!-- Backdrop -->
         <div class="fixed inset-0 bg-black/65 backdrop-blur-md transition-opacity" (click)="closeModal()"></div>
 

@@ -98,12 +98,12 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   // ── State ─────────────────────────────────────────────────────────────────
   playerId   = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
-  rightTab   = signal<'rooms' | 'online'>('rooms');
+  rightTab   = signal<'rooms' | 'create' | 'online'>('rooms');
   formOpen   = signal(false); // mobile accordion only; desktop always shows form via CSS
 
   // Create form — step wizard
   createStep     = signal<'game' | 'settings'>('game'); // 步骤：选游戏 or 填设置
-  createModalOpen = signal(false); // Quick Create Modal (Zero-scroll architecture)
+  createModalOpen = computed(() => this.rightTab() === 'create'); // Backward-compat signal
   mobileStep     = signal<'game' | 'settings'>('game');
   createGameId   = signal('');
   roomName       = signal('');
@@ -241,20 +241,37 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       }
       this.mobileStep.set('game');
     }
-    this.createModalOpen.set(true);
+    this.rightTab.set('create');
   }
 
   closeCreateModal() {
-    this.createModalOpen.set(false);
+    this.rightTab.set('rooms');
   }
 
-  selectCreateGame(id: string) {
+  onHeaderBack() {
+    if (this.rightTab() === 'create') {
+      this.rightTab.set('rooms');
+      return;
+    }
+    this.back.emit();
+  }
+
+  selectCreateGame(id: string, autoScroll = false) {
     this.createGameId.set(id);
     if (!id) return; // 清空选择
     const modes = this.availableModes();
     this.roomMode.set(modes[0]?.id || '');
     const diffs = this.availableDifficulties();
     this.roomDifficulty.set(diffs[0]?.id || '');
+
+    if (autoScroll && typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        const el = document.getElementById('pk-room-config-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50);
+    }
   }
 
   pickGameAndNext(id: string) {

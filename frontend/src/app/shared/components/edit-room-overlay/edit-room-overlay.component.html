@@ -223,24 +223,28 @@
             }
           </div>
 
-          <!-- 操作按钮 -->
-          <div class="flex gap-3 pt-2">
-            <button (click)="step.set('game')"
-                    class="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-card)] transition-all text-sm font-bold shrink-0 cursor-pointer">
-              ← {{ t('game.change') || '换游戏' }}
-            </button>
-            <button (click)="onConfirm()" [disabled]="isBountyInsufficient()"
-                    class="flex-1 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-              @if (isBountyInsufficient()) {
-                {{ t('game.bounty_btn_insufficient').replace('{cost}', editBounty().toString()).replace('{current}', coinService.coins().toString()) }}
-              } @else {
-                ✓ {{ t('game.update') }}
-              }
-            </button>
           </div>
         }
 
       </div>
+
+      <!-- ── Footer Actions (Pinned to Bottom) ── -->
+      @if (step() === 'settings') {
+        <div class="shrink-0 px-5 py-3 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-xs flex gap-3">
+          <button (click)="step.set('game')"
+                  class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-all text-sm font-bold shrink-0 cursor-pointer">
+            ← {{ t('game.change') || '换游戏' }}
+          </button>
+          <button (click)="onConfirm()" [disabled]="isBountyInsufficient()"
+                  class="flex-1 py-2.5 rounded-xl font-black text-sm bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+            @if (isBountyInsufficient()) {
+              {{ t('game.bounty_btn_insufficient').replace('{cost}', editBounty().toString()).replace('{current}', coinService.coins().toString()) }}
+            } @else {
+              ✓ {{ t('game.update') }}
+            }
+          </button>
+        </div>
+      }
     </div>
   </div>
 }

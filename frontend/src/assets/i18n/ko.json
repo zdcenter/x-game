@@ -1015,6 +1015,7 @@
   "game.reset": "재설정",
   "game.restart": "다시 플레이",
   "game.retry": "다시 시도",
+  "game.back_to_lobby": "대결 목록으로 돌아가기",
   "game.return_lobby": "로비로 돌아가기",
   "game.revive_coins_action": "{{coins}} 코인으로 부활",
   "game.revive_coins_btn": "50 코인으로 부활",

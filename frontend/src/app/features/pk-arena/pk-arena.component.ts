@@ -10,9 +10,9 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
   standalone: true,
   imports: [GamePkLobbyComponent],
   template: `
-    <div class="flex-grow flex flex-col h-[calc(100vh-64px)] py-1 sm:py-3 bg-[var(--color-bg-base)] overflow-hidden">
-      <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex-grow flex flex-col min-h-0 overflow-hidden">
-        <div class="flex-grow flex flex-col min-h-0 overflow-hidden rounded-2xl lg:rounded-3xl backdrop-blur-xl border shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
+    <div class="flex-grow flex flex-col h-full min-h-0 p-0 sm:py-2 sm:px-4 lg:py-3 lg:px-8 bg-[var(--color-bg-base)] overflow-hidden">
+      <div class="w-full max-w-[1600px] mx-auto flex-grow flex flex-col min-h-0 overflow-hidden">
+        <div class="flex-grow flex flex-col min-h-0 overflow-hidden rounded-none sm:rounded-2xl lg:rounded-3xl border-0 sm:border shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
              style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
           <app-game-pk-lobby
             [gameId]="initialGameId()"

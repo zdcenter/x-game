@@ -2,6 +2,55 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.146] - 2026-11-01
+
+### 多语言缺失修复与全站模态弹窗人机工程体验深度排查治理 (i18n Missing Key Fix & Universal Modal UX Hardening)
+- **核心痛点解决 (用户反馈：1. 提示 Missing translation for 'game.back_to_lobby'；2. 询问还有哪些地方会出现类似多层嵌套、滚动条打架、操作困难等对玩家不友好的问题，要求全面排查优化)**：
+  1. **全 8 门语言补齐 `game.back_to_lobby` 国际化字典**：
+     - 在 `zh.json`（返回对战列表）、`en.json`（Back to Rooms）、`ja.json`（対戦一覧に戻る）、`ko.json`（대결 목록으로 돌아가기）、`es.json`（Volver a la Lista de Salas）、`fr.json`（Retour aux Salons）、`de.json`（Zurück zur Raumliste）与 `pt.json`（Voltar à Lista de Salas）中全部补齐键值，彻底消除浏览器控制台 `Missing translation for 'game.back_to_lobby'` 报错，严格遵循准则第2条；
+  2. **【修改房间设置】底栏常驻吸底改造 (`EditRoomOverlayComponent`)**：
+     - **排查隐患**：原弹窗在第二步“配置规则（模式、难度、多回合制、悬赏金币）”时，把【← 换游戏】与【✓ 更新设置】两个核心按钮塞在可滚动区域的最后面。在小屏手机上，玩家需要向下翻滚过长列表才能找到保存按钮，容易误以为“无法提交”；
+     - **常驻吸底优化**：将操作按钮彻底从滚动区域中提取到卡片固定底部（`shrink-0 px-5 py-3 border-t border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-xs`），确保在任何手机屏幕上，确认更新按钮 100% 始终可见、立即可点；
+  3. **【更换对战游戏/换难度】移动端紧凑化与平滑聚焦 (`GameSwitchModalComponent`)**：
+     - **排查隐患**：等候室与局内换游戏弹窗中，19 款游戏在手机端原本采用 2 列网格展示，纵向被拉长至 10 行（约 600px 高），导致下方的难度选择（简单/中等/困难等）被挤出屏幕外；
+     - **紧凑化与平滑聚焦**：将移动端升级为 3 列网格（`grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1.5`），纵向高度压缩 30% 以上；用户在手机端点击任意游戏卡片时，页面自动平滑顺畅滚动至下方的难度与模式控制区（`#switch-config-panel`），免去手动翻找；
+  4. **【推荐本站与社交分享】外层双滚动条竞争根除 (`SiteRecommendModalComponent`)**：
+     - **排查隐患**：外层 `fixed inset-0` 遮罩层上原本同时声明了 `overflow-y-auto`，而内层对话框主体也声明了 `flex-1 overflow-y-auto`，在部分移动浏览器（如 Safari/微信浏览器）上会诱发内外双层滚动条竞争与页面拉动卡顿；
+     - **滚动层级解耦**：将外层遮罩容器修正为 `overflow-hidden` 与 `overscroll-behavior: contain`，把拉动视口 100% 留给内层卡片，滑动体验如丝般顺滑。
+
+## [v3.2.145] - 2026-11-01
+
+### 对战大厅“创建房间”页面一体化重构与多层滚动嵌套彻底根除 (PK Arena In-Page Unified "Create Room" View & Elimination of Nested Scrollbars)
+- **核心痛点解决 (用户语音与人机工程反馈：创建房间界面和外面那层有导航关系，存在多个滚动条并嵌套在弹窗中，拉动极不舒服；应当与整个页面融为一体，拉动更加自然顺畅)**：
+  1. **彻底摒弃悬浮弹窗形态，升级为页面原生一等公民视图 (`rightTab === 'create'`)**：
+     - **根因分析**：此前“创建房间”以 `fixed inset-0` 悬浮模态框的形式展示，内有深色暗化半透明遮罩与多层卡片边框。在移动端屏幕上，模态框与底层的全站顶栏、竞技大厅主卡片形成了“外层视口 - 大厅卡片 - 浮动弹窗”三重视觉嵌套盒模型，不仅割裂了页面导航层次，且手指滑动时内层与外层滚动条相互竞争、拖拽滞涩；
+     - **一国内生视图改造**：彻底废除 `createModalOpen` 浮动遮罩弹窗（移除了模板中全部 `fixed inset-0`、暗色遮罩和多层弹窗外壳），将“创建房间”直接内嵌为 `GamePkLobbyComponent` 主内容区的原生视图（与“对战房间列表”、“在线玩家”并列）；
+  2. **消除全站双层滚动条竞争与移动端满屏无缝贴合 (`MainLayoutComponent` & `PkArenaComponent`)**：
+     - 在 `MainLayoutComponent` 中增加针对 `/pk-arena` 对战大厅路由的精准识别（`isArenaRoute`）：进入对战大厅时，自动将外层 `<main>` 的 `overflow-y-auto` 切换为 `overflow-hidden`，并隐藏全局底栏 `<app-footer>`，确保整页全局仅存在竞技大厅内唯一的自然滚动视口，杜绝任何“滚动条套滚动条”的双滚动条竞争与滑动穿透；
+     - 在移动端将 `PkArenaComponent` 与 `GamePkLobbyComponent` 的外层卡片内边距、圆角与边框全部收敛至视口边缘（`p-0 border-0 rounded-none sm:rounded-2xl`），使对战大厅与手机屏幕完美融合为一整块画布；
+  3. **顶栏导航与视图状态深度联动 (Seamless Header Integration)**：
+     - `<app-game-header>` 顶栏与当前视图深度响应：当切换至创建房间视图时，顶栏主标题自动切换为“⚔️ 创建对战房间”，副标题动态显示“选择游戏与对战规则，邀请好友或等待全网玩家挑战”；
+     - 顶栏左侧原生返回箭头与右侧快捷操作按钮均实现视图联动：在创建房间视图点击返回箭头或【← 返回对战列表】即可平滑退回房间列表，大厅顶栏操作区同步追加【➕ 创建房间】快捷标签胶囊，三种视图切换行云流水；
+  4. **全端响应式与 iOS 安全区无缝适配**：
+     - 移动端单指上下滑动如丝般顺滑，常驻吸底操作栏（Sticky Bottom Action Bar）紧贴 iOS 底部手势横条安全区（`safe-area-inset-bottom`），一键即可立即创建房间并进入战备室；PC 宽屏端保持左右分栏的高阶电竞排版。
+
+## [v3.2.144] - 2026-11-01
+
+### 移动端极速创建对战房间弹窗一体化滚动与常驻创建操作栏重构 (Mobile Quick Create Room Modal Unified Scroll & Sticky Action Bar Redesign)
+- **核心痛点解决 (用户语音与截图反馈：在手机端点击创建房间后，下方选择难度等级或多回合制等参数的区域只有一条极窄的小缝隙，内容根本不显、无法正常操作，创建房间的按钮更是被隐藏在最底部完全看不见；要求将游戏选择与下方的参数配置融为一体，支持全局自由拉动，一目了然且操作简易，同时确保创建按钮清晰可见不被遮挡)**：
+  1. **移动端一体化统一视口滚动与双嵌套滚动截断根除 (`GamePkLobbyComponent`)**：
+     - **根因分析**：此前创建房间弹窗外层声明了 `overflow-hidden`，内层拆分为上部 19 款游戏网格（`overflow-y-auto`）与下部参数配置面板（`overflow-y-auto`）两个独立滚动容器。在 iPhone Safari 等移动端受限屏幕高度下，上部游戏列表撑满视口，下半部配置面板被挤压成仅几十像素的狭窄裂缝，手指无处拉动，创建按钮被深埋截断；
+     - **一体化统一滚动改造**：将外层弹窗主体在移动端升级为统一的单一大滚动流（`overflow-y-auto lg:overflow-hidden touch-pan-y overscroll-contain`），桌面端维持精致的双列分屏左右协同；用户在移动端任何位置单指即可从上到下拉动全局，游戏、难度规格、回合制、金币悬赏与配置一目了然；
+  2. **移动端 4 列紧凑极速游戏网格，垂直占高缩减 50%**：
+     - 将移动端原本占地庞大的 3 列（`grid-cols-3`）高挑卡片重构为紧凑高颜值的 4 列（`grid-cols-4 sm:grid-cols-4 lg:grid-cols-3 gap-1.5 sm:gap-2`），图标微调为 `w-7 h-7 sm:w-8 sm:h-8`，单行高度收敛至 52px；
+     - 19 款游戏选择区在手机端总高度由 ~500px 剧减至 ~260px，节约出超过 240px 黄金垂直视口，让下方的难度与参数配置直接大幅露头；
+  3. **移动端常驻吸底操作栏 (Sticky Bottom Action Bar)**：
+     - 在移动端（`lg:hidden`）部署固定常驻吸底控制栏（`sticky bottom-0 z-20 backdrop-blur-md`），适配 iOS 底部手势安全区（`pb-[max(0.6rem,env(safe-area-inset-bottom))]`）；
+     - 左侧实时呈现当前已选游戏的缩略图标、中文/多语言名称、当前难度标签、目标局数及赏金微晶徽章；
+     - 右侧常驻显眼的渐变微光【✚ 立即创建】按钮，任何时候均触手可及，彻底终结“找不到创建按钮、创建按钮被躲藏起来”的致命体验痛点；PC 端仍保留配置面板内的宽体主按钮（`hidden lg:block`），双端体验完美统一；
+  4. **游戏切换平滑智能聚焦与触感闭环**：
+     - 手机端点击上方任意一款游戏卡片时，除即时切换配置和触感震动外，页面自动平滑顺畅滚动至下方的配置详情区域（`scrollIntoView({ behavior: 'smooth' })`），操作行云流水。
+
 ## [v3.2.143] - 2026-11-01
 
 ### 移动端组队等候室滑动查看优化与游戏顶梁设置菜单全行触控强化 (Mobile Waiting Room Scrollability & Header Settings Full-Row Touch Optimization)

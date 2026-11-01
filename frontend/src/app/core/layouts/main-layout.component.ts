@@ -318,13 +318,13 @@ import { DeviceService } from '../services/device.service';
       <!-- Main Content Area -->
       <main #mainScroll
             class="flex-1 block custom-scrollbar relative min-h-0 flex flex-col"
-            [class.overflow-y-auto]="!zenService.isZenMode()"
-            [class.overflow-hidden]="zenService.isZenMode()"
+            [class.overflow-y-auto]="!zenService.isZenMode() && !isArenaRoute()"
+            [class.overflow-hidden]="zenService.isZenMode() || isArenaRoute()"
             style="overflow-anchor: none;">
-        <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode() || isFullImmersion()">
+        <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode() || isFullImmersion() || isArenaRoute()">
           <router-outlet></router-outlet>
         </div>
-        @if (!zenService.isZenMode()) {
+        @if (!zenService.isZenMode() && !isArenaRoute()) {
           <app-footer class="mt-auto"></app-footer>
         }
         <app-share-modal></app-share-modal>
@@ -457,6 +457,10 @@ export class MainLayoutComponent {
     if (this.zenService.isZenMode()) return true;
     const isHandheld = this.deviceService.isHandheld();
     return isHandheld && (this.layout.isImmersiveGame() || this.zenService.isGameRoute());
+  });
+
+  readonly isArenaRoute = computed(() => {
+    return this.router.url.includes('/pk-arena');
   });
 
   pendingFriendRequests = computed(() => {

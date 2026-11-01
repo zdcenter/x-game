@@ -1015,6 +1015,7 @@
   "game.reset": "Zurücksetzen",
   "game.restart": "Noch einmal spielen",
   "game.retry": "Erneut versuchen",
+  "game.back_to_lobby": "Zurück zur Raumliste",
   "game.return_lobby": "Zurück zur Lobby",
   "game.revive_coins_action": "Wiederbeleben mit {{coins}} Münzen",
   "game.revive_coins_btn": "Wiederbeleben (-50 Münzen)",

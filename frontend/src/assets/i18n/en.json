@@ -1062,6 +1062,7 @@
   "game.reset": "Reset",
   "game.restart": "Play Again",
   "game.retry": "Retry",
+  "game.back_to_lobby": "Back to Rooms",
   "game.return_lobby": "Return to Lobby",
   "game.revive_coins_action": "Revive with {{coins}} Coins",
   "game.revive_coins_btn": "Revive (-50 Coins)",

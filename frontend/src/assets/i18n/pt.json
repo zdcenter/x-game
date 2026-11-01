@@ -1015,6 +1015,7 @@
   "game.reset": "Redefinir",
   "game.restart": "Jogar Novamente",
   "game.retry": "Tentar novamente",
+  "game.back_to_lobby": "Voltar à Lista de Salas",
   "game.return_lobby": "Voltar para o Lobby",
   "game.revive_coins_action": "Reviver com {{coins}} Moedas",
   "game.revive_coins_btn": "Reviver (-50 Moedas)",

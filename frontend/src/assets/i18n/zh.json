@@ -1062,6 +1062,7 @@
   "game.reset": "重置",
   "game.restart": "再来一局",
   "game.retry": "重来",
+  "game.back_to_lobby": "返回对战列表",
   "game.return_lobby": "返回大厅",
   "game.revive_coins_action": "消耗 {{coins}} 脑力币复活",
   "game.revive_coins_btn": "消耗 50 脑力币复活",

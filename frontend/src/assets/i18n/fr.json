@@ -1015,6 +1015,7 @@
   "game.reset": "Réinitialiser",
   "game.restart": "Jouer à nouveau",
   "game.retry": "Réessayer",
+  "game.back_to_lobby": "Retour aux Salons",
   "game.return_lobby": "Retour au hall",
   "game.revive_coins_action": "Réanimer avec {{coins}} Pièces",
   "game.revive_coins_btn": "Relancer (-50 Pièces)",

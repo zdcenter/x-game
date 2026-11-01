@@ -1,13 +1,14 @@
-<div class="flex flex-col w-full h-full overflow-hidden rounded-2xl lg:rounded-3xl backdrop-blur-xl border shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
+<div class="flex flex-col w-full h-full min-h-0 overflow-hidden rounded-none sm:rounded-2xl lg:rounded-3xl border-0 sm:border transition-colors duration-300"
      style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
 
   <!-- ══════ Header — PK 大厅统一导航 ══════ -->
   <div class="shrink-0">
-    <app-game-header [title]="t('game.pk_lobby_title')" [subtitle]="t('game.pk_lobby_subtitle')"
+    <app-game-header [title]="rightTab() === 'create' ? (t('game.create_room') || '创建对战房间') : t('game.pk_lobby_title')"
+      [subtitle]="rightTab() === 'create' ? '选择游戏并配置规则，即刻迎战好友或全服玩家' : t('game.pk_lobby_subtitle')"
       [iconGradientClass]="'from-rose-500 to-violet-600'" [titleGradientClass]="'from-rose-500 to-violet-600 dark:from-rose-400 dark:to-violet-400'"
       [shadowClass]="'shadow-violet-500/20'"
       [headerBgClass]="'bg-[var(--color-bg-card)] dark:bg-gradient-to-r dark:from-rose-950/30 dark:to-violet-950/30 px-3 sm:px-5 md:px-6 py-1.5 sm:py-2 mb-0 border-b border-[var(--color-border-card)]'"
-      (back)="back.emit()">
+      (back)="onHeaderBack()">
 
       <!-- 大厅图标 ⚔️ -->
       <span game-icon class="text-2xl sm:text-3xl leading-none select-none">⚔️</span>
@@ -46,7 +47,7 @@
         <!-- Tab Pill Switcher -->
         <div class="inline-flex p-1 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-inner">
           <button (click)="rightTab.set('rooms')"
-                  class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5"
+                  class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   [class.bg-gradient-to-r]="rightTab() === 'rooms'"
                   [class.from-violet-600]="rightTab() === 'rooms'"
                   [class.to-indigo-600]="rightTab() === 'rooms'"
@@ -60,8 +61,20 @@
                   [class.bg-white/20]="rightTab() === 'rooms'"
                   [class.bg-black/10]="rightTab() !== 'rooms'">{{ allRooms().length }}</span>
           </button>
+          <button (click)="openCreateModal()"
+                  class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  [class.bg-gradient-to-r]="rightTab() === 'create'"
+                  [class.from-rose-500]="rightTab() === 'create'"
+                  [class.to-violet-600]="rightTab() === 'create'"
+                  [class.text-white]="rightTab() === 'create'"
+                  [class.shadow-md]="rightTab() === 'create'"
+                  [class.text-[var(--color-text-muted)]]="rightTab() !== 'create'"
+                  [class.hover:text-[var(--color-text-main)]]="rightTab() !== 'create'">
+            <span>➕</span>
+            <span>{{ t('game.create_room') || '创建房间' }}</span>
+          </button>
           <button (click)="rightTab.set('online')"
-                  class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5"
+                  class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   [class.bg-gradient-to-r]="rightTab() === 'online'"
                   [class.from-emerald-600]="rightTab() === 'online'"
                   [class.to-teal-600]="rightTab() === 'online'"
@@ -116,18 +129,318 @@
           <span>{{ t('game.quick_match') }}</span>
         </button>
 
-        <!-- Main Create Room Trigger Button -->
-        <button (click)="openCreateModal()"
-                class="px-4 sm:px-5 py-2 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:brightness-110 text-white shadow-md shadow-rose-500/20 hover:shadow-lg hover:shadow-rose-500/30 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-          <span class="text-base leading-none">➕</span>
-          <span>{{ t('game.create_room') || '创建新房间' }}</span>
-        </button>
+        @if (rightTab() === 'create') {
+          <button (click)="rightTab.set('rooms')"
+                  class="px-3.5 sm:px-4 py-2 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-all flex items-center gap-1.5 cursor-pointer">
+            <span>←</span>
+            <span>{{ t('game.back_to_lobby') || '返回对战列表' }}</span>
+          </button>
+        } @else {
+          <!-- Main Create Room Trigger Button -->
+          <button (click)="openCreateModal()"
+                  class="px-4 sm:px-5 py-2 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:brightness-110 text-white shadow-md shadow-rose-500/20 hover:shadow-lg hover:shadow-rose-500/30 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+            <span class="text-base leading-none">➕</span>
+            <span>{{ t('game.create_room') || '创建新房间' }}</span>
+          </button>
+        }
       </div>
 
     </div>
 
-    <!-- ── Rooms / Online Content Body ── -->
-    <div class="flex-grow overflow-y-auto custom-scrollbar p-3 sm:p-6 space-y-6 pb-20 sm:pb-6">
+    <!-- ── Content Area: Create Room In-Page View OR Rooms / Online List ── -->
+    @if (rightTab() === 'create') {
+      <!-- ══════ Create Room In-Page View (Zero-Modal Full-Breadth Architecture) ══════ -->
+      <div class="flex-grow flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 custom-scrollbar touch-pan-y overscroll-contain">
+        
+        <!-- Left Column: Compact Games Grid (40% width on Desktop, ~350px) -->
+        <div class="w-full lg:w-[350px] shrink-0 border-b lg:border-b-0 lg:border-r border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50 p-3 sm:p-5 flex flex-col lg:overflow-y-auto lg:custom-scrollbar">
+          <div class="flex items-center justify-between mb-2.5 shrink-0">
+            <span class="text-xs font-black uppercase tracking-wider text-[var(--color-accent-from)] flex items-center gap-1.5">
+              <span>🎯</span>
+              <span>{{ t('game.select_game') }} ({{ allGames().length }})</span>
+            </span>
+            @if (selectedGameCfg(); as g) {
+              <span class="text-[11px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20 truncate max-w-[130px]">
+                已选: {{ t(g.titleKey) }}
+              </span>
+            }
+          </div>
+
+          <!-- 4-Column on Mobile, 3-Column on Desktop: Ultra Compact & Space-Saving -->
+          <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-3 gap-1.5 sm:gap-2">
+            @for (g of allGames(); track g.id) {
+              <button (click)="selectCreateGame(g.id, true)"
+                      class="flex flex-col items-center justify-center gap-1 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border text-[10px] sm:text-[11px] font-bold transition-all active:scale-95 group relative text-center min-h-[58px] sm:min-h-[64px] cursor-pointer"
+                      [class.bg-gradient-to-br]="createGameId() === g.id"
+                      [class.from-rose-500/20]="createGameId() === g.id"
+                      [class.to-violet-500/20]="createGameId() === g.id"
+                      [class.border-violet-500]="createGameId() === g.id"
+                      [class.shadow-[0_0_12px_rgba(139,92,246,0.3)]]="createGameId() === g.id"
+                      [class.text-[var(--color-text-main)]]="createGameId() === g.id"
+                      [class.bg-[var(--color-bg-card)]]="createGameId() !== g.id"
+                      [class.border-[var(--color-border-card)]]="createGameId() !== g.id"
+                      [class.text-[var(--color-text-muted)]]="createGameId() !== g.id"
+                      [class.hover:border-violet-400]="createGameId() !== g.id">
+                <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-5 h-5 sm:w-6 sm:h-6 object-contain group-hover:scale-110 transition-transform" alt="">
+                <span class="leading-tight line-clamp-1 text-[9px] sm:text-[11px]">{{ t(g.titleKey) }}</span>
+                @if (createGameId() === g.id) {
+                  <span class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-violet-500 text-white flex items-center justify-center text-[8px] font-black shadow-xs">✓</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Right Column: Instant Live Parameter Configuration Panel (60% width on Desktop) -->
+        <div id="pk-room-config-section"
+             class="flex-1 p-3.5 sm:p-6 flex flex-col justify-between lg:overflow-y-auto lg:custom-scrollbar bg-[var(--color-bg-card)] space-y-4 pb-24 lg:pb-4">
+          
+          <div class="space-y-4">
+            <!-- Game Highlight Pill -->
+            @if (selectedGameCfg(); as g) {
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-violet-500/10 via-[var(--color-bg-main)] to-transparent border border-violet-500/20">
+                <div class="flex items-center gap-3">
+                  <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-8 h-8 object-contain drop-shadow-sm" alt="">
+                  <div>
+                    <h3 class="font-black text-sm text-[var(--color-text-main)] leading-tight">{{ t(g.titleKey) }}</h3>
+                    <p class="text-[10px] text-[var(--color-text-muted)]">双人实时对决 · 积分仲裁</p>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  实时联机
+                </span>
+              </div>
+            }
+
+            <!-- 1. Difficulty Level (Segmented Horizontal Pills) -->
+            @if (availableDifficulties().length > 0) {
+              <div>
+                <label class="block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+                  {{ t('game.diff') }}
+                </label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  @for (diff of availableDifficulties(); track diff.id) {
+                    <button (click)="roomDifficulty.set(diff.id)"
+                            class="py-2.5 px-2 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 text-center cursor-pointer"
+                            [class.bg-gradient-to-r]="roomDifficulty() === diff.id"
+                            [class.from-violet-600]="roomDifficulty() === diff.id"
+                            [class.to-indigo-600]="roomDifficulty() === diff.id"
+                            [class.text-white]="roomDifficulty() === diff.id"
+                            [class.border-violet-500]="roomDifficulty() === diff.id"
+                            [class.shadow-md]="roomDifficulty() === diff.id"
+                            [class.bg-[var(--color-bg-main)]]="roomDifficulty() !== diff.id"
+                            [class.border-[var(--color-border-card)]]="roomDifficulty() !== diff.id"
+                            [class.text-[var(--color-text-main)]]="roomDifficulty() !== diff.id"
+                            [class.hover:border-violet-400]="roomDifficulty() !== diff.id">
+                      <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
+                      @if (diff.descKey || diff.desc) {
+                        <span class="text-[9px] opacity-70 leading-tight font-normal">{{ diff.descKey ? t(diff.descKey) : diff.desc }}</span>
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- 2. Game Mode (if multiple available) -->
+            @if (availableModes().length > 1) {
+              <div>
+                <label class="block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+                  {{ t('game.game_mode') }}
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  @for (mode of availableModes(); track mode.id) {
+                    <button (click)="roomMode.set(mode.id)"
+                            class="p-2.5 rounded-xl border font-bold text-xs transition-all text-left active:scale-95 cursor-pointer"
+                            [class.bg-violet-600]="roomMode() === mode.id"
+                            [class.text-white]="roomMode() === mode.id"
+                            [class.border-violet-500]="roomMode() === mode.id"
+                            [class.shadow-md]="roomMode() === mode.id"
+                            [class.bg-[var(--color-bg-main)]]="roomMode() !== mode.id"
+                            [class.border-[var(--color-border-card)]]="roomMode() !== mode.id"
+                            [class.text-[var(--color-text-main)]]="roomMode() !== mode.id">
+                      <div class="flex items-center gap-1.5">
+                        <span>{{ mode.icon || '⚔️' }}</span>
+                        <span>{{ mode.labelKey ? t(mode.labelKey) : mode.id }}</span>
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- 3. Target Rounds & Bounty Coins (2-Column Grid on Widescreen) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Multi-Round Target -->
+              @if (isMultiRoundEnabled()) {
+                <div>
+                  <label class="block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+                    {{ t('game.pk_target_label') }}
+                  </label>
+                  <div class="grid grid-cols-4 gap-1.5">
+                    @for (opt of pkTargetOptions; track opt) {
+                      <button (click)="roomTarget.set(opt)"
+                              class="py-2 rounded-xl border font-black text-xs transition-all text-center cursor-pointer"
+                              [class.bg-violet-600]="roomTarget() === opt"
+                              [class.text-white]="roomTarget() === opt"
+                              [class.border-violet-500]="roomTarget() === opt"
+                              [class.bg-[var(--color-bg-main)]]="roomTarget() !== opt"
+                              [class.border-[var(--color-border-card)]]="roomTarget() !== opt"
+                              [class.text-[var(--color-text-main)]]="roomTarget() !== opt">
+                        {{ opt }}局
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Bounty Coins -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">
+                    <app-coin-icon size="xs" />
+                    <span>{{ t('game.bounty_label') }}</span>
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-amber-400 font-bold inline-flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                      <app-coin-icon size="xs" />
+                      <span>{{ coinService.coins() }}</span>
+                    </span>
+                    <button type="button" (click)="coinGuideService.open()" class="text-[10px] text-amber-400 hover:text-amber-300 font-medium underline cursor-pointer">
+                      {{ t('game.get_coins') || '获取' }}
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5">
+                  @for (b of bountyOptions; track b) {
+                    @let isLacking = b > 0 && coinService.coins() < b;
+                    <button type="button" (click)="selectBounty(b)"
+                            class="py-2 rounded-xl border font-black text-xs transition-all text-center flex flex-col items-center justify-center cursor-pointer relative"
+                            [class.bg-gradient-to-r]="roomBounty() === b && b > 0 && !isLacking"
+                            [class.from-amber-500]="roomBounty() === b && b > 0 && !isLacking"
+                            [class.to-yellow-500]="roomBounty() === b && b > 0 && !isLacking"
+                            [class.text-slate-900]="roomBounty() === b && b > 0 && !isLacking"
+                            [class.border-amber-400]="roomBounty() === b && b > 0 && !isLacking"
+                            [class.bg-amber-500/20]="roomBounty() === b && b > 0 && isLacking"
+                            [class.border-amber-500]="roomBounty() === b && b > 0 && isLacking"
+                            [class.text-amber-400]="roomBounty() === b && b > 0 && isLacking"
+                            [class.bg-violet-600]="roomBounty() === b && b === 0"
+                            [class.text-white]="roomBounty() === b && b === 0"
+                            [class.border-violet-500]="roomBounty() === b && b === 0"
+                            [class.bg-[var(--color-bg-main)]]="roomBounty() !== b"
+                            [class.border-[var(--color-border-card)]]="roomBounty() !== b"
+                            [class.text-[var(--color-text-main)]]="roomBounty() !== b"
+                            [class.opacity-60]="roomBounty() !== b && isLacking">
+                      <span>{{ b === 0 ? t('game.bounty_free') : b }}</span>
+                      @if (isLacking) {
+                        <span class="text-[9px] font-semibold text-rose-400 mt-0.5 scale-95">
+                          {{ t('game.bounty_short_diff').replace('{needed}', (b - coinService.coins()).toString()) }}
+                        </span>
+                      }
+                    </button>
+                  }
+                </div>
+
+                <!-- 友好内联对比提醒条 (对比自己脑力币，少于时给出友好提醒) -->
+                @if (isBountyInsufficient()) {
+                  <div class="mt-2 px-2.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs animate-fade-in gap-1.5">
+                    <div class="flex items-center gap-1.5 text-amber-400 font-medium">
+                      <span class="text-sm shrink-0">⚠️</span>
+                      <span class="leading-snug">{{ t('game.bounty_insufficient_inline').replace('{current}', coinService.coins().toString()).replace('{needed}', bountyShortage().toString()).replace('{cost}', roomBounty().toString()) }}</span>
+                    </div>
+                    <button type="button" (click)="coinGuideService.open()" class="text-[10px] underline text-amber-300 hover:text-amber-200 font-bold shrink-0 ml-1 cursor-pointer">
+                      {{ t('game.get_coins') || '获取脑力币' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- 4. Privacy & Password -->
+            <div>
+              <div class="flex gap-2">
+                <button type="button" (click)="roomPassword.set('')"
+                        class="flex-1 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                        [class.bg-violet-600]="roomPassword() === ''"
+                        [class.text-white]="roomPassword() === ''"
+                        [class.border-violet-500]="roomPassword() === ''"
+                        [class.bg-[var(--color-bg-main)]]="roomPassword() !== ''"
+                        [class.border-[var(--color-border-card)]]="roomPassword() !== ''"
+                        [class.text-[var(--color-text-muted)]]="roomPassword() !== ''">
+                  🌐 {{ t('game.room_public') || '公开房间' }}
+                </button>
+                <button type="button" (click)="roomPassword.set(roomPassword() || ' ')"
+                        class="flex-1 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                        [class.bg-amber-500]="roomPassword() !== ''"
+                        [class.text-black]="roomPassword() !== ''"
+                        [class.border-amber-500]="roomPassword() !== ''"
+                        [class.bg-[var(--color-bg-main)]]="roomPassword() === ''"
+                        [class.border-[var(--color-border-card)]]="roomPassword() === ''"
+                        [class.text-[var(--color-text-muted)]]="roomPassword() === ''">
+                  🔒 {{ t('game.room_private') || '私密房间' }}
+                </button>
+              </div>
+              @if (roomPassword() !== '') {
+                <input type="text" inputmode="numeric" maxlength="4"
+                       [value]="roomPassword().trim()"
+                       (input)="updateInput(roomPassword, $event, 4, true)"
+                       class="w-full mt-2 bg-[var(--color-bg-main)] border-2 border-amber-500/60 rounded-xl px-4 py-2 font-mono text-lg tracking-[0.8em] text-center focus:outline-none focus:border-amber-400 transition-colors"
+                       placeholder="0 0 0 0" autofocus>
+              }
+            </div>
+          </div>
+
+          <!-- Confirm Create Button (Desktop in-panel view) -->
+          <div class="pt-2 hidden lg:block">
+            <button (click)="onConfirmCreate()" [disabled]="myRooms().length > 0 || isBountyInsufficient()"
+                    class="w-full py-3.5 px-6 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:brightness-110 shadow-lg shadow-rose-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+              <span class="text-base leading-none">✚</span>
+              <span>
+                @if (isBountyInsufficient()) {
+                  {{ t('game.bounty_btn_insufficient').replace('{cost}', roomBounty().toString()).replace('{current}', coinService.coins().toString()) }}
+                } @else {
+                  {{ t('game.create_and_join') || '立即创建房间并迎战' }}
+                }
+              </span>
+            </button>
+            @if (myRooms().length > 0) {
+              <p class="text-[11px] text-center text-amber-400 mt-1.5">{{ t('game.room_limit_hint') }}</p>
+            }
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Sticky Bottom Mobile Action Bar (常驻吸底操作台：移动端时刻可见，绝不躲藏) -->
+      <div class="lg:hidden shrink-0 px-3.5 py-2.5 bg-[var(--color-bg-card)]/95 backdrop-blur-md border-t border-[var(--color-border-card)] shadow-[0_-4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between gap-3 z-30 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center shrink-0 shadow-inner">
+            <img [src]="'/assets/games/icons/' + createGameId() + '.svg?v=2'" class="w-5 h-5 object-contain" alt="">
+          </div>
+          <div class="truncate">
+            <div class="text-xs font-black text-[var(--color-text-main)] truncate">
+              {{ selectedGameCfg() ? t(selectedGameCfg()!.titleKey) : createGameId() }}
+            </div>
+            <div class="text-[10px] text-[var(--color-text-muted)] truncate flex items-center gap-1 font-mono">
+              <span>{{ roomDifficulty() ? diffLabel(roomDifficulty(), createGameId()) : '' }}</span>
+              <span>·</span>
+              <span>{{ roomTarget() }}局制</span>
+              <span>·</span>
+              <span class="text-amber-500 font-bold">{{ roomBounty() === 0 ? (t('game.bounty_free') || '免费') : (roomBounty() + '币') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="onConfirmCreate()" [disabled]="myRooms().length > 0 || isBountyInsufficient()"
+                class="py-2.5 px-4 rounded-xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:brightness-110 shadow-md shadow-rose-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+          <span class="text-sm leading-none">✚</span>
+          <span>{{ t('game.create_and_join') || '立即创建' }}</span>
+        </button>
+      </div>
+    } @else {
+      <!-- ── Rooms / Online Content Body ── -->
+      <div class="flex-grow overflow-y-auto custom-scrollbar p-3 sm:p-6 space-y-6 pb-20 sm:pb-6">
 
       <!-- ── Rooms tab ── -->
       @if (rightTab() === 'rooms') {
@@ -334,316 +647,25 @@
     </div>
 
     <!-- ── Mobile Floating Action Bar (Sticky at bottom for 1-tap Access) ── -->
-    <div class="lg:hidden fixed bottom-3 left-3 right-3 z-30 flex items-center gap-2 p-1.5 rounded-2xl bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] shadow-2xl">
-      <button (click)="onQuickMatch()"
-              class="flex-1 py-3 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-xs">
-        <span class="text-amber-400">⚡</span>
-        <span>{{ t('game.quick_match') }}</span>
-      </button>
-      <button (click)="openCreateModal()"
-              class="flex-1 py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 shadow-lg shadow-rose-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-        <span class="text-sm leading-none">➕</span>
-        <span>{{ t('game.create_room') || '创建房间' }}</span>
-      </button>
-    </div>
+    @if (rightTab() !== 'create') {
+      <div class="lg:hidden fixed bottom-3 left-3 right-3 z-30 flex items-center gap-2 p-1.5 rounded-2xl bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] shadow-2xl">
+        <button (click)="onQuickMatch()"
+                class="flex-1 py-3 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-xs">
+          <span class="text-amber-400">⚡</span>
+          <span>{{ t('game.quick_match') }}</span>
+        </button>
+        <button (click)="openCreateModal()"
+                class="flex-1 py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 shadow-lg shadow-rose-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+          <span class="text-sm leading-none">➕</span>
+          <span>{{ t('game.create_room') || '创建房间' }}</span>
+        </button>
+      </div>
+    }
+    }
 
   </div>
 
 </div>
-
-<!-- ══════ Quick Create Room Modal (Zero-Scroll Full-Breadth Architecture) ══════ -->
-@if (createModalOpen()) {
-<div class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-fade-in"
-     (click)="closeCreateModal()">
-  <div class="w-full max-w-4xl max-h-[92vh] bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-scale-up"
-       (click)="$event.stopPropagation()">
-    
-    <!-- Modal Header -->
-    <div class="px-5 sm:px-6 py-4 border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)] flex items-center justify-between shrink-0">
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-violet-600 text-white flex items-center justify-center text-lg font-black shadow-md shadow-rose-500/20">
-          ⚔️
-        </div>
-        <div>
-          <h2 class="text-base sm:text-lg font-black text-[var(--color-text-main)] leading-tight">
-            {{ t('game.create_room') || '创建对战房间' }}
-          </h2>
-          <p class="text-[11px] text-[var(--color-text-muted)]">
-            选择游戏并配置规则，即刻迎战好友或全服玩家
-          </p>
-        </div>
-      </div>
-      <button (click)="closeCreateModal()"
-              class="w-8 h-8 rounded-full bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] flex items-center justify-center text-sm font-bold transition-all active:scale-90 cursor-pointer">
-        ✕
-      </button>
-    </div>
-
-    <!-- Modal Body: 2-Column Desktop Grid / Adaptive Mobile View -->
-    <div class="flex-grow flex flex-col lg:flex-row overflow-hidden min-h-0">
-      
-      <!-- Left Column: Compact 18 Games Grid (40% width, ~350px) -->
-      <div class="lg:w-[350px] shrink-0 border-b lg:border-b-0 lg:border-r border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50 p-4 sm:p-5 flex flex-col overflow-y-auto custom-scrollbar">
-        <div class="flex items-center justify-between mb-3 shrink-0">
-          <span class="text-xs font-black uppercase tracking-wider text-[var(--color-accent-from)] flex items-center gap-1.5">
-            <span>🎯</span>
-            <span>{{ t('game.select_game') }} ({{ allGames().length }})</span>
-          </span>
-          @if (selectedGameCfg(); as g) {
-            <span class="text-[11px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20 truncate max-w-[130px]">
-              已选: {{ t(g.titleKey) }}
-            </span>
-          }
-        </div>
-
-        <!-- 3-Column Compact Grid: 18 Games strictly fitted, zero scrolling needed on desktop -->
-        <div class="grid grid-cols-3 gap-2">
-          @for (g of allGames(); track g.id) {
-            <button (click)="selectCreateGame(g.id)"
-                    class="flex flex-col items-center justify-center gap-1 p-2 rounded-2xl border text-[11px] font-bold transition-all active:scale-95 group relative text-center min-h-[64px] cursor-pointer"
-                    [class.bg-gradient-to-br]="createGameId() === g.id"
-                    [class.from-rose-500/20]="createGameId() === g.id"
-                    [class.to-violet-500/20]="createGameId() === g.id"
-                    [class.border-violet-500]="createGameId() === g.id"
-                    [class.shadow-[0_0_12px_rgba(139,92,246,0.3)]]="createGameId() === g.id"
-                    [class.text-[var(--color-text-main)]]="createGameId() === g.id"
-                    [class.bg-[var(--color-bg-card)]]="createGameId() !== g.id"
-                    [class.border-[var(--color-border-card)]]="createGameId() !== g.id"
-                    [class.text-[var(--color-text-muted)]]="createGameId() !== g.id"
-                    [class.hover:border-violet-400]="createGameId() !== g.id">
-              <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-6 h-6 object-contain group-hover:scale-110 transition-transform" alt="">
-              <span class="leading-tight line-clamp-1 text-[10px] sm:text-[11px]">{{ t(g.titleKey) }}</span>
-              @if (createGameId() === g.id) {
-                <span class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-violet-500 text-white flex items-center justify-center text-[8px] font-black shadow-xs">✓</span>
-              }
-            </button>
-          }
-        </div>
-      </div>
-
-      <!-- Right Column: Instant Live Parameter Configuration Panel (60% width) -->
-      <div class="flex-1 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto custom-scrollbar bg-[var(--color-bg-card)] space-y-4">
-        
-        <div class="space-y-4">
-          <!-- Game Highlight Pill -->
-          @if (selectedGameCfg(); as g) {
-            <div class="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-violet-500/10 via-[var(--color-bg-main)] to-transparent border border-violet-500/20">
-              <div class="flex items-center gap-3">
-                <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-8 h-8 object-contain drop-shadow-sm" alt="">
-                <div>
-                  <h3 class="font-black text-sm text-[var(--color-text-main)] leading-tight">{{ t(g.titleKey) }}</h3>
-                  <p class="text-[10px] text-[var(--color-text-muted)]">双人实时对决 · 积分仲裁</p>
-                </div>
-              </div>
-              <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                实时联机
-              </span>
-            </div>
-          }
-
-          <!-- 1. Difficulty Level (Segmented Horizontal Pills) -->
-          @if (availableDifficulties().length > 0) {
-            <div>
-              <label class="block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
-                {{ t('game.diff') }}
-              </label>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                @for (diff of availableDifficulties(); track diff.id) {
-                  <button (click)="roomDifficulty.set(diff.id)"
-                          class="py-2.5 px-2 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-0.5 active:scale-95 text-center cursor-pointer"
-                          [class.bg-gradient-to-r]="roomDifficulty() === diff.id"
-                          [class.from-violet-600]="roomDifficulty() === diff.id"
-                          [class.to-indigo-600]="roomDifficulty() === diff.id"
-                          [class.text-white]="roomDifficulty() === diff.id"
-                          [class.border-violet-500]="roomDifficulty() === diff.id"
-                          [class.shadow-md]="roomDifficulty() === diff.id"
-                          [class.bg-[var(--color-bg-main)]]="roomDifficulty() !== diff.id"
-                          [class.border-[var(--color-border-card)]]="roomDifficulty() !== diff.id"
-                          [class.text-[var(--color-text-main)]]="roomDifficulty() !== diff.id"
-                          [class.hover:border-violet-400]="roomDifficulty() !== diff.id">
-                    <span>{{ diff.labelKey ? t(diff.labelKey) : diff.id }}</span>
-                    @if (diff.descKey || diff.desc) {
-                      <span class="text-[9px] opacity-70 leading-tight font-normal">{{ diff.descKey ? t(diff.descKey) : diff.desc }}</span>
-                    }
-                  </button>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- 2. Game Mode (if multiple available) -->
-          @if (availableModes().length > 1) {
-            <div>
-              <label class="block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
-                {{ t('game.game_mode') }}
-              </label>
-              <div class="grid grid-cols-2 gap-2">
-                @for (mode of availableModes(); track mode.id) {
-                  <button (click)="roomMode.set(mode.id)"
-                          class="p-2.5 rounded-xl border font-bold text-xs transition-all text-left active:scale-95 cursor-pointer"
-                          [class.bg-violet-600]="roomMode() === mode.id"
-                          [class.text-white]="roomMode() === mode.id"
-                          [class.border-violet-500]="roomMode() === mode.id"
-                          [class.shadow-md]="roomMode() === mode.id"
-                          [class.bg-[var(--color-bg-main)]]="roomMode() !== mode.id"
-                          [class.border-[var(--color-border-card)]]="roomMode() !== mode.id"
-                          [class.text-[var(--color-text-main)]]="roomMode() !== mode.id">
-                    <div class="flex items-center gap-1.5">
-                      <span>{{ mode.icon || '⚔️' }}</span>
-                      <span>{{ mode.labelKey ? t(mode.labelKey) : mode.id }}</span>
-                    </div>
-                  </button>
-                }
-              </div>
-            </div>
-          }
-
-          <!-- 3. Target Rounds & Bounty Coins (2-Column Grid on Widescreen) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Multi-Round Target -->
-            @if (isMultiRoundEnabled()) {
-              <div>
-                <label class="block text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
-                  {{ t('game.pk_target_label') }}
-                </label>
-                <div class="grid grid-cols-4 gap-1.5">
-                  @for (opt of pkTargetOptions; track opt) {
-                    <button (click)="roomTarget.set(opt)"
-                            class="py-2 rounded-xl border font-black text-xs transition-all text-center cursor-pointer"
-                            [class.bg-violet-600]="roomTarget() === opt"
-                            [class.text-white]="roomTarget() === opt"
-                            [class.border-violet-500]="roomTarget() === opt"
-                            [class.bg-[var(--color-bg-main)]]="roomTarget() !== opt"
-                            [class.border-[var(--color-border-card)]]="roomTarget() !== opt"
-                            [class.text-[var(--color-text-main)]]="roomTarget() !== opt">
-                      {{ opt }}局
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
-            <!-- Bounty Coins -->
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <label class="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider text-[var(--color-text-muted)]">
-                  <app-coin-icon size="xs" />
-                  <span>{{ t('game.bounty_label') }}</span>
-                </label>
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] text-amber-400 font-bold inline-flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                    <app-coin-icon size="xs" />
-                    <span>{{ coinService.coins() }}</span>
-                  </span>
-                  <button type="button" (click)="coinGuideService.open()" class="text-[10px] text-amber-400 hover:text-amber-300 font-medium underline cursor-pointer">
-                    {{ t('game.get_coins') || '获取' }}
-                  </button>
-                </div>
-              </div>
-              <div class="grid grid-cols-4 gap-1.5">
-                @for (b of bountyOptions; track b) {
-                  @let isLacking = b > 0 && coinService.coins() < b;
-                  <button type="button" (click)="selectBounty(b)"
-                          class="py-2 rounded-xl border font-black text-xs transition-all text-center flex flex-col items-center justify-center cursor-pointer relative"
-                          [class.bg-gradient-to-r]="roomBounty() === b && b > 0 && !isLacking"
-                          [class.from-amber-500]="roomBounty() === b && b > 0 && !isLacking"
-                          [class.to-yellow-500]="roomBounty() === b && b > 0 && !isLacking"
-                          [class.text-slate-900]="roomBounty() === b && b > 0 && !isLacking"
-                          [class.border-amber-400]="roomBounty() === b && b > 0 && !isLacking"
-                          [class.bg-amber-500/20]="roomBounty() === b && b > 0 && isLacking"
-                          [class.border-amber-500]="roomBounty() === b && b > 0 && isLacking"
-                          [class.text-amber-400]="roomBounty() === b && b > 0 && isLacking"
-                          [class.bg-violet-600]="roomBounty() === b && b === 0"
-                          [class.text-white]="roomBounty() === b && b === 0"
-                          [class.border-violet-500]="roomBounty() === b && b === 0"
-                          [class.bg-[var(--color-bg-main)]]="roomBounty() !== b"
-                          [class.border-[var(--color-border-card)]]="roomBounty() !== b"
-                          [class.text-[var(--color-text-main)]]="roomBounty() !== b"
-                          [class.opacity-60]="roomBounty() !== b && isLacking">
-                    <span>{{ b === 0 ? t('game.bounty_free') : b }}</span>
-                    @if (isLacking) {
-                      <span class="text-[9px] font-semibold text-rose-400 mt-0.5 scale-95">
-                        {{ t('game.bounty_short_diff').replace('{needed}', (b - coinService.coins()).toString()) }}
-                      </span>
-                    }
-                  </button>
-                }
-              </div>
-
-              <!-- 友好内联对比提醒条 (对比自己脑力币，少于时给出友好提醒) -->
-              @if (isBountyInsufficient()) {
-                <div class="mt-2 px-2.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-xs animate-fade-in gap-1.5">
-                  <div class="flex items-center gap-1.5 text-amber-400 font-medium">
-                    <span class="text-sm shrink-0">⚠️</span>
-                    <span class="leading-snug">{{ t('game.bounty_insufficient_inline').replace('{current}', coinService.coins().toString()).replace('{needed}', bountyShortage().toString()).replace('{cost}', roomBounty().toString()) }}</span>
-                  </div>
-                  <button type="button" (click)="coinGuideService.open()" class="text-[10px] underline text-amber-300 hover:text-amber-200 font-bold shrink-0 ml-1 cursor-pointer">
-                    {{ t('game.get_coins') || '获取脑力币' }}
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- 4. Privacy & Password -->
-          <div>
-            <div class="flex gap-2">
-              <button type="button" (click)="roomPassword.set('')"
-                      class="flex-1 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
-                      [class.bg-violet-600]="roomPassword() === ''"
-                      [class.text-white]="roomPassword() === ''"
-                      [class.border-violet-500]="roomPassword() === ''"
-                      [class.bg-[var(--color-bg-main)]]="roomPassword() !== ''"
-                      [class.border-[var(--color-border-card)]]="roomPassword() !== ''"
-                      [class.text-[var(--color-text-muted)]]="roomPassword() !== ''">
-                🌐 {{ t('game.room_public') || '公开房间' }}
-              </button>
-              <button type="button" (click)="roomPassword.set(roomPassword() || ' ')"
-                      class="flex-1 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
-                      [class.bg-amber-500]="roomPassword() !== ''"
-                      [class.text-black]="roomPassword() !== ''"
-                      [class.border-amber-500]="roomPassword() !== ''"
-                      [class.bg-[var(--color-bg-main)]]="roomPassword() === ''"
-                      [class.border-[var(--color-border-card)]]="roomPassword() === ''"
-                      [class.text-[var(--color-text-muted)]]="roomPassword() === ''">
-                🔒 {{ t('game.room_private') || '私密房间' }}
-              </button>
-            </div>
-            @if (roomPassword() !== '') {
-              <input type="text" inputmode="numeric" maxlength="4"
-                     [value]="roomPassword().trim()"
-                     (input)="updateInput(roomPassword, $event, 4, true)"
-                     class="w-full mt-2 bg-[var(--color-bg-main)] border-2 border-amber-500/60 rounded-xl px-4 py-2 font-mono text-lg tracking-[0.8em] text-center focus:outline-none focus:border-amber-400 transition-colors"
-                     placeholder="0 0 0 0" autofocus>
-            }
-          </div>
-        </div>
-
-        <!-- Confirm Create Button -->
-        <div class="pt-2">
-          <button (click)="onConfirmCreate()" [disabled]="myRooms().length > 0 || isBountyInsufficient()"
-                  class="w-full py-3.5 px-6 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:brightness-110 shadow-lg shadow-rose-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-            <span class="text-base leading-none">✚</span>
-            <span>
-              @if (isBountyInsufficient()) {
-                {{ t('game.bounty_btn_insufficient').replace('{cost}', roomBounty().toString()).replace('{current}', coinService.coins().toString()) }}
-              } @else {
-                {{ t('game.create_and_join') || '立即创建房间并迎战' }}
-              }
-            </span>
-          </button>
-          @if (myRooms().length > 0) {
-            <p class="text-[11px] text-center text-amber-400 mt-1.5">{{ t('game.room_limit_hint') }}</p>
-          }
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-</div>
-}
 
 <!-- ══════ Room Card Template ══════ -->
 <ng-template #roomCard let-room="room" let-isMine="isMine">

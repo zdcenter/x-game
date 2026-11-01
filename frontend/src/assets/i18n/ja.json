@@ -1015,6 +1015,7 @@
   "game.reset": "リセット",
   "game.restart": "もう一度遊ぶ",
   "game.retry": "再試行",
+  "game.back_to_lobby": "対戦一覧に戻る",
   "game.return_lobby": "ロビーに戻る",
   "game.revive_coins_action": "{{coins}} コインで復活",
   "game.revive_coins_btn": "50コインで復活",

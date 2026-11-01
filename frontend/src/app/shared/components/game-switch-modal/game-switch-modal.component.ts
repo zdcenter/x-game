@@ -70,7 +70,7 @@ import { GameMode } from '../../../core/models/game.model';
 
           <!-- Game List Grid (Scrollable) -->
           <div class="flex-1 overflow-y-auto min-h-0 pr-1 py-1 custom-scrollbar space-y-3">
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-1.5 sm:gap-2">
               @for (game of filteredGames(); track game.id) {
                 <button type="button"
                         (click)="selectGame(game.id)"
@@ -108,7 +108,7 @@ import { GameMode } from '../../../core/models/game.model';
 
             <!-- Dynamic Difficulty & Mode Panel (自动根据选定游戏展开) -->
             @if (activeGameConfig(); as cfg) {
-              <div class="p-3 sm:p-4 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs flex flex-col gap-3 animate-fade-in">
+              <div id="switch-config-panel" class="p-3 sm:p-4 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs flex flex-col gap-3 animate-fade-in">
                 <!-- Selected Game Summary -->
                 <div class="flex items-center justify-between border-b border-[var(--color-border-card)]/60 pb-2">
                   <div class="flex items-center gap-2">
@@ -275,6 +275,11 @@ export class GameSwitchModalComponent {
     this.haptic.vibrateLight();
     this.selectedGameId.set(gameId);
     this.initDifficultiesForGame(gameId);
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        document.getElementById('switch-config-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
   }
 
   selectDifficulty(diffId: string) {
