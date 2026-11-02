@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { isBrowser } from '../utils/browser.util';
+import { isBrowser, getRecentGames } from '../utils/browser.util';
 
 @Injectable({
   providedIn: 'root'
@@ -91,6 +91,22 @@ export class PwaService {
     window.addEventListener('focus', () => {
       this.checkInstalledStatus();
     });
+
+    // 5. 初始化并监听“最近常玩游戏”动态同步 PWA 桌面 App Shortcuts (长按图标入口)
+    this.syncDynamicShortcuts();
+    window.addEventListener('recent_games_updated', () => {
+      this.syncDynamicShortcuts();
+    });
+    window.addEventListener('storage', (e: StorageEvent) => {
+      if (e.key === 'recent_games') {
+        this.syncDynamicShortcuts();
+      }
+    });
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        this.syncDynamicShortcuts();
+      });
+    }
   }
 
   /**
@@ -178,6 +194,281 @@ export class PwaService {
     this.isPromptDismissed.set(true);
     localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
   }
+
+  /**
+   * 动态同步 PWA 桌面 App Shortcuts（长按桌面图标快捷菜单）
+   * 根据该设备最近常玩的 4 款单机游戏，动态更新桌面快捷入口
+   */
+  async syncDynamicShortcuts(customGames?: string[]): Promise<void> {
+    if (!isBrowser()) return;
+
+    try {
+      const recent = customGames || getRecentGames();
+      const defaultTops = ['minesweeper', 'sudoku', 'tilematch', 'sliding'];
+      const topIds: string[] = [];
+
+      for (const id of recent) {
+        if (!topIds.includes(id) && GAME_SHORTCUT_CATALOG[id]) {
+          topIds.push(id);
+        }
+        if (topIds.length >= 4) break;
+      }
+
+      for (const id of defaultTops) {
+        if (!topIds.includes(id)) {
+          topIds.push(id);
+        }
+        if (topIds.length >= 4) break;
+      }
+
+      const lang = document.documentElement.lang || 'zh';
+      const isZh = lang.startsWith('zh');
+
+      const dynamicShortcuts = topIds.map(id => buildShortcut(id, isZh));
+
+      // 1. 存入 localStorage 备份
+      localStorage.setItem('pwa_dynamic_shortcuts', JSON.stringify(dynamicShortcuts));
+
+      // 2. 存入 CacheStorage: 'pwa-dynamic-shortcuts' 供 Service Worker 拦截 /manifest.webmanifest
+      if ('caches' in window) {
+        try {
+          const cache = await caches.open('pwa-dynamic-shortcuts');
+          await cache.put(
+            new Request('/__pwa__/shortcuts.json'),
+            new Response(JSON.stringify(dynamicShortcuts), {
+              headers: { 'Content-Type': 'application/json' }
+            })
+          );
+        } catch (e) {
+          console.debug('[PWA] Cache storage put shortcut skipped:', e);
+        }
+      }
+
+      // 3. 发送消息给 Service Worker
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'UPDATE_DYNAMIC_SHORTCUTS',
+          shortcuts: dynamicShortcuts
+        });
+      }
+
+      // 4. 刷新 DOM 中的 <link id="app-manifest" rel="manifest"> 促使浏览器重新抓取 Manifest
+      const manifestLink = document.getElementById('app-manifest') as HTMLLinkElement;
+      if (manifestLink) {
+        manifestLink.href = `manifest.webmanifest?t=${Date.now()}`;
+      }
+
+      console.log('[PWA] Dynamic shortcuts synced successfully:', topIds);
+    } catch (err) {
+      console.warn('[PWA] Failed to sync dynamic shortcuts:', err);
+    }
+  }
+}
+
+export interface PwaShortcutItem {
+  name: string;
+  short_name: string;
+  description: string;
+  url: string;
+  icons: Array<{ src: string; sizes: string; type?: string }>;
+}
+
+export interface GameShortcutMeta {
+  id: string;
+  emoji: string;
+  nameZh: string;
+  nameEn: string;
+  descZh: string;
+  descEn: string;
+}
+
+export const GAME_SHORTCUT_CATALOG: Record<string, GameShortcutMeta> = {
+  minesweeper: {
+    id: 'minesweeper',
+    emoji: '💣',
+    nameZh: '经典扫雷',
+    nameEn: 'Minesweeper',
+    descZh: '经典单机避雷脑力挑战',
+    descEn: 'Classic Minesweeper Solo Challenge'
+  },
+  sudoku: {
+    id: 'sudoku',
+    emoji: '🔢',
+    nameZh: '经典数独',
+    nameEn: 'Sudoku',
+    descZh: '每日逻辑九宫格数独',
+    descEn: 'Daily Logic Sudoku Puzzle'
+  },
+  tilematch: {
+    id: 'tilematch',
+    emoji: '🐑',
+    nameZh: '羊了个羊',
+    nameEn: 'Tile Match',
+    descZh: '魔性 3D 三消卡牌对决',
+    descEn: 'Addictive 3-Tile Match Puzzle'
+  },
+  sliding: {
+    id: 'sliding',
+    emoji: '🧩',
+    nameZh: '数字华容道',
+    nameEn: 'Number Sliding',
+    descZh: '经典数字方块拼图解谜',
+    descEn: 'Classic Number Klotski Sliding'
+  },
+  classic2048: {
+    id: 'classic2048',
+    emoji: '🔢',
+    nameZh: '经典2048',
+    nameEn: 'Classic 2048',
+    descZh: '合成 2048 极限数字方块',
+    descEn: 'Merge to 2048 Brain Teaser'
+  },
+  nonogram: {
+    id: 'nonogram',
+    emoji: '🎨',
+    nameZh: '数织涂色',
+    nameEn: 'Nonogram',
+    descZh: '逻辑像素点阵数织线索',
+    descEn: 'Picture Logic Nonogram Pixel Art'
+  },
+  sokoban: {
+    id: 'sokoban',
+    emoji: '📦',
+    nameZh: '经典推箱子',
+    nameEn: 'Sokoban',
+    descZh: '益智推箱进库解谜闯关',
+    descEn: 'Warehouse Box Pusher Challenge'
+  },
+  block: {
+    id: 'block',
+    emoji: '🟦',
+    nameZh: '方块消除',
+    nameEn: 'Block Puzzle',
+    descZh: '10x10 经典方块消行消列',
+    descEn: '10x10 Line Clear Block Puzzle'
+  },
+  hexa: {
+    id: 'hexa',
+    emoji: '⬡',
+    nameZh: '六边形消除',
+    nameEn: 'Hexa Puzzle',
+    descZh: '蜂窝方块多向连线消除',
+    descEn: 'Hexagonal Grid Clear Puzzle'
+  },
+  lightsout: {
+    id: 'lightsout',
+    emoji: '💡',
+    nameZh: '点灯游戏',
+    nameEn: 'Lights Out',
+    descZh: '全亮或全灭矩阵翻转解谜',
+    descEn: 'Binary Matrix Lights Out'
+  },
+  tents: {
+    id: 'tents',
+    emoji: '⛺',
+    nameZh: '帐篷与树',
+    nameEn: 'Tents and Trees',
+    descZh: '为每棵树搭一顶专属帐篷',
+    descEn: 'Camp Tents Around Trees'
+  },
+  connect: {
+    id: 'connect',
+    emoji: '🔗',
+    nameZh: '一笔画连线',
+    nameEn: 'Connect Lines',
+    descZh: '无交叉配对彩点连线',
+    descEn: 'Color Connect Numberlink'
+  },
+  watersort: {
+    id: 'watersort',
+    emoji: '🧪',
+    nameZh: '水排序',
+    nameEn: 'Water Sort',
+    descZh: '试管色彩归位逻辑倒水',
+    descEn: 'Color Water Sorting Puzzle'
+  },
+  codebreaker: {
+    id: 'codebreaker',
+    emoji: '🔢',
+    nameZh: '密码破译 (1A2B)',
+    nameEn: 'Codebreaker',
+    descZh: '猜数字推理破译终极密码',
+    descEn: 'Mastermind 1A2B Logic Deduction'
+  },
+  gomoku: {
+    id: 'gomoku',
+    emoji: '⚫',
+    nameZh: '经典五子棋',
+    nameEn: 'Gomoku',
+    descZh: '五子连珠人机博弈对弈',
+    descEn: 'Classic Five in a Row vs AI'
+  },
+  hashi: {
+    id: 'hashi',
+    emoji: '🌉',
+    nameZh: '数桥 (Hashi)',
+    nameEn: 'Hashiwokakero',
+    descZh: '跨越岛屿架设连通桥梁',
+    descEn: 'Bridge the Islands Puzzle'
+  },
+  math24: {
+    id: 'math24',
+    emoji: '🃏',
+    nameZh: '经典24点',
+    nameEn: '24 Points',
+    descZh: '加减乘除心算速度挑战',
+    descEn: 'Math 24 Mental Arithmetic'
+  },
+  drop2048: {
+    id: 'drop2048',
+    emoji: '⬇️',
+    nameZh: '下落2048',
+    nameEn: 'Drop 2048',
+    descZh: '重力下落街机消除合成',
+    descEn: 'Gravity Drop 2048 Arcade'
+  },
+  tetris: {
+    id: 'tetris',
+    emoji: '🧱',
+    nameZh: '俄罗斯方块',
+    nameEn: 'Tetris',
+    descZh: '七彩方块极速消行',
+    descEn: 'Classic Falling Blocks'
+  },
+  idiom: {
+    id: 'idiom',
+    emoji: '🀄',
+    nameZh: '成语接龙',
+    nameEn: 'Idiom Solitaire',
+    descZh: '成语填字益智脑力博弈',
+    descEn: 'Chinese Idiom Word Chain'
+  }
+};
+
+function buildShortcut(gameId: string, isZh: boolean): PwaShortcutItem {
+  const meta = GAME_SHORTCUT_CATALOG[gameId] || {
+    id: gameId,
+    emoji: '🎮',
+    nameZh: gameId,
+    nameEn: gameId,
+    descZh: '益智解谜单机对局',
+    descEn: 'Play puzzle game'
+  };
+
+  const name = isZh ? `${meta.nameZh} ${meta.emoji}` : `${meta.nameEn} ${meta.emoji}`;
+  const shortName = isZh ? meta.nameZh.replace('经典', '') : meta.nameEn;
+  const description = isZh ? meta.descZh : meta.descEn;
+
+  return {
+    name,
+    short_name: shortName,
+    description,
+    url: `/games/${gameId}?from=pwa_shortcut`,
+    icons: [
+      { src: 'assets/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { src: 'assets/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }
+    ]
+  };
 }
 
 

@@ -173,5 +173,9 @@ export const addRecentGame = (gameId: string): void => {
   if (!gameId || !isBrowser()) return;
   const list = getRecentGames().filter(id => id !== gameId);
   list.unshift(gameId);
-  storageSet(RECENT_GAMES_KEY, JSON.stringify(list.slice(0, 6)));
+  const updated = list.slice(0, 6);
+  storageSet(RECENT_GAMES_KEY, JSON.stringify(updated));
+  try {
+    window.dispatchEvent(new CustomEvent('recent_games_updated', { detail: { games: updated } }));
+  } catch {}
 };

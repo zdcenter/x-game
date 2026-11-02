@@ -1,5 +1,5 @@
 // X-Game Production PWA Service Worker
-const CACHE_NAME = 'xgame-offline-v2026.11.02.1346';
+const CACHE_NAME = 'xgame-offline-v2026.11.02.1609';
 
 // Core static assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -32,6 +32,18 @@ self.addEventListener('install', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  } else if (event.data && event.data.type === 'UPDATE_DYNAMIC_SHORTCUTS') {
+    const shortcuts = event.data.shortcuts;
+    if (Array.isArray(shortcuts)) {
+      caches.open('pwa-dynamic-shortcuts').then((cache) => {
+        cache.put(
+          new Request('/__pwa__/shortcuts.json'),
+          new Response(JSON.stringify(shortcuts), {
+            headers: { 'Content-Type': 'application/json' }
+          })
+        );
+      });
+    }
   }
 });
 
@@ -42,7 +54,7 @@ self.addEventListener('activate', (event) => {
       caches.keys().then((keys) =>
         Promise.all(
           keys.map((k) => {
-            if (k !== CACHE_NAME) {
+            if (k !== CACHE_NAME && k !== 'pwa-dynamic-shortcuts') {
               console.log('[SW] Deleting old cache:', k);
               return caches.delete(k);
             }
@@ -82,6 +94,46 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/api/v1/admin') ||
     url.pathname === '/version.json'
   ) {
+    return;
+  }
+
+  // 2.5 Intercept manifest.webmanifest and dynamically inject user's top recent single-player shortcuts
+  if (url.pathname === '/manifest.webmanifest') {
+    event.respondWith(
+      (async () => {
+        try {
+          // Fetch base manifest from network or cache
+          let baseManifest = null;
+          const cachedManifest = (await caches.match('/manifest.webmanifest')) || (await caches.match(req));
+          if (cachedManifest) {
+            baseManifest = await cachedManifest.clone().json();
+          } else {
+            const netRes = await fetch('/manifest.webmanifest');
+            baseManifest = await netRes.json();
+          }
+
+          // Check if we have dynamic shortcuts stored in pwa-dynamic-shortcuts cache
+          const shortcutsCache = await caches.open('pwa-dynamic-shortcuts');
+          const shortcutsRes = await shortcutsCache.match('/__pwa__/shortcuts.json');
+          if (shortcutsRes) {
+            const dynamicShortcuts = await shortcutsRes.json();
+            if (Array.isArray(dynamicShortcuts) && dynamicShortcuts.length > 0) {
+              baseManifest.shortcuts = dynamicShortcuts;
+            }
+          }
+
+          return new Response(JSON.stringify(baseManifest, null, 2), {
+            headers: {
+              'Content-Type': 'application/manifest+json; charset=utf-8',
+              'Cache-Control': 'no-cache, no-store, must-revalidate'
+            }
+          });
+        } catch (err) {
+          console.warn('[SW] Dynamic manifest assembly fallback:', err);
+          return (await caches.match(req)) || fetch(req);
+        }
+      })()
+    );
     return;
   }
 

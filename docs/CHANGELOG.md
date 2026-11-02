@@ -2,6 +2,21 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.163] - 2026-11-02
+
+### PWA 桌面快捷菜单 (App Shortcuts) 动态热度更新系统 (Dynamic PWA App Shortcuts Auto-Sync)
+- **核心痛点解决 (用户反馈：长按手机桌面的“Puzzle PK”图标时，根据该设备玩家最近常玩的 4 款单机游戏，动态更新桌面快捷入口)**：
+  1. **【纯客户端常玩统计与零服务器开销 (准则第5、6条)】**：
+     - **纯浏览器内存与本地存储管理**：严格遵循准则第5条（单机游戏不经过服务器，无服务器性能瓶颈与数据库开销），实时统计该设备单机游戏游玩频次与最近访问序列；
+     - **智能 Top 4 单机推荐算法**：根据该设备最近游玩记录动态推导前 4 款热门单机游戏；新安装用户或游玩不足 4 款时，自动选用经典精选单机（经典扫雷、数独、羊了个羊、数字华容道）兜底补全；
+  2. **【CacheStorage 与 Service Worker 动态 Manifest 拦截合成】**：
+     - **Service Worker 运行时动态拦截**：在 `sw.js` 中拦截浏览器对 `/manifest.webmanifest` 的拉取请求，从 `pwa-dynamic-shortcuts` 专用缓存中读取该设备专属生成的 `shortcuts` 数组，就地合成并动态返回包含该设备常玩游戏的 Manifest；
+     - **实时双向管道与自愈感知**：`PwaService` 在应用初始化、`recent_games_updated` 响应式事件以及 `storage` 事件触发时，即刻向 Service Worker 派发 `UPDATE_DYNAMIC_SHORTCUTS` 消息并写入缓存；同时微调 `<link id="app-manifest" rel="manifest">` 版本号促使 Chromium / Android 浏览器将快捷方式变更即刻推入系统刷新队列；
+  3. **【8 门语言多语言名称与 Emoji 质感图标】**：
+     - 深度适配全站 20 款单机游戏专属中英多语言名称、特色 Emoji 角标（如【💣 经典扫雷】、【🔢 经典数独】、【🐑 羊了个羊】、【🧩 数字华容道】）与清晰操作指引；
+  4. **【快捷直达与残局恢复无缝衔接】**：
+     - 桌面长按快捷方式携带 `?from=pwa_shortcut` 直达实战盘面，并自动与上一轮上线的“单机残局恢复系统”无缝联动，为玩家提供原生 App 级的瞬时回局与沉浸体验。
+
 ## [v3.2.162] - 2026-11-02
 
 ### 单机游戏残局智能检测与恢复提示系统 (Smart In-Progress Game Detection & Resume Dialog System)
