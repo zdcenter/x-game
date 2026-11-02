@@ -2083,5 +2083,10 @@
   "minesweeper.custom_height": "Hauteur (9-50)",
   "minesweeper.custom_mines": "Mines",
   "result.recommended_games": "Essayer d'autres jeux",
-  "result.switch_game": "Partie rapide"
+  "result.switch_game": "Partie rapide",
+  "pwa.install_desktop": "Installer sur l'écran d'accueil",
+  "pwa.install_title": "Ajouter à l'écran d'accueil",
+  "pwa.install_desc": "Profitez du plein écran natif et du jeu hors ligne",
+  "pwa.install_action": "Installer maintenant",
+  "pwa.install_guide_title": "Ajouter à l'écran d'accueil"
 }

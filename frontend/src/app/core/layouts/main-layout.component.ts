@@ -284,6 +284,31 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
               <span class="text-xl">📖</span> {{ i18n.t('nav.docs')() || 'Docs' }}
             </a>
 
+            <!-- 📱 移动端与平板抽屉菜单常驻安装兜底入口 (加横杠分割，绝不丢失) -->
+            @if (!pwa.isStandalone()) {
+              <div class="my-2.5 border-t border-[var(--color-border-card)]"></div>
+              <button (click)="pwa.triggerInstall(); isMobileMenuOpen.set(false)"
+                      class="flex items-center justify-between w-full px-3.5 py-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 transition-all active:scale-[0.98] cursor-pointer shadow-xs group select-none">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/20 text-emerald-500 group-hover:scale-110 transition-transform">
+                    <span class="text-xl">📱</span>
+                  </div>
+                  <div class="text-left min-w-0">
+                    <div class="font-black text-sm text-[var(--color-text-main)] flex items-center gap-1.5">
+                      <span class="truncate">{{ i18n.t('pwa.install_desktop')() || '安装到手机/桌面' }}</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-white shrink-0">PRO</span>
+                    </div>
+                    <div class="text-[11px] font-normal text-[var(--color-text-secondary)] truncate">
+                      {{ i18n.t('pwa.install_desc')() || '极速秒开 · 离线畅玩' }}
+                    </div>
+                  </div>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-xl text-white bg-emerald-500 group-hover:bg-emerald-600 transition-colors shadow-xs shrink-0 ml-2">
+                  {{ i18n.t('pwa.install_action')() || '安装' }}
+                </span>
+              </button>
+            }
+
             <!-- Mobile Quick Settings: Theme & Language (sm-) -->
             <div class="pt-4 mt-3 border-t border-[var(--color-border-card)] flex items-center justify-between gap-3 sm:hidden">
               <button (click)="theme.cycleTheme()"
@@ -332,37 +357,42 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
         <app-share-modal></app-share-modal>
       </main>
 
-      <!-- Global PWA Install Floating Prompt (Trip.com style) -->
-      @if (!zenService.isZenMode() && (pwa.canInstall() || pwa.isIos()) && !pwa.isStandalone() && !pwa.isPromptDismissed()) {
-        <div class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-96 z-[100] transition-all duration-500 ease-out transform translate-y-0 opacity-100 shadow-2xl rounded-xl"
+      <!-- Global PWA Install Floating Prompt (彻底避开右下角【🎁 推荐本站】按钮，已安装则自动隐匿) -->
+      @if (!zenService.isZenMode() && !pwa.isStandalone() && !pwa.isAppInstalledOnDevice() && !pwa.isPromptDismissed()) {
+        <!-- 
+          避让策略：
+          1. 移动手机端 (<sm): bottom-20 left-3 right-3 (悬浮在 bottom-6 的【🎁 推荐本站】上方，错开物理空间，完全不遮挡彼此)
+          2. 平板/桌面端 (sm+): 停靠在左下角 sm:left-6 sm:right-auto sm:bottom-6 sm:w-92 (右下角归【推荐本站】，左下角归【安装应用】，对仗分明)
+        -->
+        <div class="fixed bottom-20 left-3 right-3 sm:bottom-6 sm:left-6 sm:right-auto sm:w-92 z-[100] transition-all duration-500 ease-out transform translate-y-0 opacity-100 shadow-2xl rounded-2xl animate-fade-in-up"
              style="background-color: var(--color-bg-card); border: 1px solid var(--color-border-card)">
-          <div class="p-4 flex items-center gap-4">
+          <div class="p-3.5 sm:p-4 flex items-center gap-3.5">
             
             <!-- Icon -->
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                 style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md select-none"
+                 style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))">
               <span class="text-xl">📱</span>
             </div>
 
             <!-- Text -->
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold truncate" style="color: var(--color-text-main)">
-                {{ i18n.currentLang() === 'zh' ? '添加至桌面以快速访问' : 'Add to Home Screen' }}
+              <p class="text-xs sm:text-sm font-bold truncate" style="color: var(--color-text-main)">
+                {{ i18n.t('pwa.install_title')() || (i18n.currentLang() === 'zh' ? '添加至桌面以快速访问' : 'Add to Home Screen') }}
               </p>
-              <p class="text-xs mt-0.5 truncate" style="color: var(--color-text-secondary)">
-                {{ i18n.currentLang() === 'zh' ? '享受原生级流畅体验' : 'Enjoy native app experience' }}
+              <p class="text-[11px] sm:text-xs mt-0.5 truncate" style="color: var(--color-text-secondary)">
+                {{ i18n.t('pwa.install_desc')() || (i18n.currentLang() === 'zh' ? '享受原生级流畅与离线体验' : 'Enjoy native app experience') }}
               </p>
             </div>
 
             <!-- Install Button -->
-            <button (click)="pwa.canInstall() ? pwa.install() : pwa.openIosGuide()"
-                    class="px-4 py-2 text-sm font-bold text-white rounded-lg shrink-0 transition-transform hover:scale-105 shadow-md"
+            <button (click)="pwa.triggerInstall()"
+                    class="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white rounded-xl shrink-0 transition-transform hover:scale-105 active:scale-95 shadow-md cursor-pointer"
                     style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to));">
-              {{ i18n.currentLang() === 'zh' ? '安装' : 'Install' }}
+              {{ i18n.t('pwa.install_action')() || (i18n.currentLang() === 'zh' ? '安装' : 'Install') }}
             </button>
 
             <!-- Close Button -->
-            <button (click)="pwa.dismissPrompt()" class="p-1 -mr-2 text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+            <button (click)="pwa.dismissPrompt()" class="p-1 -mr-1 text-gray-400 hover:text-gray-600 transition-colors shrink-0 cursor-pointer" title="Close">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -373,15 +403,16 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
 
       <!-- iOS Install Guide — bottom sheet on mobile, centered modal on sm+ -->
       @if (pwa.showIosGuide()) {
-        <div class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
-          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="pwa.closeIosGuide()"></div>
-          <div class="relative w-full sm:max-w-sm sm:mx-4 rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl"
-               style="background-color: var(--color-bg-card); border-top: 1px solid var(--color-border-card)">
+        <div class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+             (click)="pwa.closeIosGuide()">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div class="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] z-10"
+               (click)="$event.stopPropagation()">
             <!-- Drag handle (mobile) -->
             <div class="w-10 h-1 rounded-full mx-auto mb-5 sm:hidden" style="background-color: var(--color-border-card)"></div>
 
             <h3 class="text-lg font-black text-center mb-6" style="color: var(--color-text-main)">
-              {{ i18n.t('nav.installGuideTitle')() }}
+              {{ i18n.t('nav.installGuideTitle')() || '添加到手机主屏幕' }}
             </h3>
 
             <div class="space-y-4 mb-6">
@@ -423,9 +454,40 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
             </p>
 
             <button (click)="pwa.closeIosGuide()"
-                    class="w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 hover:scale-[1.02]"
+                    class="w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 hover:scale-[1.02] active:scale-95 cursor-pointer shadow-md"
                     style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-              {{ i18n.t('nav.installGuideDone')() }}
+              {{ i18n.t('nav.installGuideDone')() || '我知道了' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 通用桌面 / 安卓浏览器安装向导 -->
+      @if (pwa.showGeneralGuide()) {
+        <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in"
+             (click)="pwa.closeGeneralGuide()">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div class="relative w-full max-w-sm rounded-3xl p-6 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl flex flex-col gap-4 text-center z-10"
+               (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-black text-[var(--color-text-main)] flex items-center gap-2">
+                <span>💻</span>
+                <span>{{ i18n.t('pwa.install_desktop')() || '安装桌面应用' }}</span>
+              </h3>
+              <button (click)="pwa.closeGeneralGuide()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer">✕</button>
+            </div>
+            <div class="flex flex-col gap-2.5 text-xs sm:text-sm text-left text-[var(--color-text-secondary)]">
+              <div class="bg-[var(--color-bg-main)] p-3 rounded-2xl border border-[var(--color-border-card)]">
+                <p class="font-bold text-[var(--color-text-main)] mb-1">桌面 Chrome / Edge 浏览器：</p>
+                <p>点击网址栏右侧的【<strong class="text-emerald-500">⊕ 安装</strong>】图标，或点击右上角菜单 (⋮) 选择【安装应用】。</p>
+              </div>
+              <div class="bg-[var(--color-bg-main)] p-3 rounded-2xl border border-[var(--color-border-card)]">
+                <p class="font-bold text-[var(--color-text-main)] mb-1">手机浏览器：</p>
+                <p>点击浏览器菜单 (⋮) -> 选择【添加到主屏幕 / 安装到手机】。</p>
+              </div>
+            </div>
+            <button (click)="pwa.closeGeneralGuide()" class="w-full py-2.5 rounded-xl font-bold text-xs bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer">
+              我知道了 (Got it)
             </button>
           </div>
         </div>

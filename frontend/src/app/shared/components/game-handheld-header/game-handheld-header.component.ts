@@ -10,6 +10,7 @@ import { FeedbackService } from '../../../core/services/feedback.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
+import { PwaService } from '../../../core/services/pwa.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 @Component({
@@ -150,6 +151,21 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
               </span>
             </button>
 
+            <!-- 📱 安装到桌面 / 手机主屏幕 (离线畅玩，若已安装则自动隐匿) -->
+            @if (!pwa.isStandalone() && !pwa.isAppInstalledOnDevice()) {
+              <button type="button"
+                      (click)="pwa.triggerInstall(); closeToolsMenu(); audio.playClick(); haptic.light()"
+                      class="w-full min-h-[44px] flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-500 hover:bg-emerald-500/10 active:bg-emerald-500/20 active:scale-[0.98] transition-all cursor-pointer border-b border-[var(--color-border-card)]/60 pb-2 mb-0.5 select-none">
+                <span class="flex items-center gap-2 pointer-events-none">
+                  <span>📱</span>
+                  <span>{{ i18n.t('pwa.install_desktop')() || '安装到手机桌面 (离线秒开)' }}</span>
+                </span>
+                <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 pointer-events-none">
+                  PRO
+                </span>
+              </button>
+            }
+
             <!-- 意见建议与 Bug 反馈 -->
             <button type="button"
                     (click)="feedbackService.open({ gameId: gameId, gameTitle: gameTitle }); closeToolsMenu(); audio.playClick(); haptic.light()"
@@ -164,6 +180,68 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
         }
       </div>
     </div>
+
+    <!-- iOS 安装向导 (棋盘局内兼容) -->
+    @if (pwa.showIosGuide()) {
+      <div class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+           (click)="pwa.closeIosGuide()">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div class="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl p-6 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl flex flex-col gap-4 text-center z-10"
+             (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-black text-[var(--color-text-main)] flex items-center gap-2">
+              <span>📱</span>
+              <span>{{ i18n.t('pwa.install_guide_title')() || '添加到手机主屏幕' }}</span>
+            </h3>
+            <button (click)="pwa.closeIosGuide()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer">✕</button>
+          </div>
+          <div class="flex flex-col gap-3 text-xs sm:text-sm text-left text-[var(--color-text-secondary)]">
+            <div class="flex items-start gap-2.5 bg-[var(--color-bg-main)] p-3 rounded-2xl border border-[var(--color-border-card)]">
+              <span class="text-lg">1️⃣</span>
+              <span>点击 Safari 底部或右上角分享按钮（<strong class="text-[var(--color-text-main)]">⎋ 分享</strong>）</span>
+            </div>
+            <div class="flex items-start gap-2.5 bg-[var(--color-bg-main)] p-3 rounded-2xl border border-[var(--color-border-card)]">
+              <span class="text-lg">2️⃣</span>
+              <span>向下滑动找到并点击【<strong class="text-emerald-500">➕ 添加到主屏幕</strong>】</span>
+            </div>
+          </div>
+          <button (click)="pwa.closeIosGuide()" class="w-full py-2.5 rounded-xl font-bold text-xs bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer">
+            我知道了 (Got it)
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- 通用桌面 / 安卓浏览器安装向导 (棋盘局内兼容) -->
+    @if (pwa.showGeneralGuide()) {
+      <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in"
+           (click)="pwa.closeGeneralGuide()">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-sm rounded-3xl p-6 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl flex flex-col gap-4 text-center z-10"
+             (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-black text-[var(--color-text-main)] flex items-center gap-2">
+              <span>💻</span>
+              <span>{{ i18n.t('pwa.install_desktop')() || '安装桌面应用' }}</span>
+            </h3>
+            <button (click)="pwa.closeGeneralGuide()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer">✕</button>
+          </div>
+          <div class="flex flex-col gap-2.5 text-xs sm:text-sm text-left text-[var(--color-text-secondary)]">
+            <div class="bg-[var(--color-bg-main)] p-3 rounded-2xl border border-[var(--color-border-card)]">
+              <p class="font-bold text-[var(--color-text-main)] mb-1">桌面 Chrome / Edge 浏览器：</p>
+              <p>点击网址栏右侧的【<strong class="text-emerald-500">⊕ 安装</strong>】图标，或点击右上角菜单 (⋮) 选择【安装应用】。</p>
+            </div>
+            <div class="bg-[var(--color-bg-main)] p-3 rounded-2xl border border-[var(--color-border-card)]">
+              <p class="font-bold text-[var(--color-text-main)] mb-1">手机浏览器：</p>
+              <p>点击浏览器菜单 (⋮) -> 选择【添加到主屏幕 / 安装到手机】。</p>
+            </div>
+          </div>
+          <button (click)="pwa.closeGeneralGuide()" class="w-full py-2.5 rounded-xl font-bold text-xs bg-emerald-500 text-white shadow-md active:scale-95 transition-all cursor-pointer">
+            我知道了 (Got it)
+          </button>
+        </div>
+      </div>
+    }
   `
 })
 export class GameHandheldHeaderComponent {
@@ -197,6 +275,7 @@ export class GameHandheldHeaderComponent {
   i18n = inject(I18nService);
   wsService = inject(WebSocketService);
   gameSwitchService = inject(GameSwitchService);
+  pwa = inject(PwaService);
   private elementRef = inject(ElementRef);
 
   readonly isInPkRoom = () => !!this.wsService.currentRoomId() || this.isPkMode;

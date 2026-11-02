@@ -2083,5 +2083,10 @@
   "minesweeper.custom_height": "高さ (9-50)",
   "minesweeper.custom_mines": "地雷数",
   "result.recommended_games": "他のゲームを試す",
-  "result.switch_game": "クイックプレイ"
+  "result.switch_game": "クイックプレイ",
+  "pwa.install_desktop": "デスクトップ / ホーム画面にインストール",
+  "pwa.install_title": "ホーム画面に追加して素早くアクセス",
+  "pwa.install_desc": "ネイティブ全画面＆オフライン即時プレイ",
+  "pwa.install_action": "今すぐインストール",
+  "pwa.install_guide_title": "ホーム画面に追加"
 }

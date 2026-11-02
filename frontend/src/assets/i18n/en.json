@@ -2156,5 +2156,10 @@
   "minesweeper.custom_height": "Height (9-50)",
   "minesweeper.custom_mines": "Mines",
   "result.recommended_games": "Try Other Games",
-  "result.switch_game": "Quick Play"
+  "result.switch_game": "Quick Play",
+  "pwa.install_desktop": "Install to Desktop / Home Screen",
+  "pwa.install_title": "Add to Home Screen for Quick Access",
+  "pwa.install_desc": "Enjoy native fullscreen & offline instant play",
+  "pwa.install_action": "Install Now",
+  "pwa.install_guide_title": "Add to Home Screen"
 }

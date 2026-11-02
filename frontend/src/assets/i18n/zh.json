@@ -2156,5 +2156,10 @@
   "minesweeper.custom_height": "高度 (9-50)",
   "minesweeper.custom_mines": "地雷数",
   "result.recommended_games": "换个游戏换换心情",
-  "result.switch_game": "快速试玩"
+  "result.switch_game": "快速试玩",
+  "pwa.install_desktop": "安装到手机/电脑桌面",
+  "pwa.install_title": "添加至桌面以快速访问",
+  "pwa.install_desc": "享受原生级全屏与离线秒开体验",
+  "pwa.install_action": "立即安装",
+  "pwa.install_guide_title": "添加到手机主屏幕"
 }

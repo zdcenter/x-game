@@ -2083,5 +2083,10 @@
   "minesweeper.custom_height": "Altura (9-50)",
   "minesweeper.custom_mines": "Minas",
   "result.recommended_games": "Prueba otros juegos",
-  "result.switch_game": "Juego rápido"
+  "result.switch_game": "Juego rápido",
+  "pwa.install_desktop": "Instalar en escritorio / pantalla de inicio",
+  "pwa.install_title": "Añadir a la pantalla de inicio",
+  "pwa.install_desc": "Disfruta de pantalla completa nativa y juego offline",
+  "pwa.install_action": "Instalar ahora",
+  "pwa.install_guide_title": "Añadir a la pantalla de inicio"
 }

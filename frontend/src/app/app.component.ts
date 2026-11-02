@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { UiOverlayComponent } from './core/components/ui-overlay/ui-overlay.component';
@@ -66,7 +66,7 @@ import { IdlePrefetchService } from './core/services/idle-prefetch.service';
     }
   `
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit {
   private seoService = inject(SeoService); // Instantiate SEO service globally
   settingsService = inject(SettingsService);
   private router = inject(Router);
@@ -100,6 +100,14 @@ export class AppComponent implements OnInit {
     this.settingsService.loadSettings().subscribe();
     this.authStore.refreshProfile();
     this.idlePrefetch.init();
+  }
+
+  ngAfterViewInit() {
+    if (typeof window !== 'undefined' && (window as any).__hidePwaSplash) {
+      setTimeout(() => {
+        (window as any).__hidePwaSplash();
+      }, 80);
+    }
   }
 
   canBypassMaintenance(): boolean {
