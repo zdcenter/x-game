@@ -319,12 +319,25 @@ export class SlidingComponent extends BaseGameComponent {
       } else {
         const savedDiff = getSavedDifficulty('sliding', 'easy');
         this.store.joinRoom('', GameMode.Single, savedDiff);
+        this.checkAndPromptResumeSession('sliding');
       }
 
       this.timerInterval = setInterval(() => {
         this.currentTime.set(Date.now());
       }, 100);
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('sliding');
+    this.store.startGame();
   }
 
   override ngOnDestroy() {

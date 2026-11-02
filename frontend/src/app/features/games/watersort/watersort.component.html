@@ -27,6 +27,9 @@
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+  [resumeSession]="pendingResumeSession()"
+  (resumeGame)="onResumeSession($event)"
+  (discardResume)="onDiscardResume()"
 >
   @if (isHandheld()) {
     <app-game-handheld-header

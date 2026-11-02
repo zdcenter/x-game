@@ -24,6 +24,7 @@ import { LeaderboardService } from '../services/leaderboard.service';
 import { DeviceService } from '../services/device.service';
 import { ZenModeService } from '../services/zen-mode.service';
 import { AdService } from '../services/ad.service';
+import { ResumeGameService, SavedGameSession } from '../services/resume-game.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -60,8 +61,12 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public deviceService = inject(DeviceService);
   public zenService = inject(ZenModeService);
   public adService = inject(AdService);
+  public resumeService = inject(ResumeGameService);
   readonly isHandheld = this.deviceService.isHandheld;
   protected _injector = inject(Injector);
+
+  // Resume In-Progress Game Session
+  pendingResumeSession = signal<SavedGameSession | null>(null);
 
   // Common Enums & Math for Templates
   readonly GameDifficulty = GameDifficulty;
@@ -603,5 +608,24 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    */
   protected onKeyDown(event: KeyboardEvent): boolean {
     return false;
+  }
+
+  /**
+   * Checks whether there is an unfinished single player session for this game.
+   * If yes, sets pendingResumeSession and returns true so subclasses can prompt the user.
+   */
+  checkAndPromptResumeSession(gameId: string): boolean {
+    const session = this.resumeService.loadSession(gameId);
+    if (session) {
+      this.pendingResumeSession.set(session);
+      return true;
+    }
+    this.pendingResumeSession.set(null);
+    return false;
+  }
+
+  clearResumeSession(gameId: string): void {
+    this.resumeService.clearSession(gameId);
+    this.pendingResumeSession.set(null);
   }
 }

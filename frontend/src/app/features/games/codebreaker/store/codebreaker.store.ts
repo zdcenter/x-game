@@ -5,6 +5,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalCodebreakerEngine, CodebreakerActionType } from './codebreaker-engine';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 export interface GuessRecord {
 	guess: string;
@@ -32,6 +33,7 @@ export class CodebreakerStore extends BaseGameStore {
   readonly gameId = GameId.Codebreaker;
 
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
 
   private localEngine = signal<LocalCodebreakerEngine | null>(null);
   private tick = signal(0);
@@ -117,6 +119,7 @@ export class CodebreakerStore extends BaseGameStore {
         difficulty: diff as string,
         digitLength: len,
         onWin: () => {
+          this.resumeService.clearSession('codebreaker');
           this.audio.playPuzzle('success');
           this.submitSinglePlayerStats();
           this.tick.set(this.tick() + 1);
@@ -160,12 +163,41 @@ export class CodebreakerStore extends BaseGameStore {
     }
   }
 
+  restoreSavedSession(data: any): void {
+    if (!data || !data.secretCode) return;
+    this.currentDifficulty.set(data.difficulty || this.currentDifficulty());
+    this.startGame();
+    this.restoreSave(data.secretCode, data.guesses || []);
+  }
+
   submitGuess(guess: string) {
     if (this.status() !== GameStatus.Playing) return;
 
     if (this.currentRoomMode() === GameMode.Single) {
-      this.localEngine()?.handleAction({ type: CodebreakerActionType.Guess, guess });
-      this.tick.set(this.tick() + 1);
+      const eng = this.localEngine();
+      if (eng) {
+        eng.handleAction({ type: CodebreakerActionType.Guess, guess });
+        this.tick.set(this.tick() + 1);
+
+        if (eng.finished) {
+          this.resumeService.clearSession('codebreaker');
+        } else if (eng.guesses.length > 0) {
+          const maxA = Math.max(0, ...eng.guesses.map(g => g.a));
+          const prog = Math.min(99, Math.round((maxA / eng.digitLength) * 100));
+          this.resumeService.saveSession('codebreaker', {
+            difficulty: this.currentDifficulty(),
+            difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'codebreaker'),
+            progressPercent: prog,
+            moves: eng.guesses.length,
+            timeElapsed: 0,
+            data: {
+              difficulty: this.currentDifficulty(),
+              secretCode: eng.secretCode,
+              guesses: [...eng.guesses]
+            }
+          });
+        }
+      }
     } else {
       this.ws.send({ action: C2SAction.Guess, guess });
     }

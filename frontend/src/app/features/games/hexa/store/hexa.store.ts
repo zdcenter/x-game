@@ -5,12 +5,14 @@ import { HexaEngine, HexPiece, HexCell, HexCoord, HexaActionType, HexaState } fr
 import { AudioService } from '../../../../core/services/audio.service';
 import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
 import { C2SAction } from '../../../../core/models/websocket.model';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
 export class HexaStore extends BaseGameStore {
   readonly gameId = 'hexa';
   
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
 
   // Local Engine
   engine = new HexaEngine();
@@ -395,6 +397,27 @@ export class HexaStore extends BaseGameStore {
     });
     this.updateSignals();
     return true;
+  }
+
+  override saveSinglePlayerProgress(): void {
+    super.saveSinglePlayerProgress();
+    if (this.currentRoomMode() !== GameMode.Single || this.gameOver() || this.engine.score <= 0) return;
+    const occupied = this.engine.cells.size > 0
+      ? Array.from(this.engine.cells.values()).filter(c => c.filled).length
+      : 0;
+    const progress = Math.min(99, Math.round((occupied / 61) * 100));
+    this.resumeService.saveSession('hexa', {
+      score: this.engine.score,
+      progressPercent: progress,
+      timeElapsed: 0,
+      moves: this.engine.piecesPlaced,
+      data: this.getSinglePlayerSaveData()
+    });
+  }
+
+  override clearSinglePlayerSave(): void {
+    super.clearSinglePlayerSave();
+    this.resumeService.clearSession('hexa');
   }
 
   loadSinglePlayer(): boolean {

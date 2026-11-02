@@ -33,6 +33,8 @@ import { GameSwitchModalComponent } from '../game-switch-modal/game-switch-modal
 import { GameSwitchService } from '../../../core/services/game-switch.service';
 import { getOrigin, setSavedDifficulty, getSavedDifficulty } from '../../../core/utils/browser.util';
 import { AdService } from '../../../core/services/ad.service';
+import { ResumeGameDialogComponent } from '../resume-game-dialog/resume-game-dialog.component';
+import { SavedGameSession } from '../../../core/services/resume-game.service';
 
 @Component({
   selector: 'app-game-layout',
@@ -53,7 +55,8 @@ import { AdService } from '../../../core/services/ad.service';
     GameWaitingRoomComponent,
     GameStartingOverlayComponent,
     GameResultOverlayComponent,
-    GameSwitchModalComponent
+    GameSwitchModalComponent,
+    ResumeGameDialogComponent
   ],
   template: `
 <div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none"
@@ -662,10 +665,25 @@ import { AdService } from '../../../core/services/ad.service';
 
   <!-- Switch Game / Difficulty Modal Dialog -->
   <app-game-switch-modal></app-game-switch-modal>
+
+  <!-- Resume In-Progress Game Dialog (Client-side saved session prompt) -->
+  @if (resumeSession) {
+    <app-resume-game-dialog
+      [session]="resumeSession"
+      [gameEmoji]="icon"
+      [gameTitle]="title"
+      (resume)="resumeGame.emit($event)"
+      (discard)="discardResume.emit()">
+    </app-resume-game-dialog>
+  }
 </div>
   `
 })
 export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() resumeSession: SavedGameSession | null = null;
+  @Output() resumeGame = new EventEmitter<SavedGameSession>();
+  @Output() discardResume = new EventEmitter<void>();
+
   settingsService = inject(SettingsService);
   zenService = inject(ZenModeService);
   i18n = inject(I18nService);

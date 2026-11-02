@@ -259,6 +259,41 @@ export class MinesweeperStore extends BaseGameStore {
     this.tick.set(this.tick() + 1);
   }
 
+  restoreSavedGame(savedData: any) {
+    if (!savedData) return;
+    this.optimisticFlags.set({});
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(savedData.difficulty || GameDifficulty.Medium);
+    this.ws.disconnect(GameId.Minesweeper);
+
+    const engine = new LocalMinesweeperEngine();
+    engine.width = savedData.width;
+    engine.height = savedData.height;
+    engine.mines = savedData.mines;
+    engine.cells = savedData.cells;
+    engine.status = GameStatus.Playing;
+    engine.revealedCnt = savedData.revealedCnt;
+    engine.startAt = Date.now() - ((savedData.elapsedSeconds || 0) * 1000);
+    engine.isMinesPlaced = !!savedData.isMinesPlaced;
+    this.localEngine.set(engine);
+    this.tick.set(this.tick() + 1);
+  }
+
+  getSingleResumeData(elapsedSeconds: number): any {
+    const engine = this.localEngine();
+    if (!engine || engine.status !== GameStatus.Playing || engine.revealedCnt <= 0) return null;
+    return {
+      width: engine.width,
+      height: engine.height,
+      mines: engine.mines,
+      cells: engine.cells,
+      revealedCnt: engine.revealedCnt,
+      elapsedSeconds,
+      isMinesPlaced: engine.isMinesPlaced,
+      difficulty: this.currentDifficulty()
+    };
+  }
+
   startTutorialGame() {
     this.optimisticFlags.set({});
     this.currentRoomMode.set(GameMode.Single);

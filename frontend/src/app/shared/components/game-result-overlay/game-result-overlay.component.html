@@ -521,9 +521,15 @@
           </button>
         }
 
-        <!-- Secondary Tool Row (Balanced 3-column deck) -->
-        <div class="grid grid-cols-3 gap-2 mt-1">
+        <!-- Secondary Tool Row (Responsive 4-column / 2x2 grid) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
           @if (currentGameId) {
+            <button (click)="openPosterModal()"
+              class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-amber-400 border border-[var(--color-border-card)] hover:border-amber-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>📸</span>
+              <span>{{ i18n.t('poster.button_title')() || 'Poster' }}</span>
+            </button>
+
             <button (click)="copyTextResult()"
               [class]="textCopied()
                 ? 'py-2.5 px-3 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer'
@@ -610,4 +616,12 @@
 
   </div>
 </div>
+
+@if (showPosterModal()) {
+  <app-poster-modal
+    [imageUrl]="posterUrl"
+    [isGenerating]="isGeneratingPoster"
+    [filename]="'xgame-' + (currentGameId || 'battle') + '-poster.png'"
+    (close)="closePosterModal()" />
+}
 }

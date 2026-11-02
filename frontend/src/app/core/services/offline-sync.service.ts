@@ -27,9 +27,15 @@ export class OfflineSyncService {
   readonly isOnline = signal<boolean>(
     isBrowser() && typeof navigator !== 'undefined' ? navigator.onLine : true
   );
-  readonly isOffline = computed(() => !this.isOnline());
+  readonly isWeakNetwork = signal<boolean>(false);
+  readonly isOffline = computed(() => !this.isOnline() || this.isWeakNetwork());
   readonly pendingCount = signal<number>(0);
   readonly isSyncing = signal<boolean>(false);
+  readonly isHealing = signal<boolean>(false);
+  readonly healedNotification = signal<boolean>(false);
+  readonly healedSyncedCount = signal<number>(0);
+
+  private healedTimer: any = null;
 
   constructor() {
     if (!isBrowser()) return;
@@ -37,13 +43,75 @@ export class OfflineSyncService {
     this.refreshPendingCount();
 
     window.addEventListener('online', () => {
-      this.isOnline.set(true);
-      this.syncPendingStats();
+      this.testConnectionAndHeal();
     });
 
     window.addEventListener('offline', () => {
       this.isOnline.set(false);
+      this.isWeakNetwork.set(false);
+      this.healedNotification.set(false);
     });
+  }
+
+  /**
+   * Proactively ping local lightweight asset to test actual connectivity,
+   * diagnose weak network, and heal offline sync automatically.
+   */
+  async testConnectionAndHeal(): Promise<boolean> {
+    if (!isBrowser()) return true;
+
+    this.isHealing.set(true);
+    let ok = false;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const resp = await fetch(`/version.json?_t=${Date.now()}`, {
+        method: 'HEAD',
+        cache: 'no-store',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      ok = resp.ok;
+    } catch {
+      ok = false;
+    }
+
+    this.isHealing.set(false);
+
+    if (ok) {
+      const wasOfflineOrWeak = !this.isOnline() || this.isWeakNetwork();
+      this.isOnline.set(true);
+      this.isWeakNetwork.set(false);
+
+      if (wasOfflineOrWeak || this.pendingCount() > 0) {
+        const synced = await this.syncPendingStats();
+        this.triggerHealedBanner(synced);
+      }
+      return true;
+    } else {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        // Browser says online, but request timed out or failed -> Weak network!
+        this.isWeakNetwork.set(true);
+      } else {
+        this.isOnline.set(false);
+        this.isWeakNetwork.set(false);
+      }
+      return false;
+    }
+  }
+
+  private triggerHealedBanner(syncedCount: number): void {
+    if (this.healedTimer) {
+      clearTimeout(this.healedTimer);
+    }
+    this.healedSyncedCount.set(syncedCount);
+    this.healedNotification.set(true);
+    this.healedTimer = setTimeout(() => {
+      this.healedNotification.set(false);
+      this.healedTimer = null;
+    }, 3800);
   }
 
   private getQueue(): QueuedOfflineStat[] {
@@ -107,11 +175,11 @@ export class OfflineSyncService {
   /**
    * Replay and flush all queued stats to the server when network connectivity is restored.
    */
-  async syncPendingStats(): Promise<void> {
-    if (!this.isOnline() || this.isSyncing()) return;
+  async syncPendingStats(): Promise<number> {
+    if (!this.isOnline() || this.isSyncing()) return 0;
 
     const queue = this.getQueue();
-    if (queue.length === 0) return;
+    if (queue.length === 0) return 0;
 
     this.isSyncing.set(true);
     let successCount = 0;
@@ -138,5 +206,7 @@ export class OfflineSyncService {
         `离线战绩已自动同步到云端 (${successCount} 局)`;
       this.toast.show(msg, 'success');
     }
+
+    return successCount;
   }
 }

@@ -6,11 +6,14 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalLightsoutEngine, LightsoutActionType } from './lightsout-engine';
 
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
+
 @Injectable()
 export class LightsoutStore extends BaseGameStore {
   readonly gameId = GameId.LightsOut;
 
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
 
   private localEngine = signal<LocalLightsoutEngine | null>(null);
   private pkBoard = signal<{ board: boolean[][]; moves: number } | null>(null);
@@ -280,6 +283,35 @@ export class LightsoutStore extends BaseGameStore {
         engine.handleAction({ type: LightsoutActionType.Toggle, row, col });
         this.audio.playPuzzle('toggle');
         this.tick.set(this.tick() + 1);
+
+        if (engine.finished || engine.status === GameStatus.Finished) {
+          this.resumeService.clearSession('lightsout');
+        } else if (engine.status === GameStatus.Playing && engine.moves > 0) {
+          let matched = 0;
+          const total = engine.size * engine.size;
+          const target = engine.targetMode === 'on';
+          for (const r of engine.board) {
+            for (const cell of r) {
+              if (cell === target) matched++;
+            }
+          }
+          const progress = Math.min(99, Math.round((matched / total) * 100));
+          this.resumeService.saveSession('lightsout', {
+            difficulty: this.currentDifficulty(),
+            difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'lightsout'),
+            progressPercent: progress,
+            moves: engine.moves,
+            timeElapsed: 0,
+            data: {
+              size: engine.size,
+              difficulty: this.currentDifficulty(),
+              targetMode: engine.targetMode,
+              board: engine.board.map(r => [...r]),
+              moves: engine.moves,
+              moveHistory: [...engine.moveHistory]
+            }
+          });
+        }
       }
     } else {
       // PK Mode: Optimistic local toggle for instant 0ms visual feedback
@@ -335,5 +367,22 @@ export class LightsoutStore extends BaseGameStore {
 
   private submitSinglePlayerStats() {
     this.submitSingleStat({ score: this.localEngine()?.moves || 0 }).subscribe();
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.board) return;
+    const engine = new LocalLightsoutEngine();
+    engine.playerId = this.playerId();
+    engine.size = data.size || data.board.length;
+    engine.difficulty = data.difficulty || this.currentDifficulty();
+    engine.targetMode = data.targetMode || this.targetMode();
+    engine.board = data.board.map((r: boolean[]) => [...r]);
+    engine.moves = data.moves || 0;
+    engine.moveHistory = data.moveHistory ? [...data.moveHistory] : [];
+    engine.status = GameStatus.Playing;
+    engine.finished = false;
+    this.localEngine.set(engine);
+    this.currentDifficulty.set(engine.difficulty);
+    this.tick.set(this.tick() + 1);
   }
 }

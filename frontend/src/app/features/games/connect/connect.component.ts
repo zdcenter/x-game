@@ -187,7 +187,21 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
       } else {
         this.handleJoinRoom(joinInfo);
       }
+    } else {
+      this.checkAndPromptResumeSession('connect');
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.view.set('play');
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('connect');
   }
 
   getSinglePlayerStats() {

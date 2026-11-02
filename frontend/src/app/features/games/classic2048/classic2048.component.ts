@@ -332,8 +332,21 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     } else {
       if (this.store.currentRoomMode() === GameMode.Single && this.store.status() === GameStatus.Waiting) {
         this.store.startGame();
+        this.checkAndPromptResumeSession('classic2048');
       }
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('classic2048');
+    this.store.startGame();
   }
 
   override ngOnDestroy() {

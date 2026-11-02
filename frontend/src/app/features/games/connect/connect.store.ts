@@ -6,6 +6,7 @@ import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/brow
 import { environment } from '../../../../environments/environment';
 import { ConnectEngine, ConnectPuzzleDef, normalizeConnectPuzzle } from './connect-engine';
 import { C2SAction } from '../../../core/models/websocket.model';
+import { ResumeGameService } from '../../../core/services/resume-game.service';
 
 export interface ConnectPlayerState {
   id: string;
@@ -36,6 +37,7 @@ export class ConnectStore extends BaseGameStore {
   readonly gameId = GameId.Connect;
 
   private http = inject(HttpClient);
+  private resumeService = inject(ResumeGameService);
 
   timeSpent = signal<number>(0);
   private timer: any;
@@ -260,6 +262,7 @@ export class ConnectStore extends BaseGameStore {
 
     if (engine.isSolved()) {
       if (this.currentRoomMode() === GameMode.Single) {
+        this.resumeService.clearSession('connect');
         this.singlePlayerFinished.set(true);
         this.stopTimer();
         this.submitFinish();
@@ -269,9 +272,31 @@ export class ConnectStore extends BaseGameStore {
         this.ws.send({ action: 'finish', paths: pathsJson });
       }
     } else {
-      // Send progress update to server in PK
-      if (this.currentRoomMode() !== GameMode.Single) {
-        // compute progress
+      if (this.currentRoomMode() === GameMode.Single) {
+        let filled = 0;
+        const total = engine.width * engine.height - (engine.blocks?.length || 0);
+        for (let r = 0; r < engine.height; r++) {
+          for (let c = 0; c < engine.width; c++) {
+            if (engine.grid[r][c] !== 0) filled++;
+          }
+        }
+        if (filled > 0) {
+          const progress = Math.min(99, Math.round((filled / Math.max(1, total)) * 100));
+          this.resumeService.saveSession('connect', {
+            difficulty: this.currentDifficulty(),
+            difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'connect'),
+            progressPercent: progress,
+            timeElapsed: this.timeSpent(),
+            data: {
+              levelId: this.currentLevelId(),
+              difficulty: this.currentDifficulty(),
+              timeSpent: this.timeSpent(),
+              paths: engine.exportPaths()
+            }
+          });
+        }
+      } else {
+        // Send progress update to server in PK
         let filled = 0;
         for (let r = 0; r < engine.height; r++) {
           for (let c = 0; c < engine.width; c++) {
@@ -410,5 +435,28 @@ export class ConnectStore extends BaseGameStore {
       clearInterval(this.timer);
       this.timer = null;
     }
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.levelId) return;
+    this.http.get<any>(`${environment.apiUrl}/connect/puzzle/${data.levelId}`).subscribe(res => {
+      this.currentLevelId.set(res.puzzle.id);
+      const puzzleDef = normalizeConnectPuzzle({
+        id: res.puzzle.id,
+        width: res.puzzle.width,
+        height: res.puzzle.height,
+        endpoints: res.puzzle.endpoints,
+        blocks: res.puzzle.blocks
+      });
+      const engine = new ConnectEngine(puzzleDef);
+      if (data.paths) {
+        engine.loadPaths(data.paths);
+      }
+      this.localEngine.set(engine);
+      this.singlePlayerFinished.set(false);
+      this.timeSpent.set(data.timeSpent || 0);
+      this.startTimer();
+      this.boardVersion.update(v => v + 1);
+    });
   }
 }

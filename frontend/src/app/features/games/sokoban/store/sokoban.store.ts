@@ -8,6 +8,7 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { HapticService } from '../../../../core/services/haptic.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 export interface SokobanPlayerState {
   id: string;
@@ -33,6 +34,7 @@ export class SokobanStore extends BaseGameStore {
   private http = inject(HttpClient);
   private audio = inject(AudioService);
   private haptic = inject(HapticService);
+  private resumeService = inject(ResumeGameService);
 
   isDead = signal(false);
   isShaking = signal(false);
@@ -295,6 +297,8 @@ export class SokobanStore extends BaseGameStore {
       this.localEngine.set(eng);
       if (eng.status === GameStatus.Finished) {
         this.submitFinish();
+      } else {
+        this.checkAutoSaveSokoban();
       }
       return;
     }
@@ -308,6 +312,7 @@ export class SokobanStore extends BaseGameStore {
   }
 
   private submitFinish() {
+    this.resumeService.clearSession('sokoban');
     const eng = this.localEngine();
     if (!eng || !this.currentLevelId()) return;
     this.http.post<any>(`${environment.apiUrl}/sokoban/puzzle/${this.currentLevelId()}/finish`, {
@@ -323,6 +328,53 @@ export class SokobanStore extends BaseGameStore {
       if (res?.xp_result?.xp_earned) this.xpService.showXpGain(res.xp_result.xp_earned);
       if (res?.new_achievements?.length) this.achievementService.handleNewAchievements(res.new_achievements);
     });
+  }
+
+  checkAutoSaveSokoban() {
+    const eng = this.localEngine();
+    if (!eng || this.currentRoomMode() !== GameMode.Single) return;
+    if (eng.status === GameStatus.Finished) {
+      this.resumeService.clearSession('sokoban');
+      return;
+    }
+    if (eng.moves <= 0) return;
+
+    let onGoal = 0;
+    let totalBoxes = 0;
+    for (const row of eng.board) {
+      for (const cell of row) {
+        if (cell === '·') onGoal++;
+        if (cell === '$' || cell === '·') totalBoxes++;
+      }
+    }
+    const progress = Math.min(99, Math.round((onGoal / Math.max(1, totalBoxes)) * 100));
+
+    this.resumeService.saveSession('sokoban', {
+      difficulty: this.currentDifficulty(),
+      difficultyLabel: `第 ${this.currentLevelNum()} 关`,
+      progressPercent: progress,
+      timeElapsed: this.timeSpent(),
+      moves: eng.moves,
+      data: {
+        levelId: this.currentLevelId(),
+        board: eng.board,
+        history: eng.history,
+        moves: eng.moves,
+        timeSpent: this.timeSpent(),
+        difficulty: this.currentDifficulty(),
+        levelStr: eng.levelStr
+      }
+    });
+  }
+
+  restoreSavedSession(data: any) {
+    if (!data?.levelStr) return;
+    const eng = new LocalSokobanEngine(data.levelId, data.difficulty, data.levelStr, data);
+    this.localEngine.set(eng);
+    this.currentLevelId.set(data.levelId);
+    this.timeSpent.set(data.timeSpent || 0);
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(data.difficulty || GameDifficulty.Medium);
   }
 
   undo() {

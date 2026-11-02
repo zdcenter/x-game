@@ -219,8 +219,25 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
         }
 
         this.joinRoom(roomId, mode, diff, host);
+        if (mode === GameMode.Single) {
+          this.checkAndPromptResumeSession('gomoku');
+        }
       });
     }
+  }
+
+  onResumeSession(session: any) {
+    if (session && session.gameId === 'gomoku') {
+      this.store.restoreSavedSession(session);
+      if (session.difficulty) {
+        this.currentDifficulty.set(session.difficulty);
+      }
+      this.clearResumeSession('gomoku');
+    }
+  }
+
+  onDiscardResume() {
+    this.clearResumeSession('gomoku');
   }
 
   joinRoom(

@@ -218,7 +218,20 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
       }
     } else {
       this.store.joinRoom('', GameMode.Single);
+      this.checkAndPromptResumeSession('hashi');
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.view.set('play');
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('hashi');
   }
 
   override ngOnDestroy() {

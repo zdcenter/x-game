@@ -8,6 +8,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../core/services/ad.service';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
 export class HashiStore extends BaseGameStore {
@@ -17,6 +18,7 @@ export class HashiStore extends BaseGameStore {
   private audio = inject(AudioService);
   private i18n = inject(I18nService);
   private adService = inject(AdService);
+  private resumeService = inject(ResumeGameService);
 
   // 本地引擎
   engine = new HashiEngine();
@@ -145,6 +147,7 @@ export class HashiStore extends BaseGameStore {
     this.syncEngineToState();
 
     if (this.engine.isSolved()) {
+      this.resumeService.clearSession('hashi');
       this.isFinishing = true;
       this.stopTimer();
       
@@ -164,6 +167,30 @@ export class HashiStore extends BaseGameStore {
           this.submitPKFinish();
         }
       }, 500); 
+    } else if (this.currentRoomMode() === GameMode.Single && this.engine.bridges.length > 0) {
+      let placed = 0;
+      for (const b of this.engine.bridges) {
+        placed += b.count;
+      }
+      let targetTotal = 0;
+      for (const isl of this.engine.islands) {
+        targetTotal += isl.value;
+      }
+      const requiredBridges = Math.max(1, Math.floor(targetTotal / 2));
+      const progress = Math.min(99, Math.round((placed / requiredBridges) * 100));
+      this.resumeService.saveSession('hashi', {
+        difficulty: this.currentDifficulty(),
+        difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'hashi'),
+        progressPercent: progress,
+        timeElapsed: this.timeSpent(),
+        data: {
+          puzzleId: this.currentPuzzleId(),
+          puzzleContent: this.currentPuzzleContent(),
+          difficulty: this.currentDifficulty(),
+          timeSpent: this.timeSpent(),
+          bridges: this.engine.exportBridges()
+        }
+      });
     }
   }
 
@@ -223,5 +250,27 @@ export class HashiStore extends BaseGameStore {
     super.leaveRoom();
     this.stopTimer();
     this.localStatus.set(GameStatus.Waiting);
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.puzzleContent) return;
+    this.currentPuzzleId.set(data.puzzleId || '');
+    this.currentPuzzleContent.set(data.puzzleContent);
+    this.currentDifficulty.set(data.difficulty || this.currentDifficulty());
+    try {
+      const parsed = typeof data.puzzleContent === 'string' ? JSON.parse(data.puzzleContent) : data.puzzleContent;
+      if (parsed && parsed.grid) {
+        this.engine.initGame(parsed.grid);
+      }
+    } catch (e) {
+      console.error('Failed to parse hashi puzzle content', e);
+    }
+    if (data.bridges) {
+      this.engine.loadBridges(data.bridges);
+    }
+    this.timeSpent.set(data.timeSpent || 0);
+    this.localStatus.set(GameStatus.Playing);
+    this.syncEngineToState();
+    this.startTimer();
   }
 }

@@ -452,9 +452,51 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         );
       }
     } else {
-      const savedDiff = getSavedDifficulty('minesweeper', 'easy');
-      this.changeSingleDifficulty(savedDiff);
+      // Check if there is an unfinished single player minesweeper session
+      const hasResume = this.checkAndPromptResumeSession('minesweeper');
+      if (!hasResume) {
+        const savedDiff = getSavedDifficulty('minesweeper', 'easy');
+        this.changeSingleDifficulty(savedDiff);
+      }
     }
+  }
+
+  handleResumeMinesweeper(session: any) {
+    if (!session?.data) return;
+    this.store.restoreSavedGame(session.data);
+    this.currentDifficulty.set(session.data.difficulty || 'medium');
+    this.elapsedSeconds.set(session.timeElapsed || 0);
+    const m = Math.floor((session.timeElapsed || 0) / 60).toString().padStart(2, '0');
+    const s = ((session.timeElapsed || 0) % 60).toString().padStart(2, '0');
+    this.elapsedTime.set(`${m}:${s}`);
+    this.pendingResumeSession.set(null);
+  }
+
+  handleDiscardMinesweeper() {
+    this.clearResumeSession('minesweeper');
+    const savedDiff = getSavedDifficulty('minesweeper', 'easy');
+    this.changeSingleDifficulty(savedDiff);
+  }
+
+  private checkAutoSaveMinesweeper() {
+    if (this.currentRoomMode() !== GameMode.Single) return;
+    if (this.store.status() === GameStatus.Finished) {
+      this.clearResumeSession('minesweeper');
+      return;
+    }
+    const data = this.store.getSingleResumeData(this.elapsedSeconds());
+    if (!data) return;
+
+    const totalSafe = Math.max(1, data.width * data.height - data.mines);
+    const progress = Math.min(99, Math.round((data.revealedCnt / totalSafe) * 100));
+
+    this.resumeService.saveSession('minesweeper', {
+      difficulty: data.difficulty,
+      difficultyLabel: this.resumeService.getDifficultyLabel(data.difficulty, 'minesweeper'),
+      progressPercent: progress,
+      timeElapsed: this.elapsedSeconds(),
+      data
+    });
   }
 
   override ngOnDestroy() {
@@ -511,10 +553,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   handleCellReveal(cell: any) {
     if (!cell.flagged && !cell.revealed) this.vibrateLight();
     this.store.revealCell(cell.x, cell.y);
+    this.checkAutoSaveMinesweeper();
   }
   handleCellFlag(cell: any) {
     if (!cell.revealed) this.vibrateMedium();
     this.store.toggleFlag(cell.x, cell.y);
+    this.checkAutoSaveMinesweeper();
   }
 
   handleReviveWithAd() {

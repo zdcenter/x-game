@@ -26,6 +26,9 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
   (difficultyChange)="switchDifficulty($event)"
+  [resumeSession]="pendingResumeSession()"
+  (resumeGame)="onResumeSession($event)"
+  (discardResume)="onDiscardResume()"
 >
   <!-- 沉浸式真·全屏大草坪 (移动端/平板首屏 100dvh 满屏铺满，PC 端黄金卡座，平板自适应超大舞台) -->
   <div class="pastoral-meadow-root w-full flex flex-col relative select-none overflow-hidden justify-between p-1.5 sm:p-2 md:p-3"

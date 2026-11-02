@@ -253,7 +253,20 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     } else {
       const savedDiff = getSavedDifficulty('lightsout', GameDifficulty.Medium);
       this.store.joinRoom('', GameMode.Single, savedDiff);
+      this.checkAndPromptResumeSession('lightsout');
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('lightsout');
+    this.store.startGame();
   }
 
   override handleCreateRoom(event: any) {

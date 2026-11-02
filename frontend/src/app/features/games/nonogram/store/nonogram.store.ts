@@ -4,6 +4,8 @@ import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '..
 import { AudioService } from '../../../../core/services/audio.service';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { NonogramEngine, CellState } from './nonogram-engine';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 export interface LocalNonogramState {
   width: number;
@@ -28,6 +30,8 @@ export interface NonogramHistoryEntry {
 export class NonogramStore extends BaseGameStore {
   readonly gameId = GameId.Nonogram;
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
+  private i18n = inject(I18nService);
 
   private localState = signal<LocalNonogramState | null>(null);
   readonly history = signal<NonogramHistoryEntry[]>([]);
@@ -475,7 +479,31 @@ export class NonogramStore extends BaseGameStore {
   private checkProgressAndWin(newGrid: CellState[][], state: LocalNonogramState) {
     if (this.currentRoomMode() === GameMode.Single) {
       if (NonogramEngine.checkWin(newGrid, state.answerGrid)) {
+        this.resumeService.clearSession('nonogram');
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
+      } else {
+        let currentCorrectFilled = 0;
+        let targetTotalFilled = 0;
+        for (let y = 0; y < state.height; y++) {
+          for (let x = 0; x < state.width; x++) {
+            if (state.answerGrid[y] && state.answerGrid[y][x] === 1) {
+              targetTotalFilled++;
+              if (newGrid[y] && newGrid[y][x] === 1) currentCorrectFilled++;
+            }
+          }
+        }
+        const progress = targetTotalFilled > 0 ? Math.min(99, Math.round((currentCorrectFilled / targetTotalFilled) * 100)) : 0;
+        this.resumeService.saveSession('nonogram', {
+          difficulty: this.currentDifficulty(),
+          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'nonogram'),
+          progressPercent: progress,
+          timeElapsed: this.timeSpent(),
+          data: {
+            state: { ...state, grid: newGrid },
+            difficulty: this.currentDifficulty(),
+            timeSpent: this.timeSpent()
+          }
+        });
       }
     } else if (this.currentRoomMode() === GameMode.Speed) {
       const targetRowHints = state.rowHints || this.rowHints();
@@ -500,6 +528,13 @@ export class NonogramStore extends BaseGameStore {
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
       }
     }
+  }
+
+  restoreSavedSession(data: any) {
+    if (!data?.state) return;
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(data.difficulty || GameDifficulty.Easy);
+    this.localState.set(data.state);
   }
 
   undo() {

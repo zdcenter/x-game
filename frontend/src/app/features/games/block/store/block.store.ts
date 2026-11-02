@@ -7,6 +7,7 @@ import { BlockEngine, BlockActionType, BlockGameState } from './block-engine';
 import { BlockShape } from '../utils/shapes';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 export interface BlockOpponent {
   id: string;
@@ -22,6 +23,7 @@ export class BlockStore extends BaseGameStore {
 
   private timer = inject(GameTimerService);
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
 
   private engine = new BlockEngine();
 
@@ -276,7 +278,7 @@ export class BlockStore extends BaseGameStore {
     this.startLocalGame();
   }
 
-  private startLocalGame(seed?: number) {
+  public startLocalGame(seed?: number) {
     this._pendingClearRows = [];
     this._pendingClearCols = [];
     this.clearTrigger.set(0);
@@ -448,6 +450,33 @@ export class BlockStore extends BaseGameStore {
     this.localStatus.set(GameStatus.Playing);
     this.updateSignals();
     return true;
+  }
+
+  override saveSinglePlayerProgress(): void {
+    super.saveSinglePlayerProgress();
+    if (this.currentRoomMode() !== GameMode.Single || this.isDead() || this.localScore() <= 0) return;
+    const board = this.localBoard();
+    const size = this.boardSize();
+    let occupied = 0;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (board[r] && board[r][c] !== 0) occupied++;
+      }
+    }
+    const totalCells = size * size;
+    const progress = Math.min(99, Math.round((occupied / totalCells) * 100));
+
+    this.resumeService.saveSession('block', {
+      score: this.localScore(),
+      progressPercent: progress,
+      timeElapsed: 0,
+      data: this.getSinglePlayerSaveData()
+    });
+  }
+
+  override clearSinglePlayerSave(): void {
+    super.clearSinglePlayerSave();
+    this.resumeService.clearSession('block');
   }
 
   override loadSinglePlayerProgress(): boolean {

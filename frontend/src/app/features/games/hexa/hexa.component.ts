@@ -250,7 +250,20 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
       } else {
         this.handleJoinRoom(pending);
       }
+    } else {
+      this.checkAndPromptResumeSession('hexa');
     }
+  }
+
+  handleResumeHexa(session: any) {
+    if (!session?.data) return;
+    this.store.loadSinglePlayer();
+    this.pendingResumeSession.set(null);
+  }
+
+  handleDiscardHexa() {
+    this.clearResumeSession('hexa');
+    this.store.restartGame();
   }
 
   override handleJoinRoom(event: any) {

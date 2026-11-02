@@ -1,11 +1,13 @@
-import { Injectable, computed, signal, effect } from '@angular/core';
+import { Injectable, computed, signal, effect, inject } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Classic2048Engine } from './classic2048-engine';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
 export class Classic2048Store extends BaseGameStore {
   readonly gameId = 'classic2048';
+  private resumeService = inject(ResumeGameService);
 
   // Local state signals
   cells = signal<number[][]>([]);
@@ -128,7 +130,24 @@ export class Classic2048Store extends BaseGameStore {
       if (changed) {
         this.syncEngineState();
         if (this.engine.status === 'finished') {
+          this.resumeService.clearSession('classic2048');
           this.localStatus.set(GameStatus.Finished);
+        } else if (this.engine.status === 'playing' && this.engine.moves > 0) {
+          const maxTile = Math.max(...this.engine.cells.flat(), 2);
+          const progress = Math.min(99, Math.round((Math.log2(maxTile) / 11) * 100));
+          this.resumeService.saveSession('classic2048', {
+            difficulty: '4x4',
+            difficultyLabel: '4×4',
+            progressPercent: progress,
+            score: this.engine.score,
+            moves: this.engine.moves,
+            timeElapsed: 0,
+            data: {
+              cells: this.engine.cells.map(r => [...r]),
+              score: this.engine.score,
+              moves: this.engine.moves
+            }
+          });
         }
       }
     } else {
@@ -174,5 +193,12 @@ export class Classic2048Store extends BaseGameStore {
     this.particles.set([...this.engine.particles]);
   }
 
-
+  restoreSavedSession(data: any): void {
+    if (!data || !data.cells) return;
+    this.engine.cells = data.cells.map((r: number[]) => [...r]);
+    this.engine.score = data.score || 0;
+    this.engine.moves = data.moves || 0;
+    this.engine.status = 'playing';
+    this.syncEngineState();
+  }
 }

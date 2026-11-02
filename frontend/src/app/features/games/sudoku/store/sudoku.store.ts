@@ -14,9 +14,8 @@ import { environment } from '../../../../../environments/environment';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { SudokuCell } from './sudoku-engine';
 import { C2SAction } from '../../../../core/models/websocket.model';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 export type { SudokuCell };
-
-
 
 @Injectable()
 export class SudokuStore extends BaseGameStore {
@@ -28,6 +27,7 @@ export class SudokuStore extends BaseGameStore {
   private haptic = inject(HapticService);
   private i18n = inject(I18nService);
   private adService = inject(AdService);
+  private resumeService = inject(ResumeGameService);
 
   private saveSubject = new Subject<void>();
   private history: SudokuCell[][][] = [];
@@ -582,6 +582,29 @@ export class SudokuStore extends BaseGameStore {
   private triggerSave() {
     if (this.currentRoomMode() === GameMode.Single) {
       this.saveSubject.next();
+
+      if (!this.isFinished() && this.currentPuzzleId()) {
+        const serialized = JSON.stringify(this.board().map(row =>
+          row.map(c => ({ ...c, notes: Array.from(c.notes) }))
+        ));
+        const filled = this.countFilledCells();
+        const progress = Math.min(99, Math.round((filled / 81) * 100));
+
+        this.resumeService.saveSession('sudoku', {
+          difficulty: this.currentDifficulty(),
+          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'sudoku'),
+          progressPercent: progress,
+          timeElapsed: this.timeSpent(),
+          data: {
+            id: this.currentPuzzleId(),
+            puzzle: this.originalPuzzleStr(),
+            solution: this.solution(),
+            savedState: serialized,
+            timeSpent: this.timeSpent(),
+            difficulty: this.currentDifficulty()
+          }
+        });
+      }
     } else if (this.roomId()) {
       // Multiplayer: save locally to localStorage so it can be restored on reconnect
       const serialized = JSON.stringify(this.board().map(row =>
@@ -609,6 +632,7 @@ export class SudokuStore extends BaseGameStore {
   private finishPuzzle() {
     if (!this.currentPuzzleId()) return;
 
+    this.resumeService.clearSession('sudoku');
     this.audio.playSudoku('success');
     this.haptic.vibrateSuccess();
 

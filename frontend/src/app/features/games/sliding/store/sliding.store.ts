@@ -5,10 +5,13 @@ import { LocalSlidingEngine, SlidingAction, SlidingActionType, applySlideMove } 
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
+
 @Injectable()
 export class SlidingStore extends BaseGameStore {
   readonly gameId = GameId.Sliding;
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
 
   private localEngine = signal<LocalSlidingEngine | null>(new LocalSlidingEngine(GameDifficulty.Easy));
   private pkOptimisticBoard = signal<{ size: number; cells: number[]; emptyIdx: number; status: string; startAt: number; moves: number } | null>(null);
@@ -193,11 +196,30 @@ export class SlidingStore extends BaseGameStore {
           this.audio.playPuzzle('move');
           
           // Submit stat if finished
-          if (le.status === GameStatus.Finished && this.auth.isAuthenticated()) {
-            const timeSecs = Math.floor((le.endAt! - le.startAt!) / 1000);
-            this.submitSingleStat({ time: timeSecs }).subscribe(res => {
-              if (res.isNewRecord) {
-                this.bestTime.set(timeSecs);
+          if (le.status === GameStatus.Finished) {
+            this.resumeService.clearSession('sliding');
+            if (this.auth.isAuthenticated()) {
+              const timeSecs = Math.floor((le.endAt! - le.startAt!) / 1000);
+              this.submitSingleStat({ time: timeSecs }).subscribe(res => {
+                if (res.isNewRecord) {
+                  this.bestTime.set(timeSecs);
+                }
+              });
+            }
+          } else if (le.status === GameStatus.Playing && le.moves > 0) {
+            this.resumeService.saveSession('sliding', {
+              difficulty: this.currentDifficulty(),
+              difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'sliding'),
+              progressPercent: Math.round(this.myProgress()),
+              timeElapsed: Math.floor((Date.now() - le.startAt) / 1000),
+              moves: le.moves,
+              data: {
+                size: le.size,
+                cells: [...le.cells],
+                emptyIdx: le.emptyIdx,
+                moves: le.moves,
+                startAt: le.startAt,
+                difficulty: this.currentDifficulty()
               }
             });
           }
@@ -233,11 +255,27 @@ export class SlidingStore extends BaseGameStore {
 
   playAgain() {
     if (this.currentRoomMode() === GameMode.Single) {
+      this.resumeService.clearSession('sliding');
       const engine = new LocalSlidingEngine(this.currentDifficulty() as string);
       this.localEngine.set(engine);
       this.startGame();
     } else {
       super.restartGame();
     }
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.cells) return;
+    const diff = data.difficulty || this.currentDifficulty();
+    const engine = new LocalSlidingEngine(diff as string);
+    engine.size = data.size || Math.sqrt(data.cells.length);
+    engine.cells = [...data.cells];
+    engine.emptyIdx = data.emptyIdx;
+    engine.moves = data.moves || 0;
+    engine.startAt = data.startAt || (Date.now() - (data.timeElapsed || 0) * 1000);
+    engine.status = GameStatus.Playing;
+    this.localEngine.set(engine);
+    this.currentDifficulty.set(diff);
+    this.tick.set(this.tick() + 1);
   }
 }

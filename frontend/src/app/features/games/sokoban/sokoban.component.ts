@@ -217,10 +217,27 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       }
       this.showLobby.set(false);
     } else {
-      const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
-      this.store.currentDifficulty.set(savedDiff);
-      this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
+      const hasResume = this.checkAndPromptResumeSession('sokoban');
+      if (!hasResume) {
+        const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
+        this.store.currentDifficulty.set(savedDiff);
+        this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
+      }
     }
+  }
+
+  handleResumeSokoban(session: any) {
+    if (!session?.data) return;
+    this.store.restoreSavedSession(session.data);
+    this.showLobby.set(false);
+    this.pendingResumeSession.set(null);
+  }
+
+  handleDiscardSokoban() {
+    this.clearResumeSession('sokoban');
+    const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
+    this.store.currentDifficulty.set(savedDiff);
+    this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
   }
 
   override goBack() {

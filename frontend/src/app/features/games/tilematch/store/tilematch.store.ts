@@ -4,11 +4,13 @@ import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '..
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { AudioService } from '../../../../core/services/audio.service';
 import { LocalTilematchEngine, TileCard, TilematchAction } from './tilematch-engine';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
 export class TilematchStore extends BaseGameStore {
   readonly gameId = GameId.Tilematch;
   private readonly audio = inject(AudioService);
+  private readonly resumeService = inject(ResumeGameService);
 
   localEngine = signal<LocalTilematchEngine | null>(null);
   tick = signal<number>(0);
@@ -373,7 +375,32 @@ export class TilematchStore extends BaseGameStore {
 
     if (this.currentRoomMode() === GameMode.Single) {
       if (eng.status === GameStatus.Finished) {
+        this.resumeService.clearSession('tilematch');
         this.submitSingleStat({ score: eng.score, won: eng.isVictory }).subscribe();
+      } else if (eng.status === GameStatus.Playing && eng.moves > 0) {
+        const cleared = eng.cards.filter(c => c.status === 'cleared').length;
+        const total = Math.max(1, eng.cards.length);
+        const progress = Math.min(99, Math.round((cleared / total) * 100));
+        this.resumeService.saveSession('tilematch', {
+          difficulty: this.currentDifficulty(),
+          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'tilematch'),
+          progressPercent: progress,
+          score: eng.score,
+          moves: eng.moves,
+          timeElapsed: 0,
+          data: {
+            difficulty: this.currentDifficulty(),
+            cards: eng.cards.map(c => ({ ...c })),
+            slot: [...eng.slot],
+            stash: [...eng.stash],
+            moves: eng.moves,
+            score: eng.score,
+            combo: eng.combo,
+            stashUsed: eng.stashUsed,
+            undoRemaining: eng.undoRemaining,
+            shuffleRemaining: eng.shuffleRemaining
+          }
+        });
       }
     } else {
       this.syncPkProgress(eng, prevScore);
@@ -408,7 +435,32 @@ export class TilematchStore extends BaseGameStore {
 
     if (this.currentRoomMode() === GameMode.Single) {
       if (eng.status === GameStatus.Finished) {
+        this.resumeService.clearSession('tilematch');
         this.submitSingleStat({ score: eng.score, won: eng.isVictory }).subscribe();
+      } else if (eng.status === GameStatus.Playing && eng.moves > 0) {
+        const cleared = eng.cards.filter(c => c.status === 'cleared').length;
+        const total = Math.max(1, eng.cards.length);
+        const progress = Math.min(99, Math.round((cleared / total) * 100));
+        this.resumeService.saveSession('tilematch', {
+          difficulty: this.currentDifficulty(),
+          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'tilematch'),
+          progressPercent: progress,
+          score: eng.score,
+          moves: eng.moves,
+          timeElapsed: 0,
+          data: {
+            difficulty: this.currentDifficulty(),
+            cards: eng.cards.map(c => ({ ...c })),
+            slot: [...eng.slot],
+            stash: [...eng.stash],
+            moves: eng.moves,
+            score: eng.score,
+            combo: eng.combo,
+            stashUsed: eng.stashUsed,
+            undoRemaining: eng.undoRemaining,
+            shuffleRemaining: eng.shuffleRemaining
+          }
+        });
       }
     } else {
       this.syncPkProgress(eng, prevScore);
@@ -459,5 +511,26 @@ export class TilematchStore extends BaseGameStore {
       }
     }
     return false;
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.cards) return;
+    const diff = data.difficulty || this.currentDifficulty();
+    const eng = new LocalTilematchEngine();
+    eng.initGame({ difficulty: diff });
+    eng.cards = data.cards.map((c: any) => ({ ...c }));
+    eng.slot = [...(data.slot || [])];
+    eng.stash = [...(data.stash || [])];
+    eng.moves = data.moves || 0;
+    eng.score = data.score || 0;
+    eng.combo = data.combo || 0;
+    eng.stashUsed = data.stashUsed || false;
+    eng.undoRemaining = data.undoRemaining !== undefined ? data.undoRemaining : 2;
+    eng.shuffleRemaining = data.shuffleRemaining !== undefined ? data.shuffleRemaining : 2;
+    eng.status = GameStatus.Playing;
+    eng.updateBlockedStatus();
+    this.localEngine.set(eng);
+    this.currentDifficulty.set(diff);
+    this.tick.set(this.tick() + 1);
   }
 }

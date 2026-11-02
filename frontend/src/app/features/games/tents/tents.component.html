@@ -26,6 +26,9 @@
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+  [resumeSession]="pendingResumeSession()"
+  (resumeGame)="onResumeSession($event)"
+  (discardResume)="onDiscardResume()"
 >
   <!-- 桌面端右侧座舱：规则详解与快捷键 -->
   <div cockpit-right class="hidden xl:flex flex-col gap-4 w-full">

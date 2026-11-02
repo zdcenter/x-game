@@ -290,7 +290,20 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
     super.ngOnInit();
     if (this.store.currentRoomMode() === GameMode.Single) {
       this.store.startLocalGame(this.store.currentLevel());
+      this.checkAndPromptResumeSession('tilematch');
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('tilematch');
+    this.store.startLocalGame(this.store.currentLevel());
   }
 
   override ngOnDestroy(): void {

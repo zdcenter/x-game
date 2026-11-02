@@ -156,8 +156,28 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       } else {
         this.handleJoinRoom(joinInfo);
       }
+    } else {
+      // Check for unfinished single player session
+      this.checkAndPromptResumeSession('sudoku');
     }
   }
+
+  handleResumeSudoku(session: any) {
+    if (!session?.data) return;
+    this.startLevel({
+      id: session.data.id,
+      puzzle: session.data.puzzle,
+      solution: session.data.solution,
+      savedState: session.data.savedState,
+      timeSpent: session.data.timeSpent || session.timeElapsed || 0
+    });
+    this.pendingResumeSession.set(null);
+  }
+
+  handleDiscardSudoku() {
+    this.clearResumeSession('sudoku');
+  }
+
   getSinglePlayerStats() {
     const stats: any[] = [
       { icon: '⏱️', value: this.gameTimer.formatTime(this.store.timeSpent()) }

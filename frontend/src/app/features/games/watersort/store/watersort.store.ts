@@ -4,6 +4,7 @@ import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalWatersortEngine, WatersortActionType } from './watersort-engine';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 export interface Tube {
   colors: string[];
@@ -27,8 +28,7 @@ export interface WatersortState {
 })
 export class WatersortStore extends BaseGameStore {
   readonly gameId = GameId.WaterSort;
-
-
+  private resumeService = inject(ResumeGameService);
 
   private localEngine = signal<LocalWatersortEngine | null>(null);
   private tick = signal(0);
@@ -73,11 +73,35 @@ export class WatersortStore extends BaseGameStore {
         playerId: this.playerId(),
         difficulty: this.currentDifficulty() as string,
         onWin: () => {
+          this.resumeService.clearSession('watersort');
           this.submitSinglePlayerStats();
           this.tick.set(this.tick() + 1);
         },
         onPour: () => {
           this.tick.set(this.tick() + 1);
+          const eng = this.localEngine();
+          if (eng && eng.moves > 0 && !eng.finished) {
+            let completed = 0;
+            const filledTubes = eng.tubes.filter(t => t.colors.length > 0);
+            for (const t of filledTubes) {
+              if (t.colors.length === 4 && t.colors.every(c => c === t.colors[0])) {
+                completed++;
+              }
+            }
+            const prog = Math.min(99, Math.round((completed / Math.max(1, filledTubes.length)) * 100));
+            this.resumeService.saveSession('watersort', {
+              difficulty: this.currentDifficulty(),
+              difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'watersort'),
+              progressPercent: prog,
+              moves: eng.moves,
+              timeElapsed: 0,
+              data: {
+                difficulty: this.currentDifficulty(),
+                tubes: eng.tubes.map(t => ({ colors: [...t.colors] })),
+                moves: eng.moves
+              }
+            });
+          }
         },
         onInvalid: () => {
           // Play clink sound in component instead of passing audio here to avoid circular dep
@@ -124,6 +148,7 @@ export class WatersortStore extends BaseGameStore {
 
   restart() {
     if (this.currentRoomMode() === GameMode.Single) {
+      this.resumeService.clearSession('watersort');
       this.localEngine()?.handleAction({ type: WatersortActionType.Restart });
       this.tick.set(this.tick() + 1);
     } else {
@@ -133,5 +158,33 @@ export class WatersortStore extends BaseGameStore {
 
   private submitSinglePlayerStats() {
     this.submitSingleStat({ score: this.localEngine()?.moves || 0 }).subscribe();
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.tubes) return;
+    const diff = data.difficulty || this.currentDifficulty();
+    const engine = new LocalWatersortEngine();
+    engine.initGame({
+      playerId: this.playerId(),
+      difficulty: diff as string,
+      onWin: () => {
+        this.resumeService.clearSession('watersort');
+        this.submitSinglePlayerStats();
+        this.tick.set(this.tick() + 1);
+      },
+      onPour: () => {
+        this.tick.set(this.tick() + 1);
+      },
+      onInvalid: () => {
+        this.tick.set(this.tick() + 1);
+      }
+    });
+    engine.tubes = data.tubes.map((t: any) => ({ colors: [...t.colors] }));
+    engine.moves = data.moves || 0;
+    engine.status = GameStatus.Playing;
+    engine.finished = false;
+    this.localEngine.set(engine);
+    this.currentDifficulty.set(diff);
+    this.tick.set(this.tick() + 1);
   }
 }

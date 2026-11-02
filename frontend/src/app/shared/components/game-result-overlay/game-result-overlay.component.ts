@@ -21,12 +21,14 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 import { LiveActivityService } from '../../../core/services/live-activity.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
+import { PosterService } from '../../../core/services/poster.service';
+import { PosterModalComponent } from '../poster-modal/poster-modal.component';
 import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-game-result-overlay',
   standalone: true,
-  imports: [CommonModule, AdsenseComponent, CoinIconComponent],
+  imports: [CommonModule, AdsenseComponent, CoinIconComponent, PosterModalComponent],
   templateUrl: './game-result-overlay.component.html',
   styles: [`
     :host {
@@ -88,6 +90,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   private wsService = inject(WebSocketService);
   private liveActivityService = inject(LiveActivityService);
   private gameSwitchService = inject(GameSwitchService);
+  private posterService = inject(PosterService);
 
   readonly costRevive = computed(() => this.settingsService.coinEconomy().costRevive);
   readonly canAffordRevive = computed(() => this.coinService.canAfford(this.costRevive()));
@@ -96,6 +99,10 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   streak = signal<number>(0);
   rays = Array.from({ length: 16 }, (_, i) => i);
   sparkles = signal<{ id: number; x: number; y: number; size: number; delay: number; duration: number }[]>([]);
+
+  showPosterModal = signal(false);
+  posterUrl = signal('');
+  isGeneratingPoster = signal(false);
 
   @Input() currentGameId?: string;
 
@@ -532,6 +539,47 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       .replace('[game]', gameName);
     this.shareService.share({ title: `${this.i18n.t('app.title')()} - ${gameName}`, text, url,
       gameName, gameEmoji: config?.iconEmoji, isWin: true });
+  }
+
+  async openPosterModal() {
+    if (!this.currentGameId) return;
+    this.haptic.vibrateLight();
+    this.showPosterModal.set(true);
+    this.isGeneratingPoster.set(true);
+
+    const config = this.gameRegistry.getConfig(this.currentGameId);
+    const gameName = config ? this.i18n.t(config.titleKey)() : this.currentGameId;
+    const username = this.authStore.currentUser()?.username;
+    const challengeParam = username ? `?challenge=${encodeURIComponent(username)}` : '';
+    const gameUrl = `${getOrigin()}/games/${this.currentGameId}${challengeParam}`;
+
+    const posterStats = (this.stats || []).map(s => ({
+      label: s.label || '',
+      value: s.value,
+      icon: s.icon
+    }));
+
+    try {
+      const url = await this.posterService.generatePixelPoster({
+        gameId: this.currentGameId,
+        gameTitle: gameName,
+        gameEmoji: config?.iconEmoji,
+        isWin: this.status === GameResult.Win,
+        isNewRecord: !!this.isNewRecord,
+        playerName: username || 'PixelGamer',
+        stats: posterStats,
+        gameUrl
+      });
+      this.posterUrl.set(url);
+    } catch (e) {
+      console.error('Failed to generate poster:', e);
+    } finally {
+      this.isGeneratingPoster.set(false);
+    }
+  }
+
+  closePosterModal() {
+    this.showPosterModal.set(false);
   }
 
   copyChallengeLink() {

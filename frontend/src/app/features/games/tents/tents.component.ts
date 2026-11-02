@@ -86,7 +86,20 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
       // 自动恢复玩家上次保存的等级/难度（无记录时默认为 easy）
       const diff = this.store.restoreSavedDifficulty('easy');
       this.store.startLocalGame(diff, 0);
+      this.checkAndPromptResumeSession('tents');
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('tents');
+    this.store.restartGame();
   }
 
   override ngOnDestroy(): void {

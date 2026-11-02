@@ -182,25 +182,26 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     this.currentInput.set('');
     this.helperMarks.set({});
     
-    // Try to load save if single player
+    // Prompt resume session if single player
     if (mode === GameMode.Single) {
-      try {
-        const saved = storageGet(`codebreaker_save_${difficulty}`);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.status === GameStatus.Playing && (Date.now() - parsed.timestamp) < 24 * 60 * 60 * 1000) {
-            this.store.restoreSave(parsed.secretCode, parsed.guesses);
-            this.helperMarks.set(parsed.helperMarks || {});
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load save', e);
-      }
+      this.checkAndPromptResumeSession('codebreaker');
     }
     
     if (mode !== GameMode.Single && !isSpectator) {
       this.roomLifecycle.saveReconnectInfo(roomId, mode, difficulty, host);
     }
+  }
+
+  onResumeSession(session: any): void {
+    if (session?.data) {
+      this.store.restoreSavedSession(session.data);
+    }
+    this.pendingResumeSession.set(null);
+  }
+
+  onDiscardResume(): void {
+    this.clearResumeSession('codebreaker');
+    this.store.startGame();
   }
   override ngOnDestroy() {
     super.ngOnDestroy();

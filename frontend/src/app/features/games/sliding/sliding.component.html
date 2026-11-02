@@ -25,6 +25,9 @@
   (joinRoom)="handleJoinRoom($event)"
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
+  [resumeSession]="pendingResumeSession()"
+  (resumeGame)="onResumeSession($event)"
+  (discardResume)="onDiscardResume()"
 >
 <div class="w-full flex-grow flex flex-col items-center justify-between min-h-0 relative select-none w-full py-0.5 sm:py-1">
 

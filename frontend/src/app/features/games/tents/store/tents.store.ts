@@ -1,13 +1,15 @@
-import { Injectable, computed, signal, effect } from '@angular/core';
+import { Injectable, computed, signal, effect, inject } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalTentsEngine, TentsCellState } from './tents-engine';
 import { TentsPuzzle } from './tents-levels';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
 export class TentsStore extends BaseGameStore {
   readonly gameId = GameId.Tents;
+  private resumeService = inject(ResumeGameService);
 
   localEngine = signal<LocalTentsEngine | null>(null);
   tick = signal<number>(0);
@@ -218,8 +220,27 @@ export class TentsStore extends BaseGameStore {
     eng.handleAction({ type: 'set_cell', row: r, col: c, state: target });
     this.tick.set(this.tick() + 1);
 
-    if (this.currentRoomMode() === GameMode.Single && eng.status === GameStatus.Finished) {
-      this.submitSingleStat({ score: eng.score, won: true }).subscribe();
+    if (this.currentRoomMode() === GameMode.Single) {
+      if (eng.status === GameStatus.Finished) {
+        this.resumeService.clearSession('tents');
+        this.submitSingleStat({ score: eng.score, won: true }).subscribe();
+      } else if (eng.status === GameStatus.Playing && (eng.placedTentsCount > 0 || eng.moves > 0)) {
+        const progress = Math.min(99, Math.round((eng.placedTentsCount / Math.max(1, eng.totalTrees)) * 100));
+        this.resumeService.saveSession('tents', {
+          difficulty: this.currentDifficulty(),
+          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'tents'),
+          progressPercent: progress,
+          moves: eng.moves,
+          timeElapsed: 0,
+          data: {
+            difficulty: this.currentDifficulty(),
+            levelIndex: this.currentLevelIndex(),
+            size: eng.size,
+            moves: eng.moves,
+            board: eng.exportBoardState()
+          }
+        });
+      }
     }
 
     if (this.currentRoomMode() !== GameMode.Single) {
@@ -298,6 +319,27 @@ export class TentsStore extends BaseGameStore {
       this.brushMode.set(null); // 取消画笔，恢复三态循环
     } else {
       this.brushMode.set(mode);
+    }
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.board) return;
+    const diff = data.difficulty || this.currentDifficulty();
+    const lvlIdx = data.levelIndex ?? this.currentLevelIndex();
+    this.startLocalGame(diff as string, lvlIdx);
+    const eng = this.localEngine();
+    if (eng && Array.isArray(data.board)) {
+      for (let r = 0; r < data.board.length; r++) {
+        for (let c = 0; c < (data.board[r]?.length || 0); c++) {
+          const val = data.board[r][c];
+          if (val === 2 || val === 3) {
+            eng.grid[r][c] = val;
+          }
+        }
+      }
+      eng.moves = data.moves || 0;
+      eng.validateBoard();
+      this.tick.set(this.tick() + 1);
     }
   }
 }

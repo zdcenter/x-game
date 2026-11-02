@@ -5,14 +5,14 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { LocalGomokuEngine, GomokuActionType } from './gomoku-engine';
 import { GomokuColor } from './gomoku-ai';
 import { C2SAction } from '../../../../core/models/websocket.model';
+import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
 export class GomokuStore extends BaseGameStore {
-
-
   readonly gameId = GameId.Gomoku;
 
   private audio = inject(AudioService);
+  private resumeService = inject(ResumeGameService);
 
   private emptyBoard = this.createEmptyBoard();
 
@@ -156,17 +156,50 @@ export class GomokuStore extends BaseGameStore {
       difficulty: difficulty,
       onStateChange: () => {
         this.tick.set(this.tick() + 1);
+        if (engine.status === GameStatus.Playing && engine.history.length > 0) {
+          const prog = Math.min(99, Math.round((engine.history.length / 30) * 100));
+          this.resumeService.saveSession('gomoku', {
+            difficulty: this.currentDifficulty(),
+            difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'gomoku'),
+            progressPercent: prog,
+            moves: engine.history.length,
+            timeElapsed: 0,
+            data: {
+              difficulty: this.currentDifficulty(),
+              history: [...engine.history],
+              board: engine.board.map(r => [...r]),
+              currentTurn: engine.currentTurn,
+              lastMove: engine.lastMove ? [...engine.lastMove] : null
+            }
+          });
+        }
       },
       onAiMove: () => {
         this.audio.playGomoku('stoneDrop');
       },
       onGameOver: (win: boolean) => {
+        this.resumeService.clearSession('gomoku');
         this.submitSinglePlayerStats(win);
         this.tick.set(this.tick() + 1);
       }
     });
     this.localEngine.set(engine);
     this.tick.set(this.tick() + 1);
+  }
+
+  restoreSavedSession(data: any): void {
+    if (!data || !data.board) return;
+    const diff = data.difficulty || this.currentDifficulty();
+    this.startLocalGame(diff as string);
+    const eng = this.localEngine();
+    if (eng) {
+      eng.board = data.board.map((r: any) => [...r]);
+      eng.history = data.history ? [...data.history] : [];
+      eng.currentTurn = data.currentTurn || this.playerId();
+      eng.lastMove = data.lastMove || null;
+      eng.status = GameStatus.Playing;
+      this.tick.set(this.tick() + 1);
+    }
   }
 
   override startGame() {
