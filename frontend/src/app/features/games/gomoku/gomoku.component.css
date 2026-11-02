@@ -68,15 +68,30 @@
   animation: winningGlow 1.2s ease-in-out infinite;
 }
 
-/* Jade / Obsidian Stone Gradients */
+/* Hand-Polished Yunnan Jade & Obsidian Stone Gradients */
 .stone-black {
-  background: radial-gradient(circle at 35% 30%, #52525b 0%, #27272a 45%, #09090b 100%);
-  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  background: radial-gradient(circle at 35% 28%, #52525b 0%, #27272a 42%, #09090b 100%);
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.7), inset 0 1.5px 2px rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.6);
 }
 
 .stone-white {
-  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f4f4f5 55%, #d4d4d8 100%);
-  box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  background: radial-gradient(circle at 35% 28%, #ffffff 0%, #fbfbfe 45%, #e2e8f0 85%, #cbd5e1 100%);
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.45), inset 0 2px 2px rgba(255, 255, 255, 1), inset 0 -1.5px 2px rgba(148, 163, 184, 0.5);
+}
+
+@keyframes stoneImpactRipple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-stone-impact {
+  animation: stoneImpactRipple 0.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
 @keyframes laserGlow {

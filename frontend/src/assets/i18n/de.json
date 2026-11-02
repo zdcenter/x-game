@@ -1147,6 +1147,9 @@
   "gomoku.diff.medium": "KI-Level: Fortgeschritten",
   "gomoku.mode.same_pk_classic": "Mehrspieler-PvP",
   "gomoku.mode.single": "Gegen KI spielen",
+  "gomoku.exit_replay": "Überprüfung Beenden",
+  "gomoku.replay": "Partie Überprüfen",
+  "gomoku.replay_step": "Zug {current} / {total}",
   "gomoku.restart": "Spiel neu starten",
   "gomoku.surrender": "Kapitulieren",
   "gomoku.turn.black": "Schwarz ist am Zug",
@@ -2075,5 +2078,10 @@
   "game.call_friend_short": "Freunde rufen",
   "game.copy_invite_link_btn": "Einladungslink kopieren",
   "game.duel_reward_tip": "Gewinner erhält +25 Gehirn-Münzen & Ranglisten-Sieg",
-  "game.duel_mode": "1v1 Duell"
+  "game.duel_mode": "1v1 Duell",
+  "minesweeper.custom_width": "Breite (9-50)",
+  "minesweeper.custom_height": "Höhe (9-50)",
+  "minesweeper.custom_mines": "Minen",
+  "result.recommended_games": "Andere Spiele ausprobieren",
+  "result.switch_game": "Schnell spielen"
 }

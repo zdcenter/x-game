@@ -3,6 +3,7 @@
 @import 'tailwindcss';
 @custom-variant dark (&:is(.theme-dark *));
 @import 'driver.js/dist/driver.css';
+@import './styles/typography.css';
 
 @layer base {
   html, body {

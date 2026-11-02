@@ -87,28 +87,28 @@
           <main class="flex-1 w-full mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-auto py-2 sm:py-3 min-h-0 overflow-y-auto lg:overflow-hidden select-none">
             
             <!-- Battle Status HUD Bar (Matches board width) -->
-            <div class="w-full flex items-center justify-between gap-2 px-3 py-2 sm:py-2.5 mb-2 sm:mb-3 rounded-2xl bg-[var(--color-bg-card)]/90 backdrop-blur-md border border-[var(--color-border-card)] shadow-sm transition-all"
+            <div class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 sm:py-3 mb-2.5 sm:mb-4 rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-sm transition-all"
                  [style.max-width]="boardSizePx()">
               
               <!-- Player 1: Black Stone -->
-              <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all duration-300"
-                   [ngClass]="currentTurnColor === 1 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-80'">
-                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full stone-black flex items-center justify-center shrink-0 relative">
+              <div class="flex items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:py-2 rounded-xl border transition-all duration-300"
+                   [ngClass]="currentTurnColor === 1 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-85'">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full stone-black flex items-center justify-center shrink-0 relative shadow-sm">
                   @if (myColor === 1 && !isSpectator()) {
-                    <span class="text-[10px] text-amber-400 font-black">★</span>
+                    <span class="text-xs text-amber-400 font-black">★</span>
                   }
                 </div>
                 <div class="flex flex-col min-w-0">
-                  <div class="flex items-center gap-1">
-                    <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate max-w-[80px] sm:max-w-[120px]">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-sm sm:text-base font-black text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[140px]">
                       {{ myColor === 1 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
                     </span>
-                    <span class="text-[10px] px-1 py-0.2 rounded bg-black/40 text-gray-200 font-bold border border-white/10 shrink-0">
+                    <span class="badge-safe bg-black/40 text-gray-100 font-bold border border-white/10 shrink-0">
                       {{ i18n.t('gomoku.you_are_black')() }}
                     </span>
                   </div>
                   @if (currentTurnColor === 1 && gameStatus() === GameStatus.Playing) {
-                    <span class="text-[10px] font-bold text-amber-500 animate-pulse leading-none mt-0.5">
+                    <span class="text-xs font-bold text-amber-500 animate-pulse leading-tight mt-0.5">
                       {{ myColor === 1 ? i18n.t('gomoku.turn.yours')() : (currentRoomMode() === GameMode.Single ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
                     </span>
                   }
@@ -116,9 +116,9 @@
               </div>
 
               <!-- Center: Move count & Action controls -->
-              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
                 <!-- Move Count Badge -->
-                <div class="px-2.5 py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-center shadow-inner">
+                <div class="px-3 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-center shadow-inner">
                   <span class="font-mono font-bold text-xs sm:text-sm text-[var(--color-text-secondary)]">
                     {{ moveCountText() }}
                   </span>
@@ -127,41 +127,51 @@
                 <!-- Single Player Hint Button (H) -->
                 @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing) {
                   <button type="button" (click)="getHint()" [disabled]="!isMyTurn"
-                          class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-black text-xs transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer"
+                          class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-black text-xs sm:text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
                           [title]="i18n.t('gomoku.hint')() + ' (H)'">
-                    <span>💡</span>
+                    <span class="text-sm">💡</span>
                     <span class="hidden sm:inline">{{ i18n.t('gomoku.hint')() }}</span>
                   </button>
 
                   <button type="button" (click)="onRestart()"
-                          class="p-1.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] transition-all active:scale-95 cursor-pointer"
+                          class="p-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] transition-all active:scale-95 cursor-pointer"
                           [title]="i18n.t('gomoku.restart')() + ' (R)'">
-                    <span class="text-xs">🔄</span>
+                    <span class="text-xs sm:text-sm">🔄</span>
+                  </button>
+                }
+
+                <!-- Replay Game Button (when finished) -->
+                @if (gameStatus() === GameStatus.Finished && history().length > 0 && !isReplaying()) {
+                  <button type="button" (click)="startReplay()"
+                          class="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-500 font-black text-xs sm:text-sm transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                          [title]="i18n.t('gomoku.replay')()">
+                    <span class="text-sm">📜</span>
+                    <span class="hidden sm:inline">{{ i18n.t('gomoku.replay')() }}</span>
                   </button>
                 }
               </div>
 
               <!-- Player 2: White Stone -->
-              <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all duration-300"
-                   [ngClass]="currentTurnColor === 2 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-80'">
+              <div class="flex items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:py-2 rounded-xl border transition-all duration-300"
+                   [ngClass]="currentTurnColor === 2 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-85'">
                 <div class="flex flex-col items-end min-w-0">
-                  <div class="flex items-center gap-1">
-                    <span class="text-[10px] px-1 py-0.2 rounded bg-white text-gray-800 font-bold border border-black/10 shrink-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="badge-safe bg-white text-gray-800 font-bold border border-black/10 shrink-0 shadow-2xs">
                       {{ i18n.t('gomoku.you_are_white')() }}
                     </span>
-                    <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate max-w-[80px] sm:max-w-[120px]">
+                    <span class="text-sm sm:text-base font-black text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[140px]">
                       {{ myColor === 2 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
                     </span>
                   </div>
                   @if (currentTurnColor === 2 && gameStatus() === GameStatus.Playing) {
-                    <span class="text-[10px] font-bold text-amber-500 animate-pulse leading-none mt-0.5">
+                    <span class="text-xs font-bold text-amber-500 animate-pulse leading-tight mt-0.5">
                       {{ myColor === 2 ? i18n.t('gomoku.turn.yours')() : (currentRoomMode() === GameMode.Single ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
                     </span>
                   }
                 </div>
-                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full stone-white flex items-center justify-center shrink-0 relative">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full stone-white flex items-center justify-center shrink-0 relative shadow-sm">
                   @if (myColor === 2 && !isSpectator()) {
-                    <span class="text-[10px] text-amber-600 font-black">★</span>
+                    <span class="text-xs text-amber-600 font-black">★</span>
                   }
                 </div>
               </div>
@@ -237,10 +247,19 @@
                             </div>
                           }
 
-                          <!-- Last Move Indicator: High-Visibility Sonar Wave + Red Target Dot -->
+                          <!-- Last Move Indicator: High-Visibility Sonar Wave + Impact Ripple + Red Target Dot -->
                           @if (lastMove() && lastMove()![0] === y && lastMove()![1] === x) {
+                            <div class="absolute -inset-2 rounded-full border-2 border-amber-400/80 pointer-events-none animate-stone-impact z-20"></div>
                             <div class="absolute -inset-1 rounded-full border-2 border-amber-400 pointer-events-none animate-sonar-ripple z-20"></div>
                             <div class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)] border border-white/80 z-20"></div>
+                          }
+
+                          <!-- Replay Move Order Badge on Stones -->
+                          @if (isReplaying() && moveOrderMap().has(y + ',' + x)) {
+                            <span class="text-[9px] sm:text-xs font-black z-30 select-none pointer-events-none"
+                                  [ngClass]="cell === 1 ? 'text-white/90' : 'text-slate-800'">
+                              {{ moveOrderMap().get(y + ',' + x) }}
+                            </span>
                           }
                         </div>
                       } @else {
@@ -252,7 +271,7 @@
                         }
 
                         <!-- Hover Placement Preview & Crosshair Aid -->
-                        @if (isMyTurn && gameStatus() === GameStatus.Playing) {
+                        @if (isMyTurn && gameStatus() === GameStatus.Playing && !isReplaying()) {
                           <div class="w-[82%] h-[82%] rounded-full relative z-10 opacity-0 group-hover:opacity-60 transition-opacity duration-150 shadow-md flex items-center justify-center pointer-events-none"
                                [ngClass]="myColor === 1 ? 'stone-black' : 'stone-white'">
                             <div class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></div>
@@ -264,5 +283,68 @@
                 }
               </div>
             </div>
+
+            <!-- Ergonomic Mobile Bottom Action Bar (Thumb Zone) -->
+            @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing && !isReplaying()) {
+              <div class="w-full flex sm:hidden items-center justify-center gap-3 mt-3 px-2"
+                   [style.max-width]="boardSizePx()">
+                <button type="button" (click)="getHint()" [disabled]="!isMyTurn"
+                        class="flex-1 py-2.5 px-3 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-500/40 text-amber-500 font-black text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                  <span class="text-base">💡</span>
+                  <span>{{ i18n.t('gomoku.hint')() }}</span>
+                </button>
+                <button type="button" (click)="onRestart()"
+                        class="py-2.5 px-4 rounded-2xl bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] active:scale-95 border border-[var(--color-border-card)] text-[var(--color-text-main)] font-bold text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                  <span class="text-base">🔄</span>
+                  <span>{{ i18n.t('gomoku.restart')() }}</span>
+                </button>
+              </div>
+            }
+
+            <!-- Dedicated Floating Replay Control Bar -->
+            @if (isReplaying()) {
+              <div class="w-full flex items-center justify-between gap-1.5 sm:gap-2 mt-3 px-3 py-2 rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-cyan-500/40 shadow-lg"
+                   [style.max-width]="boardSizePx()">
+                <!-- Prev / First controls -->
+                <div class="flex items-center gap-1">
+                  <button type="button" (click)="replayFirst()" [disabled]="replayStep()! <= 1"
+                          class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-xs font-black disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
+                          title="First Move">
+                    ⏮
+                  </button>
+                  <button type="button" (click)="replayPrev()" [disabled]="replayStep()! <= 1"
+                          class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-xs font-black disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
+                          title="Previous Move">
+                    ◀
+                  </button>
+                </div>
+
+                <!-- Replay Progress Indicator -->
+                <div class="text-center font-mono">
+                  <span class="text-xs sm:text-sm font-black text-cyan-500">
+                    {{ i18n.t('gomoku.replay_step', { current: replayStep() || 0, total: history().length })() }}
+                  </span>
+                </div>
+
+                <!-- Next / Last controls & Exit -->
+                <div class="flex items-center gap-1">
+                  <button type="button" (click)="replayNext()" [disabled]="replayStep()! >= history().length"
+                          class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-xs font-black disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
+                          title="Next Move">
+                    ▶
+                  </button>
+                  <button type="button" (click)="replayLast()" [disabled]="replayStep()! >= history().length"
+                          class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] text-xs font-black disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
+                          title="Last Move">
+                    ⏭
+                  </button>
+                  <button type="button" (click)="exitReplay()"
+                          class="ml-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-500 font-bold text-xs active:scale-95 transition-all flex items-center gap-1">
+                    <span>✕</span>
+                    <span class="hidden sm:inline">{{ i18n.t('gomoku.exit_replay')() }}</span>
+                  </button>
+                </div>
+              </div>
+            }
           </main>
 </app-game-layout>

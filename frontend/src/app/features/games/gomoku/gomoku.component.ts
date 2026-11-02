@@ -97,13 +97,61 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     { mobile: 20, tablet: 40, pc: 64 },
   );
 
+  // Replay System
+  readonly replayStep = signal<number | null>(null);
+  readonly isReplaying = computed(() => this.replayStep() !== null);
+  readonly history = computed(() => this.store.history());
+
+  // Board derivation: If replaying, dynamically slice history up to replayStep
+  readonly displayBoard = computed<GomokuColor[][]>(() => {
+    const step = this.replayStep();
+    if (step === null) {
+      return this.store.board();
+    }
+    const b: GomokuColor[][] = [];
+    for (let r = 0; r < 15; r++) {
+      b.push(new Array(15).fill(0));
+    }
+    const hist = this.history();
+    const count = Math.min(step, hist.length);
+    for (let i = 0; i < count; i++) {
+      const m = hist[i];
+      if (m && m.y >= 0 && m.y < 15 && m.x >= 0 && m.x < 15) {
+        b[m.y][m.x] = m.color;
+      }
+    }
+    return b;
+  });
+
+  readonly displayLastMove = computed<number[] | null>(() => {
+    const step = this.replayStep();
+    if (step === null) {
+      return this.store.lastMove();
+    }
+    if (step <= 0) return null;
+    const hist = this.history();
+    const m = hist[step - 1];
+    return m ? [m.y, m.x] : null;
+  });
+
+  readonly moveOrderMap = computed<Map<string, number>>(() => {
+    const map = new Map<string, number>();
+    const hist = this.history();
+    const limit = this.replayStep() ?? hist.length;
+    for (let i = 0; i < limit && i < hist.length; i++) {
+      const m = hist[i];
+      map.set(`${m.y},${m.x}`, i + 1);
+    }
+    return map;
+  });
+
   // Computed state
-  board = this.store.board;
+  board = computed(() => this.displayBoard());
   gameStatus = this.store.status;
   currentTurn = this.store.currentTurn;
   playerColors = this.store.playerColors;
   myPlayerId = this.store.playerId;
-  lastMove = computed(() => this.store.lastMove());
+  lastMove = computed(() => this.displayLastMove());
 
   // Move counter
   readonly moveCount = computed(() => {
@@ -247,6 +295,9 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
 
   // Calculate SVG line percentage coordinates from first stone to last stone
   readonly winningLineCoords = computed<{ x1: number; y1: number; x2: number; y2: number } | null>(() => {
+    if (this.isReplaying() && this.replayStep() !== this.history().length) {
+      return null;
+    }
     const pts = this.sortedWinningPoints();
     if (!pts || pts.length === 0) return null;
     const first = pts[0];
@@ -261,6 +312,9 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   });
 
   getWinningIndex(y: number, x: number): number {
+    if (this.isReplaying() && this.replayStep() !== this.history().length) {
+      return 0;
+    }
     const pts = this.sortedWinningPoints();
     if (!pts) return 0;
     const idx = pts.findIndex(p => p[0] === y && p[1] === x);
@@ -268,6 +322,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onCellClick(y: number, x: number) {
+    if (this.isReplaying()) return;
     if (this.hintMove()) {
       this.hintMove.set(null);
     }
@@ -275,6 +330,50 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
       this.vibrateSnap();
     }
     this.store.makeMove(y, x);
+  }
+
+  startReplay() {
+    const hist = this.history();
+    if (hist.length === 0) return;
+    this.showResultOverlay.set(false);
+    this.replayStep.set(hist.length);
+    this.audio.playClick();
+  }
+
+  exitReplay() {
+    this.replayStep.set(null);
+    if (this.gameStatus() === GameStatus.Finished) {
+      this.showResultOverlay.set(true);
+    }
+    this.audio.playClick();
+  }
+
+  replayFirst() {
+    if (!this.isReplaying()) return;
+    this.replayStep.set(1);
+    this.audio.playGomoku('stoneDrop');
+  }
+
+  replayPrev() {
+    const step = this.replayStep();
+    if (step === null || step <= 1) return;
+    this.replayStep.set(step - 1);
+    this.audio.playGomoku('stoneDrop');
+  }
+
+  replayNext() {
+    const step = this.replayStep();
+    const max = this.history().length;
+    if (step === null || step >= max) return;
+    this.replayStep.set(step + 1);
+    this.audio.playGomoku('stoneDrop');
+  }
+
+  replayLast() {
+    const max = this.history().length;
+    if (!this.isReplaying() || max === 0) return;
+    this.replayStep.set(max);
+    this.audio.playGomoku('stoneDrop');
   }
 
   getHint() {
@@ -312,6 +411,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   onRestart() {
+    this.replayStep.set(null);
     this.hintMove.set(null);
     this.store.startGame();
   }

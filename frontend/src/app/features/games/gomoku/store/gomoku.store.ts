@@ -54,6 +54,23 @@ export class GomokuStore extends BaseGameStore {
     return (this.rawState() as any)?.winningLine || null;
   });
 
+  history = computed<{ y: number; x: number; color: GomokuColor }[]>(() => {
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.tick();
+      return this.localEngine()?.history || [];
+    }
+    const raw = (this.rawState() as any)?.history;
+    if (Array.isArray(raw)) {
+      return raw.map((item: any) => {
+        if (Array.isArray(item)) {
+          return { y: item[0], x: item[1], color: item[2] as GomokuColor };
+        }
+        return item;
+      });
+    }
+    return [];
+  });
+
   playerColors = computed<Record<string, GomokuColor>>(() => {
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();

@@ -562,6 +562,38 @@
         </div>
       </div>
 
+      <!-- Recommended Games Section (换个游戏换换心情 · 4款推荐微卡片) -->
+      @if (recommendedGames && recommendedGames.length > 0) {
+        <div class="w-full mt-3.5 sm:mt-4 pt-3 sm:pt-3.5 border-t border-[var(--color-border-card)]/70 flex flex-col gap-2 relative z-10">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-bold text-[var(--color-text-secondary)] flex items-center gap-1.5">
+              <span class="text-amber-500">✨</span>
+              <span>{{ i18n.t('result.recommended_games')() || '换个游戏换换心情' }}</span>
+            </span>
+            <span class="text-[11px] text-[var(--color-text-muted)] font-medium">
+              {{ i18n.t('result.switch_game')() || '快速试玩' }}
+            </span>
+          </div>
+
+          <!-- 4 列紧凑卡片网格 (移动端与平板、桌面端均舒适) -->
+          <div class="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+            @for (game of recommendedGames; track game.id) {
+              <button type="button"
+                      (click)="handleGoToGame(game.id)"
+                      class="flex flex-col items-center justify-center py-2 px-1 rounded-2xl bg-[var(--color-bg-main)]/90 hover:bg-amber-500/10 border border-[var(--color-border-card)] hover:border-amber-500/50 shadow-2xs hover:shadow-sm active:scale-95 transition-all group cursor-pointer text-center min-w-0"
+                      [title]="i18n.t(game.titleKey)()">
+                <span class="text-2xl sm:text-3xl mb-1 group-hover:scale-110 transition-transform select-none shrink-0">
+                  {{ game.iconEmoji }}
+                </span>
+                <span class="text-[11px] sm:text-xs font-bold text-[var(--color-text-main)] group-hover:text-amber-500 truncate w-full px-0.5 leading-tight">
+                  {{ i18n.t(game.titleKey)() }}
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Result Overlay Ad Slot -->
       @if (adService.getBannerSlotId('result_bottom')) {
         <div class="w-full mt-4 relative z-10 flex justify-center shrink-0">

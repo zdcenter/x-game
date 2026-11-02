@@ -1147,6 +1147,9 @@
   "gomoku.diff.medium": "Nível de IA: Avançado",
   "gomoku.mode.same_pk_classic": "Multijogador PvP",
   "gomoku.mode.single": "Jogar contra IA",
+  "gomoku.exit_replay": "Sair da Revisão",
+  "gomoku.replay": "Rever Partida",
+  "gomoku.replay_step": "Jogada {current} / {total}",
   "gomoku.restart": "Reiniciar Jogo",
   "gomoku.surrender": "Rendição",
   "gomoku.turn.black": "Vez das Pretas",
@@ -2075,5 +2078,10 @@
   "game.call_friend_short": "Chamar amigos",
   "game.copy_invite_link_btn": "Copiar link de convite",
   "game.duel_reward_tip": "O vencedor ganha +25 moedas e vitória ranqueada",
-  "game.duel_mode": "Duelo 1v1"
+  "game.duel_mode": "Duelo 1v1",
+  "minesweeper.custom_width": "Largura (9-50)",
+  "minesweeper.custom_height": "Altura (9-50)",
+  "minesweeper.custom_mines": "Minas",
+  "result.recommended_games": "Experimente outros jogos",
+  "result.switch_game": "Jogo rápido"
 }

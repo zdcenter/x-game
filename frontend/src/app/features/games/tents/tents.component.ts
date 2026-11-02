@@ -5,6 +5,7 @@ import { TentsStore } from './store/tents.store';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
@@ -17,7 +18,8 @@ import { TentsCellState } from './store/tents-engine';
     CommonModule,
     GameLayoutComponent,
     GamePkHudComponent,
-    GameHandheldHeaderComponent
+    GameHandheldHeaderComponent,
+    DifficultySelectorComponent
   ],
   providers: [TentsStore],
   templateUrl: './tents.component.html',
@@ -27,6 +29,12 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
   override store = inject(TentsStore);
 
   CellState = TentsCellState;
+
+  readonly availableDifficulties: DifficultyOption[] = [
+    { id: 'easy', labelKey: 'game.diff_easy', desc: '6×6' },
+    { id: 'medium', labelKey: 'game.diff_medium', desc: '8×8' },
+    { id: 'hard', labelKey: 'game.diff_hard', desc: '10×10' }
+  ];
 
   readonly myPlayerPkStats = computed<PkPlayerStats>(() => {
     return {

@@ -383,7 +383,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
     
     let recommendedIds: string[] = [];
     if (config && config.recommendations) {
-      recommendedIds = [...config.recommendations];
+      recommendedIds = config.recommendations.filter(id => id !== this.currentGameId);
     }
     
     const otherGames = allGames.filter(g => g.id !== this.currentGameId && !recommendedIds.includes(g.id));
@@ -392,10 +392,11 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       [otherGames[i], otherGames[j]] = [otherGames[j], otherGames[i]];
     }
     
-    const needed = Math.max(0, 6 - recommendedIds.length);
+    const needed = Math.max(0, 4 - recommendedIds.length);
     const toAdd = otherGames.slice(0, needed).map(g => g.id);
     
     this.recommendedGames = [...recommendedIds, ...toAdd]
+      .slice(0, 4)
       .map(id => this.gameRegistry.getConfig(id))
       .filter((c): c is GameConfig => !!c);
   }
@@ -598,11 +599,13 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   }
 
   handleGoToGame(gameId: string) {
+    this.haptic.light();
+    this.audio.playClick();
     this.adService.tryShowInterstitial(() => {
       if (this.enableChangeRoomGame) {
         this.changeRoomGame.emit(gameId);
       } else {
-        const lang = this.router.url.split('/')[1] || 'zh';
+        const lang = this.i18n.currentLang();
         this.router.navigate(['/', lang, 'games', gameId]);
       }
     });

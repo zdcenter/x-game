@@ -57,11 +57,21 @@ export class HapticService {
     this.triggerVibrate(30);
   }
 
+  /** Alias for vibrateMedium() */
+  medium() {
+    this.vibrateMedium();
+  }
+
   /**
    * Heavy vibration. Ideal for dropping hard blocks, explosions, or large impacts.
    */
   vibrateHeavy() {
     this.triggerVibrate(50);
+  }
+
+  /** Alias for vibrateHeavy() */
+  heavy() {
+    this.vibrateHeavy();
   }
 
   /**

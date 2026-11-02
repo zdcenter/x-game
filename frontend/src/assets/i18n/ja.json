@@ -1147,6 +1147,9 @@
   "gomoku.diff.medium": "AIレベル：上級",
   "gomoku.mode.same_pk_classic": "マルチプレイヤーPvP",
   "gomoku.mode.single": "AIと対戦",
+  "gomoku.exit_replay": "再生終了",
+  "gomoku.replay": "棋譜再生",
+  "gomoku.replay_step": "第 {current} / {total} 手",
   "gomoku.restart": "ゲームを再開する",
   "gomoku.surrender": "降伏",
   "gomoku.turn.black": "黒の番",
@@ -2075,5 +2078,10 @@
   "game.call_friend_short": "フレンド招待",
   "game.copy_invite_link_btn": "招待リンクをコピー",
   "game.duel_reward_tip": "勝者は +25 コインとランク戦勝利を獲得",
-  "game.duel_mode": "1v1 対戦"
+  "game.duel_mode": "1v1 対戦",
+  "minesweeper.custom_width": "幅 (9-50)",
+  "minesweeper.custom_height": "高さ (9-50)",
+  "minesweeper.custom_mines": "地雷数",
+  "result.recommended_games": "他のゲームを試す",
+  "result.switch_game": "クイックプレイ"
 }

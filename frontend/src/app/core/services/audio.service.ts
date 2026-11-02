@@ -75,6 +75,27 @@ export class AudioService {
       window.addEventListener('touchend', unlock, { passive: true });
       window.addEventListener('keydown', unlock, { passive: true });
       window.addEventListener('click', unlock, { passive: true });
+
+      // Low-power background management: suspend WebAudio and pause BGM when tab is inactive
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            if (this.audioCtx && this.audioCtx.state === 'running') {
+              this.audioCtx.suspend().catch(() => {});
+            }
+            if (this.bgmAudio && !this.bgmAudio.paused) {
+              this.bgmAudio.pause();
+            }
+          } else if (document.visibilityState === 'visible') {
+            if (this.audioCtx && this.audioCtx.state === 'suspended' && this.hasUnlockedAudio) {
+              this.audioCtx.resume().catch(() => {});
+            }
+            if (this.bgmAudio && this.currentBgmUrl && !this.isMuted()) {
+              this.bgmAudio.play().catch(() => {});
+            }
+          }
+        });
+      }
     }
   }
 

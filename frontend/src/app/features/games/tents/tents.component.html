@@ -10,6 +10,7 @@
   [showRules]="showRules()"
   [showMobileSidebar]="isMobileSidebarOpen()"
   [currentDifficulty]="store.currentDifficulty()"
+  [availableDifficulties]="availableDifficulties"
   (difficultyChange)="changeDifficulty($event)"
   [showNextLevel]="true"
   (nextLevel)="onNextLevel()"
@@ -29,33 +30,33 @@
   <!-- 桌面端右侧座舱：规则详解与快捷键 -->
   <div cockpit-right class="hidden xl:flex flex-col gap-4 w-full">
     <!-- 三大法则指南 -->
-    <div class="p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="text-lg">📖</span>
-        <h4 class="text-sm font-black text-[var(--color-text-main)]">露营法则</h4>
+    <div class="p-4 sm:p-5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm">
+      <div class="flex items-center gap-2 mb-3 pb-2 border-b border-[var(--color-border-card)]/60">
+        <span class="text-xl">📖</span>
+        <h4 class="cockpit-card-title">露营法则</h4>
       </div>
-      <div class="space-y-2.5 text-xs text-[var(--color-text-secondary)]">
-        <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-          <div class="font-bold text-[var(--color-text-main)] flex items-center gap-1.5 mb-1">
-            <span class="text-amber-500">①</span> 一树一帐
+      <div class="space-y-3">
+        <div class="p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+          <div class="cockpit-item-title text-[var(--color-text-main)] flex items-center gap-2 mb-1">
+            <span class="text-amber-500 font-bold">①</span> 一树一帐
           </div>
-          <p class="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
-            每棵树上下左右正交相邻必须有且仅有 1 顶帐篷；帐篷总数等于树木总数。
+          <p class="cockpit-desc">
+            每棵树正交相邻必须有且仅有 1 顶帐篷；帐篷总数等于树木总数。
           </p>
         </div>
-        <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-          <div class="font-bold text-[var(--color-text-main)] flex items-center gap-1.5 mb-1">
-            <span class="text-amber-500">②</span> 帐篷不挨
+        <div class="p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+          <div class="cockpit-item-title text-[var(--color-text-main)] flex items-center gap-2 mb-1">
+            <span class="text-amber-500 font-bold">②</span> 帐篷不挨
           </div>
-          <p class="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
-            两顶帐篷之间绝对不能接触，包括上下左右与四角对角线（共 8 邻域）。
+          <p class="cockpit-desc">
+            两顶帐篷之间绝对不能接触，包括正交与对角线共 8 邻域。
           </p>
         </div>
-        <div class="p-2.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-          <div class="font-bold text-[var(--color-text-main)] flex items-center gap-1.5 mb-1">
-            <span class="text-amber-500">③</span> 行列达标
+        <div class="p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
+          <div class="cockpit-item-title text-[var(--color-text-main)] flex items-center gap-2 mb-1">
+            <span class="text-amber-500 font-bold">③</span> 行列达标
           </div>
-          <p class="text-[11px] text-[var(--color-text-muted)] leading-relaxed">
+          <p class="cockpit-desc">
             棋盘外边缘的数字代表该行或该列必须包含的帐篷确切数量。
           </p>
         </div>
@@ -63,22 +64,23 @@
     </div>
 
     <!-- 快捷操作说明 -->
-    <div class="p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-xs">
-      <div class="font-bold text-[var(--color-text-main)] mb-2 flex items-center gap-1.5">
-        <span>⌨️</span> 鼠标与快捷键速查
+    <div class="p-4 sm:p-5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-sm">
+      <div class="cockpit-card-title mb-3 pb-2 border-b border-[var(--color-border-card)]/60 flex items-center gap-2">
+        <span class="text-xl">⌨️</span>
+        <h4>鼠标与快捷键速查</h4>
       </div>
-      <div class="space-y-1.5 text-[11px] text-[var(--color-text-muted)]">
-        <div class="flex justify-between">
-          <span>左键单击</span>
-          <span class="font-mono text-[var(--color-text-main)]">空格 ➔ ⛺ ➔ 🌿</span>
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="cockpit-stat-label">左键单击</span>
+          <kbd class="cockpit-kbd">空格 ➔ ⛺ ➔ 🌿</kbd>
         </div>
-        <div class="flex justify-between">
-          <span>右键单击</span>
-          <span class="font-mono text-[var(--color-text-main)]">快速铺草 🌿</span>
+        <div class="flex items-center justify-between">
+          <span class="cockpit-stat-label">右键单击</span>
+          <kbd class="cockpit-kbd">快速铺草 🌿</kbd>
         </div>
-        <div class="flex justify-between">
-          <span>点击行列数字</span>
-          <span class="font-mono text-[var(--color-text-main)]">一键填满该行/列草地</span>
+        <div class="flex items-center justify-between">
+          <span class="cockpit-stat-label">点击行列数字</span>
+          <kbd class="cockpit-kbd">一键铺满草地</kbd>
         </div>
       </div>
     </div>
@@ -99,13 +101,15 @@
         (rules)="showRules.set(true)"
         (pk)="navigateToPkArena()">
 
-        <!-- Center: 章节关卡 + 帐篷收集进度条 + 步数 / PK 模式指示 -->
+        <!-- Center: 难度选择抽屉 + 帐篷收集进度条 + 步数 / PK 模式指示 -->
         @if (store.currentRoomMode() === GameMode.Single) {
-          <div class="flex items-center justify-center gap-1.5 sm:gap-3 flex-1 min-w-0">
-            <!-- 关卡胶囊 -->
-            <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate shrink-0">
-              {{ store.currentLevel()?.name || '第 1 关' }}
-            </span>
+          <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
+            <!-- 难度抽屉选择器 (移动端紧凑微胶囊 + 底部自适应抽屉) -->
+            <app-difficulty-selector
+              [availableDifficulties]="availableDifficulties"
+              [currentDifficulty]="store.currentDifficulty()"
+              (difficultyChange)="changeDifficulty($event)">
+            </app-difficulty-selector>
 
             <!-- 帐篷收集进度条 -->
             <div class="flex items-center gap-1 py-0.5 sm:py-1 px-2.5 sm:px-3 rounded-full bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-xs font-bold text-[var(--color-text-main)] shadow-2xs shrink-0">

@@ -1147,6 +1147,9 @@
   "gomoku.diff.medium": "Niveau d'IA : Avancé",
   "gomoku.mode.same_pk_classic": "JcJ multijoueur",
   "gomoku.mode.single": "Jouer contre l'IA",
+  "gomoku.exit_replay": "Quitter la Revue",
+  "gomoku.replay": "Revoir la Partie",
+  "gomoku.replay_step": "Coup {current} / {total}",
   "gomoku.restart": "Redémarrer le jeu",
   "gomoku.surrender": "Se rendre",
   "gomoku.turn.black": "Tour des Noirs",
@@ -2075,5 +2078,10 @@
   "game.call_friend_short": "Appeler amis",
   "game.copy_invite_link_btn": "Copier le lien d'invitation",
   "game.duel_reward_tip": "Le vainqueur gagne +25 pièces et victoire classée",
-  "game.duel_mode": "Duel 1v1"
+  "game.duel_mode": "Duel 1v1",
+  "minesweeper.custom_width": "Largeur (9-50)",
+  "minesweeper.custom_height": "Hauteur (9-50)",
+  "minesweeper.custom_mines": "Mines",
+  "result.recommended_games": "Essayer d'autres jeux",
+  "result.switch_game": "Partie rapide"
 }

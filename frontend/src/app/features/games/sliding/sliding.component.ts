@@ -37,11 +37,12 @@ import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-ico
 
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']

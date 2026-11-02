@@ -116,36 +116,36 @@
     <ng-container *ngIf="view() === 'play'">
       <!-- INFO BAR for single player (PC 桌面端展示) -->
       @if (!isHandheld() && store.currentRoomMode() === GameMode.Single) {
-        <div class="w-full mx-auto flex flex-wrap justify-between items-center gap-2 px-3 sm:px-4 py-2 bg-[var(--color-bg-card)]/80 backdrop-blur-md rounded-xl mb-4 text-xs sm:text-sm border border-[var(--color-border-card)] shadow-sm" [style.max-width]="boardWidthPx()">
-        <div class="text-[var(--color-text-main)] font-bold flex items-center gap-2">
-          <span class="px-2 py-0.5 rounded-md bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black text-xs uppercase">{{ i18n.t('game.diff_' + store.currentDifficulty())() }}</span>
-          <span>第 {{ store.currentLevelNum() }} 关</span>
+        <div class="w-full mx-auto flex flex-wrap justify-between items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-xl mb-4 text-sm border border-[var(--color-border-card)] shadow-sm" [style.max-width]="boardWidthPx()">
+        <div class="text-[var(--color-text-main)] font-bold flex items-center gap-2.5">
+          <span class="badge-safe bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black uppercase">{{ i18n.t('game.diff_' + store.currentDifficulty())() }}</span>
+          <span class="text-sm sm:text-base font-black">#{{ store.currentLevelNum() }}</span>
         </div>
         
-        <div class="flex items-center gap-2 sm:gap-3 font-semibold">
+        <div class="flex items-center gap-2.5 sm:gap-3.5 font-semibold">
           <!-- Flow Pairs Connected -->
-          <div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border-card)]"
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-card)]"
                [class.text-emerald-500]="store.connectedFlows() === store.totalFlows()"
                [class.border-emerald-500/40]="store.connectedFlows() === store.totalFlows()"
                [class.text-[var(--color-text-secondary)]]="store.connectedFlows() !== store.totalFlows()">
             <span>🔗</span>
-            <span>{{ i18n.t('game.flows')() || '连线' }}: {{ store.connectedFlows() }}/{{ store.totalFlows() }}</span>
+            <span class="text-xs sm:text-sm">{{ i18n.t('game.flows')() || '连线' }}: <b class="font-mono text-sm sm:text-base">{{ store.connectedFlows() }}/{{ store.totalFlows() }}</b></span>
           </div>
 
           <!-- Board Coverage Percentage -->
-          <div class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border-card)]"
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-card)]"
                [class.text-emerald-500]="store.coveragePercent() === 100"
                [class.border-emerald-500/40]="store.coveragePercent() === 100"
                [class.text-[var(--color-text-secondary)]]="store.coveragePercent() !== 100">
             <span>🟩</span>
-            <span>{{ i18n.t('game.coverage')() || '覆盖率' }}: {{ store.coveragePercent() }}%</span>
+            <span class="text-xs sm:text-sm">{{ i18n.t('game.coverage')() || '覆盖率' }}: <b class="font-mono text-sm sm:text-base">{{ store.coveragePercent() }}%</b></span>
           </div>
 
           <!-- Timer & Quick Restart -->
-          <div class="flex items-center gap-2">
-            <span class="text-[var(--color-text-main)] font-mono font-bold">⏱️ {{ formatTime(store.timeSpent()) }}</span>
+          <div class="flex items-center gap-2.5">
+            <span class="text-[var(--color-text-main)] font-mono font-bold text-sm sm:text-base">⏱️ {{ formatTime(store.timeSpent()) }}</span>
             <button (click)="onRestart()"
-                    class="p-1 rounded-lg bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs hover:scale-105 active:scale-95 transition-all text-xs cursor-pointer group"
+                    class="p-1.5 rounded-lg bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm cursor-pointer group"
                     [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
               <span class="group-hover:rotate-180 transition-transform duration-300 inline-block">🔄</span>
             </button>

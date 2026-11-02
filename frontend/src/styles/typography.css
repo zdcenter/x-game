@@ -1,0 +1,143 @@
+/**
+ * ==============================================================================
+ * X-GAME 统一字体排版规范系统 (Typography Hierarchy System)
+ * ==============================================================================
+ * 该配置文件统一管理整个游戏平台的文字等级与视觉大小关系。
+ * 遵循四大准则：
+ * 1. 彻底根除不可视微缩字号（全站最小字号安全底线为 12px / 0.75rem，严禁 7px~10px 蚂蚁字）。
+ * 2. 响应式阶梯（Fluid Typography Scale），在桌面大屏（xl/2xl）自然舒展，大气好看；在移动端精练紧凑。
+ * 3. 严格使用全局 CSS 变量与主题颜色，保证 Light / Dark 主题无缝切换。
+ * 4. 建立标准游戏座舱（Cockpit Wings）与 HUD 的排版规范，避免各游戏页面字号不一。
+ */
+
+@layer base {
+  :root {
+    /* Level 1: 视觉焦点与超大终局数值 (Hero / Victory / Countdown / Big Metric) */
+    --font-size-game-hero: clamp(1.75rem, 2.5vw, 2.5rem);      /* 28px ~ 40px */
+    --line-height-game-hero: 1.15;
+
+    /* Level 2: 棋盘核心数据与HUD大字 (HUD Primary Stat / Board Timer / Level Number) */
+    --font-size-game-stat: clamp(1.1875rem, 1.6vw, 1.4375rem); /* 19px ~ 23px */
+    --line-height-game-stat: 1.25;
+
+    /* Level 3: 座舱卡片大标题 (Cockpit Section Title / Board Title) */
+    --font-size-game-title: clamp(1.0625rem, 1.2vw, 1.25rem);   /* 17px ~ 20px */
+    --line-height-game-title: 1.35;
+
+    /* Level 4: 模块条目与主要交互项 (Difficulty Button / Action Item / Player Name) */
+    --font-size-game-item: clamp(0.9375rem, 1.05vw, 1.0625rem); /* 15px ~ 17px */
+    --line-height-game-item: 1.4;
+
+    /* Level 5: 规范正文与状态说明 (Rule Description / Status Note / Body Copy) */
+    --font-size-game-body: clamp(0.875rem, 0.95vw, 0.9375rem);  /* 14px ~ 15px */
+    --line-height-game-body: 1.55;
+
+    /* Level 6: 快捷键与次级辅助 (Keyboard Cap / Pro Shortcut / Secondary Tag) */
+    --font-size-game-sub: clamp(0.8125rem, 0.88vw, 0.875rem);   /* 13px ~ 14px */
+    --line-height-game-sub: 1.45;
+
+    /* Level 7: 标签徽章保底底线 (Badge / Meta / Micro Tag - 严禁低于 12px) */
+    --font-size-game-badge: 0.75rem;                             /* 12px 固定底线 */
+    --line-height-game-badge: 1.2;
+  }
+}
+
+/* Tailwind v4 主题文字等级注册 */
+@theme {
+  --text-game-hero: var(--font-size-game-hero);
+  --text-game-stat: var(--font-size-game-stat);
+  --text-game-title: var(--font-size-game-title);
+  --text-game-item: var(--font-size-game-item);
+  --text-game-body: var(--font-size-game-body);
+  --text-game-sub: var(--font-size-game-sub);
+  --text-game-badge: var(--font-size-game-badge);
+}
+
+/* ==============================================================================
+ * 游戏座舱排版专用语义工具类 (Game Cockpit Typography Classes)
+ * ============================================================================== */
+
+@layer utilities {
+  /* 左右座舱卡片主标题 (例如：🎯 难度规格、👤 选手档案、⌨️ 快捷操作) */
+  .cockpit-card-title {
+    font-size: var(--font-size-game-title);
+    line-height: var(--line-height-game-title);
+    font-weight: 800;
+    color: var(--color-text-main);
+    letter-spacing: -0.015em;
+  }
+
+  /* 侧边栏条目标题与难度按键字样 */
+  .cockpit-item-title {
+    font-size: var(--font-size-game-item);
+    line-height: var(--line-height-game-item);
+    font-weight: 700;
+  }
+
+  /* 侧边栏说明正文（规则介绍、操作指南等），行距舒适，字号清晰 */
+  .cockpit-desc {
+    font-size: var(--font-size-game-body);
+    line-height: var(--line-height-game-body);
+    color: var(--color-text-muted);
+  }
+
+  /* 精致机械键盘按键帽子 (Kbd Cap) */
+  .cockpit-kbd {
+    font-size: var(--font-size-game-sub);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--color-bg-main);
+    border: 1px solid var(--color-border-card);
+    color: var(--color-text-main);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  /* 状态栏键值对 - 标签 (如：游戏模式、当前难度、对局状态) */
+  .cockpit-stat-label {
+    font-size: var(--font-size-game-body);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+
+  /* 状态栏键值对 - 数值 (如：单机休闲、大师、挑战中) */
+  .cockpit-stat-val {
+    font-size: var(--font-size-game-item);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 棋盘上方 HUD 统一胶囊 - 核心大数值 (计时 01:23、步数 42、连线 5/5) */
+  .game-hud-val {
+    font-size: var(--font-size-game-stat);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 800;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 棋盘上方 HUD 统一胶囊 - 标签说明 (连线、覆盖率、用时、步数) */
+  .game-hud-label {
+    font-size: var(--font-size-game-badge);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  /* 平台统一安全徽章 (绝不低于12px，提供最佳视认体验) */
+  .badge-safe {
+    font-size: var(--font-size-game-badge);
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 0.375rem;
+    letter-spacing: 0.01em;
+  }
+}

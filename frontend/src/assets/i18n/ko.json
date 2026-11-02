@@ -1147,6 +1147,9 @@
   "gomoku.diff.medium": "AI 수준: 고급",
   "gomoku.mode.same_pk_classic": "멀티플레이어 PvP",
   "gomoku.mode.single": "AI와 플레이",
+  "gomoku.exit_replay": "복기 종료",
+  "gomoku.replay": "기보 복기",
+  "gomoku.replay_step": "{current} / {total} 수",
   "gomoku.restart": "게임 재시작",
   "gomoku.surrender": "항복",
   "gomoku.turn.black": "흑의 차례",
@@ -2075,5 +2078,10 @@
   "game.call_friend_short": "친구 호출",
   "game.copy_invite_link_btn": "초대 링크 복사",
   "game.duel_reward_tip": "승자는 +25 코인 및 랭크전 승리를 획득합니다",
-  "game.duel_mode": "1v1 대전"
+  "game.duel_mode": "1v1 대전",
+  "minesweeper.custom_width": "너비 (9-50)",
+  "minesweeper.custom_height": "높이 (9-50)",
+  "minesweeper.custom_mines": "지뢰 수",
+  "result.recommended_games": "다른 게임 해보기",
+  "result.switch_game": "빠른 플레이"
 }

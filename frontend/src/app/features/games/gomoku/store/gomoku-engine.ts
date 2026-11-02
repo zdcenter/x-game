@@ -18,6 +18,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
   currentTurn: string = '';
   lastMove: number[] | null = null;
   winningLine: number[][] | null = null;
+  history: { y: number; x: number; color: GomokuColor }[] = [];
   players: string[] = [];
   playerColors: Record<string, GomokuColor> = {};
 
@@ -46,6 +47,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
     this.currentTurn = this.playerId;
     this.lastMove = null;
     this.winningLine = null;
+    this.history = [];
     this.ai = new GomokuAI(2, this.aiDifficulty);
   }
 
@@ -77,8 +79,10 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
       if (this.board[y][x] !== 0) return;
 
       // Player move
-      this.board[y][x] = this.playerColors[this.playerId];
+      const pColor = this.playerColors[this.playerId];
+      this.board[y][x] = pColor;
       this.lastMove = [y, x];
+      this.history.push({ y, x, color: pColor });
       
       const winLine = this.checkWin(y, x, this.board[y][x]);
       if (winLine) {
@@ -104,8 +108,10 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
         if (this.status !== GameStatus.Playing) return;
 
         if (aiY !== -1) {
-          this.board[aiY][aiX] = this.playerColors['AI'];
+          const aiColor = this.playerColors['AI'];
+          this.board[aiY][aiX] = aiColor;
           this.lastMove = [aiY, aiX];
+          this.history.push({ y: aiY, x: aiX, color: aiColor });
           if (this.onAiMove) this.onAiMove();
           
           const aiWinLine = this.checkWin(aiY, aiX, this.board[aiY][aiX]);

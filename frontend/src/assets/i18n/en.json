@@ -1201,6 +1201,9 @@
   "gomoku.mode.same_pk_classic": "Multiplayer PvP",
   "gomoku.mode.single": "Play vs AI",
   "gomoku.move_count": "Move {{count}}",
+  "gomoku.exit_replay": "Exit Review",
+  "gomoku.replay": "Review Game",
+  "gomoku.replay_step": "Move {current} / {total}",
   "gomoku.restart": "Restart Game",
   "gomoku.surrender": "Surrender",
   "gomoku.thinking": "AI Thinking...",
@@ -2148,5 +2151,10 @@
   "game.call_friend_short": "Call Friends",
   "game.copy_invite_link_btn": "Copy Invite Link",
   "game.duel_reward_tip": "Winner earns +25 Brain Coins & Ranked Win",
-  "game.duel_mode": "1v1 Duel"
+  "game.duel_mode": "1v1 Duel",
+  "minesweeper.custom_width": "Width (9-50)",
+  "minesweeper.custom_height": "Height (9-50)",
+  "minesweeper.custom_mines": "Mines",
+  "result.recommended_games": "Try Other Games",
+  "result.switch_game": "Quick Play"
 }

@@ -29,6 +29,7 @@ type ClassicEngine struct {
 	Players      []string        `json:"players"`
 	LastMove     []int           `json:"lastMove"` // [y, x]
 	WinningLine  [][]int         `json:"winningLine"`
+	History      [][]int         `json:"history"` // list of [y, x, color]
 }
 
 func NewClassicEngine() engine.GameEngine {
@@ -38,6 +39,7 @@ func NewClassicEngine() engine.GameEngine {
 		},
 		PlayerColors: make(map[string]int),
 		Players:      make([]string, 0),
+		History:      make([][]int, 0),
 	}
 }
 
@@ -53,6 +55,7 @@ func (e *ClassicEngine) InitGame(options interface{}) error {
 	e.Winner = ""
 	e.LastMove = nil
 	e.WinningLine = nil
+	e.History = make([][]int, 0)
 	return nil
 }
 
@@ -134,6 +137,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		e.Winner = ""
 		e.LastMove = nil
 		e.WinningLine = nil
+		e.History = make([][]int, 0)
 		for i := 0; i < Size; i++ {
 			for j := 0; j < Size; j++ {
 				e.Board[i][j] = Empty
@@ -170,6 +174,7 @@ func (e *ClassicEngine) HandleAction(playerID string, action string, payload []b
 		color := e.PlayerColors[playerID]
 		e.Board[data.Y][data.X] = color
 		e.LastMove = []int{data.Y, data.X}
+		e.History = append(e.History, []int{data.Y, data.X, color})
 
 		if e.checkWin(data.X, data.Y, color) {
 			e.State = engine.StateFinished

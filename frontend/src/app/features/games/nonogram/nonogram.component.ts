@@ -30,11 +30,12 @@ import { FeedbackService } from '../../../core/services/feedback.service';
 import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-icon.component';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],

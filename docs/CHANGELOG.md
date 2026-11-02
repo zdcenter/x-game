@@ -2,6 +2,83 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.157] - 2026-11-02
+
+### 扫雷自定义维度 8 门语言翻译补齐与单机结算界面【换个游戏换换心情】4款推荐微卡片系统 (Minesweeper Custom Translation Fix & Settlement Overlay Recommended Games System)
+- **核心痛点解决 (用户反馈：缺少 `minesweeper.custom_*` 翻译；单机游戏如扫雷、五子棋等出结算界面时，需要推荐其它游戏，且布局要好看方便，让人喜欢而不违和)**：
+  1. **【全量多语言翻译补齐 (8国语言闭环)】**：
+     - 在 `zh.json`, `en.json`, `de.json`, `es.json`, `fr.json`, `ja.json`, `ko.json`, `pt.json` 中全量补齐 `minesweeper.custom_width`（宽度）、`minesweeper.custom_height`（高度）、`minesweeper.custom_mines`（地雷数），彻底根除控制台与页面上 `Missing translation for 'minesweeper.custom_*'` 告警。
+  2. **【单机结算弹窗推荐游戏体系 (GameResultOverlayComponent)】**：
+     - **黄金人机工程学布局**：将推荐卡片优雅排布于操作按钮（再来一局、复制战绩、返回大厅）的正下方与底部广告位的正上方，不抢占第一眼视觉核心，既保留了成就感和核心操作流，又为通关或失利后想换个脑力挑战的玩家提供极其顺畅的二次分流入口；
+     - **4 列紧凑自适应微胶囊网格**：采用 `grid grid-cols-4 gap-1.5 sm:gap-2.5`，每个推荐项由上层生动大尺寸 Emoji（`text-2xl sm:text-3xl`，悬停微弹动 `scale-110`）与下层规范标题（`text-[11px] sm:text-xs font-bold`）组成；高度仅 64px 极度轻巧紧凑，手机端与平板桌面端自适应平铺，绝无横向滚动条或虚胖下坠感；
+     - **智能推荐算法与跨游戏心流闭环**：结合游戏配置中的 `recommendations` 关联匹配与全局益智游戏池动态补足 4 款；点击推荐卡片触发 `handleGoToGame(gameId)`，伴随清脆点击音效与轻量触感反馈，单人模式下平滑路由至目标游戏立即开玩，房主联机模式下无缝带房迁移；
+     - **多语言与多主题保底**：文案使用 `result.recommended_games`（换个游戏换换心情）与 `result.switch_game`（快速试玩），全量样式使用 CSS 变量（`--color-bg-main`, `--color-border-card` 等），Light/Dark 双主题自适应。
+  3. **【全平台准则与单机架构守则保障】**：
+     - 单机游戏逻辑 100% 运行于客户端浏览器内存中；单元测试 14 套件 65 用例 100% 全部通过。
+
+## [v3.2.156] - 2026-11-02
+
+### 移动端与平板端单机游戏向下弹出式毛玻璃难度选择卡片、防截断边界钳位与点击外部/棋盘秒关自适应 (Mobile/Tablet Downward Dropdown Popover Difficulty Selector, Screen Boundary Clamping & Click-Outside Auto-Dismissal)
+- **核心痛点解决 (用户语音反馈：点困难/难度等级时，菜单向上跑看不清，改为点击后紧贴按钮向正下方弹出下拉卡片；左侧文本被屏幕切掉；微胶囊写长规格拥挤；且弹出后不想选时点击棋盘或任意空白处必须自动消失)**：
+  1. **【全新公共组件与统一规范】重塑 `<app-difficulty-selector>` 为视口级绝对定位防截断下拉面板 (`difficulty-selector.component.ts`)**：
+     - **轻盈极简微胶囊 (Ultra-Compact Capsule Trigger)**：微胶囊上仅显示 Emoji 和极简纯中文标签（如“简单”、“中等”、“困难”），彻底去除 5×5、10×10、多少乘多少等冗长规格文字，极致节约顶部宝贵导航空间；
+     - **视口级绝对定位与 12px 物理安全边界钳位 (Viewport-Level Fixed & Screen Boundary Clamping)**：点击后通过 `getBoundingClientRect()` 精确将卡片定位于胶囊正下方 8px，配合算法 `left = Math.max(12, Math.min(left, vw - 12 - cardWidth))`，无论微胶囊位于左侧还是中间，左侧与右侧永远保持至少 12px 安全间距，彻底根除移动端屏幕左侧被截断切字的痛点；
+     - **捕获阶段点击外部/棋盘瞬间自动消失 (Capture-Phase Click-Outside Auto-Dismissal)**：采用 `window.addEventListener('pointerdown', listener, true)`（捕获阶段监听）。即使扫雷等游戏的棋盘格子内部调用了 `stopPropagation()` 阻止事件冒泡，捕获阶段监听器也能抢先感知玩家触碰/点击了棋盘任意格子或页面其它地方，瞬间平滑关闭弹窗，无需强迫选择；
+     - **完整详实的下拉卡片**：展开后的毛玻璃卡片内完整展现各个难度级别的大字标题、Emoji 与棋盘详细规格（如 6×6、8×8、10×10、W×H 等），选定项具备金色高亮光圈与打勾标记；支持 ESC 键快捷收起。
+  2. **【帐篷与树 (Tents) 移动端难度入口全面补齐】**：
+     - 在手持端顶栏集成 `[availableDifficulties]`（简单 6×6、中等 8×8、困难 10×10），解决此前在手机/平板无法切换盘面规格的重大功能缺失；PC 桌面端在三栏座舱左侧翼同步展示。
+  3. **【数织 (Nonogram)、扫雷 (Minesweeper)、数独 (Sudoku)、数字华容道 (Sliding) 统一收敛升级】**：
+     - 彻底拔除各单机游戏在移动端手写原生 `<select>` 隐形遮罩带来的排版错乱与拥挤感；
+     - 统一接入 `<app-difficulty-selector>`，扫雷包含自定义规格（`custom`）快捷入口；全端视觉与交互手感极致一致。
+  4. **【全平台准则与单机架构守则保障】**：
+     - 100% 遵循客户端内存纯前端离线计算，零服务器与数据库 IO 开销；
+     - 全量多语言文本由 `i18n.service.ts` 动态管理，全局 CSS 变量完美适应 Light/Dark 双模主题；单元测试 14 套件 65 用例 100% 通过。
+
+## [v3.2.155] - 2026-11-02
+
+### 全平台统一字体排版规范系统、棋盘左右座舱字号升级与全站最小字号底线保障 (Unified Typography Hierarchy System, Cockpit Wings Font Scale & Minimum Font Size Standard)
+- **核心痛点解决 (用户语音反馈：前端有些字体特别小，特别是棋盘两边侧边栏的字看不清；需要合理的等级安排，在统一配置文件中搞定大小关系，让所有游戏字体统一、好看、大方)**：
+  1. **【统一配置文件与排版系统】创建 `frontend/src/styles/typography.css` 并全局接入 `styles.css`**：
+     - **7 级标准化字体阶梯 (Fluid Typography Scale)**：
+       - `Hero` (28px ~ 40px): 终局大字、胜负焦点与超大计时
+       - `Stat` (19px ~ 23px): HUD 核心数值（用时、步数、连线配对、覆盖率）
+       - `Title` (17px ~ 20px): 左右座舱卡片主标题（难度规格、选手档案、快捷操作等），粗体大方
+       - `Item` (15px ~ 17px): 难度选项按钮文本、选手名字、操作条目
+       - `Body` (14px ~ 15px): 规则详解正文、对局状态说明
+       - `Sub` (13px ~ 14px): 快捷键帽、次级标签属性
+       - `Badge` (12px): 最小安全底线微标
+     - **全站 12px 视认保底底线**：严禁任何 7px、8px、9px、10px 的不可视微缩蚂蚁字，低于 12px 的文本全面升级至 12px 规范徽章（`.badge-safe`），配合字重与字距保证极致视认性；
+     - **Tailwind v4 主题与语义实用工具类**：注入 `text-game-*` 主题字号与 `.cockpit-card-title`、`.cockpit-item-title`、`.cockpit-desc`、`.cockpit-kbd`、`.cockpit-stat-label`、`.cockpit-stat-val`、`.badge-safe`。
+  2. **【PC 桌面端竞技座舱大方舒展】左右两翼尺寸与字号系统化升级 (`game-layout.component.ts`)**：
+     - **座舱宽度拓展**：左右两翼从 `w-64 xl:w-72 2xl:w-80` 升级拓展至 `w-72 xl:w-80 2xl:w-88`，卡片内边距从 `p-4` 提升至 `p-4.5 sm:p-5`，为舒适大字号提供呼吸空间；
+     - **左翼卡片排版**：🎯 难度规格大标题与难度项应用大字号与精致边框，👤 选手档案卡片昵称、金币徽章与对局状态层级分明；
+     - **右翼快捷操作 (Pro)**：快捷操作名称采用 15px 舒适字号，按键帽全面升级为拟物等宽机械键帽（`.cockpit-kbd`），全屏专注按钮更饱满精致。
+  3. **【棋盘周边 HUD 与代表性游戏协同升级】**：
+     - **五子棋 (Gomoku)**：棋盘上方战斗 HUD 玩家名字由 12px 升级至 14~16px，黑白身份标牌与回合提示升级为 12px 标准徽章，淘汰原 10px 细字；
+     - **帐篷与树 (Tents)**：桌面右翼“三大露营法则”正文由 11px 升级至 14px 舒适行距（`.cockpit-desc`），快捷操作按键应用机械键帽；
+     - **扫雷 (Minesweeper)**：桌面右翼“扫雷操作速查”全套卡片升级为统一排版规范；
+     - **连线 (Connect)**：顶部单人信息栏升级为标准化大字与安全徽章；
+     - **PK 对战 HUD (`game-pk-hud.component.html`)**：彻底拔除原先的 7px/8px/9px 微缩字，全量对齐 12px 保底安全标准。
+  4. **【开发准则 100% 严守】**：严格使用全局 CSS 变量与主题设计令牌，无硬编码颜色；所有文本统一通过 `i18n.service.ts` 动态加载，深浅双模主题无缝切换。
+
+## [v3.2.154] - 2026-11-01
+
+### 五子棋全盘棋谱回放复盘系统、落子微冲击波光效与移动端大拇指黄金触达区 (Gomoku Interactive Kifu Replay, Impact Shockwave & Mobile Ergonomic Thumb Zone)
+- **核心体验与吸引力升级 (落实“一步一步优化，让人爱不释手，手感舒服性能好”用户指派)**：
+  1. **【五子棋全盘棋谱复盘系统 (Interactive Kifu Replay System)】**：
+     - **全链路历史记录**：在前端 `LocalGomokuEngine` 与后端 Go `ClassicEngine` 中引入每步落子历史 `history: [{ y, x, color }]`；
+     - **动态时间切片棋盘**：`displayBoard` 根据当前回放步数 `replayStep` 动态切片渲染，提供 `⏮ 首手`、`◀ 上一步`、`▶ 下一步`、`⏭ 末手` 与 `✕ 退出复盘` 完整交互；
+     - **专业棋谱落子序号**：在复盘模式下，盘面上所有已落棋子均浮现高对比度第 N 手步数徽章（黑子白字、白子黑字），并随步数回退/前进精准同步，让玩家一目了然看清全局走势与对手破局手；
+     - **全语种多语言支持**：新增 `gomoku.replay`（复盘棋谱）、`gomoku.replay_step`（第 X / N 手）、`gomoku.exit_replay`（退出复盘）等 8 门语言词条。
+  2. **【落子拟物光影与微冲击波涟漪 (Tactile Obsidian/Jade & Impact Shockwave)】**：
+     - **云南云子双面弧面高光光影**：重构黑白棋子径向渐变，黑棋具备黑曜石微冷光与双层镜面反射，白棋呈现温润羊脂白玉光泽与盘面环境漫反射；
+     - **落子微冲击波涟漪 (`animate-stone-impact`)**：落子第 0ms 瞬间在交叉点扩散一圈琥珀金微光涟漪，增强定海神针般的物理打击分量感；
+     - **极速触控响应**：棋盘应用 `touch-action: manipulation; -webkit-tap-highlight-color: transparent;` 彻底消除移动端 300ms 点击延迟与灰框闪烁。
+  3. **【移动端单手大拇指黄金触达区 (Thumb-Zone Ergonomics)】**：
+     - 手机端竖屏游戏时，在棋盘正下方新增单手触手可及的操作栏（【💡 提示】与【🔄 重开】），大拇指无需跨屏上划即可极速触达；
+  4. **【低功耗与后台自愈防御】**：
+     - `AudioService` 挂载 `document.visibilitychange` 监听，离开页面时自动挂起 AudioContext 与暂停 BGM，降低发热与电量消耗；回到前台时平滑唤醒。
+
 ## [v3.2.153] - 2026-11-01
 
 ### 多语言补全、五子棋对局闪烁五连光效与棋盘落子音频高并发零丢音修复 (I18n game.bot Localization, Gomoku Flashing 5-in-a-Row Laser & High-Concurrency Board Audio Fix)

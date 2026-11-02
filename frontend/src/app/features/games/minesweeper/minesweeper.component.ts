@@ -38,11 +38,12 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -156,6 +157,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   get predefinedDifficulties() {
     return this.gameRegistry.getConfig('minesweeper')?.difficulties || [];
   }
+
+  readonly minesweeperDifficulties = computed<DifficultyOption[]>(() => {
+    return [
+      ...this.predefinedDifficulties,
+      { id: 'custom', labelKey: 'game.custom', desc: 'W × H', icon: '🛠️' }
+    ];
+  });
 
   hasLostSingleMode = computed(() => this.currentRoomMode() === GameMode.Single && this.store.board().some(row => row.some(c => c.state === 3)));
 

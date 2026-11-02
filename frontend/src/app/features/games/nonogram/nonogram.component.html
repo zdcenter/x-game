@@ -13,6 +13,7 @@
   [showMobileSidebar]="isMobileSidebarOpen()"
   [hideLeftPanel]="hideLeftPanel()"
   [currentDifficulty]="store.currentDifficulty()"
+  [availableDifficulties]="predefinedDifficulties"
   (difficultyChange)="changeSingleDifficulty($event)"
   [showLeaveBtn]="store.currentRoomMode() !== GameMode.Single"
   [overlayStats]="[
@@ -45,28 +46,14 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()">
 
-      <!-- Center: [🎯 难度选择下拉框 / 关卡说明] (中间区域) -->
+      <!-- Center: [🎯 难度选择抽屉 / PK 模式指示] (中间区域) -->
       <div class="flex items-center justify-center mx-2 min-w-0 flex-1">
         @if (store.currentRoomMode() === GameMode.Single) {
-          <div class="relative group max-w-full">
-            <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] group-hover:border-blue-500/50 shadow-2xs transition-all cursor-pointer truncate">
-              <span class="text-xs sm:text-sm shrink-0">🎯</span>
-              <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] font-mono tracking-tight truncate">{{ currentDifficultyLabel() }}</span>
-              <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--color-text-muted)] group-hover:text-blue-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </div>
-            <!-- Native wheel / popup selector -->
-            <select class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
-                    [ngModel]="store.currentDifficulty()"
-                    (ngModelChange)="changeSingleDifficulty($event)">
-              @for (diff of predefinedDifficulties; track diff.id) {
-                <option [value]="diff.id">
-                  {{ t(diff.labelKey)() }} ({{ diff.desc }})
-                </option>
-              }
-            </select>
-          </div>
+          <app-difficulty-selector
+            [availableDifficulties]="predefinedDifficulties"
+            [currentDifficulty]="store.currentDifficulty()"
+            (difficultyChange)="changeSingleDifficulty($event)">
+          </app-difficulty-selector>
         } @else {
           <!-- PK 模式房间信息 -->
           <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">

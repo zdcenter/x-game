@@ -1201,6 +1201,9 @@
   "gomoku.mode.same_pk_classic": "联机对战",
   "gomoku.mode.single": "单机挑战",
   "gomoku.move_count": "第 {{count}} 手",
+  "gomoku.exit_replay": "退出复盘",
+  "gomoku.replay": "复盘棋谱",
+  "gomoku.replay_step": "第 {current} / {total} 手",
   "gomoku.restart": "重新开始",
   "gomoku.surrender": "认输",
   "gomoku.thinking": "AI 思考中...",
@@ -2148,5 +2151,10 @@
   "game.call_friend_short": "呼叫好友",
   "game.copy_invite_link_btn": "复制邀请链接",
   "game.duel_reward_tip": "胜者荣获 +25 脑力金币与排位胜场",
-  "game.duel_mode": "1v1 对战"
+  "game.duel_mode": "1v1 对战",
+  "minesweeper.custom_width": "宽度 (9-50)",
+  "minesweeper.custom_height": "高度 (9-50)",
+  "minesweeper.custom_mines": "地雷数",
+  "result.recommended_games": "换个游戏换换心情",
+  "result.switch_game": "快速试玩"
 }

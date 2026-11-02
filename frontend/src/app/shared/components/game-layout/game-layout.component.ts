@@ -171,33 +171,33 @@ import { AdService } from '../../../core/services/ad.service';
 
       <!-- Left Cockpit Wing (PC Wide Screen: xl+) -->
       @if (!isImmersiveEffective()) {
-        <aside class="hidden xl:flex flex-col gap-3 w-64 xl:w-72 2xl:w-80 shrink-0 animate-fade-in self-start sticky top-20">
+        <aside class="hidden xl:flex flex-col gap-4 w-72 xl:w-80 2xl:w-88 shrink-0 animate-fade-in self-start sticky top-20">
           
           <!-- Card 1: 🎯 难度规格 / 游戏等级 (Game Difficulty Card, Standardized for all games) -->
           @if (effectiveRoomMode() === GameMode.Single && availableDifficulties.length > 0) {
-            <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
-              <div class="flex items-center justify-between pb-2 border-b border-[var(--color-border-card)]/60">
-                <span class="text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
-                  <span>🎯</span>
+            <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
+              <div class="flex items-center justify-between pb-2.5 border-b border-[var(--color-border-card)]/60">
+                <span class="cockpit-card-title flex items-center gap-2">
+                  <span class="text-lg">🎯</span>
                   <span>{{ i18n.t('game.difficulty')() || '难度规格' }}</span>
                 </span>
-                <span class="text-xs font-mono font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                <span class="badge-safe font-mono font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20">
                   {{ getDifficultyLabel(effectiveDifficulty()) }}
                 </span>
               </div>
 
               <!-- Difficulty Rows: One row per level (独占一行) -->
-              <div class="grid grid-cols-1 gap-2">
+              <div class="grid grid-cols-1 gap-2.5">
                 @for (diff of availableDifficulties; track diff.id) {
                   <button (click)="onDifficultyChange(diff.id)"
-                          class="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none"
-                          [ngClass]="effectiveDifficulty() === diff.id ? 'bg-amber-500 text-white shadow-xs' : 'bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)]'">
-                    <div class="flex items-center gap-2">
-                      <span class="text-base">{{ getDifficultyEmoji(diff.id) }}</span>
-                      <span>{{ diff.labelKey ? (i18n.t(diff.labelKey)() || diff.id) : diff.id }}</span>
+                          class="w-full px-4 py-3 rounded-xl transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none"
+                          [ngClass]="effectiveDifficulty() === diff.id ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-400/40' : 'bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)]'">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-lg">{{ getDifficultyEmoji(diff.id) }}</span>
+                      <span class="cockpit-item-title">{{ diff.labelKey ? (i18n.t(diff.labelKey)() || diff.id) : diff.id }}</span>
                     </div>
                     @if (diff.desc || diff.descKey) {
-                      <span class="text-xs font-mono opacity-80" [title]="diff.descKey ? (i18n.t(diff.descKey)() || diff.desc || '') : (diff.desc || '')">
+                      <span class="text-xs xl:text-sm font-mono opacity-85 font-semibold" [title]="diff.descKey ? (i18n.t(diff.descKey)() || diff.desc || '') : (diff.desc || '')">
                         {{ diff.desc || (diff.descKey ? (i18n.t(diff.descKey)()) : '') }}
                       </span>
                     }
@@ -214,20 +214,20 @@ import { AdService } from '../../../core/services/ad.service';
           <ng-content select="[cockpit-left]"></ng-content>
 
           <!-- Card 2: 👤 选手档案 & ⚔️ PK对决 (Player Profile & Combat Specs) -->
-          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
+          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
             <div class="flex items-center gap-3 pb-3 border-b border-[var(--color-border-card)]/60">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                 {{ icon || '🎮' }}
               </div>
               <div class="min-w-0 flex-1">
-                <div class="text-sm font-black text-[var(--color-text-main)] truncate">
+                <div class="cockpit-card-title truncate">
                   {{ authStore.currentUser()?.nickname || authStore.currentUser()?.username || (i18n.t('auth.guest')() || '挑战者') }}
                 </div>
-                <div class="flex items-center gap-2 mt-0.5">
-                  <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="badge-safe bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold">
                     🪙 {{ authStore.currentUser()?.brain_coins ?? 0 }}
                   </span>
-                  <span class="text-xs text-[var(--color-text-muted)] font-mono">
+                  <span class="text-xs xl:text-sm text-[var(--color-text-muted)] font-mono font-semibold">
                     Lv.{{ authStore.currentUser()?.level ?? 1 }}
                   </span>
                 </div>
@@ -235,24 +235,24 @@ import { AdService } from '../../../core/services/ad.service';
             </div>
 
             <!-- Current Game Quick Specs -->
-            <div class="flex flex-col gap-2 text-sm">
-              <div class="flex items-center justify-between text-[var(--color-text-muted)]">
-                <span>{{ i18n.t('game.mode')() || '游戏模式' }}</span>
-                <span class="font-bold text-[var(--color-text-main)] capitalize">
+            <div class="flex flex-col gap-2.5">
+              <div class="flex items-center justify-between">
+                <span class="cockpit-stat-label">{{ i18n.t('game.mode')() || '游戏模式' }}</span>
+                <span class="cockpit-stat-val text-[var(--color-text-main)] capitalize">
                   {{ effectiveRoomMode() === GameMode.Single ? (i18n.t('game.mode_single')() || '单机休闲') : (i18n.t('game.mode_pk')() || '实时对战') }}
                 </span>
               </div>
               @if (effectiveDifficulty()) {
-                <div class="flex items-center justify-between text-[var(--color-text-muted)]">
-                  <span>{{ i18n.t('game.difficulty')() || '当前难度' }}</span>
-                  <span class="font-bold text-amber-500">
+                <div class="flex items-center justify-between">
+                  <span class="cockpit-stat-label">{{ i18n.t('game.difficulty')() || '当前难度' }}</span>
+                  <span class="cockpit-stat-val text-amber-500">
                     {{ getDifficultyLabel(effectiveDifficulty()) }}
                   </span>
                 </div>
               }
-              <div class="flex items-center justify-between text-[var(--color-text-muted)]">
-                <span>{{ i18n.t('game.status')() || '对局状态' }}</span>
-                <span class="font-bold text-emerald-500">
+              <div class="flex items-center justify-between">
+                <span class="cockpit-stat-label">{{ i18n.t('game.status')() || '对局状态' }}</span>
+                <span class="cockpit-stat-val text-emerald-500">
                   {{ effectiveStatus() === GameStatus.Playing ? (i18n.t('game.status_playing')() || '🔥 挑战中') : (effectiveStatus() === GameStatus.Waiting ? (i18n.t('game.status_waiting')() || '⏳ 等待中') : (i18n.t('game.status_ready')() || '✨ 就绪')) }}
                 </span>
               </div>
@@ -260,21 +260,21 @@ import { AdService } from '../../../core/services/ad.service';
 
             <!-- PK Match Hub in Left Wing -->
             @if (effectiveRoomMode() === GameMode.Single && settingsService.settings().multiplayer_enabled === 'true') {
-              <div class="pt-2 border-t border-[var(--color-border-card)]/60 flex flex-col gap-2">
+              <div class="pt-3 border-t border-[var(--color-border-card)]/60 flex flex-col gap-2.5">
                 <!-- If there's an active waiting room, highlight quick challenge -->
                 @if (waitingRoomForThisGame(); as wr) {
-                  <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col gap-1.5 animate-pulse">
-                    <div class="flex items-center justify-between text-xs font-bold text-amber-500">
-                      <span class="flex items-center gap-1">
+                  <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col gap-2 animate-pulse">
+                    <div class="flex items-center justify-between text-xs xl:text-sm font-bold text-amber-500">
+                      <span class="flex items-center gap-1.5">
                         <span>⚔️</span>
                         <span>{{ i18n.t('pk.waiting_room_alert')() || '发现对战房间！' }}</span>
                       </span>
-                      <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20">
+                      <span class="badge-safe bg-amber-500/20 font-mono">
                         {{ getDifficultyLabel(wr.difficulty) }}
                       </span>
                     </div>
                     <button (click)="onQuickJoinTargetRoom(wr)"
-                            class="w-full py-1.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer">
+                            class="w-full py-2 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs xl:text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer">
                       <span>⚡</span>
                       <span>{{ i18n.t('lobby.quick_join')() || '快速应战' }}</span>
                     </button>
@@ -283,8 +283,8 @@ import { AdService } from '../../../core/services/ad.service';
 
                 <!-- Fast Create / PK Arena button -->
                 <button (click)="quickCreatePkRoom()"
-                        class="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer spring-press">
-                  <span>⚔️</span>
+                        class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-sm xl:text-base flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer spring-press">
+                  <span class="text-lg">⚔️</span>
                   <span>{{ i18n.t('game.quick_pk')() || '发起对决' }}</span>
                 </button>
               </div>
@@ -490,35 +490,35 @@ import { AdService } from '../../../core/services/ad.service';
 
       <!-- Right Cockpit Wing (PC Wide Screen: xl+) -->
       @if (!isLobbyEffective() && !isImmersiveEffective()) {
-        <aside class="hidden xl:flex flex-col gap-3 w-64 xl:w-72 2xl:w-80 shrink-0 animate-fade-in self-start sticky top-20">
+        <aside class="hidden xl:flex flex-col gap-4 w-72 xl:w-80 2xl:w-88 shrink-0 animate-fade-in self-start sticky top-20">
           <ng-content select="[cockpit-right]"></ng-content>
           <!-- Desktop Hotkey & Pro Cheatsheet Card -->
-          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/90 backdrop-blur-md p-4 shadow-sm flex flex-col gap-3">
-            <div class="flex items-center justify-between pb-2 border-b border-[var(--color-border-card)]/60">
-              <span class="text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
-                <span>⌨️</span>
+          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
+            <div class="flex items-center justify-between pb-2.5 border-b border-[var(--color-border-card)]/60">
+              <span class="cockpit-card-title flex items-center gap-2">
+                <span class="text-lg">⌨️</span>
                 <span>{{ i18n.t('game.hotkeys')() || '快捷操作' }}</span>
               </span>
-              <span class="text-xs font-mono font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-main)] px-2 py-0.5 rounded border border-[var(--color-border-card)]">Pro</span>
+              <span class="badge-safe font-mono font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">Pro</span>
             </div>
 
-            <div class="flex flex-col gap-2.5 text-sm">
+            <div class="flex flex-col gap-3">
               <div class="flex items-center justify-between">
-                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_restart')() || '极速重开' }}</span>
-                <kbd class="px-2.5 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-[var(--color-text-main)] shadow-2xs">R / Space</kbd>
+                <span class="cockpit-stat-label font-medium">{{ i18n.t('game.key_restart')() || '极速重开' }}</span>
+                <kbd class="cockpit-kbd">R / Space</kbd>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_undo')() || '智能撤销' }}</span>
-                <kbd class="px-2.5 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-[var(--color-text-main)] shadow-2xs">Ctrl + Z</kbd>
+                <span class="cockpit-stat-label font-medium">{{ i18n.t('game.key_undo')() || '智能撤销' }}</span>
+                <kbd class="cockpit-kbd">Ctrl + Z</kbd>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_hint')() || '锦囊提示' }}</span>
-                <kbd class="px-2.5 py-0.5 rounded-md bg-[var(--color-bg-main)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-[var(--color-text-main)] shadow-2xs">H</kbd>
+                <span class="cockpit-stat-label font-medium">{{ i18n.t('game.key_hint')() || '锦囊提示' }}</span>
+                <kbd class="cockpit-kbd">H</kbd>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-[var(--color-text-secondary)]">{{ i18n.t('game.key_rules')() || '速查攻略' }}</span>
+                <span class="cockpit-stat-label font-medium">{{ i18n.t('game.key_rules')() || '速查攻略' }}</span>
                 <button (click)="scrollToStrategyGuide()"
-                        class="px-2.5 py-1 rounded-md bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] font-mono text-xs font-bold text-amber-500 shadow-2xs cursor-pointer active:scale-95 transition-all">
+                        class="px-3 py-1 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-xs xl:text-sm font-bold text-amber-500 shadow-2xs cursor-pointer active:scale-95 transition-all">
                   {{ i18n.t('game.view_rules')() || '📖 查看' }}
                 </button>
               </div>
@@ -526,8 +526,8 @@ import { AdService } from '../../../core/services/ad.service';
 
             <!-- Focus / Zen Mode Shortcut -->
             <button (click)="zenService.toggle()"
-                    class="w-full mt-1.5 py-2 px-3.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer">
-              <span>🧘</span>
+                    class="w-full mt-2 py-2.5 px-4 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] font-bold text-xs xl:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer">
+              <span class="text-base">🧘</span>
               <span>{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出沉浸') : (i18n.t('game.zen_mode')() || '专注全屏模式') }}</span>
             </button>
           </div>
