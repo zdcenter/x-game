@@ -374,26 +374,26 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.hoverCol.set(coord.x);
 
     const isRightClick = event.button === 2;
-    const isTouch = event.pointerType === 'touch' || event.pointerType === 'pen';
+    const isTouch = event.pointerType === 'touch' || event.pointerType === 'pen' || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     // ⚡ 0ms Instant Response: Paint start cell immediately without any latency!
     this.dragTargetState = this.store.determineNextState(coord.x, coord.y, isRightClick);
     this.vibrateLight();
     this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
 
-    // Gentle long-press (360ms) to toggle alternate mode on mobile if kept still
+    // Gentle long-press (300ms) to toggle alternate mode on mobile if kept inside cell
     if (isTouch) {
       this.longPressTimer = setTimeout(() => {
         if (this.isDragging && !this.isLongPressTriggered && this.startCoord) {
           this.isLongPressTriggered = true;
           const currentCell = this.store.grid()[this.startCoord.y]?.[this.startCoord.x];
-          // Cycle: 1 -> 2 -> 0
-          const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 0 : 2);
+          // Toggle between Paint(1) and Cross(2)
+          const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 1 : 2);
           this.dragTargetState = altState;
           this.vibrateMedium();
           this.store.setCellsBatch([this.startCoord], altState as any, this.currentBatchId);
         }
-      }, 360);
+      }, 300);
     }
   }
 
@@ -409,13 +409,23 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
     if (event.cancelable) event.preventDefault();
 
-    // Determine linear drag lock (horizontal vs vertical) once moved > 6px
-    if (this.startPointerPos && this.dragAxis === 'none') {
+    // Determine linear drag lock (horizontal vs vertical)
+    // Mobile finger jitter tolerance: do NOT cancel long-press if within start cell or within 18px!
+    if (this.startPointerPos && this.startCoord) {
       const dx = event.clientX - this.startPointerPos.x;
       const dy = event.clientY - this.startPointerPos.y;
-      if (Math.hypot(dx, dy) > 6) {
-        this.clearLongPressTimer();
-        this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+      const dist = Math.hypot(dx, dy);
+
+      const isOutsideStartCell = rawCoord && (rawCoord.x !== this.startCoord.x || rawCoord.y !== this.startCoord.y);
+
+      // Only cancel long-press and lock drag axis if finger moved out of cell or moved significantly (> 18px)
+      if (dist > 18 || isOutsideStartCell) {
+        if (!this.isLongPressTriggered) {
+          this.clearLongPressTimer();
+        }
+        if (this.dragAxis === 'none' && dist > 8) {
+          this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+        }
       }
     }
 
@@ -485,6 +495,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.dragAxis = 'none';
     this.isLongPressTriggered = false;
     this.dragTargetState = -1;
+    this.pointerHandled = false;
   }
 
   handleTouchFallbackStart(event: TouchEvent) {
@@ -517,11 +528,12 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       if (this.isDragging && !this.isLongPressTriggered && this.startCoord) {
         this.isLongPressTriggered = true;
         const currentCell = this.store.grid()[this.startCoord.y]?.[this.startCoord.x];
-        const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 0 : 2);
+        const altState = currentCell === 1 ? 2 : (currentCell === 2 ? 1 : 2);
         this.dragTargetState = altState;
+        this.vibrateMedium();
         this.store.setCellsBatch([this.startCoord], altState as any, this.currentBatchId);
       }
-    }, 360);
+    }, 300);
   }
 
   handleTouchFallbackMove(event: TouchEvent) {
@@ -529,16 +541,25 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     if (event.cancelable) event.preventDefault();
 
     const touch = event.touches[0];
-    if (this.startPointerPos && this.dragAxis === 'none') {
+    const rawCoord = this.getCoordFromClient(touch.clientX, touch.clientY);
+
+    if (this.startPointerPos && this.startCoord) {
       const dx = touch.clientX - this.startPointerPos.x;
       const dy = touch.clientY - this.startPointerPos.y;
-      if (Math.hypot(dx, dy) > 6) {
-        this.clearLongPressTimer();
-        this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+      const dist = Math.hypot(dx, dy);
+
+      const isOutsideStartCell = rawCoord && (rawCoord.x !== this.startCoord.x || rawCoord.y !== this.startCoord.y);
+
+      if (dist > 18 || isOutsideStartCell) {
+        if (!this.isLongPressTriggered) {
+          this.clearLongPressTimer();
+        }
+        if (this.dragAxis === 'none' && dist > 8) {
+          this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+        }
       }
     }
 
-    const rawCoord = this.getCoordFromClient(touch.clientX, touch.clientY);
     if (!rawCoord || !this.startCoord) return;
 
     let targetX = rawCoord.x;

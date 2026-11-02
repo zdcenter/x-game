@@ -2,6 +2,27 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.160] - 2026-11-02
+
+### 全平台双指轻点撤销手势系统与 PWA 智能无感版本更新提示 (Two-Finger Tap Undo Gesture System & PWA Smart Update Notification Toast)
+- **核心痛点解决 (用户反馈：1. 提出增加 PWA 智能无感版本更新提示，解决用户需要无痕模式或清除缓存才能看到最新版本的痛点；2. 采纳移动端/平板端手势增强：双指轻点撤销 Two-Finger Tap Undo，彻底解放双手)**：
+  1. **【全平台双指轻点撤销手势通用封装 (Two-Finger Tap Undo, 准则第6条)】**：
+     - **顶级生产力手势体验**：参考 Procreate 与 iPad 顶级绘图解谜工具交互设计，在通用游戏基类 [`BaseGameComponent`](file:///home/zd/x-game/frontend/src/app/core/utils/base-game.component.ts) 中直接集成全局双指轻点监听；
+     - **严谨物理防抖防误触算法**：
+       - **接触时长精准捕获**：限定双指在屏幕接触时长在 **30ms ~ 280ms** 极佳轻敲区间内（排除双指长按或双指拖动画布）；
+       - **位移死区安全钳位**：双指最大位移必须小于 **24px**，一旦玩家执行双指捏合缩放（Pinch Zoom）或双指平移视口，手势自动失效，100% 互不干扰；
+     - **一处封装，全站单机游戏无缝获益**：
+       - 只要单机游戏支持撤销（包括**数织 Nonogram、数字华容道 Sliding、推箱子 Sokoban、数独 Sudoku、帐篷与树 Tents、点灯 LightsOut、经典2048、24点 Math24、羊了个羊 TileMatch** 等），在手机和 iPad 平板上用双指任意位置轻敲一下屏幕，即可秒级执行撤销；
+     - **多巴胺触感与 8 国语言 Toast 闭环**：
+       - 撤销成功瞬间触发清脆触感反馈（`haptic.vibrateSnap()`）；
+       - 伴随全语言 Toast 反馈（`game.undo_toast`：中文“↶ 已撤销”、英文“↶ Undone”等 8 门语言全量覆盖），极大提升操控安全感与行云流水般的手感！
+  2. **【PWA 智能无感版本更新提示与一键热重载 (PWA Live Version Detection & Hot-Reload Toast)】**：
+     - **全自动多重更新探测闭环**：通过 [`PwaUpdateService`](file:///home/zd/x-game/frontend/src/app/core/services/pwa-update.service.ts) 在页面初始化、切回前台（`pageshow` / `visibilitychange`）、网络恢复（`online`）、路由切换（防抖 10s）及 90s 心跳定时器多通道实时直连探测 `/version.json`；
+     - **优雅浮动提示胶囊 (`app-pwa-update-prompt`)**：当检测到线上有新构建版本时，屏幕底部自动平滑滑出半透明毛玻璃金边气泡【🚀 发现新版本更新已就绪 · 点击立即应用】；
+     - **一键热重载与旧缓存强制清空 (`applyUpdate`)**：用户点击“立即更新”，前端自动向 Waiting 状态的 Service Worker 发送 `SKIP_WAITING` 信号，异步清空本地所有旧 `CacheStorage` 缓存，并在 150ms 内平滑完成 `location.reload()`，彻底终结用户“必须开无痕或手动清除浏览器缓存才能看到新功能”的技术痛点。
+  3. **【全平台准则与单机架构守则保障】**：
+     - 单机游戏逻辑 100% 运行于客户端浏览器内存中；全量多语言文本由 `i18n.service.ts` 动态管理，全局 CSS 变量完美适应 Light/Dark 双模主题；单元测试 14 套件 65 用例 100% 通过。
+
 ## [v3.2.159] - 2026-11-02
 
 ### PWA 浮条与推荐本站物理避让、平板/大屏自适应超清品牌启动屏与 SEO 零影响安全架构 (PWA Banner & Recommend Collision Avoidance, Tablet/Desktop Fluid Splash Screen & SEO Zero-Impact Architecture)
@@ -24,7 +45,12 @@
    5. **【移动端/平板端右侧三杠抽屉菜单常驻安装兜底入口与 iPadOS 精准识别 (`main-layout.component.ts` & `pwa.service.ts`)】**：
      - **横杠分割常驻兜底卡片**：在移动端与平板端右上角三杠汉堡抽屉菜单（`Mobile Menu Drawer`）中，在“游戏说明 (Docs)”下方增设分割横线，并常驻集成高颜值【📱 安装到手机/桌面 · 极速秒开 · 离线畅玩 [PRO] [安装]】兜底操作卡片。不受任何浮条屏蔽与 3 天免打扰限制，即便浮条因手误关闭或系统原因隐退，用户随时打开右侧菜单都能一键找到安装入口；
      - **iPadOS 13+ 桌面 UA 识别修复**：针对现代 iPad Safari 默认开启“请求桌面网站”导致丢失 `ipad` 标识的痛点，升级为通过 `MacIntel` 结合多点触控（`maxTouchPoints > 1`）识别，彻底根除 iPad 无法弹出 iOS 快捷安装图文指引的缺陷；同时拔除对非 Chromium 浏览器写死 `isAppInstalledOnDevice` 导致安装条永久消失的死锁。
-  6. **【全平台准则与单机架构守则保障】**：
+  6. **【数织 (Nonogram) 移动端 iPhone 长按打叉手势生理抖动防抖重构 (`nonogram.component.ts`)】**：
+     - **核心痛点解决 (用户语音反馈：数织在 iPad 上长按可以正常打叉，但在 iPhone 手机端长按无效，一直只能涂色涂黑)**：
+     - **超严苛 6px 判定陷阱拔除**：此前判定手指移动超过 6px 立即杀死长按定时器；在 iPhone 紧凑屏幕高采样率触屏上，大拇指按压时指腹生理微颤与微压形变极易产生 8~12px 微移，导致长按在几十毫秒内被强制清空腰斩，只能保留按下第 0ms 的涂黑状态；
+     - **格内容差与 18px 黄金防抖区**：升级算法为：**只要手指依然落在按下的最初单元格内（`rawCoord === startCoord`），或者物理微移在 18px 范围内，绝不取消长按**；仅当真正拖拽滑出格子或位移显著（> 18px）时才认定为划线拖拽；
+     - **响应延时微调 (360ms -> 300ms)**：长按触发时长由 360ms 优化为 300ms，对齐扫雷（320ms）的极佳手感；长按触发时双向切换（涂黑变打叉、打叉变涂黑），配合 `vibrateMedium()` 真实物理震感反馈，iPhone 与 iPad 全端长按打叉 100% 灵敏顺滑。
+  7. **【全平台准则与单机架构守则保障】**：
      - 单机游戏逻辑 100% 运行于客户端浏览器内存中；全量多语言文本由 `i18n.service.ts` 动态管理，全局 CSS 变量完美适应 Light/Dark 双模主题；单元测试 14 套件 65 用例 100% 通过。
 
 ## [v3.2.158] - 2026-11-02

@@ -2088,5 +2088,6 @@
   "pwa.install_title": "홈 화면에 추가하여 빠른 실행",
   "pwa.install_desc": "네이티브 전체 화면 및 오프라인 즉시 플레이",
   "pwa.install_action": "지금 설치",
-  "pwa.install_guide_title": "홈 화면에 추가"
+  "pwa.install_guide_title": "홈 화면에 추가",
+  "game.undo_toast": "↶ 실행 취소됨"
 }

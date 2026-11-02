@@ -2088,5 +2088,6 @@
   "pwa.install_title": "Añadir a la pantalla de inicio",
   "pwa.install_desc": "Disfruta de pantalla completa nativa y juego offline",
   "pwa.install_action": "Instalar ahora",
-  "pwa.install_guide_title": "Añadir a la pantalla de inicio"
+  "pwa.install_guide_title": "Añadir a la pantalla de inicio",
+  "game.undo_toast": "↶ Deshecho"
 }

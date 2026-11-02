@@ -2161,5 +2161,6 @@
   "pwa.install_title": "添加至桌面以快速访问",
   "pwa.install_desc": "享受原生级全屏与离线秒开体验",
   "pwa.install_action": "立即安装",
-  "pwa.install_guide_title": "添加到手机主屏幕"
+  "pwa.install_guide_title": "添加到手机主屏幕",
+  "game.undo_toast": "↶ 已撤销"
 }

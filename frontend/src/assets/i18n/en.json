@@ -2161,5 +2161,6 @@
   "pwa.install_title": "Add to Home Screen for Quick Access",
   "pwa.install_desc": "Enjoy native fullscreen & offline instant play",
   "pwa.install_action": "Install Now",
-  "pwa.install_guide_title": "Add to Home Screen"
+  "pwa.install_guide_title": "Add to Home Screen",
+  "game.undo_toast": "↶ Undone"
 }

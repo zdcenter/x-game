@@ -489,21 +489,9 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     const isUndo = ((event.key === 'z' || event.key === 'Z') && (event.ctrlKey || event.metaKey)) ||
                    ((event.key === 'u' || event.key === 'U') && !event.ctrlKey && !event.metaKey);
     if (isUndo) {
-      const storeAny = this.store as any;
-      const compAny = this as any;
-      if (typeof compAny.undo === 'function') {
-        this.vibrateLight();
-        compAny.undo();
+      if (this.triggerUndo()) {
         event.preventDefault();
         return;
-      } else if (typeof storeAny?.undo === 'function') {
-        const canUndo = typeof storeAny.canUndo === 'function' ? storeAny.canUndo() : true;
-        if (canUndo) {
-          this.vibrateLight();
-          storeAny.undo();
-          event.preventDefault();
-          return;
-        }
       }
     }
 
@@ -522,6 +510,91 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
         return;
       }
     }
+  }
+
+  /**
+   * 触发通用撤销动作（支持快捷键、按钮与双指轻点手势）
+   */
+  public triggerUndo(): boolean {
+    const storeAny = this.store as any;
+    const compAny = this as any;
+    if (typeof compAny.undo === 'function') {
+      this.vibrateLight();
+      compAny.undo();
+      return true;
+    } else if (typeof storeAny?.undo === 'function') {
+      const canUndo = typeof storeAny.canUndo === 'function' ? storeAny.canUndo() : true;
+      if (canUndo) {
+        this.vibrateLight();
+        storeAny.undo();
+        return true;
+      }
+    } else if (typeof compAny.handleUseUndo === 'function') {
+      this.vibrateLight();
+      compAny.handleUseUndo();
+      return true;
+    }
+    return false;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎨 双指轻点撤销手势 (Two-Finger Tap Undo)
+  // 参考 Procreate / iPad 顶级创作工具：双指在屏幕轻点（30~280ms），自动触发撤销
+  // ═══════════════════════════════════════════════════════════════════
+  private twoFingerTouchStartTime = 0;
+  private twoFingerStartPositions: { x: number; y: number }[] = [];
+  private isTwoFingerGestureActive = false;
+
+  @HostListener('touchstart', ['$event'])
+  onBaseTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      this.isTwoFingerGestureActive = true;
+      this.twoFingerTouchStartTime = Date.now();
+      this.twoFingerStartPositions = [
+        { x: event.touches[0].clientX, y: event.touches[0].clientY },
+        { x: event.touches[1].clientX, y: event.touches[1].clientY }
+      ];
+    } else if (event.touches.length > 2) {
+      this.isTwoFingerGestureActive = false;
+    }
+  }
+
+  @HostListener('touchend', ['$event'])
+  onBaseTouchEnd(event: TouchEvent) {
+    if (!this.isTwoFingerGestureActive) return;
+
+    const duration = Date.now() - this.twoFingerTouchStartTime;
+    // 轻点判定：双指接触时长在 30ms ~ 280ms 之间（排除长按或双指缩放/滚动）
+    if (duration >= 30 && duration <= 280 && this.twoFingerStartPositions.length === 2) {
+      const changedTouches = Array.from(event.changedTouches);
+      let maxDisplacement = 0;
+      for (const touch of changedTouches) {
+        for (const startPos of this.twoFingerStartPositions) {
+          const dist = Math.hypot(touch.clientX - startPos.x, touch.clientY - startPos.y);
+          maxDisplacement = Math.max(maxDisplacement, dist);
+        }
+      }
+
+      // 如果双指移动距离小于 24px（说明是原地轻敲，没有发生捏合缩放或拖拽平移）
+      if (maxDisplacement < 24) {
+        const handled = this.triggerUndo();
+        if (handled) {
+          if (event.cancelable) event.preventDefault();
+          this.haptic.vibrateSnap();
+          const toastText = this.i18n.t('game.undo_toast')() || '↶ 已撤销';
+          this.toast.info(toastText);
+        }
+      }
+    }
+
+    this.isTwoFingerGestureActive = false;
+    this.twoFingerStartPositions = [];
+  }
+
+  @HostListener('touchcancel')
+  onBaseTouchCancel() {
+    this.isTwoFingerGestureActive = false;
+    this.twoFingerStartPositions = [];
   }
 
   /**

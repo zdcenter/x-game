@@ -2088,5 +2088,6 @@
   "pwa.install_title": "Adicionar ao ecrã principal",
   "pwa.install_desc": "Desfrute de ecrã inteiro nativo e jogo offline",
   "pwa.install_action": "Instalar agora",
-  "pwa.install_guide_title": "Adicionar ao ecrã principal"
+  "pwa.install_guide_title": "Adicionar ao ecrã principal",
+  "game.undo_toast": "↶ Desfeito"
 }

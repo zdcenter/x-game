@@ -2088,5 +2088,6 @@
   "pwa.install_title": "ホーム画面に追加して素早くアクセス",
   "pwa.install_desc": "ネイティブ全画面＆オフライン即時プレイ",
   "pwa.install_action": "今すぐインストール",
-  "pwa.install_guide_title": "ホーム画面に追加"
+  "pwa.install_guide_title": "ホーム画面に追加",
+  "game.undo_toast": "↶ 元に戻しました"
 }

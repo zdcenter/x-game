@@ -2088,5 +2088,6 @@
   "pwa.install_title": "Zum Startbildschirm hinzufügen",
   "pwa.install_desc": "Vollbildmodus & Offline-Sofortspiel genießen",
   "pwa.install_action": "Jetzt installieren",
-  "pwa.install_guide_title": "Zum Startbildschirm hinzufügen"
+  "pwa.install_guide_title": "Zum Startbildschirm hinzufügen",
+  "game.undo_toast": "↶ Rückgängig gemacht"
 }

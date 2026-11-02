@@ -2088,5 +2088,6 @@
   "pwa.install_title": "Ajouter à l'écran d'accueil",
   "pwa.install_desc": "Profitez du plein écran natif et du jeu hors ligne",
   "pwa.install_action": "Installer maintenant",
-  "pwa.install_guide_title": "Ajouter à l'écran d'accueil"
+  "pwa.install_guide_title": "Ajouter à l'écran d'accueil",
+  "game.undo_toast": "↶ Annulé"
 }
