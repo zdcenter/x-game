@@ -60,6 +60,15 @@ export async function onRequest(context) {
       return Response.redirect(new URL(pathname.replace('/pages/', '/legal/'), request.url).toString(), 301);
     }
 
+    // Consolidated language strategy: permanently 301 redirect legacy non-core languages
+    // (ja, ko, de, fr, es, pt) to English (/en) equivalent paths to preserve SEO backlinks
+    // and eliminate 404s, keeping site maintenance strictly focused on Chinese & English.
+    const nonCoreLangMatch = pathname.match(/^\/(es|ja|ko|pt|fr|de)(\/.*)?$/);
+    if (nonCoreLangMatch) {
+      const subPath = (nonCoreLangMatch[2] || '').replace(/\/lobby\/?$/, '').replace(/\/+$/, '');
+      return Response.redirect(new URL(`/en${subPath}`, request.url).toString(), 301);
+    }
+
     // Serve prerendered page via explicit index.html path.
     // Avoids 301 trailing-slash redirects that env.ASSETS.fetch emits for bare directory paths,
     // which would cause a redirect loop (/zh/lobby → 301 → /zh/lobby/ → 301 → ...).
@@ -112,7 +121,7 @@ export async function onRequest(context) {
             '<body style="font-family:system-ui;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">' +
             '<div style="text-align:center"><h1 style="font-size:3rem;margin:0">404</h1>' +
             '<p>The page you are looking for does not exist.</p>' +
-            '<a href="/en/lobby" style="color:#38bdf8">← Back to Puzzle PK</a></div></body></html>',
+            '<a href="/en" style="color:#38bdf8">← Back to Puzzle PK</a></div></body></html>',
             {
               status: 404,
               headers: {
