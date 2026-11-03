@@ -22,7 +22,7 @@ import { I18nService } from '../../../../core/i18n/i18n.service';
               <span>🔥</span>
               <span>{{ i18n.t('lobby.live_waiting_title')() }}</span>
             </h2>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700/60">
               {{ live.waitingCount() }} ROOMS
             </span>
           </div>

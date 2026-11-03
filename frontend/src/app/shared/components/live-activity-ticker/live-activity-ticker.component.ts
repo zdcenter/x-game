@@ -8,7 +8,6 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { ToastService } from '../../../core/services/toast.service';
 import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
-import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-live-activity-ticker',
@@ -236,15 +235,18 @@ export class LiveActivityTickerComponent implements OnInit, OnDestroy {
     );
   }
 
-  cheerForPlayer(act: LobbyActivity): void {
+  async cheerForPlayer(act: LobbyActivity): Promise<void> {
     this.activityService.sendCheer(act.username, act.gameId);
     
-    // Confetti effect
-    confetti({
-      particleCount: 40,
-      spread: 60,
-      origin: { y: 0.7 }
-    });
+    // Dynamic confetti effect on demand
+    try {
+      const confetti = (await import('canvas-confetti')).default;
+      confetti({
+        particleCount: 40,
+        spread: 60,
+        origin: { y: 0.7 }
+      });
+    } catch {}
 
     const cheerSentTpl = this.i18n.t('activity.cheer_sent')() || '🎉 已为玩家【{user}】送出喝彩！';
     this.toast.show(cheerSentTpl.replace('{user}', act.username), 'success');
