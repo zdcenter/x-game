@@ -11,7 +11,9 @@
      - 配置 `/en/lobby` 与 `/zh/lobby` 301 永久重定向至 `/en` 与 `/zh`，杜绝历史大厅路由与首页重复；
      - 配置小语种 `/es/*`、`/ja/*` 等统一 301 重定向至 `/en`，降低多语言内容稀释风险；
   2. **Hreflang 多语言标准标签优化 (`seo.service.ts`)**：
-     - 简体中文 `alternate` 标签采用 Google 官方推荐标准 `zh-Hans`，与 `en` 及 `x-default` 形成闭环，完全符合 Google 国际化与 AdSense 规范；
+  3. **Cloudflare Edge 路由防误判修复 (`functions/[[path]].js`)**：
+     - 修复边缘软 404 嗅探器在比较根 HTML shell 时，因 `/` 301 重定向导致 `/en` 根大厅被误判定为 missing route 并返回 404 的致命缺陷；
+     - 显式声明 `/en` 与 `/zh` 为预渲染根节点，直接放行静态页面，确保爬虫与审核工具访问 `/en` 获得稳固 HTTP 200；
 
 ## [v3.2.168] - 2026-11-03
 

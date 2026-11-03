@@ -84,6 +84,11 @@ export async function onRequest(context) {
     let response = await env.ASSETS.fetch(new Request(new URL(cleanPath + '/index.html', request.url)));
     const isHtml = (response.headers.get('content-type') || '').includes('text/html');
 
+    // Core language homepages (/en and /zh) are prerendered and never fallbacks.
+    if (cleanPath === '/en' || cleanPath === '/zh') {
+      return response;
+    }
+
     if (isHtml) {
       const shellResp = await env.ASSETS.fetch(new Request(new URL('/index.html', request.url)));
       const shellLen = shellResp.headers.get('content-length');
@@ -109,9 +114,11 @@ export async function onRequest(context) {
         // routes (auth / profile / arena / admin) legitimately need the app
         // shell. Everything else is a genuine 404 — returning 200 with the
         // lobby shell would create soft-404s that hurt Google crawl quality.
-        const langPrefix = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)\//)?.[0] || '/';
-        const rel = pathname.slice(langPrefix.length);
+        const langMatch = pathname.match(/^\/(en|zh|es|ja|ko|pt|fr|de)(\/|$)/);
+        const langPrefix = langMatch ? langMatch[0] : '/';
+        const rel = pathname.slice(langPrefix.length).replace(/\/+$/, '');
         const isClientRoute =
+          rel === '' ||
           rel === 'login' || rel === 'register' || rel === 'profile' ||
           rel === 'pk-arena' ||
           rel === 'admin' || rel.startsWith('admin/');
