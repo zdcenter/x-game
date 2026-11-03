@@ -133,7 +133,16 @@ export function getHtmlEntityLength(str: string): number {
  * Optimizes a page title to strictly stay <= 68 HTML characters.
  */
 export function optimizeMetaTitle(baseTitle: string, appName: string, suffix?: string): string {
-  const cleanBase = (baseTitle || '').trim();
+  let cleanBase = (baseTitle || '').trim();
+
+  // 防止重复拼接品牌名称 (例如: Title - 益智游戏PK网 - 益智游戏PK网)
+  if (appName) {
+    const escapedApp = appName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    cleanBase = cleanBase.replace(new RegExp(`(\\s*[-|–—]\\s*${escapedApp})+\\s*$`, 'i'), '').trim();
+    // 英文通用品牌名也一并去重
+    cleanBase = cleanBase.replace(/(\s*[-|–—]\s*Puzzle PK)+\s*$/i, '').trim();
+  }
+
   const defaultSuffix = suffix ?? ` - ${appName}`;
   let title = `${cleanBase}${defaultSuffix}`;
 

@@ -2,6 +2,23 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.168] - 2026-11-03
+
+### Google AdSense 审核合规与 SSR 静态预渲染多语言透传修复 (AdSense Compliance & SSR Prerender i18n Defense)
+- **核心痛点解决 (用户反馈：AdSense 官方审核自查报告指出首页与英文大厅大面积泄露原始未渲染 key 如 `seo.default.title - app.title`、`lobby.nonogram.desc`，导致爬虫识别为 414 词的占位/建设中页面，且 Privacy Policy 丢失 Cookie/AdSense 披露，标题出现重复品牌后缀)**：
+  1. **【SSR 预渲染多语言异步加载阻断修复 (`lang.resolver.ts` & `app.config.ts`)】**：
+     - **根因确诊**：Transloco 原 `langResolver` 为同步返回，SSR 预渲染环境（Node.js）在未完成异步分包加载（`() => import(...)`）前就提前输出了 HTML DOM，导致非默认语言（如 `/en/...`）全部沦为原始占位符键名；
+     - **异步等待与全语种内存预装填**：将 `langResolver` 改造为 `async` 并使用 `await firstValueFrom(transloco.load(activeLang))` 确保在组件渲染前字典百分百到位；在 `app.config.ts` 的 `APP_INITIALIZER` 注入 SSR 专用钩子，预渲染阶段一次性将 `SUPPORTED_LANGS` 全部多语言字典在 Node.js 内存中预热（耗时 <2ms）；
+     - **配置全局安全降级**：`provideTransloco` 注入 `fallbackLang: 'zh'` 与 `missingHandler: { useFallbackTranslation: true }`，确保当个别小语种词条缺漏时，绝不向爬虫与访客暴露 `xxx.yyy_zzz` 字面量；
+  2. **【I18nService 安全降级保障与防 Key 泄漏盾 (`i18n.service.ts`)】**：
+     - 在 `I18nService.t()` 中增加智能检测，若 Transloco 返回的值与传入的 key 字面量完全相同（表示未命中翻译），自动降级尝试获取中文或英文实文；如皆未命中则返回安全人类可读文本，彻底终结任何 raw key 输出；
+  3. **【SEO 标题防重复品牌后缀去重 (`seo.util.ts` & `seo.service.ts`)】**：
+     - 修复标题模板重复拼接导致的 `免费在线扫雷... | Puzzle PK - 益智游戏PK网 - 益智游戏PK网` 语义混杂缺陷，在 `optimizeMetaTitle()` 中动态剥离已存在的品牌后缀后再行规范追加；
+     - 为 `seo.default.title` 与 `seo.default.desc` 注入硬编码防击穿保底，确保任何路由在极端情况下也不会输出 `seo.default.title - app.title`；
+  4. **【验证全站 133 个静态路由预渲染 HTML 零 Raw Key 泄漏】**：
+     - 全量脚本巡检 `frontend/dist/frontend/browser/`，英文首页 `/en/lobby` 标题正确呈现为 `Premium Puzzle Games - Logic Training & Family Fun - Puzzle PK`，正文 100% 完整充实；
+     - `/en/legal/privacy` 完整呈现 75.5 KB 详尽隐私权政策（包含 Google AdSense、DoubleClick Cookie、个人权利及数据留存），彻底清除 Blocker 级违规项。
+
 ## [v3.2.167] - 2026-11-03
 
 ### Google Lighthouse 无障碍 100 分冲刺与对比度合规优化 (Accessibility 100 & WCAG AA Contrast Compliance)

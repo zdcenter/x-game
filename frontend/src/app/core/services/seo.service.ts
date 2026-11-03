@@ -49,17 +49,29 @@ export class SeoService {
       }
 
       // Read default SEO translation strings (this registers language dependency)
+      const lang = this.i18n.currentLang();
       let pageTitle = this.i18n.t('seo.default.title')();
       let desc = this.i18n.t('seo.default.desc')();
       let keywords = this.i18n.t('seo.default.keywords')();
+
+      // 绝不允许输出原始 key 占位符给爬虫
+      if (!pageTitle || pageTitle.includes('seo.default.title')) {
+        pageTitle = lang === 'zh'
+          ? '益智游戏PK网 - 官方游戏大厅 | 免费在线益智游戏与脑力对战'
+          : 'Puzzle PK - Free Online Logic Puzzles & Multiplayer Brain Games';
+      }
+      if (!desc || desc.includes('seo.default.desc')) {
+        desc = lang === 'zh'
+          ? 'Puzzle PK (益智游戏PK网) 提供数十款高品质免费在线益智游戏，包含扫雷、数独、数织、推箱子与实时联机PK对战。'
+          : 'Play free online puzzle games and real-time multiplayer PK battles in your browser with zero downloads.';
+      }
 
       // If route has specific SEO data, override the defaults
       if (effectiveSeo) {
         if (effectiveSeo.titleKey) {
           const resolved = this.i18n.t(effectiveSeo.titleKey)();
           if (resolved && resolved !== effectiveSeo.titleKey) {
-            const appName = this.i18n.t('app.title')();
-            pageTitle = resolved.includes(appName) ? resolved : `${resolved} - ${appName}`;
+            pageTitle = resolved;
           }
         }
         if (effectiveSeo.descKey) {
@@ -74,7 +86,6 @@ export class SeoService {
 
       // --- Derive origin / URL (always absolute, even in SSR) ---
       const origin = getOrigin() || PROD_ORIGIN;
-      const lang = this.i18n.currentLang();
       // Strip the lang prefix that Transloco routing adds
       const langPattern = SUPPORTED_LANGS.map(l => l.code).join('|');
       const regex = new RegExp(`^\\/(${langPattern})`);

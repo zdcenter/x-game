@@ -72,7 +72,25 @@ export class I18nService {
   t(key: string, params?: Record<string, unknown>): Signal<string> {
     return computed(() => {
       const lang = this.currentLang(); // reactive dependency
-      let res = this.transloco.translate(key, params ?? {}, lang) || key;
+      let res = this.transloco.translate(key, params ?? {}, lang);
+
+      // 若当前语种缺失翻译或返回了 key 本身，严禁回退到 key 字面量，自动向备用语种回退
+      if (!res || res === key) {
+        const fallbackLang = lang === 'zh' ? 'en' : 'zh';
+        res = this.transloco.translate(key, params ?? {}, fallbackLang);
+      }
+
+      // 如果备用语种也无此 key，使用保底或去除前缀的人类可读文本
+      if (!res || res === key) {
+        if (key === 'app.title') return 'Puzzle PK';
+        if (key === 'seo.default.title') return 'Puzzle PK - Free Online Logic Puzzles & Brain Games';
+        if (key === 'seo.default.desc') return 'Play free online puzzle games and real-time multiplayer PK battles.';
+        if (key === 'seo.default.keywords') return 'puzzle games, brain games, logic puzzles';
+        // 去除命名空间前缀，转换为首字母大写可读文本，杜绝 xxx.yyy 形态字符串暴露给爬虫
+        const lastPart = key.split('.').pop() || key;
+        res = lastPart.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
       if (params && typeof res === 'string' && Object.keys(params).length > 0) {
         for (const [k, v] of Object.entries(params)) {
           res = res.replace(new RegExp(`\\{\\{?\\s*${k}\\s*\\}\\}?`, 'g'), String(v));
