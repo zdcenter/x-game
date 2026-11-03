@@ -23,7 +23,12 @@
      - 英文标题由 `Family Fun` 调整为更具针对性且避免误触发 COPPA 严苛限制的 `Brain Challenges`；
   6. **【静态 HTML 中文残留清理与冷启动体验优化 (`index.html` & `lobby.component.html`)】**：
      - 清理 PWA 启动屏内嵌的静态中文与刷新文案，改为运行时动态嗅探注入，确保英文端静态 HTML（`/en/*`）纯净度达到 100%；
-     - 大厅游戏卡片未统计游玩量时自动隐藏 `🔥 0` 徽章，杜绝审核员主观误判为“无人空站”。
+     - 大厅游戏卡片未统计游玩量时自动隐藏 `🔥 0` 徽章，杜绝审核员主观误判为“无人空站”；
+  7. **【彻底消除重复入口页/门页风险与大厅路径规范化 (`ADS-CONTENT-08`)】**：
+     - **根因确诊**：此前大厅作为子路径存在于 `/en/lobby` 与 `/zh/lobby`，而根域名 `/` 带有相同内容，导致检测工具与爬虫识别为“首页与 `/en/lobby` 逐字相同（构成门页/重复入口页风险）”；
+     - **路径去虚收敛**：全面统一将语言根路径（`/en`、`/zh`）作为唯一规范的大厅/首页入口；
+     - **301 永久平滑重定向与权重继承**：在 Cloudflare Edge Function (`functions/[[path]].js`) 与 Angular 路由中将旧的 `/en/lobby` 和 `/zh/lobby` 100% 配置为 HTTP 301 重定向至 `/en` 和 `/zh`，确保历史收录权重完整继承无损；
+     - **Canonical 与 Sitemap 纯净统一**：`sitemap.xml` 移除 `/en/lobby` 改为精准收录 `<loc>https://www.puzzlepk.com/en</loc>` 与 `<loc>https://www.puzzlepk.com/zh</loc>`；`SeoService` 自动规范输出对应语言根的 canonical 与 alternate 标签，彻底根除 ADS-CONTENT-08 门页风险。
 
 ## [v3.2.167] - 2026-11-03
 

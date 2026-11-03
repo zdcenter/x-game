@@ -1,5 +1,5 @@
-/en/lobby
-/zh/lobby
+/en
+/zh
 /en/leaderboard
 /zh/leaderboard
 /en/daily

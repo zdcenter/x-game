@@ -35,7 +35,7 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
 
           <!-- Left: Logo + Nav links -->
           <div class="flex items-center gap-1 sm:gap-3 xl:gap-5 min-w-0">
-            <a [routerLink]="['/', i18n.currentLang(), 'lobby']" class="flex items-center cursor-pointer group shrink-0">
+            <a [routerLink]="['/', i18n.currentLang()]" class="flex items-center cursor-pointer group shrink-0">
               <span class="text-xl sm:text-2xl lg:text-3xl font-black tracking-widest bg-clip-text text-transparent transition-transform group-hover:scale-105"
                     style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
                 Puzzle PK

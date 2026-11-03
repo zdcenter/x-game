@@ -89,13 +89,15 @@ export class SeoService {
       // Strip the lang prefix that Transloco routing adds
       const langPattern = SUPPORTED_LANGS.map(l => l.code).join('|');
       const regex = new RegExp(`^\\/(${langPattern})`);
-      const routePath = this.router.url.split('?')[0].replace(regex, '') || '/';
-      const canonicalUrl = `${origin}/${lang}${routePath}`;
-      const defaultUrl = `${origin}/en${routePath}`;
+      const rawRoute = this.router.url.split('?')[0].replace(regex, '') || '/';
+      // Normalize /lobby or / to empty string for canonical URLs (/en, /zh)
+      const cleanRoute = (rawRoute === '/' || rawRoute === '/lobby') ? '' : rawRoute;
+      const canonicalUrl = `${origin}/${lang}${cleanRoute}`;
+      const defaultUrl = `${origin}/en${cleanRoute}`;
 
       // ===== Match Routes for Dynamic Content =====
-      const gameMatch = routePath.match(/^\/games\/([a-zA-Z0-9_-]+)/);
-      const docsMatch = routePath.match(/^\/docs\/([a-zA-Z0-9_-]+)/);
+      const gameMatch = rawRoute.match(/^\/games\/([a-zA-Z0-9_-]+)/);
+      const docsMatch = rawRoute.match(/^\/docs\/([a-zA-Z0-9_-]+)/);
       const gameId = gameMatch ? gameMatch[1] : (docsMatch ? docsMatch[1] : null);
 
       // --- og:image: dynamically select based on game or default ---
@@ -137,7 +139,7 @@ export class SeoService {
       
       // Generate alternate tags for all supported languages
       SUPPORTED_LANGS.forEach(supportedLang => {
-        const altUrl = `${origin}/${supportedLang.code}${routePath}`;
+        const altUrl = `${origin}/${supportedLang.code}${cleanRoute}`;
         this.setLinkTag('alternate', altUrl, supportedLang.code);
       });
       
@@ -235,9 +237,9 @@ export class SeoService {
 
       // ===== BreadcrumbList (Home > Section > Page) =====
       const breadcrumbItems: { name: string; path: string }[] = [
-        { name: lang === 'zh' ? '首页' : 'Home', path: `/${lang}/lobby` },
+        { name: lang === 'zh' ? '首页' : 'Home', path: `/${lang}` },
       ];
-      const seg = routePath.split('/').filter(Boolean); // e.g. ['games','sudoku'] / ['docs','sudoku'] / ['blog','slug'] / ['legal','privacy']
+      const seg = cleanRoute.split('/').filter(Boolean); // e.g. ['games','sudoku'] / ['docs','sudoku'] / ['blog','slug'] / ['legal','privacy']
       if (seg.length >= 1) {
         const section = seg[0];
         const sectionNames: Record<string, string> = {
@@ -245,7 +247,6 @@ export class SeoService {
           docs: lang === 'zh' ? '攻略' : 'Guides',
           blog: lang === 'zh' ? '博客' : 'Blog',
           legal: lang === 'zh' ? '法律与联系' : 'Legal',
-          lobby: lang === 'zh' ? '大厅' : 'Lobby',
         };
         const sectionName = sectionNames[section];
         if (sectionName) {
@@ -254,7 +255,7 @@ export class SeoService {
         if (seg.length >= 2 && (section === 'games' || section === 'docs' || section === 'blog')) {
           const pageName = (pageTitle || '').split(' - ')[0].split(' | ')[0];
           if (pageName) {
-            breadcrumbItems.push({ name: pageName, path: `/${lang}${routePath}` });
+            breadcrumbItems.push({ name: pageName, path: `/${lang}${cleanRoute}` });
           }
         }
       }

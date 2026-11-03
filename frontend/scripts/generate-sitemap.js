@@ -30,7 +30,7 @@ const blogPosts = fs.existsSync(blogIndexPath)
 
 // Route config: [path, changefreq, priority, lastmod]
 const staticPaths = [
-  ['lobby',        'daily',  '1.0', today],
+  ['',             'daily',  '1.0', today],
   ['leaderboard',  'hourly', '0.9', today],
   ['daily',        'daily',  '0.9', today],
   ['blog',         'weekly', '0.8', today],
@@ -66,14 +66,17 @@ const sitemapPaths = allPaths.filter(([p]) => !sitemapExclude.has(p));
 const prerenderPaths = [...staticPaths, ...blogPostPaths];
 
 function urlEntry(p, changefreq, priority, lastmod, lang) {
+  const cleanPath = p ? `${lang}/${p}` : `${lang}`;
   let xml = `  <url>\n`;
-  xml += `    <loc>${domain}/${lang}/${p}</loc>\n`;
+  xml += `    <loc>${domain}/${cleanPath}</loc>\n`;
   xml += `    <lastmod>${lastmod}</lastmod>\n`;
   // hreflang alternates always point to all available active languages
   for (const altLang of activeLangs) {
-    xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${domain}/${altLang}/${p}"/>\n`;
+    const altPath = p ? `${altLang}/${p}` : `${altLang}`;
+    xml += `    <xhtml:link rel="alternate" hreflang="${altLang}" href="${domain}/${altPath}"/>\n`;
   }
-  xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domain}/${defaultLang}/${p}"/>\n`;
+  const defPath = p ? `${defaultLang}/${p}` : `${defaultLang}`;
+  xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${domain}/${defPath}"/>\n`;
   xml += `    <changefreq>${changefreq}</changefreq>\n`;
   xml += `    <priority>${priority}</priority>\n`;
   xml += `  </url>\n`;
@@ -101,7 +104,7 @@ console.log(`sitemap.xml generated — ${sitemapPaths.length * activeLangs.lengt
 
 // Routes for Angular SSG prerender — strictly aligned with activeLangs
 const routesContent = prerenderPaths
-  .flatMap(([p]) => activeLangs.map(lang => `/${lang}/${p}`))
+  .flatMap(([p]) => activeLangs.map(lang => p ? `/${lang}/${p}` : `/${lang}`))
   .join('\n') + '\n';
 fs.writeFileSync(path.join(__dirname, '../routes.txt'), routesContent, 'utf-8');
 console.log(`routes.txt generated — ${prerenderPaths.length * activeLangs.length} prerender routes`);

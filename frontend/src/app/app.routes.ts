@@ -8,7 +8,8 @@ import { SUPPORTED_LANGS } from './core/i18n/i18n.service';
 
 const browserRedirectGuard = () => {
   if (isPlatformBrowser(inject(PLATFORM_ID))) {
-    return inject(Router).parseUrl('/zh/lobby');
+    const isZh = (navigator.language || '').toLowerCase().startsWith('zh');
+    return inject(Router).parseUrl(isZh ? '/zh' : '/en');
   }
   return true; // Stay on route during SSR to prevent meta refresh HTML generation
 };
@@ -42,8 +43,6 @@ const adminRoute: Route = {
 // Using literal paths ('en'/'zh') instead of ':lang' prevents
 // bare paths like /games/sudoku from ever matching as a lang segment.
 const langChildren: Routes = [
-  { path: '', redirectTo: 'lobby', pathMatch: 'full' },
-
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent),
@@ -64,9 +63,15 @@ const langChildren: Routes = [
     loadComponent: () => import('./core/layouts/main-layout.component').then(m => m.MainLayoutComponent),
     children: [
       {
-        path: 'lobby',
+        path: '',
+        pathMatch: 'full',
         loadComponent: () => import('./features/lobby/lobby.component').then(m => m.LobbyComponent),
         data: { seo: { titleKey: 'seo.lobby.title', descKey: 'seo.lobby.desc', keywordsKey: 'seo.lobby.keywords' } }
+      },
+      {
+        path: 'lobby',
+        redirectTo: '',
+        pathMatch: 'full'
       },
       {
         path: 'blog',

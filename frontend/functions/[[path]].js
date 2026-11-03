@@ -42,16 +42,16 @@ export async function onRequest(context) {
       // 302 for Chinese (language-based, may vary per user).
       const code = isZh ? 302 : 301;
       const lang = isZh ? 'zh' : 'en';
-      return Response.redirect(new URL(`/${lang}/lobby`, request.url).toString(), code);
+      return Response.redirect(new URL(`/${lang}`, request.url).toString(), code);
     }
 
-    // Language root paths (/en, /en/, /zh, /zh/) — redirect server-side so Googlebot
-    // receives a proper 301/302 rather than a JS-only client-side Angular redirect.
-    if (pathname === '/en' || pathname === '/en/') {
-      return Response.redirect(new URL('/en/lobby', request.url).toString(), 301);
+    // Legacy /lobby paths — 301 permanently redirect to clean language roots (/en, /zh)
+    // to eliminate duplicate doorway pages (ADS-CONTENT-08 compliance).
+    if (pathname === '/en/lobby' || pathname === '/en/lobby/') {
+      return Response.redirect(new URL('/en', request.url).toString(), 301);
     }
-    if (pathname === '/zh' || pathname === '/zh/') {
-      return Response.redirect(new URL('/zh/lobby', request.url).toString(), 302);
+    if (pathname === '/zh/lobby' || pathname === '/zh/lobby/') {
+      return Response.redirect(new URL('/zh', request.url).toString(), 301);
     }
 
     // Legacy /pages/* links (old footer links) — consolidate on the canonical

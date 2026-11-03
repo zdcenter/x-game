@@ -2,20 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://www.puzzlepk.com/en/lobby</loc>
+    <loc>https://www.puzzlepk.com/en</loc>
     <lastmod>2026-11-03</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/lobby"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/lobby"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/lobby"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en"/>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/zh/lobby</loc>
+    <loc>https://www.puzzlepk.com/zh</loc>
     <lastmod>2026-11-03</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/lobby"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/lobby"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/lobby"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en"/>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
