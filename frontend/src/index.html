@@ -432,21 +432,23 @@
       </div>
 
       <div class="pwa-splash-brand">Puzzle PK</div>
-      <div class="pwa-splash-slogan">益智游戏PK网 · 经典竞技即开即玩</div>
+      <div class="pwa-splash-slogan">Brain Games &amp; Logic Arena</div>
 
       <div class="pwa-splash-track">
         <div class="pwa-splash-bar"></div>
       </div>
 
-      <div class="pwa-splash-fallback" id="pwa-splash-fallback">
-        <span>加载遇到网络波动？</span>
-        <button type="button" onclick="pwaForceRecover()">点击刷新应用 (Reload)</button>
-      </div>
+      <div class="pwa-splash-fallback" id="pwa-splash-fallback" style="display: none;"></div>
       <script>
         setTimeout(function() {
           var el = document.getElementById('pwa-splash-fallback');
-          if (el) el.style.display = 'flex';
-        }, 5000);
+          if (el && !window.__APP_LOADED__) {
+            var isZh = (navigator.language || '').toLowerCase().indexOf('zh') > -1;
+            el.innerHTML = '<span>' + (isZh ? '加载遇到网络波动？' : 'Taking longer than expected?') + '</span>' +
+              '<button type="button" onclick="pwaForceRecover()">' + (isZh ? '点击刷新应用 (Reload)' : 'Reload App') + '</button>';
+            el.style.display = 'flex';
+          }
+        }, 6000);
       </script>
     </div>
   </div>

@@ -443,10 +443,12 @@
 
                     <div class="flex items-center gap-1.5 shrink-0">
                       <!-- Hot Visit Stat Pill -->
-                      <div class="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
-                        <span class="text-amber-500 text-xs">🔥</span>
-                        <span class="tabular-nums">{{ game.visitCount || 0 }}</span>
-                      </div>
+                      @if ((game.visitCount || 0) > 0) {
+                        <div class="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
+                          <span class="text-amber-500 text-xs">🔥</span>
+                          <span class="tabular-nums">{{ game.visitCount }}</span>
+                        </div>
+                      }
 
                       <!-- Share Button -->
                       <button (click)="shareGame($event, game.id)"

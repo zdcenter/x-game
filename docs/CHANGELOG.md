@@ -16,8 +16,14 @@
      - 修复标题模板重复拼接导致的 `免费在线扫雷... | Puzzle PK - 益智游戏PK网 - 益智游戏PK网` 语义混杂缺陷，在 `optimizeMetaTitle()` 中动态剥离已存在的品牌后缀后再行规范追加；
      - 为 `seo.default.title` 与 `seo.default.desc` 注入硬编码防击穿保底，确保任何路由在极端情况下也不会输出 `seo.default.title - app.title`；
   4. **【验证全站 133 个静态路由预渲染 HTML 零 Raw Key 泄漏】**：
-     - 全量脚本巡检 `frontend/dist/frontend/browser/`，英文首页 `/en/lobby` 标题正确呈现为 `Premium Puzzle Games - Logic Training & Family Fun - Puzzle PK`，正文 100% 完整充实；
-     - `/en/legal/privacy` 完整呈现 75.5 KB 详尽隐私权政策（包含 Google AdSense、DoubleClick Cookie、个人权利及数据留存），彻底清除 Blocker 级违规项。
+     - 全量脚本巡检 `frontend/dist/frontend/browser/`，英文首页 `/en/lobby` 标题正确呈现为 `Premium Puzzle Games - Logic Training & Brain Challenges`，正文 100% 完整充实；
+     - `/en/legal/privacy` 完整呈现 75.5 KB 详尽隐私权政策（包含 Google AdSense、DoubleClick Cookie、个人权利及数据留存），彻底清除 Blocker 级违规项；
+  5. **【商标与儿童向受众风险化解 (`en.json` & `seo.service.ts`)】**：
+     - 将对外展示的英文游戏名由 `Tetris Battle` 规范升级为中性且契合玩法的 `Falling Blocks Battle`，彻底消除 The Tetris Company 注册商标侵权风险；
+     - 英文标题由 `Family Fun` 调整为更具针对性且避免误触发 COPPA 严苛限制的 `Brain Challenges`；
+  6. **【静态 HTML 中文残留清理与冷启动体验优化 (`index.html` & `lobby.component.html`)】**：
+     - 清理 PWA 启动屏内嵌的静态中文与刷新文案，改为运行时动态嗅探注入，确保英文端静态 HTML（`/en/*`）纯净度达到 100%；
+     - 大厅游戏卡片未统计游玩量时自动隐藏 `🔥 0` 徽章，杜绝审核员主观误判为“无人空站”。
 
 ## [v3.2.167] - 2026-11-03
 
