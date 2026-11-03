@@ -14,6 +14,7 @@ import { LayoutService } from '../services/layout.service';
 import { CoinService } from '../services/coin.service';
 import { LiveActivityService } from '../services/live-activity.service';
 import { CrossGameJoinService } from '../services/cross-game-join.service';
+import { LocalAchievementService } from '../services/local-achievement.service';
 import { storageGet, storageSet, storageRemove, getSavedDifficulty, setSavedDifficulty, getSavedLevel, setSavedLevel } from '../utils/browser.util';
 
 @Injectable()
@@ -28,9 +29,11 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly layoutService = inject(LayoutService);
   protected readonly liveActivity = inject(LiveActivityService);
   protected readonly crossGameJoin = inject(CrossGameJoinService);
+  protected readonly localAchievementService = inject(LocalAchievementService);
 
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
+  readonly isPersonalBest = signal<boolean>(false);
 
   // PK stat auto-submit tracking (plain properties, not signals)
   private _pkPrevStatus = '';
@@ -565,7 +568,24 @@ export abstract class BaseGameStore implements GameStoreInterface {
    */
   submitSingleStat(payload: { score?: number; time?: number; won?: boolean } = {}): Observable<SubmitStatResponse> {
     this.lastStatResult.set(null);
+    this.isPersonalBest.set(false);
     const won = payload.won ?? true;
+
+    // 纯前端 0ms 即时成就与多巴胺里程碑检测 (准则第5条，不依赖服务器，离线或游客立即触发)
+    try {
+      const checkRes = this.localAchievementService.trackGameFinished({
+        gameId: this.gameId,
+        won,
+        difficulty: this.currentDifficulty() as string,
+        score: payload.score,
+        timeSpent: payload.time
+      });
+      if (checkRes.isPersonalBest) {
+        this.isPersonalBest.set(true);
+      }
+    } catch (e) {
+      console.debug('[Achievement] Local check skipped:', e);
+    }
 
     // Report game completion to 全服动态
     this.liveActivity.reportGameResult(

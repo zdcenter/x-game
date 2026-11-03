@@ -35,15 +35,16 @@ export class SeoService {
     effect(() => {
       const seoData = this.currentSeoData();
 
-      // Legal pages: the Contact page gets its own dedicated title/desc/keywords
-      // instead of the generic "Legal & Privacy Policy" used by privacy/terms/about.
+      // Legal pages: provide dedicated title/desc/keywords for privacy, terms, about, contact
+      // to eliminate duplicate meta content signals across legal routes.
       let effectiveSeo = seoData;
       const legalMatch = this.router.url.match(/\/legal\/([a-zA-Z_-]+)/);
-      if (legalMatch && legalMatch[1] === 'contact') {
+      if (legalMatch) {
+        const legalSub = legalMatch[1];
         effectiveSeo = {
-          titleKey: 'seo.legal.contact.title',
-          descKey: 'seo.legal.contact.desc',
-          keywordsKey: 'seo.legal.contact.keywords',
+          titleKey: `seo.legal.${legalSub}.title`,
+          descKey: `seo.legal.${legalSub}.desc`,
+          keywordsKey: `seo.legal.${legalSub}.keywords`,
         };
       }
 

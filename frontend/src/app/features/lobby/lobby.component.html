@@ -1,7 +1,7 @@
 <div class="min-h-[calc(100vh-64px)] w-full bg-[var(--color-bg-main)] text-[var(--color-text-main)] flex flex-col items-center">
 
   <!-- Main Container -->
-  <main class="w-full max-w-[1600px] px-3 sm:px-6 lg:px-8 py-2 sm:py-4 flex flex-col gap-3 sm:gap-4">
+  <div class="w-full max-w-[1600px] px-3 sm:px-6 lg:px-8 py-2 sm:py-4 flex flex-col gap-3 sm:gap-4">
     
     <!-- ══════ Live Community Activity Ticker & Carousel (全服即时动态轮播) ══════ -->
     <app-live-activity-ticker class="w-full shrink-0"></app-live-activity-ticker>
@@ -591,7 +591,7 @@
       </div>
     </section>
 
-  </main>
+  </div>
 
   <!-- Global Arena Lobby Drawer (Shown on Demand) -->
   @if (isGlobalLobbyOpen()) {

@@ -2134,5 +2134,16 @@
   "resume.dialog_title": "中断したゲームを再開",
   "resume.dialog_desc": "前回の未完了のゲームが見つかりました。続きからプレイしますか？",
   "resume.resume_btn": "続きからプレイ",
-  "resume.discard_btn": "新しく始める"
+  "resume.discard_btn": "新しく始める",
+  "result.personal_best": "🏆 自己ベスト記録更新！",
+  "result.rewards": "マッチ報酬",
+  "seo.legal.about.title": "About Us - Free Online Logic Games & Multiplayer Platform - Puzzle PK",
+  "seo.legal.about.desc": "Discover Puzzle PK: an open-source, family-friendly logic puzzle arena built for mental agility, parent-child fun, and real-time multiplayer PK.",
+  "seo.legal.about.keywords": "about puzzle pk, puzzle games platform, logic brain training, parent-child gaming, free online puzzle games",
+  "seo.legal.privacy.title": "Privacy Policy - Data Protection & Cookie Policy - Puzzle PK",
+  "seo.legal.privacy.desc": "Learn how Puzzle PK collects, safeguards, and respects your privacy, data, and cookies under GDPR, CCPA, and Google AdSense policies.",
+  "seo.legal.privacy.keywords": "privacy policy, data protection, cookie policy, google adsense cookies, puzzle pk privacy",
+  "seo.legal.terms.title": "Terms of Service & Fair Play Rules - Puzzle PK",
+  "seo.legal.terms.desc": "Review Puzzle PK terms of service, user conduct guidelines, fair play standards, and multiplayer match regulations.",
+  "seo.legal.terms.keywords": "terms of service, user agreement, fair play, puzzle pk rules, terms of use"
 }

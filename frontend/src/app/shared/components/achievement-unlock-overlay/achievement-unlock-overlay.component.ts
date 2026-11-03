@@ -2,6 +2,8 @@ import { Component, inject, OnDestroy, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AchievementService } from '../../../core/services/achievement.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { AudioService } from '../../../core/services/audio.service';
+import { HapticService } from '../../../core/services/haptic.service';
 
 @Component({
   selector: 'app-achievement-unlock-overlay',
@@ -9,8 +11,8 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   imports: [CommonModule],
   styles: [`
     @keyframes achieveIn {
-      0%   { opacity: 0; transform: translateY(60px) scale(0.8); }
-      60%  { opacity: 1; transform: translateY(-8px) scale(1.05); }
+      0%   { opacity: 0; transform: translateY(60px) scale(0.85); }
+      60%  { opacity: 1; transform: translateY(-8px) scale(1.04); }
       100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes shimmer {
@@ -21,15 +23,22 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       from { width: 100%; }
       to   { width: 0%; }
     }
+    @keyframes trophyBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12) rotate(4deg); }
+    }
     .achieve-in  { animation: achieveIn 0.5s cubic-bezier(.22,1,.36,1) forwards; }
     .shimmer     { animation: shimmer 2s ease-in-out infinite; }
     .countdown-bar { animation: countdown linear forwards; }
+    .trophy-bounce { animation: trophyBounce 2s ease-in-out infinite; }
   `],
   templateUrl: './achievement-unlock-overlay.component.html',
 })
 export class AchievementUnlockOverlayComponent implements OnDestroy {
   achievementService = inject(AchievementService);
   i18n = inject(I18nService);
+  private audio = inject(AudioService);
+  private haptic = inject(HapticService);
 
   duration = signal(4000);
   private timer?: ReturnType<typeof setTimeout>;
@@ -39,6 +48,10 @@ export class AchievementUnlockOverlayComponent implements OnDestroy {
       const achievement = this.achievementService.pendingUnlocks()[0];
       this.clearTimer();
       if (!achievement) return;
+
+      // 播放清脆的成就解锁胜利乐音与三阶微触感
+      this.audio.playWin();
+      this.haptic.vibrateCombo();
 
       const ms = achievement.rarity === 'legendary' ? 6000
                : achievement.rarity === 'epic'      ? 5000

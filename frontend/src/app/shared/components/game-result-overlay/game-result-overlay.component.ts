@@ -128,11 +128,23 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
     this.isTemporarilyDismissed.set(false);
   }
 
+  rollingCoins = signal(0);
+  rollingXp = signal(0);
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isWaitingOthers'] && !this.isWaitingOthers) {
       this.isTemporarilyDismissed.set(false);
       this.playEffect();
       this.animateStats();
+      this.animateRewards();
+    }
+    if (changes['xpResult'] || changes['coinsEarned']) {
+      this.animateRewards();
+    }
+    if (changes['isNewRecord'] && this.isNewRecord && !changes['isNewRecord'].previousValue) {
+      this.fireNewRecordConfetti();
+      this.haptic.vibrateCombo();
+      this.audio.playWin();
     }
   }
 
@@ -269,6 +281,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
       if (this.isNewRecord) {
         this.fireNewRecordConfetti();
+        this.haptic.vibrateCombo();
       } else {
         this.fireConfetti();
       }
@@ -276,6 +289,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       this.haptic.vibrateError();
     }
     this.animateStats();
+    this.animateRewards();
   }
 
   private fireConfetti() {
@@ -377,6 +391,38 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
       if (progress < 1) {
         window.requestAnimationFrame(step);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  }
+
+  private animateRewards() {
+    const targetCoins = this.effectiveCoinsEarned;
+    const targetXp = this.xpResult?.xp_earned || 0;
+
+    if (targetCoins <= 0 && targetXp <= 0) {
+      this.rollingCoins.set(0);
+      this.rollingXp.set(0);
+      return;
+    }
+
+    let startTimestamp: number | null = null;
+    const duration = 1200; // 1.2s smooth ticker
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+
+      this.rollingCoins.set(Math.floor(targetCoins * easeProgress));
+      this.rollingXp.set(Math.floor(targetXp * easeProgress));
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else {
+        this.rollingCoins.set(targetCoins);
+        this.rollingXp.set(targetXp);
       }
     };
 

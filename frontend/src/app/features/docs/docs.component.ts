@@ -111,8 +111,8 @@ interface DocCategoryWithGames extends DocCategoryDef {
           </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 min-w-0 w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm relative">
+        <!-- Main Content (Semantic Article) -->
+        <article class="flex-1 min-w-0 w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-8 lg:p-10 shadow-sm relative">
           <!-- Mobile Header (Hamburger) -->
           <div class="lg:hidden mb-6 pb-4 border-b border-[var(--color-border-card)] flex items-center justify-between">
             <button (click)="isMobileMenuOpen.set(true)" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-sm font-bold text-[var(--color-text-primary)] cursor-pointer">
@@ -227,7 +227,7 @@ interface DocCategoryWithGames extends DocCategoryDef {
             }
 
           </div>
-        </main>
+        </article>
 
       </div>
     </div>
@@ -530,7 +530,7 @@ export class DocsComponent {
     // Reset scroll
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      const mainContainer = document.querySelector('main.overflow-y-auto');
+      const mainContainer = document.querySelector('.custom-scrollbar.overflow-y-auto') || document.querySelector('main.overflow-y-auto');
       if (mainContainer) {
         mainContainer.scrollTop = 0;
       }

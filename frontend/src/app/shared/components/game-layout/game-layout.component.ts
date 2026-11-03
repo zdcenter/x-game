@@ -161,10 +161,10 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
   }
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
-  <main class="flex-grow flex flex-col min-h-0 relative transition-all duration-300"
-        [ngClass]="isImmersiveEffective() ? 'w-full h-[100dvh] max-h-[100dvh] flex-none overflow-hidden p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
-        [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
-        [class.pb-16]="showHandheldDock()">
+  <div class="game-cockpit-arena flex-grow flex flex-col min-h-0 relative transition-all duration-300"
+       [ngClass]="isImmersiveEffective() ? 'w-full h-[100dvh] max-h-[100dvh] flex-none overflow-hidden p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
+       [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
+       [class.pb-16]="showHandheldDock()">
     
     <!-- Cockpit Grid Wrapper (Single-column on mobile/tablet, 3-column on PC xl+) -->
     <div class="w-full flex-grow flex flex-col xl:flex-row items-center xl:items-start justify-center gap-4 2xl:gap-6 min-h-0"
@@ -539,7 +539,7 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
 
     </div>
 
-  </main>
+  </div>
 
   <!-- Ergonomic Handheld Floating Dock (Thumb Zone Mastery) -->
   @if (showHandheldDock()) {
@@ -1061,7 +1061,8 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   });
 
   readonly resultIsNewRecord = computed(() => {
-    return (this.store as any)?.lastStatResult?.()?.isNewRecord;
+    const s = this.store as any;
+    return !!(s?.isPersonalBest?.() || s?.lastStatResult?.()?.isNewRecord);
   });
 
   onPlayAgainClicked() {

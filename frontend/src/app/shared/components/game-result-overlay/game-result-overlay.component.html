@@ -106,9 +106,9 @@
         @if (isNewRecord || streak() >= 3) {
           <div class="flex flex-wrap items-center justify-center gap-2 mt-2.5">
             @if (isNewRecord) {
-              <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black bg-gradient-to-r from-amber-400/25 to-yellow-300/15 border border-amber-400/60 text-amber-300 shadow-sm animate-pulse">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-400/30 via-yellow-300/20 to-amber-500/30 border border-amber-400/70 text-amber-300 shadow-md shadow-amber-500/20 animate-pulse">
                 <span>🏆</span>
-                <span>{{ i18n.t('result.new_record')() }}</span>
+                <span>{{ i18n.t('result.personal_best')() }}</span>
               </div>
             }
             @if (streak() >= 3 && status === GameResult.Win) {
@@ -163,23 +163,27 @@
         }
       }
 
-      <!-- XP & Level Progress Bar -->
-      @if (xpResult && xpResult.xp_earned > 0) {
+      <!-- XP & Rewards Bar (Dopamine positive feedback ticker) -->
+      @if ((xpResult && xpResult.xp_earned > 0) || (status === GameResult.Win && effectiveCoinsEarned > 0)) {
         <div class="w-full my-2 p-3.5 rounded-2xl bg-[var(--color-bg-main)]/80 border border-[var(--color-border-card)] relative z-10 shadow-inner">
           <div class="flex items-center justify-between text-xs mb-2">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-xs">
-                {{ xpResult.leveled_up ? '⭐' : '✨' }}
+                {{ xpResult?.leveled_up ? '⭐' : '✨' }}
               </span>
               <span class="font-black text-[var(--color-text-main)]">
-                {{ xpResult.leveled_up ? (i18n.t('result.level_up')() + ' Lv.' + xpResult.level) : ('Lv.' + xpResult.level + ' ' + (i18n.t('result.level_progress')() || 'Level Progress')) }}
+                @if (xpResult) {
+                  {{ xpResult.leveled_up ? (i18n.t('result.level_up')() + ' Lv.' + xpResult.level) : ('Lv.' + xpResult.level + ' ' + (i18n.t('result.level_progress')() || 'Level Progress')) }}
+                } @else {
+                  {{ i18n.t('result.rewards')() }}
+                }
               </span>
             </div>
             <div class="flex items-center gap-1.5">
-              @if (status === GameResult.Win && authStore.isAuthenticated() && effectiveCoinsEarned > 0) {
-                <span class="font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm">
+              @if (status === GameResult.Win && effectiveCoinsEarned > 0) {
+                <span class="font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs flex items-center gap-1 shadow-sm transition-transform active:scale-105">
                   <app-coin-icon size="xs" />
-                  <span>+{{ effectiveCoinsEarned }}</span>
+                  <span>+{{ rollingCoins() }}</span>
                 </span>
               }
               @if (status === GameResult.Lose && isPkMatch && effectiveBountyCoins > 0 && authStore.isAuthenticated()) {
@@ -188,15 +192,19 @@
                   <span>-{{ effectiveBountyCoins }}</span>
                 </span>
               }
-              <span class="font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-xs">
-                +{{ xpResult.xp_earned }} XP
-              </span>
+              @if (xpResult && xpResult.xp_earned > 0) {
+                <span class="font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs">
+                  +{{ rollingXp() }} XP
+                </span>
+              }
             </div>
           </div>
-          <div class="w-full h-2 rounded-full bg-[var(--color-bg-card)] overflow-hidden p-0.5 border border-[var(--color-border-card)]">
-            <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 shadow-sm"
-                 [style.width.%]="levelProgressPercent"></div>
-          </div>
+          @if (xpResult) {
+            <div class="w-full h-2 rounded-full bg-[var(--color-bg-card)] overflow-hidden p-0.5 border border-[var(--color-border-card)]">
+              <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 shadow-sm"
+                   [style.width.%]="levelProgressPercent"></div>
+            </div>
+          }
         </div>
       }
 

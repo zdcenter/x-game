@@ -341,21 +341,22 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
         </div>
       }
 
-      <!-- Main Content Area -->
-      <main #mainScroll
-            class="flex-1 block custom-scrollbar relative min-h-0 flex flex-col"
-            [class.overflow-y-auto]="!zenService.isZenMode() && !isArenaRoute()"
-            [class.overflow-hidden]="zenService.isZenMode() || isArenaRoute()"
-            style="overflow-anchor: none;">
+      <!-- Scroll Viewport Container -->
+      <div #mainScroll
+           class="flex-1 block custom-scrollbar relative min-h-0 flex flex-col"
+           [class.overflow-y-auto]="!zenService.isZenMode() && !isArenaRoute()"
+           [class.overflow-hidden]="zenService.isZenMode() || isArenaRoute()"
+           style="overflow-anchor: none;">
         <app-offline-banner></app-offline-banner>
-        <div class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode() || isFullImmersion() || isArenaRoute()">
+        <!-- Main Content Landmark (Unique per page, strictly conforms to W3C HTML5 single <main> standard) -->
+        <main class="flex-1 flex flex-col pb-12 sm:pb-16" [class.pb-0]="zenService.isZenMode() || isFullImmersion() || isArenaRoute()">
           <router-outlet></router-outlet>
-        </div>
+        </main>
         @if (!zenService.isZenMode() && !isArenaRoute()) {
           <app-footer class="mt-auto"></app-footer>
         }
         <app-share-modal></app-share-modal>
-      </main>
+      </div>
 
       <!-- Global PWA Install Floating Prompt (彻底避开右下角【🎁 推荐本站】按钮，已安装则自动隐匿) -->
       @if (!zenService.isZenMode() && !pwa.isStandalone() && !pwa.isAppInstalledOnDevice() && !pwa.isPromptDismissed()) {

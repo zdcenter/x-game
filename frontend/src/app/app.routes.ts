@@ -70,7 +70,7 @@ const langChildren: Routes = [
       },
       {
         path: 'blog',
-        loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent),
+        loadComponent: () => import('./features/blog/blog-list/blog-list.component').then(m => m.BlogListComponent),
         data: { seo: { titleKey: 'seo.blog.title', descKey: 'seo.blog.desc', keywordsKey: 'seo.blog.keywords' } }
       },
       {
