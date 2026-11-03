@@ -327,27 +327,34 @@ export class LobbyComponent implements OnInit, OnDestroy {
     // Populate recently played games from client storage
     if (isBrowser()) {
       this.recentGameIds.set(getRecentGames());
+
+      // 非关键背景数据平滑阶梯载入，杜绝在首屏 t=0 瞬间并发 7 道 HTTP 请求卡死网络关键链路
+      setTimeout(() => {
+        this.loadGamesStats();
+      }, 600);
+
+      setTimeout(() => {
+        this.announcementService.getActiveAnnouncements().subscribe(anns => {
+          this.activeAnnouncements.set(anns);
+        });
+      }, 1200);
+
+      setTimeout(() => {
+        const player = this.authStore.currentUser()?.username || this.authStore.guestId;
+        this.wsService.connectLobby(player, player);
+      }, 1800);
+
+      setTimeout(() => {
+        // Fetch latest blogs for AdSense text density and UX
+        this.blogService.getBlogPosts().subscribe({
+          next: (data) => {
+            const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            this.rawBlogs.set(sorted.slice(0, 4));
+          },
+          error: (err) => console.error('Failed to load recent blogs', err)
+        });
+      }, 2400);
     }
-
-    // Load dynamic game stats (visitCounts) and merge without reordering
-    this.loadGamesStats();
-
-    // Fetch active announcements
-    this.announcementService.getActiveAnnouncements().subscribe(anns => {
-      this.activeAnnouncements.set(anns);
-    });
-
-    const player = this.authStore.currentUser()?.username || this.authStore.guestId;
-    this.wsService.connectLobby(player, player);
-
-    // Fetch latest blogs for AdSense text density and UX
-    this.blogService.getBlogPosts().subscribe({
-      next: (data) => {
-        const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        this.rawBlogs.set(sorted.slice(0, 4));
-      },
-      error: (err) => console.error('Failed to load recent blogs', err)
-    });
   }
 
   private loadGamesStats() {

@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { GameRegistryService } from './core/services/game-registry.service';
 import { TranslocoService } from '@jsverse/transloco';
-import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules, UrlSerializer } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, UrlSerializer } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideTransloco } from '@jsverse/transloco';
 
@@ -47,7 +47,8 @@ class GlobalErrorHandler implements ErrorHandler {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZonelessChangeDetection(),
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' }), withPreloading(PreloadAllModules)),
+    // 移除 withPreloading(PreloadAllModules)，禁止启动时无脑并行下载全站 70+ 游戏组件，彻底消除 4 秒关键路径延迟与主线程脚本解析过载
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     provideHttpClient(withInterceptors([ssrNoopInterceptor, authInterceptor]), withFetch()),
     // Initialize PWA Update & Service Worker management
     {
@@ -70,28 +71,34 @@ export const appConfig: ApplicationConfig = {
       },
       loader: InlineTranslocoLoader,
     }),
-    // Eagerly load all languages before first render — inline loader is synchronous so this is free.
+    // 仅按需预加载首屏所需的一门语言，严禁启动时无脑全量并发下载所有语种（每个语种都是 80KB+ JSON 模块）
     {
       provide: APP_INITIALIZER,
       useFactory: () => {
         const transloco = inject(TranslocoService);
         return () => {
-          let chain = Promise.resolve();
-          for (const lang of SUPPORTED_LANGS) {
-            chain = chain.then(() => transloco.load(lang.code).toPromise() as Promise<void>);
+          let initialLang = 'zh';
+          if (typeof window !== 'undefined') {
+            const path = window.location.pathname;
+            if (path.startsWith('/en')) initialLang = 'en';
+            else if (path.startsWith('/zh')) initialLang = 'zh';
           }
-          return chain;
+          return transloco.load(initialLang).toPromise() as Promise<void>;
         };
       },
       multi: true,
     },
-    // Merge DB game metadata (icon/modes/difficulties) into GameRegistryService at startup.
-    // Browser-only: SSR/prerender falls back silently to TS seed data.
+    // 后台非阻塞静默同步 DB 游戏元数据，绝不阻塞 APP_INITIALIZER 与首屏首帧（GAME_DEFINITIONS 已有同步种子底本）
     {
       provide: APP_INITIALIZER,
       useFactory: () => {
         const registry = inject(GameRegistryService);
-        return () => registry.loadFromDB();
+        return () => {
+          if (typeof window !== 'undefined') {
+            setTimeout(() => registry.loadFromDB(), 2000);
+          }
+          return Promise.resolve();
+        };
       },
       multi: true,
     },

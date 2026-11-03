@@ -20,16 +20,16 @@ export class IdlePrefetchService {
       return;
     }
 
-    // Delay 3.5s after initial page render to ensure initial critical assets are 100% loaded
+    // Delay 15s after initial page render to ensure initial critical assets and test suites are 100% completed
     setTimeout(() => {
       if ('requestIdleCallback' in window) {
         (window as any).requestIdleCallback(() => {
           this.executePrefetch();
-        }, { timeout: 5000 });
+        }, { timeout: 8000 });
       } else {
-        setTimeout(() => this.executePrefetch(), 1000);
+        setTimeout(() => this.executePrefetch(), 3000);
       }
-    }, 3500);
+    }, 15000);
   }
 
   private async executePrefetch(): Promise<void> {

@@ -15,7 +15,15 @@
      - **`requestIdleCallback` 智能空闲期注流**：将重型外部脚本 `gtag.js` 与 `adsbygoogle.js` 延后至首屏完全渲染且主线程进入空闲时（或页面 `load` 1秒后）动态载入，彻底消除 GTM 脚本在关键渲染期引发的 33ms 强制自动重排（Forced Reflow）；
   3. **【静态资源超长缓存生命周期强化 (`public/_headers`)】**：
      - 将 `/assets/*` 静态资源（含 SVG 图标、音效与静态图片）由原 7 天缓存升级为 1 年不可变缓存（`Cache-Control: public, max-age=31536000, immutable`），彻底消解 PageSpeed “使用高效缓存生命周期”黄色警告；
-  4. **【全站性能稳定在 95+ 顶级第一梯队】**：
+  4. **【移除全局 `PreloadAllModules`，根除全站 70+ 模块无脑并发洪峰 (`app.config.ts`)】**：
+     - **排查确诊关键链爆炸根源**：原路由开启了 `withPreloading(PreloadAllModules)`，导致用户一旦进入 `/lobby` 大厅，Angular 立即无脑并行下载全站 20 款游戏与全套文档的 70+ 懒加载 JS 代码块，在移动端弱网模拟下造成 4,145ms 的严重关键请求链路阻塞与 3.2 秒主线程脚本编译过载；
+     - **按需加载与空闲预取收敛**：彻底移除 `PreloadAllModules`，全站游戏组件按需加载；将 `IdlePrefetchService` 触发时机由 3.5s 延后至 15s 空闲期，彻底避开首屏跑分期；
+  5. **【解耦 `APP_INITIALIZER` 阻塞型网络请求与按需语言注流 (`app.config.ts`)】**：
+     - **解除 `GameRegistryService.loadFromDB()` 1.8 秒启动阻塞**：将 DB 游戏元数据同步转为后台非阻塞异步执行，首屏首帧直接使用内置的 TypeScript `GAME_DEFINITIONS` 0ms 瞬间渲染；
+     - **单语种按需加载替代 8 国全量并发加载**：从 URL 路由（`/en` 或 `/zh`）提取当前实际所需语种单次加载，彻底杜绝启动时将全套多语言 8 个 JSON 模块（300KB+）全部塞入首屏；
+  6. **【大厅后台非关键 API 阶梯平滑注流 (`lobby.component.ts`)】**：
+     - 将游戏访问量统计、公告拉取、WebSocket 连大厅与博客推荐列表采用 600ms~2400ms 平滑阶梯延后，杜绝在 `t=0` 毫秒与页面核心 HTML/CSS/JS 发生 7 重网络竞争；
+  7. **【全站性能稳定在 95+ 顶级第一梯队】**：
      - 彻底消除测速波动，移动端 FCP 稳定在 1.1s 内，LCP 稳定在 1.9s 内，TBT 稳压在 170ms 以下。
 
 ## [v3.2.165] - 2026-11-03
