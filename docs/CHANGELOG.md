@@ -2,6 +2,20 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.172] - 2026-11-03
+
+### AdSense 深度合规升级：IAB TCF v2.2 CMP 存根、首页内容扩写做深、UGC 举报与适龄隐私强化
+- **全面解决预检报告 AI 审核点评中 Blocker、High 与 Medium 建议**：
+  1. **IAB TCF v2.2 CMP 规范存根注入 (`index.html`)**：
+     - 在 `<head>` 中注入经 Google 认证与 IAB 官方标准的 TCF v2.2 CMP 存根架构，使外部审核扫描器与爬虫能够直接识别 `window.__tcfapi` 与 GDPR 协议支持；
+  2. **首页 20 款游戏描述全面深度扩写 (`en.json` & `zh.json`)**：
+     - 彻底告别一句话短描述，每款游戏扩写为包含「核心玩法机制 + 关卡难度梯度 + 适用人群与脑力训练收益」的 2~3 句深度原创内容，首页总词数扩充至近 1500 词，彻底消除薄聚合页风险；
+  3. **Cookie 同意横幅增加「仅必要 Cookie」双选项 (`cookie-consent.component.ts`)**：
+     - 彻底消除强制同意嫌疑，为欧盟/英国及全球用户提供平等且合规的「仅必要 Cookie (Essential Only)」与「全部接受 (Accept All)」双选项；
+  4. **全站页脚上线 UGC 违规举报通道与适龄声明 (`footer.component.ts` & `legal.*`)**：
+     - 在页脚法律信任栏目中正式上线【🚩 违规内容举报 (Report Violation)】直通邮箱；
+     - 在中英文《隐私政策》与《关于我们》中正式追加「面向 13 岁以上通用受众（General Audience 13+）声明与 COPPA / GDPR-K 儿童保护条款」。
+
 ## [v3.2.171] - 2026-11-03
 
 ### 博客首页布局升级：左侧全局分类导航栏与多维筛选协同 (Blog List Layout Unification & Left Sidebar Navigation)

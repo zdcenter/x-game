@@ -38,12 +38,20 @@ import { I18nService } from '../../../core/i18n/i18n.service';
             </a>
           </div>
 
-          <!-- Footer -->
-          <button (click)="accept()" 
-                  class="w-full px-6 py-2.5 rounded-xl font-bold text-white shadow-lg shadow-emerald-500/20 transition-transform hover:scale-[1.02] active:scale-95"
-                  style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-            {{ i18n.t('cookie.accept')() || 'Accept All' }}
-          </button>
+          <!-- Footer Buttons -->
+          <div class="flex items-center gap-2.5">
+            <button (click)="rejectNonEssential()" 
+                    type="button"
+                    class="flex-1 px-3 py-2.5 rounded-xl font-semibold text-xs border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-card)] transition-colors cursor-pointer text-center">
+              {{ i18n.t('cookie.essential_only')() || '仅必要 Cookie' }}
+            </button>
+            <button (click)="accept()" 
+                    type="button"
+                    class="flex-1 px-3 py-2.5 rounded-xl font-bold text-xs text-white shadow-md shadow-emerald-500/20 transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer text-center"
+                    style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+              {{ i18n.t('cookie.accept')() || '全部接受' }}
+            </button>
+          </div>
         </div>
       </div>
     }
@@ -75,7 +83,14 @@ export class CookieConsentComponent implements OnInit {
 
   accept() {
     if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem('cookie_consent', 'true');
+      localStorage.setItem('cookie_consent', 'all');
+    }
+    this.isVisible.set(false);
+  }
+
+  rejectNonEssential() {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('cookie_consent', 'essential_only');
     }
     this.isVisible.set(false);
   }

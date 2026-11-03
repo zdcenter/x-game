@@ -98,6 +98,11 @@ import { I18nService } from '../../i18n/i18n.service';
                   {{ i18n.t('legal.contact.title')() || 'Contact Us' }}
                 </a>
               </li>
+              <li>
+                <a href="mailto:support@puzzlepk.com?subject=UGC%20Violation%20Report" class="hover:underline transition-colors flex items-center gap-1" style="color: var(--color-text-secondary)">
+                  <span>🚩</span> {{ i18n.t('legal.report.title')() || 'Report Violation' }}
+                </a>
+              </li>
             </ul>
           </div>
 
