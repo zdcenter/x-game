@@ -140,7 +140,8 @@ export class SeoService {
       // Generate alternate tags for all supported languages
       SUPPORTED_LANGS.forEach(supportedLang => {
         const altUrl = `${origin}/${supportedLang.code}${cleanRoute}`;
-        this.setLinkTag('alternate', altUrl, supportedLang.code);
+        const hreflangCode = supportedLang.code === 'zh' ? 'zh-Hans' : supportedLang.code;
+        this.setLinkTag('alternate', altUrl, hreflangCode);
       });
       
       this.setLinkTag('alternate', defaultUrl, 'x-default');

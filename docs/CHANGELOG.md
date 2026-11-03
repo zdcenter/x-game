@@ -2,6 +2,17 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.169] - 2026-11-03
+
+### AdSense 门页镜像消除与 Cloudflare Edge 301 规范重定向 (Doorway Mirror Elimination & Edge 301 Canonical)
+- **ADS-CONTENT-08 门页/镜像重复彻底根除**：
+  1. **Cloudflare Edge 301 永久重定向 (`frontend/public/_redirects`)**：
+     - 配置根路径 `/` 301 永久重定向至 `/en`，彻底杜绝根域名与 `/en` 同时输出 200 OK 镜像内容（888 词完全一致）导致的 Doorway Page 判定；
+     - 配置 `/en/lobby` 与 `/zh/lobby` 301 永久重定向至 `/en` 与 `/zh`，杜绝历史大厅路由与首页重复；
+     - 配置小语种 `/es/*`、`/ja/*` 等统一 301 重定向至 `/en`，降低多语言内容稀释风险；
+  2. **Hreflang 多语言标准标签优化 (`seo.service.ts`)**：
+     - 简体中文 `alternate` 标签采用 Google 官方推荐标准 `zh-Hans`，与 `en` 及 `x-default` 形成闭环，完全符合 Google 国际化与 AdSense 规范；
+
 ## [v3.2.168] - 2026-11-03
 
 ### Google AdSense 审核合规与 SSR 静态预渲染多语言透传修复 (AdSense Compliance & SSR Prerender i18n Defense)

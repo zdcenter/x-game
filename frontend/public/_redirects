@@ -1,1 +1,19 @@
-# Routing is handled by functions/[[path]].js
+# Root domain canonical redirect: eliminates doorway/duplicate page issue (ADS-CONTENT-08)
+/              /en             301
+
+# Legacy /lobby redirects to clean canonical routes
+/en/lobby      /en             301
+/en/lobby/     /en             301
+/zh/lobby      /zh             301
+/zh/lobby/     /zh             301
+
+# Legacy /pages/* to /legal/*
+/pages/*       /legal/:splat   301
+
+# Non-core languages to English canonicals
+/es/*          /en/:splat      301
+/ja/*          /en/:splat      301
+/ko/*          /en/:splat      301
+/pt/*          /en/:splat      301
+/fr/*          /en/:splat      301
+/de/*          /en/:splat      301
