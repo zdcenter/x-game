@@ -28,7 +28,10 @@
      - **根因确诊**：此前大厅作为子路径存在于 `/en/lobby` 与 `/zh/lobby`，而根域名 `/` 带有相同内容，导致检测工具与爬虫识别为“首页与 `/en/lobby` 逐字相同（构成门页/重复入口页风险）”；
      - **路径去虚收敛**：全面统一将语言根路径（`/en`、`/zh`）作为唯一规范的大厅/首页入口；
      - **301 永久平滑重定向与权重继承**：在 Cloudflare Edge Function (`functions/[[path]].js`) 与 Angular 路由中将旧的 `/en/lobby` 和 `/zh/lobby` 100% 配置为 HTTP 301 重定向至 `/en` 和 `/zh`，确保历史收录权重完整继承无损；
-     - **Canonical 与 Sitemap 纯净统一**：`sitemap.xml` 移除 `/en/lobby` 改为精准收录 `<loc>https://www.puzzlepk.com/en</loc>` 与 `<loc>https://www.puzzlepk.com/zh</loc>`；`SeoService` 自动规范输出对应语言根的 canonical 与 alternate 标签，彻底根除 ADS-CONTENT-08 门页风险。
+     - **Canonical 与 Sitemap 纯净统一**：`sitemap.xml` 移除 `/en/lobby` 改为精准收录 `<loc>https://www.puzzlepk.com/en</loc>` 与 `<loc>https://www.puzzlepk.com/zh</loc>`；`SeoService` 自动规范输出对应语言根的 canonical 与 alternate 标签，彻底根除 ADS-CONTENT-08 门页风险；
+  8. **【补齐 `nav.open_menu` 8 国语言包与移除对决大厅底部冗余悬浮操作栏 (`GamePkLobbyComponent`)】**：
+     - **全量补齐 `nav.open_menu` / `nav.close_menu`**：8 国多语言字典同步补齐，彻底消灭控制台 `Missing translation for 'nav.open_menu'` 报错；
+     - **消除 PK 竞技大厅底部重复悬浮按钮**：移除手持端常驻吸底的 `⚡ 一键随机匹配` 与 `➕ 创建房间` 悬浮卡片，杜绝与上方顶部操作栏及居中主按钮重复，界面整洁规范。
 
 ## [v3.2.167] - 2026-11-03
 
