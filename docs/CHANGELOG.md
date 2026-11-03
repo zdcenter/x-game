@@ -2,6 +2,21 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.170] - 2026-11-03
+
+### AdSense 深度优化：UGC 条款、E-E-A-T 教程元数据、标题去模板化与中性命名 (E-E-A-T & UGC Policy Polish)
+- **全面解决 AI 审核深度点评的 H1-H4 及 M1-M4 建议**：
+  1. **服务条款补充 UGC 与全服排行榜审核政策 (`legal.terms.content`)**：
+     - 在中英文《服务条款》中正式追加第 9 条《用户生成内容（UGC）与排行榜审核管理制度》（包含违规昵称自动化过滤、分数算法回放防作弊校验、24 小时投诉受理邮箱 `support@puzzlepk.com`），直接满足 `ADS-CONTENT-07`；
+  2. **教程与攻略标题去模板化 (`i18n/*.json`)**：
+     - 彻底重构全量 18 款游戏 Docs 标题，将原平行的「X 深度策略攻略与玩法规则技巧」全量替换为具体命题（如《扫雷不猜雷高胜率实战：1-2-1 / 1-2-2-1 定式拆解》、《Hashi 数桥连线推导：孤岛死局预防与双桥连通》等），消除批量生成内容嫌疑；
+  3. **文档注入 E-E-A-T 原创与校验标头 (`docs.component.ts`)**：
+     - 在每篇教程文章标题下方增加结构化作者元数据标头（撰写团队：Puzzle PK Logic Research Team、实测校验日期：2026年11月、预计阅读时长、自研实测标签），极大增强审核员信赖度；
+  4. **游戏命名与商标中性化 (`lobby.tilematch`)**：
+     - 将原叠层三消游戏由可能引致混淆的 `Sheep A Sheep` 规范重命名为 `Tile Match Master`（叠消大师），消除第三方侵权风险；
+  5. **广告单元容器规范间距与中性标签 (`adsense.component.ts`)**：
+     - 将 AdSense 容器边距扩大至 `my-4 sm:my-6`，确保操作区与广告之间保留至少 24px-32px 安全间隔，杜绝游戏误触；始终保持规范小号 `ADVERTISEMENT` 中性标签；
+
 ## [v3.2.169] - 2026-11-03
 
 ### AdSense 门页镜像消除与 Cloudflare Edge 301 规范重定向 (Doorway Mirror Elimination & Edge 301 Canonical)

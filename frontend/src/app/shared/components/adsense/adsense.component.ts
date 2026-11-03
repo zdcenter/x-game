@@ -7,10 +7,10 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
   imports: [CommonModule],
   template: `
     @if (isValidSlot && !isUnfilled()) {
-      <div class="adsense-container w-full flex flex-col items-center justify-center my-2 sm:my-3 py-0.5"
+      <div class="adsense-container w-full flex flex-col items-center justify-center my-4 sm:my-6 py-1"
            [class.hidden]="isUnfilled()">
-        @if (showLabel && isFilled()) {
-          <span class="text-[9px] sm:text-[10px] tracking-widest uppercase opacity-40 font-mono select-none mb-1 text-[var(--color-text-muted)]">
+        @if (showLabel) {
+          <span class="text-[10px] sm:text-xs tracking-widest uppercase opacity-50 font-mono select-none mb-1.5 text-[var(--color-text-muted)]">
             ADVERTISEMENT
           </span>
         }

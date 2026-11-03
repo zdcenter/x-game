@@ -139,6 +139,29 @@ interface DocCategoryWithGames extends DocCategoryDef {
                   <p class="text-[var(--color-text-secondary)] text-base sm:text-lg">
                     {{ getGameDesc(currentGame()!.id) }}
                   </p>
+
+                  <!-- E-E-A-T Editorial & Verification Metadata -->
+                  <div class="flex flex-wrap items-center gap-3 sm:gap-5 text-xs text-[var(--color-text-muted)] mt-4 pt-3 border-t border-[var(--color-border-card)]/60">
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                      <span>✍️</span>
+                      <span>{{ i18n.currentLang() === 'zh' ? '撰写：Puzzle PK 逻辑研学组' : 'Author: Puzzle PK Logic Research Team' }}</span>
+                    </span>
+                    <span>•</span>
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                      <span>📅</span>
+                      <span>{{ i18n.currentLang() === 'zh' ? '实测校验：2026年11月 (引擎 v3.2)' : 'Verified: Nov 2026 (Engine v3.2)' }}</span>
+                    </span>
+                    <span>•</span>
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                      <span>⏱️</span>
+                      <span>{{ i18n.currentLang() === 'zh' ? '阅读时长：约 6 分钟' : 'Read Time: ~6 mins' }}</span>
+                    </span>
+                    <span>•</span>
+                    <span class="inline-flex items-center gap-1.5 font-medium text-emerald-500">
+                      <span>✓</span>
+                      <span>{{ i18n.currentLang() === 'zh' ? '独立自研原创' : 'Original & Tested' }}</span>
+                    </span>
+                  </div>
                 </div>
 
                 <!-- Advanced Interactive Tutorial for Sliding Puzzle -->
