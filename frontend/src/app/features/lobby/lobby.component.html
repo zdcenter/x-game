@@ -39,10 +39,10 @@
           </div>
           <div>
             <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
-              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-[var(--color-accent-from)] flex items-center gap-1.5">
+              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                 <span>⚔️</span> {{ i18n.t('lobby.pk_arena_card_title')() || '多人竞技场' }}
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                 LIVE PK
               </span>
             </div>
@@ -51,7 +51,7 @@
             </p>
           </div>
           <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
-            <span class="text-xs sm:text-sm font-bold text-[var(--color-accent-from)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+            <span class="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {{ i18n.t('lobby.pk_arena_card_cta')() || '进入竞技大厅' }}
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -68,10 +68,10 @@
           </div>
           <div>
             <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
-              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-[var(--color-accent-to)] flex items-center gap-1.5">
+              <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
                 <span>🎲</span> {{ i18n.t('lobby.random_game')() || '随便来一把' }}
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                 1s START
               </span>
             </div>
@@ -80,7 +80,7 @@
             </p>
           </div>
           <div class="mt-2.5 sm:mt-3 flex items-center justify-between">
-            <span class="text-xs sm:text-sm font-bold text-[var(--color-accent-to)] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+            <span class="text-xs sm:text-sm font-bold text-purple-700 dark:text-purple-400 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
               {{ i18n.t('lobby.random_cta')() || '🎲 立即开局' }}
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -200,6 +200,8 @@
         <!-- Quick Switcher Trigger (Direct Action) -->
         <div class="relative shrink-0 quick-switcher-container">
           <button (click)="toggleQuickSwitcher($event)"
+                  [attr.aria-label]="i18n.t('lobby.quick_select_title')() || '快速直达'"
+                  [attr.aria-expanded]="isQuickSwitcherOpen()"
                   class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] flex items-center gap-2 transition-all shadow-sm cursor-pointer active:scale-95 group"
                   [class.border-[var(--color-accent-from)]]="isQuickSwitcherOpen()"
                   [class.ring-2]="isQuickSwitcherOpen()"
@@ -207,7 +209,7 @@
                   [title]="i18n.t('lobby.quick_select_title')()">
             <span class="text-base group-hover:scale-110 transition-transform">🎯</span>
             <span>{{ i18n.t('lobby.quick_select_btn')() || '快速直达' }}</span>
-            <span class="px-1.5 py-0.2 rounded-full bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)] text-[10px] sm:text-xs font-mono font-bold">
+            <span class="px-1.5 py-0.2 rounded-full bg-[var(--color-bg-sub)] text-[var(--color-text-main)] border border-[var(--color-border-card)] text-[10px] sm:text-xs font-mono font-bold">
               {{ games().length }}
             </span>
             <span class="text-xs transition-transform duration-200 opacity-60 group-hover:opacity-100" [class.rotate-180]="isQuickSwitcherOpen()">▾</span>
@@ -238,6 +240,7 @@
                        class="w-full pl-8 pr-7 py-1.5 rounded-lg text-xs bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-from)]" />
                 @if (searchQuery()) {
                   <button (click)="searchQuery.set('')"
+                          aria-label="Clear search"
                           class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] cursor-pointer">
                     ✕
                   </button>
@@ -287,7 +290,7 @@
             <div class="flex items-center gap-2">
               <span class="text-lg">🎯</span>
               <span class="font-bold text-sm text-[var(--color-text-main)]">{{ i18n.t('lobby.quick_select_title')() }}</span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)] font-bold">
+              <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-bg-sub)] text-[var(--color-text-main)] border border-[var(--color-border-card)] font-bold">
                 {{ allQuickGames().length }}
               </span>
             </div>
@@ -310,7 +313,8 @@
                      class="w-full pl-9 pr-8 py-2 rounded-xl text-xs bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-from)]" />
               @if (searchQuery()) {
                 <button (click)="searchQuery.set('')"
-                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]">
+                        aria-label="Clear search"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] cursor-pointer">
                   ✕
                 </button>
               }

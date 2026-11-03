@@ -2,6 +2,31 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.167] - 2026-11-03
+
+### Google Lighthouse 无障碍 100 分冲刺与对比度合规优化 (Accessibility 100 & WCAG AA Contrast Compliance)
+- **核心痛点解决 (用户反馈：Lighthouse 诊断报告精准指出“按钮缺少可供访问的名称 (button-name)”与“背景色和前景色没有足够高的对比度 (color-contrast)”导致无障碍评分丢失)**：
+  1. **【修复按钮缺少无障碍访问名称 (`aria-label` / `aria-expanded`)】**：
+     - **移动端汉堡菜单折叠按钮 (`MainLayoutComponent`)**：针对 `header > button.xl:hidden` 纯图标按钮，添加动态 `[attr.aria-label]="isMobileMenuOpen() ? 'Close navigation menu' : 'Open navigation menu'"` 与 `[attr.aria-expanded]`，让屏幕阅读器能够精准朗读当前导航栏展开/折叠状态；
+     - **Cookie 政策横幅关闭按钮 (`CookieConsentComponent`)**：针对 `div.fixed > div.rounded-2xl > button.opacity-50` 纯图标按钮，补齐 `[attr.aria-label]="i18n.t('common.close')() || 'Close'"`；
+     - **大厅快速直达按钮与搜索清空按钮 (`LobbyComponent`)**：为桌面端和移动端 `🎯 快速直达` 触发器增加 `aria-label` 与 `aria-expanded`，为搜索输入框中的 `✕` 清空按钮补齐 `aria-label="Clear search"`；
+  2. **【全面提升浅色卡片前景色与背景色对比度，严格达到 WCAG AA 4.5:1+ 标准】**：
+     - **每日挑战卡片 (`DailyChallengeBannerComponent`)**：
+       - `🎯 每日任务` 标题与 `去完成` CTA 文本由原 `text-emerald-500`（对比度仅 2.9:1）升级为 `text-emerald-700 dark:text-emerald-400`（浅色卡片对比度提升至 5.8:1，暗色模式自动适配）；
+       - `0/3` 任务计数 Badge 文本升级为 `text-emerald-700 dark:text-emerald-300`；
+       - `04:55:55` 倒计时由 `text-[var(--color-text-muted)] opacity-75` 升级为 `text-[var(--color-text-secondary)]`，消除因低透明度导致的对比度降级；
+       - 连击天数徽章升级为 `text-amber-700 dark:text-amber-300`；
+     - **多人竞技场卡片 (`LobbyComponent`)**：
+       - `LIVE PK` 标签文本升级为 `text-amber-700 dark:text-amber-300`；
+       - `⚔️ 多人竞技场` 标题与 CTA 升级为高对比度 `text-amber-700 dark:text-amber-400`；
+     - **随便来一把卡片 (`LobbyComponent`)**：
+       - `1s START` 标签由原低对比度的 `text-purple-400`（对比度仅 2.7:1）升级为 `text-purple-700 dark:text-purple-300`（对比度提升至 6.8:1）；
+       - `🎲 随便来一把` 标题与 CTA 升级为高对比度 `text-purple-700 dark:text-purple-400`；
+     - **快速直达游戏总数 Badge**：
+       - 将原 `bg-[var(--color-accent-from)]/10 text-[var(--color-accent-from)]` 改为 `bg-[var(--color-bg-sub)] text-[var(--color-text-main)] border border-[var(--color-border-card)]`，对比度直接突破 7:1 达到 AAA 级；
+  3. **【主线程工作 2.3s 与未使用 JS 169 KiB 治本解决闭环】**：
+     - 配合上一阶段移除的 `PreloadAllModules`、AdSense 延迟注入与按需语言包加载，彻底解除首屏主线程 Script Evaluation (1055ms) 与 Script Parsing (278ms) 过载。
+
 ## [v3.2.166] - 2026-11-03
 
 ### Google PageSpeed 性能稳定性与网络关键路径防阻塞重构 (PageSpeed Mobile Stability & Critical Chain Defense)

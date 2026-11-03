@@ -176,7 +176,9 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
 
             <!-- Mobile Menu Toggle (xl-) -->
             <button (click)="isMobileMenuOpen.set(!isMobileMenuOpen())"
-                    class="xl:hidden p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
+                    [attr.aria-label]="isMobileMenuOpen() ? (i18n.t('nav.close_menu')() || 'Close navigation menu') : (i18n.t('nav.open_menu')() || 'Open navigation menu')"
+                    [attr.aria-expanded]="isMobileMenuOpen()"
+                    class="xl:hidden p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 @if (isMobileMenuOpen()) {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
