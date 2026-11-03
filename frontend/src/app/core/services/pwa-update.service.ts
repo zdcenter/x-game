@@ -25,6 +25,8 @@ export class PwaUpdateService {
   private registration: ServiceWorkerRegistration | null = null;
   private checkTimer: any = null;
   private lastCheckTime = 0;
+  private isChecking = false;
+  private readonly startTime = Date.now();
 
   constructor() {
     if (this.isBrowser) {
@@ -36,22 +38,22 @@ export class PwaUpdateService {
     // 1. 注册 Service Worker 并绑定生命周期监听
     this.initServiceWorker();
 
-    // 2. 页面就绪 2 秒后执行初次版本探测
+    // 2. 页面就绪 10 秒后（避开首屏渲染与网络关键路径）执行初次版本探测
     setTimeout(() => {
       this.checkForUpdate();
-    }, 2000);
+    }, 10000);
 
-    // 3. 移动端/iPad PWA 前台恢复多重监听（从桌面切回、切任务切回）
+    // 3. 移动端/iPad PWA 前台恢复监听（从后台切回桌面后重新检查）
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         this.triggerForegroundResumeCheck();
       }
     });
-    window.addEventListener('pageshow', () => {
-      this.triggerForegroundResumeCheck();
-    });
-    window.addEventListener('focus', () => {
-      this.triggerForegroundResumeCheck();
+    window.addEventListener('pageshow', (event) => {
+      // 仅当从 bfcache (往返缓存) 恢复时触发，常规初次载入不触发
+      if ((event as PageTransitionEvent).persisted) {
+        this.triggerForegroundResumeCheck();
+      }
     });
 
     // 4. 网络上线事件（如断网重连、Wi-Fi 重新唤醒）
@@ -63,27 +65,25 @@ export class PwaUpdateService {
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(() => {
-        // 10 秒防抖，避免频繁切页面产生无效请求
-        if (Date.now() - this.lastCheckTime > 10000) {
+        // 20 秒防抖，避免频繁切页面产生无效请求
+        if (Date.now() - this.lastCheckTime > 20000) {
           this.checkForUpdate();
         }
       });
 
-    // 6. 周期性心跳探测（前台可见状态下每 90 秒探测一次）
+    // 6. 周期性心跳探测（前台可见状态下每 120 秒探测一次）
     this.checkTimer = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         this.checkForUpdate();
       }
-    }, 90 * 1000);
+    }, 120 * 1000);
   }
 
   /**
-   * 切回前台阶梯检查：
-   * 移动端从后台恢复时，Wi-Fi/蜂窝网络通常需要 500~1500ms 重新完成握手。
-   * 立即检查 1 次，并在 1.5 秒网络稳定后重试 1 次，确保 100% 成功拿到最新版本。
+   * 切回前台检查：
+   * 增加 1.5 秒延迟，等待移动端 Wi-Fi/蜂窝网络握手就绪后平稳探测一次
    */
   private triggerForegroundResumeCheck(): void {
-    this.checkForUpdate();
     setTimeout(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         this.checkForUpdate();
@@ -195,27 +195,42 @@ export class PwaUpdateService {
    */
   async checkForUpdate(): Promise<void> {
     if (!this.isBrowser) return;
+
+    // 启动前 8 秒内不发起版本探测，避免在首屏关键渲染期与核心 JS/CSS 资源争夺带宽
+    if (Date.now() - this.startTime < 8000) return;
+
+    // 并发锁：若当前探测尚未完成，禁止并发重复请求
+    if (this.isChecking) return;
+
+    // 频控节流：至少间隔 15 秒才允许再次检测
+    if (Date.now() - this.lastCheckTime < 15000) return;
+
+    this.isChecking = true;
     this.lastCheckTime = Date.now();
 
-    // A. 通知 Service Worker 检测 sw.js 字节是否有变动
-    if (this.registration) {
-      try {
-        await this.registration.update();
-      } catch (e) {
-        console.debug('[PWA] SW registration update check failed:', e);
+    try {
+      // A. 通知 Service Worker 检测 sw.js 字节是否有变动
+      if (this.registration) {
+        try {
+          await this.registration.update();
+        } catch (e) {
+          console.debug('[PWA] SW registration update check failed:', e);
+        }
       }
-    }
 
-    // B. 直连探测 /version.json 最新构建元数据
-    const remoteVersion = await this.fetchRemoteVersion();
-    if (remoteVersion && remoteVersion !== environment.version) {
-      const dismissedVer = sessionStorage.getItem('pwa_dismissed_version');
-      if (dismissedVer !== remoteVersion) {
-        console.log(`[PWA] Remote version ${remoteVersion} detected (current: ${environment.version})`);
-        this.hasUpdate.set(true);
+      // B. 直连探测 /version.json 最新构建元数据
+      const remoteVersion = await this.fetchRemoteVersion();
+      if (remoteVersion && remoteVersion !== environment.version) {
+        const dismissedVer = sessionStorage.getItem('pwa_dismissed_version');
+        if (dismissedVer !== remoteVersion) {
+          console.log(`[PWA] Remote version ${remoteVersion} detected (current: ${environment.version})`);
+          this.hasUpdate.set(true);
+        }
+      } else {
+        this.hasUpdate.set(false);
       }
-    } else {
-      this.hasUpdate.set(false);
+    } finally {
+      this.isChecking = false;
     }
   }
 

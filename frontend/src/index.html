@@ -32,22 +32,40 @@
   <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
   <link rel="dns-prefetch" href="https://www.googletagmanager.com">
 
-  <!-- Google Analytics -->
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S0JB094KY4"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-S0JB094KY4');
-</script>
-  <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8428944074138941" 
-     crossorigin="anonymous"></script>
+  <!-- Google Analytics & AdSense (Initialized immediately, script deferred to idle to protect FCP/LCP & prevent reflow) -->
   <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-S0JB094KY4');
+
     window.adsbygoogle = window.adsbygoogle || [];
-    var adbreak = adConfig = function(o) { adsbygoogle.push(o); }
+    var adbreak = adConfig = function(o) { adsbygoogle.push(o); };
+
+    function __loadThirdPartyScripts() {
+      // 1. Google Analytics
+      var ga = document.createElement('script');
+      ga.async = true;
+      ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-S0JB094KY4';
+      document.head.appendChild(ga);
+
+      // 2. Google AdSense
+      var ads = document.createElement('script');
+      ads.async = true;
+      ads.crossOrigin = 'anonymous';
+      ads.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8428944074138941';
+      document.head.appendChild(ads);
+    }
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(function() {
+        setTimeout(__loadThirdPartyScripts, 1000);
+      }, { timeout: 3500 });
+    } else {
+      window.addEventListener('load', function() {
+        setTimeout(__loadThirdPartyScripts, 1000);
+      });
+    }
   </script>
 
   <!-- PWA Early Capture & Native Anti-White-Screen Shield -->

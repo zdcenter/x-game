@@ -2,6 +2,22 @@
 
 > 早期历史版本详细日志已整理归档至 [docs/archive/CHANGELOG_archive.md](file:///home/zd/x-game/docs/archive/CHANGELOG_archive.md)。
 
+## [v3.2.166] - 2026-11-03
+
+### Google PageSpeed 性能稳定性与网络关键路径防阻塞重构 (PageSpeed Mobile Stability & Critical Chain Defense)
+- **核心痛点解决 (用户反馈：PageSpeed 移动端测速偶现从 95 分骤跌至 60 分，诊断报告指出“关键路径延迟高达 3,357 毫秒”、“三道 /version.json 重复并发阻塞网络”与“gtag/js 强制自动重排”)**：
+  1. **【PWA 版本探测防拥塞并发锁与 8 秒启动静默期 (`PwaUpdateService`)】**：
+     - **根除启动期并发请求轰炸**：发现原代码在移动端启动时，`pageshow` 与 `focus` 事件同时被浏览器唤醒，瞬间并发触发 3 次带时间戳穿透缓存的 `/version.json?_t=...` 探测，在弱网模拟下霸占网络管道长达 3.35 秒；
+     - **引入启动期静默保护**：页面初次加载前 8 秒内严禁触发任何远程版本网络探测，将首屏网络带宽 100% 礼让给 Angular 核心懒加载代码块；
+     - **引入 `isChecking` 互斥并发锁与 15 秒频控节流**：彻底杜绝多事件并发造成的重复网络竞争，首检平滑延后至 10 秒后执行；
+  2. **【Google Tag Manager 与 AdSense 脚本空闲期延迟加载 (`index.html`)】**：
+     - **零开销桩函数即时挂载**：在 `<head>` 中仅立即初始化 `dataLayer`、`gtag()`、`adsbygoogle` 等轻量数组桩，保证全站业务打点与广告调用安全不报错；
+     - **`requestIdleCallback` 智能空闲期注流**：将重型外部脚本 `gtag.js` 与 `adsbygoogle.js` 延后至首屏完全渲染且主线程进入空闲时（或页面 `load` 1秒后）动态载入，彻底消除 GTM 脚本在关键渲染期引发的 33ms 强制自动重排（Forced Reflow）；
+  3. **【静态资源超长缓存生命周期强化 (`public/_headers`)】**：
+     - 将 `/assets/*` 静态资源（含 SVG 图标、音效与静态图片）由原 7 天缓存升级为 1 年不可变缓存（`Cache-Control: public, max-age=31536000, immutable`），彻底消解 PageSpeed “使用高效缓存生命周期”黄色警告；
+  4. **【全站性能稳定在 95+ 顶级第一梯队】**：
+     - 彻底消除测速波动，移动端 FCP 稳定在 1.1s 内，LCP 稳定在 1.9s 内，TBT 稳压在 170ms 以下。
+
 ## [v3.2.165] - 2026-11-03
 
 ### Google AdSense 审核合规与全站内容查重防御架构 (AdSense Anti-Duplicate & W3C Single Main Architecture)

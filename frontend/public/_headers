@@ -38,9 +38,9 @@
 /chunk-*.css
   Cache-Control: public, max-age=31536000, immutable
 
-# Static assets — cache 1 week
+# Static assets — cache 1 year immutable
 /assets/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=31536000, immutable
 
 # Global Security & Privacy Headers
 /*
