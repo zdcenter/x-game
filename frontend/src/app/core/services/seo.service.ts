@@ -151,16 +151,34 @@ export class SeoService {
       if (gameMatch && gameId) {
         this.setJsonLd({
           '@context': 'https://schema.org',
-          '@type': 'WebApplication',
+          '@type': ['WebApplication', 'VideoGame'],
           'name': pageTitle,
           'description': desc,
           'url': canonicalUrl,
           'applicationCategory': 'GameApplication',
           'operatingSystem': 'Web Browser',
+          'gamePlatform': ['Web Browser', 'Mobile Browser', 'Tablet', 'Desktop'],
+          'genre': ['Logic Puzzle', 'Brain Training', 'Educational Game', 'Competitive PK'],
+          'playMode': ['SinglePlayer', 'MultiPlayer'],
           'offers': {
             '@type': 'Offer',
             'price': '0',
-            'priceCurrency': 'USD'
+            'priceCurrency': 'USD',
+            'availability': 'https://schema.org/InStock'
+          },
+          'author': {
+            '@type': 'Organization',
+            'name': 'Puzzle PK Logic Research Team',
+            'url': origin
+          },
+          'publisher': {
+            '@type': 'Organization',
+            'name': lang === 'zh' ? '益智游戏PK网' : 'Puzzle PK',
+            'url': origin,
+            'logo': {
+              '@type': 'ImageObject',
+              'url': `${origin}/assets/icons/icon-192x192.png`
+            }
           },
           'image': fullImageUrl,
           'inLanguage': LANG_LOCALES[lang]

@@ -20,8 +20,18 @@
   touch-action: manipulation;
 }
 
-.ms-cell-btn > span {
+.ms-cell-btn > span:not(.ms-owner-badge) {
   font-size: calc(var(--ms-cell-size, 32px) * 0.58);
+}
+
+.ms-owner-badge {
+  font-size: calc(var(--ms-cell-size, 32px) * 0.22) !important;
+  line-height: 1 !important;
+  padding: 1px 2px;
+  background-color: rgba(0, 0, 0, 0.75);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.02em;
 }
 
 /* === 未翻开格子：微拟物柔和倒角浮雕方块 (Tactile Soft-Beveled Crystal Tile) === */

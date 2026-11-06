@@ -59,36 +59,72 @@
         </div>
       </div>
 
-      <!-- ── Host Quick Difficulty Switcher (Segmented Radio Group) ── -->
-      @if (availableDifficulties().length > 1) {
-        <div class="shrink-0 px-3 sm:px-6 lg:px-8 py-2 bg-[var(--color-bg-main)]/70 border-b border-[var(--color-border-card)] flex flex-wrap items-center justify-between gap-2.5 animate-fade-in">
-          <div class="flex items-center gap-1.5 font-bold text-xs text-[var(--color-text-secondary)]">
-            <span class="text-sm">🎯</span>
-            <span>{{ i18n.t('game.difficulty')() || '游戏难度' }}:</span>
-          </div>
-
-          <!-- If Host: Interactive Segmented Radio Pills -->
+      <!-- ── Host Quick Settings: Game Mode & Difficulty Control Bar ── -->
+      @if (availableModes().length > 1 || availableDifficulties().length > 1) {
+        <div class="shrink-0 px-3 sm:px-6 lg:px-8 py-2 bg-[var(--color-bg-main)]/80 backdrop-blur-sm border-b border-[var(--color-border-card)] animate-fade-in">
           @if (currentUserId === hostId) {
-            <div class="flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs flex-wrap">
-              @for (diff of availableDifficulties(); track diff.id) {
-                <button (click)="changeDifficulty(diff.id)"
-                        type="button"
-                        class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
-                        [ngClass]="diff.id === difficulty 
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25 ring-1 ring-amber-400/40 font-black' 
-                          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]'">
-                  @if (diff.id === difficulty) {
-                    <span class="text-[9px]">●</span>
-                  }
-                  <span>{{ getDifficultyLabel(diff.id) }}</span>
-                </button>
+            <!-- Host View: Responsive Dual Controls (Side-by-side on sm+, Stacked dual-deck on mobile) -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+              <!-- Mode Selector (if game offers multiple PK modes) -->
+              @if (availableModes().length > 1) {
+                <div class="flex items-center justify-between sm:justify-start gap-2 min-w-0">
+                  <div class="flex items-center gap-1 font-bold text-xs text-[var(--color-text-secondary)] shrink-0">
+                    <span class="text-xs">⚔️</span>
+                    <span>{{ i18n.t('game.mode')() || '模式' }}:</span>
+                  </div>
+                  <div class="flex items-center gap-1 p-0.5 sm:p-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+                    @for (m of availableModes(); track m.id) {
+                      <button (click)="changeMode(m.id)"
+                              type="button"
+                              class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
+                              [ngClass]="m.id === mode
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40 font-black'
+                                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]'">
+                        <span>{{ getModeIcon(m.id) }}</span>
+                        <span>{{ getModeName(m.id) }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Divider (visible on sm+ when both mode and difficulty exist) -->
+              @if (availableModes().length > 1 && availableDifficulties().length > 1) {
+                <div class="hidden sm:block w-px h-5 bg-[var(--color-border-card)] shrink-0"></div>
+              }
+
+              <!-- Difficulty Selector (if game offers multiple difficulties) -->
+              @if (availableDifficulties().length > 1) {
+                <div class="flex items-center justify-between sm:justify-start gap-2 min-w-0 sm:ml-auto">
+                  <div class="flex items-center gap-1 font-bold text-xs text-[var(--color-text-secondary)] shrink-0">
+                    <span class="text-xs">🎯</span>
+                    <span>{{ i18n.t('game.difficulty')() || '难度' }}:</span>
+                  </div>
+                  <div class="flex items-center gap-1 p-0.5 sm:p-1 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs flex-wrap">
+                    @for (diff of availableDifficulties(); track diff.id) {
+                      <button (click)="changeDifficulty(diff.id)"
+                              type="button"
+                              class="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 whitespace-nowrap"
+                              [ngClass]="diff.id === difficulty 
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25 ring-1 ring-amber-400/40 font-black' 
+                                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]'">
+                        @if (diff.id === difficulty) {
+                          <span class="text-[9px]">●</span>
+                        }
+                        <span>{{ getDifficultyLabel(diff.id) }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
               }
             </div>
           } @else {
-            <!-- If Guest: Informative Read-only Badge -->
-            <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-amber-400/30 text-amber-500 font-bold text-xs shadow-xs">
-              <span>🔒 {{ getDifficultyLabel(difficulty) }}</span>
-              <span class="text-[10px] text-[var(--color-text-muted)] font-normal">({{ i18n.t('game.host_controlled')() || '房主设定' }})</span>
+            <!-- Guest View: Informative Read-only Badge showing active Mode & Difficulty -->
+            <div class="flex items-center justify-between sm:justify-start gap-2 flex-wrap">
+              <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-[var(--color-bg-card)] border border-amber-400/30 text-amber-500 font-bold text-xs shadow-xs">
+                <span>🔒 {{ getModeIcon(mode) }} {{ getModeName(mode) }} · {{ getDifficultyLabel(difficulty) }}</span>
+                <span class="text-[10px] text-[var(--color-text-muted)] font-normal">({{ i18n.t('game.host_controlled')() || '房主设定' }})</span>
+              </div>
             </div>
           }
         </div>

@@ -18,8 +18,8 @@
   } @else if (cell.state === CellState.Flagged) {
     <span class="drop-shadow-md z-10 pointer-events-none select-none leading-none ms-flag-icon">🚩</span>
     @if (cell.owner) {
-       <div class="absolute inset-0 bg-green-500/20 animate-pulse pointer-events-none rounded-[3px]"></div>
-       <span class="absolute -bottom-0.5 right-0.5 text-[9px] font-mono leading-none text-green-300 z-20 pointer-events-none" style="text-shadow: 0 1px 2px black;">
+       <div class="absolute inset-0 bg-green-500/15 animate-pulse pointer-events-none rounded-[3px]"></div>
+       <span class="ms-owner-badge absolute bottom-0.5 right-0.5 font-mono text-green-300 font-bold z-20 pointer-events-none">
          {{ (cell.owner | slice:0:3) }}
        </span>
     }

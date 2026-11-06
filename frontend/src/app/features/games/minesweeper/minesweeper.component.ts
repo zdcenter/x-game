@@ -545,7 +545,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
 
   getSubtitle(): string {
-    return this.currentRoomMode() !== GameMode.Single ? this.i18n.t('game.same_pk_speed_label')() : this.i18n.t('game.single_label')();
+    if (this.currentRoomMode() === GameMode.Steal) {
+      return this.i18n.t('game.same_pk_steal_label')();
+    }
+    if (this.currentRoomMode() === GameMode.Speed) {
+      return this.i18n.t('game.same_pk_speed_label')();
+    }
+    return this.i18n.t('game.single_label')();
   }
 
 

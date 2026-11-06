@@ -7,17 +7,19 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
   imports: [CommonModule],
   template: `
     @if (isValidSlot && !isUnfilled()) {
-      <div class="adsense-container w-full flex flex-col items-center justify-center my-4 sm:my-6 py-1"
+      <div class="adsense-container w-full flex flex-col items-center justify-center my-3 sm:my-5 py-1 transition-all duration-300"
+           [style.min-height]="isUnfilled() ? '0px' : resolvedMinHeight"
            [class.hidden]="isUnfilled()">
         @if (showLabel) {
-          <span class="text-[10px] sm:text-xs tracking-widest uppercase opacity-50 font-mono select-none mb-1.5 text-[var(--color-text-muted)]">
+          <span class="text-[10px] sm:text-xs tracking-widest uppercase opacity-50 font-mono select-none mb-1 text-[var(--color-text-muted)]">
             ADVERTISEMENT
           </span>
         }
-        <!-- Google AdSense Unit -->
+        <!-- Google AdSense Unit (Pre-allocated min-height eliminates CLS) -->
         <ins #insTag
              class="adsbygoogle w-full"
              style="display:block"
+             [style.min-height]="isUnfilled() ? '0px' : resolvedMinHeight"
              [attr.data-ad-client]="parsedClient"
              [attr.data-ad-slot]="parsedSlot"
              [attr.data-ad-format]="adFormat"
@@ -33,9 +35,11 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
     }
     :host(:has(ins[data-ad-status="unfilled"])) {
       display: none !important;
+      min-height: 0 !important;
     }
     .adsense-container:has(ins[data-ad-status="unfilled"]) {
       display: none !important;
+      min-height: 0 !important;
     }
   `]
 })
@@ -46,6 +50,14 @@ export class AdsenseComponent implements AfterViewInit, OnDestroy {
   @Input() adFormat: string = 'auto';
   @Input() fullWidthResponsive: boolean = true;
   @Input() showLabel: boolean = true;
+  @Input() minHeight?: string;
+
+  get resolvedMinHeight(): string {
+    if (this.minHeight) return this.minHeight;
+    if (this.adFormat === 'rectangle') return '250px';
+    if (this.adFormat === 'horizontal') return '90px';
+    return '100px';
+  }
 
   readonly isUnfilled = signal<boolean>(false);
   readonly isFilled = signal<boolean>(false);

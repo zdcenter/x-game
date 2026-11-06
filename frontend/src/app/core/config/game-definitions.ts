@@ -57,7 +57,8 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
     loadComponent: () => import('../../features/games/minesweeper/minesweeper.component').then(m => m.MinesweeperComponent),
     modes: [
       { id: GameMode.Single, labelKey: 'game.single_label', descKey: 'game.single_desc', icon: '👤', desc: 'Single Player' },
-      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' }
+      { id: GameMode.Speed, labelKey: 'game.same_pk_speed_label', descKey: 'game.same_pk_speed_desc', icon: '🏎️', desc: 'Separate boards. First to clear wins!' },
+      { id: GameMode.Steal, labelKey: 'game.same_pk_steal_label', descKey: 'game.same_pk_steal_desc', icon: '💣', desc: 'Shared board. Race to flag mines!' }
     ],
     difficulties: [
       { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_mine_9x9', desc: '9x9 (10)' },

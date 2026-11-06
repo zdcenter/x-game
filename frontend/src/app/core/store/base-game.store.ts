@@ -42,7 +42,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly audioService = inject(AudioService);
 
   constructor() {
-    // Sync target & difficulty from WS game state so they are always up-to-date
+    // Sync target, difficulty & mode from WS game state so they are always up-to-date
     // for both room creators and joiners/guests.
     effect(() => {
       const gs = this.ws.gameState() as any;
@@ -53,6 +53,11 @@ export abstract class BaseGameStore implements GameStoreInterface {
       const newDiff = gs?.difficulty || wsDiff;
       if (newDiff) {
         untracked(() => this.currentDifficulty.set(newDiff));
+      }
+      const wsMode = this.ws.currentMode();
+      const newMode = gs?.mode || wsMode;
+      if (newMode && newMode !== GameMode.Single && newMode !== untracked(() => this.currentRoomMode())) {
+        untracked(() => this.currentRoomMode.set(newMode));
       }
     });
 

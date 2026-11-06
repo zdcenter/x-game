@@ -42,6 +42,15 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
           this.difficulty = newDiff;
         });
       }
+
+      const gsMode = this.ws.gameState()?.mode;
+      const wsMode = this.ws.currentMode();
+      const newMode = gsMode || wsMode;
+      if (newMode && newMode !== this.mode) {
+        untracked(() => {
+          this.mode = newMode;
+        });
+      }
     });
   }
 
@@ -72,6 +81,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   @Output() ready = new EventEmitter<void>();
   @Output() cancelReady = new EventEmitter<void>();
   @Output() difficultyChange = new EventEmitter<string>();
+  @Output() modeChange = new EventEmitter<string>();
 
   shareService = inject(ShareService);
 
@@ -81,6 +91,29 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     const cfg = this.gameRegistry.getConfig(this.gameId);
     return cfg?.difficulties || [];
   });
+
+  availableModes = computed(() => {
+    const cfg = this.gameRegistry.getConfig(this.gameId);
+    return (cfg?.modes || []).filter(m => m.id !== GameMode.Single);
+  });
+
+  changeMode(newMode: string) {
+    if (this.currentUserId !== this.hostId || this.mode === newMode) return;
+    this.audioService.playClick();
+    this.mode = newMode;
+    this.modeChange.emit(newMode);
+    this.ws.send({
+      action: C2SAction.ChangeGame,
+      roomId: this.roomId,
+      game: this.gameId,
+      mode: newMode,
+      difficulty: this.difficulty,
+      target: this.target(),
+      bountyCoins: 0
+    });
+    const label = this.getModeName(newMode);
+    this.toast.show((this.i18n.t('game.mode')() || '游戏模式') + `: ${label} ✓`, 'success');
+  }
 
   changeDifficulty(newDiff: string) {
     if (this.currentUserId !== this.hostId || this.difficulty === newDiff) return;
@@ -98,6 +131,15 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     });
     const label = this.getDifficultyLabel(newDiff);
     this.toast.show((this.i18n.t('game.difficulty')() || '难度') + `: ${label} ✓`, 'success');
+  }
+
+  getModeIcon(modeId: string): string {
+    const cfg = this.gameRegistry.getConfig(this.gameId);
+    const m = cfg?.modes?.find(item => item.id === modeId);
+    if (m?.icon) return m.icon;
+    if (modeId.includes(GameMode.Steal)) return '💣';
+    if (modeId.includes(GameMode.Speed)) return '🏎️';
+    return '⚔️';
   }
 
   getDifficultyLabel(diffId: string): string {

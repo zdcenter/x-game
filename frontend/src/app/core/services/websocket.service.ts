@@ -330,10 +330,14 @@ export class WebSocketService {
           this.toastService.show(this.i18n.t('game.game_switched_toast', { game: gameName })() || `房间已切换至游戏: ${gameName}`, 'info');
           this.router.navigate([targetUrl]);
         } else {
+          const modeLabel = this.gameRegistry.getModeLabel(msg.game, msg.mode);
+          const modeName = modeLabel ? (this.i18n.t(modeLabel)() || msg.mode) : '';
           const diffLabel = this.gameRegistry.getDifficultyLabel(msg.game, msg.difficulty);
           const diffName = diffLabel ? (this.i18n.t(diffLabel)() || msg.difficulty) : msg.difficulty;
-          const diffText = this.i18n.t('game.difficulty')() || '游戏难度';
-          this.toastService.show(`${diffText}: ${diffName} ✓`, 'info');
+          const displayParts: string[] = [];
+          if (modeName) displayParts.push(modeName);
+          if (diffName) displayParts.push(diffName);
+          this.toastService.show(`${displayParts.join(' · ')} ✓`, 'info');
         }
       } else if (msg.type === S2CEvent.EmojiBroadcast) {
         this.emojiReceivedEvent.set(msg.payload);

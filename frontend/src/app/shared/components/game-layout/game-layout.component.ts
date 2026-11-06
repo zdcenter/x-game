@@ -396,6 +396,7 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
               (cancelReady)="onWaitingRoomCancelReady()"
               (kick)="onWaitingRoomKick($event)"
               (difficultyChange)="onWaitingRoomDifficultyChange($event)"
+              (modeChange)="onWaitingRoomModeChange($event)"
             ></app-game-waiting-room>
           </div>
         } @else {
@@ -1391,6 +1392,12 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     this.currentDifficultySignal.set(newDiff);
     if (this.gameId) {
       setSavedDifficulty(this.gameId, newDiff);
+    }
+  }
+
+  onWaitingRoomModeChange(newMode: string) {
+    if (this.store && (this.store as any).currentRoomMode?.set) {
+      (this.store as any).currentRoomMode.set(newMode);
     }
   }
 
