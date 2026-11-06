@@ -171,16 +171,19 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
 
   // Opponent name for HUD
   readonly opponentName = computed(() => {
-    if (this.currentRoomMode() === GameMode.Single) {
+    if (this.isSingleMode()) {
       return 'AI ' + this.i18n.t('game.bot')();
     }
     const players = this.mappedPlayers;
     const opponent = players.find(p => p.id !== this.myPlayerId());
-    return opponent?.nickname || opponent?.username || opponent?.id || this.i18n.t('game.opponent')();
+    return opponent?.nickname || opponent?.username || opponent?.id || this.i18n.t('game.opponent')() || '对手';
   });
   
   // Room state
   currentRoomMode = signal<string>(GameMode.Single);
+  readonly isSingleMode = computed(() => {
+    return this.store.currentRoomMode() === GameMode.Single && this.currentRoomMode() === GameMode.Single;
+  });
   currentDifficulty = signal<string>(GameDifficulty.Medium);
   roomId = signal<string>('');
   hostId = signal<string>('');
@@ -394,7 +397,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   getHint() {
-    if (!this.isMyTurn || this.gameStatus() !== GameStatus.Playing) return;
+    if (!this.isSingleMode() || !this.isMyTurn || this.gameStatus() !== GameStatus.Playing) return;
     const currentBoard = this.board();
     const myCol = this.myColor as GomokuColor;
     const ai = new GomokuAI(myCol, GameDifficulty.Medium);
@@ -415,12 +418,12 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   handleKeyDown(e: KeyboardEvent) {
     if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
     if (e.key === 'r' || e.key === 'R') {
-      if (this.currentRoomMode() === GameMode.Single) {
+      if (this.isSingleMode()) {
         e.preventDefault();
         this.onRestart();
       }
     } else if (e.key === 'h' || e.key === 'H') {
-      if (this.currentRoomMode() === GameMode.Single) {
+      if (this.isSingleMode()) {
         e.preventDefault();
         this.getHint();
       }
@@ -487,7 +490,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   getSubtitle(): string {
-    if (this.currentRoomMode() === GameMode.Single) {
+    if (this.isSingleMode()) {
       let diffStr = '';
       const diff = this.currentDifficulty();
       if (diff) {
@@ -509,7 +512,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     const winnerId = this.store.winner();
     if (winnerId === 'tie') return this.i18n.t('gomoku.winner.tie')();
     if (winnerId === this.myPlayerId()) return this.i18n.t('game.you_win')();
-    if (this.currentRoomMode() === GameMode.Single && winnerId === 'AI') return this.i18n.t('game.game_over')();
+    if (this.isSingleMode() && winnerId === 'AI') return this.i18n.t('game.game_over')();
     
     // PvP opponent wins
     const color = this.playerColors()[winnerId!] === 1 ? 'gomoku.winner.black' : 'gomoku.winner.white';

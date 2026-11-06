@@ -14,6 +14,7 @@ import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
@@ -34,7 +35,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   imports: [GameSpectatingOverlayComponent, 
     CommonModule,
     GameScoreCapsuleComponent,
-    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
   templateUrl: './classic2048.component.html',
   styleUrls: ['./classic2048.component.css'],
   providers: [Classic2048Store]

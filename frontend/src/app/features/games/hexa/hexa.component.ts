@@ -12,6 +12,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
@@ -21,7 +22,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   imports: [CommonModule,
     FormsModule,
     HexaBoardComponent,
-    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent],
+    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'

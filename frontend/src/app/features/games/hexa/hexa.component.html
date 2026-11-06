@@ -114,38 +114,23 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()"
     >
-      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
-        <!-- SCORE -->
-        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[54px] sm:min-w-[70px]">
-          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
-            {{ t('hexa.score')() || 'SCORE' }}
-          </span>
-          <span class="text-xs sm:text-base font-black text-amber-500 font-mono leading-tight">
-            {{ store.score() }}
-          </span>
-        </div>
-
+      <app-game-handheld-score
+        [score]="store.score()"
+        [bestScore]="store.bestScore()"
+        [worldBestScore]="worldRecord()?.bestScore"
+        [worldRecordHolder]="worldRecord()?.username"
+      >
         <!-- Restart Smiley / Dynamic Action -->
         <button
           type="button"
           (click)="!store.isSpectator() && store.startGame()"
           [disabled]="store.isSpectator()"
-          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm transition-all shrink-0"
+          class="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-sm transition-all shrink-0"
           [ngClass]="store.isSpectator() ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[var(--color-border-card)] active:scale-95 cursor-pointer'"
           [title]="store.isSpectator() ? (t('game.spectator_mode')() || '观战模式') : ((t('game.restart')() || 'Restart') + ' (R)')"
         >
           {{ store.gameOver() ? '😵' : (store.combo() > 1 ? '🔥' : '😊') }}
         </button>
-
-        <!-- BEST -->
-        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[54px] sm:min-w-[70px]">
-          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
-            {{ t('hexa.best')() || 'BEST' }}
-          </span>
-          <span class="text-xs sm:text-base font-black text-[var(--color-text-main)] font-mono leading-tight">
-            {{ store.score() > store.bestScore() ? store.score() : store.bestScore() }}
-          </span>
-        </div>
 
         <!-- Palette Theme Toggle Button (Handheld) -->
         <button
@@ -156,7 +141,7 @@
         >
           🎨
         </button>
-      </div>
+      </app-game-handheld-score>
     </app-game-handheld-header>
   }
 

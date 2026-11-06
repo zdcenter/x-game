@@ -23,6 +23,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
@@ -32,7 +33,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]

@@ -47,34 +47,21 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()">
 
-      <!-- Center: Score + Best Score + Restart -->
+      <!-- Center: Score + Best Score + World Record + Restart -->
       @if (store.currentRoomMode() === GameMode.Single) {
-        <div class="flex items-center gap-1.5 sm:gap-3 flex-1 justify-center min-w-0">
-          <!-- SCORE -->
-          <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-               [title]="'SCORE'">
-            <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">SCORE</span>
-            <span class="font-digital text-amber-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-              {{ store.localScore() }}
-            </span>
-          </div>
-
-          <!-- BEST -->
-          <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-               [title]="'BEST'">
-            <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">BEST</span>
-            <span class="font-digital text-emerald-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-              {{ math.max(store.localScore(), bestScore()) }}
-            </span>
-          </div>
-
+        <app-game-handheld-score
+          [score]="store.localScore()"
+          [bestScore]="math.max(store.localScore(), bestScore())"
+          [worldBestScore]="worldRecord()?.bestScore"
+          [worldRecordHolder]="worldRecord()?.username"
+        >
           <!-- 😃 经典笑脸重启 -->
           <button (click)="store.restartGame()"
                   class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
                   [title]="i18n.t('game.restart')() || '重新开始'">
             {{ store.status() === GameStatus.Finished ? '😵' : '😃' }}
           </button>
-        </div>
+        </app-game-handheld-score>
       } @else {
         <!-- PK 模式头部指示器 -->
         <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">

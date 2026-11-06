@@ -18,14 +18,14 @@
           <!-- 活跃房间 Badge -->
           <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-violet-500/10 dark:bg-violet-500/20 border border-violet-500/20 dark:border-violet-500/30 shadow-xs">
             <span class="w-1.5 h-1.5 rounded-full bg-violet-600 dark:bg-violet-400 animate-pulse"></span>
-            <span class="font-mono font-black text-violet-700 dark:text-violet-300">{{ totalActiveRooms() }}</span>
+            <span class="font-mono font-black text-violet-800 dark:text-violet-300 text-xs sm:text-sm">{{ totalActiveRooms() }}</span>
             <span class="text-[11px] font-bold text-[var(--color-text-secondary)] hidden sm:inline">{{ t('game.active_rooms_count') }}</span>
           </div>
 
           <!-- 在线玩家 Badge -->
           <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 shadow-xs">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:emerald-400 animate-pulse"></span>
-            <span class="font-mono font-black text-emerald-700 dark:text-emerald-300">{{ totalOnline() }}</span>
+            <span class="font-mono font-black text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm">{{ totalOnline() }}</span>
             <span class="text-[11px] font-bold text-[var(--color-text-secondary)] hidden sm:inline">{{ t('game.online') }}</span>
           </div>
         </div>
@@ -84,9 +84,12 @@
                   [class.hover:text-[var(--color-text-main)]]="rightTab() !== 'online'">
             <span>👥</span>
             <span>{{ t('game.online') }}</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono ml-0.5 text-emerald-300"
-                  [class.bg-white/20]="rightTab() === 'online'"
-                  [class.bg-black/10]="rightTab() !== 'online'">{{ totalOnline() }}</span>
+            <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono ml-0.5 font-bold transition-colors"
+                  [class.bg-white/25]="rightTab() === 'online'"
+                  [class.text-white]="rightTab() === 'online'"
+                  [class.bg-emerald-500/15]="rightTab() !== 'online'"
+                  [class.text-emerald-700]="rightTab() !== 'online'"
+                  [class.dark:text-emerald-300]="rightTab() !== 'online'">{{ totalOnline() }}</span>
           </button>
         </div>
 

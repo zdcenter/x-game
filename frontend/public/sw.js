@@ -1,9 +1,8 @@
 // X-Game Production PWA Service Worker
-const CACHE_NAME = 'xgame-offline-v2026.11.03.1722';
+const CACHE_NAME = 'xgame-offline-v2026.11.06.1104';
 
-// Core static assets to pre-cache on install
+// Core static assets to pre-cache on install (never pre-cache '/' as it can trigger 301/302 redirects)
 const PRECACHE_ASSETS = [
-  '/',
   '/manifest.webmanifest',
   '/favicon.ico',
   '/favicon.svg',
@@ -12,6 +11,29 @@ const PRECACHE_ASSETS = [
   '/assets/icons/icon-512x512.png',
   '/assets/docs/index.json'
 ];
+
+/**
+ * Strips Safari/WebKit redirected flags.
+ * WebKit throws "Response served by service worker has redirections" if a response
+ * passed to event.respondWith() has response.redirected === true.
+ */
+async function cleanResponse(res) {
+  if (!res) return res;
+  if (res.redirected) {
+    try {
+      const blob = await res.blob();
+      return new Response(blob, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: res.headers
+      });
+    } catch (err) {
+      console.warn('[SW] cleanResponse clone fallback:', err);
+      return res;
+    }
+  }
+  return res;
+}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -141,18 +163,18 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate') {
     event.respondWith(
       (async () => {
-        const networkFetch = fetch(req).then((res) => {
-          if (res && res.status === 200) {
+        const networkFetch = fetch(req).then(async (res) => {
+          if (res && res.status === 200 && !res.redirected) {
             const copy = res.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
           }
-          return res;
+          return cleanResponse(res);
         });
 
-        const cached =
+        const rawCached =
           (await caches.match(req)) ||
-          (await caches.match('/')) ||
           (await caches.match('/index.html'));
+        const cached = await cleanResponse(rawCached);
 
         // If we have a cached offline shell, race network with a 1500ms timeout
         // to prevent 30~60s white-screen hangs on weak/flaky networks
@@ -168,16 +190,17 @@ self.addEventListener('fetch', (event) => {
           try {
             const winner = await Promise.race([networkFetch, timeoutFallback]);
             clearTimeout(timeoutId);
-            return winner;
+            return cleanResponse(winner);
           } catch {
             clearTimeout(timeoutId);
             return cached;
           }
         }
 
-        // If no cached copy exists, wait for network or try root fallback
+        // If no cached copy exists, wait for network or try clean index fallback
         return networkFetch.catch(async () => {
-          return (await caches.match('/')) || (await caches.match('/index.html'));
+          const fallback = await caches.match('/index.html');
+          return cleanResponse(fallback);
         });
       })()
     );

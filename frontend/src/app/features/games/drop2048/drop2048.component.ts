@@ -22,6 +22,7 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
+import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
@@ -33,7 +34,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
     Drop2048BoardComponent,
-    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent],
+    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html',
   styleUrls: ['./drop2048.component.css']

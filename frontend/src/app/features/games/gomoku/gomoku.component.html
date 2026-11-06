@@ -50,7 +50,7 @@
           <div class="w-4 h-4 rounded-full border border-black/20"
                [ngClass]="currentTurnColor === 1 ? 'stone-black' : 'stone-white'"></div>
           <span class="text-xs font-bold text-[var(--color-text-main)]">
-            {{ currentTurnColor === myColor ? (i18n.t('gomoku.turn.yours')() || '你的回合') : (i18n.t('gomoku.thinking')() || '思考中...') }}
+            {{ currentTurnColor === myColor ? (i18n.t('gomoku.turn.yours')() || '你的回合') : (isSingleMode() ? (i18n.t('gomoku.thinking')() || '思考中...') : (i18n.t('gomoku.turn.opponent')() || '对方回合')) }}
           </span>
         </div>
 
@@ -62,7 +62,7 @@
         </div>
 
         <!-- 单机提示按钮 -->
-        @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing) {
+        @if (isSingleMode() && gameStatus() === GameStatus.Playing) {
           <button
             type="button"
             (click)="getHint()"
@@ -112,7 +112,7 @@
                   </div>
                   @if (currentTurnColor === 1 && gameStatus() === GameStatus.Playing) {
                     <span class="text-xs font-bold text-amber-500 animate-pulse leading-tight mt-0.5">
-                      {{ myColor === 1 ? i18n.t('gomoku.turn.yours')() : (currentRoomMode() === GameMode.Single ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
+                      {{ myColor === 1 ? i18n.t('gomoku.turn.yours')() : (isSingleMode() ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
                     </span>
                   }
                 </div>
@@ -128,7 +128,7 @@
                 </div>
 
                 <!-- Single Player Hint Button (H) -->
-                @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing) {
+                @if (isSingleMode() && gameStatus() === GameStatus.Playing) {
                   <button type="button" (click)="getHint()" [disabled]="!isMyTurn"
                           class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-black text-xs sm:text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
                           [title]="i18n.t('gomoku.hint')() + ' (H)'">
@@ -168,7 +168,7 @@
                   </div>
                   @if (currentTurnColor === 2 && gameStatus() === GameStatus.Playing) {
                     <span class="text-xs font-bold text-amber-500 animate-pulse leading-tight mt-0.5">
-                      {{ myColor === 2 ? i18n.t('gomoku.turn.yours')() : (currentRoomMode() === GameMode.Single ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
+                      {{ myColor === 2 ? i18n.t('gomoku.turn.yours')() : (isSingleMode() ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
                     </span>
                   }
                 </div>
@@ -266,8 +266,8 @@
                           }
                         </div>
                       } @else {
-                        <!-- AI Recommendation Hint Marker -->
-                        @if (hintMove() && hintMove()![0] === y && hintMove()![1] === x) {
+                        <!-- AI Recommendation Hint Marker (Single Mode Only) -->
+                        @if (isSingleMode() && hintMove() && hintMove()![0] === y && hintMove()![1] === x) {
                           <div class="w-[82%] h-[82%] rounded-full border-2 border-amber-400 bg-amber-400/30 animate-hint-pulse z-20 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.8)] pointer-events-none">
                             <span class="text-xs">💡</span>
                           </div>
@@ -287,8 +287,8 @@
               </div>
             </div>
 
-            <!-- Ergonomic Mobile Bottom Action Bar (Thumb Zone) -->
-            @if (currentRoomMode() === GameMode.Single && gameStatus() === GameStatus.Playing && !isReplaying()) {
+            <!-- Ergonomic Mobile Bottom Action Bar (Thumb Zone - Single Mode Only) -->
+            @if (isSingleMode() && gameStatus() === GameStatus.Playing && !isReplaying()) {
               <div class="w-full flex sm:hidden items-center justify-center gap-3 mt-3 px-2"
                    [style.max-width]="boardSizePx()">
                 <button type="button" (click)="getHint()" [disabled]="!isMyTurn"

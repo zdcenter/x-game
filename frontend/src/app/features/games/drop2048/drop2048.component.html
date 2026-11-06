@@ -49,31 +49,18 @@
 
         <!-- Center: Score + Best + Level + Restart -->
         @if (store.currentRoomMode() === GameMode.Single) {
-          <div class="flex items-center gap-1.5 sm:gap-3 flex-1 justify-center min-w-0">
-            <!-- SCORE -->
-            <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                 [title]="'SCORE'">
-              <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">SCORE</span>
-              <span class="font-digital text-amber-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                {{ store.score() }}
-              </span>
-            </div>
-
+          <app-game-handheld-score
+            [score]="store.score()"
+            [bestScore]="store.bestScore()"
+            [worldBestScore]="worldRecord()?.bestScore"
+            [worldRecordHolder]="worldRecord()?.username"
+          >
             <!-- LV -->
-            <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
+            <div class="flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[36px] sm:min-w-[48px] shrink-0"
                  [title]="'LEVEL'">
-              <span class="text-[10px] sm:text-xs font-black text-cyan-500 select-none">LV</span>
-              <span class="font-mono text-cyan-500 font-bold text-xs sm:text-base leading-none">
+              <span class="text-[8px] sm:text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider leading-none">LV</span>
+              <span class="font-mono text-cyan-500 font-black text-xs sm:text-base leading-tight mt-0.5 tabular-nums">
                 {{ store.level() }}
-              </span>
-            </div>
-
-            <!-- BEST -->
-            <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                 [title]="'BEST'">
-              <span class="text-[10px] sm:text-xs font-black text-[var(--color-text-muted)] select-none">BEST</span>
-              <span class="font-digital text-emerald-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                {{ store.bestScore() }}
               </span>
             </div>
 
@@ -83,7 +70,7 @@
                     [title]="i18n.t('game.restart')() || '重新开始'">
               {{ store.status() === GameStatus.Finished ? '😵' : '😃' }}
             </button>
-          </div>
+          </app-game-handheld-score>
         } @else {
           <!-- PK 模式头部指示器 -->
           <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
