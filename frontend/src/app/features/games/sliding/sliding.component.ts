@@ -328,18 +328,6 @@ export class SlidingComponent extends BaseGameComponent {
     }
   }
 
-  onResumeSession(session: any): void {
-    if (session?.data) {
-      this.store.restoreSavedSession(session.data);
-    }
-    this.pendingResumeSession.set(null);
-  }
-
-  onDiscardResume(): void {
-    this.clearResumeSession('sliding');
-    this.store.startGame();
-  }
-
   override ngOnDestroy() {
     this.store.leaveRoom();
     if (this.timerInterval) clearInterval(this.timerInterval);

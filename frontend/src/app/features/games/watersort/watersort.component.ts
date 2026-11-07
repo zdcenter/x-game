@@ -146,18 +146,6 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
     }
   }
 
-  onResumeSession(session: any): void {
-    if (session?.data) {
-      this._store.restoreSavedSession(session.data);
-    }
-    this.pendingResumeSession.set(null);
-  }
-
-  onDiscardResume(): void {
-    this.clearResumeSession('watersort');
-    this._store.startGame();
-  }
-
   override ngOnDestroy() {
     super.ngOnDestroy();
     this._store.leaveRoom();

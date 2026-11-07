@@ -226,15 +226,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     }
   }
 
-  handleResumeSokoban(session: any) {
-    if (!session?.data) return;
-    this.store.restoreSavedSession(session.data);
-    this.showLobby.set(false);
-    this.pendingResumeSession.set(null);
-  }
-
-  handleDiscardSokoban() {
-    this.clearResumeSession('sokoban');
+  protected override resetGameSession() {
     const savedDiff = getSavedDifficulty('sokoban', GameDifficulty.Easy);
     this.store.currentDifficulty.set(savedDiff);
     this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);

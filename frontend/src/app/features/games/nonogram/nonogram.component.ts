@@ -183,21 +183,6 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     }
   }
 
-  handleResumeNonogram(session: any) {
-    if (!session?.data) return;
-    this.store.restoreSavedSession(session.data);
-    this.pendingResumeSession.set(null);
-  }
-
-  handleDiscardNonogram() {
-    this.clearResumeSession('nonogram');
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('nonogram_saved_game');
-    }
-    const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
-    this.store.startNewSingleGame(initialDiff);
-  }
-
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.store.leaveRoom();

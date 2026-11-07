@@ -22,8 +22,8 @@
     { label: i18n.t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
   ]"
   [resumeSession]="pendingResumeSession()"
-  (resumeGame)="handleResumeSokoban($event)"
-  (discardResume)="handleDiscardSokoban()"
+  (resumeGame)="onResumeSession($event)"
+  (discardResume)="onDiscardResume()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"

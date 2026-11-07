@@ -256,18 +256,6 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
     }
   }
 
-  handleResumeHexa(session: any) {
-    if (!session?.data) return;
-    this.store.loadSinglePlayer();
-    this.pendingResumeSession.set(null);
-  }
-
-  handleDiscardHexa() {
-    this.clearResumeSession('hexa');
-    this.store.clearSinglePlayerSave();
-    this.store.restartGame();
-  }
-
   override handleJoinRoom(event: any) {
     if (this.currentRoomId() === event.roomId) return;
     if (event.password) this.wsService.setPendingPassword(event.password);

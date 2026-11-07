@@ -280,18 +280,6 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  handleResumeBlock(session: any) {
-    if (!session?.data) return;
-    this.store.loadSinglePlayerProgress();
-    this.pendingResumeSession.set(null);
-  }
-
-  handleDiscardBlock() {
-    this.clearResumeSession('block');
-    this.store.clearSinglePlayerSave();
-    this.store.startLocalGame();
-  }
-
 
   override handleCreateRoom(event: any) {
     super.handleCreateRoom(event);

@@ -461,19 +461,16 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  handleResumeMinesweeper(session: any) {
-    if (!session?.data) return;
-    this.store.restoreSavedGame(session.data);
-    this.currentDifficulty.set(session.data.difficulty || 'medium');
+  protected override restoreGameSession(data: any, session: any) {
+    this.store.restoreSavedGame(data);
+    this.currentDifficulty.set(data.difficulty || 'medium');
     this.elapsedSeconds.set(session.timeElapsed || 0);
     const m = Math.floor((session.timeElapsed || 0) / 60).toString().padStart(2, '0');
     const s = ((session.timeElapsed || 0) % 60).toString().padStart(2, '0');
     this.elapsedTime.set(`${m}:${s}`);
-    this.pendingResumeSession.set(null);
   }
 
-  handleDiscardMinesweeper() {
-    this.clearResumeSession('minesweeper');
+  protected override resetGameSession() {
     const savedDiff = getSavedDifficulty('minesweeper', 'easy');
     this.changeSingleDifficulty(savedDiff);
   }

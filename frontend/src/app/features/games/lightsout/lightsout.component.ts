@@ -257,18 +257,6 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     }
   }
 
-  onResumeSession(session: any): void {
-    if (session?.data) {
-      this.store.restoreSavedSession(session.data);
-    }
-    this.pendingResumeSession.set(null);
-  }
-
-  onDiscardResume(): void {
-    this.clearResumeSession('lightsout');
-    this.store.startGame();
-  }
-
   override handleCreateRoom(event: any) {
     super.handleCreateRoom(event);
     if (event.mode !== GameMode.Single) {

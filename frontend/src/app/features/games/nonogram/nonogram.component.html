@@ -20,8 +20,8 @@
     { label: t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
   ]"
   [resumeSession]="pendingResumeSession()"
-  (resumeGame)="handleResumeNonogram($event)"
-  (discardResume)="handleDiscardNonogram()"
+  (resumeGame)="onResumeSession($event)"
+  (discardResume)="onDiscardResume()"
   (rulesClosed)="showRules.set(false)"
   (rulesOpen)="showRules.set(true)"
   (titleClick)="handleTitleClick()"

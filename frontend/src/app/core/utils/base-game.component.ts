@@ -246,6 +246,13 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             replaceUrl: true
           });
         }, 200);
+      } else if (gameId) {
+        // Automatically check for unfinished single-player session
+        setTimeout(() => {
+          if (!this.crossGameJoin.pendingJoin()) {
+            this.checkAndPromptResumeSession(gameId);
+          }
+        }, 100);
       }
     }
   }
@@ -611,11 +618,24 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Helper to extract the current game ID from store or active route URL
+   */
+  get currentGameId(): string {
+    if (this.store?.gameId) return this.store.gameId;
+    const urlPath = this._baseRouter.url.split('?')[0];
+    const segments = urlPath.split('/');
+    const gamesIdx = segments.indexOf('games');
+    return gamesIdx >= 0 ? segments[gamesIdx + 1] : '';
+  }
+
+  /**
    * Checks whether there is an unfinished single player session for this game.
    * If yes, sets pendingResumeSession and returns true so subclasses can prompt the user.
    */
-  checkAndPromptResumeSession(gameId: string): boolean {
-    const session = this.resumeService.loadSession(gameId);
+  checkAndPromptResumeSession(gameId?: string): boolean {
+    const targetGameId = gameId || this.currentGameId;
+    if (!targetGameId) return false;
+    const session = this.resumeService.loadSession(targetGameId);
     if (session) {
       this.pendingResumeSession.set(session);
       return true;
@@ -624,8 +644,99 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  clearResumeSession(gameId: string): void {
-    this.resumeService.clearSession(gameId);
+  clearResumeSession(gameId?: string): void {
+    const targetGameId = gameId || this.currentGameId;
+    if (targetGameId) {
+      this.resumeService.clearSession(targetGameId);
+    }
     this.pendingResumeSession.set(null);
+  }
+
+  /**
+   * Subclass hook to handle game-specific restoration logic (e.g. board data, timers).
+   * Default implementation checks common store restore methods.
+   */
+  protected restoreGameSession(data: any, session: SavedGameSession): void {
+    if (typeof (this.store as any).restoreSavedSession === 'function') {
+      (this.store as any).restoreSavedSession(data);
+    } else if (typeof (this.store as any).loadSinglePlayerProgress === 'function') {
+      (this.store as any).loadSinglePlayerProgress();
+    } else if (typeof (this.store as any).loadSinglePlayer === 'function') {
+      (this.store as any).loadSinglePlayer();
+    } else if (typeof (this.store as any).restoreSavedGame === 'function') {
+      (this.store as any).restoreSavedGame(data);
+    }
+  }
+
+  /**
+   * Subclass hook to handle game-specific reset logic on discard.
+   * Default implementation checks common store restart/start methods.
+   */
+  protected resetGameSession(): void {
+    if (typeof (this.store as any).startNewSingleGame === 'function') {
+      const s = this.store as any;
+      const curDiff = typeof s.currentDifficulty === 'function' ? s.currentDifficulty() : 'easy';
+      s.startNewSingleGame(curDiff);
+    } else if (typeof (this.store as any).startLocalGame === 'function') {
+      (this.store as any).startLocalGame();
+    } else if (typeof (this.store as any).restartGame === 'function') {
+      (this.store as any).restartGame();
+    } else if (typeof (this.store as any).startGame === 'function') {
+      (this.store as any).startGame();
+    }
+  }
+
+  /**
+   * Unified session restoration handler.
+   * Can be directly bound in templates: (resumeGame)="onResumeSession($event)"
+   */
+  onResumeSession(session: any): void {
+    if (!session?.data) {
+      this.pendingResumeSession.set(null);
+      return;
+    }
+
+    this.restoreGameSession(session.data, session);
+
+    // If game has a lobby/play view switcher, ensure view is switched to play
+    if ('view' in this && typeof (this as any).view === 'object' && typeof (this as any).view.set === 'function') {
+      (this as any).view.set('play');
+    } else if ('showLobby' in this && typeof (this as any).showLobby === 'object' && typeof (this as any).showLobby.set === 'function') {
+      (this as any).showLobby.set(false);
+    }
+
+    this.pendingResumeSession.set(null);
+  }
+
+  /**
+   * Unified session discard and reset handler.
+   * Can be directly bound in templates: (discardResume)="onDiscardResume()"
+   */
+  onDiscardResume(): void {
+    const gameId = this.currentGameId;
+    if (gameId) {
+      this.clearResumeSession(gameId);
+      // Clean up legacy localStorage keys to prevent duplicate/desync state
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(`${gameId}_saved_game`);
+        localStorage.removeItem(`${gameId}_single_save`);
+      }
+    }
+
+    // Clear single player save in store if available
+    if (typeof (this.store as any).clearSinglePlayerSave === 'function') {
+      (this.store as any).clearSinglePlayerSave();
+    }
+
+    this.resetGameSession();
+  }
+
+  // Backwards-compatible aliases for templates
+  handleResumeGame(session: any): void {
+    this.onResumeSession(session);
+  }
+
+  handleDiscardResume(): void {
+    this.onDiscardResume();
   }
 }

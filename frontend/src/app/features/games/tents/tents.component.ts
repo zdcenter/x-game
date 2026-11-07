@@ -90,18 +90,6 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
-  onResumeSession(session: any): void {
-    if (session?.data) {
-      this.store.restoreSavedSession(session.data);
-    }
-    this.pendingResumeSession.set(null);
-  }
-
-  onDiscardResume(): void {
-    this.clearResumeSession('tents');
-    this.store.restartGame();
-  }
-
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this.store.leaveRoom();

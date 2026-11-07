@@ -192,18 +192,6 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
     }
   }
 
-  onResumeSession(session: any): void {
-    if (session?.data) {
-      this.view.set('play');
-      this.store.restoreSavedSession(session.data);
-    }
-    this.pendingResumeSession.set(null);
-  }
-
-  onDiscardResume(): void {
-    this.clearResumeSession('connect');
-  }
-
   getSinglePlayerStats() {
     return [
       { icon: '⏱️', value: this.gameTimer.formatTime(this.store.timeSpent()) }

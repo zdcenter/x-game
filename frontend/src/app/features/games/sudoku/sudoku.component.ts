@@ -162,20 +162,14 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
-  handleResumeSudoku(session: any) {
-    if (!session?.data) return;
+  protected override restoreGameSession(data: any, session: any) {
     this.startLevel({
-      id: session.data.id,
-      puzzle: session.data.puzzle,
-      solution: session.data.solution,
-      savedState: session.data.savedState,
-      timeSpent: session.data.timeSpent || session.timeElapsed || 0
+      id: data.id,
+      puzzle: data.puzzle,
+      solution: data.solution,
+      savedState: data.savedState,
+      timeSpent: data.timeSpent || session.timeElapsed || 0
     });
-    this.pendingResumeSession.set(null);
-  }
-
-  handleDiscardSudoku() {
-    this.clearResumeSession('sudoku');
   }
 
   getSinglePlayerStats() {

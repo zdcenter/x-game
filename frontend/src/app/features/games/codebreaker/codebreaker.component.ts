@@ -192,17 +192,6 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
     }
   }
 
-  onResumeSession(session: any): void {
-    if (session?.data) {
-      this.store.restoreSavedSession(session.data);
-    }
-    this.pendingResumeSession.set(null);
-  }
-
-  onDiscardResume(): void {
-    this.clearResumeSession('codebreaker');
-    this.store.startGame();
-  }
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.store.leaveRoom();
