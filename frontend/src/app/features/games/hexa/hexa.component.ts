@@ -264,6 +264,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   handleDiscardHexa() {
     this.clearResumeSession('hexa');
+    this.store.clearSinglePlayerSave();
     this.store.restartGame();
   }
 

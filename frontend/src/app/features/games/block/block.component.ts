@@ -288,6 +288,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
 
   handleDiscardBlock() {
     this.clearResumeSession('block');
+    this.store.clearSinglePlayerSave();
     this.store.startLocalGame();
   }
 

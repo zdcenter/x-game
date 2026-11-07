@@ -286,6 +286,7 @@ export class ConnectStore extends BaseGameStore {
             difficulty: this.currentDifficulty(),
             difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'connect'),
             progressPercent: progress,
+            moves: filled,
             timeElapsed: this.timeSpent(),
             data: {
               levelId: this.currentLevelId(),

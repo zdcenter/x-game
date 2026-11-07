@@ -401,16 +401,17 @@ export class HexaStore extends BaseGameStore {
 
   override saveSinglePlayerProgress(): void {
     super.saveSinglePlayerProgress();
-    if (this.currentRoomMode() !== GameMode.Single || this.gameOver() || this.engine.score <= 0) return;
+    if (this.currentRoomMode() !== GameMode.Single || this.gameOver()) return;
     const occupied = this.engine.cells.size > 0
       ? Array.from(this.engine.cells.values()).filter(c => c.filled).length
       : 0;
+    if (occupied <= 0 && this.engine.score <= 0) return;
     const progress = Math.min(99, Math.round((occupied / 61) * 100));
     this.resumeService.saveSession('hexa', {
       score: this.engine.score,
       progressPercent: progress,
       timeElapsed: 0,
-      moves: this.engine.piecesPlaced,
+      moves: this.engine.piecesPlaced || occupied,
       data: this.getSinglePlayerSaveData()
     });
   }

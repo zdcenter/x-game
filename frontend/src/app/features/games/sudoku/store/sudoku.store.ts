@@ -594,6 +594,7 @@ export class SudokuStore extends BaseGameStore {
           difficulty: this.currentDifficulty(),
           difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'sudoku'),
           progressPercent: progress,
+          moves: filled,
           timeElapsed: this.timeSpent(),
           data: {
             id: this.currentPuzzleId(),

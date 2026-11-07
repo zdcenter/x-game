@@ -494,6 +494,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       difficulty: data.difficulty,
       difficultyLabel: this.resumeService.getDifficultyLabel(data.difficulty, 'minesweeper'),
       progressPercent: progress,
+      moves: (data.revealedCnt || 0) + (data.flags?.length || 0),
       timeElapsed: this.elapsedSeconds(),
       data
     });

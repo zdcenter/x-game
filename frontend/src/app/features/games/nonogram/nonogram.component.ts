@@ -148,6 +148,32 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       );
       return;
     } else {
+      // Legacy migration: if older version saved in 'nonogram_saved_game', migrate to ResumeGameService
+      if (typeof localStorage !== 'undefined') {
+        const legacy = localStorage.getItem('nonogram_saved_game');
+        if (legacy) {
+          try {
+            const parsed = JSON.parse(legacy);
+            if (parsed?.state && parsed.state.status === GameStatus.Playing) {
+              const diff = parsed.difficulty || GameDifficulty.Easy;
+              this.resumeService.saveSession('nonogram', {
+                difficulty: diff,
+                difficultyLabel: this.resumeService.getDifficultyLabel(diff, 'nonogram'),
+                progressPercent: 10,
+                moves: 1,
+                timeElapsed: 0,
+                data: {
+                  state: parsed.state,
+                  difficulty: diff,
+                  timeSpent: 0
+                }
+              });
+            }
+          } catch {}
+          localStorage.removeItem('nonogram_saved_game');
+        }
+      }
+
       const hasResume = this.checkAndPromptResumeSession('nonogram');
       if (!hasResume) {
         const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
@@ -165,9 +191,11 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   handleDiscardNonogram() {
     this.clearResumeSession('nonogram');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('nonogram_saved_game');
+    }
     const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
-    this.store.currentDifficulty.set(initialDiff);
-    this.store.joinRoom('', GameMode.Single, initialDiff);
+    this.store.startNewSingleGame(initialDiff);
   }
 
   override ngOnDestroy() {

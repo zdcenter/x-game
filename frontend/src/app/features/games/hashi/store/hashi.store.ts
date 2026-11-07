@@ -182,6 +182,7 @@ export class HashiStore extends BaseGameStore {
         difficulty: this.currentDifficulty(),
         difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'hashi'),
         progressPercent: progress,
+        moves: placed,
         timeElapsed: this.timeSpent(),
         data: {
           puzzleId: this.currentPuzzleId(),

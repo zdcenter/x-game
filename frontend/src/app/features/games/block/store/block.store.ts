@@ -454,7 +454,7 @@ export class BlockStore extends BaseGameStore {
 
   override saveSinglePlayerProgress(): void {
     super.saveSinglePlayerProgress();
-    if (this.currentRoomMode() !== GameMode.Single || this.isDead() || this.localScore() <= 0) return;
+    if (this.currentRoomMode() !== GameMode.Single || this.isDead()) return;
     const board = this.localBoard();
     const size = this.boardSize();
     let occupied = 0;
@@ -463,12 +463,14 @@ export class BlockStore extends BaseGameStore {
         if (board[r] && board[r][c] !== 0) occupied++;
       }
     }
+    if (occupied <= 0 && this.localScore() <= 0) return;
     const totalCells = size * size;
     const progress = Math.min(99, Math.round((occupied / totalCells) * 100));
 
     this.resumeService.saveSession('block', {
       score: this.localScore(),
       progressPercent: progress,
+      moves: occupied,
       timeElapsed: 0,
       data: this.getSinglePlayerSaveData()
     });
