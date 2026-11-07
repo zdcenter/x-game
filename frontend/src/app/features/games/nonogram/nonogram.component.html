@@ -136,11 +136,9 @@
 
   <!-- Main Board (Seamless & Integrated, Clean Fit Container) -->
   <div #boardScrollContainer
-       class="flex-1 min-h-0 max-h-full w-full flex flex-col items-center p-1 sm:p-2 md:p-2.5"
-       [class.overflow-auto]="isBoardOverflowing() || zoomLevel() > 1.0"
-       [class.overflow-hidden]="!isBoardOverflowing() && zoomLevel() <= 1.0"
-       [class.custom-scrollbar]="isBoardOverflowing() || zoomLevel() > 1.0"
+       class="flex-1 min-h-0 max-h-full w-full flex flex-col items-center p-1 sm:p-2 md:p-2.5 overflow-auto custom-scrollbar"
        style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;"
+       [class.cursor-grab]="zoomLevel() > 1.0"
        [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
     <div class="min-w-fit flex flex-col items-center pt-0.5 sm:pt-1"
          [class.my-auto]="!isBoardOverflowing() && zoomLevel() <= 1.0">
@@ -159,7 +157,7 @@
                 <div class="col-hints"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let col of store.colHints(); let x = index" 
-                       class="col-hint-item flex flex-col justify-end items-center pb-1 text-[var(--color-text-main)] font-black select-none"
+                       class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none"
                        [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
                        [class.no-border-r]="x === store.width() - 1"
                        [class.col-focused]="hoverCol() === x"
@@ -174,15 +172,16 @@
                 <div class="row-hints"
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
-                       class="row-hint-item flex justify-end items-center pr-2 sm:pr-2.5 text-[var(--color-text-main)] font-black select-none"
+                       class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none"
                        [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
                        [class.no-border-b]="y === store.height() - 1"
                        [class.row-focused]="hoverRow() === y"
                        [class.row-completed]="store.completedRows()[y]">
                     <span *ngFor="let hint of row; let last = last" 
                           class="font-mono font-black leading-none" 
-                          [class.mr-1]="!last" 
-                          [class.sm:mr-1.5]="!last"
+                          [class.mr-0.5]="store.width() >= 20 && !last" 
+                          [class.mr-1]="store.width() < 20 && !last" 
+                          [class.sm:mr-1.5]="store.width() < 15 && !last"
                           [class.line-through]="store.completedRows()[y]"
                           [class.opacity-35]="store.completedRows()[y]">{{ hint }}</span>
                   </div>

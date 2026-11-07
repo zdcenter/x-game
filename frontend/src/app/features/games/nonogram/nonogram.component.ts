@@ -220,12 +220,28 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
 
     // Available width for the board container:
+    // Takes into account max-w-[1600px] desktop arena, 3-column cockpit wings, and pedestal paddings
     const isXl = vw >= 1280;
+    const is2Xl = vw >= 1536;
     const isZen = this.zenService.isZenMode();
-    const wingsWidth = isXl ? (isZen ? 0 : 660) : 0;
-    const padW = vw < 640 ? 16 : (vw < 1024 ? 32 : 48);
-    const maxBoardW = Math.max(260, vw - wingsWidth - padW);
-    const availW = Math.max(240, maxBoardW);
+
+    let availW: number;
+    if (isZen) {
+      availW = Math.max(260, vw - 32);
+    } else if (isXl) {
+      // PC 3-column cockpit layout inside max-w-[1600px] arena
+      const arenaW = Math.min(vw, 1600);
+      const arenaPadding = is2Xl ? 64 : 48; // px-8 (64px) on 2xl, px-6 (48px) on xl
+      const wingsWidth = is2Xl ? 704 : 640; // two 352px wings on 2xl, two 320px wings on xl
+      const gaps = is2Xl ? 48 : 32; // gap-6 (24px * 2) on 2xl, gap-4 (16px * 2) on xl
+      const centerStageW = Math.min(896, arenaW - arenaPadding - wingsWidth - gaps);
+      const pedestalAndBoardPadding = 68; // p-6 (48px) + md:p-2.5 (20px)
+      availW = Math.max(240, centerStageW - pedestalAndBoardPadding);
+    } else {
+      // Mobile / Tablet single column
+      const padW = vw < 640 ? 20 : (vw < 1024 ? 40 : 64);
+      availW = Math.max(240, vw - padW);
+    }
 
     // Available height in viewport:
     const isSingle = this.store.currentRoomMode() === GameMode.Single;
@@ -239,7 +255,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const availH = Math.max(240, vh - chromeH);
 
     // Realistic pixel reservations for hint areas:
-    const estRowHintWidth = Math.max(34, maxRowHints * 15 + 12);
+    const hintNumberPitch = w >= 20 ? 15 : 18;
+    const estRowHintWidth = Math.max(38, maxRowHints * hintNumberPitch + 18);
     const availGridW = Math.max(120, availW - estRowHintWidth);
 
     const estColHintHeight = Math.max(34, maxColHints * 14 + 8);
@@ -252,29 +269,29 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     if (vw < 640) {
       // Mobile portrait
       if (w >= 25) {
-        return Math.max(16, Math.min(calculatedSize, 26));
+        return Math.max(16, Math.min(calculatedSize, 24));
       } else if (w >= 20) {
-        return Math.max(18, Math.min(calculatedSize, 32));
+        return Math.max(18, Math.min(calculatedSize, 28));
       } else if (w >= 15) {
-        return Math.max(22, Math.min(calculatedSize, 42));
+        return Math.max(22, Math.min(calculatedSize, 40));
       } else if (w >= 10) {
         return Math.max(30, Math.min(calculatedSize, 56));
       } else {
-        return Math.max(52, Math.min(calculatedSize, 96));
+        return Math.max(48, Math.min(calculatedSize, 80));
       }
     } else {
       // Tablet and Desktop (>=640px)
       // Allow natural fit down to readable/clickable minimums:
       if (w >= 25) {
-        return Math.max(16, Math.min(calculatedSize, 32));
+        return Math.max(16, Math.min(calculatedSize, 24));
       } else if (w >= 20) {
-        return Math.max(18, Math.min(calculatedSize, 36));
+        return Math.max(18, Math.min(calculatedSize, 28));
       } else if (w >= 15) {
-        return Math.max(24, Math.min(calculatedSize, 45));
+        return Math.max(22, Math.min(calculatedSize, 38));
       } else if (w >= 10) {
-        return Math.max(34, Math.min(calculatedSize, 60));
+        return Math.max(30, Math.min(calculatedSize, 54));
       } else {
-        return Math.max(54, Math.min(calculatedSize, 100));
+        return Math.max(48, Math.min(calculatedSize, 80));
       }
     }
   });
@@ -296,12 +313,28 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
     const maxRowHints = rowHints.length > 0 ? Math.max(...rowHints.map((r: number[]) => r.length), 1) : 1;
     const estBoardH = h * cell + (maxColHints * 14 + 10);
-    const estBoardW = w * cell + (maxRowHints * 15 + 14);
+    const hintNumberPitch = w >= 20 ? 15 : 18;
+    const estBoardW = w * cell + (maxRowHints * hintNumberPitch + 18);
     const { w: vw, h: vh } = this.windowSize.size();
     const isZen = this.zenService.isZenMode();
     const isXl = vw >= 1280;
-    const wingsWidth = isXl ? (isZen ? 0 : 660) : 0;
-    const availW = Math.max(240, vw - wingsWidth - 48);
+    const is2Xl = vw >= 1536;
+
+    let availW: number;
+    if (isZen) {
+      availW = Math.max(260, vw - 32);
+    } else if (isXl) {
+      const arenaW = Math.min(vw, 1600);
+      const arenaPadding = is2Xl ? 64 : 48;
+      const wingsWidth = is2Xl ? 704 : 640;
+      const gaps = is2Xl ? 48 : 32;
+      const centerStageW = Math.min(896, arenaW - arenaPadding - wingsWidth - gaps);
+      availW = Math.max(240, centerStageW - 68);
+    } else {
+      const padW = vw < 640 ? 20 : (vw < 1024 ? 40 : 64);
+      availW = Math.max(240, vw - padW);
+    }
+
     const chromeH = isZen ? 45 : (this.deviceService.isHandheld() ? (vw < 640 ? 115 : 135) : 164);
     const availH = Math.max(240, vh - chromeH);
     return estBoardH > availH || estBoardW > availW;
