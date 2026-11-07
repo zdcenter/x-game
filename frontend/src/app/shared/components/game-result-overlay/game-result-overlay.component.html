@@ -610,7 +610,7 @@
 
       <!-- Result Overlay Ad Slot -->
       @if (adService.getBannerSlotId('result_bottom')) {
-        <div class="w-full mt-4 relative z-10 flex justify-center shrink-0">
+        <div class="w-full mt-4 relative z-10 flex justify-center shrink-0 min-h-[60px] sm:min-h-[90px]">
           <app-adsense
             [adSlot]="adService.getBannerSlotId('result_bottom')!"
             adFormat="horizontal"

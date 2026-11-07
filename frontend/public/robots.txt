@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
 
+# Explicit permission for Google AdSense Crawler
+User-agent: Mediapartners-Google
+Allow: /
+
 # Block admin panel — protected by auth, no SEO value
 Disallow: /admin/
 Disallow: /en/admin/

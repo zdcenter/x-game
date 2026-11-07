@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Meta } from '@angular/platform-browser';
 import { I18nService } from '../../core/i18n/i18n.service';
 
 interface RecommendedGame {
@@ -106,9 +107,18 @@ interface RecommendedGame {
     </div>
   `
 })
-export class NotFoundComponent {
+export class NotFoundComponent implements OnInit, OnDestroy {
   i18n = inject(I18nService);
   private location = inject(Location);
+  private meta = inject(Meta);
+
+  ngOnInit(): void {
+    this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
+  }
+
+  ngOnDestroy(): void {
+    this.meta.removeTag("name='robots'");
+  }
 
   recommendedGames: RecommendedGame[] = [
     {

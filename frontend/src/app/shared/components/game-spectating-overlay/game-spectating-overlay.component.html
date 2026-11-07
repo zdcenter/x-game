@@ -72,9 +72,8 @@
     
     <!-- AD BANNER -->
     @if (adService.getBannerSlotId('result_bottom')) {
-      <div class="w-full mt-2 bg-black/30 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-1 border border-white/5 relative z-10">
-        <span class="text-[8px] text-white/20 uppercase tracking-widest mb-1.5 font-bold pt-1">Sponsored</span>
-        <app-adsense [adSlot]="adService.getBannerSlotId('result_bottom')!" [adFormat]="'auto'" [fullWidthResponsive]="true" class="w-full min-h-[50px] flex items-center justify-center"></app-adsense>
+      <div class="w-full mt-2 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-1 relative z-10 min-h-[60px]">
+        <app-adsense [adSlot]="adService.getBannerSlotId('result_bottom')!" adFormat="auto" [fullWidthResponsive]="true" [showLabel]="true" class="w-full flex items-center justify-center"></app-adsense>
       </div>
     }
   </div>
