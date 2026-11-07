@@ -1,5 +1,5 @@
 // X-Game Production PWA Service Worker
-const CACHE_NAME = 'xgame-offline-v2026.11.07.1747';
+const CACHE_NAME = 'xgame-offline-v2026.11.07.1803';
 
 // Core static assets to pre-cache on install (never pre-cache '/' as it can trigger 301/302 redirects)
 const PRECACHE_ASSETS = [

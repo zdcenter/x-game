@@ -215,6 +215,40 @@ export class SudokuStore extends BaseGameStore {
     }
   }
 
+  /**
+   * Validate that a saved serialized board strictly matches the fixed clues of puzzleStr.
+   * Prevents corrupted/cross-puzzle states from overriding a level's actual problem statement.
+   */
+  isSavedStateValid(parsedBoard: any[][], puzzleStr: string): boolean {
+    if (!Array.isArray(parsedBoard) || parsedBoard.length !== 9 || !puzzleStr || puzzleStr.length !== 81) {
+      return false;
+    }
+    for (let r = 0; r < 9; r++) {
+      const row = parsedBoard[r];
+      if (!Array.isArray(row) || row.length !== 9) return false;
+      for (let c = 0; c < 9; c++) {
+        const char = puzzleStr[r * 9 + c];
+        const isClue = char !== '-' && char !== '.' && char !== '0';
+        const expectedVal = isClue ? parseInt(char, 10) : 0;
+        const cell = row[c];
+        if (!cell || typeof cell !== 'object') return false;
+
+        if (isClue) {
+          // If puzzle requires a clue, cell must be fixed and value must match
+          if (!cell.fixed || cell.val !== expectedVal) {
+            return false;
+          }
+        } else {
+          // Non-clue cells in the problem statement must never be fixed
+          if (cell.fixed) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   // --- SINGLE PLAYER INIT ---
   initBoard(puzzleStr: string, solutionStr: string = '', savedState?: string, savedTime?: number) {
     this.history = [];
@@ -228,13 +262,21 @@ export class SudokuStore extends BaseGameStore {
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        // Convert array back to Set for notes
-        for (let r = 0; r < 9; r++) {
-          for (let c = 0; c < 9; c++) {
-            parsed[r][c].notes = new Set(parsed[r][c].notes);
+        if (this.isSavedStateValid(parsed, puzzleStr)) {
+          // Convert array back to Set for notes
+          for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+              parsed[r][c].notes = new Set(parsed[r][c].notes);
+            }
           }
+          this.board.set(parsed);
+        } else {
+          console.warn('[Sudoku] Saved state mismatched puzzle clues, resetting cleanly to original puzzle');
+          this.createBoardFromString(puzzleStr);
+          this.timeSpent.set(0);
+          // Auto-heal the corrupted record in the backend with the clean board
+          this.saveStateToBackend();
         }
-        this.board.set(parsed);
       } catch (e) {
         this.createBoardFromString(puzzleStr);
       }
@@ -617,14 +659,21 @@ export class SudokuStore extends BaseGameStore {
 
   // Backend sync
   private saveStateToBackend() {
-    if (!this.currentPuzzleId()) return;
+    const puzzleId = this.currentPuzzleId();
+    const puzzleStr = this.originalPuzzleStr();
+    if (!puzzleId || !puzzleStr || this.board().length !== 9) return;
+
+    // Safety guard: only persist if current board strictly matches the puzzle clues
+    if (!this.isSavedStateValid(this.board(), puzzleStr)) {
+      return;
+    }
 
     // Serialize board, converting Sets to arrays
     const serialized = JSON.stringify(this.board().map(row =>
       row.map(c => ({ ...c, notes: Array.from(c.notes) }))
     ));
 
-    this.http.post(`${environment.apiUrl}/sudoku/puzzle/${this.currentPuzzleId()}/save`, {
+    this.http.post(`${environment.apiUrl}/sudoku/puzzle/${puzzleId}/save`, {
       current_state: serialized,
       time_spent: this.timeSpent()
     }).subscribe();
