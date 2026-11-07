@@ -245,6 +245,11 @@ import {
                         <span>{{ i18n.t('blog.cta_play_solo')() }}</span>
                       </a>
                       @if (game.id !== 'lobby') {
+                        <a [routerLink]="['/', i18n.currentLang(), 'docs', game.id]"
+                           class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-emerald-500/50 hover:text-emerald-400 active:scale-95 transition-all">
+                          <span>📚</span>
+                          <span>{{ i18n.t('game.read_docs_guide')() || '进阶推演手册' }}</span>
+                        </a>
                         <a [routerLink]="['/', i18n.currentLang(), 'pk-arena']"
                            [queryParams]="{ game: game.id }"
                            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/50 active:scale-95 transition-all">

@@ -599,7 +599,7 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
           <h2 class="text-base sm:text-lg font-bold text-[var(--color-text-main)] flex items-center gap-2">
             <span>{{ i18n.t('game.strategy_guide_title')() || '🎮 玩法规则与操作指南' }}</span>
           </h2>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--color-accent-from)] border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)]/20 transition-all cursor-pointer">
               <span>📚</span>
@@ -610,9 +610,9 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
             </a>
             @if (relatedGuideSlug) {
               <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
-                 class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[var(--color-text-secondary)] border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all cursor-pointer">
+                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-500 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all cursor-pointer">
                 <span>📖</span>
-                <span>{{ i18n.t('game.read_guide')() }}</span>
+                <span>{{ i18n.t('game.read_guide')() || '实战图解秘籍' }}</span>
               </a>
             }
           </div>
@@ -621,7 +621,7 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
              [innerHTML]="i18n.t(computedSeoDescKey)()">
         </div>
 
-        <!-- Callout Banner: Link to Deep Tutorial /docs/:gameId -->
+        <!-- Callout Banner: Direct Links to Deep Tutorial (/docs/:gameId) and Blog Guide (/blog/:slug) -->
         <div class="mt-6 pt-5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-[var(--color-bg-main)]">
           <div class="flex items-center gap-3">
             <span class="text-2xl p-2 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner">🎓</span>
@@ -630,14 +630,23 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
               <div class="text-xs sm:text-sm font-semibold text-[var(--color-text-main)] mt-0.5">{{ i18n.t('game.docs_callout_title')() || '想进阶成为解谜大师？查阅全套核心技巧与高阶推演指南' }}</div>
             </div>
           </div>
-          <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
-             class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all shrink-0 cursor-pointer">
-            <span>📚</span>
-            <span>{{ i18n.t('game.read_full_docs')() || '查阅完整攻略文档' }}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
+            <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
+               class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+              <span>📚</span>
+              <span>{{ i18n.t('game.read_full_docs')() || '查阅完整攻略文档' }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+            @if (relatedGuideSlug) {
+              <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]"
+                 class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-amber-500 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 shadow-xs hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+                <span>📖</span>
+                <span>{{ i18n.t('game.read_guide')() || '实战图解秘籍' }}</span>
+              </a>
+            }
+          </div>
         </div>
       </div>
     </section>

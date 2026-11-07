@@ -53,16 +53,28 @@ import { RouterLink } from '@angular/router';
                [innerHTML]="parsedRulesHTML()">
           </div>
           
-          <!-- Footer: Direct link to Deep Strategy Document (/docs/:gameId) -->
+          <!-- Footer: Direct links to Deep Strategy Document (/docs/:gameId) and Blog Guide (/blog/:slug) -->
           <div class="p-4 border-t border-[var(--color-border-card)] flex flex-col gap-2.5 bg-[var(--color-bg-main)]/60">
-            <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]" target="_blank"
-               class="w-full py-2.5 px-3 rounded-xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 text-center text-xs font-bold text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-              <span>📚</span>
-              <span>{{ i18n.t('game.read_full_docs')() || '查阅完整进阶攻略文档 (技巧推演与深度定理)' }}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]" target="_blank"
+                 class="py-2.5 px-3 rounded-xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 text-center text-xs font-bold text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                <span>📚</span>
+                <span class="truncate">{{ i18n.t('game.read_docs_guide')() || '进阶推演手册' }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+              @if (relatedGuideSlug) {
+                <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedGuideSlug]" target="_blank"
+                   class="py-2.5 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-center text-xs font-bold text-amber-500 hover:bg-amber-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                  <span>📖</span>
+                  <span class="truncate">{{ i18n.t('game.read_guide')() || '实战图解通关秘籍' }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              }
+            </div>
             <button (click)="closed.emit()"
                     class="w-full py-2.5 rounded-xl font-bold bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-[var(--color-bg-main)] shadow-md hover:shadow-lg transition-all hover:scale-[1.01] active:scale-95 cursor-pointer text-xs sm:text-sm">
               {{ i18n.t('game.rules.got_it')() || '我知道了' }}
@@ -81,6 +93,33 @@ export class GameRulesModalComponent implements OnChanges {
   @Input({ required: true }) gameId!: string;
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
+
+  static readonly RELATED_GUIDES: Record<string, string> = {
+    minesweeper: 'minesweeper-logic',
+    sudoku: 'sudoku-benefits',
+    gomoku: 'gomoku-strategy-guide',
+    nonogram: 'nonogram-strategy',
+    sokoban: 'sokoban-strategy',
+    watersort: 'water-sort-puzzle-guide',
+    tetris: 'tetris-battle-strategy',
+    codebreaker: '1a2b-bulls-cows',
+    math24: 'why-math24-is-the-best-brain-training-game-for-kids',
+    sliding: 'sliding-puzzle-strategy',
+    hexa: 'hexa-puzzle-strategy',
+    block: 'block-puzzle-strategy',
+    lightsout: 'lights-out-puzzle-guide',
+    classic2048: 'classic2048-strategy',
+    hashi: 'hashi-bridges-strategy',
+    drop2048: 'classic2048-strategy',
+    connect: 'connect-colors-strategy',
+    idiom: 'idiom-battle-strategy',
+    tilematch: 'tilematch-strategy',
+    tents: 'tents-puzzle-guide',
+  };
+
+  get relatedGuideSlug(): string | null {
+    return GameRulesModalComponent.RELATED_GUIDES[this.gameId] || null;
+  }
 
   private rawGameRules = signal<string | null>(null);
   private loaded = false;

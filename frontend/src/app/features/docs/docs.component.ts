@@ -197,10 +197,20 @@ interface DocCategoryWithGames extends DocCategoryDef {
                   <h3 class="text-2xl font-bold mb-6 text-[var(--color-text-primary)]">
                     {{ i18n.t('blog.cta_title')() || '准备好挑战您的大脑了吗？' }}
                   </h3>
-                  <a [routerLink]="['/', i18n.currentLang(), 'games', currentGameId()]" 
-                     class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-                    {{ i18n.t('blog.cta_btn')() || '立即畅玩益智游戏' }}
-                  </a>
+                  <div class="flex flex-wrap items-center justify-center gap-4">
+                    <a [routerLink]="['/', i18n.currentLang(), 'games', currentGameId()]" 
+                       class="inline-flex items-center justify-center gap-2 px-8 py-3.5 border border-transparent text-base sm:text-lg font-bold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                      <span>🕹️</span>
+                      <span>{{ i18n.t('blog.cta_btn')() || '立即畅玩益智游戏' }}</span>
+                    </a>
+                    @if (relatedBlogSlug()) {
+                      <a [routerLink]="['/', i18n.currentLang(), 'blog', relatedBlogSlug()!]"
+                         class="inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 text-base sm:text-lg font-bold rounded-xl shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer">
+                        <span>📖</span>
+                        <span>{{ i18n.t('game.read_guide')() || '阅读实战图解秘籍' }}</span>
+                      </a>
+                    }
+                  </div>
                 </div>
               } @else {
                 <!-- Docs index hub — real SEO content instead of an empty shell -->
@@ -271,6 +281,34 @@ export class DocsComponent {
   games = signal<GameDoc[]>([]);
   currentGameId = signal<string>('');
   isMobileMenuOpen = signal(false);
+
+  static readonly RELATED_BLOG_SLUGS: Record<string, string> = {
+    minesweeper: 'minesweeper-logic',
+    sudoku: 'sudoku-benefits',
+    gomoku: 'gomoku-strategy-guide',
+    nonogram: 'nonogram-strategy',
+    sokoban: 'sokoban-strategy',
+    watersort: 'water-sort-puzzle-guide',
+    tetris: 'tetris-battle-strategy',
+    codebreaker: '1a2b-bulls-cows',
+    math24: 'why-math24-is-the-best-brain-training-game-for-kids',
+    sliding: 'sliding-puzzle-strategy',
+    hexa: 'hexa-puzzle-strategy',
+    block: 'block-puzzle-strategy',
+    lightsout: 'lights-out-puzzle-guide',
+    classic2048: 'classic2048-strategy',
+    hashi: 'hashi-bridges-strategy',
+    drop2048: 'classic2048-strategy',
+    connect: 'connect-colors-strategy',
+    idiom: 'idiom-battle-strategy',
+    tilematch: 'tilematch-strategy',
+    tents: 'tents-puzzle-guide',
+  };
+
+  relatedBlogSlug = computed<string | null>(() => {
+    const id = this.currentGameId();
+    return DocsComponent.RELATED_BLOG_SLUGS[id] || null;
+  });
 
   readonly DOC_CATEGORIES: DocCategoryDef[] = [
     {
