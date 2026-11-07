@@ -35,7 +35,7 @@
   (createRoom)="handleCreateRoom($event)"
   (mobileSidebarClosed)="isMobileSidebarOpen.set(false)"
 >
-<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-start my-0">
+<div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-start my-0 h-full max-h-full">
 
   <!-- Integrated Board Header Bar (手持移动/平板端 或 专注全屏沉浸模式时展示) -->
   @if (isHandheld() || zenService.isZenMode()) {
@@ -68,6 +68,55 @@
     </app-game-handheld-header>
   }
 
+  <!-- Single Player Board Utility & Zoom Toolbar (PC & Tablet) -->
+  @if (store.currentRoomMode() === GameMode.Single && !isHandheld()) {
+    <div class="flex items-center justify-between w-full max-w-4xl px-2 sm:px-4 py-1 text-xs text-[var(--color-text-muted)] select-none shrink-0 gap-2">
+      <!-- Left: Grid Size & Completed Line Progress -->
+      <div class="flex items-center gap-2 text-xs">
+        <span class="font-mono font-bold px-2 py-0.5 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)]">
+          {{ store.width() }}×{{ store.height() }}
+        </span>
+        <span class="text-[11px] hidden sm:inline text-[var(--color-text-muted)]">
+          {{ t('game.nonogram_completed_lines')() || '已达标行/列' }}:
+          <strong class="text-emerald-500 font-mono">{{ completedRowsCount() }}/{{ store.height() }}</strong> ·
+          <strong class="text-blue-500 font-mono">{{ completedColsCount() }}/{{ store.width() }}</strong>
+        </span>
+      </div>
+
+      <!-- Right: Responsive Zoom & Fit Controls -->
+      <div class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl px-2 py-0.5 shadow-2xs">
+        <button (click)="zoomOut()" 
+                [disabled]="zoomLevel() <= 0.75"
+                class="hover:text-[var(--color-accent-from)] disabled:opacity-30 p-1 rounded-lg hover:bg-[var(--color-bg-main)] cursor-pointer transition-all active:scale-90"
+                title="缩小视图 (-)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <span class="font-mono text-xs font-bold min-w-[38px] text-center"
+              [class.text-amber-500]="zoomLevel() !== 1.0"
+              [class.text-[var(--color-text-main)]]="zoomLevel() === 1.0">
+          {{ Math.round(zoomLevel() * 100) }}%
+        </span>
+        <button (click)="zoomIn()" 
+                [disabled]="zoomLevel() >= 1.6"
+                class="hover:text-[var(--color-accent-from)] disabled:opacity-30 p-1 rounded-lg hover:bg-[var(--color-bg-main)] cursor-pointer transition-all active:scale-90"
+                title="放大视图 (+)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        @if (zoomLevel() !== 1.0) {
+          <button (click)="resetZoom()" 
+                  class="ml-1 px-2 py-0.5 rounded-lg text-[10px] bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white border border-blue-500/20 transition-all font-bold cursor-pointer active:scale-95"
+                  title="重置为一屏自适应 (0)">
+            {{ t('game.auto_fit')() || '适屏' }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
   <!-- Players Info Row (Hidden in Single Player to maximize board height) -->
   @if (store.currentRoomMode() !== GameMode.Single) {
     <div class="flex-none py-1 mb-1 shrink-0 w-full">
@@ -85,10 +134,13 @@
     </div>
   }
 
-  <!-- Main Board (Seamless & Integrated) -->
-  <div class="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center p-1 sm:p-2 md:p-2.5 w-full"
+  <!-- Main Board (Seamless & Integrated, Sticky Panes Scrollable Container) -->
+  <div #boardScrollContainer
+       class="flex-1 min-h-0 max-h-full w-full overflow-auto custom-scrollbar flex flex-col items-center p-1 sm:p-2 md:p-2.5"
+       style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;"
        [class.opacity-50]="store.status() !== GameStatus.Playing && store.status() !== GameStatus.Finished">
-    <div class="min-w-fit flex flex-col items-center mx-auto my-auto pt-0.5 sm:pt-1">
+    <div class="min-w-fit flex flex-col items-center pt-0.5 sm:pt-1"
+         [class.my-auto]="!isBoardOverflowing()">
 
               <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"

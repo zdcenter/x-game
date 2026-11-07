@@ -1134,6 +1134,8 @@
   "game.steal_mode": "盗むモード",
   "game.steal_victory": "あなたが最も多くの地雷に旗を立てました！",
   "game.stepped_mine": "あなたは地雷を踏みました。",
+  "game.auto_fit": "全体表示",
+  "game.nonogram_completed_lines": "完成した行/列",
   "game.strategy_guide": "攻略ガイド",
   "game.strategy_guide_tip": "解法のロジックや高度なテクニックをマスターし、クリアや対戦勝利を目指しましょう。",
   "game.read_strategy_guide": "完全攻略ガイドを読む",

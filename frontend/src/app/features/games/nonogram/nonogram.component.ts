@@ -192,7 +192,23 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   readonly hideLeftPanel = computed(() => this.store.width() > 15);
 
-  readonly cellSize = computed(() => {
+  /** Zoom Controls: 1.0 = 100% Auto-fit, 1.15 = 115%, etc. */
+  zoomLevel = signal<number>(1.0);
+
+  zoomIn() {
+    this.zoomLevel.update(z => Math.min(1.6, Math.round((z + 0.15) * 100) / 100));
+  }
+
+  zoomOut() {
+    this.zoomLevel.update(z => Math.max(0.7, Math.round((z - 0.15) * 100) / 100));
+  }
+
+  resetZoom() {
+    this.zoomLevel.set(1.0);
+  }
+
+  /** Optimal cell size to fit 100% within available viewport without clipping */
+  readonly autoFitCellSize = computed(() => {
     const w = this.store.width();
     const h = this.store.height();
     const { w: vw, h: vh } = this.windowSize.size();
@@ -204,73 +220,82 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
 
     // Available width for the board container:
-    // Mobile (<640px): leave only 16px safety margins so board gracefully fills viewport
-    // Tablet (640-1024px): 40px margins
-    // Desktop (>=1024px): 80px margins
-    const padW = vw < 640 ? 16 : (vw < 1024 ? 40 : 80);
-    const maxBoardW = vw >= 1024 ? 960 : (vw >= 640 ? 780 : vw - padW);
-    const availW = Math.max(260, Math.min(vw - padW, maxBoardW));
+    const isXl = vw >= 1280;
+    const isZen = this.zenService.isZenMode();
+    const wingsWidth = isXl ? (isZen ? 0 : 660) : 0;
+    const padW = vw < 640 ? 16 : (vw < 1024 ? 32 : 48);
+    const maxBoardW = Math.max(260, vw - wingsWidth - padW);
+    const availW = Math.max(240, maxBoardW);
 
     // Available height in viewport:
     const isSingle = this.store.currentRoomMode() === GameMode.Single;
     const isHandheld = this.deviceService.isHandheld();
-    const chromeH = isSingle
-      ? (isHandheld ? (vw < 640 ? 115 : 135) : 175)
-      : (isHandheld ? (vw < 640 ? 155 : 175) : 215);
-    const availH = Math.max(280, vh - chromeH);
+    // Chrome height reservation:
+    // Zen mode: minimal ~45px
+    // Normal single player: site header (64px) + game header (48px) + mini-toolbar (28px) + pedestal padding (24px) = ~164px
+    const chromeH = isZen
+      ? 45
+      : (isSingle ? (isHandheld ? (vw < 640 ? 115 : 135) : 164) : (isHandheld ? (vw < 640 ? 155 : 175) : 210));
+    const availH = Math.max(240, vh - chromeH);
 
     // Realistic pixel reservations for hint areas:
-    // Row hints: ~16px per hint number + padding ~12px
-    const estRowHintWidth = Math.max(38, maxRowHints * 16 + 12);
-    const availGridW = Math.max(160, availW - estRowHintWidth);
+    const estRowHintWidth = Math.max(34, maxRowHints * 15 + 12);
+    const availGridW = Math.max(120, availW - estRowHintWidth);
 
-    // Col hints: ~16px per hint number line + padding ~10px
-    const estColHintHeight = Math.max(38, maxColHints * 16 + 10);
-    const availGridH = Math.max(160, availH - estColHintHeight);
+    const estColHintHeight = Math.max(34, maxColHints * 14 + 8);
+    const availGridH = Math.max(120, availH - estColHintHeight);
 
     const sizeW = Math.floor(availGridW / w);
     const sizeH = Math.floor(availGridH / h);
     let calculatedSize = Math.min(sizeW, sizeH);
 
-    // Monotonic scaling guarantee: Board total footprint must NEVER shrink as grid count increases!
     if (vw < 640) {
-      // Mobile portrait:
-      // 5x5: ~58-64px (grid width ~300px)
-      // 10x10: ~30-34px (grid width ~320px)
-      // 15x15: ~22-26px (grid width ~340-360px)
-      // 20x20: ~19-22px (grid width ~380-400px)
-      // 25x25: ~18-20px (grid width ~450px, smooth scrolling enabled)
+      // Mobile portrait
       if (w >= 25) {
-        return Math.max(18, Math.min(calculatedSize, 26));
+        return Math.max(16, Math.min(calculatedSize, 26));
       } else if (w >= 20) {
-        return Math.max(19, Math.min(calculatedSize, 32));
+        return Math.max(18, Math.min(calculatedSize, 32));
       } else if (w >= 15) {
         return Math.max(22, Math.min(calculatedSize, 42));
       } else if (w >= 10) {
         return Math.max(30, Math.min(calculatedSize, 56));
       } else {
-        return Math.max(58, Math.min(calculatedSize, 96));
+        return Math.max(52, Math.min(calculatedSize, 96));
       }
     } else {
-      // Tablet and Desktop:
-      // Board footprint (w * cellSize) is strictly non-decreasing across difficulties:
-      // 5x5: 64-96px (span 320-480px)
-      // 10x10: 40-60px (span 400-600px)
-      // 15x15: 30-45px (span 450-675px)
-      // 20x20: 25-36px (span 500-720px)
-      // 25x25: 23-32px (span 575-750px)
+      // Tablet and Desktop (>=640px)
+      // Allow natural fit down to readable/clickable minimums:
       if (w >= 25) {
-        return Math.max(23, Math.min(calculatedSize, 34));
+        return Math.max(16, Math.min(calculatedSize, 32));
       } else if (w >= 20) {
-        return Math.max(25, Math.min(calculatedSize, 40));
+        return Math.max(18, Math.min(calculatedSize, 36));
       } else if (w >= 15) {
-        return Math.max(30, Math.min(calculatedSize, 48));
+        return Math.max(24, Math.min(calculatedSize, 45));
       } else if (w >= 10) {
-        return Math.max(40, Math.min(calculatedSize, 64));
+        return Math.max(34, Math.min(calculatedSize, 60));
       } else {
-        return Math.max(64, Math.min(calculatedSize, 112));
+        return Math.max(54, Math.min(calculatedSize, 100));
       }
     }
+  });
+
+  readonly cellSize = computed(() => {
+    const base = this.autoFitCellSize();
+    const zoom = this.zoomLevel();
+    if (zoom === 1.0) return base;
+    return Math.max(14, Math.min(60, Math.round(base * zoom)));
+  });
+
+  /** Whether the board footprint exceeds the visible container viewport */
+  readonly isBoardOverflowing = computed(() => {
+    const h = this.store.height();
+    const cell = this.cellSize();
+    const colHints: number[][] = (this.store.colHints() as any) || [];
+    const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
+    const estBoardH = h * cell + (maxColHints * 14 + 10);
+    const { h: vh } = this.windowSize.size();
+    const chromeH = this.zenService.isZenMode() ? 50 : 170;
+    return estBoardH > (vh - chromeH);
   });
 
   @ViewChild('cellsGrid') cellsGridRef?: ElementRef<HTMLElement>;
@@ -806,6 +831,23 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     // Hint
     if (key === 'h' && this.store.currentRoomMode() === GameMode.Single) {
       this.store.useHint();
+      event.preventDefault();
+      return;
+    }
+
+    // Zoom Controls hotkeys (+, -, 0)
+    if ((event.key === '+' || event.key === '=') && !event.ctrlKey && !event.metaKey) {
+      this.zoomIn();
+      event.preventDefault();
+      return;
+    }
+    if ((event.key === '-' || event.key === '_') && !event.ctrlKey && !event.metaKey) {
+      this.zoomOut();
+      event.preventDefault();
+      return;
+    }
+    if (event.key === '0' && !event.ctrlKey && !event.metaKey) {
+      this.resetZoom();
       event.preventDefault();
       return;
     }

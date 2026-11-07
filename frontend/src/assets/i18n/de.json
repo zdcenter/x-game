@@ -1134,6 +1134,8 @@
   "game.steal_mode": "Diebstahlmodus",
   "game.steal_victory": "Du hast die meisten Minen markiert!",
   "game.stepped_mine": "Du bist auf eine Mine getreten.",
+  "game.auto_fit": "Einpassen",
+  "game.nonogram_completed_lines": "Abgeschlossene Zeilen/Spalten",
   "game.strategy_guide": "Strategie-Guide",
   "game.strategy_guide_tip": "Meistern Sie Kernlösungslogik und Taktiken, um Level zu meistern und PK-Duelle zu gewinnen.",
   "game.read_strategy_guide": "Vollständigen Guide lesen",

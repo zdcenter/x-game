@@ -1134,6 +1134,8 @@
   "game.steal_mode": "도둑 모드",
   "game.steal_victory": "당신이 가장 많은 지뢰를 표시했어요!",
   "game.stepped_mine": "당신은 지뢰를 밟았습니다.",
+  "game.auto_fit": "화면 맞춤",
+  "game.nonogram_completed_lines": "완성된 행/열",
   "game.strategy_guide": "공략 가이드",
   "game.strategy_guide_tip": "핵심 풀이 로직과 추론 기법을 익혀 스테이지 클리어 및 PK 승률을 극대화하세요.",
   "game.read_strategy_guide": "전략 공략집 읽기",

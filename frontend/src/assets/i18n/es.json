@@ -1134,6 +1134,8 @@
   "game.steal_mode": "Modo de robo",
   "game.steal_victory": "¡Marcaste la mayoría de las minas!",
   "game.stepped_mine": "Pisaste una mina.",
+  "game.auto_fit": "Ajustar",
+  "game.nonogram_completed_lines": "Líneas completadas",
   "game.strategy_guide": "Guía de Estrategia",
   "game.strategy_guide_tip": "Domina la lógica de resolución, técnicas de deducción y tácticas pro para superar niveles y ganar en PK.",
   "game.read_strategy_guide": "Leer Guía Completa",

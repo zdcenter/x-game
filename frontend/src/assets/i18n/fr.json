@@ -1134,6 +1134,8 @@
   "game.steal_mode": "Mode Vol",
   "game.steal_victory": "Vous avez signalé le plus de mines !",
   "game.stepped_mine": "Vous avez marché sur une mine.",
+  "game.auto_fit": "Ajuster",
+  "game.nonogram_completed_lines": "Lignes complétées",
   "game.strategy_guide": "Guide Stratégique",
   "game.strategy_guide_tip": "Maîtrisez la logique de résolution et les tactiques avancées pour réussir les niveaux et dominer en PK.",
   "game.read_strategy_guide": "Lire le Guide Complet",
