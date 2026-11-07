@@ -7,11 +7,12 @@ import { ConnectEngine, Position } from '../connect-engine';
   standalone: true,
   imports: [CommonModule],
   host: {
-    'class': 'block w-full'
+    'class': 'block w-full touch-none select-none',
+    'style': 'touch-action: none;'
   },
   template: `
-    <div class="relative w-full h-full max-w-full max-h-full select-none rounded-2xl sm:rounded-3xl bg-[var(--color-bg-card)] border-2 border-[var(--color-border-card)] shadow-[0_8px_20px_var(--color-cell-shadow)] p-3 sm:p-4 box-border flex flex-col justify-center items-center overflow-hidden"
-         style="container-type: inline-size;"
+    <div class="relative w-full h-full max-w-full max-h-full select-none rounded-2xl sm:rounded-3xl bg-[var(--color-bg-card)] border-2 border-[var(--color-border-card)] shadow-[0_8px_20px_var(--color-cell-shadow)] p-3 sm:p-4 box-border flex flex-col justify-center items-center overflow-hidden touch-none overscroll-contain"
+         style="container-type: inline-size; touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none;"
          (mousedown)="onPointerDown($event)"
          (touchstart)="onPointerDown($event)"
          (mousemove)="onPointerMove($event)"

@@ -9,6 +9,14 @@ import { HapticService } from '../../../../../core/services/haptic.service';
   standalone: true,
   imports: [CommonModule],
   styles: [`
+    :host {
+      display: block;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      overscroll-behavior: contain;
+    }
+
     /* ─── Player Wrapper ─── */
     .player-wrapper { /* no transition on transform — instant direction flip */ }
     .player-wrapper.facing-left { transform: scaleX(-1); }
@@ -619,6 +627,7 @@ export class SokobanBoardComponent {
 
   onTouchStart(event: TouchEvent) {
     if (this.readonly || this.store.isSpectator()) return;
+    if (event.cancelable) event.preventDefault();
     if (event.touches.length > 0) {
       this.touchStartX = event.touches[0].clientX;
       this.touchStartY = event.touches[0].clientY;

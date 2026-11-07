@@ -140,10 +140,11 @@
           </div>
         }
 
-        <div class="relative select-none flex items-center justify-center rounded-2xl bg-[var(--color-bg-main)]/50 border border-[var(--color-border-card)] shadow-inner p-2 sm:p-3 transition-all duration-300"
+        <div class="relative select-none flex items-center justify-center rounded-2xl bg-[var(--color-bg-main)]/50 border border-[var(--color-border-card)] shadow-inner p-2 sm:p-3 transition-all duration-300 touch-none overscroll-contain"
              [class.pointer-events-none]="store.isSpectator()"
              [style.width]="boardDimensions().width"
-             [style.height]="boardDimensions().height">
+             [style.height]="boardDimensions().height"
+             style="touch-action: none; overscroll-behavior: contain;">
               
               @if (store.localStatus() !== GameStatus.Starting) {
               <svg class="w-full h-full relative z-10 touch-none" 

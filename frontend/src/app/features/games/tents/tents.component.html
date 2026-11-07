@@ -193,7 +193,8 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <!-- 经典“帐篷与树”棋盘 (100% 像素级还原参考图：浅草绿底板、象牙白方砖、抹茶草地) -->
     <!-- ───────────────────────────────────────────────────────────── -->
-    <div class="relative w-full p-2.5 sm:p-5 rounded-[28px] bg-[#dce9cd] dark:bg-[#1b2b1b] border-2 border-[#c7dab4] dark:border-[#2e472e] shadow-xl select-none flex flex-col items-center justify-center transition-all duration-300 mx-auto"
+    <div class="relative w-full p-2.5 sm:p-5 rounded-[28px] bg-[#dce9cd] dark:bg-[#1b2b1b] border-2 border-[#c7dab4] dark:border-[#2e472e] shadow-xl select-none flex flex-col items-center justify-center transition-all duration-300 mx-auto touch-manipulation overscroll-contain"
+         style="touch-action: manipulation; overscroll-behavior: contain;"
          [style.max-width]="'min(96vw, 680px)'"
          [style.width]="'min(96vw, 86vmin, 680px)'"
          [class.pointer-events-none]="store.isSpectator()">

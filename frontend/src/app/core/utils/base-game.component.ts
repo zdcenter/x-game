@@ -25,6 +25,7 @@ import { DeviceService } from '../services/device.service';
 import { ZenModeService } from '../services/zen-mode.service';
 import { AdService } from '../services/ad.service';
 import { ResumeGameService, SavedGameSession } from '../services/resume-game.service';
+import { WakeLockService } from '../services/wake-lock.service';
 
 /**
  * A base component that provides boilerplate functionality for any PK-enabled game.
@@ -62,6 +63,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public zenService = inject(ZenModeService);
   public adService = inject(AdService);
   public resumeService = inject(ResumeGameService);
+  public wakeLock = inject(WakeLockService);
   readonly isHandheld = this.deviceService.isHandheld;
   protected _injector = inject(Injector);
 
@@ -176,6 +178,16 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             this.baseToastService.show(cheerTpl.replace('{sender}', cheer.senderName), 'success');
           }
         }, { injector: this._injector });
+
+        // Automatic Screen Wake Lock: Keeps screen awake while game is actively being played
+        effect(() => {
+          const status = this.store?.status?.();
+          if (status === GameStatus.Playing) {
+            this.wakeLock.requestLock();
+          } else {
+            this.wakeLock.releaseLock();
+          }
+        }, { injector: this._injector });
       }
     }
 
@@ -261,6 +273,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    * Cleanup on destroy. Subclasses that override ngOnDestroy MUST call super.ngOnDestroy().
    */
   ngOnDestroy(): void {
+    // Release screen wake lock when navigating away
+    this.wakeLock.releaseLock();
     // Lobby WS stays connected across game switches — no disconnect here.
     // Game-specific cleanup should be handled in the subclass.
   }
