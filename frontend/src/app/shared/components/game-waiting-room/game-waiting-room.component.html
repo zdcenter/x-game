@@ -278,10 +278,10 @@
                       <span>👥</span>
                       <span class="truncate">{{ i18n.t('game.call_friend_short')() || '呼叫好友' }}</span>
                     </button>
-                    <button (click)="copyInviteLink()"
+                    <button (click)="shareInviteLink()"
                             class="flex-1 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:border-amber-400 text-[var(--color-text-main)] shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all">
-                      <span>🔗</span>
-                      <span class="truncate">{{ linkCopied() ? (i18n.t('text_share.copied_short')() || '已复制') : (i18n.t('share.invite_pk')() || '邀请PK') }}</span>
+                      <span>{{ linkCopied() ? '✓' : (shareService.canNativeShare() ? '📤' : '🔗') }}</span>
+                      <span class="truncate">{{ linkCopied() ? (i18n.t('text_share.copied_short')() || '已复制') : (shareService.canNativeShare() ? (i18n.t('share.share_invite')() || '分享邀请') : (i18n.t('share.invite_pk')() || '邀请PK')) }}</span>
                     </button>
                   </div>
                 </div>
@@ -351,15 +351,23 @@
 
                   <div class="flex-1 min-w-0 flex flex-col justify-center">
                     <p class="text-xs font-medium text-[var(--color-text-secondary)] mb-2 leading-relaxed">
-                      {{ i18n.t('game.scan_mobile_play')() || '手机扫码或复制链接分享给好友' }}
+                      {{ shareService.canNativeShare()
+                        ? (i18n.t('game.share_mobile_play')() || '一键唤起微信/QQ等原生分享，或扫码入场')
+                        : (i18n.t('game.scan_mobile_play')() || '手机扫码或复制链接分享给好友') }}
                     </p>
-                    <button (click)="copyInviteLink()"
+                    <button (click)="shareInviteLink()"
                             class="w-full py-2.5 px-3 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                             [class]="linkCopied()
                               ? 'bg-emerald-500 text-white'
                               : 'bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white hover:brightness-110'">
-                      <span>{{ linkCopied() ? '✓' : '🔗' }}</span>
-                      <span>{{ linkCopied() ? (i18n.t('game.copied_invite_link')() || '链接已复制！') : (i18n.t('game.copy_invite_link_btn')() || '复制邀请链接') }}</span>
+                      <span>{{ linkCopied() ? '✓' : (shareService.canNativeShare() ? '📤' : '🔗') }}</span>
+                      <span>
+                        {{ linkCopied()
+                          ? (i18n.t('game.copied_invite_link')() || '链接已复制！')
+                          : (shareService.canNativeShare()
+                            ? (i18n.t('share.native_invite_btn')() || '一键分享邀请好友')
+                            : (i18n.t('game.copy_invite_link_btn')() || '复制邀请链接')) }}
+                      </span>
                     </button>
                   </div>
                 </div>

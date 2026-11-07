@@ -20,7 +20,7 @@ export class ShareModalComponent implements OnDestroy {
   private authStore = inject(AuthStore);
 
   isAdmin = computed(() => this.authStore.currentUser()?.role === 'admin');
-  canNativeShare = computed(() => isBrowser() && !!navigator.share);
+  canNativeShare = this.shareService.canNativeShare;
 
   @ViewChild('qrcodeCanvas') qrcodeCanvas!: ElementRef<HTMLCanvasElement>;
 

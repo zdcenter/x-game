@@ -211,20 +211,36 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     });
   }
 
-  copyInviteLink() {
+  async shareInviteLink() {
     const url = this.getInviteUrl();
-    
     const gameName = this.i18n.t('lobby.' + this.gameId)() || this.gameId;
     let text = this.i18n.t('share.room_invite')() || `I am waiting for you in [game]! Click the link to join my room [room] directly and let's play!`;
     text = text.replace('[game]', gameName).replace('[room]', this.roomId);
-    
-    this.shareService.share({
+
+    const shareData = {
       title: `${gameName} - ${this.i18n.t('app.title')()}`,
       text: text,
-      url: url
-    });
-    this.linkCopied.set(true);
-    setTimeout(() => this.linkCopied.set(false), 2500);
+      url: url,
+      gameName: gameName
+    };
+
+    if (this.shareService.canNativeShare()) {
+      // Direct native share sheet (must be called synchronously in gesture loop)
+      const res = await this.shareService.share(shareData);
+      if (res === 'native') {
+        this.linkCopied.set(true);
+        setTimeout(() => this.linkCopied.set(false), 2500);
+      }
+    } else {
+      // Desktop / unsupported: copy link directly to clipboard with toast
+      await this.shareService.copyUrl(url);
+      this.linkCopied.set(true);
+      setTimeout(() => this.linkCopied.set(false), 2500);
+    }
+  }
+
+  copyInviteLink() {
+    return this.shareInviteLink();
   }
 
   openFriendList() {
