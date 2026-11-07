@@ -248,10 +248,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const isHandheld = this.deviceService.isHandheld();
     // Chrome height reservation:
     // Zen mode: minimal ~45px
-    // Normal single player: site header (64px) + game header (48px) + mini-toolbar (28px) + pedestal padding (24px) = ~164px
+    // Normal single player: site header (64px) + game header (48px) + mini-toolbar (28px) + pedestal padding (24px) + bottom-toolbar (60px) = ~224px
     const chromeH = isZen
       ? 45
-      : (isSingle ? (isHandheld ? (vw < 640 ? 115 : 135) : 164) : (isHandheld ? (vw < 640 ? 155 : 175) : 210));
+      : (isSingle ? (isHandheld ? (vw < 640 ? 175 : 195) : 225) : (isHandheld ? (vw < 640 ? 215 : 235) : 270));
     const availH = Math.max(240, vh - chromeH);
 
     // Realistic pixel reservations for hint areas:
@@ -335,7 +335,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       availW = Math.max(240, vw - padW);
     }
 
-    const chromeH = isZen ? 45 : (this.deviceService.isHandheld() ? (vw < 640 ? 115 : 135) : 164);
+    const chromeH = isZen ? 45 : (this.deviceService.isHandheld() ? (vw < 640 ? 175 : 195) : 225);
     const availH = Math.max(240, vh - chromeH);
     return estBoardH > availH || estBoardW > availW;
   });
