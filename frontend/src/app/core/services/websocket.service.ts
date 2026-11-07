@@ -562,14 +562,14 @@ export class WebSocketService {
       this.socket.onclose = null;
       this.socket.close();
       this.socket = null;
-      this.isConnected.set(false);
-      this.currentGameId = null;
-      this.activeGameId.set('');
-      this.currentRoomId.set('');
-      this.currentMode.set('');
-      this.currentDifficulty.set('');
-      this.isCurrentSpectator.set(false);
     }
+    this.isConnected.set(false);
+    this.currentGameId = null;
+    this.activeGameId.set('');
+    this.currentRoomId.set('');
+    this.currentMode.set('');
+    this.currentDifficulty.set('');
+    this.isCurrentSpectator.set(false);
     this.lastGameConnectConfig = null;
     this.gameState.set(null);
   }

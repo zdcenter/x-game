@@ -42,7 +42,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly audioService = inject(AudioService);
 
   constructor() {
-    // Sync target, difficulty & mode from WS game state so they are always up-to-date
+    // Sync target & difficulty from WS game state so they are always up-to-date
     // for both room creators and joiners/guests.
     effect(() => {
       const gs = this.ws.gameState() as any;
@@ -54,10 +54,11 @@ export abstract class BaseGameStore implements GameStoreInterface {
       if (newDiff) {
         untracked(() => this.currentDifficulty.set(newDiff));
       }
-      const wsMode = this.ws.currentMode();
-      const newMode = gs?.mode || wsMode;
-      if (newMode && newMode !== GameMode.Single && newMode !== untracked(() => this.currentRoomMode())) {
-        untracked(() => this.currentRoomMode.set(newMode));
+      // Only sync mode if currently inside an active multiplayer room
+      const curRoom = untracked(() => this.roomId());
+      const curMode = untracked(() => this.currentRoomMode());
+      if (curRoom && curMode !== GameMode.Single && gs?.mode && gs.mode !== curMode) {
+        untracked(() => this.currentRoomMode.set(gs.mode));
       }
     });
 
@@ -462,6 +463,20 @@ export abstract class BaseGameStore implements GameStoreInterface {
     const currentRoom = this.roomId() || this.ws.currentRoomId();
     if (pending && currentRoom && pending.roomId === currentRoom) {
       return;
+    }
+
+    // 清理 sessionStorage 中的重连记录，防止下次进入该游戏时被自动重连进旧房间
+    if (typeof sessionStorage !== 'undefined' && this.gameId) {
+      const prefix = `${this.gameId}_reconnect`;
+      const room = sessionStorage.getItem(`${prefix}_room`);
+      if (room) {
+        sessionStorage.removeItem(`room_password_${room}`);
+      }
+      sessionStorage.removeItem(`${prefix}_room`);
+      sessionStorage.removeItem(`${prefix}_mode`);
+      sessionStorage.removeItem(`${prefix}_diff`);
+      sessionStorage.removeItem(`${prefix}_host`);
+      sessionStorage.removeItem(`${prefix}_spectator`);
     }
 
     if (this.currentRoomMode() !== GameMode.Single) {

@@ -986,7 +986,7 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   readonly isAutoWaitingRoomVisible = computed(() => {
-    return !this.isLobbyEffective() && !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Waiting && this.effectiveRoomMode() !== GameMode.Single && !this.isSpectatorActive();
+    return !this.isLobbyEffective() && !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Waiting && this.effectiveRoomMode() !== GameMode.Single && !this.isSpectatorActive() && !!this.effectiveRoomId();
   });
 
   readonly isAutoStartingVisible = computed(() => {

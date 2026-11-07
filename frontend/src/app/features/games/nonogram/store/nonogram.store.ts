@@ -314,7 +314,7 @@ export class NonogramStore extends BaseGameStore {
       }
     });
 
-    // Save state and difficulty preference to local storage using BaseGameStore engine
+    // Save difficulty preference to local storage
     effect(() => {
       const mode = this.currentRoomMode();
       const diff = this.currentDifficulty();
@@ -322,8 +322,6 @@ export class NonogramStore extends BaseGameStore {
       if (mode === GameMode.Single && diff && typeof localStorage !== 'undefined') {
         localStorage.setItem('nonogram_difficulty', diff as string);
       }
-      this.localState();
-      this.saveSinglePlayerProgress();
     });
   }
 
@@ -362,7 +360,7 @@ export class NonogramStore extends BaseGameStore {
           startAt: Date.now()
         });
       } else {
-        this.initSinglePlayer(this.currentDifficulty() as string, true);
+        this.startNewSingleGame(this.currentDifficulty() as string);
       }
     } else {
       super.startGame();
@@ -480,30 +478,43 @@ export class NonogramStore extends BaseGameStore {
     if (this.currentRoomMode() === GameMode.Single) {
       if (NonogramEngine.checkWin(newGrid, state.answerGrid)) {
         this.resumeService.clearSession('nonogram');
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('nonogram_saved_game');
+        }
         this.localState.set({ ...this.localState()!, status: GameStatus.Finished, endAt: Date.now() });
       } else {
         let currentCorrectFilled = 0;
         let targetTotalFilled = 0;
+        let totalPlacedCells = 0;
         for (let y = 0; y < state.height; y++) {
           for (let x = 0; x < state.width; x++) {
+            if (newGrid[y] && newGrid[y][x] !== 0) {
+              totalPlacedCells++;
+            }
             if (state.answerGrid[y] && state.answerGrid[y][x] === 1) {
               targetTotalFilled++;
               if (newGrid[y] && newGrid[y][x] === 1) currentCorrectFilled++;
             }
           }
         }
-        const progress = targetTotalFilled > 0 ? Math.min(99, Math.round((currentCorrectFilled / targetTotalFilled) * 100)) : 0;
-        this.resumeService.saveSession('nonogram', {
-          difficulty: this.currentDifficulty(),
-          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'nonogram'),
-          progressPercent: progress,
-          timeElapsed: this.timeSpent(),
-          data: {
-            state: { ...state, grid: newGrid },
+
+        if (totalPlacedCells > 0) {
+          const progress = targetTotalFilled > 0 ? Math.min(99, Math.round((currentCorrectFilled / targetTotalFilled) * 100)) : 0;
+          this.resumeService.saveSession('nonogram', {
             difficulty: this.currentDifficulty(),
-            timeSpent: this.timeSpent()
-          }
-        });
+            difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'nonogram'),
+            progressPercent: progress,
+            moves: totalPlacedCells,
+            timeElapsed: this.timeSpent(),
+            data: {
+              state: { ...state, grid: newGrid },
+              difficulty: this.currentDifficulty(),
+              timeSpent: this.timeSpent()
+            }
+          });
+        } else {
+          this.resumeService.clearSession('nonogram');
+        }
       }
     } else if (this.currentRoomMode() === GameMode.Speed) {
       const targetRowHints = state.rowHints || this.rowHints();
@@ -534,7 +545,11 @@ export class NonogramStore extends BaseGameStore {
     if (!data?.state) return;
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(data.difficulty || GameDifficulty.Easy);
-    this.localState.set(data.state);
+    const restoredState = { ...data.state };
+    if (data.timeSpent && data.timeSpent > 0) {
+      restoredState.startAt = Date.now() - (data.timeSpent * 1000);
+    }
+    this.localState.set(restoredState);
   }
 
   undo() {
@@ -632,26 +647,39 @@ export class NonogramStore extends BaseGameStore {
     this.checkProgressAndWin(newGrid, state);
   }
 
+  startNewSingleGame(difficulty?: string) {
+    const diff = difficulty || (this.currentDifficulty() as string) || GameDifficulty.Easy;
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(diff);
+    this.roomId.set('');
+    this.resumeService.clearSession('nonogram');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('nonogram_saved_game');
+    }
+    this.initSinglePlayer(diff);
+  }
+
   playAgain() {
     if (this.currentRoomMode() === GameMode.Single) {
-      this.initSinglePlayer(this.currentDifficulty() as string, true);
-      this.startGame();
+      this.startNewSingleGame(this.currentDifficulty() as string);
     } else {
       super.restartGame();
     }
   }
 
-  private initSinglePlayer(difficulty: string, forceNew = false) {
+  protected override onSinglePlayerRestart(): void {
+    this.startNewSingleGame(this.currentDifficulty() as string);
+  }
+
+  protected override onSinglePlayerStart(): void {
+    this.startNewSingleGame(this.currentDifficulty() as string);
+  }
+
+  private initSinglePlayer(difficulty: string) {
     const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
     if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
       difficulty = savedDiff;
       this.currentDifficulty.set(difficulty);
-    }
-
-    if (!forceNew) {
-      if (this.loadSinglePlayerProgress()) {
-        return;
-      }
     }
 
     let w = 5, h = 5;
@@ -674,27 +702,5 @@ export class NonogramStore extends BaseGameStore {
       startAt: Date.now()
     });
     this.history.set([]);
-  }
-
-  // ── 接入 BaseGameStore 统一单机断点续玩与终局安全清理引擎 ──────────────────
-  protected override enableSinglePlayerSave = true;
-
-  protected override getSinglePlayerSaveKey(): string {
-    return 'nonogram_saved_game';
-  }
-
-  protected override getSinglePlayerSaveData(): any {
-    const state = this.localState();
-    if (!state || state.status !== GameStatus.Playing) return null;
-    return { state, difficulty: this.currentDifficulty() };
-  }
-
-  protected override restoreSinglePlayerSaveData(parsed: any): boolean {
-    if (!parsed || !parsed.state || parsed.state.status !== GameStatus.Playing) return false;
-    if (parsed.difficulty) {
-      this.currentDifficulty.set(parsed.difficulty);
-    }
-    this.localState.set(parsed.state);
-    return true;
   }
 }
