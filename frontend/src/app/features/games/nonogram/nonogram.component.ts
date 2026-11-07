@@ -289,13 +289,22 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   /** Whether the board footprint exceeds the visible container viewport */
   readonly isBoardOverflowing = computed(() => {
     const h = this.store.height();
+    const w = this.store.width();
     const cell = this.cellSize();
     const colHints: number[][] = (this.store.colHints() as any) || [];
+    const rowHints: number[][] = (this.store.rowHints() as any) || [];
     const maxColHints = colHints.length > 0 ? Math.max(...colHints.map((c: number[]) => c.length), 1) : 1;
+    const maxRowHints = rowHints.length > 0 ? Math.max(...rowHints.map((r: number[]) => r.length), 1) : 1;
     const estBoardH = h * cell + (maxColHints * 14 + 10);
-    const { h: vh } = this.windowSize.size();
-    const chromeH = this.zenService.isZenMode() ? 50 : 170;
-    return estBoardH > (vh - chromeH);
+    const estBoardW = w * cell + (maxRowHints * 15 + 14);
+    const { w: vw, h: vh } = this.windowSize.size();
+    const isZen = this.zenService.isZenMode();
+    const isXl = vw >= 1280;
+    const wingsWidth = isXl ? (isZen ? 0 : 660) : 0;
+    const availW = Math.max(240, vw - wingsWidth - 48);
+    const chromeH = isZen ? 45 : (this.deviceService.isHandheld() ? (vw < 640 ? 115 : 135) : 164);
+    const availH = Math.max(240, vh - chromeH);
+    return estBoardH > availH || estBoardW > availW;
   });
 
   @ViewChild('cellsGrid') cellsGridRef?: ElementRef<HTMLElement>;
