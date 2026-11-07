@@ -51,13 +51,25 @@ export class SudokuLobbyComponent implements OnInit {
   playerId = this.authStore.currentUser()?.username || this.authStore.guestId;
 
   @Output() openLobby = new EventEmitter<void>();
-  @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}>();
+  @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number, difficulty?: string}>();
   @Output() difficultyChange = new EventEmitter<string>();
 
+  sanitizeDifficulty(diff: string | undefined | null): string {
+    if (!diff) return GameDifficulty.Easy;
+    const lower = diff.toLowerCase();
+    const match = this.difficulties.find(d => d.id === lower);
+    if (match) return match.id;
+    for (const d of this.difficulties) {
+      if (lower.includes(d.id)) return d.id;
+    }
+    return GameDifficulty.Easy;
+  }
+
   @Input() set currentDifficulty(val: string | undefined) {
-    if (val && val !== this.activeTab()) {
-      this.activeTab.set(val);
-      this.loadLevels(val);
+    const valid = this.sanitizeDifficulty(val);
+    if (valid !== this.activeTab()) {
+      this.activeTab.set(valid);
+      this.loadLevels(valid);
     }
   }
 
@@ -68,24 +80,28 @@ export class SudokuLobbyComponent implements OnInit {
 
   difficulties = sudokuDifficulties;
 
-  activeTab = signal<string>(getSavedDifficulty('sudoku', GameDifficulty.Easy));
+  activeTab = signal<string>(this.sanitizeDifficulty(getSavedDifficulty('sudoku', GameDifficulty.Easy)));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels(this.activeTab());
+    const initialDiff = this.sanitizeDifficulty(this.activeTab());
+    this.activeTab.set(initialDiff);
+    this.loadLevels(initialDiff);
   }
 
   selectDifficulty(diff: string) {
-    setSavedDifficulty('sudoku', diff);
-    this.activeTab.set(diff);
-    this.difficultyChange.emit(diff);
-    this.loadLevels(diff);
+    const sanitized = this.sanitizeDifficulty(diff);
+    setSavedDifficulty('sudoku', sanitized);
+    this.activeTab.set(sanitized);
+    this.difficultyChange.emit(sanitized);
+    this.loadLevels(sanitized);
   }
 
   private loadLevels(difficulty: string) {
+    const sanitized = this.sanitizeDifficulty(difficulty);
     this.loading.set(true);
-    this.http.get<LevelResponse[]>(`${environment.apiUrl}/sudoku/levels/${difficulty}`).subscribe({
+    this.http.get<LevelResponse[]>(`${environment.apiUrl}/sudoku/levels/${sanitized}`).subscribe({
       next: (data) => {
         this.levels.set(data || []);
         this.loading.set(false);
@@ -104,7 +120,8 @@ export class SudokuLobbyComponent implements OnInit {
         puzzle: res.puzzle.puzzle,
         solution: res.puzzle.solution,
         savedState: res.progress?.current_state,
-        timeSpent: res.progress?.time_spent
+        timeSpent: res.progress?.time_spent,
+        difficulty: this.sanitizeDifficulty(level.difficulty || res.puzzle?.difficulty || this.activeTab())
       });
     });
   }

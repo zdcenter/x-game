@@ -29,6 +29,14 @@
           <div class="flex justify-center items-center h-full">
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-accent-from)]"></div>
           </div>
+        } @else if (levels().length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-center">
+            <span class="text-4xl mb-2">🧩</span>
+            <p class="text-sm font-bold text-[var(--color-text-muted)] mb-3">{{ i18n.t('lobby.coming_soon')() || '该难度暂无关卡或加载失败' }}</p>
+            <button (click)="selectDifficulty(difficulties[0].id)" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white active:scale-95 transition-all">
+              {{ i18n.t('game.diff_sudoku_easy')() || '初级' }} (9x9)
+            </button>
+          </div>
         } @else {
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             @for (level of levels(); track level.id; let i = $index) {

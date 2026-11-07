@@ -72,6 +72,17 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     return item ? (this.i18n.t(item.labelKey as any)() || item.id) : diff;
   }
 
+  sanitizeDifficulty(diff: string | undefined | null): string {
+    if (!diff) return GameDifficulty.Easy;
+    const lower = diff.toLowerCase();
+    const match = this.sudokuDifficulties.find(d => d.id === lower);
+    if (match) return match.id;
+    for (const d of this.sudokuDifficulties) {
+      if (lower.includes(d.id)) return d.id;
+    }
+    return GameDifficulty.Easy;
+  }
+
   private roomLifecycle!: RoomLifecycleHandle;
   private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);
@@ -129,6 +140,12 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     super.ngOnInit(); // connects lobby WS
     this.view.set('lobby');
 
+    // Ensure initial difficulty is strictly normalized and persisted
+    const initialDiff = this.sanitizeDifficulty(this.activeDifficulty());
+    this.activeDifficulty.set(initialDiff);
+    this.store.currentDifficulty.set(initialDiff);
+    setSavedDifficulty('sudoku', initialDiff);
+
     const qp = this.route.snapshot.queryParamMap;
     const dailyChallengeId = qp.get('dailyChallengeId');
     const puzzleId = qp.get('puzzleId');
@@ -183,32 +200,33 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     return stats;
   }
 
-  currentDifficulty() {
+  currentDifficulty(): string {
     if (this.store.currentRoomMode() === GameMode.Single) {
-      return this.activeDifficulty();
+      return this.sanitizeDifficulty(this.activeDifficulty());
     }
     const rState = this.store.rawState() as any;
     if (rState && rState.difficulty) {
-      return rState.difficulty;
+      return this.sanitizeDifficulty(rState.difficulty);
     }
-    return this.activeDifficulty();
+    return this.sanitizeDifficulty(this.activeDifficulty());
   }
 
   changeSingleDifficulty(diff: string) {
-    this.activeDifficulty.set(diff);
-    this.store.currentDifficulty.set(diff);
-    setSavedDifficulty('sudoku', diff);
+    const sanitized = this.sanitizeDifficulty(diff);
+    this.activeDifficulty.set(sanitized);
+    this.store.currentDifficulty.set(sanitized);
+    setSavedDifficulty('sudoku', sanitized);
     if (this.store.currentRoomMode() !== GameMode.Single || this.store.roomId()) {
       return;
     }
     if (this.view() === 'lobby') {
-      if (this.sudokuLobby?.activeTab() !== diff) {
-        this.sudokuLobby?.selectDifficulty(diff);
+      if (this.sudokuLobby?.activeTab() !== sanitized) {
+        this.sudokuLobby?.selectDifficulty(sanitized);
       }
       return;
     }
     // Find next unsolved level for this diff
-    this.http.get<any[]>(`${environment.apiUrl}/sudoku/levels/${diff}`).subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/sudoku/levels/${sanitized}`).subscribe({
       next: (levels) => {
         let nextLevel = levels.find(l => l.progress?.status !== 'completed');
         if (!nextLevel && levels.length > 0) {
@@ -216,15 +234,14 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
         }
         if (nextLevel) {
           this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${nextLevel.id}`).subscribe(res => {
-            if (res?.puzzle) {
-              this.startLevel({
-                id: res.puzzle.id,
-                puzzle: res.puzzle.puzzle,
-                solution: res.puzzle.solution,
-                savedState: res.progress?.current_state,
-                timeSpent: res.progress?.time_spent || 0
-              });
-            }
+            this.startLevel({
+              id: res.puzzle.id,
+              puzzle: res.puzzle.puzzle,
+              solution: res.puzzle.solution,
+              savedState: res.progress?.current_state,
+              timeSpent: res.progress?.time_spent,
+              difficulty: sanitized
+            });
           });
         }
       }
@@ -311,16 +328,22 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
-  startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number}) {
+  startLevel(level: {id: string, puzzle: string, solution?: string, savedState?: string, timeSpent?: number, difficulty?: string}) {
     this.view.set('play');
-    const match = level.id.match(/^([a-zA-Z]+)-/);
-    if (match && match[1]) {
-      this.activeDifficulty.set(match[1]);
-      setSavedDifficulty('sudoku', match[1]);
+    let diff = level.difficulty;
+    if (!diff && level.id) {
+      const parts = level.id.toLowerCase().split('-');
+      diff = parts.find(p => this.sudokuDifficulties.some(d => d.id === p));
     }
+    const finalDiff = this.sanitizeDifficulty(diff || this.activeDifficulty());
+    this.activeDifficulty.set(finalDiff);
+    this.store.currentDifficulty.set(finalDiff);
+    setSavedDifficulty('sudoku', finalDiff);
+
     this.store.currentPuzzleId.set(level.id);
     this.store.initBoard(level.puzzle, level.solution, level.savedState, level.timeSpent);
   }
+
   playNextLevel() {
     const currentId = this.store.currentPuzzleId();
     if (!currentId) return;
@@ -330,7 +353,8 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       return;
     }
     const prefix = match[1];
-    const diff = prefix.replace(/^sudoku-/, '');
+    const diffMatch = prefix.toLowerCase().match(/(easy|medium|hard|expert)/);
+    const diff = this.sanitizeDifficulty(diffMatch ? diffMatch[1] : this.activeDifficulty());
     const numStr = match[2];
     const nextNum = parseInt(numStr, 10) + 1;
     const nextId = `${prefix}-${nextNum.toString().padStart(numStr.length, '0')}`;

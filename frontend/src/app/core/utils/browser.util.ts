@@ -76,12 +76,14 @@ export const cookieRemove = (name: string): void => {
 export const getSavedDifficulty = (gameId: string, defaultDiff: string): string => {
   if (!isBrowser()) return defaultDiff;
   try {
-    return (
+    const val =
       localStorage.getItem(`${gameId}_single_diff`) ||
       localStorage.getItem(`${gameId}_difficulty`) ||
-      localStorage.getItem(`game_diff_${gameId}`) ||
-      defaultDiff
-    );
+      localStorage.getItem(`game_diff_${gameId}`);
+    if (!val || val.trim() === '' || val.toLowerCase() === gameId.toLowerCase()) {
+      return defaultDiff;
+    }
+    return val;
   } catch {
     return defaultDiff;
   }
@@ -92,6 +94,7 @@ export const getSavedDifficulty = (gameId: string, defaultDiff: string): string 
  */
 export const setSavedDifficulty = (gameId: string, diff: string): void => {
   if (!isBrowser() || !gameId || !diff) return;
+  if (diff.toLowerCase() === gameId.toLowerCase()) return;
   try {
     localStorage.setItem(`${gameId}_single_diff`, diff);
     if (gameId === 'nonogram') {
