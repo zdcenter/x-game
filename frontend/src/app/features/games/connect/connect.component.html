@@ -109,7 +109,7 @@
     </app-game-handheld-header>
   }
 
-  <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2">
+  <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
     <ng-container *ngIf="view() === 'lobby'">
       <app-connect-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
         (startLevel)="startLevel($event)">

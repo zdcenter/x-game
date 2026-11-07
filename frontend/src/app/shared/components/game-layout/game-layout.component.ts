@@ -535,6 +535,40 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
               <span>{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出沉浸') : (i18n.t('game.zen_mode')() || '专注全屏模式') }}</span>
             </button>
           </div>
+
+          <!-- Card 2: 💡 官方进阶指南与深度解析 (SEO internal link + content reinforcement) -->
+          <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col gap-3">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--color-border-card)]/60">
+              <span class="cockpit-card-title flex items-center gap-2">
+                <span class="text-lg">💡</span>
+                <span>{{ i18n.t('game.strategy_guide')() || '进阶攻略' }}</span>
+              </span>
+              <span class="badge-safe font-mono font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20">Tips</span>
+            </div>
+
+            <p class="text-xs text-[var(--color-text-muted)] leading-relaxed">
+              {{ i18n.t('game.strategy_guide_tip')() || '掌握核心解法、排除技巧与高效决策战术，助你轻松通关与提升 PK 胜率。' }}
+            </p>
+
+            <a [routerLink]="['/', i18n.currentLang(), 'docs', gameId]"
+               class="w-full py-2.5 px-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 font-bold text-xs flex items-center justify-between active:scale-98 transition-all group">
+              <span class="flex items-center gap-1.5">
+                <span>📖</span>
+                <span>{{ i18n.t('game.read_strategy_guide')() || '阅读高分攻略手册' }}</span>
+              </span>
+              <span class="group-hover:translate-x-0.5 transition-transform text-sm font-mono">→</span>
+            </a>
+
+            <!-- Daily Quest Link -->
+            <a [routerLink]="['/', i18n.currentLang(), 'daily']"
+               class="w-full py-2 px-3 rounded-lg text-xs font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-border-card)]/40 flex items-center justify-between transition-colors">
+              <span class="flex items-center gap-1.5">
+                <span>📅</span>
+                <span>{{ i18n.t('daily.title')() || '今日每日挑战' }}</span>
+              </span>
+              <span class="text-[10px] text-amber-500 font-mono font-bold">+100 🪙</span>
+            </a>
+          </div>
         </aside>
       }
 

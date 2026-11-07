@@ -101,7 +101,7 @@
       (levelSelect)="startLevel($event)">
     </app-hashi-lobby>
   } @else {
-    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto">
+    <div class="w-full flex-grow flex flex-col relative min-h-0 w-full items-center justify-center my-auto pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
       
       <!-- Players / Opponents (Top Universal PK HUD) -->
       @if (store.currentRoomMode() !== GameMode.Single && store.localStatus() !== GameStatus.Waiting) {

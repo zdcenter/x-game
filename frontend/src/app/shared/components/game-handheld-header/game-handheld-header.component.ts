@@ -21,7 +21,7 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
     class: 'w-full block shrink-0 z-30 pointer-events-auto'
   },
   template: `
-    <div class="w-full flex items-center justify-between px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-3.5 bg-[var(--color-bg-card)]/90 backdrop-blur-md border-b border-[var(--color-border-card)] shadow-xs select-none sticky top-0 z-30 shrink-0 min-h-[50px] sm:min-h-[64px] md:min-h-[68px]">
+    <div class="w-full flex items-center justify-between px-2 sm:px-4 md:px-6 pt-[max(0.5rem,env(safe-area-inset-top,0px))] pb-2 sm:py-3 md:py-3.5 bg-[var(--color-bg-card)]/90 backdrop-blur-md border-b border-[var(--color-border-card)] shadow-xs select-none sticky top-0 z-30 shrink-0 min-h-[50px] sm:min-h-[64px] md:min-h-[68px]">
       
       <!-- Left: Back + Rules (极左翼锚定) -->
       <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">

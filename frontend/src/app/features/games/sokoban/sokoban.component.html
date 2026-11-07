@@ -185,7 +185,7 @@
 
         <!-- Action Toolbar -->
         @if (!store.isSpectator()) {
-          <div class="w-full mt-2" [style.max-width]="boardDimPx()">
+          <div class="w-full mt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]" [style.max-width]="boardDimPx()">
             <app-game-toolbar
               [layoutStyle]="'compact'"
               [showBack]="true"

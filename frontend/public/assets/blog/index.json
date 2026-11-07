@@ -1100,6 +1100,82 @@
     }
   },
   {
+    "id": "block-puzzle-strategy",
+    "date": "2026-08-26",
+    "en": {
+      "title": "Block Puzzle Strategy: 10 Tips to Survive Longer and Score Higher",
+      "description": "10 proven Block Puzzle tips: keep the board flat, read the piece queue, time your combos, avoid early-game mistakes. Practice in Endless and PK modes.",
+      "keywords": "block puzzle strategy, block puzzle tips, wood block puzzle, block blast strategy, high score tips",
+      "readTime": "9 min read",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "Block Puzzle",
+        "Strategy",
+        "Tips"
+      ]
+    },
+    "zh": {
+      "title": "方块拼图策略：10 个技巧，让你活得更久、分数更高",
+      "description": "10 个经过验证的方块拼图技巧：保持棋盘平整、读懂积木队列、把握连击时机、避开提前出局的常见错误。在 Puzzle PK 的无限模式与 PK 模式中反复练习，分数自然更高。",
+      "keywords": "方块拼图, 木块拼图技巧, 消方块攻略, 益智游戏, 高分技巧",
+      "readTime": "9 分钟阅读",
+      "author": "Puzzle PK 团队",
+      "tags": [
+        "方块拼图",
+        "策略",
+        "技巧"
+      ]
+    },
+    "es": {
+      "title": "Estrategia de Block Puzzle: 10 consejos para durar más y sumar más puntos",
+      "description": "10 consejos probados de Block Puzzle: mantén el tablero plano, lee la cola de piezas, elige el momento de tus combos y evita los errores de las primeras partidas. Practica en los modos Endless y PK.",
+      "keywords": "estrategia de block puzzle, consejos de block puzzle, puzzle de bloques de madera, estrategia de block blast, trucos para puntuación alta",
+      "readTime": "9 min de lectura",
+      "author": "Equipo de Puzzle PK",
+      "tags": ""
+    },
+    "ja": {
+      "title": "ブロックパズル攻略：長く生き延びて高得点を狙う10のコツ",
+      "description": "実証済みのブロックパズルのコツ10選：盤面を平らに保つ、ピースの並びを読む、コンボのタイミングを計る、序盤のミスを避ける。エンドレスモードとPKモードで練習しよう。",
+      "keywords": "ブロックパズル 攻略, ブロックパズル コツ, ウッドブロックパズル, ブロックブラスト 攻略, 高得点 コツ",
+      "readTime": "9 分で読めます",
+      "author": "Puzzle PK チーム",
+      "tags": ""
+    },
+    "ko": {
+      "title": "블록 퍼즐 전략: 더 오래 살아남고 더 높은 점수를 받는 10가지 팁",
+      "description": "검증된 블록 퍼즐 팁 10가지: 보드를 평평하게 유지하고, 조각 큐를 읽고, 콤보 타이밍을 맞추고, 초반 실수를 피하세요. 엔들리스 모드와 PK 모드에서 연습하세요.",
+      "keywords": "블록 퍼즐 전략, 블록 퍼즐 팁, 우드 블록 퍼즐, 블록 블라스트 전략, 고득점 팁",
+      "readTime": "9분 소요",
+      "author": "Puzzle PK 팀",
+      "tags": ""
+    },
+    "pt": {
+      "title": "Estratégia de Block Puzzle: 10 dicas para durar mais e pontuar mais alto",
+      "description": "10 dicas comprovadas de Block Puzzle: mantenha o tabuleiro plano, leia a fila de peças, escolha o momento dos seus combos e evite erros de início de partida. Pratique nos modos Endless e PK.",
+      "keywords": "estratégia de block puzzle, dicas de block puzzle, puzzle de blocos de madeira, estratégia de block blast, dicas de pontuação alta",
+      "readTime": "9 min de leitura",
+      "author": "Equipe Puzzle PK",
+      "tags": ""
+    },
+    "fr": {
+      "title": "Stratégie de Block Puzzle : 10 astuces pour survivre plus longtemps et marquer plus de points",
+      "description": "10 astuces éprouvées de Block Puzzle : gardez le plateau plat, lisez la file de pièces, choisissez le moment de vos combos et évitez les erreurs de début de partie. Entraînez-vous dans les modes Endless et PK.",
+      "keywords": "stratégie block puzzle, astuces block puzzle, puzzle de blocs de bois, stratégie block blast, astuces pour un score élevé",
+      "readTime": "9 min de lecture",
+      "author": "Équipe Puzzle PK",
+      "tags": ""
+    },
+    "de": {
+      "title": "Block-Puzzle-Strategie: 10 Tipps, um länger zu überleben und höhere Punktzahlen zu erreichen",
+      "description": "10 bewährte Block-Puzzle-Tipps: Halte das Spielfeld eben, lies die Steine-Reihenfolge, wähle den Zeitpunkt deiner Combos und vermeide Anfängerfehler. Trainiere im Endlos- und PK-Modus.",
+      "keywords": "Block-Puzzle-Strategie, Block-Puzzle-Tipps, Holzblock-Puzzle, Block-Blast-Strategie, Tipps für hohe Punktzahlen",
+      "readTime": "9 Min. Lesezeit",
+      "author": "Puzzle PK Team",
+      "tags": ""
+    }
+  },
+  {
     "id": "classic2048-strategy",
     "date": "2026-08-26",
     "en": {
@@ -1176,77 +1252,79 @@
     }
   },
   {
-    "id": "block-puzzle-strategy",
+    "id": "hashi-bridges-strategy",
     "date": "2026-08-26",
     "en": {
-      "title": "Block Puzzle Strategy: 10 Tips to Survive Longer and Score Higher",
-      "description": "10 proven Block Puzzle tips: keep the board flat, read the piece queue, time your combos, avoid early-game mistakes. Practice in Endless and PK modes.",
-      "keywords": "block puzzle strategy, block puzzle tips, wood block puzzle, block blast strategy, high score tips",
-      "readTime": "9 min read",
+      "title": "Hashi (Bridges) Puzzle Strategy: From Beginner to Expert",
+      "description": "Learn Hashi (Bridges): rules, corner and edge patterns, 8- and 6-islands, forced pairs, connectivity, a solved 7x7 example, and Speed PK tips.",
+      "keywords": "hashi puzzle, bridges puzzle strategy, hashi solver tips, bridge logic puzzle, how to play hashi",
+      "readTime": "10 min read",
       "author": "Puzzle PK Team",
       "tags": [
-        "Block Puzzle",
+        "Hashi",
+        "Bridges",
         "Strategy",
-        "Tips"
+        "Logic Puzzle"
       ]
     },
     "zh": {
-      "title": "方块拼图策略：10 个技巧，让你活得更久、分数更高",
-      "description": "10 个经过验证的方块拼图技巧：保持棋盘平整、读懂积木队列、把握连击时机、避开提前出局的常见错误。在 Puzzle PK 的无限模式与 PK 模式中反复练习，分数自然更高。",
-      "keywords": "方块拼图, 木块拼图技巧, 消方块攻略, 益智游戏, 高分技巧",
-      "readTime": "9 分钟阅读",
+      "title": "桥梁谜题（Hashi）从入门到精通：完整攻略",
+      "description": "从五条规则到专家级技巧，学会玩桥梁谜题（Hashi）：角落与边缘规律、8 与 6 的处理、强制配对、连通性推理、完整 7×7 解题演示，还有竞速对战（Speed PK）的实战建议。",
+      "keywords": "桥梁谜题, 岛桥谜题, 数桥游戏, 桥梁攻略, 逻辑谜题",
+      "readTime": "10 分钟阅读",
       "author": "Puzzle PK 团队",
       "tags": [
-        "方块拼图",
+        "桥梁谜题",
+        "数桥",
         "策略",
-        "技巧"
+        "逻辑谜题"
       ]
     },
     "es": {
-      "title": "Estrategia de Block Puzzle: 10 consejos para durar más y sumar más puntos",
-      "description": "10 consejos probados de Block Puzzle: mantén el tablero plano, lee la cola de piezas, elige el momento de tus combos y evita los errores de las primeras partidas. Practica en los modos Endless y PK.",
-      "keywords": "estrategia de block puzzle, consejos de block puzzle, puzzle de bloques de madera, estrategia de block blast, trucos para puntuación alta",
-      "readTime": "9 min de lectura",
+      "title": "Estrategia del puzzle Hashi (Puentes): de principiante a experto",
+      "description": "Aprende Hashi (Puentes): reglas, patrones de esquinas y bordes, islas 8 y 6, pares forzados, conectividad, un ejemplo resuelto de 7×7 y consejos para Speed PK.",
+      "keywords": "puzzle hashi, estrategia puzzle de puentes, trucos para resolver hashi, puzzle lógico de puentes, cómo jugar a hashi",
+      "readTime": "10 min de lectura",
       "author": "Equipo de Puzzle PK",
       "tags": ""
     },
     "ja": {
-      "title": "ブロックパズル攻略：長く生き延びて高得点を狙う10のコツ",
-      "description": "実証済みのブロックパズルのコツ10選：盤面を平らに保つ、ピースの並びを読む、コンボのタイミングを計る、序盤のミスを避ける。エンドレスモードとPKモードで練習しよう。",
-      "keywords": "ブロックパズル 攻略, ブロックパズル コツ, ウッドブロックパズル, ブロックブラスト 攻略, 高得点 コツ",
-      "readTime": "9 分で読めます",
+      "title": "ハシ（橋）パズル攻略：初心者から上級者まで",
+      "description": "ハシ（橋）パズルを学ぼう：ルール、角と辺のパターン、8と6の島、強制ペア、連結性、解ききった7×7の例題、スピードPKのコツ。",
+      "keywords": "ハシパズル, 橋パズル 攻略, ハシ 解き方 コツ, 橋 ロジックパズル, ハシパズルの遊び方",
+      "readTime": "10分で読了",
       "author": "Puzzle PK チーム",
       "tags": ""
     },
     "ko": {
-      "title": "블록 퍼즐 전략: 더 오래 살아남고 더 높은 점수를 받는 10가지 팁",
-      "description": "검증된 블록 퍼즐 팁 10가지: 보드를 평평하게 유지하고, 조각 큐를 읽고, 콤보 타이밍을 맞추고, 초반 실수를 피하세요. 엔들리스 모드와 PK 모드에서 연습하세요.",
-      "keywords": "블록 퍼즐 전략, 블록 퍼즐 팁, 우드 블록 퍼즐, 블록 블라스트 전략, 고득점 팁",
-      "readTime": "9분 소요",
+      "title": "하시(다리) 퍼즐 전략: 초보자부터 고수까지",
+      "description": "하시(다리) 퍼즐 배우기: 규칙, 모서리·가장자리 패턴, 8과 6 섬, 강제 페어, 연결성, 풀이된 7×7 예제, 스피드 PK 팁.",
+      "keywords": "하시 퍼즐, 다리 퍼즐 전략, 하시 퍼즐 풀이 팁, 다리 연결 논리 퍼즐, 하시 퍼즐 하는 법",
+      "readTime": "10분 읽기",
       "author": "Puzzle PK 팀",
       "tags": ""
     },
     "pt": {
-      "title": "Estratégia de Block Puzzle: 10 dicas para durar mais e pontuar mais alto",
-      "description": "10 dicas comprovadas de Block Puzzle: mantenha o tabuleiro plano, leia a fila de peças, escolha o momento dos seus combos e evite erros de início de partida. Pratique nos modos Endless e PK.",
-      "keywords": "estratégia de block puzzle, dicas de block puzzle, puzzle de blocos de madeira, estratégia de block blast, dicas de pontuação alta",
-      "readTime": "9 min de leitura",
+      "title": "Estratégia do puzzle Hashi (Pontes): do iniciante ao especialista",
+      "description": "Aprenda Hashi (Pontes): regras, padrões de cantos e bordas, ilhas 8 e 6, pares forçados, conectividade, um exemplo resolvido de 7×7 e dicas de Speed PK.",
+      "keywords": "puzzle hashi, estratégia de puzzle de pontes, dicas para resolver hashi, puzzle lógico de pontes, como jogar hashi",
+      "readTime": "10 min de leitura",
       "author": "Equipe Puzzle PK",
       "tags": ""
     },
     "fr": {
-      "title": "Stratégie de Block Puzzle : 10 astuces pour survivre plus longtemps et marquer plus de points",
-      "description": "10 astuces éprouvées de Block Puzzle : gardez le plateau plat, lisez la file de pièces, choisissez le moment de vos combos et évitez les erreurs de début de partie. Entraînez-vous dans les modes Endless et PK.",
-      "keywords": "stratégie block puzzle, astuces block puzzle, puzzle de blocs de bois, stratégie block blast, astuces pour un score élevé",
-      "readTime": "9 min de lecture",
+      "title": "Stratégie du puzzle Hashi (Ponts) : du débutant à l'expert",
+      "description": "Apprenez le Hashi (Ponts) : règles, motifs de coins et de bords, îles 8 et 6, paires forcées, connectivité, un exemple résolu de 7×7 et des conseils pour le Speed PK.",
+      "keywords": "puzzle hashi, stratégie puzzle de ponts, astuces pour résoudre le hashi, puzzle logique de ponts, comment jouer au hashi",
+      "readTime": "10 min de lecture",
       "author": "Équipe Puzzle PK",
       "tags": ""
     },
     "de": {
-      "title": "Block-Puzzle-Strategie: 10 Tipps, um länger zu überleben und höhere Punktzahlen zu erreichen",
-      "description": "10 bewährte Block-Puzzle-Tipps: Halte das Spielfeld eben, lies die Steine-Reihenfolge, wähle den Zeitpunkt deiner Combos und vermeide Anfängerfehler. Trainiere im Endlos- und PK-Modus.",
-      "keywords": "Block-Puzzle-Strategie, Block-Puzzle-Tipps, Holzblock-Puzzle, Block-Blast-Strategie, Tipps für hohe Punktzahlen",
-      "readTime": "9 Min. Lesezeit",
+      "title": "Hashi-Strategie (Brücken-Rätsel): vom Anfänger zum Experten",
+      "description": "Lerne Hashi (Brücken): Regeln, Ecken- und Randmuster, 8er- und 6er-Inseln, Zwangspaare, Konnektivität, ein gelöstes 7×7-Beispiel und Speed-PK-Tipps.",
+      "keywords": "Hashi-Rätsel, Brückenrätsel Strategie, Hashi-Lösungstipps, Brücken-Logikrätsel, wie spielt man Hashi",
+      "readTime": "10 Min. Lesezeit",
       "author": "Puzzle PK Team",
       "tags": ""
     }
@@ -1474,84 +1552,6 @@
       "title": "Schiebepuzzle-Strategie: So löst du jedes 4x4-, 5x5- oder 6x6-Brett",
       "description": "Meistere das Schiebepuzzle: die Reihen-für-Reihe-Methode, Eck- und Zwei-Reihen-Techniken, die Paritätsprüfung und Tipps für Speed PK. Löse jedes 4x4-, 5x5- oder 6x6-Brett – jedes Mal.",
       "keywords": "Schiebepuzzle Strategie, Schiebepuzzle lösen, 15-Puzzle Lösung, Schiebepuzzle Tipps, 4x4 Schiebepuzzle",
-      "readTime": "10 Min. Lesezeit",
-      "author": "Puzzle PK Team",
-      "tags": ""
-    }
-  },
-  {
-    "id": "hashi-bridges-strategy",
-    "date": "2026-08-26",
-    "en": {
-      "title": "Hashi (Bridges) Puzzle Strategy: From Beginner to Expert",
-      "description": "Learn Hashi (Bridges): rules, corner and edge patterns, 8- and 6-islands, forced pairs, connectivity, a solved 7x7 example, and Speed PK tips.",
-      "keywords": "hashi puzzle, bridges puzzle strategy, hashi solver tips, bridge logic puzzle, how to play hashi",
-      "readTime": "10 min read",
-      "author": "Puzzle PK Team",
-      "tags": [
-        "Hashi",
-        "Bridges",
-        "Strategy",
-        "Logic Puzzle"
-      ]
-    },
-    "zh": {
-      "title": "桥梁谜题（Hashi）从入门到精通：完整攻略",
-      "description": "从五条规则到专家级技巧，学会玩桥梁谜题（Hashi）：角落与边缘规律、8 与 6 的处理、强制配对、连通性推理、完整 7×7 解题演示，还有竞速对战（Speed PK）的实战建议。",
-      "keywords": "桥梁谜题, 岛桥谜题, 数桥游戏, 桥梁攻略, 逻辑谜题",
-      "readTime": "10 分钟阅读",
-      "author": "Puzzle PK 团队",
-      "tags": [
-        "桥梁谜题",
-        "数桥",
-        "策略",
-        "逻辑谜题"
-      ]
-    },
-    "es": {
-      "title": "Estrategia del puzzle Hashi (Puentes): de principiante a experto",
-      "description": "Aprende Hashi (Puentes): reglas, patrones de esquinas y bordes, islas 8 y 6, pares forzados, conectividad, un ejemplo resuelto de 7×7 y consejos para Speed PK.",
-      "keywords": "puzzle hashi, estrategia puzzle de puentes, trucos para resolver hashi, puzzle lógico de puentes, cómo jugar a hashi",
-      "readTime": "10 min de lectura",
-      "author": "Equipo de Puzzle PK",
-      "tags": ""
-    },
-    "ja": {
-      "title": "ハシ（橋）パズル攻略：初心者から上級者まで",
-      "description": "ハシ（橋）パズルを学ぼう：ルール、角と辺のパターン、8と6の島、強制ペア、連結性、解ききった7×7の例題、スピードPKのコツ。",
-      "keywords": "ハシパズル, 橋パズル 攻略, ハシ 解き方 コツ, 橋 ロジックパズル, ハシパズルの遊び方",
-      "readTime": "10分で読了",
-      "author": "Puzzle PK チーム",
-      "tags": ""
-    },
-    "ko": {
-      "title": "하시(다리) 퍼즐 전략: 초보자부터 고수까지",
-      "description": "하시(다리) 퍼즐 배우기: 규칙, 모서리·가장자리 패턴, 8과 6 섬, 강제 페어, 연결성, 풀이된 7×7 예제, 스피드 PK 팁.",
-      "keywords": "하시 퍼즐, 다리 퍼즐 전략, 하시 퍼즐 풀이 팁, 다리 연결 논리 퍼즐, 하시 퍼즐 하는 법",
-      "readTime": "10분 읽기",
-      "author": "Puzzle PK 팀",
-      "tags": ""
-    },
-    "pt": {
-      "title": "Estratégia do puzzle Hashi (Pontes): do iniciante ao especialista",
-      "description": "Aprenda Hashi (Pontes): regras, padrões de cantos e bordas, ilhas 8 e 6, pares forçados, conectividade, um exemplo resolvido de 7×7 e dicas de Speed PK.",
-      "keywords": "puzzle hashi, estratégia de puzzle de pontes, dicas para resolver hashi, puzzle lógico de pontes, como jogar hashi",
-      "readTime": "10 min de leitura",
-      "author": "Equipe Puzzle PK",
-      "tags": ""
-    },
-    "fr": {
-      "title": "Stratégie du puzzle Hashi (Ponts) : du débutant à l'expert",
-      "description": "Apprenez le Hashi (Ponts) : règles, motifs de coins et de bords, îles 8 et 6, paires forcées, connectivité, un exemple résolu de 7×7 et des conseils pour le Speed PK.",
-      "keywords": "puzzle hashi, stratégie puzzle de ponts, astuces pour résoudre le hashi, puzzle logique de ponts, comment jouer au hashi",
-      "readTime": "10 min de lecture",
-      "author": "Équipe Puzzle PK",
-      "tags": ""
-    },
-    "de": {
-      "title": "Hashi-Strategie (Brücken-Rätsel): vom Anfänger zum Experten",
-      "description": "Lerne Hashi (Brücken): Regeln, Ecken- und Randmuster, 8er- und 6er-Inseln, Zwangspaare, Konnektivität, ein gelöstes 7×7-Beispiel und Speed-PK-Tipps.",
-      "keywords": "Hashi-Rätsel, Brückenrätsel Strategie, Hashi-Lösungstipps, Brücken-Logikrätsel, wie spielt man Hashi",
       "readTime": "10 Min. Lesezeit",
       "author": "Puzzle PK Team",
       "tags": ""

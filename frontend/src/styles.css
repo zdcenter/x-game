@@ -29,7 +29,7 @@
     --color-border-card: #e2e8f0; /* slate-200 */
     --color-border-thick: #cbd5e1; /* slate-300 */
     --color-sudoku-grid: #cbd5e1;
-    --color-sudoku-thick: #64748b;
+    --color-sudoku-thick: #475569;
     --color-accent-from: #3b82f6; /* blue-500 */
     --color-accent-to: #10b981; /* emerald-500 */
     --color-cell-highlight: rgba(255, 255, 255, 0.9);
@@ -119,6 +119,8 @@
     --color-bg-card: #2c2c2e;
     --color-border-card: #3a3a3c;
     --color-border-thick: #48484a;
+    --color-sudoku-grid: #3a3a3c;
+    --color-sudoku-thick: #636366;
     --color-accent-from: #60a5fa;
     --color-accent-to: #34d399;
     --color-cell-highlight: rgba(255, 255, 255, 0.08);

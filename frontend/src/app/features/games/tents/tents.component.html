@@ -403,7 +403,7 @@
 
     <!-- 底部多功能操控热区 -->
     @if (store.currentRoomMode() === GameMode.Single) {
-      <div class="w-full max-w-lg flex flex-col gap-2 mt-3 z-10 shrink-0">
+      <div class="w-full max-w-lg flex flex-col gap-2 mt-3 z-10 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
 
         <!-- 底部核心工具栏 -->
         <div class="flex items-center justify-between p-1.5 sm:p-2 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md">

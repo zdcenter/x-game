@@ -178,7 +178,7 @@
     
     <!-- Single Player Actions -->
     @if (currentRoomMode() === GameMode.Single) {
-      <div class="flex-none flex justify-center items-center gap-4 py-2 w-full mx-auto relative z-10 shrink-0 mt-2 sm:mt-3" [style.max-width]="boardSizePx()">
+      <div class="flex-none flex justify-center items-center gap-4 py-2 w-full mx-auto relative z-10 shrink-0 mt-2 sm:mt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]" [style.max-width]="boardSizePx()">
 
         <app-game-toolbar
           [layoutStyle]="'compact'"

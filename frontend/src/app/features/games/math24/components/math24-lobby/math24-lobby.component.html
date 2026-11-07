@@ -29,22 +29,26 @@
         @for (level of paginatedLevels(); track level.id; let i = $index) {
           <button 
             (click)="playLevel(level, (currentPage() - 1) * pageSize + i)"
-            class="aspect-square flex items-center justify-center rounded-xl text-lg sm:text-xl font-bold transition-all duration-300 relative group overflow-hidden shadow-lg border"
+            class="aspect-square flex flex-col items-center justify-center p-2 rounded-xl text-base sm:text-lg font-bold transition-all duration-300 relative group overflow-hidden active:scale-98 cursor-pointer select-none border"
             [ngClass]="{
-              'bg-[var(--color-bg-card)] text-emerald-500 border-emerald-500/50 hover:bg-emerald-500/10': level.progress?.status === GameStatus.Finished,
-              'bg-[var(--color-bg-main)] text-[var(--color-text-main)] border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] hover:border-[var(--color-border-thick)] hover:text-[var(--color-accent-from)]': level.progress?.status !== GameStatus.Finished
+              'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]': level.progress?.status === GameStatus.Finished,
+              'bg-amber-500/10 text-amber-400 border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.3)]': level.progress?.status === GameStatus.Playing,
+              'bg-[var(--color-bg-main)] text-[var(--color-text-main)] border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] hover:shadow-[0_0_15px_rgba(var(--color-accent-from-rgb),0.2)]': !level.progress || (level.progress.status !== GameStatus.Finished && level.progress.status !== GameStatus.Playing)
             }">
             
-            <span class="z-10 relative text-sm sm:text-base whitespace-nowrap">{{ i18n.t('game.level')() }} {{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
-            
+            <!-- Finished corner badge -->
             @if (level.progress?.status === GameStatus.Finished) {
-              <div class="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
-                <span class="text-4xl">⭐</span>
+              <div class="absolute top-0 right-0 w-7 h-7 bg-emerald-500/20 rotate-45 transform translate-x-3.5 -translate-y-3.5"></div>
+              <div class="absolute top-0.5 right-0.5">
+                <span class="text-emerald-400 text-xs leading-none">⭐</span>
               </div>
-              <div class="absolute -top-1 -right-1">
-                <span class="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] text-sm sm:text-base">★</span>
-              </div>
+            } @else if (level.progress?.status === GameStatus.Playing) {
+              <div class="absolute top-0 right-0 w-7 h-7 bg-amber-500/20 rotate-45 transform translate-x-3.5 -translate-y-3.5"></div>
+              <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
             }
+
+            <span class="z-10 relative text-xs sm:text-sm font-black whitespace-nowrap">{{ i18n.t('game.level')() }}</span>
+            <span class="z-10 relative text-sm sm:text-base font-black font-mono">{{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
           </button>
         }
       </div>

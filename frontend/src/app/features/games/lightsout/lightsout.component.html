@@ -239,7 +239,7 @@
 
       <!-- Unified Action Toolbar below board (Single Player) -->
       @if (store.currentRoomMode() === GameMode.Single) {
-        <div class="flex-none flex justify-center items-center py-2 sm:py-3 w-full mx-auto relative z-20 shrink-0" [style.max-width]="boardSizePx()">
+        <div class="flex-none flex justify-center items-center py-2 sm:py-3 w-full mx-auto relative z-20 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]" [style.max-width]="boardSizePx()">
           <app-game-toolbar
             [layoutStyle]="'compact'"
             [showPrev]="false"

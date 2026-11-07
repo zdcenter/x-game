@@ -180,7 +180,7 @@
               </div>
 
               <!-- Toolbar (Sudoku Style) -->
-              <div class="mt-2.5 sm:mt-3 md:mt-4 flex justify-center gap-1.5 md:gap-3 w-full max-w-[500px]" *ngIf="store.status() !== GameStatus.Waiting">
+              <div class="mt-2.5 sm:mt-3 md:mt-4 flex justify-center gap-1.5 md:gap-3 w-full max-w-[500px] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]" *ngIf="store.status() !== GameStatus.Waiting">
                 
                 @if (store.currentRoomMode() === GameMode.Single) {
                   <app-game-toolbar

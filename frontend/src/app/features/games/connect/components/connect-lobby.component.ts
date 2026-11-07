@@ -47,34 +47,55 @@ import { ConnectStore } from '../connect.store';
             @for (level of store.levelsList(); track level.id; let i = $index) {
               <button 
                 (click)="startLevel.emit(level.id)"
-                class="flex flex-col items-center p-4 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-from)] hover:shadow-[0_0_15px_rgba(var(--color-accent-from-rgb),0.3)] transition-all group relative overflow-hidden"
+                class="flex flex-col items-center p-3 sm:p-4 rounded-xl border transition-all group relative overflow-hidden active:scale-98 cursor-pointer select-none"
+                [ngClass]="{
+                  'border-emerald-500/40 bg-emerald-500/5 hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.25)]': level.progress?.status === GameStatus.Finished,
+                  'border-amber-500/40 bg-amber-500/5 hover:border-amber-400 hover:shadow-[0_0_15px_rgba(245,158,11,0.25)]': level.progress?.status === GameStatus.Playing,
+                  'border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-[var(--color-accent-from)] hover:shadow-[0_0_15px_rgba(var(--color-accent-from-rgb),0.2)]': !level.progress || (level.progress.status !== GameStatus.Finished && level.progress.status !== GameStatus.Playing)
+                }"
               >
-                <!-- Status indicator -->
-                @if (level.progress?.status === GameStatus.Playing) {
+                <!-- Finished corner badge -->
+                @if (level.progress?.status === GameStatus.Finished) {
+                  <div class="absolute top-0 right-0 w-8 h-8 bg-emerald-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
+                  <div class="absolute top-1 right-1 flex items-center justify-center">
+                    <span class="text-emerald-500 text-xs leading-none">⭐</span>
+                  </div>
+                } @else if (level.progress?.status === GameStatus.Playing) {
                   <div class="absolute top-0 right-0 w-8 h-8 bg-yellow-500/20 rotate-45 transform translate-x-4 -translate-y-4"></div>
                   <div class="absolute top-1 right-1 w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
                 }
                 
-                <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)] transition-colors mb-2 whitespace-nowrap">
+                <span class="text-sm sm:text-base font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)] transition-colors mb-1.5 whitespace-nowrap">
                   {{ i18n.t('game.level')() }} {{ i + 1 | number:'3.0-0' }}
                 </span>
                 
                 <!-- Stars -->
-                <div class="flex gap-1 h-4">
+                <div class="flex gap-1 h-4 items-center justify-center">
                   @if (level.progress?.status === GameStatus.Finished) {
                     @for (star of [1,2,3]; track star) {
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" 
-                           [class.text-yellow-400]="(level.progress?.stars || 3) >= star"
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" 
+                           [class.text-amber-400]="(level.progress?.stars || 3) >= star"
                            [class.text-[var(--color-border-thick)]]="(level.progress?.stars || 3) < star"
                            viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    }
+                  } @else {
+                    @for (star of [1,2,3]; track star) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-[var(--color-border-card)]/50" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     }
                   }
                 </div>
                 
-                @if (level.progress?.status === GameStatus.Playing) {
-                  <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider">{{ i18n.t('game.in_progress')() }}</span>
+                <!-- Status Label -->
+                @if (level.progress?.status === GameStatus.Finished) {
+                  <span class="text-[10px] text-emerald-500 font-bold mt-1.5 uppercase tracking-wider text-center">{{ i18n.t('game.finished')() }}</span>
+                } @else if (level.progress?.status === GameStatus.Playing) {
+                  <span class="text-[10px] text-yellow-500 font-bold mt-1.5 uppercase tracking-wider text-center animate-pulse">{{ i18n.t('game.in_progress')() }}</span>
+                } @else {
+                  <span class="text-[10px] text-[var(--color-text-muted)] font-medium mt-1.5 uppercase tracking-wider text-center">{{ i18n.t('game.unplayed')() }}</span>
                 }
               </button>
             }
