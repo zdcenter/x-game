@@ -329,6 +329,7 @@ export class SlidingComponent extends BaseGameComponent {
   }
 
   override ngOnDestroy() {
+    super.ngOnDestroy();
     this.store.leaveRoom();
     if (this.timerInterval) clearInterval(this.timerInterval);
   }

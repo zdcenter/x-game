@@ -43,7 +43,18 @@ export class Math24LobbyComponent implements OnInit {
     { id: GameDifficulty.Expert, labelKey: 'game.diff_math24_expert' }
   ];
 
-  activeTab = signal<string>(getSavedDifficulty('math24', GameDifficulty.Easy));
+  sanitizeDifficulty(diff: string | undefined | null): string {
+    if (!diff) return 'easy';
+    const lower = diff.toLowerCase();
+    const match = this.difficulties.find(d => d.id === lower);
+    if (match) return match.id;
+    for (const d of this.difficulties) {
+      if (lower.includes(d.id)) return d.id;
+    }
+    return 'easy';
+  }
+
+  activeTab = signal<string>(this.sanitizeDifficulty(getSavedDifficulty('math24', GameDifficulty.Easy)));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
@@ -61,14 +72,17 @@ export class Math24LobbyComponent implements OnInit {
   totalPages = computed(() => Math.ceil(this.levels().length / this.pageSize));
 
   ngOnInit() {
-    this.loadLevels(this.activeTab());
+    const initialDiff = this.sanitizeDifficulty(this.activeTab());
+    this.activeTab.set(initialDiff);
+    this.loadLevels(initialDiff);
   }
 
   selectDifficulty(diff: string) {
-    setSavedDifficulty('math24', diff);
-    this.activeTab.set(diff);
+    const sanitized = this.sanitizeDifficulty(diff);
+    setSavedDifficulty('math24', sanitized);
+    this.activeTab.set(sanitized);
     this.currentPage.set(1);
-    this.loadLevels(diff);
+    this.loadLevels(sanitized);
   }
 
   nextPage() {
@@ -92,8 +106,9 @@ export class Math24LobbyComponent implements OnInit {
   }
 
   private loadLevels(difficulty: string) {
+    const sanitized = this.sanitizeDifficulty(difficulty);
     this.loading.set(true);
-    this.http.get<LevelResponse[]>(`${environment.apiUrl}/math24/levels/${difficulty}`).subscribe({
+    this.http.get<LevelResponse[]>(`${environment.apiUrl}/math24/levels/${sanitized}`).subscribe({
       next: (data) => {
         this.levels.set(data || []);
         this.loading.set(false);

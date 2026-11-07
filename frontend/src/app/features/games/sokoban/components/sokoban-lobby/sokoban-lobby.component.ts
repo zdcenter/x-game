@@ -49,10 +49,22 @@ export class SokobanLobbyComponent implements OnInit {
   @Output() levelSelect = new EventEmitter<{id: string, puzzle: string, difficulty: string, levelNum: number}>();
   @Output() difficultyChange = new EventEmitter<string>();
 
+  sanitizeDifficulty(diff: string | undefined | null): string {
+    if (!diff) return GameDifficulty.Easy;
+    const lower = diff.toLowerCase();
+    const match = this.difficulties.find(d => d.id === lower);
+    if (match) return match.id;
+    for (const d of this.difficulties) {
+      if (lower.includes(d.id)) return d.id;
+    }
+    return GameDifficulty.Easy;
+  }
+
   @Input() set currentDifficulty(val: string | undefined) {
-    if (val && val !== this.activeTab()) {
-      this.activeTab.set(val);
-      this.loadLevels(val);
+    const valid = this.sanitizeDifficulty(val);
+    if (valid !== this.activeTab()) {
+      this.activeTab.set(valid);
+      this.loadLevels(valid);
     }
   }
 
@@ -63,24 +75,28 @@ export class SokobanLobbyComponent implements OnInit {
     { id: GameDifficulty.Expert, labelKey: 'game.diff_sokoban_professional', desc: 'True test of skill' }
   ];
 
-  activeTab = signal<string>(getSavedDifficulty('sokoban', GameDifficulty.Easy));
+  activeTab = signal<string>(this.sanitizeDifficulty(getSavedDifficulty('sokoban', GameDifficulty.Easy)));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels(this.activeTab());
+    const initialDiff = this.sanitizeDifficulty(this.activeTab());
+    this.activeTab.set(initialDiff);
+    this.loadLevels(initialDiff);
   }
 
   selectDifficulty(diff: string) {
-    setSavedDifficulty('sokoban', diff);
-    this.activeTab.set(diff);
-    this.difficultyChange.emit(diff);
-    this.loadLevels(diff);
+    const sanitized = this.sanitizeDifficulty(diff);
+    setSavedDifficulty('sokoban', sanitized);
+    this.activeTab.set(sanitized);
+    this.difficultyChange.emit(sanitized);
+    this.loadLevels(sanitized);
   }
 
   private loadLevels(difficulty: string) {
+    const sanitized = this.sanitizeDifficulty(difficulty);
     this.loading.set(true);
-    this.http.get<LevelResponse[]>(`${environment.apiUrl}/sokoban/levels/${difficulty}`).subscribe({
+    this.http.get<LevelResponse[]>(`${environment.apiUrl}/sokoban/levels/${sanitized}`).subscribe({
       next: (data) => {
         // Sort levels by level_num
         const sorted = (data || []).sort((a, b) => a.level_num - b.level_num);

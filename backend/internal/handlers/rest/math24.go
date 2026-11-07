@@ -13,7 +13,7 @@ func (r *Math24Repo) HasSave() bool { return false }
 
 func (r *Math24Repo) GetLevels(difficulty string, userID *uint) (any, error) {
 	var puzzles []domain.Math24Puzzle
-	if err := db.DB.Where("difficulty = ?", difficulty).Find(&puzzles).Error; err != nil {
+	if err := db.DB.Where("difficulty = ?", difficulty).Order("LENGTH(id) asc, id asc").Find(&puzzles).Error; err != nil {
 		return nil, err
 	}
 

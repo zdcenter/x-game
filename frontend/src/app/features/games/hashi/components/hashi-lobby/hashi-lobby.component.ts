@@ -3,7 +3,7 @@ import { Component, EventEmitter, Output, inject, signal, OnInit, computed } fro
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
-import { storageGet, storageSet } from '../../../../../core/utils/browser.util';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
 import { environment } from '../../../../../../environments/environment';
 
 interface LevelResponse {
@@ -114,23 +114,38 @@ export class HashiLobbyComponent implements OnInit {
     { id: 'expert', labelKey: 'game.diff_hashi_expert' }
   ];
 
-  activeTab = signal<string>(storageGet('hashi_single_diff') || 'easy');
+  sanitizeDifficulty(diff: string | undefined | null): string {
+    if (!diff) return 'easy';
+    const lower = diff.toLowerCase();
+    const match = this.difficulties.find(d => d.id === lower);
+    if (match) return match.id;
+    for (const d of this.difficulties) {
+      if (lower.includes(d.id)) return d.id;
+    }
+    return 'easy';
+  }
+
+  activeTab = signal<string>(this.sanitizeDifficulty(getSavedDifficulty('hashi', 'easy')));
   levels = signal<LevelResponse[]>([]);
   loading = signal<boolean>(false);
 
   ngOnInit() {
-    this.loadLevels(this.activeTab());
+    const initialDiff = this.sanitizeDifficulty(this.activeTab());
+    this.activeTab.set(initialDiff);
+    this.loadLevels(initialDiff);
   }
 
   selectDifficulty(diff: string) {
-    storageSet('hashi_single_diff', diff);
-    this.activeTab.set(diff);
-    this.loadLevels(diff);
+    const sanitized = this.sanitizeDifficulty(diff);
+    setSavedDifficulty('hashi', sanitized);
+    this.activeTab.set(sanitized);
+    this.loadLevels(sanitized);
   }
 
   private loadLevels(difficulty: string) {
+    const sanitized = this.sanitizeDifficulty(difficulty);
     this.loading.set(true);
-    this.http.get<LevelResponse[]>(`${environment.apiUrl}/hashi/levels/${difficulty}`).subscribe({
+    this.http.get<LevelResponse[]>(`${environment.apiUrl}/hashi/levels/${sanitized}`).subscribe({
       next: (data) => {
         this.levels.set(data || []);
         this.loading.set(false);

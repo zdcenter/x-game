@@ -331,7 +331,7 @@ export class Math24Store extends BaseGameStore {
     }, 1000);
   }
 
-  private stopTimer() {
+  stopTimer() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }

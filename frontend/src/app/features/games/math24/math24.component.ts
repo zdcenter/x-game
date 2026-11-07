@@ -186,11 +186,16 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
+  goToLobby() {
+    this.store.stopTimer();
+    this.view.set('lobby');
+  }
+
   override goBack(): void {
     if (this.view() === 'lobby') {
       super.goBack();
     } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
-      this.view.set('lobby');
+      this.goToLobby();
     } else if (this.view() === 'room') {
       this.store.leaveRoom();
       this.roomLifecycle.clearReconnectInfo();

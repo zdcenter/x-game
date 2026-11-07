@@ -133,7 +133,7 @@
           <!-- Single Player Unified HUD Bar (PC 桌面端展示) -->
           <div class="w-full flex items-center justify-between px-1 mb-2 shrink-0 relative z-10" [style.max-width]="boardDimPx()">
             <!-- Left: 选关大厅快捷按钮 -->
-            <button (click)="showLobby.set(true)" 
+            <button (click)="openLobbyView()" 
                     class="px-2.5 sm:px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 group"
                     [title]="i18n.t('lobby.select_level')() || '选择关卡'">
               <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">

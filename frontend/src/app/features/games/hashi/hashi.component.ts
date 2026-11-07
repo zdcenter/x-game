@@ -252,6 +252,11 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     }
   }
 
+  goToLobby() {
+    this.store.stopTimer();
+    this.view.set('lobby');
+  }
+
   override goBack(): void {
     if (this.view() === 'lobby' && this.store.currentRoomMode() === GameMode.Single) {
       super.goBack();

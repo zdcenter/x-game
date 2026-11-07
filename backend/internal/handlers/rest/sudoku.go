@@ -13,7 +13,7 @@ func (r *SudokuRepo) HasSave() bool { return true }
 
 func (r *SudokuRepo) GetLevels(difficulty string, userID *uint) (any, error) {
 	var puzzles []domain.SudokuPuzzle
-	if err := db.DB.Where("difficulty = ?", difficulty).Find(&puzzles).Error; err != nil {
+	if err := db.DB.Where("difficulty = ?", difficulty).Order("LENGTH(id) asc, id asc").Find(&puzzles).Error; err != nil {
 		return nil, err
 	}
 

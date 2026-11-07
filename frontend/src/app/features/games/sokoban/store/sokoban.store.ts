@@ -513,7 +513,7 @@ export class SokobanStore extends BaseGameStore {
     }, 1000);
   }
 
-  private stopTimer() {
+  stopTimer() {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;

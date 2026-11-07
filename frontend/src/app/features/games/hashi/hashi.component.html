@@ -59,7 +59,7 @@
           <!-- 关卡编号 -->
           <button
             type="button"
-            (click)="view.set('lobby')"
+            (click)="goToLobby()"
             class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 active:scale-95 transition-all cursor-pointer shrink-0"
             [title]="i18n.t('lobby.select_level')() || '选择关卡'"
           >

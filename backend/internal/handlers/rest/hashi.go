@@ -15,7 +15,7 @@ func (r *HashiRepo) HasSave() bool { return false }
 // GetLevels returns a list of puzzles for a given difficulty and the user's progress
 func (r *HashiRepo) GetLevels(difficulty string, userID *uint) (any, error) {
 	var puzzles []domain.HashiPuzzle
-	if err := db.DB.Where("difficulty = ?", difficulty).Find(&puzzles).Error; err != nil {
+	if err := db.DB.Where("difficulty = ?", difficulty).Order("LENGTH(id) asc, id asc").Find(&puzzles).Error; err != nil {
 		return nil, err
 	}
 

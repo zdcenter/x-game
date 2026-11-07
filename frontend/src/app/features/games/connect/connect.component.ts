@@ -247,11 +247,14 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   }
 
   override ngOnDestroy() {
+    super.ngOnDestroy();
     this.wsService.disconnect('connect');
     this.gameTimer.stopCountdown();
+    this.store.leaveRoom();
   }
 
   goBackToLobby() {
+    this.store.stopTimer();
     this.store.view.set('lobby');
   }
 

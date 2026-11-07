@@ -134,8 +134,11 @@ export class HashiStore extends BaseGameStore {
     }, 1000);
   }
 
-  private stopTimer() {
-    if (this.timer) clearInterval(this.timer);
+  stopTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   }
 
   private isFinishing = false;

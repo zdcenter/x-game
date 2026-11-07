@@ -100,14 +100,26 @@ export class ConnectLobbyComponent implements OnInit {
     { id: 'expert', labelKey: 'game.diff_expert' }
   ];
 
+  sanitizeDifficulty(diff: string | undefined | null): string {
+    if (!diff) return 'easy';
+    const lower = diff.toLowerCase();
+    const match = this.difficulties.find(d => d.id === lower);
+    if (match) return match.id;
+    for (const d of this.difficulties) {
+      if (lower.includes(d.id)) return d.id;
+    }
+    return 'easy';
+  }
+
   ngOnInit() {
-    if (this.store.levelsList().length === 0) {
-      this.store.fetchLevelsAndLoad(this.store.currentDifficulty() || 'easy');
+    const diff = this.sanitizeDifficulty(this.store.currentDifficulty());
+    if (this.store.levelsList().length === 0 || this.store.currentDifficulty() !== diff) {
+      this.store.changeSingleDifficulty(diff);
     }
   }
 
   selectDifficulty(diff: string) {
-    this.store.changeSingleDifficulty(diff);
+    this.store.changeSingleDifficulty(this.sanitizeDifficulty(diff));
   }
 }
 

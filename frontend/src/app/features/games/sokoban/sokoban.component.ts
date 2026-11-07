@@ -245,6 +245,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   }
 
   openLobbyView() {
+    this.store.stopTimer();
     this.showLobby.set(true);
     const currentDiff = this.store.currentDifficulty() || getSavedDifficulty('sokoban', GameDifficulty.Easy);
     setTimeout(() => {

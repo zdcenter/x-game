@@ -297,6 +297,7 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   override ngOnDestroy() {
+    super.ngOnDestroy();
     this.wsService.disconnect('sudoku');
     this.gameTimer.stopCountdown();
     this.store.destroy();
