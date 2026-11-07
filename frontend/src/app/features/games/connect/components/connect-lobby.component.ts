@@ -56,7 +56,7 @@ import { ConnectStore } from '../connect.store';
                 }
                 
                 <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)] transition-colors mb-2 whitespace-nowrap">
-                  关卡 {{ i + 1 | number:'3.0-0' }}
+                  {{ i18n.t('game.level')() }} {{ i + 1 | number:'3.0-0' }}
                 </span>
                 
                 <!-- Stars -->

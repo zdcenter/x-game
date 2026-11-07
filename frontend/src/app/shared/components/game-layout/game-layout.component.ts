@@ -176,8 +176,8 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
       @if (!isImmersiveEffective()) {
         <aside class="hidden xl:flex flex-col gap-4 w-72 xl:w-80 2xl:w-88 shrink-0 animate-fade-in self-start sticky top-20">
           
-          <!-- Card 1: 🎯 难度规格 / 游戏等级 (Game Difficulty Card, Standardized for all games) -->
-          @if (effectiveRoomMode() === GameMode.Single && availableDifficulties.length > 0) {
+          <!-- Card 1: 🎯 难度规格 / 游戏等级 (Game Difficulty Card, Standardized for all games; hidden during level-select lobby to prevent duplicate controls) -->
+          @if (!isLobbyEffective() && effectiveRoomMode() === GameMode.Single && availableDifficulties.length > 0) {
             <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
               <div class="flex items-center justify-between pb-2.5 border-b border-[var(--color-border-card)]/60">
                 <span class="cockpit-card-title flex items-center gap-2">

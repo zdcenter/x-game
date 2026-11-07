@@ -21,7 +21,7 @@
     <!-- Level Grid Header -->
     <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-1 shrink-0">
       <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-        总关卡: {{ levels().length }}
+        {{ i18n.t('game.total_levels')() }}: {{ levels().length }}
       </span>
     </div>
     <div class="flex-1 px-3 sm:px-6 pb-12 sm:pb-6 overflow-y-auto custom-scrollbar min-h-0" style="touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
@@ -51,7 +51,7 @@
                 }
                 
                 <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)] transition-colors mb-2 whitespace-nowrap">
-                  关卡 {{ i + 1 | number:'3.0-0' }}
+                  {{ i18n.t('game.level')() }} {{ i + 1 | number:'3.0-0' }}
                 </span>
                 
                 <!-- Stars -->

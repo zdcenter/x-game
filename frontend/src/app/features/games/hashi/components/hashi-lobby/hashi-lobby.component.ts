@@ -44,7 +44,7 @@ interface LevelResponse {
         <!-- Level Grid Header -->
         <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-1 shrink-0">
           <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-            总关卡: {{ levels().length }}
+            {{ i18n.t('game.total_levels')() }}: {{ levels().length }}
           </span>
         </div>
         <div class="flex-1 px-3 sm:px-6 pb-12 sm:pb-6 overflow-y-auto custom-scrollbar min-h-0" style="touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
@@ -66,7 +66,7 @@ interface LevelResponse {
                   }
                   
                   <span class="text-sm sm:text-lg font-black text-[var(--color-text-main)] group-hover:text-[var(--color-accent-from)] transition-colors mb-2 whitespace-nowrap">
-                    关卡 {{ i + 1 | number:'3.0-0' }}
+                    {{ i18n.t('game.level')() }} {{ i + 1 | number:'3.0-0' }}
                   </span>
                   
                   <!-- Stars -->
@@ -84,7 +84,7 @@ interface LevelResponse {
                   </div>
                   
                   @if (level.progress?.status === 'playing') {
-                    <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider">In Progress</span>
+                    <span class="text-[10px] text-yellow-500 font-bold mt-2 uppercase tracking-wider">{{ i18n.t('game.in_progress')() }}</span>
                   }
                 </button>
               }
@@ -92,7 +92,7 @@ interface LevelResponse {
             
             @if (levels().length === 0) {
               <div class="text-center text-[var(--color-text-muted)] mt-10">
-                Coming soon
+                {{ i18n.t('lobby.coming_soon')() }}
               </div>
             }
           }

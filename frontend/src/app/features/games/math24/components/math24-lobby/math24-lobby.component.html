@@ -20,7 +20,7 @@
     <!-- Level Grid Header -->
     <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-1 shrink-0">
       <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-        总关卡: {{ levels().length }}
+        {{ i18n.t('game.total_levels')() }}: {{ levels().length }}
       </span>
     </div>
     
@@ -35,7 +35,7 @@
               'bg-[var(--color-bg-main)] text-[var(--color-text-main)] border-[var(--color-border-card)] hover:bg-[var(--color-bg-card)] hover:border-[var(--color-border-thick)] hover:text-[var(--color-accent-from)]': level.progress?.status !== GameStatus.Finished
             }">
             
-            <span class="z-10 relative text-sm sm:text-base whitespace-nowrap">关卡 {{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
+            <span class="z-10 relative text-sm sm:text-base whitespace-nowrap">{{ i18n.t('game.level')() }} {{ (currentPage() - 1) * pageSize + i + 1 | number:'3.0-0' }}</span>
             
             @if (level.progress?.status === GameStatus.Finished) {
               <div class="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-30 transition-opacity">
