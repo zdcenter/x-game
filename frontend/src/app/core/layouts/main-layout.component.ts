@@ -42,6 +42,16 @@ import { NotificationService, NotificationItem } from '../services/notification.
                 Puzzle PK
               </span>
             </a>
+
+            <!-- ⚔️ 多人竞技场 (全局导航高亮直达) -->
+            <a [routerLink]="['/', i18n.currentLang(), 'pk-arena']" 
+               routerLinkActive="border-amber-500 bg-amber-500/20 text-amber-500 font-black shadow-xs ring-2 ring-amber-500/20"
+               class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-black whitespace-nowrap shrink-0 rounded-xl transition-all border border-amber-500/35 bg-gradient-to-r from-amber-500/15 to-orange-500/15 text-amber-700 dark:text-amber-300 hover:from-amber-500/25 hover:to-orange-500/25 hover:scale-105 active:scale-95 shadow-xs">
+              <span class="text-base animate-pulse">⚔️</span>
+              <span>{{ i18n.t('nav.arena')() || '多人竞技场' }}</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white tracking-wider">LIVE</span>
+            </a>
+
             <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" 
                routerLinkActive="bg-[var(--color-bg-main)] text-[var(--color-accent-from)] font-black border border-[var(--color-border-card)] shadow-xs"
                class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold whitespace-nowrap shrink-0 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]">
@@ -366,6 +376,16 @@ import { NotificationService, NotificationItem } from '../services/notification.
                 }
               </button>
             }
+
+            <!-- ⚔️ 多人竞技场 (Mobile Drawer Entry) -->
+            <a [routerLink]="['/', i18n.currentLang(), 'pk-arena']" 
+               routerLinkActive="bg-amber-500/20 text-amber-500 font-black border border-amber-500/40"
+               (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-extrabold text-base text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-colors">
+              <span class="text-xl">⚔️</span>
+              <span>{{ i18n.t('nav.arena')() || '多人竞技场' }}</span>
+              <span class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white tracking-wider">LIVE</span>
+            </a>
+
             <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" 
                routerLinkActive="bg-[var(--color-accent-from)]/15 text-[var(--color-accent-from)] font-black border border-[var(--color-accent-from)]/30"
                (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold text-base text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-main)] hover:text-[var(--color-text-main)] transition-colors">
