@@ -35,6 +35,7 @@ import { getOrigin, setSavedDifficulty, getSavedDifficulty } from '../../../core
 import { AdService } from '../../../core/services/ad.service';
 import { ResumeGameDialogComponent } from '../resume-game-dialog/resume-game-dialog.component';
 import { SavedGameSession } from '../../../core/services/resume-game.service';
+import { JuiceService } from '../../../core/services/juice.service';
 
 @Component({
   selector: 'app-game-layout',
@@ -174,9 +175,18 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
 
   <!-- Central Game Focus Arena (Spacious, Centered, Distraction-Free) -->
   <div class="game-cockpit-arena flex-grow flex flex-col min-h-0 relative transition-all duration-300"
+       [class.animate-screen-shake]="juice.isShaking()"
        [ngClass]="isImmersiveEffective() ? 'w-full h-[100dvh] max-h-[100dvh] flex-none overflow-hidden p-0 m-0 max-w-none' : 'w-full max-w-[1600px] mx-auto px-1 sm:px-6 lg:px-8 py-0.5 sm:py-2'"
        [class.items-center]="!isLobbyEffective() && !isImmersiveEffective()"
        [class.pb-16]="showHandheldDock()">
+
+    <!-- Arcade Floating Juice / Combo Text Overlay -->
+    @for (t of juice.floatingTexts(); track t.id) {
+      <div class="pointer-events-none fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[105] flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-black/90 border-2 border-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.8)] animate-bounce text-amber-300 font-black text-xl sm:text-3xl backdrop-blur-md">
+        <span>{{ t.icon }}</span>
+        <span>{{ t.text }}</span>
+      </div>
+    }
     
     <!-- Cockpit Grid Wrapper (Single-column on mobile/tablet, 3-column on PC xl+) -->
     <div class="w-full flex-grow flex flex-col xl:flex-row items-center xl:items-start justify-center gap-4 2xl:gap-6 min-h-0"
@@ -738,6 +748,7 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
 
   settingsService = inject(SettingsService);
   zenService = inject(ZenModeService);
+  juice = inject(JuiceService);
   i18n = inject(I18nService);
   gameRegistry = inject(GameRegistryService);
   authStore = inject(AuthStore);

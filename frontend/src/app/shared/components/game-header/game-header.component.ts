@@ -11,6 +11,7 @@ import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinGuideModalComponent } from '../coin-guide-modal/coin-guide-modal.component';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 import { isBrowser } from '../../../core/utils/browser.util';
+import { StreamerModeService } from '../../../core/services/streamer-mode.service';
 
 @Component({
   selector: 'app-game-header',
@@ -38,6 +39,7 @@ export class GameHeaderComponent implements OnInit {
   pwaService = inject(PwaService);
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
+  streamerMode = inject(StreamerModeService);
   i18n = inject(I18nService);
   router = inject(Router);
   private elementRef = inject(ElementRef);

@@ -131,6 +131,23 @@
                   </span>
                 </button>
 
+                <!-- OBS Streamer Mode Toggle -->
+                <button type="button"
+                        (click)="streamerMode.toggle(); closeToolsMenu(); audioService.playClick(); hapticService.light()"
+                        class="w-full min-h-[40px] flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] active:bg-[var(--color-border-card)]/50 active:scale-[0.98] transition-all cursor-pointer select-none">
+                  <span class="flex items-center gap-2 pointer-events-none">
+                    <span>📺</span>
+                    <span>{{ i18n.t('game.streamer_mode')() || 'OBS 主播模式' }}</span>
+                  </span>
+                  <span class="text-[10px] px-2 py-0.5 rounded font-mono pointer-events-none"
+                        [class.bg-purple-500/20]="streamerMode.isStreamerMode()"
+                        [class.text-purple-400]="streamerMode.isStreamerMode()"
+                        [class.bg-gray-500/15]="!streamerMode.isStreamerMode()"
+                        [class.text-[var(--color-text-muted)]]="!streamerMode.isStreamerMode()">
+                    {{ streamerMode.isStreamerMode() ? 'ON' : 'OFF' }}
+                  </span>
+                </button>
+
                 <!-- PWA Install option if available (hidden if already installed) -->
                 @if (!pwaService.isStandalone() && !pwaService.isAppInstalledOnDevice()) {
                   <button (click)="pwaService.triggerInstall(); closeToolsMenu()"

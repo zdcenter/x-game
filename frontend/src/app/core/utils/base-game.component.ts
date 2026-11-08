@@ -23,6 +23,7 @@ import { GameRegistryService } from '../services/game-registry.service';
 import { LeaderboardService } from '../services/leaderboard.service';
 import { DeviceService } from '../services/device.service';
 import { ZenModeService } from '../services/zen-mode.service';
+import { JuiceService } from '../services/juice.service';
 import { AdService } from '../services/ad.service';
 import { ResumeGameService, SavedGameSession } from '../services/resume-game.service';
 import { WakeLockService } from '../services/wake-lock.service';
@@ -64,6 +65,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   public adService = inject(AdService);
   public resumeService = inject(ResumeGameService);
   public wakeLock = inject(WakeLockService);
+  public juice = inject(JuiceService);
   readonly isHandheld = this.deviceService.isHandheld;
   protected _injector = inject(Injector);
 
@@ -121,6 +123,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    */
   celebrateVictory() {
     this.vibrateSuccess();
+    this.juice.shakeScreen();
     if (!isBrowser()) return;
     try {
       confetti({

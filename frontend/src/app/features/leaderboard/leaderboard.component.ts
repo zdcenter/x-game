@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -7,9 +7,57 @@ import { GameStatsService, GameDifficultyRecord } from '../../core/services/game
 import { GameRegistryService, GameDifficultyConfig } from '../../core/services/game-registry.service';
 import { FriendService } from '../../core/services/friend.service';
 import { ToastService } from '../../core/services/toast.service';
+import { AudioService } from '../../core/services/audio.service';
+import { HapticService } from '../../core/services/haptic.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 import { LevelBadgeComponent } from '../../shared/components/level-badge/level-badge.component';
+
+export interface LeaderboardGameCategory {
+  id: string;
+  nameKey: string;
+  defaultName: string;
+  icon: string;
+  gameIds: string[];
+}
+
+export const LEADERBOARD_CATEGORIES: LeaderboardGameCategory[] = [
+  {
+    id: 'all',
+    nameKey: 'leaderboard.category.all',
+    defaultName: '全部',
+    icon: '🌟',
+    gameIds: []
+  },
+  {
+    id: 'logic',
+    nameKey: 'leaderboard.category.logic',
+    defaultName: '逻辑解谜',
+    icon: '🧠',
+    gameIds: ['nonogram', 'minesweeper', 'sudoku', 'lightsout', 'hashi', 'tents']
+  },
+  {
+    id: 'arcade',
+    nameKey: 'leaderboard.category.arcade',
+    defaultName: '消除街机',
+    icon: '⚡',
+    gameIds: ['tetris', 'hexa', 'drop2048', 'block', 'tilematch']
+  },
+  {
+    id: 'strategy',
+    nameKey: 'leaderboard.category.strategy',
+    defaultName: '棋盘策略',
+    icon: '♟️',
+    gameIds: ['gomoku', 'sliding', 'watersort', 'sokoban', 'classic2048', 'connect']
+  },
+  {
+    id: 'brain',
+    nameKey: 'leaderboard.category.brain',
+    defaultName: '数字文字',
+    icon: '🔢',
+    gameIds: ['codebreaker', 'math24', 'idiom']
+  }
+];
 
 @Component({
   selector: 'app-leaderboard',
@@ -35,60 +83,183 @@ import { LevelBadgeComponent } from '../../shared/components/level-badge/level-b
         </div>
 
         <!-- Capsule Navigation Bar (20 Games + Global) -->
-        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col gap-2.5">
-          <div class="flex items-center justify-between text-xs font-bold text-[var(--color-text-secondary)] border-b border-[var(--color-border-card)]/60 pb-2">
-            <span class="flex items-center gap-1.5">
-              <span>🎯</span>
-              <span>{{ i18n.t('leaderboard.select_game_filter')() || '选择游戏天梯' }}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-bg-main)] text-[var(--color-text-muted)] font-mono">
-                {{ games.length }} 款游戏
-              </span>
-            </span>
-
-            <!-- Mobile Expand / Collapse toggle -->
-            <button (click)="isExpanded.set(!isExpanded())"
-                    class="md:hidden flex items-center gap-1 text-xs font-bold text-[var(--color-accent-from)] hover:underline cursor-pointer active:scale-95">
-              <span>{{ isExpanded() ? (i18n.t('common.collapse')() || '收起') : (i18n.t('common.expand_all')() || '展开全部 20款') }}</span>
-              <span>{{ isExpanded() ? '▴' : '▾' }}</span>
-            </button>
-          </div>
-
-          <!-- Capsule Buttons Grid / Row -->
-          <div class="flex items-center gap-1.5 sm:gap-2 pb-1 md:flex-wrap transition-all"
-               [class.flex-wrap]="isExpanded()"
-               [class.overflow-x-auto]="!isExpanded()"
-               [class.scrollbar-none]="!isExpanded()"
-               [class.no-scrollbar]="!isExpanded()">
+        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col gap-3">
+          
+          <!-- Top Control Header: Label, Category Tabs, Search & View Mode -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-[var(--color-border-card)]/60 pb-2.5">
             
-            <!-- Global Capsule -->
-            <button (click)="selectGame('global')"
-                    class="px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-xs"
-                    [class.bg-[var(--color-accent-from)]]="selectedGameId() === 'global'"
-                    [class.text-white]="selectedGameId() === 'global'"
-                    [class.border-transparent]="selectedGameId() === 'global'"
-                    [class.bg-[var(--color-bg-main)]]="selectedGameId() !== 'global'"
-                    [class.text-[var(--color-text-secondary)]]="selectedGameId() !== 'global'"
-                    [class.border-[var(--color-border-card)]]="selectedGameId() !== 'global'">
-              <span>🌍</span>
-              <span>{{ i18n.t('leaderboard.global')() || '全服总榜' }}</span>
-            </button>
+            <!-- Left: Filter Title & Count Pill -->
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-base sm:text-lg">🎯</span>
+              <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)]">
+                {{ i18n.t('leaderboard.select_game_filter')() || '选择游戏天梯' }}
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-bg-main)] text-[var(--color-accent-from)] font-mono font-bold border border-[var(--color-border-card)]">
+                {{ games.length }} 款竞技榜
+              </span>
+            </div>
 
-            <!-- Individual Games Capsules -->
-            @for (g of games; track g.id) {
-              <button (click)="selectGame(g.id)"
-                      [id]="'capsule-' + g.id"
-                      class="px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-xs hover:border-[var(--color-accent-from)]/40"
-                      [class.bg-[var(--color-accent-from)]]="selectedGameId() === g.id"
-                      [class.text-white]="selectedGameId() === g.id"
-                      [class.border-transparent]="selectedGameId() === g.id"
-                      [class.bg-[var(--color-bg-main)]]="selectedGameId() !== g.id"
-                      [class.text-[var(--color-text-secondary)]]="selectedGameId() !== g.id"
-                      [class.border-[var(--color-border-card)]]="selectedGameId() !== g.id">
-                <span>{{ g.iconEmoji }}</span>
-                <span>{{ i18n.t(g.titleKey)() || g.id }}</span>
+            <!-- Center: Category Filter Pills -->
+            <div class="flex items-center gap-1 overflow-x-auto scrollbar-none no-scrollbar py-0.5 max-w-full">
+              @for (cat of categories; track cat.id) {
+                <button (click)="selectCategory(cat.id)"
+                        class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 active:scale-95 border shrink-0"
+                        [class.bg-[var(--color-accent-from)]]="selectedCategory() === cat.id"
+                        [class.text-white]="selectedCategory() === cat.id"
+                        [class.border-transparent]="selectedCategory() === cat.id"
+                        [class.shadow-xs]="selectedCategory() === cat.id"
+                        [class.bg-[var(--color-bg-main)]]="selectedCategory() !== cat.id"
+                        [class.text-[var(--color-text-secondary)]]="selectedCategory() !== cat.id"
+                        [class.border-[var(--color-border-card)]]="selectedCategory() !== cat.id"
+                        [class.hover:border-[var(--color-accent-from)]/40]="selectedCategory() !== cat.id">
+                  <span>{{ cat.icon }}</span>
+                  <span>{{ i18n.t(cat.nameKey)() || cat.defaultName }}</span>
+                  @if (cat.id !== 'all') {
+                    <span class="text-[10px] opacity-75 font-mono">({{ cat.gameIds.length }})</span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Right: Search & View Toggle -->
+            <div class="flex items-center gap-1.5 ml-auto">
+              <!-- Compact Search Input -->
+              <div class="relative flex items-center">
+                <span class="absolute left-2.5 text-xs text-[var(--color-text-muted)] pointer-events-none">🔍</span>
+                <input type="text"
+                       [placeholder]="i18n.t('leaderboard.search_placeholder')() || '搜索游戏...'"
+                       [value]="searchQuery()"
+                       (input)="onSearchInput($event)"
+                       class="pl-7 pr-6 py-1 w-24 sm:w-32 text-xs bg-[var(--color-bg-main)] text-[var(--color-text-main)] placeholder-[var(--color-text-muted)] border border-[var(--color-border-card)] rounded-lg focus:outline-none focus:border-[var(--color-accent-from)] transition-all">
+                @if (searchQuery()) {
+                  <button (click)="clearSearch()"
+                          class="absolute right-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] cursor-pointer">
+                    ✕
+                  </button>
+                }
+              </div>
+
+              <!-- View Mode Toggle (Grid Matrix vs Single Row Carousel) -->
+              <button (click)="toggleViewMode()"
+                      [title]="isExpanded() ? (i18n.t('leaderboard.view_carousel')() || '单行轮播') : (i18n.t('leaderboard.view_grid')() || '全景平铺 (20款)')"
+                      class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 cursor-pointer active:scale-95 bg-[var(--color-bg-main)] text-[var(--color-text-main)] border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] shadow-xs">
+                <span>{{ isExpanded() ? '⊟' : '⊞' }}</span>
+                <span class="hidden sm:inline">{{ isExpanded() ? (i18n.t('leaderboard.view_carousel')() || '单行轮播') : (i18n.t('leaderboard.view_grid')() || '全景平铺') }}</span>
               </button>
-            }
+            </div>
           </div>
+
+          <!-- Mode 1: Carousel Track with smooth Left/Right navigation (Default) -->
+          @if (!isExpanded()) {
+            <div class="relative flex items-center group/carousel">
+              <!-- Left Arrow Button -->
+              <button (click)="scrollCarousel(-260)"
+                      [disabled]="!canScrollLeft()"
+                      class="absolute -left-2 z-10 w-7 h-7 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-xs font-black flex items-center justify-center text-[var(--color-text-main)] hover:bg-[var(--color-accent-from)] hover:text-white transition-all cursor-pointer active:scale-90 disabled:opacity-0 disabled:pointer-events-none"
+                      [title]="i18n.t('leaderboard.scroll_left')() || '向左滚动'">
+                ‹
+              </button>
+
+              <!-- Left Fade Mask -->
+              @if (canScrollLeft()) {
+                <div class="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[var(--color-bg-card)] to-transparent z-[5]"></div>
+              }
+
+              <!-- Scrollable Track -->
+              <div #carouselContainer
+                   (scroll)="checkScroll()"
+                   class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 scroll-smooth w-full scrollbar-none no-scrollbar">
+                
+                <!-- Global Capsule (Shown when in 'all' or when not searching) -->
+                @if (selectedCategory() === 'all' && !searchQuery()) {
+                  <button (click)="selectGame('global')"
+                          id="capsule-global"
+                          class="px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-xs"
+                          [class.bg-[var(--color-accent-from)]]="selectedGameId() === 'global'"
+                          [class.text-white]="selectedGameId() === 'global'"
+                          [class.border-transparent]="selectedGameId() === 'global'"
+                          [class.shadow-md]="selectedGameId() === 'global'"
+                          [class.bg-[var(--color-bg-main)]]="selectedGameId() !== 'global'"
+                          [class.text-[var(--color-text-secondary)]]="selectedGameId() !== 'global'"
+                          [class.border-[var(--color-border-card)]]="selectedGameId() !== 'global'">
+                    <span>🌍</span>
+                    <span>{{ i18n.t('leaderboard.global')() || '全站总榜 (Global)' }}</span>
+                  </button>
+                }
+
+                <!-- Individual Game Capsules -->
+                @for (g of filteredGames(); track g.id) {
+                  <button (click)="selectGame(g.id)"
+                          [id]="'capsule-' + g.id"
+                          class="px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-xs hover:border-[var(--color-accent-from)]/50"
+                          [class.bg-[var(--color-accent-from)]]="selectedGameId() === g.id"
+                          [class.text-white]="selectedGameId() === g.id"
+                          [class.border-transparent]="selectedGameId() === g.id"
+                          [class.shadow-md]="selectedGameId() === g.id"
+                          [class.bg-[var(--color-bg-main)]]="selectedGameId() !== g.id"
+                          [class.text-[var(--color-text-secondary)]]="selectedGameId() !== g.id"
+                          [class.border-[var(--color-border-card)]]="selectedGameId() !== g.id">
+                    <span>{{ g.iconEmoji }}</span>
+                    <span>{{ i18n.t(g.titleKey)() || g.id }}</span>
+                  </button>
+                }
+
+                @if (filteredGames().length === 0 && selectedCategory() !== 'all') {
+                  <div class="text-xs text-[var(--color-text-muted)] py-1.5 px-3">
+                    {{ i18n.t('leaderboard.no_games_found')() || '当前分类下暂无匹配游戏' }}
+                  </div>
+                }
+              </div>
+
+              <!-- Right Fade Mask -->
+              @if (canScrollRight()) {
+                <div class="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-bg-card)] to-transparent z-[5]"></div>
+              }
+
+              <!-- Right Arrow Button -->
+              <button (click)="scrollCarousel(260)"
+                      [disabled]="!canScrollRight()"
+                      class="absolute -right-2 z-10 w-7 h-7 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-xs font-black flex items-center justify-center text-[var(--color-text-main)] hover:bg-[var(--color-accent-from)] hover:text-white transition-all cursor-pointer active:scale-90 disabled:opacity-0 disabled:pointer-events-none"
+                      [title]="i18n.t('leaderboard.scroll_right')() || '向右滚动'">
+                ›
+              </button>
+            </div>
+          } @else {
+            <!-- Mode 2: Expanded Grid Matrix View (Displays ALL 20 games at once) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2 pt-1 transition-all">
+              <!-- Global Card -->
+              @if (selectedCategory() === 'all' && !searchQuery()) {
+                <button (click)="selectGame('global')"
+                        class="p-2 sm:p-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 cursor-pointer border active:scale-95 shadow-xs"
+                        [class.bg-[var(--color-accent-from)]]="selectedGameId() === 'global'"
+                        [class.text-white]="selectedGameId() === 'global'"
+                        [class.border-transparent]="selectedGameId() === 'global'"
+                        [class.shadow-md]="selectedGameId() === 'global'"
+                        [class.bg-[var(--color-bg-main)]]="selectedGameId() !== 'global'"
+                        [class.text-[var(--color-text-secondary)]]="selectedGameId() !== 'global'"
+                        [class.border-[var(--color-border-card)]]="selectedGameId() !== 'global'">
+                  <span class="text-base sm:text-lg">🌍</span>
+                  <span class="truncate">{{ i18n.t('leaderboard.global')() || '全站总榜' }}</span>
+                </button>
+              }
+
+              @for (g of filteredGames(); track g.id) {
+                <button (click)="selectGame(g.id)"
+                        class="p-2 sm:p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer border active:scale-95 shadow-xs hover:border-[var(--color-accent-from)]/40 text-left min-w-0"
+                        [class.bg-[var(--color-accent-from)]]="selectedGameId() === g.id"
+                        [class.text-white]="selectedGameId() === g.id"
+                        [class.border-transparent]="selectedGameId() === g.id"
+                        [class.shadow-md]="selectedGameId() === g.id"
+                        [class.bg-[var(--color-bg-main)]]="selectedGameId() !== g.id"
+                        [class.text-[var(--color-text-secondary)]]="selectedGameId() !== g.id"
+                        [class.border-[var(--color-border-card)]]="selectedGameId() !== g.id">
+                  <span class="text-base sm:text-lg shrink-0">{{ g.iconEmoji }}</span>
+                  <span class="truncate">{{ i18n.t(g.titleKey)() || g.id }}</span>
+                </button>
+              }
+            </div>
+          }
+
         </div>
 
         <!-- Section 1: Pinnacle Milestones Hall (Only when a specific game is selected) -->
@@ -468,7 +639,7 @@ import { LevelBadgeComponent } from '../../shared/components/level-badge/level-b
     </div>
   `
 })
-export class LeaderboardComponent implements OnInit {
+export class LeaderboardComponent implements OnInit, AfterViewInit {
   i18n = inject(I18nService);
   private friendService = inject(FriendService);
   authStore = inject(AuthStore);
@@ -477,21 +648,52 @@ export class LeaderboardComponent implements OnInit {
   private gameRegistry = inject(GameRegistryService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  audio = inject(AudioService);
+  haptic = inject(HapticService);
 
   games = GAME_DEFINITIONS;
+  categories = LEADERBOARD_CATEGORIES;
 
   selectedGameId = signal<string>('global');
+  selectedCategory = signal<string>('all');
+  searchQuery = signal<string>('');
   selectedDifficulty = signal<string>('all');
   selectedPeriod = signal<string>('all');
   readonly currentTime = signal<number>(Date.now());
   readonly isExpanded = signal<boolean>(false);
   currentPage = signal<number>(1);
 
+  canScrollLeft = signal<boolean>(false);
+  canScrollRight = signal<boolean>(true);
+
+  @ViewChild('carouselContainer') carouselContainer?: ElementRef<HTMLDivElement>;
+
   isLoading = signal(false);
   data = signal<LeaderboardResponse | null>(null);
 
   pinnacleRecords = signal<GameDifficultyRecord[]>([]);
   loadingPinnacle = signal<boolean>(false);
+
+  filteredGames = computed(() => {
+    const cat = this.selectedCategory();
+    const q = this.searchQuery().trim().toLowerCase();
+
+    return this.games.filter(g => {
+      if (cat !== 'all') {
+        const catDef = LEADERBOARD_CATEGORIES.find(c => c.id === cat);
+        if (catDef && !catDef.gameIds.includes(g.id)) {
+          return false;
+        }
+      }
+      if (q) {
+        const title = (this.i18n.t(g.titleKey)() || g.id).toLowerCase();
+        if (!title.includes(q) && !g.id.toLowerCase().includes(q)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  });
 
   selectedGame = computed(() => GAME_DEFINITIONS.find(g => g.id === this.selectedGameId()));
 
@@ -547,8 +749,66 @@ export class LeaderboardComponent implements OnInit {
     this.reloadAll();
   }
 
+  ngAfterViewInit(): void {
+    if (typeof window !== 'undefined') {
+      setTimeout(() => this.checkScroll(), 250);
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.checkScroll();
+  }
+
+  selectCategory(catId: string): void {
+    if (this.selectedCategory() === catId) return;
+    this.haptic.vibrateLight();
+    this.audio.playClick();
+    this.selectedCategory.set(catId);
+    setTimeout(() => this.checkScroll(), 100);
+  }
+
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchQuery.set(input.value || '');
+    setTimeout(() => this.checkScroll(), 100);
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    setTimeout(() => this.checkScroll(), 100);
+  }
+
+  toggleViewMode(): void {
+    this.haptic.vibrateLight();
+    this.audio.playClick();
+    this.isExpanded.update(v => !v);
+    if (!this.isExpanded()) {
+      setTimeout(() => this.checkScroll(), 150);
+    }
+  }
+
+  scrollCarousel(offset: number): void {
+    this.haptic.vibrateLight();
+    this.audio.playClick();
+    const el = this.carouselContainer?.nativeElement;
+    if (el) {
+      el.scrollBy({ left: offset, behavior: 'smooth' });
+      setTimeout(() => this.checkScroll(), 300);
+    }
+  }
+
+  checkScroll(): void {
+    const el = this.carouselContainer?.nativeElement;
+    if (!el) return;
+    this.canScrollLeft.set(el.scrollLeft > 10);
+    this.canScrollRight.set(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  }
+
   selectGame(gameId: string): void {
     if (this.selectedGameId() === gameId) return;
+    this.haptic.vibrateLight();
+    this.audio.playClick();
     this.selectedGameId.set(gameId);
     this.selectedDifficulty.set('all');
     this.currentPage.set(1);
@@ -557,6 +817,7 @@ export class LeaderboardComponent implements OnInit {
       setTimeout(() => {
         const el = document.getElementById('capsule-' + gameId);
         el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        this.checkScroll();
       }, 50);
     }
   }

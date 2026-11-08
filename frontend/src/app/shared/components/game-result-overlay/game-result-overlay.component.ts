@@ -23,12 +23,13 @@ import { HapticService } from '../../../core/services/haptic.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
 import { PosterService } from '../../../core/services/poster.service';
 import { PosterModalComponent } from '../poster-modal/poster-modal.component';
+import { TimelapseModalComponent } from '../timelapse-modal/timelapse-modal.component';
 import confetti from 'canvas-confetti';
 
 @Component({
   selector: 'app-game-result-overlay',
   standalone: true,
-  imports: [CommonModule, AdsenseComponent, CoinIconComponent, PosterModalComponent],
+  imports: [CommonModule, AdsenseComponent, CoinIconComponent, PosterModalComponent, TimelapseModalComponent],
   templateUrl: './game-result-overlay.component.html',
   styles: [`
     :host {
@@ -120,6 +121,17 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   showPosterModal = signal(false);
   posterUrl = signal('');
   isGeneratingPoster = signal(false);
+  showTimelapseModal = signal(false);
+
+  openTimelapseModal() {
+    this.haptic.vibrateLight();
+    this.audio.playClick();
+    this.showTimelapseModal.set(true);
+  }
+
+  closeTimelapseModal() {
+    this.showTimelapseModal.set(false);
+  }
 
   @Input() currentGameId?: string;
 
@@ -217,6 +229,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   textCopied = signal(false);
   challengeCopied = signal(false);
+  warpostCopied = signal(false);
 
   get hasPkMode(): boolean {
     if (!this.currentGameId) return false;
@@ -677,7 +690,47 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       .replace('[count]', String(this.streak()))
       .replace('[game]', gameName);
     this.shareService.share({ title: `${this.i18n.t('app.title')()} - ${gameName}`, text, url,
-      gameName, gameEmoji: config?.iconEmoji, isWin: true });
+      gameName, gameEmoji: config?.iconEmoji, isWin: true, stats: this.stats });
+  }
+
+  generateWarpost() {
+    this.haptic.vibrateSuccess();
+    this.audio.playClick();
+
+    const config = this.currentGameId ? this.gameRegistry.getConfig(this.currentGameId) : null;
+    const gameName = config ? this.i18n.t(config.titleKey)() : (this.title || '益智挑战');
+    const isWin = this.status === GameResult.Win;
+    const lang = this.i18n.currentLang();
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://puzzlepk.com';
+    const challengeUrl = `${origin}/${lang}/games/${this.currentGameId || 'nonogram'}?challenge=true`;
+
+    const statSummary = (this.stats && this.stats.length > 0)
+      ? `${this.stats[0].label || '成绩'}: ${this.stats[0].value}`
+      : '';
+
+    let text = '';
+    if (this.isNewRecord) {
+      text = `👑【全网封神战帖】我在《${gameName}》打出了历史最佳巅峰纪录！(${statSummary}) 全网至今无人能破，赌你撑不过1分钟，不服来战 👉 ${challengeUrl}`;
+    } else if (isWin) {
+      text = `🏆【巅峰高光战帖】我在《${gameName}》以不可思议的绝杀通关！(${statSummary}) 敢来挑战我的手速和脑力吗？点击应战 👉 ${challengeUrl}`;
+    } else {
+      text = `🔥【极限悬赏帖】就差最后一步！谁来帮我通关《${gameName}》这一关？今晚不通关不睡觉 👉 ${challengeUrl}`;
+    }
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.warpostCopied.set(true);
+        setTimeout(() => this.warpostCopied.set(false), 2500);
+      });
+    }
+
+    if (navigator.share) {
+      navigator.share({
+        title: `《${gameName}》挑战战帖`,
+        text: text,
+        url: challengeUrl
+      }).catch(() => {});
+    }
   }
 
   async openPosterModal() {

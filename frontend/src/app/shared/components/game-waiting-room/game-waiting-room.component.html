@@ -59,6 +59,23 @@
         </div>
       </div>
 
+      <!-- ── Streamer & Spectator Big Room Banner ── -->
+      <div class="px-3 sm:px-6 lg:px-8 py-2 bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-amber-500/15 border-b border-amber-500/30 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-base sm:text-lg animate-pulse">📺</span>
+          <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate">
+            直播挑战房间号:
+            <span class="font-mono text-base sm:text-xl font-black text-amber-500 tracking-wider ml-1 bg-black/20 px-2.5 py-0.5 rounded-lg border border-amber-500/40 select-all">
+              {{ roomId }}
+            </span>
+          </span>
+        </div>
+        <button (click)="copyRoomId()"
+                class="px-3 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs flex items-center gap-1 active:scale-95 shadow-sm transition-all cursor-pointer shrink-0">
+          <span>{{ roomCopied() ? '✓ 已复制' : '📋 复制邀请' }}</span>
+        </button>
+      </div>
+
       <!-- ── Host Quick Settings: Game Mode & Difficulty Control Bar ── -->
       @if (availableModes().length > 1 || availableDifficulties().length > 1) {
         <div class="shrink-0 px-3 sm:px-6 lg:px-8 py-2 bg-[var(--color-bg-main)]/80 backdrop-blur-sm border-b border-[var(--color-border-card)] animate-fade-in">

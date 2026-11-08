@@ -736,4 +736,39 @@
   background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(96, 165, 250, 0.16), transparent 75%);
 }
 
+/* ============================================================
+   P0 & P2: Streamer Mode & Combo Screen Shake
+   ============================================================ */
+
+/* 屏幕震颤打击感 (Combo & Critical Screen Shake) */
+@keyframes screenShake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  20% { transform: translate3d(-3px, 2px, 0); }
+  40% { transform: translate3d(3px, -2px, 0); }
+  60% { transform: translate3d(-2px, -1px, 0); }
+  80% { transform: translate3d(2px, 1px, 0); }
+}
+
+.animate-screen-shake {
+  animation: screenShake 0.18s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* 主播纯净投屏模式 (OBS Streamer Mode) */
+body.streamer-mode-active {
+  --color-overlay: rgba(0, 0, 0, 0.6);
+}
+
+body.streamer-mode-active app-adsense,
+body.streamer-mode-active .ad-container,
+body.streamer-mode-active footer,
+body.streamer-mode-active .streamer-hide {
+  display: none !important;
+}
+
+body.streamer-mode-active .game-cockpit-arena {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+
 
