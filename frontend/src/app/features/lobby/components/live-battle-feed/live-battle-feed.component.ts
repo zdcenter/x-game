@@ -265,6 +265,7 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   battles = signal<PKBattle[]>([]);
   loading = signal<boolean>(false);
   refreshing = signal<boolean>(false);
+  readonly currentTime = signal<number>(Date.now());
 
   // Active multiplayer rooms from websocket lobby
   activeRooms = computed(() => {
@@ -284,6 +285,7 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
 
     // Auto-poll battles every 30 seconds
     this.timer = setInterval(() => {
+      this.currentTime.set(Date.now());
       this.fetchBattles(false);
     }, 30000);
   }
@@ -295,6 +297,7 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   }
 
   fetchBattles(showSpinner: boolean = true): void {
+    this.currentTime.set(Date.now());
     if (showSpinner) this.loading.set(true);
     this.statsService.getRecentPKBattles(6).subscribe({
       next: res => {
@@ -424,7 +427,7 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   formatTimeAgo(dateStr: string): string {
     if (!dateStr) return '';
     try {
-      const diffMs = Date.now() - new Date(dateStr).getTime();
+      const diffMs = this.currentTime() - new Date(dateStr).getTime();
       const diffMin = Math.floor(diffMs / (1000 * 60));
       if (diffMin < 1) return '刚刚';
       if (diffMin < 60) return `${diffMin}分钟前`;

@@ -18,7 +18,7 @@ export interface FeaturedGameTab {
   standalone: true,
   imports: [CommonModule, RouterLink, LevelBadgeComponent],
   template: `
-    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-3.5 h-full">
+    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col gap-3 sm:gap-3.5 h-full">
       
       <!-- Card Top Header -->
       <div class="flex items-center justify-between gap-2 border-b border-[var(--color-border-card)] pb-3">
@@ -69,49 +69,49 @@ export interface FeaturedGameTab {
       } @else {
         <div class="flex flex-col gap-2">
           @for (rec of records(); track rec.difficulty) {
-            <div class="group flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-amber-500/40 transition-all hover:shadow-xs">
+            <div class="group flex items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-amber-500/40 transition-all hover:shadow-xs">
               
-              <!-- Tier Badge & Specification (Left) -->
-              <div class="flex items-center gap-2.5 shrink-0 min-w-[105px] sm:min-w-[145px]">
-                <span class="w-2.5 h-2.5 rounded-full shrink-0" [ngClass]="getDifficultyDotClass(rec.difficulty)"></span>
-                <div class="flex flex-col">
-                  <span class="text-xs font-black text-[var(--color-text-main)] tracking-wide">
+              <!-- Tier Badge & Specification (Left Column) -->
+              <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 w-[58px] sm:w-[125px]">
+                <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full shrink-0" [ngClass]="getDifficultyDotClass(rec.difficulty)"></span>
+                <div class="flex flex-col min-w-0 leading-tight">
+                  <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] tracking-wide truncate">
                     {{ getDifficultyName(selectedGameId(), rec.difficulty) }}
                   </span>
                   @if (getDifficultySpec(selectedGameId(), rec.difficulty)) {
-                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
+                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono truncate">
                       {{ getDifficultySpec(selectedGameId(), rec.difficulty) }}
                     </span>
                   }
                 </div>
               </div>
 
-              <!-- Champion & Record Stat (Center) -->
+              <!-- Champion & Record Stat (Center Column) -->
               @if (rec.user_id > 0) {
-                <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-6 flex-1 min-w-0">
+                <div class="flex items-center justify-between sm:justify-start gap-1 sm:gap-6 flex-1 min-w-0 px-1 sm:px-2">
                   <!-- User Info -->
-                  <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="text-base shrink-0">👑</span>
-                    <span class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[85px] sm:max-w-[130px]">
+                  <div class="flex items-center gap-1 sm:gap-1.5 min-w-0 shrink">
+                    <span class="text-sm sm:text-base shrink-0">👑</span>
+                    <span class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[65px] sm:max-w-[120px]">
                       {{ rec.username }}
                     </span>
                     <app-level-badge [level]="rec.level || 1" size="xs" />
                   </div>
 
                   <!-- Time / Score Stat -->
-                  <div class="flex items-baseline gap-2 shrink-0">
+                  <div class="flex items-baseline gap-1.5 sm:gap-2 shrink-0">
                     @if (rec.rank_type === 'time') {
-                      <div class="flex items-baseline gap-1">
+                      <div class="flex items-baseline gap-0.5 sm:gap-1">
                         <span class="text-xs text-emerald-500 font-bold">⚡</span>
-                        <span class="text-sm sm:text-base font-black font-mono text-emerald-500">
+                        <span class="text-xs sm:text-base font-black font-mono text-emerald-500 whitespace-nowrap">
                           {{ formatTime(rec.best_time) }}
                         </span>
                         <span class="text-[10px] text-[var(--color-text-muted)] hidden md:inline ml-0.5">全网极速</span>
                       </div>
                     } @else {
-                      <div class="flex items-baseline gap-1">
+                      <div class="flex items-baseline gap-0.5 sm:gap-1">
                         <span class="text-xs text-amber-500 font-bold">🏆</span>
-                        <span class="text-sm sm:text-base font-black font-mono text-amber-500">
+                        <span class="text-xs sm:text-base font-black font-mono text-amber-500 whitespace-nowrap">
                           {{ rec.best_score }}
                         </span>
                         <span class="text-[10px] text-[var(--color-text-muted)] hidden md:inline ml-0.5">最高分</span>
@@ -124,26 +124,29 @@ export interface FeaturedGameTab {
                 </div>
               } @else {
                 <!-- Unclaimed Milestone -->
-                <div class="flex items-center justify-between sm:justify-start gap-2 flex-1 min-w-0">
-                  <div class="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-                    <span class="text-sm opacity-50">🚩</span>
-                    <span class="font-medium text-[11px] sm:text-xs">虚位以待 · 首通载入史册</span>
+                <div class="flex items-center justify-between sm:justify-start gap-1 sm:gap-2 flex-1 min-w-0 px-1 sm:px-2">
+                  <div class="flex items-center gap-1 sm:gap-1.5 text-xs text-[var(--color-text-muted)] min-w-0">
+                    <span class="text-xs sm:text-sm opacity-50 shrink-0">🚩</span>
+                    <span class="font-medium text-[11px] sm:text-xs truncate whitespace-nowrap">
+                      <span class="sm:hidden">虚位以待</span>
+                      <span class="hidden sm:inline">虚位以待 · 首通载入史册</span>
+                    </span>
                   </div>
-                  <span class="text-xs font-mono text-[var(--color-text-muted)] opacity-50">⚡ --:--</span>
+                  <span class="text-xs font-mono text-[var(--color-text-muted)] opacity-50 shrink-0 whitespace-nowrap">⚡ --:--</span>
                 </div>
               }
 
-              <!-- Challenge Action CTA (Right) -->
+              <!-- Challenge Action CTA (Right Column) -->
               <div class="shrink-0">
                 @if (rec.user_id > 0) {
                   <button (click)="challengeRecord(rec.difficulty)"
-                          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 text-xs font-bold flex items-center gap-0.5 sm:gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
                     <span>⚔️</span>
                     <span class="hidden sm:inline">破纪录</span><span>挑战</span>
                   </button>
                 } @else {
                   <button (click)="challengeRecord(rec.difficulty)"
-                          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:text-white border border-[var(--color-accent-from)]/30 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:text-white border border-[var(--color-accent-from)]/30 text-xs font-bold flex items-center gap-0.5 sm:gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
                     <span>🚀</span>
                     <span>抢首登</span>
                   </button>
@@ -167,6 +170,7 @@ export class HallOfFameComponent implements OnInit {
   selectedGameId = signal<string>('nonogram');
   records = signal<GameDifficultyRecord[]>([]);
   loading = signal<boolean>(false);
+  readonly currentTime = signal<number>(Date.now());
 
   readonly featuredGames: FeaturedGameTab[] = [
     { id: 'nonogram',    nameKey: 'lobby.nonogram',    emoji: '🎨', route: '/games/nonogram' },
@@ -283,7 +287,7 @@ export class HallOfFameComponent implements OnInit {
     if (!dateStr || dateStr.startsWith('0001')) return '';
     try {
       const date = new Date(dateStr);
-      const diffHours = (Date.now() - date.getTime()) / (1000 * 60 * 60);
+      const diffHours = (this.currentTime() - date.getTime()) / (1000 * 60 * 60);
       if (diffHours < 1) return '刚刚';
       if (diffHours < 24) return `${Math.floor(diffHours)}小时前`;
       if (diffHours < 48) return '昨天';
