@@ -72,6 +72,8 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   @Input({ required: true }) hostId!: string;
   @Input({ required: true }) currentUserId!: string;
   @Input() readyPlayers: Record<string, boolean> = {};
+  @Input() isSpectatorInput?: boolean;
+  @Input() spectatorCount: number = 0;
   target = input<number>(1);
 
   @Output() leave = new EventEmitter<void>();
@@ -82,6 +84,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   @Output() cancelReady = new EventEmitter<void>();
   @Output() difficultyChange = new EventEmitter<string>();
   @Output() modeChange = new EventEmitter<string>();
+  @Output() switchToContestant = new EventEmitter<void>();
 
   shareService = inject(ShareService);
 
@@ -223,6 +226,8 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   get isSpectator(): boolean {
+    if (this.isSpectatorInput !== undefined) return this.isSpectatorInput;
+    if (!this.players) return false;
     return !this.players.some(p => p.id === this.currentUserId);
   }
 

@@ -163,6 +163,12 @@
                 <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)]">
                   {{ dynamicSeatCountLabel }}
                 </span>
+                @if (spectatorCount > 0) {
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-violet-500/10 border border-violet-500/20 text-violet-500 flex items-center gap-1">
+                    <span>👁️</span>
+                    <span>{{ spectatorCount }} 观战</span>
+                  </span>
+                }
               </div>
               <span class="text-[11px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
                 {{ dynamicArenaBadge }}
@@ -602,11 +608,35 @@
                   </button>
                 </div>
               } @else {
-                <!-- Guest Actions -->
+                <!-- Guest / Spectator Actions -->
                 <div class="flex flex-col gap-2">
                   @if (isSpectator) {
-                    <button class="w-full py-3.5 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)] font-black text-sm uppercase tracking-wide cursor-default">
-                      {{ i18n.t('game.spectating')() || '旁观中...' }}
+                    <!-- 观战视角等候提示 -->
+                    <div class="w-full py-3 px-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex flex-col items-center justify-center gap-1 shadow-xs">
+                      <div class="flex items-center gap-2 text-xs sm:text-sm font-black">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                        <span>{{ i18n.t('game.spectator_lobby_title')() || '👁️ 观战视角 · 入座等候中' }}</span>
+                      </div>
+                      <p class="text-[11px] text-[var(--color-text-muted)] text-center leading-tight">
+                        {{ i18n.t('game.spectator_lobby_tip')() || '选手正在大厅备战，开战后将自动同步进入比赛视角' }}
+                      </p>
+                    </div>
+
+                    <!-- 若擂台仍有空余席位，观战者可一键转为参赛选手 -->
+                    @if (sortedPlayers.length < maxCapacity) {
+                      <button (click)="switchToContestant.emit(); audioService.playClick()"
+                              type="button"
+                              class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs uppercase tracking-wide shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer">
+                        <span>⚡</span>
+                        <span>{{ i18n.t('game.take_seat_btn')() || '尚有空位 · 立即入席参战' }}</span>
+                      </button>
+                    }
+
+                    <button (click)="leave.emit(); audioService.playClick()"
+                            type="button"
+                            class="w-full py-2.5 px-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] text-[var(--color-text-muted)] hover:text-red-400 hover:border-red-400/40 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer whitespace-nowrap">
+                      <span>🚪</span>
+                      <span>{{ i18n.t('game.leave_spectate')() || '退出观战' }}</span>
                     </button>
                   } @else if (readyPlayers[currentUserId]) {
                     <button (click)="cancelReady.emit(); audioService.playClick()"

@@ -355,7 +355,7 @@ import { JuiceService } from '../../../core/services/juice.service';
         }
 
         <!-- Universal Spectator Director Bar (Option 1) -->
-        @if (isSpectatorActive()) {
+        @if (isSpectatorActive() && !isAutoWaitingRoomVisible()) {
           <div class="w-full mb-2 px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 border border-amber-500/40 shadow-lg flex items-center justify-between gap-2 backdrop-blur-md animate-fade-in shrink-0">
             <div class="flex items-center gap-2 min-w-0">
               <span class="flex h-2.5 w-2.5 relative shrink-0">
@@ -411,6 +411,8 @@ import { JuiceService } from '../../../core/services/juice.service';
               [currentUserId]="storePlayerId()"
               [readyPlayers]="effectiveReadyPlayers()"
               [target]="effectiveTarget()"
+              [isSpectatorInput]="isSpectatorActive()"
+              [spectatorCount]="effectiveSpectatorCount()"
               (start)="onWaitingRoomStart()"
               (leave)="back.emit()"
               (changeSettings)="openChangeSettingsGlobal()"
@@ -419,6 +421,7 @@ import { JuiceService } from '../../../core/services/juice.service';
               (kick)="onWaitingRoomKick($event)"
               (difficultyChange)="onWaitingRoomDifficultyChange($event)"
               (modeChange)="onWaitingRoomModeChange($event)"
+              (switchToContestant)="onWaitingRoomSwitchToContestant()"
             ></app-game-waiting-room>
           </div>
         } @else {
@@ -1048,8 +1051,24 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   readonly isAutoWaitingRoomVisible = computed(() => {
-    return !this.isLobbyEffective() && !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Waiting && this.effectiveRoomMode() !== GameMode.Single && !this.isSpectatorActive() && !!this.effectiveRoomId();
+    return !this.isLobbyEffective() && !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Waiting && this.effectiveRoomMode() !== GameMode.Single && !!this.effectiveRoomId();
   });
+
+  readonly effectiveSpectatorCount = computed(() => {
+    const raw = (this.store as any)?.rawState?.();
+    const specs = (this.store as any)?.spectators?.() || raw?.spectators || [];
+    return Array.isArray(specs) ? specs.length : 0;
+  });
+
+  onWaitingRoomSwitchToContestant() {
+    if (!this.store) return;
+    const roomId = this.effectiveRoomId();
+    if (!roomId) return;
+    const mode = this.effectiveRoomMode();
+    const diff = this.effectiveDifficulty();
+    const host = this.effectiveHostId();
+    (this.store as any).joinRoom?.(roomId, mode, diff, host, 1, '', 0, false, 'join');
+  }
 
   readonly isAutoStartingVisible = computed(() => {
     return !!this.store && this.autoManageOverlays && this.effectiveStatus() === GameStatus.Starting;

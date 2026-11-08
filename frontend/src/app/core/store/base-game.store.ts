@@ -200,6 +200,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly currentDifficulty = signal<GameDifficultyType | string>(GameDifficulty.Medium);
   readonly currentRoomTarget = signal<number>(1);
   readonly bountyCoins = computed<number>(() => (this.rawState() as any)?.bountyCoins ?? 0);
+  readonly spectators = computed<string[]>(() => (this.rawState() as any)?.spectators || []);
 
   readonly playerId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
