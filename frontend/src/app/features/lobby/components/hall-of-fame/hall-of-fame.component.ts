@@ -63,18 +63,18 @@ export interface FeaturedGameTab {
 
       <!-- Difficulty Milestone Records Tier Ladder -->
       @if (loading()) {
-        <div class="py-12 flex flex-col items-center justify-center gap-2">
+        <div class="py-12 flex flex-col items-center justify-center gap-2 flex-grow">
           <div class="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
           <span class="text-xs text-[var(--color-text-muted)]">加载纪录中...</span>
         </div>
       } @else {
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-2.5 flex-grow">
           @for (rec of records(); track rec.difficulty) {
-            <div class="group flex items-center justify-between gap-1.5 sm:gap-3 px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-amber-500/40 transition-all hover:shadow-xs">
+            <div class="group flex items-center justify-between gap-1.5 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-amber-500/40 transition-all hover:shadow-xs">
               
               <!-- Tier Badge & Specification (Left Column) -->
-              <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 w-[58px] sm:w-[125px]">
-                <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full shrink-0" [ngClass]="getDifficultyDotClass(rec.difficulty)"></span>
+              <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 w-[60px] sm:w-[130px]">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs" [ngClass]="getDifficultyDotClass(rec.difficulty)"></span>
                 <div class="flex flex-col min-w-0 leading-tight">
                   <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] tracking-wide truncate">
                     {{ getDifficultyName(selectedGameId(), rec.difficulty) }}
@@ -93,7 +93,7 @@ export interface FeaturedGameTab {
                   <!-- User Info -->
                   <div class="flex items-center gap-1 sm:gap-1.5 min-w-0 shrink">
                     <span class="text-sm sm:text-base shrink-0">👑</span>
-                    <span class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[65px] sm:max-w-[120px]">
+                    <span class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[70px] sm:max-w-[130px]">
                       {{ rec.username }}
                     </span>
                     <app-level-badge [level]="rec.level || 1" size="xs" />
@@ -130,7 +130,7 @@ export interface FeaturedGameTab {
                     <span class="text-xs sm:text-sm opacity-50 shrink-0">🚩</span>
                     <span class="font-medium text-[11px] sm:text-xs truncate whitespace-nowrap">
                       <span class="sm:hidden">虚位以待</span>
-                      <span class="hidden sm:inline">虚位以待 · 首通载入史册</span>
+                      <span class="hidden sm:inline">虚位以待 · 突破极限定格史册</span>
                     </span>
                   </div>
                   <span class="text-xs font-mono text-[var(--color-text-muted)] opacity-50 shrink-0 whitespace-nowrap">⚡ --:--</span>
@@ -141,13 +141,13 @@ export interface FeaturedGameTab {
               <div class="shrink-0">
                 @if (rec.user_id > 0) {
                   <button (click)="challengeRecord(rec.difficulty)"
-                          class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 text-xs font-bold flex items-center gap-0.5 sm:gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/25 text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
                     <span>⚔️</span>
                     <span class="hidden sm:inline">破纪录</span><span>挑战</span>
                   </button>
                 } @else {
                   <button (click)="challengeRecord(rec.difficulty)"
-                          class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:text-white border border-[var(--color-accent-from)]/30 text-xs font-bold flex items-center gap-0.5 sm:gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] hover:brightness-110 text-white border border-transparent text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
                     <span>🚀</span>
                     <span>抢首登</span>
                   </button>
@@ -158,6 +158,22 @@ export interface FeaturedGameTab {
           }
         </div>
       }
+
+      <!-- Hall of Fame Honour & Rules Footer Bar (Fills remaining height naturally & adds clear value) -->
+      <div class="mt-auto pt-2.5 border-t border-[var(--color-border-card)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-[var(--color-text-secondary)]">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-amber-500 font-bold shrink-0">💡 破榜规则:</span>
+          <span class="truncate text-[var(--color-text-muted)]">
+            超越全网纪录即可登顶殿堂，刷新纪录立赠 <b class="text-amber-500">+50</b> 脑力金币与全网快报！
+          </span>
+        </div>
+        <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']" 
+           [queryParams]="{ game: selectedGameId() }"
+           class="text-[var(--color-accent-from)] hover:underline font-bold whitespace-nowrap shrink-0 flex items-center gap-0.5">
+          <span>查看该游戏排行榜</span>
+          <span>→</span>
+        </a>
+      </div>
 
     </div>
   `

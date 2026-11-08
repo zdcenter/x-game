@@ -104,7 +104,7 @@ import { GameMode } from '../../../../core/models/game.model';
       }
 
       <!-- Main Scrollable Content Area -->
-      <div class="flex flex-col gap-3 flex-grow overflow-y-auto max-h-[380px] sm:max-h-[420px] pr-1 scrollbar-thin">
+      <div class="flex flex-col gap-2.5 flex-grow overflow-y-auto max-h-[420px] sm:max-h-[460px] pr-1 scrollbar-thin">
 
         <!-- ========================================== -->
         <!-- SECTION 1: 正在交锋 (Live Matches & Open Challenges) -->
@@ -153,8 +153,9 @@ import { GameMode } from '../../../../core/models/game.model';
                         <span>交锋中 ({{ room.players }}/{{ getMaxPlayers(room.game) }})</span>
                       </span>
                       @if (room.spectators > 0) {
-                        <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
-                          👁️ {{ room.spectators }}
+                        <span class="text-[10px] text-[var(--color-text-muted)] font-mono flex items-center gap-0.5">
+                          <span>👁️</span>
+                          <span>{{ room.spectators }}人观战</span>
                         </span>
                       }
                     </div>
@@ -278,11 +279,12 @@ import { GameMode } from '../../../../core/models/game.model';
                           <span>⚡</span>
                           <span>{{ i18n.t('lobby.join_duel_btn')() || '立即参战' }}</span>
                         </button>
-                        <!-- 旁观入口 -->
+                        <!-- 旁观入口 (带文字表达) -->
                         <button (click)="spectateRoom(room)"
-                                class="p-1.5 rounded-lg border border-[var(--color-border-card)] hover:border-violet-500/60 bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-violet-500 text-xs flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-                                title="入席旁观">
+                                class="px-2.5 py-1.5 rounded-lg border border-[var(--color-border-card)] hover:border-violet-500/60 bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-violet-500 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
+                                title="入席观战">
                           <span>👁️</span>
+                          <span>{{ i18n.t('lobby.spectate_btn')() || '观战' }}</span>
                         </button>
                       } @else {
                         <!-- 满员时只能观战 -->
@@ -339,12 +341,12 @@ import { GameMode } from '../../../../core/models/game.model';
               </div>
             } @else {
               @for (b of battles().slice(0, feedTab() === 'all' ? 3 : 6); track b.id) {
-                <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/70 hover:border-emerald-500/40 p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-2xs">
+                <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-emerald-500/40 p-2 sm:p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-xs">
                   
                   <!-- Match Header: Game & Difficulty & Time -->
                   <div class="flex items-center justify-between text-xs">
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="text-sm">{{ getGameEmoji(b.game_id) }}</span>
+                      <span class="text-sm shrink-0">{{ getGameEmoji(b.game_id) }}</span>
                       <span class="font-black text-[var(--color-text-main)]">{{ getGameTitle(b.game_id) }}</span>
                       <span class="px-1.5 py-0.2 rounded text-[10px] font-bold" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
                         {{ getDifficultyLabel(b.game_id, b.difficulty) }}
@@ -358,67 +360,57 @@ import { GameMode } from '../../../../core/models/game.model';
                     <span class="text-[10px] text-[var(--color-text-muted)] font-mono shrink-0">{{ formatTimeAgo(b.played_at) }}</span>
                   </div>
 
-                  <!-- Head-to-Head Clash Bar with Win / Loss Visual Contrast -->
-                  <div class="flex items-center justify-between gap-1.5 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                  <!-- Head-to-Head Clash Row (Clean, High-Contrast & Instant Read) -->
+                  <div class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)]/80 text-xs">
                     
                     <!-- Winner Side -->
-                    <div class="flex items-center gap-2 min-w-0 flex-1">
-                      <span class="text-base shrink-0">👑</span>
-                      <div class="min-w-0">
-                        <div class="flex items-center gap-1">
-                          <span class="text-xs font-black text-amber-500 truncate max-w-[70px] sm:max-w-[90px]">
-                            {{ b.winner?.username || 'Winner' }}
-                          </span>
-                          <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-500 shrink-0">
-                            胜
-                          </span>
-                        </div>
-                        <span class="text-[11px] font-mono font-black text-emerald-500 block truncate">
-                          {{ formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true) }}
-                        </span>
-                      </div>
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                      <span class="text-sm shrink-0">👑</span>
+                      <span class="font-black text-amber-500 truncate max-w-[80px] sm:max-w-[105px]">
+                        {{ b.winner?.username || 'Winner' }}
+                      </span>
+                      <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-500 shrink-0">
+                        胜
+                      </span>
+                      <span class="font-mono font-black text-emerald-500 truncate text-[11px]">
+                        ⚡ {{ formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true) }}
+                      </span>
                     </div>
 
-                    <!-- Clash VS Indicator -->
-                    <div class="flex flex-col items-center shrink-0 px-1.5">
+                    <!-- VS Divider with optional margin -->
+                    <div class="flex items-center gap-1 shrink-0 px-1">
                       <span class="text-[10px] font-black text-[var(--color-text-muted)] italic">VS</span>
                       @if (b.margin > 0) {
-                        <span class="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded-sm whitespace-nowrap">
+                        <span class="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded-sm whitespace-nowrap hidden sm:inline">
                           +{{ b.margin }}{{ isTimeGame(b.game_id) ? 's' : '' }}
                         </span>
                       }
                     </div>
 
                     <!-- Loser Side -->
-                    <div class="flex items-center justify-end gap-2 min-w-0 flex-1 text-right">
-                      <div class="min-w-0">
-                        <div class="flex items-center justify-end gap-1">
-                          <span class="px-1 py-0.1 rounded text-[9px] font-semibold bg-zinc-500/15 text-[var(--color-text-muted)] shrink-0">
-                            负
-                          </span>
-                          <span class="text-xs font-medium text-[var(--color-text-secondary)] truncate max-w-[70px] sm:max-w-[90px]">
-                            {{ b.loser?.username || 'Opponent' }}
-                          </span>
-                        </div>
-                        <span class="text-[11px] font-mono text-[var(--color-text-muted)] block truncate">
-                          {{ formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
-                        </span>
-                      </div>
-                      <span class="text-sm shrink-0 opacity-40">🛡️</span>
+                    <div class="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
+                      <span class="font-mono text-[11px] text-[var(--color-text-muted)] truncate">
+                        {{ formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
+                      </span>
+                      <span class="px-1 py-0.1 rounded text-[9px] font-semibold bg-zinc-500/15 text-[var(--color-text-muted)] shrink-0">
+                        负
+                      </span>
+                      <span class="font-medium text-[var(--color-text-secondary)] truncate max-w-[80px] sm:max-w-[105px]">
+                        {{ b.loser?.username || 'Opponent' }}
+                      </span>
+                      <span class="text-xs shrink-0 opacity-40">🛡️</span>
                     </div>
 
                   </div>
 
-                  <!-- Real-time Narrative Commentary on Outcome -->
-                  <div class="mt-0.5 pt-1 border-t border-[var(--color-border-card)]/50 flex flex-col gap-0.5 text-[10px]">
-                    <div class="flex items-center gap-1 text-emerald-500 font-bold truncate">
-                      <span>🏆</span>
-                      <span class="truncate">{{ getBattleCommentary(b).headline }} {{ getBattleCommentary(b).bountyNote }}</span>
-                    </div>
-                    <div class="flex items-center gap-1 text-[var(--color-text-muted)] truncate">
-                      <span>💥</span>
-                      <span class="truncate">{{ getBattleCommentary(b).loseNote }}</span>
-                    </div>
+                  <!-- Quick Narrative Highlight (Single Line) -->
+                  <div class="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] px-0.5">
+                    <span class="truncate">
+                      🏆 <b class="text-emerald-500 font-bold">【{{ b.winner?.username }}】</b>获胜 {{ getBattleCommentary(b).bountyNote }}
+                    </span>
+                    <span class="text-[9px] opacity-75 shrink-0 hidden sm:inline">
+                      巅峰战报
+                    </span>
                   </div>
 
                 </div>
