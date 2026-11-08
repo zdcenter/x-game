@@ -6,6 +6,7 @@ import { GameStatsService, PKBattle } from '../../../../core/services/game-stats
 import { GameRegistryService } from '../../../../core/services/game-registry.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { CrossGameJoinService } from '../../../../core/services/cross-game-join.service';
+import { AuthStore } from '../../../../core/auth/auth.store';
 import { GameMode } from '../../../../core/models/game.model';
 
 @Component({
@@ -168,11 +169,11 @@ import { GameMode } from '../../../../core/models/game.model';
                       </span>
                       <span class="text-rose-500 font-extrabold text-[11px] italic shrink-0">VS</span>
                       <span class="text-xs font-black text-[var(--color-text-main)] truncate max-w-[75px] sm:max-w-[95px]">
-                        👤 {{ room.opponent || '挑战者' }}
+                        👤 {{ room.opponent || (room.players > 1 ? ('等 ' + room.players + ' 玩家') : '挑战者') }}
                       </span>
                     </div>
 
-                    <!-- Action: 严格专属【实时观战】按钮 (无迎战按钮) -->
+                    <!-- Action: 严格专属【实时观战】按钮 (游戏中不允许半途插队，只能观战) -->
                     <button (click)="spectateRoom(room)"
                             class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0">
                       <span>👁️</span>
@@ -183,14 +184,20 @@ import { GameMode } from '../../../../core/models/game.model';
                   <!-- Real-time Commentary -->
                   <div class="text-[10px] text-[var(--color-text-secondary)] flex items-center gap-1">
                     <span>⚔️</span>
-                    <span class="truncate">【{{ room.host }}】与【{{ room.opponent || '对手' }}】绝杀对决中，胜负悬念拉满！</span>
+                    <span class="truncate">
+                      @if (room.opponent) {
+                        【{{ room.host }}】与【{{ room.opponent }}】巅峰对决进行中，胜负悬念拉满！
+                      } @else {
+                        【{{ room.host }}】领衔多人竞速狂飙中，胜负悬念拉满！
+                      }
+                    </span>
                   </div>
                 </div>
               }
             </div>
           }
 
-          <!-- 1B: 开放擂台等候中 (1/2 人等候) -> 仅提供【立即迎战】 -->
+          <!-- 1B: 开放擂台等候中 (游戏未开始 status !== 'playing') -> 优先提供【立即参战】 -->
           @if (waitingRooms().length > 0) {
             <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between text-xs font-bold text-emerald-500 px-0.5">
@@ -198,7 +205,7 @@ import { GameMode } from '../../../../core/models/game.model';
                   <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                   <span>{{ i18n.t('lobby.open_challenges_group')() || '⚔️ 擂台迎战' }} ({{ waitingRooms().length }})</span>
                 </span>
-                <span class="text-[10px] font-normal text-[var(--color-text-muted)]">点击立即应战</span>
+                <span class="text-[10px] font-normal text-[var(--color-text-muted)]">等候开局中 · 随入随战</span>
               </div>
 
               @for (room of waitingRooms(); track room.id) {
@@ -228,7 +235,7 @@ import { GameMode } from '../../../../core/models/game.model';
 
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 flex items-center gap-1 shrink-0">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                      <span>等候迎战 ({{ room.players }}/{{ getMaxPlayers(room.game) }})</span>
+                      <span>{{ isRoomFull(room) ? '满员备战中' : '等候迎战' }} ({{ room.players }}/{{ getMaxPlayers(room.game) }})</span>
                     </span>
                   </div>
 
@@ -239,17 +246,53 @@ import { GameMode } from '../../../../core/models/game.model';
                         <span class="font-black text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[120px]">
                           👤 {{ room.host }}
                         </span>
-                        <span class="text-[10px] text-amber-500 font-bold">已摆擂台</span>
+                        @if (room.players > 1) {
+                          <span class="text-[10px] text-emerald-500 font-bold">等 {{ room.players }} 人已入席</span>
+                        } @else {
+                          <span class="text-[10px] text-amber-500 font-bold">已摆擂台</span>
+                        }
                       </div>
-                      <p class="text-[10px] text-[var(--color-text-muted)] truncate">速来挑战，角逐王者！</p>
+                      <p class="text-[10px] text-[var(--color-text-muted)] truncate">
+                        @if (isRoomFull(room)) {
+                          席位已满，房主即将发车！
+                        } @else if (room.players > 1) {
+                          尚余 {{ (room.maxPlayers || getMaxPlayers(room.game)) - room.players }} 个空位，火速参战！
+                        } @else {
+                          虚位以待，速来挑战！
+                        }
+                      </p>
                     </div>
 
-                    <!-- Action: 严格专属【立即迎战】按钮 (无观战按钮) -->
-                    <button (click)="joinRoom(room)"
-                            class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0">
-                      <span>⚡</span>
-                      <span>{{ i18n.t('lobby.join_duel_btn')() || '立即迎战' }}</span>
-                    </button>
+                    <!-- Action: 参战 / 观战 / 回房 -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      @if (isUserInRoom(room)) {
+                        <button (click)="joinRoom(room)"
+                                class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          <span>🏠</span>
+                          <span>返回我的房间</span>
+                        </button>
+                      } @else if (!isRoomFull(room)) {
+                        <!-- 立即参战 -->
+                        <button (click)="joinRoom(room)"
+                                class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          <span>⚡</span>
+                          <span>{{ i18n.t('lobby.join_duel_btn')() || '立即参战' }}</span>
+                        </button>
+                        <!-- 旁观入口 -->
+                        <button (click)="spectateRoom(room)"
+                                class="p-1.5 rounded-lg border border-[var(--color-border-card)] hover:border-violet-500/60 bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-violet-500 text-xs flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                                title="入席旁观">
+                          <span>👁️</span>
+                        </button>
+                      } @else {
+                        <!-- 满员时只能观战 -->
+                        <button (click)="spectateRoom(room)"
+                                class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                          <span>👁️</span>
+                          <span>{{ i18n.t('lobby.spectate_btn')() || '入席观战' }}</span>
+                        </button>
+                      }
+                    </div>
                   </div>
                 </div>
               }
@@ -410,6 +453,9 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   private wsService = inject(WebSocketService);
   private crossGameJoin = inject(CrossGameJoinService);
   private router = inject(Router);
+  private auth = inject(AuthStore);
+
+  readonly currentUserId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
   // Default to 'all' so users can see ongoing battles & finished outcomes without toggling
   feedTab = signal<'all' | 'live' | 'battles'>('all');
@@ -425,15 +471,26 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
     return raw.filter((r: any) => r && r.mode !== GameMode.Single);
   });
 
-  // Rooms actively dueling with 2 players (Strictly Spectate only)
+  // Rooms actively dueling / in-game (Status is playing/starting) -> Strictly Spectate
   playingRooms = computed(() => {
-    return this.activeRooms().filter((r: any) => r && (r.status === 'playing' || r.players >= 2));
+    return this.activeRooms().filter((r: any) => r && (r.status === 'playing' || r.status === 'starting'));
   });
 
-  // Rooms waiting for challenger with 1 player (Strictly Join Duel only)
+  // Rooms waiting for challenger / contestants in lobby (Status is NOT playing) -> Prioritize Join
   waitingRooms = computed(() => {
-    return this.activeRooms().filter((r: any) => r && r.status !== 'playing' && r.players < 2);
+    return this.activeRooms().filter((r: any) => r && r.status !== 'playing' && r.status !== 'starting');
   });
+
+  isRoomFull(room: any): boolean {
+    const max = room.maxPlayers || this.getMaxPlayers(room.game) || 2;
+    return (room.players || 0) >= max;
+  }
+
+  isUserInRoom(room: any): boolean {
+    const myId = this.currentUserId();
+    if (!myId) return false;
+    return room.host === myId || room.opponent === myId;
+  }
 
   private timer: any;
 
