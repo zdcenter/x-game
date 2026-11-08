@@ -236,46 +236,104 @@ import { NotificationService, NotificationItem } from '../services/notification.
                 }
               </div>
 
-              <!-- Avatar + username → profile link (hidden on < sm to prevent header overflow) -->
-              <a [routerLink]="['/', i18n.currentLang(), 'profile']"
-                 class="hidden sm:flex items-center gap-2 px-1.5 py-1 rounded-lg transition-colors hover:bg-[var(--color-bg-main)]"
-                 [title]="authStore.currentUser()?.username">
-                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
-                      style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-                  {{ (authStore.currentUser()?.username || '?')[0].toUpperCase() }}
-                </span>
-                <span class="hidden md:block text-sm font-bold max-w-[80px] lg:max-w-[110px] truncate" style="color: var(--color-accent-from)">
-                  {{ authStore.currentUser()?.username }}
-                </span>
-              </a>
-
-              <!-- Admin badge (md+) -->
-              @if (authStore.isAdmin()) {
-                <a routerLink="/admin"
-                   class="hidden md:flex items-center justify-center p-1.5 rounded-lg transition-all hover:scale-105 bg-purple-500/10 text-purple-500 border border-purple-500/20 hover:bg-purple-500/20"
-                   title="Admin Dashboard">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <!-- User Profile & Account Dropdown (Unified modern popover menu) -->
+              <div class="relative user-dropdown-container">
+                <button (click)="toggleUserMenu($event)"
+                        class="flex items-center gap-1.5 sm:gap-2 p-1 sm:px-2 sm:py-1 rounded-xl transition-all hover:bg-[var(--color-bg-main)] border border-transparent hover:border-[var(--color-border-card)] cursor-pointer select-none"
+                        [class.border-[var(--color-border-card)]]="isUserMenuOpen()"
+                        [class.bg-[var(--color-bg-main)]]="isUserMenuOpen()"
+                        [title]="authStore.currentUser()?.username || '用户资料'">
+                  <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0 shadow-xs"
+                        style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                    {{ (authStore.currentUser()?.username || '?')[0].toUpperCase() }}
+                  </span>
+                  <span class="hidden md:block text-xs sm:text-sm font-bold max-w-[80px] lg:max-w-[110px] truncate" style="color: var(--color-accent-from)">
+                    {{ authStore.currentUser()?.username }}
+                  </span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="hidden sm:block h-3.5 w-3.5 text-[var(--color-text-muted)] transition-transform duration-200"
+                       [class.rotate-180]="isUserMenuOpen()"
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
-                </a>
-              }
+                </button>
 
-              <!-- Guest badge (md+) -->
-              @if (authStore.currentUser()?.role === 'guest') {
-                <span class="hidden md:inline-flex px-2 py-1 text-xs font-bold rounded-lg bg-[var(--color-bg-card)] text-[var(--color-text-muted)] border border-[var(--color-border-card)] uppercase">
-                  {{ i18n.t('nav.guest')() }}
-                </span>
-              }
+                @if (isUserMenuOpen()) {
+                  <div class="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl p-2 z-[100] flex flex-col gap-1 backdrop-blur-xl animate-scale-up"
+                       (click)="$event.stopPropagation()">
+                    
+                    <!-- User Header Info -->
+                    <div class="px-3 py-2 rounded-xl bg-[var(--color-bg-main)]/70 border border-[var(--color-border-card)]/50 flex items-center gap-2.5">
+                      <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0 shadow-xs"
+                            style="background: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
+                        {{ (authStore.currentUser()?.username || '?')[0].toUpperCase() }}
+                      </span>
+                      <div class="min-w-0 flex-1">
+                        <div class="text-xs font-black text-[var(--color-text-main)] truncate">
+                          {{ authStore.currentUser()?.username }}
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          @if (authStore.isAdmin()) {
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/25">
+                              ADMIN
+                            </span>
+                          } @else if (authStore.currentUser()?.role === 'guest') {
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                              {{ i18n.t('nav.guest')() }}
+                            </span>
+                          } @else {
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                              VIP 玩家
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
 
-              <!-- Logout (hidden on < sm, moved to mobile drawer) -->
-              <button (click)="logout()"
-                      class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-500/10 border border-[var(--color-border-card)] hover:border-red-500/30"
-                      [title]="authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span class="hidden xl:inline">{{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}</span>
-              </button>
+                    <!-- Menu List -->
+                    <div class="pt-1 flex flex-col gap-0.5">
+                      <!-- 个人中心 (Profile) -->
+                      <a [routerLink]="['/', i18n.currentLang(), 'profile']"
+                         (click)="isUserMenuOpen.set(false)"
+                         class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
+                        <span class="text-sm">👤</span>
+                        <span>{{ i18n.t('nav.profile')() || '个人中心' }}</span>
+                      </a>
+
+                      <!-- 管理员后台 (Admin Dashboard) -->
+                      @if (authStore.isAdmin()) {
+                        <a routerLink="/admin"
+                           (click)="isUserMenuOpen.set(false)"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-colors cursor-pointer">
+                          <span class="text-sm">🛡️</span>
+                          <span>{{ i18n.t('nav.admin')() || '管理后台' }}</span>
+                        </a>
+                      }
+
+                      <!-- 金币明细/规则 (Coin Economy Guide) -->
+                      <button (click)="coinGuideService.open(); isUserMenuOpen.set(false)"
+                              class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer text-left">
+                        <span class="flex items-center gap-2.5">
+                          <app-coin-icon size="xs" />
+                          <span>{{ i18n.t('game.coins_balance')() || '脑力金币' }}</span>
+                        </span>
+                        <span class="font-mono font-bold text-amber-500">{{ coinService.coins() }}</span>
+                      </button>
+
+                      <div class="my-1 border-t border-[var(--color-border-card)]"></div>
+
+                      <!-- 退出登录 (Logout) -->
+                      <button (click)="logout(); isUserMenuOpen.set(false)"
+                              class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer text-left">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>{{ authStore.currentUser()?.role === 'guest' ? i18n.t('auth.login.submit')() : i18n.t('auth.logout')() }}</span>
+                      </button>
+                    </div>
+
+                  </div>
+                }
+              </div>
 
             } @else {
               <a [routerLink]="['/', i18n.currentLang(), 'login']"
@@ -637,10 +695,22 @@ export class MainLayoutComponent {
   notificationService = inject(NotificationService);
 
   isNotificationDropdownOpen = signal(false);
+  isUserMenuOpen = signal(false);
 
   toggleNotificationDropdown(event?: Event): void {
     if (event) event.stopPropagation();
     this.isNotificationDropdownOpen.update(v => !v);
+    if (this.isNotificationDropdownOpen()) {
+      this.isUserMenuOpen.set(false);
+    }
+  }
+
+  toggleUserMenu(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.isUserMenuOpen.update(v => !v);
+    if (this.isUserMenuOpen()) {
+      this.isNotificationDropdownOpen.set(false);
+    }
   }
 
   openRevengeFromDropdown(item: NotificationItem): void {
@@ -663,12 +733,18 @@ export class MainLayoutComponent {
     if (this.isNotificationDropdownOpen() && !target.closest('.notification-dropdown-container')) {
       this.isNotificationDropdownOpen.set(false);
     }
+    if (this.isUserMenuOpen() && !target.closest('.user-dropdown-container')) {
+      this.isUserMenuOpen.set(false);
+    }
   }
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     if (this.isNotificationDropdownOpen()) {
       this.isNotificationDropdownOpen.set(false);
+    }
+    if (this.isUserMenuOpen()) {
+      this.isUserMenuOpen.set(false);
     }
   }
 

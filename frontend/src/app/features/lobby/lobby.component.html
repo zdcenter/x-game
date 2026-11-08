@@ -6,21 +6,22 @@
     <!-- ══════ Live Community Activity Ticker & Carousel (全服即时动态轮播) ══════ -->
     <app-live-activity-ticker class="w-full shrink-0"></app-live-activity-ticker>
 
-    <!-- Global Announcement Marquee -->
-    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-2 sm:p-2.5 flex items-center shadow-sm relative overflow-hidden transition-all"
-         [class.hidden]="activeAnnouncements().length === 0 || isAnnouncementDismissed()">
-      <span class="mr-2 sm:mr-3 text-base sm:text-lg shrink-0 animate-pulse bg-[var(--color-bg-card)] pr-1">📣</span>
-      <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
-        <div class="animate-marquee inline-block text-xs sm:text-sm font-bold text-[var(--color-accent-from)]">
-          @for (ann of activeAnnouncements(); track ann.id) {
-            <span class="mx-6 sm:mx-8">✨ {{ ann.content }}</span>
-          }
+    <!-- Global Announcement Banner (Slim, High-readability Notice - Non-competing with live ticker) -->
+    @if (activeAnnouncements().length > 0 && !isAnnouncementDismissed()) {
+      <div class="w-full bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-1.5 sm:px-4 sm:py-2 flex items-center justify-between gap-2 shadow-2xs animate-fade-in text-amber-700 dark:text-amber-300">
+        <div class="flex items-center gap-2 min-w-0 text-xs sm:text-sm font-semibold truncate">
+          <span class="text-sm sm:text-base shrink-0">📣</span>
+          <span class="truncate">
+            @for (ann of activeAnnouncements(); track ann.id) {
+              <span class="mr-4">✨ {{ ann.content }}</span>
+            }
+          </span>
         </div>
+        <button (click)="isAnnouncementDismissed.set(true)"
+                class="text-xs opacity-60 hover:opacity-100 p-1 rounded-lg hover:bg-amber-500/20 transition-all cursor-pointer shrink-0"
+                title="关闭公告">✕</button>
       </div>
-      <button (click)="isAnnouncementDismissed.set(true)"
-              class="ml-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] p-1 rounded-lg hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer shrink-0"
-              title="Close">✕</button>
-    </div>
+    }
 
     <!-- Semantic SEO Headline (Screen Reader & Search Engines) -->
     <h1 class="sr-only">{{ i18n.t('lobby.title')() }} - {{ i18n.t('lobby.subtitle')() }}</h1>
@@ -468,44 +469,35 @@
       }
     </section>
 
-    <!-- Platform Value Proposition (Moved Below Games For Content-First Experience) -->
-    <section class="mt-6 pt-6 border-t border-[var(--color-border-card)]">
-      <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-5 sm:p-7 shadow-sm">
-        <h2 class="text-lg sm:text-xl font-bold mb-3 bg-clip-text text-transparent"
-            style="background-image: linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))">
-          {{ i18n.t('lobby.why_title')() || 'Why Puzzle PK?' }}
-        </h2>
-        <p class="text-[var(--color-text-secondary)] text-xs sm:text-sm leading-relaxed mb-5">
-          {{ i18n.t('lobby.why_description')() || 'Puzzle PK is a free online platform featuring 18+ carefully curated logic and brain games. Whether you\'re a student looking to sharpen your math skills, a parent seeking educational screen time for your kids, or a puzzle enthusiast craving a daily challenge — we\'ve got you covered.' }}
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-            <span class="text-xl shrink-0">🧠</span>
-            <div>
-              <h3 class="font-bold text-xs mb-0.5 text-[var(--color-text-main)]">{{ i18n.t('lobby.why_feature1_title')() || 'Brain Training' }}</h3>
-              <p class="text-[11px] text-[var(--color-text-secondary)] leading-tight">{{ i18n.t('lobby.why_feature1_desc')() || 'Scientifically-backed puzzles that improve memory, logic, and spatial reasoning.' }}</p>
-            </div>
+    <!-- Platform Value Highlights (Compact, Modern & Clean Feature Strip) -->
+    <section class="mt-4 pt-4 border-t border-[var(--color-border-card)]">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+        <div class="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+          <span class="text-xl sm:text-2xl shrink-0">🧠</span>
+          <div class="min-w-0">
+            <h3 class="font-black text-xs text-[var(--color-text-main)] truncate">{{ i18n.t('lobby.why_feature1_title')() || '脑力思维训练' }}</h3>
+            <p class="text-[10px] text-[var(--color-text-muted)] truncate hidden sm:block">{{ i18n.t('lobby.why_feature1_desc')() || '科学提升记忆与逻辑推理' }}</p>
           </div>
-          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-            <span class="text-xl shrink-0">⚔️</span>
-            <div>
-              <h3 class="font-bold text-xs mb-0.5 text-[var(--color-text-main)]">{{ i18n.t('lobby.why_feature2_title')() || 'Multiplayer PK' }}</h3>
-              <p class="text-[11px] text-[var(--color-text-secondary)] leading-tight">{{ i18n.t('lobby.why_feature2_desc')() || 'Challenge friends or random opponents in real-time puzzle battles.' }}</p>
-            </div>
+        </div>
+        <div class="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+          <span class="text-xl sm:text-2xl shrink-0">⚔️</span>
+          <div class="min-w-0">
+            <h3 class="font-black text-xs text-[var(--color-text-main)] truncate">{{ i18n.t('lobby.why_feature2_title')() || '实时多人联机' }}</h3>
+            <p class="text-[10px] text-[var(--color-text-muted)] truncate hidden sm:block">{{ i18n.t('lobby.why_feature2_desc')() || '好友切磋与全服即时匹配' }}</p>
           </div>
-          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-            <span class="text-xl shrink-0">🎓</span>
-            <div>
-              <h3 class="font-bold text-xs mb-0.5 text-[var(--color-text-main)]">{{ i18n.t('lobby.why_feature3_title')() || 'Educational' }}</h3>
-              <p class="text-[11px] text-[var(--color-text-secondary)] leading-tight">{{ i18n.t('lobby.why_feature3_desc')() || 'Perfect for kids and students — learn math, logic, and problem-solving through play.' }}</p>
-            </div>
+        </div>
+        <div class="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+          <span class="text-xl sm:text-2xl shrink-0">🎓</span>
+          <div class="min-w-0">
+            <h3 class="font-black text-xs text-[var(--color-text-main)] truncate">{{ i18n.t('lobby.why_feature3_title')() || '益智启发教育' }}</h3>
+            <p class="text-[10px] text-[var(--color-text-muted)] truncate hidden sm:block">{{ i18n.t('lobby.why_feature3_desc')() || '青少年逻辑启蒙与思维挑战' }}</p>
           </div>
-          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)]">
-            <span class="text-xl shrink-0">🌍</span>
-            <div>
-              <h3 class="font-bold text-xs mb-0.5 text-[var(--color-text-main)]">{{ i18n.t('lobby.why_feature4_title')() || '8 Languages' }}</h3>
-              <p class="text-[11px] text-[var(--color-text-secondary)] leading-tight">{{ i18n.t('lobby.why_feature4_desc')() || 'Available in English, Chinese, Spanish, Japanese, Korean, Portuguese, French, and German.' }}</p>
-            </div>
+        </div>
+        <div class="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+          <span class="text-xl sm:text-2xl shrink-0">🌍</span>
+          <div class="min-w-0">
+            <h3 class="font-black text-xs text-[var(--color-text-main)] truncate">{{ i18n.t('lobby.why_feature4_title')() || '全球多语言' }}</h3>
+            <p class="text-[10px] text-[var(--color-text-muted)] truncate hidden sm:block">{{ i18n.t('lobby.why_feature4_desc')() || '支持中英日韩等 8 国语言' }}</p>
           </div>
         </div>
       </div>
