@@ -244,6 +244,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       }
 
       const q = this._baseRoute.snapshot.queryParams;
+      const requestedDiff = q['difficulty'] || q['diff'];
       if (q['joinRoom'] && q['mode'] && q['diff'] && q['mode'] !== GameMode.Single) {
         setTimeout(() => {
           this.handleJoinRoom({
@@ -261,6 +262,18 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             replaceUrl: true
           });
         }, 200);
+      } else if (requestedDiff && (!q['mode'] || q['mode'] === GameMode.Single) && gameId) {
+        setTimeout(() => {
+          if (this.store && this.store.currentRoomMode() === GameMode.Single && !this.store.roomId()) {
+            this.pendingResumeSession.set(null);
+            (this.store as any).currentDifficulty?.set(requestedDiff);
+            this.store.joinRoom('', GameMode.Single, requestedDiff);
+            const config = this.gameRegistry.getConfig(gameId);
+            const match = config?.difficulties?.find(d => d.id === requestedDiff);
+            const diffName = match?.labelKey ? (this.i18n.t(match.labelKey)() || requestedDiff) : requestedDiff;
+            this.toastService.show(`⚔️ 已为您切换至【${diffName}】挑战模式！`, 'info');
+          }
+        }, 80);
       } else if (gameId) {
         // Automatically check for unfinished single-player session ONLY IF strictly in single player mode
         setTimeout(() => {
