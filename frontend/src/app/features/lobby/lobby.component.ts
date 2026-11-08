@@ -207,6 +207,7 @@ export class LobbyComponent implements OnInit, OnDestroy {
   }
 
   activeAnnouncements = signal<Announcement[]>([]);
+  isAnnouncementDismissed = signal(false);
   isGlobalLobbyOpen = signal(false);
   frontendVersion = versionEnv.version;
   
@@ -305,6 +306,27 @@ export class LobbyComponent implements OnInit, OnDestroy {
     const myId = this.liveRoom.currentUserId();
     return this.liveRoom.waitingRooms().some(r => r.game === gameId && r.host !== myId);
   }
+
+  getWaitingRoomCount(gameId: string): number {
+    const myId = this.liveRoom.currentUserId();
+    return this.liveRoom.waitingRooms().filter(r => r.game === gameId && r.host !== myId).length;
+  }
+
+  categoryCounts = computed(() => {
+    const all = this.games();
+    const pk = all.filter(g => this.hasMultiplayer(g.id)).length;
+    const logicIds = ['minesweeper', 'sudoku', 'nonogram', 'sliding', 'codebreaker', 'math24', 'connect', 'drop2048', 'classic2048'];
+    const puzzleIds = ['hexa', 'block', 'tetris', 'gomoku', 'sokoban', 'watersort', 'lightsout', 'hashi', 'idiom'];
+    const logic = all.filter(g => logicIds.includes(g.id)).length;
+    const puzzle = all.filter(g => puzzleIds.includes(g.id)).length;
+    return {
+      all: all.length,
+      hot: Math.min(8, all.length),
+      pk,
+      logic,
+      puzzle
+    };
+  });
 
   playPkGame(event: Event, gameId: string) {
     event.preventDefault();

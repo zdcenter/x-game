@@ -7,16 +7,19 @@
     <app-live-activity-ticker class="w-full shrink-0"></app-live-activity-ticker>
 
     <!-- Global Announcement Marquee -->
-    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-2.5 sm:p-3 flex items-center shadow-sm relative overflow-hidden transition-all"
-         [class.hidden]="activeAnnouncements().length === 0">
-      <span class="mr-2 sm:mr-3 text-lg sm:text-xl shrink-0 animate-pulse bg-[var(--color-bg-card)] pr-1">📣</span>
+    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-xl p-2 sm:p-2.5 flex items-center shadow-sm relative overflow-hidden transition-all"
+         [class.hidden]="activeAnnouncements().length === 0 || isAnnouncementDismissed()">
+      <span class="mr-2 sm:mr-3 text-base sm:text-lg shrink-0 animate-pulse bg-[var(--color-bg-card)] pr-1">📣</span>
       <div class="marquee-container w-full overflow-hidden whitespace-nowrap relative">
-        <div class="animate-marquee inline-block text-xs sm:text-sm md:text-base font-bold text-[var(--color-accent-from)]">
+        <div class="animate-marquee inline-block text-xs sm:text-sm font-bold text-[var(--color-accent-from)]">
           @for (ann of activeAnnouncements(); track ann.id) {
             <span class="mx-6 sm:mx-8">✨ {{ ann.content }}</span>
           }
         </div>
       </div>
+      <button (click)="isAnnouncementDismissed.set(true)"
+              class="ml-2 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] p-1 rounded-lg hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer shrink-0"
+              title="Close">✕</button>
     </div>
 
     <!-- Semantic SEO Headline (Screen Reader & Search Engines) -->
@@ -67,42 +70,47 @@
 
     <!-- Filters & Search Toolbar -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-      <!-- Category Pills -->
+      <!-- Category Pills with Live Counts -->
       <div class="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none no-scrollbar">
         <button (click)="selectedCategory.set('all')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
+                class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer flex items-center gap-1.5"
                 [style.background]="selectedCategory() === 'all' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'all' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'all' ? 'transparent' : 'var(--color-border-card)'">
-          {{ i18n.t('lobby.filter.all')() || '全部游戏' }}
+          <span>{{ i18n.t('lobby.filter.all')() || '全部游戏' }}</span>
+          <span class="text-[11px] font-mono opacity-80 font-normal">({{ categoryCounts().all }})</span>
         </button>
         <button (click)="selectedCategory.set('hot')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
+                class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer flex items-center gap-1.5"
                 [style.background]="selectedCategory() === 'hot' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'hot' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'hot' ? 'transparent' : 'var(--color-border-card)'">
-          {{ i18n.t('lobby.filter.hot')() || '🔥 热门榜' }}
+          <span>{{ i18n.t('lobby.filter.hot')() || '🔥 热门榜' }}</span>
+          <span class="text-[11px] font-mono opacity-80 font-normal">({{ categoryCounts().hot }})</span>
         </button>
         <button (click)="selectedCategory.set('pk')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
+                class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer flex items-center gap-1.5"
                 [style.background]="selectedCategory() === 'pk' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'pk' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'pk' ? 'transparent' : 'var(--color-border-card)'">
-          {{ i18n.t('lobby.filter.pk')() || '⚔️ 实时联机PK' }}
+          <span>{{ i18n.t('lobby.filter.pk')() || '⚔️ 实时联机PK' }}</span>
+          <span class="text-[11px] font-mono opacity-90 font-black text-amber-500">({{ categoryCounts().pk }})</span>
         </button>
         <button (click)="selectedCategory.set('logic')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
+                class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer flex items-center gap-1.5"
                 [style.background]="selectedCategory() === 'logic' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'logic' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'logic' ? 'transparent' : 'var(--color-border-card)'">
-          {{ i18n.t('lobby.filter.logic')() || '🔢 数字推理' }}
+          <span>{{ i18n.t('lobby.filter.logic')() || '🔢 数字推理' }}</span>
+          <span class="text-[11px] font-mono opacity-80 font-normal">({{ categoryCounts().logic }})</span>
         </button>
         <button (click)="selectedCategory.set('puzzle')"
-                class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer"
+                class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 border cursor-pointer flex items-center gap-1.5"
                 [style.background]="selectedCategory() === 'puzzle' ? 'linear-gradient(to right, var(--color-accent-from), var(--color-accent-to))' : 'var(--color-bg-card)'"
                 [style.color]="selectedCategory() === 'puzzle' ? '#ffffff' : 'var(--color-text-secondary)'"
                 [style.border-color]="selectedCategory() === 'puzzle' ? 'transparent' : 'var(--color-border-card)'">
-          {{ i18n.t('lobby.filter.puzzle')() || '🧩 空间拼图' }}
+          <span>{{ i18n.t('lobby.filter.puzzle')() || '🧩 空间拼图' }}</span>
+          <span class="text-[11px] font-mono opacity-80 font-normal">({{ categoryCounts().puzzle }})</span>
         </button>
       </div>
 
@@ -298,32 +306,32 @@
     <!-- Games Grid (Heart of the Platform) -->
     <section>
       @if (isLoading()) {
-        <!-- Skeleton Screen Grid Matching Exact Card Layout -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
+        <!-- Skeleton Screen Grid Matching Exact Compact Card Layout -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-5 animate-pulse">
           @for (item of [1,2,3,4,5,6,7,8,9,10]; track item) {
             <div class="flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] shadow-sm">
-              <!-- Thumbnail Skeleton (80% Aspect Ratio) -->
-              <div class="w-full relative shrink-0 bg-[var(--color-bg-main)]/60 border-b border-[var(--color-border-card)]" style="padding-top: 80%;">
+              <!-- Thumbnail Skeleton (62% Aspect Ratio) -->
+              <div class="w-full relative shrink-0 bg-[var(--color-bg-main)]/60 border-b border-[var(--color-border-card)]" style="padding-top: 62%;">
                 <div class="absolute inset-0 flex items-center justify-center">
-                  <div class="w-20 h-20 rounded-2xl bg-[var(--color-border-card)]/40"></div>
+                  <div class="w-14 h-14 rounded-2xl bg-[var(--color-border-card)]/40"></div>
                 </div>
               </div>
               <!-- Content Skeleton -->
-              <div class="p-4 flex flex-col flex-grow justify-between gap-3">
+              <div class="p-3 sm:p-3.5 flex flex-col flex-grow justify-between gap-2.5">
                 <div>
-                  <div class="flex items-center justify-between gap-2 mb-2">
-                    <div class="h-5 w-28 rounded-md bg-[var(--color-border-card)]/60"></div>
-                    <div class="h-4 w-12 rounded-md bg-[var(--color-border-card)]/40"></div>
+                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <div class="h-4 w-24 rounded-md bg-[var(--color-border-card)]/60"></div>
+                    <div class="h-3.5 w-10 rounded-md bg-[var(--color-border-card)]/40"></div>
                   </div>
-                  <div class="space-y-1.5">
+                  <div class="space-y-1">
                     <div class="h-3 w-full rounded bg-[var(--color-border-card)]/30"></div>
                     <div class="h-3 w-4/5 rounded bg-[var(--color-border-card)]/30"></div>
                   </div>
                 </div>
                 <!-- Action Buttons Skeleton -->
                 <div class="pt-2 border-t border-[var(--color-border-card)]/50 flex gap-2">
-                  <div class="h-8 flex-1 rounded-xl bg-[var(--color-border-card)]/40"></div>
-                  <div class="h-8 flex-1 rounded-xl bg-[var(--color-border-card)]/50"></div>
+                  <div class="h-7 sm:h-8 flex-1 rounded-xl bg-[var(--color-border-card)]/40"></div>
+                  <div class="h-7 sm:h-8 flex-1 rounded-xl bg-[var(--color-border-card)]/50"></div>
                 </div>
               </div>
             </div>
@@ -341,62 +349,75 @@
           </button>
         </div>
       } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3.5 sm:gap-5">
           @for (game of filteredGames(); track game.id; let i = $index) {
             <!-- Ultra-Clean Action-Oriented Game Card -->
             <div class="game-card-cv group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-[var(--color-accent-from)]/30">
               
-              <!-- Card Top: Thumbnail Banner -->
-              <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="w-full relative shrink-0 overflow-hidden bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)] cursor-pointer block" style="padding-top: 80%;">
+              <!-- Card Top: Thumbnail Banner (62% Compact Ratio) -->
+              <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]" class="w-full relative shrink-0 overflow-hidden bg-[var(--color-bg-main)] border-b border-[var(--color-border-card)] cursor-pointer block" style="padding-top: 62%;">
                 <!-- Subtle Gradient Accent Overlay -->
                 <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"
                      style="background: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to))"></div>
 
                 <!-- Admin Dynamic Card Badge (NEW / HOT / PINNED) -->
                 @if (getGameBadge(game.id); as badge) {
-                  <div class="absolute top-2 left-2 z-10 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r {{ badge.gradientClass }} shadow-md flex items-center gap-1 animate-pulse pointer-events-none backdrop-blur-sm">
+                  <div class="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gradient-to-r {{ badge.gradientClass }} shadow-md flex items-center gap-1 animate-pulse pointer-events-none backdrop-blur-sm">
                     <span class="text-[11px] leading-none">{{ badge.icon }}</span>
                     <span class="tracking-wide uppercase leading-none">{{ badge.label }}</span>
                   </div>
                 }
+
+                <!-- 对决状态角标: 实时等待迎战高亮呼吸浮标 -->
+                @if (getWaitingRoomCount(game.id); as waitCount) {
+                  @if (waitCount > 0) {
+                    <div class="absolute top-2 right-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white shadow-md flex items-center gap-1.5 border border-white/40 animate-pulse pointer-events-none backdrop-blur-sm">
+                      <span class="relative flex h-2 w-2 shrink-0">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                      </span>
+                      <span>⚡ {{ waitCount }}人等待迎战</span>
+                    </div>
+                  }
+                }
                 
                 <!-- Game Icon SVG - Edge-to-Edge Hero Presence -->
-                <div class="absolute inset-0 flex items-center justify-center p-1.5 sm:p-2 overflow-hidden">
+                <div class="absolute inset-0 flex items-center justify-center p-2 sm:p-2.5 overflow-hidden">
                   <img [src]="'/assets/games/icons/' + game.id + '.svg?v=7'"
                        [alt]="getGameTitle(game.id)"
                        [attr.fetchpriority]="i < 4 ? 'high' : null"
                        [attr.loading]="i >= 8 ? 'lazy' : 'eager'"
                        decoding="async"
-                       class="w-full h-full object-contain drop-shadow-md scale-[1.15] group-hover:scale-[1.20] transition-transform duration-500"
+                       class="w-full h-full object-contain drop-shadow-md scale-[1.05] group-hover:scale-[1.12] transition-transform duration-500"
                        (error)="handleIconError($event, game.id)" />
                 </div>
               </a>
 
               <!-- Card Bottom: Info & Direct Action CTA Buttons -->
-              <div class="p-4 flex flex-col flex-grow justify-between gap-3">
+              <div class="p-3 sm:p-3.5 flex flex-col flex-grow justify-between gap-2.5">
                 
                 <!-- Title, Hot Stat & Share -->
                 <div>
-                  <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <div class="flex items-center justify-between gap-1.5 mb-1">
                     <a [routerLink]="['/', i18n.currentLang(), 'games', game.id]"
-                       class="text-base sm:text-lg md:text-xl font-extrabold hover:text-[var(--color-accent-from)] transition-colors truncate tracking-tight">
+                       class="text-sm sm:text-base md:text-lg font-extrabold hover:text-[var(--color-accent-from)] transition-colors truncate tracking-tight">
                       {{ getGameTitle(game.id) }}
                     </a>
 
-                    <div class="flex items-center gap-1.5 shrink-0">
+                    <div class="flex items-center gap-1 shrink-0">
                       <!-- Hot Visit Stat Pill -->
                       @if ((game.visitCount || 0) > 0) {
-                        <div class="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
-                          <span class="text-amber-500 text-xs">🔥</span>
+                        <div class="flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.2 rounded-md bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
+                          <span class="text-amber-500 text-[10px]">🔥</span>
                           <span class="tabular-nums">{{ game.visitCount }}</span>
                         </div>
                       }
 
                       <!-- Share Button -->
                       <button (click)="shareGame($event, game.id)"
-                              class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-bg-main)] transition-colors"
+                              class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer"
                               title="Share">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                         </svg>
                       </button>
@@ -404,16 +425,16 @@
                   </div>
 
                   <!-- Short Description -->
-                  <p class="text-xs sm:text-[13.5px] text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
+                  <p class="text-xs text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed">
                     {{ getGameDesc(game.id) }}
                   </p>
                 </div>
 
                 <!-- Direct Launch Action Group -->
-                <div class="pt-2.5 border-t border-[var(--color-border-card)] flex items-center gap-2">
+                <div class="pt-2 border-t border-[var(--color-border-card)] flex items-center gap-2">
                   <!-- Main Play Button (Primary CTA) -->
                   <button (click)="playSoloGame($event, game.id)"
-                          class="flex-1 py-2 px-3 sm:px-3.5 rounded-xl text-xs sm:text-sm font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+                          class="flex-1 py-1.5 sm:py-2 px-3 rounded-xl text-xs sm:text-sm font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
                     <span>🕹️</span>
                     <span>{{ i18n.t('lobby.play_instant')() || '开始游戏' }}</span>
                   </button>
@@ -421,11 +442,12 @@
                   <!-- Secondary PK Capsule (If multiplayer supported) -->
                   @if (hasMultiplayer(game.id)) {
                     <button (click)="playPkGame($event, game.id)"
-                            class="py-2 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold text-white active:scale-95 transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-sm hover:brightness-110"
-                            [style.background]="getPkButtonInfo(game.id).gradient"
-                            [style.box-shadow]="getPkButtonInfo(game.id).shadow"
+                            class="py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold text-white active:scale-95 transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-sm hover:brightness-110"
+                            [class.animate-pulse]="getWaitingRoomCount(game.id) > 0"
+                            [style.background]="getWaitingRoomCount(game.id) > 0 ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : getPkButtonInfo(game.id).gradient"
+                            [style.box-shadow]="getWaitingRoomCount(game.id) > 0 ? '0 0 12px rgba(245, 158, 11, 0.5)' : getPkButtonInfo(game.id).shadow"
                             [title]="i18n.t('game.quick_pk')() || '联机对战'">
-                      @if (hasWaitingRoom(game.id)) {
+                      @if (getWaitingRoomCount(game.id) > 0) {
                         <span class="relative flex h-2 w-2 shrink-0">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                           <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
