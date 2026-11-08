@@ -1717,6 +1717,8 @@
   "result.instant_replay_hint": "键盘 Space / R 极速再战",
   "result.level_progress": "等级进阶进度",
   "result.level_up": "升级了！",
+  "result.near_miss_encourage": "就差一步！手感正热，立刻重开必破纪录！",
+  "result.try_again_revenge": "不服再战 · 立刻重开",
   "result.new_record": "新个人最佳！",
   "result.next_level_hint": "进阶下一关挑战",
   "result.personal_best": "🏆 创造个人历史最佳新纪录！",

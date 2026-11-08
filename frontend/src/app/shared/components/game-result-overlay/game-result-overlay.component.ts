@@ -56,6 +56,23 @@ import confetti from 'canvas-confetti';
       0%, 100% { opacity: 0.2; transform: scale(0.6); }
       50% { opacity: 1; transform: scale(1.2); }
     }
+    @keyframes pingOnce {
+      0% { transform: scale(0.6); opacity: 0.9; }
+      75% { transform: scale(1.35); opacity: 0.15; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    .animate-ping-once {
+      animation: pingOnce 1.2s cubic-bezier(0, 0, 0.2, 1) forwards;
+    }
+    @keyframes trophyImpact {
+      0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+      50% { transform: scale(1.2) rotate(4deg); opacity: 1; }
+      75% { transform: scale(0.95) rotate(-2deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .animate-trophy-impact {
+      animation: trophyImpact 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
     .animate-spin-slow {
       animation: spinSlow 30s linear infinite;
     }
@@ -293,56 +310,132 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   }
 
   private fireConfetti() {
-    // A quick, celebratory burst from the center bottom
-    const duration = 2000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 45, spread: 90, ticks: 100, zIndex: 10000, colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'] };
+    // 1. Immediate high-velocity dual-cannon blast shooting upward from bottom corners
+    const colors = ['#FFE135', '#FFA500', '#FF416C', '#00F2FE', '#4FACFE', '#00E676', '#9B51E0', '#FFD700'];
 
+    // Left cannon -> shoots up-right
+    confetti({
+      particleCount: 75,
+      angle: 60,
+      spread: 65,
+      origin: { x: 0.05, y: 0.85 },
+      colors,
+      startVelocity: 55,
+      gravity: 1.05,
+      ticks: 240,
+      zIndex: 10001
+    });
+
+    // Right cannon -> shoots up-left
+    confetti({
+      particleCount: 75,
+      angle: 120,
+      spread: 65,
+      origin: { x: 0.95, y: 0.85 },
+      colors,
+      startVelocity: 55,
+      gravity: 1.05,
+      ticks: 240,
+      zIndex: 10001
+    });
+
+    // Center starburst
+    setTimeout(() => {
+      confetti({
+        particleCount: 45,
+        spread: 110,
+        origin: { x: 0.5, y: 0.55 },
+        shapes: ['circle'],
+        colors: ['#FFD700', '#FFA500', '#FFFFFF', '#FEE715'],
+        startVelocity: 35,
+        gravity: 0.9,
+        ticks: 200,
+        zIndex: 10001
+      });
+    }, 150);
+
+    // 2. Continuous celebration rain for 2.2s
+    const duration = 2200;
+    const animationEnd = Date.now() + duration;
     const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
     const interval: any = setInterval(() => {
       const timeLeft = animationEnd - Date.now();
-
       if (timeLeft <= 0) {
         return clearInterval(interval);
       }
-
-      const particleCount = 40 * (timeLeft / duration);
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-    }, 250);
+      const particleCount = 20 * (timeLeft / duration);
+      confetti({
+        particleCount,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: randomInRange(0.65, 0.9) },
+        colors,
+        zIndex: 10001
+      });
+      confetti({
+        particleCount,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: randomInRange(0.65, 0.9) },
+        colors,
+        zIndex: 10001
+      });
+    }, 280);
   }
 
   private fireNewRecordConfetti() {
-    // A massive, glorious golden explosion for new records
-    const duration = 4000;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 60, spread: 120, ticks: 150, zIndex: 10000 };
-    const goldenColors = ['#FEE715', '#FFD700', '#FFA500', '#FF8C00', '#FFDF00'];
+    // Ultra-luxurious all-gold & ruby stadium fireworks
+    const goldenColors = ['#FEE715', '#FFD700', '#FFA500', '#FF8C00', '#FFDF00', '#FFFFFF', '#FF3366'];
 
-    // Initial massive explosion
+    // Left cannon
     confetti({
-      particleCount: 150,
-      spread: 180,
-      origin: { y: 0.6 },
+      particleCount: 120,
+      angle: 55,
+      spread: 75,
+      origin: { x: 0, y: 0.88 },
       colors: goldenColors,
-      startVelocity: 80,
-      zIndex: 10000
+      startVelocity: 65,
+      gravity: 1.0,
+      ticks: 300,
+      zIndex: 10001
+    });
+    // Right cannon
+    confetti({
+      particleCount: 120,
+      angle: 125,
+      spread: 75,
+      origin: { x: 1, y: 0.88 },
+      colors: goldenColors,
+      startVelocity: 65,
+      gravity: 1.0,
+      ticks: 300,
+      zIndex: 10001
+    });
+    // Center mega burst
+    confetti({
+      particleCount: 100,
+      spread: 160,
+      origin: { x: 0.5, y: 0.5 },
+      colors: goldenColors,
+      startVelocity: 45,
+      ticks: 250,
+      zIndex: 10001
     });
 
-    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
-
+    const duration = 3500;
+    const animationEnd = Date.now() + duration;
     const interval: any = setInterval(() => {
       const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
-
-      const particleCount = 60 * (timeLeft / duration);
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.1 }, colors: goldenColors });
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.1 }, colors: goldenColors });
-    }, 200);
+      if (timeLeft <= 0) return clearInterval(interval);
+      confetti({
+        particleCount: 25,
+        spread: 80,
+        origin: { x: Math.random(), y: Math.random() * 0.4 },
+        colors: goldenColors,
+        zIndex: 10001
+      });
+    }, 280);
   }
 
   private animateStats() {

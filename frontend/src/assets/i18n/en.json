@@ -1717,6 +1717,8 @@
   "result.instant_replay_hint": "Press Space / R for Instant Replay",
   "result.level_progress": "Rank Progression",
   "result.level_up": "Level Up!",
+  "result.near_miss_encourage": "So close! Momentum is high, try again now!",
+  "result.try_again_revenge": "Try Again Now",
   "result.new_record": "New Personal Best!",
   "result.next_level_hint": "Advance to Next Level",
   "result.personal_best": "🏆 New Personal Best Record!",
