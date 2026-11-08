@@ -131,7 +131,7 @@ func GetActiveRooms() []RoomSnapshot {
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
 
-		maxPlayers := 4
+		maxPlayers := 8
 		if game == "gomoku" || game == "idiom" {
 			maxPlayers = 2
 		}
@@ -433,7 +433,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 				currentContestants++
 			}
 		}
-		maxCapacity := 4
+		maxCapacity := 8
 		if r.Game == "gomoku" || r.Game == "idiom" {
 			maxCapacity = 2
 		}

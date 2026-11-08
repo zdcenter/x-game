@@ -161,16 +161,16 @@
                   <span>{{ i18n.t('game.battle_arena_seats')() || '竞技对决擂台' }}</span>
                 </span>
                 <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)]">
-                  {{ sortedPlayers.length }}/{{ maxCapacity }}
+                  {{ dynamicSeatCountLabel }}
                 </span>
               </div>
-              <span class="text-[11px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full hidden sm:inline-block">
-                {{ arenaBadgeLabel }}
+              <span class="text-[11px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                {{ dynamicArenaBadge }}
               </span>
             </div>
 
-            <!-- ── A. Pure 1v1 Dual Layout (Gomoku, Idiom, etc.) ── -->
-            @if (isStrictlyDual) {
+            <!-- ── A. Pure 1v1 Dual Layout (Gomoku, Idiom, or 1~2 Players) ── -->
+            @if (stageLayout === 'dual') {
               <div class="relative flex flex-row items-stretch justify-between gap-2.5 sm:gap-3.5 w-full my-auto py-1">
                 
                 <!-- Center VS Badge -->
@@ -298,8 +298,8 @@
               </div>
             }
 
-            <!-- ── B. Full Multiplayer Podium Grid (Speed Race / Score PK 2-4+ Players) ── -->
-            @if (!isStrictlyDual) {
+            <!-- ── B. Squad 4-Podium Grid (3~4 Players) ── -->
+            @else if (stageLayout === 'squad') {
               <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 w-full my-auto py-1">
                 
                 <!-- Render Joined Players -->
@@ -380,8 +380,12 @@
                 }
 
                 <!-- Render Empty Available Seats -->
-                @for (seat of emptySeatSlots; track seat) {
+                @for (seat of squadEmptySlots; track seat; let sIdx = $index) {
                   <div class="relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl sm:rounded-2xl border-2 border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-card)]/50 min-h-[130px] sm:min-h-[155px]">
+                    <span class="absolute top-1.5 left-1.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
+                      P{{ sortedPlayers.length + sIdx + 1 }}
+                    </span>
+
                     <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[var(--color-bg-main)] border-2 border-dashed border-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] text-sm sm:text-base mb-1 shadow-inner animate-pulse">
                       ?
                     </div>
@@ -402,6 +406,75 @@
                         <span class="truncate">邀请入席</span>
                       </button>
                     </div>
+                  </div>
+                }
+
+              </div>
+            }
+
+            <!-- ── C. Grand Arena Matrix (5~8 Players) ── -->
+            @else {
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 w-full my-auto py-1">
+                
+                @for (player of sortedPlayers; track player.id; let idx = $index) {
+                  <div class="relative flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border-2 transition-all duration-300 shadow-xs bg-[var(--color-bg-card)] min-h-[54px]"
+                       [class.border-emerald-500]="readyPlayers[player.id] || player.id === hostId"
+                       [class.shadow-[0_0_12px_rgba(16,185,129,0.1)]]="readyPlayers[player.id] || player.id === hostId"
+                       [class.border-amber-500/40]="!readyPlayers[player.id] && player.id !== hostId">
+                    
+                    <!-- Mini Avatar -->
+                    <div class="relative shrink-0">
+                      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-sm border border-[var(--color-bg-card)]"
+                           [style.background]="getPlayerGradient(idx)">
+                        {{ player.id?.charAt(0)?.toUpperCase() }}
+                      </div>
+                      @if (player.id === hostId || readyPlayers[player.id]) {
+                        <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border border-[var(--color-bg-card)] flex items-center justify-center text-white text-[8px] font-black">
+                          ✓
+                        </div>
+                      } @else {
+                        <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-amber-500/20 border border-[var(--color-bg-card)] flex items-center justify-center rounded-full">
+                          <div class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Info Column -->
+                    <div class="flex flex-col min-w-0 flex-1">
+                      <div class="flex items-center gap-1">
+                        @if (player.id === hostId) {
+                          <span class="bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[8px] font-black px-1 rounded-sm leading-tight shrink-0">👑</span>
+                        } @else {
+                          <span class="px-1 rounded-sm text-[8px] font-mono font-bold bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)] leading-tight shrink-0">P{{ idx + 1 }}</span>
+                        }
+                        <span class="font-bold text-[11px] sm:text-xs text-[var(--color-text-main)] truncate drop-shadow-xs">
+                          {{ player.id }}
+                        </span>
+                      </div>
+                      <div class="text-[9px] font-medium leading-tight mt-0.5 truncate"
+                           [class.text-emerald-400]="player.id === hostId || readyPlayers[player.id]"
+                           [class.text-amber-400]="player.id !== hostId && !readyPlayers[player.id]">
+                        {{ (player.id === hostId || readyPlayers[player.id]) ? (i18n.t('game.ready')() || '已就绪') : (i18n.t('game.waiting_challenger')() || '准备中...') }}
+                      </div>
+                    </div>
+
+                    <!-- Host Kick Button -->
+                    @if (currentUserId === hostId && player.id !== hostId) {
+                      <button (click)="kick.emit(player.id)"
+                              class="w-4.5 h-4.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all text-[10px] font-bold active:scale-95 cursor-pointer shrink-0"
+                              title="Kick Player">
+                        ✕
+                      </button>
+                    }
+                  </div>
+                }
+
+                <!-- Invite More Slot if < maxCapacity -->
+                @if (sortedPlayers.length < maxCapacity) {
+                  <div (click)="shareInviteLink()"
+                       class="relative flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border-2 border-dashed border-[var(--color-border-card)] hover:border-amber-400/80 bg-[var(--color-bg-card)]/50 cursor-pointer active:scale-98 transition-all min-h-[54px] text-amber-500 hover:text-amber-400 group">
+                    <span class="text-sm font-black group-hover:scale-125 transition-transform">+</span>
+                    <span class="text-[11px] font-bold">邀请更多 ({{ sortedPlayers.length }}/{{ maxCapacity }})</span>
                   </div>
                 }
 

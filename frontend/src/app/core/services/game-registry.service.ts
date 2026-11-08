@@ -153,9 +153,9 @@ export class GameRegistryService {
   }
 
   /**
-   * Returns maximum player capacity for a game room. Defaults to 4 for speed/score races, 2 for dual-only.
+   * Returns maximum player capacity for a game room. Defaults to 8 for speed/score races, 2 for dual-only.
    */
   getMaxPlayers(gameId: string): number {
-    return this.isStrictlyDual(gameId) ? 2 : 4;
+    return this.isStrictlyDual(gameId) ? 2 : 8;
   }
 }

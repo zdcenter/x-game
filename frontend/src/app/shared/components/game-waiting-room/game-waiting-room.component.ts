@@ -169,23 +169,43 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     return this.gameRegistry.isStrictlyDual(this.gameId);
   }
 
-  get arenaBadgeLabel(): string {
-    if (this.isStrictlyDual) {
-      return this.i18n.t('game.duel_mode')() || '1v1 对战';
-    }
-    if (this.mode?.includes(GameMode.Speed)) {
-      return this.i18n.t('game.speed_race_mode')() || '多人极速竞速';
-    }
-    if (this.mode?.includes(GameMode.Steal) || this.mode?.includes(GameMode.Score)) {
-      return this.i18n.t('game.score_battle_mode')() || '多人积分对抗';
-    }
-    return this.i18n.t('game.multiplayer_arena')() || '多人竞技对决';
+  get stageLayout(): 'dual' | 'squad' | 'grand' {
+    if (this.isStrictlyDual) return 'dual';
+    const count = this.sortedPlayers.length;
+    if (count <= 2) return 'dual';
+    if (count <= 4) return 'squad';
+    return 'grand';
   }
 
-  get emptySeatSlots(): number[] {
+  get dynamicArenaBadge(): string {
+    if (this.isStrictlyDual) {
+      return this.i18n.t('game.duel_mode')() || '1v1 棋盘对弈';
+    }
+    const count = this.sortedPlayers.length;
+    if (count <= 2) {
+      return this.mode?.includes(GameMode.Speed) ? '1v1 极速竞速' : '1v1 巅峰对决';
+    }
+    if (count <= 4) {
+      return `🏎️ ${count}人 同台竞速`;
+    }
+    return `🔥 ${count}人 群雄大乱斗`;
+  }
+
+  get dynamicSeatCountLabel(): string {
+    if (this.isStrictlyDual) {
+      return `${this.sortedPlayers.length}/2`;
+    }
+    const count = this.sortedPlayers.length;
+    if (count <= 1) return `1人等待中`;
+    if (count === 2) return `2人已入席`;
+    if (count <= 4) return `${count}人对决席`;
+    return `${count}人大乱斗`;
+  }
+
+  get squadEmptySlots(): number[] {
     const current = this.sortedPlayers.length;
-    const remaining = Math.max(0, this.maxCapacity - current);
-    return Array.from({ length: remaining }, (_, i) => i);
+    if (current >= 4) return [];
+    return Array.from({ length: 4 - current }, (_, i) => i);
   }
 
   getPlayerGradient(index: number): string {
@@ -194,6 +214,10 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
       'linear-gradient(135deg, #f43f5e, #f97316)',
       'linear-gradient(135deg, #10b981, #06b6d4)',
       'linear-gradient(135deg, #f59e0b, #eab308)',
+      'linear-gradient(135deg, #ec4899, #8b5cf6)',
+      'linear-gradient(135deg, #06b6d4, #3b82f6)',
+      'linear-gradient(135deg, #84cc16, #10b981)',
+      'linear-gradient(135deg, #a855f7, #ec4899)',
     ];
     return gradients[index % gradients.length];
   }
