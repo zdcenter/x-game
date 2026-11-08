@@ -16,7 +16,7 @@
             </div>
             <div class="min-w-0 flex flex-col justify-center">
               <h1 class="text-sm sm:text-base md:text-lg lg:text-xl font-black tracking-tight uppercase flex items-center gap-1 sm:gap-2 truncate">
-                <button (click)="titleClick.emit()" class="truncate hover:opacity-80 active:scale-95 transition-all text-left bg-clip-text text-transparent bg-gradient-to-r max-w-[80px] xs:max-w-[130px] sm:max-w-none"
+                <button (click)="titleClick.emit()" class="truncate hover:opacity-80 active:scale-95 transition-all text-left bg-clip-text text-transparent bg-gradient-to-r max-w-[130px] xs:max-w-[170px] sm:max-w-none"
                         [ngClass]="titleGradientClass">
                   {{ title }}
                 </button>
@@ -38,10 +38,10 @@
           <!-- Main Action Injection (e.g. ⚔️ 联机对战 / ⚡ 迎战) -->
           <ng-content select="[header-right]"></ng-content>
 
-          <!-- Quick Rules Button (Desk/Tablet/Mobile visible) -->
+          <!-- Quick Rules Button (Desk/Tablet visible, on mobile cleanly housed inside ⚙️ Tools menu) -->
           @if (showRulesBtn) {
             <button (click)="rules.emit()"
-                    class="inline-flex p-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-semibold items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
+                    class="hidden sm:inline-flex p-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:border-[var(--color-accent-from)]/40 transition-all text-xs font-semibold items-center gap-1 active:scale-95 shadow-2xs cursor-pointer"
                     [title]="i18n.t('game.rules')() || '规则说明'">
               <span class="text-xs">📖</span>
               <span class="hidden md:inline">{{ i18n.t('game.rules')() || '规则' }}</span>

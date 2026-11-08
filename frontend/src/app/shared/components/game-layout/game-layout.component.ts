@@ -61,6 +61,18 @@ import { SavedGameSession } from '../../../core/services/resume-game.service';
   template: `
 <div class="flex w-full flex-col relative text-[var(--color-text-main)] select-none"
      [ngClass]="zenService.isZenMode() ? 'h-[100dvh] max-h-[100dvh] overflow-hidden bg-[var(--color-bg-base)]' : (deviceService.isHandheld() ? 'min-h-[100dvh] bg-transparent p-0 m-0' : 'min-h-[calc(100dvh-64px)] bg-[var(--color-bg-base)]')">
+  <!-- Floating Minimal Zen Exit Pill (Effortless 1-click exit for Mobile & Desktop without visual obstruction) -->
+  @if (zenService.isZenMode()) {
+    <div class="fixed top-2.5 right-2.5 z-50 animate-fade-in pointer-events-auto">
+      <button (click)="zenService.toggle()"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-bg-card)]/85 hover:bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] shadow-lg backdrop-blur-md text-xs font-semibold cursor-pointer transition-all active:scale-95 group"
+              [title]="i18n.t('game.exit_zen_mode')() || '退出沉浸模式'">
+        <span class="text-sm">🧘</span>
+        <span class="text-[11px] opacity-80 group-hover:opacity-100">{{ i18n.t('game.zen_mode_exit')() || '退出沉浸' }}</span>
+      </button>
+    </div>
+  }
+
   <!-- Offline Mode Banner -->
   @if (!zenService.isZenMode() && !isImmersiveEffective()) {
     <app-offline-banner></app-offline-banner>
