@@ -68,6 +68,23 @@ export interface ClaimQuestResponse {
   milestone_notice?: string;
 }
 
+export interface ClaimAllQuestsResponse {
+  total_quests_claimed: number;
+  total_xp_amount: number;
+  total_coins_amount: number;
+  xp_result: {
+    xp_earned: number;
+    xp: number;
+    level: number;
+    leveled_up: boolean;
+  };
+  streak: number;
+  streak_freezes: number;
+  brain_coins: number;
+  milestone_notice?: string;
+  claimed_quest_ids: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class DailyQuestService {
   private http = inject(HttpClient);
@@ -106,6 +123,45 @@ export class DailyQuestService {
         });
 
         // Update authStore user if present
+        if (this.authStore.currentUser()) {
+          const user = this.authStore.currentUser()!;
+          this.authStore.updateUser({
+            ...user,
+            xp: res.xp_result.xp,
+            level: res.xp_result.level,
+            login_streak: res.streak,
+            streak_freezes: res.streak_freezes,
+            brain_coins: res.brain_coins,
+          });
+        }
+      })
+    );
+  }
+
+  claimAllQuests(): Observable<ClaimAllQuestsResponse> {
+    return this.http.post<ClaimAllQuestsResponse>(`${this.apiUrl}/quests/claim-all`, {}).pipe(
+      tap(res => {
+        this.questsData.update(data => {
+          if (!data) return null;
+          data.quests.forEach(q => {
+            if (res.claimed_quest_ids.includes(q.id)) {
+              q.claimed = true;
+            }
+          });
+          if (res.claimed_quest_ids.includes('daily_chest')) {
+            data.chest.claimed = true;
+            data.streak = res.streak;
+          }
+          data.brain_coins = res.brain_coins;
+          data.streak_freezes = res.streak_freezes;
+          if (data.milestones) {
+            for (const m of data.milestones) {
+              m.reached = res.streak >= m.days;
+            }
+          }
+          return { ...data };
+        });
+
         if (this.authStore.currentUser()) {
           const user = this.authStore.currentUser()!;
           this.authStore.updateUser({

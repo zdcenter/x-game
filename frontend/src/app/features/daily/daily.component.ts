@@ -427,48 +427,26 @@ export class DailyComponent implements OnInit, OnDestroy {
 
     this.isClaimingAll.set(true);
 
-    const requests = tasks.map(t => this.questService.claimQuest(t.id));
-    if (chestReady) {
-      requests.push(this.questService.claimQuest('daily_chest'));
-    }
-
-    forkJoin(requests).subscribe({
-      next: (results: ClaimQuestResponse[]) => {
+    this.questService.claimAllQuests().subscribe({
+      next: res => {
         this.isClaimingAll.set(false);
-        let totalXp = 0;
-        let totalCoins = 0;
-        let hasLeveledUp = false;
-        let finalLevel = this.userLevel();
-        let lastMilestone = '';
-
-        results.forEach(r => {
-          totalXp += r.xp_amount || 0;
-          totalCoins += r.coins_amount || 0;
-          if (r.xp_result?.leveled_up) {
-            hasLeveledUp = true;
-            finalLevel = r.xp_result.level;
-          }
-          if (r.milestone_notice) {
-            lastMilestone = r.milestone_notice;
-          }
-        });
 
         // 触发大丰收全清大弹窗！
         this.celebrationData.set({
           title: '🎉 奖励大丰收！',
-          subtitle: `成功领取全部 ${results.length} 项挑战奖励`,
+          subtitle: `成功领取全部 ${res.total_quests_claimed} 项挑战奖励`,
           icon: '👑',
-          xp: totalXp,
-          coins: totalCoins,
-          leveledUp: hasLeveledUp,
-          newLevel: finalLevel,
-          milestoneTitle: lastMilestone ? '连胜里程碑' : undefined,
-          milestoneDesc: lastMilestone || undefined
+          xp: res.total_xp_amount,
+          coins: res.total_coins_amount,
+          leveledUp: res.xp_result?.leveled_up,
+          newLevel: res.xp_result?.level ?? this.userLevel(),
+          milestoneTitle: res.milestone_notice ? '连胜里程碑' : undefined,
+          milestoneDesc: res.milestone_notice || undefined
         });
       },
       error: () => {
         this.isClaimingAll.set(false);
-        this.toast.error('一键领取部分失败，请重试');
+        this.toast.error('一键领取失败，请稍后重试');
       }
     });
   }

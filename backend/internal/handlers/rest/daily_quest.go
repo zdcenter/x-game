@@ -44,3 +44,19 @@ func ClaimDailyQuest(c fiber.Ctx) error {
 
 	return c.JSON(res)
 }
+
+// ClaimAllDailyQuests awards XP and coins for all completed daily quests atomically
+func ClaimAllDailyQuests(c fiber.Ctx) error {
+	userIDVal := c.Locals("user_id")
+	if userIDVal == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+	userID := uint(userIDVal.(float64))
+
+	res, err := service.ClaimAllDailyQuests(userID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(res)
+}

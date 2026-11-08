@@ -147,6 +147,7 @@ func main() {
 	quests := v1.Group("/quests")
 	quests.Get("/today", middleware.OptionalProtected(), rest.GetDailyQuests)
 	quests.Post("/claim", middleware.Protected(), rest.ClaimDailyQuest)
+	quests.Post("/claim-all", middleware.Protected(), rest.ClaimAllDailyQuests)
 
 	// Feedback & Bug Reporting (public with optional auth)
 	v1.Post("/feedback", middleware.OptionalProtected(), rest.SubmitFeedback)

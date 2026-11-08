@@ -7,6 +7,7 @@ import (
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
+	"gorm.io/gorm/clause"
 )
 
 type QuestDef struct {
@@ -317,6 +318,18 @@ type DailyQuestClaimResult struct {
 	MilestoneNotice string   `json:"milestone_notice,omitempty"`
 }
 
+type DailyQuestClaimAllResult struct {
+	TotalQuestsClaimed int      `json:"total_quests_claimed"`
+	TotalXPAmount      int      `json:"total_xp_amount"`
+	TotalCoinsAmount   int      `json:"total_coins_amount"`
+	XPResult           XPResult `json:"xp_result"`
+	Streak             int      `json:"streak"`
+	StreakFreezes      int      `json:"streak_freezes"`
+	BrainCoins         int      `json:"brain_coins"`
+	MilestoneNotice    string   `json:"milestone_notice,omitempty"`
+	ClaimedQuestIDs    []string `json:"claimed_quest_ids"`
+}
+
 // AddUnlockedItem safely appends an item ID into the JSON string array field
 func AddUnlockedItem(currentJSON, newItemID string) string {
 	var list []string
@@ -331,25 +344,40 @@ func AddUnlockedItem(currentJSON, newItemID string) string {
 	return string(data)
 }
 
-// ClaimDailyQuest awards XP, coins, and updates streak
+// ClaimDailyQuest awards XP, coins, and updates streak atomically inside a database transaction
 func ClaimDailyQuest(userID uint, questID string) (*DailyQuestClaimResult, error) {
 	today := time.Now().Format("2006-01-02")
 
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var quest domain.UserDailyQuest
-	if err := db.DB.Where("user_id = ? AND date = ? AND quest_id = ?", userID, today, questID).First(&quest).Error; err != nil {
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("user_id = ? AND date = ? AND quest_id = ?", userID, today, questID).
+		First(&quest).Error; err != nil {
+		tx.Rollback()
 		return nil, errors.New("quest not found")
 	}
 
 	if !quest.Completed {
+		tx.Rollback()
 		return nil, errors.New("quest not yet completed")
 	}
 
 	if quest.Claimed {
+		tx.Rollback()
 		return nil, errors.New("quest already claimed")
 	}
 
 	quest.Claimed = true
-	db.DB.Save(&quest)
+	if err := tx.Save(&quest).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
 
 	// Coins lookup
 	coinsEarned := 20
@@ -361,10 +389,15 @@ func ClaimDailyQuest(userID uint, questID string) (*DailyQuestClaimResult, error
 		coinsEarned = 100
 	}
 
-	xpRes := AddXP(userID, quest.XPAmount)
-
 	var user domain.User
-	db.DB.First(&user, userID)
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, userID).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	oldLevel := user.Level
+	user.XP += quest.XPAmount
+	user.Level = CalcLevel(user.XP)
 	user.BrainCoins += coinsEarned
 
 	milestoneNotice := ""
@@ -376,6 +409,7 @@ func ClaimDailyQuest(userID uint, questID string) (*DailyQuestClaimResult, error
 		switch user.LoginStreak {
 		case 3:
 			user.XP += 50
+			user.Level = CalcLevel(user.XP)
 			user.BrainCoins += 100
 			if user.StreakFreezes < 2 {
 				user.StreakFreezes++
@@ -383,16 +417,19 @@ func ClaimDailyQuest(userID uint, questID string) (*DailyQuestClaimResult, error
 			milestoneNotice = "🎉 达成 3 天连胜！获得 1 张连胜保护卡 🧊 与 +100 脑力金币！"
 		case 7:
 			user.XP += 150
+			user.Level = CalcLevel(user.XP)
 			user.BrainCoins += 300
 			user.UnlockedTitles = AddUnlockedItem(user.UnlockedTitles, "persistent")
 			milestoneNotice = "🎉 达成 7 天连胜！解锁专属称号「坚持不懈」与 +300 脑力金币！"
 		case 14:
 			user.XP += 300
+			user.Level = CalcLevel(user.XP)
 			user.BrainCoins += 600
 			user.UnlockedFrames = AddUnlockedItem(user.UnlockedFrames, "frame-flame")
 			milestoneNotice = "🎉 达成 14 天连胜！解锁「烈焰之环」🔥 动态头像框与 +600 脑力金币！"
 		case 30:
 			user.XP += 1000
+			user.Level = CalcLevel(user.XP)
 			user.BrainCoins += 2000
 			user.UnlockedTitles = AddUnlockedItem(user.UnlockedTitles, "puzzle_legend")
 			user.UnlockedFrames = AddUnlockedItem(user.UnlockedFrames, "frame-gold")
@@ -400,24 +437,190 @@ func ClaimDailyQuest(userID uint, questID string) (*DailyQuestClaimResult, error
 		}
 	}
 
-	db.DB.Model(&user).Updates(map[string]any{
+	if err := tx.Model(&user).Updates(map[string]any{
 		"xp":              user.XP,
-		"level":           CalcLevel(user.XP),
+		"level":           user.Level,
 		"login_streak":    user.LoginStreak,
 		"streak_freezes":  user.StreakFreezes,
 		"brain_coins":     user.BrainCoins,
 		"unlocked_titles": user.UnlockedTitles,
 		"unlocked_frames": user.UnlockedFrames,
-	})
+	}).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
 
 	return &DailyQuestClaimResult{
 		QuestID:         questID,
 		XPAmount:        quest.XPAmount,
 		CoinsAmount:     coinsEarned,
-		XPResult:        xpRes,
+		XPResult: XPResult{
+			XPEarned:  quest.XPAmount,
+			XP:        user.XP,
+			Level:     user.Level,
+			LeveledUp: user.Level > oldLevel,
+		},
 		Streak:          user.LoginStreak,
 		StreakFreezes:   user.StreakFreezes,
 		BrainCoins:      user.BrainCoins,
 		MilestoneNotice: milestoneNotice,
+	}, nil
+}
+
+// ClaimAllDailyQuests claims all completed quests and chest for today atomically in a single transaction
+func ClaimAllDailyQuests(userID uint) (*DailyQuestClaimAllResult, error) {
+	today := time.Now().Format("2006-01-02")
+
+	tx := db.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 1. Fetch user quests with row locks
+	var quests []domain.UserDailyQuest
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("user_id = ? AND date = ?", userID, today).
+		Find(&quests).Error; err != nil {
+		tx.Rollback()
+		return nil, errors.New("failed to query quests")
+	}
+
+	// 2. Count completed standard quests
+	completedStandard := 0
+	totalStandard := len(StandardQuests)
+	for _, q := range quests {
+		if q.QuestID != "daily_chest" && q.Completed {
+			completedStandard++
+		}
+	}
+
+	// If all standard quests are completed, ensure daily_chest is marked completed
+	if completedStandard >= totalStandard {
+		for i := range quests {
+			if quests[i].QuestID == "daily_chest" && !quests[i].Completed {
+				quests[i].Completed = true
+				_ = tx.Save(&quests[i])
+			}
+		}
+	}
+
+	// 3. Filter claimable quests
+	var claimable []*domain.UserDailyQuest
+	for i := range quests {
+		if quests[i].Completed && !quests[i].Claimed {
+			claimable = append(claimable, &quests[i])
+		}
+	}
+
+	if len(claimable) == 0 {
+		tx.Rollback()
+		return nil, errors.New("no claimable quests")
+	}
+
+	// 4. Fetch user with row lock
+	var user domain.User
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, userID).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	oldLevel := user.Level
+	totalXP := 0
+	totalCoins := 0
+	var claimedIDs []string
+	milestoneNotice := ""
+
+	for _, q := range claimable {
+		q.Claimed = true
+		if err := tx.Save(q).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		coins := 20
+		if q.QuestID == "pk_play" {
+			coins = 30
+		} else if q.QuestID == "win_game" {
+			coins = 50
+		} else if q.QuestID == "daily_chest" {
+			coins = 100
+		}
+
+		totalXP += q.XPAmount
+		totalCoins += coins
+		claimedIDs = append(claimedIDs, q.QuestID)
+
+		if q.QuestID == "daily_chest" {
+			user.LoginStreak++
+			switch user.LoginStreak {
+			case 3:
+				totalXP += 50
+				totalCoins += 100
+				if user.StreakFreezes < 2 {
+					user.StreakFreezes++
+				}
+				milestoneNotice = "🎉 达成 3 天连胜！获得 1 张连胜保护卡 🧊 与 +100 脑力金币！"
+			case 7:
+				totalXP += 150
+				totalCoins += 300
+				user.UnlockedTitles = AddUnlockedItem(user.UnlockedTitles, "persistent")
+				milestoneNotice = "🎉 达成 7 天连胜！解锁专属称号「坚持不懈」与 +300 脑力金币！"
+			case 14:
+				totalXP += 300
+				totalCoins += 600
+				user.UnlockedFrames = AddUnlockedItem(user.UnlockedFrames, "frame-flame")
+				milestoneNotice = "🎉 达成 14 天连胜！解锁「烈焰之环」🔥 动态头像框与 +600 脑力金币！"
+			case 30:
+				totalXP += 1000
+				totalCoins += 2000
+				user.UnlockedTitles = AddUnlockedItem(user.UnlockedTitles, "puzzle_legend")
+				user.UnlockedFrames = AddUnlockedItem(user.UnlockedFrames, "frame-gold")
+				milestoneNotice = "👑 达成 30 天传奇连胜！解锁「皇家流金」头像框与「益智王者」至尊称号！"
+			}
+		}
+	}
+
+	user.XP += totalXP
+	user.Level = CalcLevel(user.XP)
+	user.BrainCoins += totalCoins
+
+	if err := tx.Model(&user).Updates(map[string]any{
+		"xp":              user.XP,
+		"level":           user.Level,
+		"login_streak":    user.LoginStreak,
+		"streak_freezes":  user.StreakFreezes,
+		"brain_coins":     user.BrainCoins,
+		"unlocked_titles": user.UnlockedTitles,
+		"unlocked_frames": user.UnlockedFrames,
+	}).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return &DailyQuestClaimAllResult{
+		TotalQuestsClaimed: len(claimedIDs),
+		TotalXPAmount:      totalXP,
+		TotalCoinsAmount:   totalCoins,
+		XPResult: XPResult{
+			XPEarned:  totalXP,
+			XP:        user.XP,
+			Level:     user.Level,
+			LeveledUp: user.Level > oldLevel,
+		},
+		Streak:          user.LoginStreak,
+		StreakFreezes:   user.StreakFreezes,
+		BrainCoins:      user.BrainCoins,
+		MilestoneNotice: milestoneNotice,
+		ClaimedQuestIDs: claimedIDs,
 	}, nil
 }
