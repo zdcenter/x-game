@@ -69,6 +69,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
   // Resume In-Progress Game Session
   pendingResumeSession = signal<SavedGameSession | null>(null);
+  protected _isMounted = false;
 
   // Common Enums & Math for Templates
   readonly GameDifficulty = GameDifficulty;
@@ -196,7 +197,9 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       if (gameId) {
         effect(() => {
           const currentPending = this.crossGameJoin.pendingJoin();
-          if (currentPending && currentPending.game === gameId) {
+          // Only process in-game dynamic invites/joins when component is already mounted.
+          // Initial route entry is handled cleanly and synchronously by roomLifecycle.consumePendingOrReconnect() in ngOnInit!
+          if (this._isMounted && currentPending && currentPending.game === gameId) {
             const pendingCross = this.crossGameJoin.consumePendingJoin(gameId);
             if (pendingCross) {
               setTimeout(() => {
@@ -259,13 +262,22 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
           });
         }, 200);
       } else if (gameId) {
-        // Automatically check for unfinished single-player session
+        // Automatically check for unfinished single-player session ONLY IF strictly in single player mode
         setTimeout(() => {
-          if (!this.crossGameJoin.pendingJoin()) {
+          if (!this.crossGameJoin.pendingJoin() &&
+              this.store?.currentRoomMode?.() === GameMode.Single &&
+              !this.isSpectator() &&
+              !this.store?.isSpectator?.() &&
+              !this.store?.roomId?.()) {
             this.checkAndPromptResumeSession(gameId);
           }
         }, 100);
       }
+
+      // Mark mounted so future pending joins while remaining on the same page can be consumed by the effect
+      setTimeout(() => {
+        this._isMounted = true;
+      }, 0);
     }
   }
 
@@ -304,6 +316,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   handleJoinRoom(event: {roomId: string, mode: string, difficulty: string, host: string, password?: string, bountyCoins?: number, isSpectator?: boolean}) {
+    this.pendingResumeSession.set(null);
     this.isMobileSidebarOpen.set(false);
     if (this.gameLayout) {
       this.gameLayout.togglePkDrawer(false);
@@ -316,6 +329,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   }
 
   handleCreateRoom(event: {name: string, mode: string, difficulty: string, password?: string, target?: number, bountyCoins?: number}) {
+    this.pendingResumeSession.set(null);
     this.isMobileSidebarOpen.set(false);
     if (this.gameLayout) {
       this.gameLayout.togglePkDrawer(false);
@@ -644,9 +658,33 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
 
   /**
    * Checks whether there is an unfinished single player session for this game.
-   * If yes, sets pendingResumeSession and returns true so subclasses can prompt the user.
+   * Strictly isolated: NEVER triggers or prompts if the user is spectating, in a multiplayer room,
+   * or has a pending cross-game join action.
    */
   checkAndPromptResumeSession(gameId?: string): boolean {
+    if (this.isSpectator() || (this.store as any)?.isSpectator?.()) {
+      this.pendingResumeSession.set(null);
+      return false;
+    }
+    if (this.store?.currentRoomMode?.() !== GameMode.Single) {
+      this.pendingResumeSession.set(null);
+      return false;
+    }
+    if (this.store?.roomId?.()) {
+      this.pendingResumeSession.set(null);
+      return false;
+    }
+    const pendingJoin = this.crossGameJoin.pendingJoin();
+    if (pendingJoin && (pendingJoin.action === 'spectate' || pendingJoin.spectate || pendingJoin.mode !== GameMode.Single || pendingJoin.roomId)) {
+      this.pendingResumeSession.set(null);
+      return false;
+    }
+    const pendingAction = this.wsService.pendingAction;
+    if (pendingAction === 'spectate' || pendingAction === 'join' || pendingAction === 'create' || this.wsService.isCurrentSpectator()) {
+      this.pendingResumeSession.set(null);
+      return false;
+    }
+
     const targetGameId = gameId || this.currentGameId;
     if (!targetGameId) return false;
     const session = this.resumeService.loadSession(targetGameId);
@@ -671,6 +709,8 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    * Default implementation checks common store restore methods.
    */
   protected restoreGameSession(data: any, session: SavedGameSession): void {
+    if (this.isSpectator() || (this.store as any)?.isSpectator?.()) return;
+    if (this.store?.currentRoomMode?.() !== GameMode.Single) return;
     if (typeof (this.store as any).restoreSavedSession === 'function') {
       (this.store as any).restoreSavedSession(data);
     } else if (typeof (this.store as any).loadSinglePlayerProgress === 'function') {
@@ -705,6 +745,10 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
    * Can be directly bound in templates: (resumeGame)="onResumeSession($event)"
    */
   onResumeSession(session: any): void {
+    if (this.isSpectator() || (this.store as any)?.isSpectator?.() || this.store?.currentRoomMode?.() !== GameMode.Single) {
+      this.pendingResumeSession.set(null);
+      return;
+    }
     if (!session?.data) {
       this.pendingResumeSession.set(null);
       return;

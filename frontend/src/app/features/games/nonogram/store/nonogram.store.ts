@@ -248,6 +248,7 @@ export class NonogramStore extends BaseGameStore {
 
     // Speed mode sync: when rawState updates and mode is speed, we must sync the answers if we are starting
     effect(() => {
+      if (this.isSpectator()) return;
       const raw = this.rawState() as any;
       if (this.currentRoomMode() === GameMode.Speed && raw && raw.status === GameStatus.Playing && this.localState()?.status !== GameStatus.Playing) {
         // Init local board for speed mode based on server config
@@ -333,6 +334,11 @@ export class NonogramStore extends BaseGameStore {
     });
   }
 
+  override onResetLocalGameState(): void {
+    this.localState.set(null);
+    this.history.set([]);
+  }
+
   override joinRoom(
     roomId: string,
     mode: string = GameMode.Single,
@@ -343,7 +349,7 @@ export class NonogramStore extends BaseGameStore {
     bountyCoins?: number,
     isSpectator?: boolean
   ) {
-    if (mode === GameMode.Single) {
+    if (mode === GameMode.Single && !isSpectator) {
       const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
       if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
         difficulty = savedDiff;
@@ -352,9 +358,12 @@ export class NonogramStore extends BaseGameStore {
     const finalDiff = difficulty || GameDifficulty.Easy;
     super.joinRoom(roomId, mode, finalDiff, hostId, target, password, bountyCoins, isSpectator);
 
-    if (mode === GameMode.Single) {
+    if (mode === GameMode.Single && !isSpectator) {
       this.currentDifficulty.set(finalDiff);
       this.initSinglePlayer(finalDiff);
+    } else {
+      this.localState.set(null);
+      this.history.set([]);
     }
   }
 
@@ -551,6 +560,7 @@ export class NonogramStore extends BaseGameStore {
 
   restoreSavedSession(data: any) {
     if (!data?.state) return;
+    if (this.currentRoomMode() !== GameMode.Single || this.isSpectator()) return;
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(data.difficulty || GameDifficulty.Easy);
     const restoredState = { ...data.state };
@@ -561,7 +571,7 @@ export class NonogramStore extends BaseGameStore {
   }
 
   undo() {
-    if (this.status() !== GameStatus.Playing) return;
+    if (this.status() !== GameStatus.Playing || this.isSpectator()) return;
     if (this.currentRoomMode() === GameMode.Steal) return;
     
     const state = this.localState();
@@ -593,7 +603,7 @@ export class NonogramStore extends BaseGameStore {
   }
 
   clearBoard() {
-    if (this.status() !== GameStatus.Playing) return;
+    if (this.status() !== GameStatus.Playing || this.isSpectator()) return;
     if (this.currentRoomMode() === GameMode.Steal) return;
     
     const state = this.localState();
@@ -608,7 +618,7 @@ export class NonogramStore extends BaseGameStore {
   }
 
   useHint() {
-    if (this.status() !== GameStatus.Playing) return;
+    if (this.status() !== GameStatus.Playing || this.isSpectator()) return;
     if (this.currentRoomMode() !== GameMode.Single) return; // Only allow hints in single player
     
     const state = this.localState();

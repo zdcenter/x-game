@@ -453,7 +453,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this._pkPrevStatus = '';
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
-    if (mode !== GameMode.Single) {
+    if (mode !== GameMode.Single || isSpectator) {
+      this.resetLocalGameState();
       const explicitAction = action || (isSpectator ? 'spectate' : '');
       this.ws.connect(this.gameId, roomId, this.playerId(), mode as string, difficulty as string, hostId, explicitAction, password, target, bounty, isSpectator);
     }

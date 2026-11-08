@@ -66,6 +66,10 @@ export class WebSocketService {
   private _pendingPassword = '';
   private _pendingAction = '';
 
+  get pendingAction(): string {
+    return this._pendingAction;
+  }
+
   setPendingAction(action: string) {
     this._pendingAction = action;
   }

@@ -188,7 +188,8 @@
                 </div>
 
                 <div #cellsGrid
-                     class="cells-grid prevent-select"
+                     class="cells-grid prevent-select relative"
+                     [class.pointer-events-none]="store.isSpectator()"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'"
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'"
                      (pointerdown)="handlePointerDown($event)"
@@ -209,9 +210,9 @@
                          [class.no-border-r]="x === store.width() - 1"
                          [class.no-border-b]="y === store.height() - 1"
                          [class.bg-[var(--color-text-main)]]="cell === 1"
-                         [class.cell-crosshair-row]="hoverRow() === y && cell !== 1"
-                         [class.cell-crosshair-col]="hoverCol() === x && cell !== 1"
-                         [class.cell-crosshair-center]="hoverRow() === y && hoverCol() === x && cell !== 1"
+                         [class.cell-crosshair-row]="!store.isSpectator() && hoverRow() === y && cell !== 1"
+                         [class.cell-crosshair-col]="!store.isSpectator() && hoverCol() === x && cell !== 1"
+                         [class.cell-crosshair-center]="!store.isSpectator() && hoverRow() === y && hoverCol() === x && cell !== 1"
                          (contextmenu)="onContextMenu($event)">
                       
                       <!-- Crossed 2 -->
@@ -221,8 +222,8 @@
                 </div>
               </div>
 
-              <!-- Toolbar & Actions (提示, 重开, 撤销, 涂色, 打叉) -->
-              @if (store.status() !== GameStatus.Waiting) {
+              <!-- Toolbar & Actions (提示, 重开, 撤销, 涂色, 打叉 - Only for active players, NOT spectators) -->
+              @if (store.status() !== GameStatus.Waiting && !store.isSpectator()) {
                 <!-- Clues progress summary pill (Mobile only, on PC it's in the top bar) -->
                 @if (isHandheld()) {
                   <div class="mt-2 text-[11px] font-semibold text-[var(--color-text-secondary)] flex items-center justify-center gap-3">
@@ -308,6 +309,21 @@
                     [title]="t('tutorial.nonogram.cross')() || '打叉'">
                     <span class="text-base sm:text-lg mb-0.5 drop-shadow-md">❌</span>
                     <span class="text-[10px] md:text-xs font-bold">{{ t('tutorial.nonogram.cross')() || '打叉' }}</span>
+                  </button>
+                </div>
+              }
+
+              <!-- Spectator Dedicated Control Bar -->
+              @if (store.isSpectator()) {
+                <div class="mt-2 sm:mt-3 flex items-center justify-center gap-2.5 w-full max-w-[480px] pb-1 sm:pb-2">
+                  <div class="flex-1 px-3 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-bold flex items-center justify-center gap-2 shadow-xs">
+                    <span class="w-2 h-2 rounded-full bg-purple-500 animate-ping"></span>
+                    <span>{{ t('game.spectating_live_stream')() || '正在观战选手盘面实时转播 (只读视角)' }}</span>
+                  </div>
+                  <button (click)="goBack()"
+                          class="px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 text-xs font-bold transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 shadow-xs shrink-0">
+                    <span>🚪</span>
+                    <span>{{ t('game.leave_spectate')() || '退出观战' }}</span>
                   </button>
                 </div>
               }

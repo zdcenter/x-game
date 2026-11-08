@@ -95,7 +95,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   }
 
   changeSingleDifficulty(diff: string) {
-    if (this.store.roomId()) return;
+    if (this.store.roomId() || this.store.isSpectator() || this.store.currentRoomMode() !== GameMode.Single) return;
     this.store.currentDifficulty.set(diff);
     setSavedDifficulty('nonogram', diff);
     this.store.playAgain();
@@ -136,6 +136,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     super.ngOnInit();
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
+      this.pendingResumeSession.set(null);
       this.store.joinRoom(
         pending.roomId,
         pending.mode,
@@ -174,11 +175,14 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
         }
       }
 
-      const hasResume = this.checkAndPromptResumeSession('nonogram');
-      if (!hasResume) {
-        const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
-        this.store.currentDifficulty.set(initialDiff);
-        this.store.joinRoom('', GameMode.Single, initialDiff);
+      // Strictly isolate: only check or prompt resume session if purely in single-player
+      if (this.store.currentRoomMode() === GameMode.Single && !this.store.isSpectator() && !this.store.roomId()) {
+        const hasResume = this.checkAndPromptResumeSession('nonogram');
+        if (!hasResume) {
+          const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
+          this.store.currentDifficulty.set(initialDiff);
+          this.store.joinRoom('', GameMode.Single, initialDiff);
+        }
       }
     }
   }
@@ -442,7 +446,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   }
 
   handlePointerDown(event: PointerEvent) {
-    if (this.store.status() !== GameStatus.Playing) return;
+    if (this.store.status() !== GameStatus.Playing || this.store.isSpectator()) return;
     if (event.button !== 0 && event.button !== 2) return;
 
     this.pointerHandled = true;
@@ -494,6 +498,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   }
 
   handlePointerMove(event: PointerEvent) {
+    if (this.store.isSpectator()) return;
     const rawCoord = this.getCoordFromClient(event.clientX, event.clientY);
     if (rawCoord) {
       this.hoverRow.set(rawCoord.y);
@@ -595,7 +600,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   }
 
   handleTouchFallbackStart(event: TouchEvent) {
-    if (this.pointerHandled || this.store.status() !== GameStatus.Playing) return;
+    if (this.pointerHandled || this.store.status() !== GameStatus.Playing || this.store.isSpectator()) return;
     if (event.touches.length !== 1) return;
 
     const touch = event.touches[0];
