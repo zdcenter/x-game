@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { GameMode, GameStatus, GameResultType, GameDifficulty } from '../../../core/models/game.model';
+import { C2SAction } from '../../../core/models/websocket.model';
 import { GameHeaderComponent } from '../game-header/game-header.component';
 import { GameRulesModalComponent } from '../game-rules-modal/game-rules-modal.component';
 import { DifficultySelectorComponent } from '../difficulty-selector/difficulty-selector.component';
@@ -1061,13 +1062,21 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   });
 
   onWaitingRoomSwitchToContestant() {
-    if (!this.store) return;
-    const roomId = this.effectiveRoomId();
-    if (!roomId) return;
-    const mode = this.effectiveRoomMode();
-    const diff = this.effectiveDifficulty();
-    const host = this.effectiveHostId();
-    (this.store as any).joinRoom?.(roomId, mode, diff, host, 1, '', 0, false, 'join');
+    if (typeof sessionStorage !== 'undefined' && this.gameId) {
+      const prefix = `${this.gameId}_reconnect`;
+      sessionStorage.removeItem(`${prefix}_spectator`);
+      sessionStorage.removeItem(`${this.gameId}_spectator`);
+    }
+    this.router.navigate([], {
+      queryParams: { spectate: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+    if (this.store && typeof (this.store as any).claimContestantSeat === 'function') {
+      (this.store as any).claimContestantSeat();
+    } else {
+      this.wsService.send({ action: C2SAction.JoinContestant });
+    }
   }
 
   readonly isAutoStartingVisible = computed(() => {

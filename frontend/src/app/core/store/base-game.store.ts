@@ -461,6 +461,16 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }
   }
 
+  claimContestantSeat() {
+    this._isSpectator.set(false);
+    if (typeof sessionStorage !== 'undefined' && this.gameId) {
+      const prefix = `${this.gameId}_reconnect`;
+      sessionStorage.removeItem(`${prefix}_spectator`);
+      sessionStorage.removeItem(`${this.gameId}_spectator`);
+    }
+    this.ws.send({ action: C2SAction.JoinContestant });
+  }
+
   leaveRoom() {
     this.resetLocalGameState();
     if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single && this.isFinished()) {

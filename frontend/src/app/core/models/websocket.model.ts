@@ -37,6 +37,8 @@ export enum C2SAction {
   JoinRoom = 'join',
   /** 请求观战房间 */
   Spectate = 'spectate',
+  /** 从观战者就地转入选手席位 */
+  JoinContestant = 'join_contestant',
   /** 请求离开房间 */
   LeaveRoom = 'leave_game',
   /** 准备就绪 */

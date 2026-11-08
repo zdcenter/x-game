@@ -654,6 +654,36 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
 			return
 		}
+		if action == string(domain.ActionJoinContestant) || action == "join_contestant" || action == "take_seat" {
+			st := r.Engine.GetStatus()
+			if st != engine.StateWaiting {
+				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","payload":"对战已在进行中，无法入席"}`))
+				return
+			}
+			currentContestants := 0
+			for pid, c := range r.Clients {
+				if !c.IsSpectator && pid != clientID {
+					currentContestants++
+				}
+			}
+			maxCapacity := 8
+			if r.Game == "gomoku" || r.Game == "idiom" {
+				maxCapacity = 2
+			}
+			if currentContestants >= maxCapacity {
+				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","payload":"席位已满"}`))
+				return
+			}
+			senderClient.IsSpectator = false
+			senderClient.IsReady = false
+			if r.Host == "" {
+				r.Host = clientID
+			}
+			r.Engine.AddPlayer(clientID)
+			r.BroadcastStateLocked()
+			go Lobby.BroadcastLobbyUpdate()
+			return
+		}
 		if action == string(domain.ActionLeaveRoom) {
 			delete(r.Clients, clientID)
 			senderClient.Close()
