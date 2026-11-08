@@ -95,6 +95,21 @@
     <!-- 🔥 Live Waiting Rooms Deck -->
     <app-live-waiting-rooms></app-live-waiting-rooms>
 
+    <!-- 🏆 全网极限纪录殿堂 ＆ ⚡ 即时电竞战报流 (Hall of Fame & Live Battles Dual Deck) -->
+    <section class="w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
+        <!-- 👑 游戏极限纪录殿堂 (All-Time Record Hall of Fame) -->
+        <div class="lg:col-span-7 xl:col-span-8 w-full h-full">
+          <app-hall-of-fame class="h-full block" />
+        </div>
+
+        <!-- ⚔️ 全网最新对决实况 (Live Member PK Feed) -->
+        <div class="lg:col-span-5 xl:col-span-4 w-full h-full">
+          <app-live-battle-feed class="h-full block" />
+        </div>
+      </div>
+    </section>
+
     <!-- 🕒 最近常玩 (Recently Played Quick-Launch Bar) -->
     @if (recentGames().length > 0) {
       <section class="flex flex-col gap-2 pt-1 animate-fade-in">

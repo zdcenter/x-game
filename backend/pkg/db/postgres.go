@@ -75,6 +75,8 @@ func InitPostgres() {
 		&domain.Friendship{},
 		// Ghost Challenge & Async Duel
 		&domain.GhostChallenge{},
+		// Head-to-head Member PK Battles
+		&domain.PKBattle{},
 		// Player Feedback & Bug Reporting
 		&domain.Feedback{},
 	)

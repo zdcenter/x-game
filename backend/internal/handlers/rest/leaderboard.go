@@ -2,6 +2,7 @@ package rest
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
@@ -399,4 +400,142 @@ func GetGlobalLeaderboard(c fiber.Ctx) error {
 		"game_id":      "global",
 	})
 }
+
+// GameDifficultyRecord represents the all-time #1 champion for a specific game and difficulty.
+type GameDifficultyRecord struct {
+	Difficulty string    `json:"difficulty"`
+	UserID     uint      `json:"user_id"`
+	Username   string    `json:"username"`
+	Avatar     string    `json:"avatar"`
+	Level      int       `json:"level"`
+	BestTime   int       `json:"best_time"`
+	BestScore  int       `json:"best_score"`
+	Rating     int       `json:"rating"`
+	RankType   string    `json:"rank_type"`
+	AchievedAt time.Time `json:"achieved_at"`
+}
+
+var defaultGameDifficulties = map[string][]string{
+	"nonogram":    {"easy", "medium", "hard", "expert", "master"},
+	"minesweeper": {"easy", "medium", "hard", "expert", "master"},
+	"sudoku":      {"easy", "medium", "hard", "expert"},
+	"sliding":     {"easy", "medium", "hard", "expert"},
+	"sokoban":     {"easy", "medium", "hard", "expert"},
+	"math24":      {"easy", "medium", "hard", "expert"},
+	"lightsout":   {"easy", "medium", "hard", "expert"},
+	"tetris":      {"easy", "medium", "hard", "expert"},
+	"watersort":   {"easy", "medium", "hard", "expert"},
+	"codebreaker": {"easy", "medium", "hard"},
+	"drop2048":    {"easy", "medium", "hard"},
+	"classic2048": {"easy", "medium", "hard"},
+	"block":       {"easy", "medium", "hard"},
+	"hexa":        {"easy", "medium", "hard"},
+	"connect":     {"easy", "medium", "hard"},
+	"hashi":       {"easy", "medium", "hard"},
+}
+
+// GetGameDifficultyRecords returns the all-time #1 best record across all difficulty tiers of a specific game.
+func GetGameDifficultyRecords(c fiber.Ctx) error {
+	gameID := c.Query("gameId", "nonogram")
+	if gameID == "" {
+		gameID = "nonogram"
+	}
+
+	timeGames := map[string]bool{
+		"minesweeper": true, "sudoku": true, "sliding": true,
+		"codebreaker": true, "math24": true, "watersort": true,
+		"sokoban": true, "lightsout": true, "nonogram": true,
+		"connect": true, "hashi": true, "idiom": true,
+	}
+
+	rankType := "score"
+	if timeGames[gameID] {
+		rankType = "time"
+	}
+
+	// 1. Gather difficulties: defaults + any in DB
+	diffList := defaultGameDifficulties[gameID]
+	if len(diffList) == 0 {
+		diffList = []string{"easy", "medium", "hard"}
+	}
+
+	var dbDiffs []string
+	db.DB.Table("gm_user_game_stats").
+		Where("game_id = ? AND difficulty != ''", gameID).
+		Distinct("difficulty").
+		Pluck("difficulty", &dbDiffs)
+
+	diffMap := make(map[string]bool)
+	finalDiffs := make([]string, 0, len(diffList)+len(dbDiffs))
+	for _, d := range diffList {
+		diffMap[d] = true
+		finalDiffs = append(finalDiffs, d)
+	}
+	for _, d := range dbDiffs {
+		if !diffMap[d] {
+			diffMap[d] = true
+			finalDiffs = append(finalDiffs, d)
+		}
+	}
+
+	type topRow struct {
+		UserID     uint      `gorm:"column:user_id"`
+		Username   string    `gorm:"column:username"`
+		Avatar     string    `gorm:"column:avatar"`
+		Level      int       `gorm:"column:level"`
+		BestTime   int       `gorm:"column:best_time"`
+		BestScore  int       `gorm:"column:best_score"`
+		Rating     int       `gorm:"column:rating"`
+		AchievedAt time.Time `gorm:"column:updated_at"`
+	}
+
+	records := make([]GameDifficultyRecord, 0, len(finalDiffs))
+	for _, diff := range finalDiffs {
+		q := db.DB.Table("gm_user_game_stats AS s").
+			Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
+			Where("s.game_id = ? AND (s.difficulty = ? OR s.difficulty = ?)",
+				gameID, diff, diff)
+
+		if rankType == "time" {
+			q = q.Where("s.best_time > 0").Order("s.best_time ASC")
+		} else {
+			q = q.Where("s.best_score > 0").Order("s.best_score DESC")
+		}
+
+		var row topRow
+		err := q.Select("s.user_id, u.username, u.avatar, u.level, s.best_time, s.best_score, s.rating, s.updated_at").
+			Limit(1).
+			Scan(&row).Error
+
+		if err == nil && row.UserID > 0 {
+			records = append(records, GameDifficultyRecord{
+				Difficulty: diff,
+				UserID:     row.UserID,
+				Username:   row.Username,
+				Avatar:     row.Avatar,
+				Level:      row.Level,
+				BestTime:   row.BestTime,
+				BestScore:  row.BestScore,
+				Rating:     row.Rating,
+				RankType:   rankType,
+				AchievedAt: row.AchievedAt,
+			})
+		} else {
+			// Unclaimed difficulty milestone
+			records = append(records, GameDifficultyRecord{
+				Difficulty: diff,
+				UserID:     0,
+				Username:   "",
+				RankType:   rankType,
+			})
+		}
+	}
+
+	return c.JSON(fiber.Map{
+		"game_id":   gameID,
+		"rank_type": rankType,
+		"records":   records,
+	})
+}
+
 

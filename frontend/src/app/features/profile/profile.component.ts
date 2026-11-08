@@ -3,7 +3,7 @@ import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { GameStatsService, UserGameStat } from '../../core/services/game-stats.service';
+import { GameStatsService, UserGameStat, PKBattle, MyPKStatsSummary } from '../../core/services/game-stats.service';
 import { GameService, getLocalizedField } from '../../core/services/game.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { XpService } from '../../core/services/xp.service';
@@ -444,39 +444,205 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
 
         <!-- ── History Tab ── -->
         @if (activeTab() === 'history') {
-          @if (historyLoading()) {
-            <div class="flex justify-center py-16">
-              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-accent-to)]"></div>
+          <div class="flex flex-col gap-5">
+            
+            <!-- History Mode Switcher: PK Battles vs Solo Matches -->
+            <div class="flex items-center gap-2 border-b border-[var(--color-border-card)] pb-3">
+              <button (click)="historySubTab.set('pk')"
+                      class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 border"
+                      [class.bg-[var(--color-accent-from)]]="historySubTab() === 'pk'"
+                      [class.text-white]="historySubTab() === 'pk'"
+                      [class.border-transparent]="historySubTab() === 'pk'"
+                      [class.shadow-xs]="historySubTab() === 'pk'"
+                      [class.bg-[var(--color-bg-card)]]="historySubTab() !== 'pk'"
+                      [class.text-[var(--color-text-secondary)]]="historySubTab() !== 'pk'"
+                      [class.border-[var(--color-border-card)]]="historySubTab() !== 'pk'">
+                <span>⚔️</span>
+                <span>{{ i18n.t('profile.tab_pk_battles')() || '会员对战战报' }}</span>
+                @if (pkSummary()?.total_matches) {
+                  <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                        [class.bg-white/20]="historySubTab() === 'pk'"
+                        [class.bg-[var(--color-bg-main)]]="historySubTab() !== 'pk'">
+                    {{ pkSummary()?.total_matches }}
+                  </span>
+                }
+              </button>
+
+              <button (click)="historySubTab.set('solo')"
+                      class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer active:scale-95 border"
+                      [class.bg-[var(--color-accent-from)]]="historySubTab() === 'solo'"
+                      [class.text-white]="historySubTab() === 'solo'"
+                      [class.border-transparent]="historySubTab() === 'solo'"
+                      [class.shadow-xs]="historySubTab() === 'solo'"
+                      [class.bg-[var(--color-bg-card)]]="historySubTab() !== 'solo'"
+                      [class.text-[var(--color-text-secondary)]]="historySubTab() !== 'solo'"
+                      [class.border-[var(--color-border-card)]]="historySubTab() !== 'solo'">
+                <span>👤</span>
+                <span>{{ i18n.t('profile.tab_solo_history')() || '单人通关流水' }}</span>
+              </button>
             </div>
-          } @else if (matchHistory().length === 0) {
-            <div class="flex flex-col items-center gap-4 py-16 text-[var(--color-text-muted)]">
-              <span class="text-5xl opacity-40">📋</span>
-              <p class="font-bold">{{ i18n.t('profile.no_history')() }}</p>
-            </div>
-          } @else {
-            <div class="flex flex-col gap-3">
-              @for (h of matchHistory(); track h.id) {
-                <div class="flex items-center justify-between p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-                  <div class="flex items-center gap-3">
-                    <span class="text-2xl">{{ getGameEmoji(h.game_id) }}</span>
-                    <div>
-                      <p class="font-bold text-sm text-[var(--color-text-main)]">{{ getGameNameById(h.game_id) }}</p>
-                      <p class="text-xs text-[var(--color-text-muted)]">{{ formatDate(h.created_at) }}</p>
+
+            <!-- PK Battles View -->
+            @if (historySubTab() === 'pk') {
+              @if (pkBattlesLoading()) {
+                <div class="flex justify-center py-16">
+                  <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-accent-to)]"></div>
+                </div>
+              } @else {
+                <!-- Career PK Stats Summary Deck -->
+                @if (pkSummary(); as sum) {
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="p-3 sm:p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex flex-col gap-1 shadow-2xs">
+                      <span class="text-[11px] font-bold text-[var(--color-text-secondary)]">总对战场次</span>
+                      <span class="text-xl sm:text-2xl font-black font-mono text-[var(--color-text-main)]">{{ sum.total_matches }}</span>
+                    </div>
+
+                    <div class="p-3 sm:p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex flex-col gap-1 shadow-2xs">
+                      <span class="text-[11px] font-bold text-[var(--color-text-secondary)]">胜 / 负</span>
+                      <div class="flex items-baseline gap-1 text-xl sm:text-2xl font-black font-mono">
+                        <span class="text-emerald-500">{{ sum.wins }}</span>
+                        <span class="text-xs text-[var(--color-text-muted)]">/</span>
+                        <span class="text-rose-500">{{ sum.losses }}</span>
+                      </div>
+                    </div>
+
+                    <div class="p-3 sm:p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex flex-col gap-1 shadow-2xs">
+                      <span class="text-[11px] font-bold text-[var(--color-text-secondary)]">PK 胜率</span>
+                      <span class="text-xl sm:text-2xl font-black font-mono text-amber-500">{{ sum.win_rate }}%</span>
+                    </div>
+
+                    <div class="p-3 sm:p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex flex-col gap-1 shadow-2xs">
+                      <span class="text-[11px] font-bold text-[var(--color-text-secondary)]">赢取脑币</span>
+                      <span class="text-xl sm:text-2xl font-black font-mono text-yellow-500 flex items-center gap-1">
+                        <span>💰</span>
+                        <span>{{ sum.total_bounty_won }}</span>
+                      </span>
                     </div>
                   </div>
-                  <div class="flex flex-col items-end gap-0.5">
-                    <span class="text-xs font-bold px-2 py-0.5 rounded-full border"
-                          [class]="h.result === 'win' || h.result === 'completed'
-                            ? 'text-green-300 border-green-400/40 bg-green-400/10'
-                            : 'text-red-300 border-red-400/40 bg-red-400/10'">
-                      {{ i18n.t('history.result.' + h.result)() || h.result }}
-                    </span>
-                    <span class="text-[11px] font-bold text-[var(--color-accent-to)]">+{{ h.xp_earned }} XP</span>
+                }
+
+                <!-- Battle Stream -->
+                @if (pkBattles().length === 0) {
+                  <div class="flex flex-col items-center gap-3 py-16 text-[var(--color-text-muted)] bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)]">
+                    <span class="text-5xl opacity-40">⚔️</span>
+                    <p class="font-bold text-sm">{{ i18n.t('profile.no_pk_history')() || '暂无会员对战记录，快去多人竞技场开房对战吧！' }}</p>
+                    <a [routerLink]="['/', i18n.currentLang(), 'games', 'pk-arena']"
+                       class="mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-all">
+                      ⚡ 发起联机对决
+                    </a>
                   </div>
+                } @else {
+                  <div class="flex flex-col gap-3">
+                    @for (b of pkBattles(); track b.id) {
+                      <div class="p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-amber-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs transition-all">
+                        
+                        <!-- Left: Game, Mode, Difficulty -->
+                        <div class="flex items-center gap-3">
+                          <span class="text-2xl sm:text-3xl shrink-0">{{ getGameEmoji(b.game_id) }}</span>
+                          <div>
+                            <div class="flex items-center gap-2">
+                              <span class="font-black text-sm text-[var(--color-text-main)]">{{ getGameNameById(b.game_id) }}</span>
+                              <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                {{ b.difficulty }}
+                              </span>
+                            </div>
+                            <span class="text-[11px] text-[var(--color-text-muted)] font-mono">
+                              {{ formatDate(b.played_at) }}
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Center: Head-to-Head Clash Details -->
+                        <div class="flex items-center justify-between sm:justify-center gap-4 bg-[var(--color-bg-main)] px-4 py-2 rounded-xl border border-[var(--color-border-card)]">
+                          <!-- Current User -->
+                          <div class="flex items-center gap-2">
+                            <div class="text-right">
+                              <span class="text-xs font-bold block" [class.text-emerald-500]="isCurrentUserWinner(b)" [class.text-[var(--color-text-muted)]]="!isCurrentUserWinner(b)">
+                                {{ isCurrentUserWinner(b) ? '👑 ' + (b.winner?.username || '我') : (b.loser?.username || '我') }}
+                              </span>
+                              <span class="text-[10px] font-mono font-bold">
+                                {{ isCurrentUserWinner(b) ? (b.winner_time > 0 ? formatSeconds(b.winner_time) : b.winner_score + '分') : (b.loser_time > 0 ? formatSeconds(b.loser_time) : b.loser_score + '分') }}
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Divider -->
+                          <span class="text-xs font-black text-[var(--color-text-muted)] italic">VS</span>
+
+                          <!-- Opponent -->
+                          <div class="flex items-center gap-2">
+                            <div class="text-left">
+                              <span class="text-xs font-bold block" [class.text-emerald-500]="!isCurrentUserWinner(b)" [class.text-[var(--color-text-muted)]]="isCurrentUserWinner(b)">
+                                {{ isCurrentUserWinner(b) ? (b.loser?.username || '对手') : '👑 ' + (b.winner?.username || '对手') }}
+                              </span>
+                              <span class="text-[10px] font-mono font-bold">
+                                {{ isCurrentUserWinner(b) ? (b.loser_time > 0 ? formatSeconds(b.loser_time) : b.loser_score + '分') : (b.winner_time > 0 ? formatSeconds(b.winner_time) : b.winner_score + '分') }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Right: Outcome & Margin Badge -->
+                        <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                          @if (b.margin > 0) {
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              领先 {{ b.margin }}s
+                            </span>
+                          }
+
+                          <span class="text-xs font-black px-3 py-1 rounded-xl border"
+                                [class]="isCurrentUserWinner(b)
+                                  ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/15'
+                                  : 'text-rose-400 border-rose-500/40 bg-rose-500/15'">
+                            {{ isCurrentUserWinner(b) ? '👑 WIN 获胜' : '🛡️ LOSS 惜败' }}
+                          </span>
+                        </div>
+
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            }
+
+            <!-- Solo Matches View -->
+            @if (historySubTab() === 'solo') {
+              @if (historyLoading()) {
+                <div class="flex justify-center py-16">
+                  <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--color-accent-to)]"></div>
+                </div>
+              } @else if (matchHistory().length === 0) {
+                <div class="flex flex-col items-center gap-4 py-16 text-[var(--color-text-muted)]">
+                  <span class="text-5xl opacity-40">📋</span>
+                  <p class="font-bold">{{ i18n.t('profile.no_history')() }}</p>
+                </div>
+              } @else {
+                <div class="flex flex-col gap-3">
+                  @for (h of matchHistory(); track h.id) {
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                      <div class="flex items-center gap-3">
+                        <span class="text-2xl">{{ getGameEmoji(h.game_id) }}</span>
+                        <div>
+                          <p class="font-bold text-sm text-[var(--color-text-main)]">{{ getGameNameById(h.game_id) }}</p>
+                          <p class="text-xs text-[var(--color-text-muted)]">{{ formatDate(h.created_at) }}</p>
+                        </div>
+                      </div>
+                      <div class="flex flex-col items-end gap-0.5">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full border"
+                              [class]="h.result === 'win' || h.result === 'completed'
+                                ? 'text-green-300 border-green-400/40 bg-green-400/10'
+                                : 'text-red-300 border-red-400/40 bg-red-400/10'">
+                          {{ i18n.t('history.result.' + h.result)() || h.result }}
+                        </span>
+                        <span class="text-[11px] font-bold text-[var(--color-accent-to)]">+{{ h.xp_earned }} XP</span>
+                      </div>
+                    </div>
+                  }
                 </div>
               }
-            </div>
-          }
+            }
+
+          </div>
         }
 
       </div>
@@ -542,6 +708,10 @@ export class ProfileComponent implements OnInit {
   // History
   historyLoading = signal(false);
   matchHistory = signal<any[]>([]);
+  historySubTab = signal<'pk' | 'solo'>('pk');
+  pkBattles = signal<PKBattle[]>([]);
+  pkSummary = signal<MyPKStatsSummary | null>(null);
+  pkBattlesLoading = signal(false);
 
   xpProgress = computed(() => {
     const u = this.authStore.currentUser();
@@ -559,6 +729,7 @@ export class ProfileComponent implements OnInit {
     this.loadAchievements();
     this.loadRanks();
     this.loadHistory();
+    this.loadPKBattles();
   }
 
   private loadRadar(): void {
@@ -634,6 +805,31 @@ export class ProfileComponent implements OnInit {
       next: h => { this.matchHistory.set(h); this.historyLoading.set(false); },
       error: () => this.historyLoading.set(false),
     });
+  }
+
+  loadPKBattles(): void {
+    this.pkBattlesLoading.set(true);
+    this.statsService.getMyPKBattles(1, 25).subscribe({
+      next: res => {
+        this.pkBattles.set(res.battles || []);
+        this.pkSummary.set(res.summary);
+        this.pkBattlesLoading.set(false);
+      },
+      error: () => this.pkBattlesLoading.set(false),
+    });
+  }
+
+  isCurrentUserWinner(b: PKBattle): boolean {
+    const curUserId = this.authStore.currentUser()?.id;
+    return b.winner_id === curUserId;
+  }
+
+  formatSeconds(sec: number): string {
+    if (!sec || sec <= 0) return '0s';
+    if (sec < 60) return `${sec}s`;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}m${s > 0 ? s + 's' : ''}`;
   }
 
   getGameEmoji(id: string): string {

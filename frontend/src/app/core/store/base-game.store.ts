@@ -671,13 +671,26 @@ export abstract class BaseGameStore implements GameStoreInterface {
       time
     );
 
+    // Identify opponent in head-to-head PK to support member-vs-member verified battle records
+    const myId = this.playerId();
+    const opponent = this.roomPlayers().find((p: any) => (p.id || p.userId) !== myId);
+    const opponentId = opponent?.id || (opponent as any)?.userId || '';
+    const rawState = this.rawState() as any;
+    const opponentState = rawState?.players?.[opponentId];
+    const opponentScore = opponentState?.score ?? 0;
+    const opponentTime = opponentState?.time ?? opponentState?.time_taken ?? 0;
+
     this.stats.submitStat(this.gameId, {
-      mode:         this.currentRoomMode() as string,
-      difficulty:   this.currentDifficulty() as string,
+      mode:              this.currentRoomMode() as string,
+      difficulty:        this.currentDifficulty() as string,
       score,
       time,
       won,
-      bounty_coins: bounty > 0 ? bounty : undefined,
+      bounty_coins:      bounty > 0 ? bounty : undefined,
+      room_id:           this.roomId() || undefined,
+      opponent_username: opponentId || undefined,
+      opponent_score:    opponentScore,
+      opponent_time:     opponentTime,
     }).subscribe({
       next: res => {
         this.lastStatResult.set(res);

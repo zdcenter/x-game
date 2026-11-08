@@ -9,12 +9,16 @@ import (
 )
 
 type SubmitStatRequest struct {
-	Mode        string `json:"mode"`
-	Difficulty  string `json:"difficulty"`
-	Score       int    `json:"score"`
-	Time        int    `json:"time"`
-	Won         bool   `json:"won"`
-	BountyCoins int    `json:"bounty_coins,omitempty"`
+	Mode             string `json:"mode"`
+	Difficulty       string `json:"difficulty"`
+	Score            int    `json:"score"`
+	Time             int    `json:"time"`
+	Won              bool   `json:"won"`
+	BountyCoins      int    `json:"bounty_coins,omitempty"`
+	RoomID           string `json:"room_id,omitempty"`
+	OpponentUsername string `json:"opponent_username,omitempty"`
+	OpponentScore    int    `json:"opponent_score,omitempty"`
+	OpponentTime     int    `json:"opponent_time,omitempty"`
 }
 
 // GetStats returns the personal best stats for the current user and a specific game
@@ -154,6 +158,17 @@ func SubmitStat(c fiber.Ctx) error {
 
 	// Record match history
 	service.RecordMatch(userID, gameID, req.Mode, req.Difficulty, req.Won, req.Score, req.Time, xpAmount)
+
+	// Record head-to-head PK battle if this was a member-vs-member match
+	if isPK && req.OpponentUsername != "" {
+		service.TryRecordPKBattle(
+			req.RoomID, gameID, req.Mode, req.Difficulty,
+			userID, req.OpponentUsername,
+			req.Score, req.OpponentScore,
+			req.Time, req.OpponentTime,
+			req.Won, req.BountyCoins,
+		)
+	}
 
 	// Check achievements
 	newAchievements := service.CheckAchievements(service.AchievementContext{

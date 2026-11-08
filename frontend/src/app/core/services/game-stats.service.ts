@@ -28,6 +28,58 @@ export interface SubmitStatRequest {
   time: number;
   won: boolean;
   bounty_coins?: number;
+  room_id?: string;
+  opponent_username?: string;
+  opponent_score?: number;
+  opponent_time?: number;
+}
+
+export interface PKBattlePlayer {
+  id: number;
+  username: string;
+  avatar: string;
+  level: number;
+  role: string;
+}
+
+export interface PKBattle {
+  id: number;
+  room_id: string;
+  game_id: string;
+  mode: string;
+  difficulty: string;
+  winner_id: number;
+  winner?: PKBattlePlayer;
+  winner_score: number;
+  winner_time: number;
+  loser_id: number;
+  loser?: PKBattlePlayer;
+  loser_score: number;
+  loser_time: number;
+  margin: number;
+  bounty_coins: number;
+  played_at: string;
+}
+
+export interface MyPKStatsSummary {
+  total_matches: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  total_bounty_won: number;
+}
+
+export interface GameDifficultyRecord {
+  difficulty: string;
+  user_id: number;
+  username: string;
+  avatar: string;
+  level: number;
+  best_time: number;
+  best_score: number;
+  rating: number;
+  rank_type: 'time' | 'score';
+  achieved_at: string;
 }
 
 export interface XPResult {
@@ -109,5 +161,21 @@ export class GameStatsService {
     if (options.mode)   params['mode']   = options.mode;
     return this.http.get<{ history: any[] }>(`${this.apiUrl}/history`, { params })
       .pipe(map(r => r.history ?? []));
+  }
+
+  getRecentPKBattles(limit: number = 15): Observable<PKBattle[]> {
+    return this.http.get<{ battles: PKBattle[] }>(`${this.apiUrl}/pk/recent?limit=${limit}`)
+      .pipe(map(res => res.battles || []));
+  }
+
+  getMyPKBattles(page: number = 1, limit: number = 15, gameId?: string, result?: string): Observable<{ battles: PKBattle[]; total: number; summary: MyPKStatsSummary }> {
+    const params: Record<string, string> = { page: String(page), limit: String(limit) };
+    if (gameId && gameId !== 'all') params['gameId'] = gameId;
+    if (result && result !== 'all') params['result'] = result;
+    return this.http.get<{ battles: PKBattle[]; total: number; summary: MyPKStatsSummary }>(`${this.apiUrl}/pk/my-battles`, { params });
+  }
+
+  getGameDifficultyRecords(gameId: string): Observable<{ game_id: string; rank_type: string; records: GameDifficultyRecord[] }> {
+    return this.http.get<{ game_id: string; rank_type: string; records: GameDifficultyRecord[] }>(`${this.apiUrl}/leaderboard/game-records?gameId=${gameId}`);
   }
 }

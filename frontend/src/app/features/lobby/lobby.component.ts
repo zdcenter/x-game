@@ -21,6 +21,8 @@ import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { DailyChallengeBannerComponent } from '../../shared/components/daily-challenge-banner/daily-challenge-banner.component';
 import { LiveWaitingRoomsComponent } from './components/live-waiting-rooms/live-waiting-rooms.component';
+import { HallOfFameComponent } from './components/hall-of-fame/hall-of-fame.component';
+import { LiveBattleFeedComponent } from './components/live-battle-feed/live-battle-feed.component';
 import { LiveActivityTickerComponent } from '../../shared/components/live-activity-ticker/live-activity-ticker.component';
 import { LiveRoomService } from '../../core/services/live-room.service';
 import { AuthModalService } from '../../core/services/auth-modal.service';
@@ -40,7 +42,7 @@ export interface GameBadge {
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent, LiveActivityTickerComponent, SiteRecommendModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, DailyChallengeBannerComponent, LiveWaitingRoomsComponent, LiveActivityTickerComponent, SiteRecommendModalComponent, HallOfFameComponent, LiveBattleFeedComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })

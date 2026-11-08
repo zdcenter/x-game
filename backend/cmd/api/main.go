@@ -54,6 +54,7 @@ func main() {
 	db.InitPostgres()
 	service.SeedEconomySettings()
 	service.SeedXPSettings()
+	service.SeedInitialPKBattlesIfNeeded()
 
 	// Start traffic simulator for fake players/rooms
 	simulator.Start()
@@ -127,7 +128,13 @@ func main() {
 	leaderboard.Use(middleware.OptionalProtected())
 	leaderboard.Get("/global", rest.GetGlobalLeaderboard)
 	leaderboard.Get("/my-ranks", middleware.Protected(), rest.GetMyRanks)
+	leaderboard.Get("/game-records", rest.GetGameDifficultyRecords)
 	leaderboard.Get("/:gameId", rest.GetLeaderboard)
+
+	// PK Battles & Match History
+	pk := v1.Group("/pk")
+	pk.Get("/recent", rest.GetRecentPKBattles)
+	pk.Get("/my-battles", middleware.Protected(), rest.GetMyPKBattles)
 
 	// Daily challenge (optional auth)
 	daily := v1.Group("/daily-challenge")

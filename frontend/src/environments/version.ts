@@ -1,4 +1,4 @@
 export const environment = {
-  version: 'v2026.11.07.2148',
-  buildTime: 1794059337695
+  version: 'v2026.11.08.0954',
+  buildTime: 1794102868755
 };
