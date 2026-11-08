@@ -42,7 +42,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 
 	// Determine time-focused games
 	timeGames := map[string]bool{
-		"minesweeper": true, "sudoku": true, "sliding": true,
+		"nonogram": true, "minesweeper": true, "sudoku": true, "sliding": true,
 		"codebreaker": true, "math24": true, "watersort": true,
 		"sokoban": true, "lightsout": true,
 	}
@@ -74,10 +74,17 @@ func GetLeaderboard(c fiber.Ctx) error {
 	var total int64
 	var rows []rawRow
 
-	if mode != "" && difficulty != "" {
+	if mode != "" || difficulty != "" {
 		q := db.DB.Table("gm_user_game_stats AS s").
 			Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
-			Where("s.game_id = ? AND s.mode = ? AND s.difficulty = ?", gameID, mode, difficulty)
+			Where("s.game_id = ?", gameID)
+
+		if mode != "" {
+			q = q.Where("s.mode = ?", mode)
+		}
+		if difficulty != "" {
+			q = q.Where("s.difficulty = ?", difficulty)
+		}
 
 		if period == "weekly" {
 			q = q.Where("s.updated_at > NOW() - INTERVAL '7 days'")
@@ -189,16 +196,28 @@ func GetLeaderboard(c fiber.Ctx) error {
 }
 
 func getUserRank(gameID, mode, difficulty, rankType, period string, userID uint) int {
-	if mode != "" && difficulty != "" {
+	if mode != "" || difficulty != "" {
 		var stat domain.UserGameStat
-		if err := db.DB.Where("user_id = ? AND game_id = ? AND mode = ? AND difficulty = ?",
-			userID, gameID, mode, difficulty).First(&stat).Error; err != nil {
+		statQ := db.DB.Where("user_id = ? AND game_id = ?", userID, gameID)
+		if mode != "" {
+			statQ = statQ.Where("mode = ?", mode)
+		}
+		if difficulty != "" {
+			statQ = statQ.Where("difficulty = ?", difficulty)
+		}
+		if err := statQ.Order("best_time ASC, best_score DESC").First(&stat).Error; err != nil {
 			return 0
 		}
 
 		q := db.DB.Table("gm_user_game_stats AS s").
 			Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
-			Where("s.game_id = ? AND s.mode = ? AND s.difficulty = ?", gameID, mode, difficulty)
+			Where("s.game_id = ?", gameID)
+		if mode != "" {
+			q = q.Where("s.mode = ?", mode)
+		}
+		if difficulty != "" {
+			q = q.Where("s.difficulty = ?", difficulty)
+		}
 
 		if period == "weekly" {
 			q = q.Where("s.updated_at > NOW() - INTERVAL '7 days'")

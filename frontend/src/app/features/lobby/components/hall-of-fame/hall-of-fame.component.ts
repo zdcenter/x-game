@@ -18,7 +18,7 @@ export interface FeaturedGameTab {
   standalone: true,
   imports: [CommonModule, RouterLink, LevelBadgeComponent],
   template: `
-    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-4 h-full">
+    <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-3.5 h-full">
       
       <!-- Card Top Header -->
       <div class="flex items-center justify-between gap-2 border-b border-[var(--color-border-card)] pb-3">
@@ -60,84 +60,95 @@ export interface FeaturedGameTab {
         }
       </div>
 
-      <!-- Difficulty Milestone Records Grid -->
+      <!-- Difficulty Milestone Records Tier Ladder -->
       @if (loading()) {
         <div class="py-12 flex flex-col items-center justify-center gap-2">
           <div class="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
           <span class="text-xs text-[var(--color-text-muted)]">加载纪录中...</span>
         </div>
       } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+        <div class="flex flex-col gap-2">
           @for (rec of records(); track rec.difficulty) {
-            <div class="group relative rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-amber-500/40 p-3 flex flex-col justify-between gap-2.5 transition-all hover:shadow-sm">
+            <div class="group flex items-center justify-between gap-3 px-3 sm:px-4 py-2.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-amber-500/40 transition-all hover:shadow-xs">
               
-              <!-- Tier Title & Specification -->
-              <div class="flex items-center justify-between gap-1">
-                <span class="px-2 py-0.5 rounded-lg text-xs font-black tracking-wide"
-                      [ngClass]="getDifficultyBadgeClass(rec.difficulty)">
-                  {{ getDifficultyLabel(selectedGameId(), rec.difficulty) }}
-                </span>
-                
-                @if (rec.user_id > 0) {
-                  <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
-                    {{ formatAchievedDate(rec.achieved_at) }}
+              <!-- Tier Badge & Specification (Left) -->
+              <div class="flex items-center gap-2.5 shrink-0 min-w-[105px] sm:min-w-[145px]">
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" [ngClass]="getDifficultyDotClass(rec.difficulty)"></span>
+                <div class="flex flex-col">
+                  <span class="text-xs font-black text-[var(--color-text-main)] tracking-wide">
+                    {{ getDifficultyName(selectedGameId(), rec.difficulty) }}
                   </span>
-                }
+                  @if (getDifficultySpec(selectedGameId(), rec.difficulty)) {
+                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
+                      {{ getDifficultySpec(selectedGameId(), rec.difficulty) }}
+                    </span>
+                  }
+                </div>
               </div>
 
-              <!-- Champion Info & Record Stat -->
+              <!-- Champion & Record Stat (Center) -->
               @if (rec.user_id > 0) {
-                <div class="flex items-center justify-between gap-2">
-                  <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-lg">👑</span>
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-1.5">
-                        <span class="text-xs font-bold text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[110px]">
-                          {{ rec.username }}
-                        </span>
-                        <app-level-badge [level]="rec.level || 1" size="xs" />
-                      </div>
-                      <span class="text-[10px] text-[var(--color-text-muted)]">纪录保持者</span>
-                    </div>
+                <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-6 flex-1 min-w-0">
+                  <!-- User Info -->
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-base shrink-0">👑</span>
+                    <span class="text-xs sm:text-sm font-bold text-[var(--color-text-main)] truncate max-w-[85px] sm:max-w-[130px]">
+                      {{ rec.username }}
+                    </span>
+                    <app-level-badge [level]="rec.level || 1" size="xs" />
                   </div>
 
-                  <!-- High Score / Fastest Time Highlight -->
-                  <div class="text-right">
+                  <!-- Time / Score Stat -->
+                  <div class="flex items-baseline gap-2 shrink-0">
                     @if (rec.rank_type === 'time') {
-                      <div class="text-sm sm:text-base font-black font-mono text-emerald-500">
-                        ⚡ {{ formatTime(rec.best_time) }}
+                      <div class="flex items-baseline gap-1">
+                        <span class="text-xs text-emerald-500 font-bold">⚡</span>
+                        <span class="text-sm sm:text-base font-black font-mono text-emerald-500">
+                          {{ formatTime(rec.best_time) }}
+                        </span>
+                        <span class="text-[10px] text-[var(--color-text-muted)] hidden md:inline ml-0.5">全网极速</span>
                       </div>
-                      <span class="text-[9px] text-[var(--color-text-muted)] font-medium">最短用时</span>
                     } @else {
-                      <div class="text-sm sm:text-base font-black font-mono text-amber-500">
-                        🏆 {{ rec.best_score }}
+                      <div class="flex items-baseline gap-1">
+                        <span class="text-xs text-amber-500 font-bold">🏆</span>
+                        <span class="text-sm sm:text-base font-black font-mono text-amber-500">
+                          {{ rec.best_score }}
+                        </span>
+                        <span class="text-[10px] text-[var(--color-text-muted)] hidden md:inline ml-0.5">最高分</span>
                       </div>
-                      <span class="text-[9px] text-[var(--color-text-muted)] font-medium">最高得分</span>
                     }
+                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono hidden sm:inline">
+                      {{ formatAchievedDate(rec.achieved_at) }}
+                    </span>
                   </div>
                 </div>
-
-                <!-- Action CTA -->
-                <button (click)="challengeRecord(rec.difficulty)"
-                        class="w-full py-1.5 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-                  <span>⚔️</span>
-                  <span>{{ i18n.t('lobby.challenge_record_btn')() || '破纪录挑战' }}</span>
-                </button>
               } @else {
                 <!-- Unclaimed Milestone -->
-                <div class="py-2.5 flex flex-col items-center justify-center text-center gap-1">
-                  <span class="text-xl opacity-40">🚩</span>
-                  <span class="text-xs font-bold text-[var(--color-text-muted)]">
-                    {{ i18n.t('lobby.unclaimed_record')() || '虚位以待，等你登顶' }}
-                  </span>
+                <div class="flex items-center justify-between sm:justify-start gap-2 flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                    <span class="text-sm opacity-50">🚩</span>
+                    <span class="font-medium text-[11px] sm:text-xs">虚位以待 · 首通载入史册</span>
+                  </div>
+                  <span class="text-xs font-mono text-[var(--color-text-muted)] opacity-50">⚡ --:--</span>
                 </div>
-
-                <button (click)="challengeRecord(rec.difficulty)"
-                        class="w-full py-1.5 px-3 rounded-lg bg-[var(--color-bg-card)] hover:bg-[var(--color-border-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer">
-                  <span>🚀</span>
-                  <span>{{ i18n.t('lobby.claim_first_record')() || '抢占首纪录' }}</span>
-                </button>
               }
+
+              <!-- Challenge Action CTA (Right) -->
+              <div class="shrink-0">
+                @if (rec.user_id > 0) {
+                  <button (click)="challengeRecord(rec.difficulty)"
+                          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white border border-amber-500/20 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                    <span>⚔️</span>
+                    <span class="hidden sm:inline">破纪录</span><span>挑战</span>
+                  </button>
+                } @else {
+                  <button (click)="challengeRecord(rec.difficulty)"
+                          class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[var(--color-accent-from)]/10 hover:bg-[var(--color-accent-from)] text-[var(--color-accent-from)] hover:text-white border border-[var(--color-accent-from)]/30 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
+                    <span>🚀</span>
+                    <span>抢首登</span>
+                  </button>
+                }
+              </div>
 
             </div>
           }
@@ -192,25 +203,56 @@ export class HallOfFameComponent implements OnInit {
     });
   }
 
-  getDifficultyLabel(gameId: string, diffId: string): string {
+  getDifficultyName(gameId: string, diffId: string): string {
     const config = this.gameRegistry.getConfig(gameId);
     if (config?.difficulties) {
       const match = config.difficulties.find(d => d.id === diffId);
       if (match) {
-        const name = match.labelKey ? (this.i18n.t(match.labelKey)() || match.id) : match.id;
-        const spec = match.descKey ? (this.i18n.t(match.descKey)() || match.desc) : match.desc;
-        return spec ? `${name} (${spec})` : name;
+        return match.labelKey ? (this.i18n.t(match.labelKey)() || match.id) : match.id;
       }
     }
-    // Fallback dictionary
     const dict: Record<string, string> = {
       easy: '简单',
       medium: '中等',
       hard: '困难',
       expert: '专家',
-      master: '大师'
+      master: '大师',
+      '3x3': '3×3 阶',
+      '4x4': '4×4 阶',
+      '5x5': '5×5 阶'
     };
     return dict[diffId] || diffId;
+  }
+
+  getDifficultySpec(gameId: string, diffId: string): string {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config?.difficulties) {
+      const match = config.difficulties.find(d => d.id === diffId);
+      if (match) {
+        return match.descKey ? (this.i18n.t(match.descKey)() || match.desc || '') : (match.desc || '');
+      }
+    }
+    return '';
+  }
+
+  getDifficultyDotClass(diff: string): string {
+    switch (diff.toLowerCase()) {
+      case 'easy':
+      case '3x3':
+        return 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+      case 'medium':
+      case '4x4':
+        return 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]';
+      case 'hard':
+      case '5x5':
+        return 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]';
+      case 'expert':
+        return 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]';
+      case 'master':
+        return 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]';
+      default:
+        return 'bg-zinc-400';
+    }
   }
 
   getDifficultyBadgeClass(diff: string): string {
