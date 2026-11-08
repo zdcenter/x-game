@@ -149,7 +149,7 @@ import { GameMode } from '../../../../core/models/game.model';
                     <div class="flex items-center gap-1.5 shrink-0">
                       <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-500 border border-rose-500/20 flex items-center gap-1">
                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                        <span>交锋中</span>
+                        <span>交锋中 ({{ room.players }}/{{ getMaxPlayers(room.game) }})</span>
                       </span>
                       @if (room.spectators > 0) {
                         <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
@@ -228,7 +228,7 @@ import { GameMode } from '../../../../core/models/game.model';
 
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 flex items-center gap-1 shrink-0">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                      <span>等候迎战 (1/2)</span>
+                      <span>等候迎战 ({{ room.players }}/{{ getMaxPlayers(room.game) }})</span>
                     </span>
                   </div>
 
@@ -580,6 +580,10 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   getGameEmoji(gameId: string): string {
     const config = this.gameRegistry.getConfig(gameId);
     return config?.iconEmoji || '🎮';
+  }
+
+  getMaxPlayers(gameId: string): number {
+    return this.gameRegistry.getMaxPlayers(gameId);
   }
 
   isTimeGame(gameId: string): boolean {

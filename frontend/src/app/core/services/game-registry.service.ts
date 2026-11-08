@@ -144,4 +144,18 @@ export class GameRegistryService {
     const diff = config.difficulties.find(d => d.id === diffId);
     return diff?.labelKey;
   }
+
+  /**
+   * Returns whether a game is strictly 2-player turn-based (e.g. gomoku, idiom).
+   */
+  isStrictlyDual(gameId: string): boolean {
+    return ['gomoku', 'idiom'].includes(gameId);
+  }
+
+  /**
+   * Returns maximum player capacity for a game room. Defaults to 4 for speed/score races, 2 for dual-only.
+   */
+  getMaxPlayers(gameId: string): number {
+    return this.isStrictlyDual(gameId) ? 2 : 4;
+  }
 }

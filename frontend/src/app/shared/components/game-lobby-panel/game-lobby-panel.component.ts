@@ -373,4 +373,8 @@ export class GameLobbyPanelComponent implements OnInit {
     if (diffId === GameDifficulty.Hard) return this.t('game.diff_hard');
     return diffId;
   }
+
+  getMaxPlayers(gameId: string): number {
+    return this.gameRegistry.getMaxPlayers(gameId);
+  }
 }

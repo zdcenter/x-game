@@ -206,7 +206,7 @@
                   <img [src]="'/assets/games/icons/' + g.id + '.svg?v=2'" class="w-8 h-8 object-contain drop-shadow-sm" alt="">
                   <div>
                     <h3 class="font-black text-sm text-[var(--color-text-main)] leading-tight">{{ t(g.titleKey) }}</h3>
-                    <p class="text-[10px] text-[var(--color-text-muted)]">双人实时对决 · 积分仲裁</p>
+                    <p class="text-[10px] text-[var(--color-text-muted)]">实时多人竞技 · 积分仲裁</p>
                   </div>
                 </div>
                 <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -711,7 +711,7 @@
           <span class="font-bold text-[var(--color-text-main)]">{{ formatHost(room.host) }}</span>
         </span>
         <span class="font-mono text-[11px] font-bold text-violet-400 shrink-0">
-          {{ room.players }}/2 玩家
+          {{ room.players }}/{{ getMaxPlayers(room.game) }} 玩家
         </span>
       </div>
     </div>

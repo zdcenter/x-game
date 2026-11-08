@@ -161,6 +161,43 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     });
   }
 
+  get maxCapacity(): number {
+    return this.gameRegistry.getMaxPlayers(this.gameId);
+  }
+
+  get isStrictlyDual(): boolean {
+    return this.gameRegistry.isStrictlyDual(this.gameId);
+  }
+
+  get arenaBadgeLabel(): string {
+    if (this.isStrictlyDual) {
+      return this.i18n.t('game.duel_mode')() || '1v1 对战';
+    }
+    if (this.mode?.includes(GameMode.Speed)) {
+      return this.i18n.t('game.speed_race_mode')() || '多人极速竞速';
+    }
+    if (this.mode?.includes(GameMode.Steal) || this.mode?.includes(GameMode.Score)) {
+      return this.i18n.t('game.score_battle_mode')() || '多人积分对抗';
+    }
+    return this.i18n.t('game.multiplayer_arena')() || '多人竞技对决';
+  }
+
+  get emptySeatSlots(): number[] {
+    const current = this.sortedPlayers.length;
+    const remaining = Math.max(0, this.maxCapacity - current);
+    return Array.from({ length: remaining }, (_, i) => i);
+  }
+
+  getPlayerGradient(index: number): string {
+    const gradients = [
+      'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+      'linear-gradient(135deg, #f43f5e, #f97316)',
+      'linear-gradient(135deg, #10b981, #06b6d4)',
+      'linear-gradient(135deg, #f59e0b, #eab308)',
+    ];
+    return gradients[index % gradients.length];
+  }
+
   get isSpectator(): boolean {
     return !this.players.some(p => p.id === this.currentUserId);
   }

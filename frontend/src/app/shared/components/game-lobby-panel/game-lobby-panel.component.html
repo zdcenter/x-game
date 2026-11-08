@@ -185,9 +185,7 @@
                     }
                   </div>
                   <div class="flex items-center gap-1">
-                    <div class="w-2 h-2 rounded-full transition-colors" [class.bg-[var(--color-accent-to)]]="room.players >= 1" [class.bg-[var(--color-border-card)]]="room.players < 1"></div>
-                    <div class="w-2 h-2 rounded-full transition-colors" [class.bg-[var(--color-accent-to)]]="room.players >= 2" [class.bg-[var(--color-border-card)]]="room.players < 2"></div>
-                    <span class="text-[10px] text-[var(--color-text-muted)] ml-1">{{ room.players }}/2</span>
+                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono font-bold">{{ room.players }}/{{ getMaxPlayers(room.game) }} 玩家</span>
                   </div>
                 </div>
                 <!-- Row 3: join + management -->
@@ -273,9 +271,7 @@
                     }
                   </div>
                   <div class="flex items-center gap-1">
-                    <div class="w-2 h-2 rounded-full transition-colors" [class.bg-[var(--color-accent-to)]]="room.players >= 1" [class.bg-[var(--color-border-card)]]="room.players < 1"></div>
-                    <div class="w-2 h-2 rounded-full transition-colors" [class.bg-[var(--color-accent-to)]]="room.players >= 2" [class.bg-[var(--color-border-card)]]="room.players < 2"></div>
-                    <span class="text-[10px] text-[var(--color-text-muted)] ml-1">{{ room.players }}/2</span>
+                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono font-bold">{{ room.players }}/{{ getMaxPlayers(room.game) }} 玩家</span>
                   </div>
                 </div>
                 <!-- Row 3: join button -->

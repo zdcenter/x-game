@@ -277,6 +277,7 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 			"host":        r.Host,
 			"opponent":    r.Opponent,
 			"players":     r.PlayerCount,
+			"maxPlayers":  r.MaxPlayers,
 			"spectators":  r.SpectatorCount,
 			"mode":        r.Mode,
 			"difficulty":  r.Difficulty,

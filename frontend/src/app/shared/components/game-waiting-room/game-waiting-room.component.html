@@ -151,160 +151,262 @@
       <div class="flex-grow overflow-y-auto custom-scrollbar p-2.5 sm:p-5 lg:p-6 touch-pan-y pb-8 sm:pb-6 overscroll-contain">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-5 items-stretch">
 
-          <!-- ═════ LEFT WING: Duel Stage (Player vs Player) ═════ -->
+          <!-- ═════ LEFT WING: Duel / Multiplayer Stage (Dynamic Capacity) ═════ -->
           <div class="md:col-span-7 flex flex-col justify-between gap-3 bg-[var(--color-bg-main)]/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-[var(--color-border-card)] shadow-xs">
             
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
                   <span class="text-base">⚔️</span>
-                  <span>{{ i18n.t('game.battle_arena_seats')() || '双人对战擂台' }}</span>
+                  <span>{{ i18n.t('game.battle_arena_seats')() || '竞技对决擂台' }}</span>
                 </span>
                 <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-muted)]">
-                  {{ sortedPlayers.length }}/2
+                  {{ sortedPlayers.length }}/{{ maxCapacity }}
                 </span>
               </div>
               <span class="text-[11px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full hidden sm:inline-block">
-                {{ i18n.t('game.duel_mode')() || '1v1 对战' }}
+                {{ arenaBadgeLabel }}
               </span>
             </div>
 
-            <!-- Duel Combat Pods -->
-            <div class="relative flex flex-row items-stretch justify-between gap-2.5 sm:gap-3.5 w-full my-auto py-1">
-              
-              <!-- Center VS Badge -->
-              <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
-                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[2px] shadow-[0_0_20px_rgba(245,158,11,0.5)] animate-pulse">
-                  <div class="w-full h-full bg-[var(--color-bg-card)] rounded-full flex items-center justify-center border border-amber-300/40">
-                    <span class="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-orange-500 text-xs sm:text-sm drop-shadow-sm">VS</span>
+            <!-- ── A. Pure 1v1 Dual Layout (Gomoku, Idiom, etc.) ── -->
+            @if (isStrictlyDual) {
+              <div class="relative flex flex-row items-stretch justify-between gap-2.5 sm:gap-3.5 w-full my-auto py-1">
+                
+                <!-- Center VS Badge -->
+                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
+                  <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 p-[2px] shadow-[0_0_20px_rgba(245,158,11,0.5)] animate-pulse">
+                    <div class="w-full h-full bg-[var(--color-bg-card)] rounded-full flex items-center justify-center border border-amber-300/40">
+                      <span class="font-black italic text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-orange-500 text-xs sm:text-sm drop-shadow-sm">VS</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- ── Player 1 (Host) Pod ── -->
-              @if (sortedPlayers.length > 0) {
-                <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-sm bg-[var(--color-bg-card)] min-h-[125px] sm:min-h-[170px]"
-                     [class.border-emerald-500]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId"
-                     [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId">
-                  
-                  <!-- Host Crown Badge -->
-                  @if (sortedPlayers[0].id === hostId) {
+                <!-- Host Pod -->
+                @if (sortedPlayers.length > 0) {
+                  <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-sm bg-[var(--color-bg-card)] min-h-[125px] sm:min-h-[170px]"
+                       [class.border-emerald-500]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId"
+                       [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="readyPlayers[sortedPlayers[0].id] || sortedPlayers[0].id === hostId">
+                    
                     <span class="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm z-10 flex items-center gap-0.5">
                       <span>👑</span>
                       <span>{{ i18n.t('game.host')() || '房主' }}</span>
                     </span>
-                  }
 
-                  <!-- Host Avatar -->
-                  <div class="relative mt-1 mb-1.5 sm:mb-2">
-                    <div class="w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-lg border-2 border-[var(--color-bg-card)] transition-transform hover:scale-105"
-                         style="background: linear-gradient(135deg, #3b82f6, #8b5cf6)">
-                      {{ sortedPlayers[0].id?.charAt(0)?.toUpperCase() }}
-                    </div>
-                    <!-- Ready Mark -->
-                    <div class="absolute -bottom-1 -right-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-[10px] sm:text-xs font-black animate-scale-in">
-                      ✓
-                    </div>
-                  </div>
-
-                  <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[100px] sm:max-w-[140px] text-center drop-shadow-sm">
-                    {{ sortedPlayers[0].id }}
-                  </span>
-
-                  <span class="mt-1 text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>{{ i18n.t('game.host_ready')() || '房主就绪' }}</span>
-                  </span>
-
-                  @if (sortedPlayers[0].id !== currentUserId && !isFriend(sortedPlayers[0].id)) {
-                    <button (click)="addFriend(sortedPlayers[0].id)" class="mt-1.5 text-[9px] bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white px-2 py-0.5 rounded-full shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all">
-                      <span>+</span>
-                      <span>{{ i18n.t('game.add')() || '加好友' }}</span>
-                    </button>
-                  }
-                </div>
-              }
-
-              <!-- ── Player 2 (Challenger) Pod ── -->
-              @if (sortedPlayers.length > 1) {
-                <!-- Challenger Joined -->
-                <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-sm bg-[var(--color-bg-card)] min-h-[125px] sm:min-h-[170px]"
-                     [class.border-emerald-500]="readyPlayers[sortedPlayers[1].id]"
-                     [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="readyPlayers[sortedPlayers[1].id]"
-                     [class.border-amber-500/40]="!readyPlayers[sortedPlayers[1].id]">
-                  
-                  <!-- Kick Button (Host Only) -->
-                  @if (currentUserId === hostId && sortedPlayers[1].id !== hostId) {
-                    <button (click)="kick.emit(sortedPlayers[1].id)"
-                            class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all text-xs font-bold z-10 active:scale-95"
-                            title="Kick Player">
-                      ✕
-                    </button>
-                  }
-
-                  <!-- Challenger Avatar -->
-                  <div class="relative mt-1 mb-1.5 sm:mb-2">
-                    <div class="w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-lg border-2 border-[var(--color-bg-card)] transition-transform hover:scale-105"
-                         style="background: linear-gradient(135deg, #f43f5e, #f97316)">
-                      {{ sortedPlayers[1].id?.charAt(0)?.toUpperCase() }}
-                    </div>
-                    @if (readyPlayers[sortedPlayers[1].id]) {
-                      <div class="absolute -bottom-1 -left-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-[10px] sm:text-xs font-black animate-scale-in">✓</div>
-                    } @else {
-                      <div class="absolute -bottom-1 -left-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-amber-500/20 border-2 border-[var(--color-bg-card)] flex items-center justify-center rounded-full">
-                        <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+                    <div class="relative mt-1 mb-1.5 sm:mb-2">
+                      <div class="w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-lg border-2 border-[var(--color-bg-card)] transition-transform hover:scale-105"
+                           [style.background]="getPlayerGradient(0)">
+                        {{ sortedPlayers[0].id?.charAt(0)?.toUpperCase() }}
                       </div>
+                      <div class="absolute -bottom-1 -right-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-[10px] sm:text-xs font-black animate-scale-in">
+                        ✓
+                      </div>
+                    </div>
+
+                    <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[100px] sm:max-w-[140px] text-center drop-shadow-sm">
+                      {{ sortedPlayers[0].id }}
+                    </span>
+
+                    <span class="mt-1 text-[10px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span>{{ i18n.t('game.host_ready')() || '房主就绪' }}</span>
+                    </span>
+
+                    @if (sortedPlayers[0].id !== currentUserId && !isFriend(sortedPlayers[0].id)) {
+                      <button (click)="addFriend(sortedPlayers[0].id)" class="mt-1.5 text-[9px] bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white px-2 py-0.5 rounded-full shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer">
+                        <span>+</span>
+                        <span>{{ i18n.t('game.add')() || '加好友' }}</span>
+                      </button>
                     }
                   </div>
+                }
 
-                  <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[100px] sm:max-w-[140px] text-center drop-shadow-sm">
-                    {{ sortedPlayers[1].id }}
-                  </span>
+                <!-- Challenger Pod -->
+                @if (sortedPlayers.length > 1) {
+                  <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-sm bg-[var(--color-bg-card)] min-h-[125px] sm:min-h-[170px]"
+                       [class.border-emerald-500]="readyPlayers[sortedPlayers[1].id]"
+                       [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="readyPlayers[sortedPlayers[1].id]"
+                       [class.border-amber-500/40]="!readyPlayers[sortedPlayers[1].id]">
+                    
+                    @if (currentUserId === hostId && sortedPlayers[1].id !== hostId) {
+                      <button (click)="kick.emit(sortedPlayers[1].id)"
+                              class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all text-xs font-bold z-10 active:scale-95 cursor-pointer"
+                              title="Kick Player">
+                        ✕
+                      </button>
+                    }
 
-                  <span class="mt-1 text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
-                        [class.text-emerald-400]="readyPlayers[sortedPlayers[1].id]"
-                        [class.text-amber-400]="!readyPlayers[sortedPlayers[1].id]">
-                    <span class="w-1.5 h-1.5 rounded-full"
-                          [class.bg-emerald-400]="readyPlayers[sortedPlayers[1].id]"
-                          [class.bg-amber-400]="!readyPlayers[sortedPlayers[1].id]"></span>
-                    <span>{{ readyPlayers[sortedPlayers[1].id] ? (i18n.t('game.ready')() || '已准备') : (i18n.t('game.waiting_challenger')() || '准备中...') }}</span>
-                  </span>
+                    <div class="relative mt-1 mb-1.5 sm:mb-2">
+                      <div class="w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-lg border-2 border-[var(--color-bg-card)] transition-transform hover:scale-105"
+                           [style.background]="getPlayerGradient(1)">
+                        {{ sortedPlayers[1].id?.charAt(0)?.toUpperCase() }}
+                      </div>
+                      @if (readyPlayers[sortedPlayers[1].id]) {
+                        <div class="absolute -bottom-1 -left-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-[10px] sm:text-xs font-black animate-scale-in">✓</div>
+                      } @else {
+                        <div class="absolute -bottom-1 -left-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-amber-500/20 border-2 border-[var(--color-bg-card)] flex items-center justify-center rounded-full">
+                          <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+                        </div>
+                      }
+                    </div>
 
-                  @if (sortedPlayers[1].id !== currentUserId && !isFriend(sortedPlayers[1].id)) {
-                    <button (click)="addFriend(sortedPlayers[1].id)" class="mt-1.5 text-[9px] bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white px-2 py-0.5 rounded-full shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all">
-                      <span>+</span>
-                      <span>{{ i18n.t('game.add')() || '加好友' }}</span>
-                    </button>
-                  }
-                </div>
-              } @else if (mode !== GameMode.Single) {
-                <!-- Challenger Empty Seat -->
-                <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-card)]/50 min-h-[125px] sm:min-h-[170px]">
-                  
-                  <div class="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-[var(--color-bg-main)] border-2 border-dashed border-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] text-lg sm:text-2xl mb-1 shadow-inner animate-pulse">
-                    ?
+                    <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[100px] sm:max-w-[140px] text-center drop-shadow-sm">
+                      {{ sortedPlayers[1].id }}
+                    </span>
+
+                    <span class="mt-1 text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
+                          [class.text-emerald-400]="readyPlayers[sortedPlayers[1].id]"
+                          [class.text-amber-400]="!readyPlayers[sortedPlayers[1].id]">
+                      <span class="w-1.5 h-1.5 rounded-full"
+                            [class.bg-emerald-400]="readyPlayers[sortedPlayers[1].id]"
+                            [class.bg-amber-400]="!readyPlayers[sortedPlayers[1].id]"></span>
+                      <span>{{ readyPlayers[sortedPlayers[1].id] ? (i18n.t('game.ready')() || '已准备') : (i18n.t('game.waiting_challenger')() || '准备中...') }}</span>
+                    </span>
+
+                    @if (sortedPlayers[1].id !== currentUserId && !isFriend(sortedPlayers[1].id)) {
+                      <button (click)="addFriend(sortedPlayers[1].id)" class="mt-1.5 text-[9px] bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white px-2 py-0.5 rounded-full shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer">
+                        <span>+</span>
+                        <span>{{ i18n.t('game.add')() || '加好友' }}</span>
+                      </button>
+                    }
                   </div>
+                } @else if (mode !== GameMode.Single) {
+                  <!-- Challenger Empty Seat -->
+                  <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-card)]/50 min-h-[125px] sm:min-h-[170px]">
+                    <div class="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-[var(--color-bg-main)] border-2 border-dashed border-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] text-lg sm:text-2xl mb-1 shadow-inner animate-pulse">
+                      ?
+                    </div>
 
-                  <p class="text-[11px] sm:text-xs font-bold text-[var(--color-text-secondary)] mb-2 text-center leading-tight">
-                    {{ i18n.t('game.waiting_challenger_seat')() || '虚位以待，等待对手入席...' }}
-                  </p>
+                    <p class="text-[11px] sm:text-xs font-bold text-[var(--color-text-secondary)] mb-2 text-center leading-tight">
+                      {{ i18n.t('game.waiting_challenger_seat')() || '虚位以待，等待对手入席...' }}
+                    </p>
 
-                  <div class="flex flex-row items-center gap-1.5 w-full max-w-[200px]">
-                    <button (click)="openFriendList()"
-                            class="flex-1 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all">
-                      <span>👥</span>
-                      <span class="truncate">{{ i18n.t('game.call_friend_short')() || '呼叫好友' }}</span>
-                    </button>
-                    <button (click)="shareInviteLink()"
-                            class="flex-1 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:border-amber-400 text-[var(--color-text-main)] shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all">
-                      <span>{{ linkCopied() ? '✓' : (shareService.canNativeShare() ? '📤' : '🔗') }}</span>
-                      <span class="truncate">{{ linkCopied() ? (i18n.t('text_share.copied_short')() || '已复制') : (shareService.canNativeShare() ? (i18n.t('share.share_invite')() || '分享邀请') : (i18n.t('share.invite_pk')() || '邀请PK')) }}</span>
-                    </button>
+                    <div class="flex flex-row items-center gap-1.5 w-full max-w-[200px]">
+                      <button (click)="openFriendList()"
+                              class="flex-1 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer">
+                        <span>👥</span>
+                        <span class="truncate">{{ i18n.t('game.call_friend_short')() || '呼叫好友' }}</span>
+                      </button>
+                      <button (click)="shareInviteLink()"
+                              class="flex-1 py-1.5 px-2 rounded-lg text-[10px] sm:text-[11px] font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:border-amber-400 text-[var(--color-text-main)] shadow-xs flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer">
+                        <span>{{ linkCopied() ? '✓' : (shareService.canNativeShare() ? '📤' : '🔗') }}</span>
+                        <span class="truncate">{{ linkCopied() ? (i18n.t('text_share.copied_short')() || '已复制') : (shareService.canNativeShare() ? (i18n.t('share.share_invite')() || '分享邀请') : (i18n.t('share.invite_pk')() || '邀请PK')) }}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              }
+                }
+              </div>
+            }
 
-            </div>
+            <!-- ── B. Full Multiplayer Podium Grid (Speed Race / Score PK 2-4+ Players) ── -->
+            @if (!isStrictlyDual) {
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 w-full my-auto py-1">
+                
+                <!-- Render Joined Players -->
+                @for (player of sortedPlayers; track player.id; let idx = $index) {
+                  <div class="relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-sm bg-[var(--color-bg-card)] min-h-[130px] sm:min-h-[155px]"
+                       [class.border-emerald-500]="readyPlayers[player.id] || player.id === hostId"
+                       [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="readyPlayers[player.id] || player.id === hostId"
+                       [class.border-amber-500/40]="!readyPlayers[player.id] && player.id !== hostId">
+                    
+                    <!-- Host Crown or Seat Number Badge -->
+                    @if (player.id === hostId) {
+                      <span class="absolute top-1.5 left-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-sm z-10 flex items-center gap-0.5">
+                        <span>👑</span>
+                        <span>{{ i18n.t('game.host')() || '房主' }}</span>
+                      </span>
+                    } @else {
+                      <span class="absolute top-1.5 left-1.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-[var(--color-bg-main)] text-[var(--color-text-muted)] border border-[var(--color-border-card)]">
+                        P{{ idx + 1 }}
+                      </span>
+                    }
+
+                    <!-- Kick Button (Host Only for guests) -->
+                    @if (currentUserId === hostId && player.id !== hostId) {
+                      <button (click)="kick.emit(player.id)"
+                              class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all text-xs font-bold z-10 active:scale-95 cursor-pointer"
+                              title="Kick Player">
+                        ✕
+                      </button>
+                    }
+
+                    <!-- Avatar with Gradient & Ready Mark -->
+                    <div class="relative mt-2 mb-1">
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-black text-sm sm:text-lg shadow-md border-2 border-[var(--color-bg-card)] transition-transform hover:scale-105"
+                           [style.background]="getPlayerGradient(idx)">
+                        {{ player.id?.charAt(0)?.toUpperCase() }}
+                      </div>
+                      @if (player.id === hostId || readyPlayers[player.id]) {
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-[9px] sm:text-[10px] font-black animate-scale-in">
+                          ✓
+                        </div>
+                      } @else {
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-amber-500/20 border-2 border-[var(--color-bg-card)] flex items-center justify-center rounded-full">
+                          <div class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Name -->
+                    <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[85px] sm:max-w-[105px] text-center drop-shadow-sm">
+                      {{ player.id }}
+                    </span>
+
+                    <!-- Ready Status -->
+                    @if (player.id === hostId) {
+                      <span class="mt-0.5 text-[9px] font-black uppercase text-emerald-400 flex items-center gap-0.5">
+                        <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>{{ i18n.t('game.host_ready')() || '房主就绪' }}</span>
+                      </span>
+                    } @else {
+                      <span class="mt-0.5 text-[9px] font-black uppercase flex items-center gap-0.5"
+                            [class.text-emerald-400]="readyPlayers[player.id]"
+                            [class.text-amber-400]="!readyPlayers[player.id]">
+                        <span class="w-1 h-1 rounded-full"
+                              [class.bg-emerald-400]="readyPlayers[player.id]"
+                              [class.bg-amber-400]="!readyPlayers[player.id]"></span>
+                        <span>{{ readyPlayers[player.id] ? (i18n.t('game.ready')() || '已准备') : (i18n.t('game.waiting_challenger')() || '准备中...') }}</span>
+                      </span>
+                    }
+
+                    <!-- Add friend button if not self and not friend -->
+                    @if (player.id !== currentUserId && !isFriend(player.id)) {
+                      <button (click)="addFriend(player.id)" class="mt-1 text-[8px] bg-blue-500/15 text-blue-400 hover:bg-blue-500 hover:text-white px-1.5 py-0.2 rounded-full shadow-xs flex items-center justify-center gap-0.5 active:scale-95 transition-all cursor-pointer">
+                        <span>+</span>
+                        <span>{{ i18n.t('game.add')() || '加好友' }}</span>
+                      </button>
+                    }
+                  </div>
+                }
+
+                <!-- Render Empty Available Seats -->
+                @for (seat of emptySeatSlots; track seat) {
+                  <div class="relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl sm:rounded-2xl border-2 border-dashed border-[var(--color-border-card)] bg-[var(--color-bg-card)]/50 min-h-[130px] sm:min-h-[155px]">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[var(--color-bg-main)] border-2 border-dashed border-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] text-sm sm:text-base mb-1 shadow-inner animate-pulse">
+                      ?
+                    </div>
+
+                    <p class="text-[10px] font-bold text-[var(--color-text-secondary)] mb-1.5 text-center leading-tight">
+                      虚位以待
+                    </p>
+
+                    <div class="flex flex-col gap-1 w-full max-w-[110px]">
+                      <button (click)="openFriendList()"
+                              class="w-full py-1 px-1.5 rounded-lg text-[9px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs flex items-center justify-center gap-0.5 active:scale-95 transition-all cursor-pointer">
+                        <span>👥</span>
+                        <span class="truncate">呼叫好友</span>
+                      </button>
+                      <button (click)="shareInviteLink()"
+                              class="w-full py-1 px-1.5 rounded-lg text-[9px] font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:border-amber-400 text-[var(--color-text-main)] shadow-xs flex items-center justify-center gap-0.5 active:scale-95 transition-all cursor-pointer">
+                        <span>🔗</span>
+                        <span class="truncate">邀请入席</span>
+                      </button>
+                    </div>
+                  </div>
+                }
+
+              </div>
+            }
 
             <!-- Duel Incentive / Rule Footnote -->
             <div class="px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center justify-between text-[11px] text-[var(--color-text-secondary)]">
@@ -314,27 +416,6 @@
               </span>
               <span class="font-mono font-bold text-amber-500">BO{{ target() > 1 ? (target() * 2 - 1) : 1 }}</span>
             </div>
-
-            <!-- Extra Players Row (If > 2 players) -->
-            @if (sortedPlayers.length > 2) {
-              <div class="pt-2 border-t border-[var(--color-border-card)] flex flex-wrap items-center gap-1.5">
-                <span class="text-[11px] text-[var(--color-text-muted)] font-bold mr-1">其他参战者:</span>
-                @for (player of sortedPlayers.slice(2); track player.id) {
-                  <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs"
-                       [class.border-emerald-500]="readyPlayers[player.id]" [class.bg-emerald-500/10]="readyPlayers[player.id]"
-                       [class.border-[var(--color-border-card)]]="!readyPlayers[player.id]" [class.bg-[var(--color-bg-card)]]="!readyPlayers[player.id]">
-                    <div class="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[9px] font-bold">
-                      {{ player.id?.charAt(0)?.toUpperCase() }}
-                    </div>
-                    <span class="font-bold truncate max-w-[80px]">{{ player.id }}</span>
-                    @if (readyPlayers[player.id]) { <span class="text-emerald-400">✓</span> }
-                    @if (currentUserId === hostId) {
-                      <button (click)="kick.emit(player.id)" class="ml-1 w-3.5 h-3.5 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-[7px]">✕</button>
-                    }
-                  </div>
-                }
-              </div>
-            }
 
           </div>
 

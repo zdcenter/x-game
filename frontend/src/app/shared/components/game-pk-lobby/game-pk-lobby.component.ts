@@ -75,6 +75,10 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     return this.friendService.friends().some(f => f.username === username);
   }
 
+  getMaxPlayers(gameId: string): number {
+    return this.reg.getMaxPlayers(gameId);
+  }
+
   addFriend(username: string) {
     if (this.playerId()?.startsWith('guest_')) {
       this.toast.show(this.t('game.cannot_add_guest') || 'Cannot add guest players', 'error');

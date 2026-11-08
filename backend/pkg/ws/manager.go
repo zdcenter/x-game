@@ -74,6 +74,7 @@ type RoomSnapshot struct {
 	Status         domain.GameStatus     `json:"status"`
 	CreatedAt      int64                 `json:"createdAt"`
 	PlayerCount    int                   `json:"players"`
+	MaxPlayers     int                   `json:"maxPlayers"`
 	SpectatorCount int                   `json:"spectators,omitempty"`
 	HasPassword    bool                  `json:"hasPassword"`
 	BountyCoins    int                   `json:"bountyCoins,omitempty"`
@@ -130,6 +131,11 @@ func GetActiveRooms() []RoomSnapshot {
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
 
+		maxPlayers := 4
+		if game == "gomoku" || game == "idiom" {
+			maxPlayers = 2
+		}
+
 		snapshots = append(snapshots, RoomSnapshot{
 			ID:             r.ID,
 			Game:           game,
@@ -140,6 +146,7 @@ func GetActiveRooms() []RoomSnapshot {
 			Status:         status,
 			CreatedAt:      createdAt,
 			PlayerCount:    playerCount,
+			MaxPlayers:     maxPlayers,
 			SpectatorCount: spectatorCount,
 			HasPassword:    hasPassword,
 			BountyCoins:    bounty,
@@ -416,6 +423,23 @@ func (r *Room) AddClient(client *Client, password string) error {
 			return fmt.Errorf("%s:%d", domain.ErrKickCooldown, remaining)
 		}
 		delete(r.KickedPlayers, client.ID)
+	}
+
+	// Reject if room reached max player capacity (spectators can always join)
+	if !client.IsSpectator {
+		currentContestants := 0
+		for pid, c := range r.Clients {
+			if !c.IsSpectator && pid != client.ID {
+				currentContestants++
+			}
+		}
+		maxCapacity := 4
+		if r.Game == "gomoku" || r.Game == "idiom" {
+			maxCapacity = 2
+		}
+		if currentContestants >= maxCapacity {
+			return fmt.Errorf("room is full (max %d players)", maxCapacity)
+		}
 	}
 
 	// Reject if game actively in progress and player is new (allow host and spectators to bypass)
