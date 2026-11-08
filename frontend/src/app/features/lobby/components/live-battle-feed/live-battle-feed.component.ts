@@ -153,6 +153,9 @@ import { GameMode } from '../../../../core/models/game.model';
                           <span class="px-1.5 py-0.2 rounded text-[9px] font-bold" [ngClass]="getDifficultyBadgeClass(room.difficulty)">
                             {{ getDifficultyLabel(room.game, room.difficulty) }}
                           </span>
+                          <span class="px-1.5 py-0.2 rounded bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[9px] font-semibold text-[var(--color-text-secondary)]">
+                            {{ getRoomRoundLabel(room) }}
+                          </span>
                           @if (room.bountyCoins > 0) {
                             <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
                               🪙 {{ room.bountyCoins }}
@@ -180,12 +183,21 @@ import { GameMode } from '../../../../core/models/game.model';
                   <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
                     <!-- Head to Head Matchup -->
                     <div class="flex items-center gap-2 min-w-0 flex-1">
-                      <span class="text-xs font-black text-[var(--color-text-main)] truncate max-w-[75px] sm:max-w-[95px]">
-                        👤 {{ room.host }}
+                      <span class="text-xs font-black text-amber-500 truncate max-w-[85px] sm:max-w-[110px] flex items-center gap-0.5">
+                        <span>👑</span>
+                        <span>{{ room.host }}</span>
                       </span>
                       <span class="text-rose-500 font-extrabold text-[11px] italic shrink-0">VS</span>
-                      <span class="text-xs font-black text-[var(--color-text-main)] truncate max-w-[75px] sm:max-w-[95px]">
-                        👤 {{ room.opponent || (room.players > 1 ? ('等 ' + room.players + ' 玩家') : '挑战者') }}
+                      <span class="text-xs font-black truncate max-w-[90px] sm:max-w-[120px]"
+                            [class.text-rose-500]="room.opponent"
+                            [class.text-blue-500]="!room.opponent && room.players > 1">
+                        @if (room.opponent) {
+                          <span>⚔️ {{ room.opponent }}</span>
+                        } @else if (room.players > 1) {
+                          <span>👥 共 {{ room.players }} 选手</span>
+                        } @else {
+                          <span class="text-[var(--color-text-muted)]">等候挑战</span>
+                        }
                       </span>
                     </div>
 
@@ -239,6 +251,9 @@ import { GameMode } from '../../../../core/models/game.model';
                           </span>
                           <span class="px-1.5 py-0.2 rounded text-[9px] font-bold" [ngClass]="getDifficultyBadgeClass(room.difficulty)">
                             {{ getDifficultyLabel(room.game, room.difficulty) }}
+                          </span>
+                          <span class="px-1.5 py-0.2 rounded bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[9px] font-semibold text-[var(--color-text-secondary)]">
+                            {{ getRoomRoundLabel(room) }}
                           </span>
                           @if (room.bountyCoins > 0) {
                             <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
@@ -362,33 +377,44 @@ import { GameMode } from '../../../../core/models/game.model';
               @for (b of battles().slice(0, feedTab() === 'all' ? 3 : 6); track b.id) {
                 <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/60 hover:bg-[var(--color-bg-main)] hover:border-emerald-500/40 p-2 sm:p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-xs">
                   
-                  <!-- Match Header: Game & Difficulty & Time -->
-                  <div class="flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-1.5 flex-wrap">
+                  <!-- Match Header: Game & Difficulty & Winner Highlight & Time -->
+                  <div class="flex items-center justify-between text-xs gap-1.5">
+                    <div class="flex items-center gap-1.5 flex-wrap min-w-0">
                       <span class="text-sm shrink-0">{{ getGameEmoji(b.game_id) }}</span>
-                      <span class="font-black text-[var(--color-text-main)]">{{ getGameTitle(b.game_id) }}</span>
-                      <span class="px-1.5 py-0.2 rounded text-[10px] font-bold" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
+                      <span class="font-black text-[var(--color-text-main)] truncate max-w-[85px] sm:max-w-[110px]">{{ getGameTitle(b.game_id) }}</span>
+                      <span class="px-1.5 py-0.2 rounded text-[10px] font-bold shrink-0" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
                         {{ getDifficultyLabel(b.game_id, b.difficulty) }}
                       </span>
                       @if (b.bounty_coins > 0) {
-                        <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                        <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20 shrink-0">
                           🪙 {{ b.bounty_coins }}
                         </span>
                       }
+                      <!-- 获胜者徽记：紧凑置于游戏与时间之间，取代下方冗余行 -->
+                      <span class="inline-flex items-center gap-1 text-[11px] font-black text-amber-500 shrink-0">
+                        <span>🏆</span>
+                        <span class="truncate max-w-[85px] sm:max-w-[110px]">{{ b.winner?.username || 'Winner' }} 胜出</span>
+                      </span>
                     </div>
-                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono shrink-0">{{ formatTimeAgo(b.played_at) }}</span>
+
+                    <div class="flex items-center gap-1.5 shrink-0 text-[10px] font-mono text-[var(--color-text-muted)]">
+                      <span class="px-1.5 py-0.2 rounded bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[9px] font-semibold text-[var(--color-text-secondary)]">
+                        {{ getRoundLabel(b) }}
+                      </span>
+                      <span>{{ formatTimeAgo(b.played_at) }}</span>
+                    </div>
                   </div>
 
-                  <!-- Head-to-Head Clash Row (Clean, High-Contrast & Instant Read) -->
-                  <div class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)]/80 text-xs">
+                  <!-- Head-to-Head Clash Row (Winner Gold/Emerald VS Loser Crimson Rose) -->
+                  <div class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]/80 text-xs shadow-2xs">
                     
-                    <!-- Winner Side -->
+                    <!-- Winner Side (Left: Gold & Emerald) -->
                     <div class="flex items-center gap-1.5 min-w-0 flex-1">
                       <span class="text-sm shrink-0">👑</span>
-                      <span class="font-black text-amber-500 truncate max-w-[80px] sm:max-w-[105px]">
+                      <span class="font-black text-amber-500 dark:text-amber-400 truncate max-w-[80px] sm:max-w-[105px]">
                         {{ b.winner?.username || 'Winner' }}
                       </span>
-                      <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-500 shrink-0">
+                      <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shrink-0">
                         胜
                       </span>
                       <span class="font-mono font-black text-emerald-500 truncate text-[11px]">
@@ -406,30 +432,20 @@ import { GameMode } from '../../../../core/models/game.model';
                       }
                     </div>
 
-                    <!-- Loser Side -->
+                    <!-- Loser Side (Right: Defeated Crimson Rose, Meaningful & High-Contrast) -->
                     <div class="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
-                      <span class="font-mono text-[11px] text-[var(--color-text-muted)] truncate">
+                      <span class="font-mono text-[11px] text-rose-500/80 truncate">
                         {{ formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
                       </span>
-                      <span class="px-1 py-0.1 rounded text-[9px] font-semibold bg-zinc-500/15 text-[var(--color-text-muted)] shrink-0">
+                      <span class="px-1 py-0.1 rounded text-[9px] font-bold bg-rose-500/15 text-rose-500 border border-rose-500/30 shrink-0">
                         负
                       </span>
-                      <span class="font-medium text-[var(--color-text-secondary)] truncate max-w-[80px] sm:max-w-[105px]">
+                      <span class="font-bold text-rose-600 dark:text-rose-400 truncate max-w-[80px] sm:max-w-[105px]">
                         {{ b.loser?.username || 'Opponent' }}
                       </span>
-                      <span class="text-xs shrink-0 opacity-40">🛡️</span>
+                      <span class="text-xs shrink-0 text-rose-400 opacity-60">🛡️</span>
                     </div>
 
-                  </div>
-
-                  <!-- Quick Narrative Highlight (Single Line) -->
-                  <div class="flex items-center justify-between text-[10px] text-[var(--color-text-muted)] px-0.5">
-                    <span class="truncate">
-                      🏆 <b class="text-emerald-500 font-bold">【{{ b.winner?.username }}】</b>获胜 {{ getBattleCommentary(b).bountyNote }}
-                    </span>
-                    <span class="text-[9px] opacity-75 shrink-0 hidden sm:inline">
-                      巅峰战报
-                    </span>
                   </div>
 
                 </div>
@@ -602,6 +618,18 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
     }
 
     return { headline, loseNote, bountyNote };
+  }
+
+  getRoundLabel(b: PKBattle): string {
+    if (b.mode === 'bo3') return 'BO3';
+    if (b.mode === 'bo5') return 'BO5';
+    return '单局决胜';
+  }
+
+  getRoomRoundLabel(room: any): string {
+    if (room.targetRounds === 3 || room.mode === 'bo3') return 'BO3';
+    if (room.targetRounds === 5 || room.mode === 'bo5') return 'BO5';
+    return '单局';
   }
 
   spectateRoom(room: any): void {
