@@ -108,6 +108,8 @@ export class WebSocketService {
 
   // Global milestone hall of fame event
   readonly globalRecordBrokenEvent = signal<any>(null);
+  // Real-time battle finished event
+  readonly liveBattleFinishedEvent = signal<any>(null);
 
   // Triggered when an emoji is received
   readonly emojiReceivedEvent = signal<{senderId: string, emoji: string} | null>(null);
@@ -453,6 +455,8 @@ export class WebSocketService {
         }
       } else if (msg.type === 'record_broken') {
         this.notificationService.handleRealtimeRecordBroken(msg);
+      } else if (msg.type === 'live_battle_finished' && msg.battle) {
+        this.liveBattleFinishedEvent.set(msg.battle);
       } else if (msg.type === 'global_record_broken') {
         this.globalRecordBrokenEvent.set(msg);
         const gameConfig = this.gameRegistry.getConfig(msg.game_id);

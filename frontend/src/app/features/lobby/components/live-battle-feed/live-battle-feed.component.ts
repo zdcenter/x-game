@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { I18nService } from '../../../../core/i18n/i18n.service';
@@ -42,10 +42,23 @@ import { GameMode } from '../../../../core/models/game.model';
         </button>
       </div>
 
-      <!-- Mode Switcher Tabs: 正在交锋 (观战/迎战) vs 完赛战报 -->
+      <!-- Mode Switcher Tabs: 全部实况 (默认) / 正在交锋 / 完赛战报 -->
       <div class="flex items-center gap-1.5 border-b border-[var(--color-border-card)]/60 pb-2">
+        <button (click)="feedTab.set('all')"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border active:scale-95 whitespace-nowrap"
+                [class.bg-[var(--color-accent-from)]]="feedTab() === 'all'"
+                [class.text-white]="feedTab() === 'all'"
+                [class.border-transparent]="feedTab() === 'all'"
+                [class.shadow-2xs]="feedTab() === 'all'"
+                [class.bg-[var(--color-bg-main)]]="feedTab() !== 'all'"
+                [class.text-[var(--color-text-secondary)]]="feedTab() !== 'all'"
+                [class.border-[var(--color-border-card)]]="feedTab() !== 'all'">
+          <span>⚡</span>
+          <span>{{ i18n.t('lobby.all_battles_tab')() || '全部实况' }}</span>
+        </button>
+
         <button (click)="feedTab.set('live')"
-                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95 whitespace-nowrap"
                 [class.bg-[var(--color-accent-from)]]="feedTab() === 'live'"
                 [class.text-white]="feedTab() === 'live'"
                 [class.border-transparent]="feedTab() === 'live'"
@@ -62,7 +75,7 @@ import { GameMode } from '../../../../core/models/game.model';
         </button>
 
         <button (click)="feedTab.set('battles')"
-                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border active:scale-95 whitespace-nowrap"
                 [class.bg-[var(--color-accent-from)]]="feedTab() === 'battles'"
                 [class.text-white]="feedTab() === 'battles'"
                 [class.border-transparent]="feedTab() === 'battles'"
@@ -75,12 +88,176 @@ import { GameMode } from '../../../../core/models/game.model';
         </button>
       </div>
 
-      <!-- Content Area (Bounded strictly to 3 items to match left Hall of Fame card height) -->
-      <div class="flex flex-col gap-2 flex-grow overflow-hidden min-h-[220px]">
+      <!-- Real-time Live Breaking News Banner (WS Push Event) -->
+      @if (latestLiveCommentary()) {
+        <div class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border border-amber-500/30 text-xs flex items-center justify-between gap-2 shadow-2xs animate-pulse">
+          <div class="flex items-center gap-1.5 truncate">
+            <span class="text-sm shrink-0">📢</span>
+            <span class="font-black text-amber-500 text-[11px] shrink-0">战报快讯:</span>
+            <span class="text-[11px] text-[var(--color-text-main)] truncate font-semibold">
+              {{ latestLiveCommentary() }}
+            </span>
+          </div>
+          <span class="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-400 font-mono shrink-0">REALTIME</span>
+        </div>
+      }
 
-        <!-- TAB 1: 正在交锋 (活跃房间 · 支持实时观战与迎战) -->
-        @if (feedTab() === 'live') {
-          @if (activeRooms().length === 0) {
+      <!-- Main Scrollable Content Area -->
+      <div class="flex flex-col gap-3 flex-grow overflow-y-auto max-h-[380px] sm:max-h-[420px] pr-1 scrollbar-thin">
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: 正在交锋 (Live Matches & Open Challenges) -->
+        <!-- ========================================== -->
+        @if (feedTab() === 'all' || feedTab() === 'live') {
+
+          <!-- 1A: 激烈交锋中 (2/2 人对战) -> 仅提供【实时观战】 -->
+          @if (playingRooms().length > 0) {
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between text-xs font-bold text-rose-500 px-0.5">
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                  <span>{{ i18n.t('lobby.live_matches_group')() || '🔥 激战直播' }} ({{ playingRooms().length }})</span>
+                </span>
+                <span class="text-[10px] font-normal text-[var(--color-text-muted)]">点击进入观战视角</span>
+              </div>
+
+              @for (room of playingRooms(); track room.id) {
+                <div class="rounded-xl border border-rose-500/30 bg-rose-500/5 hover:border-rose-500/60 p-2.5 flex flex-col gap-2 transition-all hover:shadow-2xs">
+                  <!-- Top Row: Game Info & Live Spectator Counter -->
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <div class="w-8 h-8 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base shrink-0">
+                        {{ getGameEmoji(room.game) }}
+                      </div>
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[120px]">
+                            {{ getGameTitle(room.game) }}
+                          </span>
+                          <span class="px-1.5 py-0.2 rounded text-[9px] font-bold" [ngClass]="getDifficultyBadgeClass(room.difficulty)">
+                            {{ getDifficultyLabel(room.game, room.difficulty) }}
+                          </span>
+                          @if (room.bountyCoins > 0) {
+                            <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                              🪙 {{ room.bountyCoins }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-500 border border-rose-500/20 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span>交锋中</span>
+                      </span>
+                      @if (room.spectators > 0) {
+                        <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
+                          👁️ {{ room.spectators }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Middle Row: Clash VS Bar + Dedicated Spectate Action -->
+                  <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                    <!-- Head to Head Matchup -->
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                      <span class="text-xs font-black text-[var(--color-text-main)] truncate max-w-[75px] sm:max-w-[95px]">
+                        👤 {{ room.host }}
+                      </span>
+                      <span class="text-rose-500 font-extrabold text-[11px] italic shrink-0">VS</span>
+                      <span class="text-xs font-black text-[var(--color-text-main)] truncate max-w-[75px] sm:max-w-[95px]">
+                        👤 {{ room.opponent || '挑战者' }}
+                      </span>
+                    </div>
+
+                    <!-- Action: 严格专属【实时观战】按钮 (无迎战按钮) -->
+                    <button (click)="spectateRoom(room)"
+                            class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0">
+                      <span>👁️</span>
+                      <span>{{ i18n.t('lobby.spectate_btn')() || '实时观战' }}</span>
+                    </button>
+                  </div>
+
+                  <!-- Real-time Commentary -->
+                  <div class="text-[10px] text-[var(--color-text-secondary)] flex items-center gap-1">
+                    <span>⚔️</span>
+                    <span class="truncate">【{{ room.host }}】与【{{ room.opponent || '对手' }}】绝杀对决中，胜负悬念拉满！</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- 1B: 开放擂台等候中 (1/2 人等候) -> 仅提供【立即迎战】 -->
+          @if (waitingRooms().length > 0) {
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between text-xs font-bold text-emerald-500 px-0.5">
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                  <span>{{ i18n.t('lobby.open_challenges_group')() || '⚔️ 擂台迎战' }} ({{ waitingRooms().length }})</span>
+                </span>
+                <span class="text-[10px] font-normal text-[var(--color-text-muted)]">点击立即应战</span>
+              </div>
+
+              @for (room of waitingRooms(); track room.id) {
+                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/60 p-2.5 flex flex-col gap-2 transition-all hover:shadow-2xs">
+                  <!-- Top Row: Game Info & Waiting Badge -->
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <div class="w-8 h-8 rounded-lg bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base shrink-0">
+                        {{ getGameEmoji(room.game) }}
+                      </div>
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[120px]">
+                            {{ getGameTitle(room.game) }}
+                          </span>
+                          <span class="px-1.5 py-0.2 rounded text-[9px] font-bold" [ngClass]="getDifficultyBadgeClass(room.difficulty)">
+                            {{ getDifficultyLabel(room.game, room.difficulty) }}
+                          </span>
+                          @if (room.bountyCoins > 0) {
+                            <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                              🪙 {{ room.bountyCoins }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 flex items-center gap-1 shrink-0">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                      <span>等候迎战 (1/2)</span>
+                    </span>
+                  </div>
+
+                  <!-- Middle Row: Host Challenge Callout + Dedicated Join Duel Action -->
+                  <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1 text-xs">
+                        <span class="font-black text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[120px]">
+                          👤 {{ room.host }}
+                        </span>
+                        <span class="text-[10px] text-amber-500 font-bold">已摆擂台</span>
+                      </div>
+                      <p class="text-[10px] text-[var(--color-text-muted)] truncate">速来挑战，角逐王者！</p>
+                    </div>
+
+                    <!-- Action: 严格专属【立即迎战】按钮 (无观战按钮) -->
+                    <button (click)="joinRoom(room)"
+                            class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0">
+                      <span>⚡</span>
+                      <span>{{ i18n.t('lobby.join_duel_btn')() || '立即迎战' }}</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Empty Live Rooms State -->
+          @if (activeRooms().length === 0 && feedTab() === 'live') {
             <div class="py-10 flex flex-col items-center justify-center text-center gap-2 text-[var(--color-text-muted)] my-auto">
               <span class="text-3xl opacity-40">🏟️</span>
               <span class="text-xs font-bold">{{ i18n.t('lobby.no_ongoing_rooms')() || '当前暂无对战中的房间' }}</span>
@@ -89,149 +266,122 @@ import { GameMode } from '../../../../core/models/game.model';
                 去多人竞技场开房 →
               </button>
             </div>
-          } @else {
-            @for (room of activeRooms().slice(0, 3); track room.id) {
-              <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/70 hover:border-amber-500/40 p-2.5 flex items-center justify-between gap-2.5 transition-all hover:shadow-2xs">
-                <!-- Left info -->
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="w-9 h-9 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center justify-center text-lg shrink-0">
-                    {{ getGameEmoji(room.game) }}
-                  </div>
-                  <div class="min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[85px] sm:max-w-[110px]">
-                        {{ getGameTitle(room.game) }}
-                      </span>
-                      <span class="px-1.5 py-0.2 rounded text-[9px] font-bold" [ngClass]="getDifficultyBadgeClass(room.difficulty)">
-                        {{ getDifficultyLabel(room.game, room.difficulty) }}
-                      </span>
-                    </div>
-                    <div class="flex items-center gap-1.5 text-[10px] text-[var(--color-text-muted)] font-mono mt-0.5">
-                      <span class="truncate max-w-[70px]">👤 {{ room.host }}</span>
-                      <span>·</span>
-                      @if (room.status === 'playing') {
-                        <span class="text-rose-500 font-bold flex items-center gap-0.5">
-                          <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                          <span>激烈对决中</span>
-                        </span>
-                      } @else {
-                        <span class="text-emerald-500 font-bold flex items-center gap-0.5">
-                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                          <span>等候挑战者</span>
-                        </span>
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Right Action Button: 观战 vs 迎战 -->
-                <div class="shrink-0">
-                  @if (room.status === 'playing') {
-                    <button (click)="spectateRoom(room)"
-                            class="px-2.5 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white border border-purple-500/20 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
-                      <span>👁️</span>
-                      <span>观战</span>
-                    </button>
-                  } @else {
-                    <button (click)="joinRoom(room)"
-                            class="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
-                      <span>⚔️</span>
-                      <span>迎战</span>
-                    </button>
-                  }
-                </div>
-              </div>
-            }
           }
         }
 
-        <!-- TAB 2: 完赛战报 (最近热血决战结果 · 严格限制 3 条) -->
-        @if (feedTab() === 'battles') {
-          @if (loading() && battles().length === 0) {
-            <div class="py-12 flex flex-col items-center justify-center gap-2 my-auto">
-              <div class="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-              <span class="text-xs text-[var(--color-text-muted)]">同步战报中...</span>
-            </div>
-          } @else if (battles().length === 0) {
-            <div class="py-10 flex flex-col items-center justify-center text-center gap-2 text-[var(--color-text-muted)] my-auto">
-              <span class="text-3xl opacity-40">⚔️</span>
-              <span class="text-xs font-bold">{{ i18n.t('lobby.no_recent_battles')() || '暂无最近战报，去开房打一把吧！' }}</span>
-            </div>
-          } @else {
-            @for (b of battles().slice(0, 3); track b.id) {
-              <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/70 hover:border-emerald-500/40 p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-2xs">
-                
-                <!-- Match Subheader: Game & Time -->
-                <div class="flex items-center justify-between text-xs">
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-sm">{{ getGameEmoji(b.game_id) }}</span>
-                    <span class="font-black text-[var(--color-text-main)]">{{ getGameTitle(b.game_id) }}</span>
-                    <span class="px-1.5 py-0.2 rounded text-[10px] font-bold" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
-                      {{ getDifficultyLabel(b.game_id, b.difficulty) }}
-                    </span>
-                    @if (b.bounty_coins > 0) {
-                      <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
-                        🪙 {{ b.bounty_coins }}
-                      </span>
-                    }
-                  </div>
-                  <span class="text-[10px] text-[var(--color-text-muted)] font-mono shrink-0">{{ formatTimeAgo(b.played_at) }}</span>
-                </div>
-
-                <!-- Head-to-Head Clash Bar with Win / Loss Visual Contrast -->
-                <div class="flex items-center justify-between gap-1.5 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
-                  
-                  <!-- Winner Side -->
-                  <div class="flex items-center gap-2 min-w-0 flex-1">
-                    <span class="text-base shrink-0">👑</span>
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-1">
-                        <span class="text-xs font-black text-amber-500 truncate max-w-[70px] sm:max-w-[90px]">
-                          {{ b.winner?.username || 'Winner' }}
-                        </span>
-                        <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-500 shrink-0">
-                          胜
-                        </span>
-                      </div>
-                      <span class="text-[11px] font-mono font-black text-emerald-500 block truncate">
-                        {{ formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true) }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Clash VS Indicator -->
-                  <div class="flex flex-col items-center shrink-0 px-1.5">
-                    <span class="text-[10px] font-black text-[var(--color-text-muted)] italic">VS</span>
-                    @if (b.margin > 0) {
-                      <span class="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded-sm whitespace-nowrap">
-                        +{{ b.margin }}{{ isTimeGame(b.game_id) ? 's' : '' }}
-                      </span>
-                    }
-                  </div>
-
-                  <!-- Loser Side -->
-                  <div class="flex items-center justify-end gap-2 min-w-0 flex-1 text-right">
-                    <div class="min-w-0">
-                      <div class="flex items-center justify-end gap-1">
-                        <span class="px-1 py-0.1 rounded text-[9px] font-semibold bg-zinc-500/15 text-[var(--color-text-muted)] shrink-0">
-                          负
-                        </span>
-                        <span class="text-xs font-medium text-[var(--color-text-secondary)] truncate max-w-[70px] sm:max-w-[90px]">
-                          {{ b.loser?.username || 'Opponent' }}
-                        </span>
-                      </div>
-                      <span class="text-[11px] font-mono text-[var(--color-text-muted)] block truncate">
-                        {{ formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
-                      </span>
-                    </div>
-                    <span class="text-sm shrink-0 opacity-40">🛡️</span>
-                  </div>
-
-                </div>
-
+        <!-- ========================================== -->
+        <!-- SECTION 2: 完赛战报 (Finished Battle Records) -->
+        <!-- ========================================== -->
+        @if (feedTab() === 'all' || feedTab() === 'battles') {
+          <div class="flex flex-col gap-2">
+            @if (feedTab() === 'all') {
+              <div class="flex items-center justify-between text-xs font-bold text-amber-500 px-0.5 pt-1 border-t border-[var(--color-border-card)]/50">
+                <span class="flex items-center gap-1">
+                  <span>🏆</span>
+                  <span>{{ i18n.t('lobby.finished_battles_tab')() || '完赛战报' }}</span>
+                </span>
+                <span class="text-[10px] font-normal text-[var(--color-text-muted)]">全网最新决战记录</span>
               </div>
             }
-          }
+
+            @if (loading() && battles().length === 0) {
+              <div class="py-8 flex flex-col items-center justify-center gap-2 my-auto">
+                <div class="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-xs text-[var(--color-text-muted)]">同步战报中...</span>
+              </div>
+            } @else if (battles().length === 0) {
+              <div class="py-8 flex flex-col items-center justify-center text-center gap-2 text-[var(--color-text-muted)] my-auto">
+                <span class="text-2xl opacity-40">⚔️</span>
+                <span class="text-xs font-bold">{{ i18n.t('lobby.no_recent_battles')() || '暂无最近战报，去开房打一把吧！' }}</span>
+              </div>
+            } @else {
+              @for (b of battles().slice(0, feedTab() === 'all' ? 3 : 6); track b.id) {
+                <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/70 hover:border-emerald-500/40 p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-2xs">
+                  
+                  <!-- Match Header: Game & Difficulty & Time -->
+                  <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="text-sm">{{ getGameEmoji(b.game_id) }}</span>
+                      <span class="font-black text-[var(--color-text-main)]">{{ getGameTitle(b.game_id) }}</span>
+                      <span class="px-1.5 py-0.2 rounded text-[10px] font-bold" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
+                        {{ getDifficultyLabel(b.game_id, b.difficulty) }}
+                      </span>
+                      @if (b.bounty_coins > 0) {
+                        <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                          🪙 {{ b.bounty_coins }}
+                        </span>
+                      }
+                    </div>
+                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono shrink-0">{{ formatTimeAgo(b.played_at) }}</span>
+                  </div>
+
+                  <!-- Head-to-Head Clash Bar with Win / Loss Visual Contrast -->
+                  <div class="flex items-center justify-between gap-1.5 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                    
+                    <!-- Winner Side -->
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                      <span class="text-base shrink-0">👑</span>
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1">
+                          <span class="text-xs font-black text-amber-500 truncate max-w-[70px] sm:max-w-[90px]">
+                            {{ b.winner?.username || 'Winner' }}
+                          </span>
+                          <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-500 shrink-0">
+                            胜
+                          </span>
+                        </div>
+                        <span class="text-[11px] font-mono font-black text-emerald-500 block truncate">
+                          {{ formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true) }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Clash VS Indicator -->
+                    <div class="flex flex-col items-center shrink-0 px-1.5">
+                      <span class="text-[10px] font-black text-[var(--color-text-muted)] italic">VS</span>
+                      @if (b.margin > 0) {
+                        <span class="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded-sm whitespace-nowrap">
+                          +{{ b.margin }}{{ isTimeGame(b.game_id) ? 's' : '' }}
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Loser Side -->
+                    <div class="flex items-center justify-end gap-2 min-w-0 flex-1 text-right">
+                      <div class="min-w-0">
+                        <div class="flex items-center justify-end gap-1">
+                          <span class="px-1 py-0.1 rounded text-[9px] font-semibold bg-zinc-500/15 text-[var(--color-text-muted)] shrink-0">
+                            负
+                          </span>
+                          <span class="text-xs font-medium text-[var(--color-text-secondary)] truncate max-w-[70px] sm:max-w-[90px]">
+                            {{ b.loser?.username || 'Opponent' }}
+                          </span>
+                        </div>
+                        <span class="text-[11px] font-mono text-[var(--color-text-muted)] block truncate">
+                          {{ formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
+                        </span>
+                      </div>
+                      <span class="text-sm shrink-0 opacity-40">🛡️</span>
+                    </div>
+
+                  </div>
+
+                  <!-- Real-time Narrative Commentary on Outcome -->
+                  <div class="mt-0.5 pt-1 border-t border-[var(--color-border-card)]/50 flex flex-col gap-0.5 text-[10px]">
+                    <div class="flex items-center gap-1 text-emerald-500 font-bold truncate">
+                      <span>🏆</span>
+                      <span class="truncate">{{ getBattleCommentary(b).headline }} {{ getBattleCommentary(b).bountyNote }}</span>
+                    </div>
+                    <div class="flex items-center gap-1 text-[var(--color-text-muted)] truncate">
+                      <span>💥</span>
+                      <span class="truncate">{{ getBattleCommentary(b).loseNote }}</span>
+                    </div>
+                  </div>
+
+                </div>
+              }
+            }
+          </div>
         }
 
       </div>
@@ -261,11 +411,13 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   private crossGameJoin = inject(CrossGameJoinService);
   private router = inject(Router);
 
-  feedTab = signal<'live' | 'battles'>('battles');
+  // Default to 'all' so users can see ongoing battles & finished outcomes without toggling
+  feedTab = signal<'all' | 'live' | 'battles'>('all');
   battles = signal<PKBattle[]>([]);
   loading = signal<boolean>(false);
   refreshing = signal<boolean>(false);
   readonly currentTime = signal<number>(Date.now());
+  readonly latestLiveCommentary = signal<string | null>(null);
 
   // Active multiplayer rooms from websocket lobby
   activeRooms = computed(() => {
@@ -273,15 +425,30 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
     return raw.filter((r: any) => r && r.mode !== GameMode.Single);
   });
 
+  // Rooms actively dueling with 2 players (Strictly Spectate only)
+  playingRooms = computed(() => {
+    return this.activeRooms().filter((r: any) => r && (r.status === 'playing' || r.players >= 2));
+  });
+
+  // Rooms waiting for challenger with 1 player (Strictly Join Duel only)
+  waitingRooms = computed(() => {
+    return this.activeRooms().filter((r: any) => r && r.status !== 'playing' && r.players < 2);
+  });
+
   private timer: any;
+
+  constructor() {
+    // Listen to real-time finished battle event pushed by backend via WebSocket
+    effect(() => {
+      const liveBattle = this.wsService.liveBattleFinishedEvent();
+      if (liveBattle) {
+        this.handleLiveBattleFinished(liveBattle);
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.fetchBattles();
-
-    // Auto-select 'live' tab if there are active ongoing rooms
-    if (this.activeRooms().length > 0) {
-      this.feedTab.set('live');
-    }
 
     // Auto-poll battles every 30 seconds
     this.timer = setInterval(() => {
@@ -299,7 +466,7 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   fetchBattles(showSpinner: boolean = true): void {
     this.currentTime.set(Date.now());
     if (showSpinner) this.loading.set(true);
-    this.statsService.getRecentPKBattles(6).subscribe({
+    this.statsService.getRecentPKBattles(10).subscribe({
       next: res => {
         this.battles.set(res || []);
         this.loading.set(false);
@@ -315,6 +482,58 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.refreshing.set(true);
     this.fetchBattles(false);
+  }
+
+  private handleLiveBattleFinished(battle: any): void {
+    const winner = battle.winner?.username || '胜者';
+    const loser = battle.loser?.username || '对手';
+    const gameTitle = this.getGameTitle(battle.game_id);
+    const isTime = this.isTimeGame(battle.game_id);
+    const scoreOrTime = isTime ? `${battle.winner_time}s` : `${battle.winner_score}分`;
+    const text = `🏆 玩家【${winner}】在《${gameTitle}》力克【${loser}】(${scoreOrTime})！`;
+    this.latestLiveCommentary.set(text);
+
+    // Prepend to battles list if not already present
+    this.battles.update(list => {
+      const exists = list.some(b => b.id === battle.id);
+      if (exists) return list;
+      return [battle, ...list].slice(0, 10);
+    });
+  }
+
+  getBattleCommentary(b: PKBattle): { headline: string; loseNote: string; bountyNote: string } {
+    const isTime = this.isTimeGame(b.game_id);
+    const winnerName = b.winner?.username || '胜者';
+    const loserName = b.loser?.username || '对手';
+    const unit = isTime ? 's' : '分';
+    const marginStr = b.margin > 0 ? `${b.margin}${unit}` : '';
+
+    let headline = '';
+    let loseNote = '';
+    const bountyNote = b.bounty_coins > 0 ? `· 斩获 🪙${b.bounty_coins} 悬赏` : '';
+
+    if (isTime) {
+      if (b.winner_time > 0 && b.margin > 0 && b.margin <= 3) {
+        headline = `【${winnerName}】以 ${b.winner_time}s 绝杀胜出！(领先 ${marginStr})`;
+        loseNote = `【${loserName}】微弱劣势惜败，相差仅 ${marginStr}`;
+      } else if (b.winner_time > 0) {
+        headline = `【${winnerName}】以 ${b.winner_time}s 强势登顶！${marginStr ? `(领先 ${marginStr})` : ''}`;
+        loseNote = `【${loserName}】遗憾战败，等待下轮复仇`;
+      } else {
+        headline = `【${winnerName}】率先极速通关获胜！`;
+        loseNote = `【${loserName}】未能在限时内完成`;
+      }
+    } else {
+      if (b.margin > 0 && b.margin <= 10) {
+        headline = `【${winnerName}】以 ${b.winner_score}分 险胜！(领先 +${marginStr})`;
+        loseNote = `【${loserName}】以 ${b.loser_score}分 惜败`;
+      } else {
+        headline = `【${winnerName}】以 ${b.winner_score}分 制霸战场！${marginStr ? `(领先 +${marginStr})` : ''}`;
+        loseNote = `【${loserName}】获得 ${b.loser_score}分 居次席`;
+      }
+    }
+
+    return { headline, loseNote, bountyNote };
   }
 
   spectateRoom(room: any): void {

@@ -275,12 +275,15 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 			"id":          r.ID,
 			"game":        r.Game,
 			"host":        r.Host,
+			"opponent":    r.Opponent,
 			"players":     r.PlayerCount,
+			"spectators":  r.SpectatorCount,
 			"mode":        r.Mode,
 			"difficulty":  r.Difficulty,
 			"status":      r.Status,
 			"createdAt":   r.CreatedAt,
 			"hasPassword": r.HasPassword,
+			"bountyCoins": r.BountyCoins,
 		})
 	}
 
@@ -429,7 +432,9 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 					"id":         r.ID,
 					"game":       r.Game,
 					"host":       r.Host,
+					"opponent":   r.Opponent,
 					"players":    r.PlayerCount,
+					"spectators": r.SpectatorCount,
 					"mode":       r.Mode,
 					"difficulty": r.Difficulty,
 					"status":     r.Status,

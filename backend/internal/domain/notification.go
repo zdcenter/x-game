@@ -35,3 +35,4 @@ type Notification struct {
 	User   *User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Sender *User `gorm:"foreignKey:SenderID" json:"sender,omitempty"`
 }
+

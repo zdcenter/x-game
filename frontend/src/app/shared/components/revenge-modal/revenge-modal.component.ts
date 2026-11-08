@@ -182,3 +182,4 @@ export class RevengeModalComponent {
     return diff > 0 ? `落后 ${diff}分` : `被刷新`;
   }
 }
+

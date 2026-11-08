@@ -91,3 +91,4 @@ func MarkAllNotificationsRead(c fiber.Ctx) error {
 		"success": true,
 	})
 }
+

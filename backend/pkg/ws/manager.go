@@ -68,6 +68,7 @@ type RoomSnapshot struct {
 	ID             string                `json:"id"`
 	Game           domain.GameId         `json:"game"`
 	Host           string                `json:"host"`
+	Opponent       string                `json:"opponent,omitempty"`
 	Mode           domain.GameMode       `json:"mode"`
 	Difficulty     domain.GameDifficulty `json:"difficulty"`
 	Status         domain.GameStatus     `json:"status"`
@@ -93,11 +94,15 @@ func GetActiveRooms() []RoomSnapshot {
 		r.mu.Lock()
 		playerCount := 0
 		spectatorCount := 0
-		for _, c := range r.Clients {
+		opponent := ""
+		for pid, c := range r.Clients {
 			if c.IsSpectator {
 				spectatorCount++
 			} else {
 				playerCount++
+				if pid != r.Host && opponent == "" {
+					opponent = pid
+				}
 			}
 		}
 		game := r.Game
@@ -129,6 +134,7 @@ func GetActiveRooms() []RoomSnapshot {
 			ID:             r.ID,
 			Game:           game,
 			Host:           host,
+			Opponent:       opponent,
 			Mode:           mode,
 			Difficulty:     diff,
 			Status:         status,

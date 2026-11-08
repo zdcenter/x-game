@@ -7,6 +7,7 @@ import (
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/pkg/db"
+	"github.com/x-game/backend/pkg/ws"
 )
 
 // MyPKStatsSummary provides an aggregated view of a member's PK career.
@@ -113,6 +114,36 @@ func TryRecordPKBattle(
 		log.Printf("[PKBattle] Failed to record match between %s and %s: %v", userA.Username, userB.Username, err)
 		return false
 	}
+
+	// Broadcast live battle outcome to lobby so spectators & players see real-time commentary
+	go func() {
+		ws.Lobby.BroadcastMessage(map[string]interface{}{
+			"type": "live_battle_finished",
+			"battle": map[string]interface{}{
+				"id":           battle.ID,
+				"room_id":      roomID,
+				"game_id":      gameID,
+				"mode":         mode,
+				"difficulty":   difficulty,
+				"winner": map[string]interface{}{
+					"id":       userA.ID,
+					"username": userA.Username,
+				},
+				"loser": map[string]interface{}{
+					"id":       userB.ID,
+					"username": userB.Username,
+				},
+				"winner_score": winnerScore,
+				"loser_score":  loserScore,
+				"winner_time":  winnerTime,
+				"loser_time":   loserTime,
+				"margin":       margin,
+				"bounty_coins": bounty,
+				"played_at":    battle.PlayedAt.Format(time.RFC3339),
+			},
+		})
+		ws.Lobby.BroadcastLobbyUpdate()
+	}()
 
 	log.Printf("[PKBattle] Successfully recorded battle: %s beat %s in %s (%s)", userA.Username, userB.Username, gameID, difficulty)
 	return true
