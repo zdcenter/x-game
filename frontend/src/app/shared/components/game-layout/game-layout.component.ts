@@ -473,37 +473,6 @@ import { JuiceService } from '../../../core/services/juice.service';
             @if (isAutoStartingVisible()) {
               <app-game-starting-overlay [countdown]="gameTimer.countdownDisplay()"></app-game-starting-overlay>
             }
-
-            <!-- Auto-managed Game Finished Result Overlay -->
-            @if (isAutoResultVisible()) {
-              <app-game-result-overlay
-                [currentGameId]="gameId"
-                [status]="resultStatus()"
-                [title]="resultTitle()"
-                [subtitle]="customResultSubtitle"
-                [stats]="overlayStats || []"
-                [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
-                [opponentInfo]="resultOpponent()"
-                [pkSeriesScore]="resultPkSeriesScore()"
-                [pkRoundFormat]="resultPkRoundFormat()"
-                [xpResult]="resultXpResult()"
-                [isNewRecord]="resultIsNewRecord()"
-                [showLeave]="true"
-                [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
-                [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
-                [showRevive]="effectiveShowRevive()"
-                [showNextLevel]="showNextLevel"
-                (rematch)="onResultRematch()"
-                (leave)="back.emit()"
-                (restart)="onResultRestart()"
-                (dismiss)="onResultDismiss()"
-                (revive)="onResultRevive()"
-                (nextLevel)="nextLevel.emit()"
-                [enableChangeRoomGame]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
-                [isHost]="effectiveIsHost()"
-                (changeRoomGame)="onResultChangeRoomGame($event)"
-              ></app-game-result-overlay>
-            }
           </div>
         }
 
@@ -725,6 +694,37 @@ import { JuiceService } from '../../../core/services/juice.service';
       <span class="sr-only">{{ i18n.t('feedback.tooltip')() || '意见反馈' }}</span>
     </button>
   </aside>
+
+  <!-- Auto-managed Game Finished Result Overlay (True Viewport Fullscreen Grand Hall) -->
+  @if (isAutoResultVisible()) {
+    <app-game-result-overlay
+      [currentGameId]="gameId"
+      [status]="resultStatus()"
+      [title]="resultTitle()"
+      [subtitle]="customResultSubtitle"
+      [stats]="overlayStats || []"
+      [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
+      [opponentInfo]="resultOpponent()"
+      [pkSeriesScore]="resultPkSeriesScore()"
+      [pkRoundFormat]="resultPkRoundFormat()"
+      [xpResult]="resultXpResult()"
+      [isNewRecord]="resultIsNewRecord()"
+      [showLeave]="true"
+      [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
+      [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+      [showRevive]="effectiveShowRevive()"
+      [showNextLevel]="showNextLevel"
+      (rematch)="onResultRematch()"
+      (leave)="back.emit()"
+      (restart)="onResultRestart()"
+      (dismiss)="onResultDismiss()"
+      (revive)="onResultRevive()"
+      (nextLevel)="nextLevel.emit()"
+      [enableChangeRoomGame]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+      [isHost]="effectiveIsHost()"
+      (changeRoomGame)="onResultChangeRoomGame($event)"
+    ></app-game-result-overlay>
+  }
 
   <!-- Player Feedback Modal Dialog -->
   <app-feedback-modal></app-feedback-modal>

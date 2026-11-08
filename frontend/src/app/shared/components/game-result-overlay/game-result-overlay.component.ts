@@ -149,6 +149,26 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   isTemporarilyDismissed = signal(false);
 
+  readonly currentGameConfig = computed(() => {
+    return this.currentGameId ? this.gameRegistry.getConfig(this.currentGameId) : null;
+  });
+
+  readonly currentGameTitle = computed(() => {
+    const cfg = this.currentGameConfig();
+    if (!cfg) return '';
+    return cfg.titleKey ? (this.i18n.t(cfg.titleKey)() || cfg.id) : cfg.id;
+  });
+
+  readonly currentGameIcon = computed(() => {
+    return this.currentGameConfig()?.iconEmoji || '🎮';
+  });
+
+  peekBoard() {
+    this.haptic.vibrateLight();
+    this.audio.playClick();
+    this.isTemporarilyDismissed.set(true);
+  }
+
   spectateOpponent() {
     this.isTemporarilyDismissed.set(true);
   }
