@@ -19,7 +19,6 @@ import { FriendService } from '../../../core/services/friend.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
-import { LiveActivityTickerComponent } from '../live-activity-ticker/live-activity-ticker.component';
 import { LiveActivityService } from '../../../core/services/live-activity.service';
 import confetti from 'canvas-confetti';
 
@@ -46,7 +45,7 @@ export interface PkJoinRoomEvent {
 @Component({
   selector: 'app-game-pk-lobby',
   standalone: true,
-  imports: [CommonModule, GameHeaderComponent, CoinIconComponent, LiveActivityTickerComponent],
+  imports: [CommonModule, GameHeaderComponent, CoinIconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-pk-lobby.component.html',
   host: { class: 'flex flex-col flex-1 min-h-0 w-full' },

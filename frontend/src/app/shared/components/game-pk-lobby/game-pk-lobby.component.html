@@ -33,18 +33,15 @@
     </app-game-header>
   </div>
 
-  <!-- ══════ Live Single-Player & Arena Activity Ticker ══════ -->
-  <app-live-activity-ticker class="shrink-0"></app-live-activity-ticker>
-
   <!-- ══════ Main Body (Universal Full-Width Esports Arena Grid) ══════ -->
   <div class="flex-grow flex flex-col min-h-0 overflow-hidden relative">
 
     <!-- ── Hero Action Bar (Action Hub: Filter, Match, Create) ── -->
     <div class="shrink-0 px-3 sm:px-6 py-2.5 sm:py-3 border-b border-[var(--color-border-card)] bg-[var(--color-bg-card)] flex flex-wrap items-center justify-between gap-3 shadow-xs z-10">
       
-      <!-- Left: Tabs & Quick Filter Chips -->
+      <!-- Left: Tabs & Quick Filter Chips (Clean 2-Tab Data View Switcher) -->
       <div class="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
-        <!-- Tab Pill Switcher -->
+        <!-- Tab Pill Switcher (Data Views: 对战大厅 / 在线玩家) -->
         <div class="inline-flex p-1 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-inner">
           <button (click)="rightTab.set('rooms')"
                   class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
@@ -60,18 +57,6 @@
             <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono ml-0.5"
                   [class.bg-white/20]="rightTab() === 'rooms'"
                   [class.bg-black/10]="rightTab() !== 'rooms'">{{ allRooms().length }}</span>
-          </button>
-          <button (click)="openCreateModal()"
-                  class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                  [class.bg-gradient-to-r]="rightTab() === 'create'"
-                  [class.from-rose-500]="rightTab() === 'create'"
-                  [class.to-violet-600]="rightTab() === 'create'"
-                  [class.text-white]="rightTab() === 'create'"
-                  [class.shadow-md]="rightTab() === 'create'"
-                  [class.text-[var(--color-text-muted)]]="rightTab() !== 'create'"
-                  [class.hover:text-[var(--color-text-main)]]="rightTab() !== 'create'">
-            <span>➕</span>
-            <span>{{ t('game.create_room') || '创建房间' }}</span>
           </button>
           <button (click)="rightTab.set('online')"
                   class="px-3.5 sm:px-4 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer"
@@ -515,49 +500,75 @@
 
         <!-- Other Active Rooms Section (Widescreen Multi-Column Grid) -->
         <div>
-          <div class="flex items-center justify-between mb-3 px-1">
-            <h3 class="text-xs font-black text-[var(--color-text-muted)] uppercase tracking-widest flex items-center gap-1.5">
-              <span>⚔️</span>
-              <span>{{ t('game.active_rooms') }}</span>
-              @if (roomGameFilter()) {
-                <span class="ml-1 normal-case font-normal opacity-70">— {{ gameLabel(roomGameFilter()) }}</span>
-              }
-            </h3>
-            <span class="text-[11px] font-mono text-[var(--color-text-muted)]">
-              共 {{ otherRooms().length }} 间对局房
-            </span>
-          </div>
-
           @if (otherRooms().length > 0) {
+            <div class="flex items-center justify-between mb-3 px-1">
+              <h3 class="text-xs font-black text-[var(--color-text-muted)] uppercase tracking-widest flex items-center gap-1.5">
+                <span>⚔️</span>
+                <span>{{ t('game.active_rooms') }}</span>
+                @if (roomGameFilter()) {
+                  <span class="ml-1 normal-case font-bold text-violet-500">— {{ gameLabel(roomGameFilter()) }}</span>
+                  <button (click)="roomGameFilter.set('')" class="ml-1 text-[10px] text-zinc-400 hover:text-zinc-600 underline cursor-pointer">清除</button>
+                }
+              </h3>
+              <span class="text-[11px] font-mono text-[var(--color-text-muted)]">
+                共 {{ otherRooms().length }} 间对局房
+              </span>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
               @for (room of otherRooms(); track room.id) {
                 <ng-container *ngTemplateOutlet="roomCard; context: { room: room, isMine: false }"></ng-container>
               }
             </div>
           } @else {
-            <!-- Beautiful Empty State Card with Direct Action Buttons -->
-            <div class="text-center py-16 sm:py-20 border border-dashed border-[var(--color-border-card)] rounded-3xl bg-[var(--color-bg-card)]/40 p-6 flex flex-col items-center max-w-xl mx-auto shadow-sm">
-              <div class="w-16 h-16 rounded-3xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-3xl mb-4 shadow-inner">
-                🎮
+            <!-- Esports-Grade Clean Empty State Hub -->
+            <div class="text-center py-10 sm:py-16 rounded-3xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] p-6 sm:p-8 flex flex-col items-center max-w-2xl mx-auto shadow-sm animate-fade-in relative overflow-hidden my-4 sm:my-8">
+              <!-- Watermark -->
+              <div class="absolute -right-6 -bottom-6 text-9xl opacity-5 pointer-events-none select-none">
+                ⚔️
               </div>
-              <h3 class="text-base sm:text-lg font-black text-[var(--color-text-main)] mb-1">
-                {{ roomGameFilter() ? ('暂无【' + gameLabel(roomGameFilter()) + '】房间') : t('game.no_rooms') }}
+
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 via-pink-500/15 to-amber-500/20 border border-violet-500/30 flex items-center justify-center text-3xl mb-4 shadow-inner">
+                ⚔️
+              </div>
+
+              <h3 class="text-base sm:text-lg font-black text-[var(--color-text-main)] mb-1.5">
+                {{ roomGameFilter() ? ('暂无【' + gameLabel(roomGameFilter()) + '】等待中的房间') : (t('game.no_rooms') || '当前暂无等待中的对局') }}
               </h3>
-              <p class="text-xs text-[var(--color-text-muted)] max-w-xs leading-relaxed mb-6">
-                {{ t('game.create_one') || '创建一个专属房间发起挑战，或者点击快速匹配！' }}
+              <p class="text-xs sm:text-sm text-[var(--color-text-muted)] max-w-md leading-relaxed mb-6">
+                {{ t('game.create_one') || '可以点击快速匹配随机应战，或选择下方热门游戏一键秒建房间等待全网迎战！' }}
               </p>
-              <div class="flex items-center gap-3">
-                <button (click)="openCreateModal(roomGameFilter())"
-                        class="px-6 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-rose-500/25 active:scale-95 hover:brightness-110 transition-all flex items-center gap-2 cursor-pointer">
-                  <span class="text-base leading-none">➕</span>
-                  <span>{{ t('game.create_room') || '创建房间' }}</span>
-                </button>
+
+              <!-- Primary CTAs -->
+              <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
                 <button (click)="onQuickMatch()"
-                        class="px-5 py-3 bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)] font-bold text-xs sm:text-sm rounded-2xl shadow-xs active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                        class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-violet-500/50 text-[var(--color-text-main)] shadow-xs hover:shadow active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
                   <span class="text-amber-400">⚡</span>
-                  <span>{{ t('game.quick_match') }}</span>
+                  <span>{{ t('game.quick_match') || '一键随机匹配' }}</span>
+                </button>
+                <button (click)="openCreateModal(roomGameFilter())"
+                        class="px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-rose-500 via-pink-500 to-violet-600 hover:brightness-110 text-white shadow-md shadow-rose-500/25 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                  <span>➕</span>
+                  <span>{{ t('game.create_room') || '创建对战房间' }}</span>
                 </button>
               </div>
+
+              <!-- Quick 1-Click Game Launch Pills -->
+              <div class="w-full pt-5 border-t border-[var(--color-border-card)]/60 flex flex-col items-center gap-2.5">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                  ⚡ 选择热门游戏一键开房
+                </span>
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                  @for (hotId of ['minesweeper', 'nonogram', 'sudoku', 'tetris', 'sokoban', 'math24']; track hotId) {
+                    <button (click)="openCreateModal(hotId)"
+                            class="px-3 py-1.5 rounded-xl text-xs font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-violet-500 hover:text-[var(--color-accent-from)] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs">
+                      <img [src]="'/assets/games/icons/' + hotId + '.svg?v=2'" class="w-4 h-4 object-contain" alt="">
+                      <span>{{ gameLabel(hotId) }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
             </div>
           }
         </div>

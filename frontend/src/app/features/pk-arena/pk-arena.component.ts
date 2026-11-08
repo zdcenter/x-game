@@ -10,19 +10,17 @@ import { GamePkLobbyComponent, PkCreateRoomEvent, PkJoinRoomEvent } from '../../
   standalone: true,
   imports: [GamePkLobbyComponent],
   template: `
-    <div class="flex-grow flex flex-col h-full min-h-0 p-0 sm:py-2 sm:px-4 lg:py-3 lg:px-8 bg-[var(--color-bg-base)] overflow-hidden">
+    <div class="flex-grow flex flex-col h-full min-h-0 p-0 sm:p-3 lg:p-4 bg-[var(--color-bg-main)] overflow-hidden">
       <div class="w-full max-w-[1600px] mx-auto flex-grow flex flex-col min-h-0 overflow-hidden">
-        <div class="flex-grow flex flex-col min-h-0 overflow-hidden rounded-none sm:rounded-2xl lg:rounded-3xl border-0 sm:border shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-colors duration-300"
-             style="background-color: var(--color-bg-card); border-color: var(--color-border-card)">
-          <app-game-pk-lobby
-            [gameId]="initialGameId()"
-            [isArena]="true"
-            currentRoomId=""
-            (createRoom)="handleCreate($event)"
-            (joinRoom)="handleJoin($event)"
-            (back)="goBack()">
-          </app-game-pk-lobby>
-        </div>
+        <app-game-pk-lobby
+          class="flex-grow flex flex-col min-h-0 overflow-hidden shadow-xs"
+          [gameId]="initialGameId()"
+          [isArena]="true"
+          currentRoomId=""
+          (createRoom)="handleCreate($event)"
+          (joinRoom)="handleJoin($event)"
+          (back)="goBack()">
+        </app-game-pk-lobby>
       </div>
     </div>
   `
