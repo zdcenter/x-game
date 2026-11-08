@@ -205,7 +205,10 @@ export class SeoService {
           // Remove stale FAQ schema if navigating away
           this.removeJsonLd('seo-jsonld-faq');
         }
+        this.removeJsonLd('seo-jsonld-games-itemlist');
       } else if (docsMatch && gameId) {
+        this.removeJsonLd('seo-jsonld-faq');
+        this.removeJsonLd('seo-jsonld-games-itemlist');
         // Add HowTo schema for docs
         
         // Import ALL_DEMO_CONFIGS dynamically or statically?
@@ -239,6 +242,7 @@ export class SeoService {
           ]
         });
       } else {
+        this.removeJsonLd('seo-jsonld-faq');
         this.setJsonLd({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
@@ -248,10 +252,34 @@ export class SeoService {
           'inLanguage': SUPPORTED_LANGS.map(l => l.code),
           'potentialAction': {
             '@type': 'SearchAction',
-            'target': `${origin}/lobby`,
+            'target': `${origin}/${lang}/games/{search_term_string}`,
             'query-input': 'required name=search_term_string'
           }
         });
+
+        if (cleanRoute === '') {
+          // Homepage: Structured ItemList of featured games to earn rich snippet carousels in Google
+          const featuredGameIds = ['nonogram', 'minesweeper', 'sudoku', 'sliding', 'sokoban', 'lightsout', 'math24', 'connect'];
+          this.setJsonLd({
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            'name': lang === 'zh' ? 'Puzzle PK 精选益智与对战游戏' : 'Puzzle PK Featured Logic & Battle Games',
+            'description': desc,
+            'numberOfItems': featuredGameIds.length,
+            'itemListElement': featuredGameIds.map((gid, idx) => {
+              const cfg = this.gameRegistry.getConfig(gid);
+              const gName = cfg?.titleKey ? (this.i18n.t(cfg.titleKey)() || gid) : gid;
+              return {
+                '@type': 'ListItem',
+                'position': idx + 1,
+                'name': gName,
+                'url': `${origin}/${lang}/games/${gid}`
+              };
+            })
+          }, 'seo-jsonld-games-itemlist');
+        } else {
+          this.removeJsonLd('seo-jsonld-games-itemlist');
+        }
       }
 
       // ===== BreadcrumbList (Home > Section > Page) =====

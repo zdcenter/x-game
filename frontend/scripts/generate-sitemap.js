@@ -31,6 +31,7 @@ const blogPosts = fs.existsSync(blogIndexPath)
 // Route config: [path, changefreq, priority, lastmod]
 const staticPaths = [
   ['',             'daily',  '1.0', today],
+  ['pk-arena',     'daily',  '0.8', today],
   ['leaderboard',  'hourly', '0.9', today],
   ['daily',        'daily',  '0.9', today],
   ['blog',         'weekly', '0.8', today],
