@@ -6,6 +6,7 @@ import { GameStatsService, GameDifficultyRecord } from '../../../../core/service
 import { GameRegistryService } from '../../../../core/services/game-registry.service';
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { LevelBadgeComponent } from '../../../../shared/components/level-badge/level-badge.component';
+import { GAME_DEFINITIONS } from '../../../../core/config/game-definitions';
 
 export interface FeaturedGameTab {
   id: string;
@@ -43,8 +44,9 @@ export interface FeaturedGameTab {
         </a>
       </div>
 
-      <!-- Game Selector Pills (Horizontal Scrollbar) -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+      <!-- Game Selector Pills (Horizontal Scrollbar with mouse wheel support) -->
+      <div (wheel)="onWheelScroll($event)"
+           class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
         @for (g of featuredGames; track g.id) {
           <button (click)="selectGame(g.id)"
                   class="px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 border"
@@ -199,16 +201,29 @@ export class HallOfFameComponent implements OnInit {
   loading = signal<boolean>(false);
   readonly currentTime = signal<number>(Date.now());
 
-  readonly featuredGames: FeaturedGameTab[] = [
-    { id: 'nonogram',    nameKey: 'lobby.nonogram',    emoji: '🎨', route: '/games/nonogram' },
-    { id: 'minesweeper', nameKey: 'lobby.minesweeper', emoji: '💣', route: '/games/minesweeper' },
-    { id: 'sudoku',      nameKey: 'lobby.sudoku',      emoji: '🔢', route: '/games/sudoku' },
-    { id: 'sliding',     nameKey: 'lobby.sliding',     emoji: '🧩', route: '/games/sliding' },
-    { id: 'sokoban',     nameKey: 'lobby.sokoban',     emoji: '📦', route: '/games/sokoban' },
-    { id: 'math24',      nameKey: 'lobby.math24',      emoji: '➕', route: '/games/math24' },
-    { id: 'lightsout',   nameKey: 'lobby.lightsout',   emoji: '💡', route: '/games/lightsout' },
-    { id: 'tetris',      nameKey: 'lobby.tetris',      emoji: '🧱', route: '/games/tetris' },
-  ];
+  readonly featuredGames: FeaturedGameTab[] = GAME_DEFINITIONS.map(g => {
+    const emojis: Record<string, string> = {
+      minesweeper: '💣', sudoku: '🔢', sliding: '🧩', hexa: '🔷',
+      tetris: '🧱', gomoku: '⚪', codebreaker: '🔐', math24: '➕',
+      drop2048: '🎲', block: '🟩', lightsout: '💡', watersort: '🧪',
+      sokoban: '📦', nonogram: '🎨', idiom: '📚', classic2048: '2️⃣',
+      connect: '🌈', hashi: '🌉', tilematch: '🐑', tents: '⛺',
+    };
+    return {
+      id: g.id,
+      nameKey: g.titleKey,
+      emoji: emojis[g.id] || g.iconEmoji || '🎮',
+      route: g.route
+    };
+  });
+
+  onWheelScroll(event: WheelEvent): void {
+    const el = event.currentTarget as HTMLElement;
+    if (el && event.deltaY !== 0) {
+      el.scrollLeft += event.deltaY;
+      event.preventDefault();
+    }
+  }
 
   ngOnInit(): void {
     this.fetchRecords(this.selectedGameId());
@@ -242,15 +257,16 @@ export class HallOfFameComponent implements OnInit {
         return match.labelKey ? (this.i18n.t(match.labelKey)() || match.id) : match.id;
       }
     }
+    const isZh = this.i18n.currentLang() === 'zh';
     const dict: Record<string, string> = {
-      easy: '简单',
-      medium: '中等',
-      hard: '困难',
-      expert: '专家',
-      master: '大师',
-      '3x3': '3×3 阶',
-      '4x4': '4×4 阶',
-      '5x5': '5×5 阶'
+      easy: isZh ? '简单' : 'Easy',
+      medium: isZh ? '中等' : 'Medium',
+      hard: isZh ? '困难' : 'Hard',
+      expert: isZh ? '专家' : 'Expert',
+      master: isZh ? '大师' : 'Master',
+      '3x3': isZh ? '3×3 阶' : '3×3',
+      '4x4': isZh ? '4×4 阶' : '4×4',
+      '5x5': isZh ? '5×5 阶' : '5×5'
     };
     return dict[diffId] || diffId;
   }
