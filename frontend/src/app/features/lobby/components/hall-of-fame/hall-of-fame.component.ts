@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { GameStatsService, GameDifficultyRecord } from '../../../../core/services/game-stats.service';
 import { GameRegistryService } from '../../../../core/services/game-registry.service';
+import { WebSocketService } from '../../../../core/services/websocket.service';
 import { LevelBadgeComponent } from '../../../../shared/components/level-badge/level-badge.component';
 
 export interface FeaturedGameTab {
@@ -165,7 +166,17 @@ export class HallOfFameComponent implements OnInit {
   i18n = inject(I18nService);
   private statsService = inject(GameStatsService);
   private gameRegistry = inject(GameRegistryService);
+  private wsService = inject(WebSocketService);
   private router = inject(Router);
+
+  constructor() {
+    effect(() => {
+      const evt = this.wsService.globalRecordBrokenEvent();
+      if (evt && evt.game_id === this.selectedGameId()) {
+        this.fetchRecords(this.selectedGameId());
+      }
+    });
+  }
 
   selectedGameId = signal<string>('nonogram');
   records = signal<GameDifficultyRecord[]>([]);

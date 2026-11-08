@@ -438,19 +438,23 @@ var defaultGameDifficulties = map[string][]string{
 	"nonogram":    {"easy", "medium", "hard", "expert", "master"},
 	"minesweeper": {"easy", "medium", "hard", "expert", "master"},
 	"sudoku":      {"easy", "medium", "hard", "expert"},
-	"sliding":     {"easy", "medium", "hard", "expert"},
+	"sliding":     {"easy", "medium", "hard"},
 	"sokoban":     {"easy", "medium", "hard", "expert"},
 	"math24":      {"easy", "medium", "hard", "expert"},
-	"lightsout":   {"easy", "medium", "hard", "expert"},
-	"tetris":      {"easy", "medium", "hard", "expert"},
-	"watersort":   {"easy", "medium", "hard", "expert"},
+	"lightsout":   {"easy", "medium", "hard", "expert", "master"},
+	"tetris":      {"easy", "medium", "hard"},
+	"watersort":   {"easy", "medium", "hard"},
 	"codebreaker": {"easy", "medium", "hard"},
 	"drop2048":    {"easy", "medium", "hard"},
 	"classic2048": {"easy", "medium", "hard"},
 	"block":       {"easy", "medium", "hard"},
 	"hexa":        {"easy", "medium", "hard"},
-	"connect":     {"easy", "medium", "hard"},
-	"hashi":       {"easy", "medium", "hard"},
+	"connect":     {"easy", "medium", "hard", "expert"},
+	"hashi":       {"easy", "medium", "hard", "expert"},
+	"gomoku":      {"easy", "medium", "hard"},
+	"tilematch":   {"easy", "medium", "hard"},
+	"tents":       {"easy", "medium", "hard"},
+	"idiom":       {"easy", "medium", "hard"},
 }
 
 // GetGameDifficultyRecords returns the all-time #1 best record across all difficulty tiers of a specific game.
@@ -464,7 +468,7 @@ func GetGameDifficultyRecords(c fiber.Ctx) error {
 		"minesweeper": true, "sudoku": true, "sliding": true,
 		"codebreaker": true, "math24": true, "watersort": true,
 		"sokoban": true, "lightsout": true, "nonogram": true,
-		"connect": true, "hashi": true, "idiom": true,
+		"connect": true, "hashi": true, "idiom": true, "tents": true,
 	}
 
 	rankType := "score"

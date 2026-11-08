@@ -116,9 +116,17 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
   effect(() => {
     const dismissed = wsService.roomDismissedEvent();
     if (dismissed > 0 && untracked(() => config.getCurrentMode()) !== GameMode.Single) {
-      toastService.show(i18n.t('game.room_dismissed_msg')() || 'The host has dismissed the room.', 'info');
+      const isSpec = wsService.isCurrentSpectator();
+      toastService.show(
+        isSpec ? (i18n.t('game.spectate_room_closed')() || '观战对决已完赛或房间已关闭') : (i18n.t('game.room_dismissed_msg')() || '房主已解散房间'),
+        'info'
+      );
       clearReconnectInfo();
       config.onLeaveRoom();
+      if (isSpec) {
+        const lang = i18n.currentLang() || 'zh';
+        router.navigate([`/${lang}/pk-arena`]);
+      }
     }
   });
 
@@ -134,8 +142,17 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
   effect(() => {
     const rejected = wsService.connectionRejectedEvent();
     if (rejected > 0 && untracked(() => config.getCurrentMode()) !== GameMode.Single) {
+      const isSpec = wsService.isCurrentSpectator();
+      toastService.show(
+        isSpec ? (i18n.t('game.spectate_room_closed')() || '观战对决已完赛或房间已关闭') : (i18n.t('game.room_not_available')() || '房间已失效或无法加入'),
+        'info'
+      );
       clearReconnectInfo();
       config.onLeaveRoom();
+      if (isSpec) {
+        const lang = i18n.currentLang() || 'zh';
+        router.navigate([`/${lang}/pk-arena`]);
+      }
     }
   });
 

@@ -104,6 +104,9 @@ export class WebSocketService {
   readonly friendStatusEvent = signal<any>(null);
   readonly friendInviteEvent = signal<any>(null);
 
+  // Global milestone hall of fame event
+  readonly globalRecordBrokenEvent = signal<any>(null);
+
   // Triggered when an emoji is received
   readonly emojiReceivedEvent = signal<{senderId: string, emoji: string} | null>(null);
   
@@ -446,6 +449,25 @@ export class WebSocketService {
         if (msg.targetId === playerId || msg.targetId === username) {
           this.cheerReceivedEvent.set({ senderName: msg.senderName, gameId: msg.gameId });
         }
+      } else if (msg.type === 'global_record_broken') {
+        this.globalRecordBrokenEvent.set(msg);
+        const gameConfig = this.gameRegistry.getConfig(msg.game_id);
+        const gameTitle = gameConfig?.titleKey ? (this.i18n.t(gameConfig.titleKey)() || msg.game_id) : msg.game_id;
+        const diffConfig = gameConfig?.difficulties?.find(d => d.id === msg.difficulty);
+        const diffLabel = diffConfig?.labelKey ? (this.i18n.t(diffConfig.labelKey)() || msg.difficulty) : msg.difficulty;
+        const scoreOrTime = msg.rank_type === 'time' ? `${msg.best_time}s` : `${msg.best_score}分`;
+        
+        this.toastService.show(
+          `👑 纪录刷新！会员【${msg.username}】登顶《${gameTitle} · ${diffLabel}》殿堂！(${scoreOrTime})`,
+          'success'
+        );
+        this.broadcastMessages.update(msgs => [
+          {
+            type: 'broadcast',
+            message: `👑 恭喜 【${msg.username}】 荣登 《${gameTitle} · ${diffLabel}》 极限纪录殿堂榜首 (成绩: ${scoreOrTime})！随时发起破纪录挑战！`
+          },
+          ...msgs
+        ].slice(0, 3));
       } else if (msg.type === 'broadcast') {
         this.broadcastMessages.update(msgs => {
           const newMsgs = [msg, ...msgs];

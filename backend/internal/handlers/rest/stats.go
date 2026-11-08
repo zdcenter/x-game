@@ -5,6 +5,7 @@ import (
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/service"
 	"github.com/x-game/backend/pkg/db"
+	"github.com/x-game/backend/pkg/ws"
 	"gorm.io/gorm"
 )
 
@@ -185,10 +186,69 @@ func SubmitStat(c fiber.Ctx) error {
 		service.ProgressDailyQuest(userID, "win_game", 1)
 	}
 
+	// Check if this performance broke the All-Time Global Record (Hall of Fame)
+	isGlobalRecord := false
+	if isNewRecord && req.Difficulty != "" {
+		var user domain.User
+		if err := db.DB.Select("id, username, avatar, level, role").Where("id = ?", userID).First(&user).Error; err == nil && user.Role != "guest" {
+			timeGames := map[string]bool{
+				"minesweeper": true, "sudoku": true, "sliding": true,
+				"codebreaker": true, "math24": true, "watersort": true,
+				"sokoban": true, "lightsout": true, "nonogram": true,
+				"connect": true, "hashi": true, "idiom": true, "tents": true,
+			}
+			isTimeGame := timeGames[gameID]
+
+			if isTimeGame && req.Time > 0 && req.Won {
+				var prevBestTime int
+				db.DB.Table("gm_user_game_stats AS s").
+					Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
+					Where("s.game_id = ? AND s.difficulty = ? AND s.best_time > 0 AND s.user_id != ?", gameID, req.Difficulty, userID).
+					Select("COALESCE(MIN(s.best_time), 0)").
+					Scan(&prevBestTime)
+
+				if prevBestTime == 0 || req.Time < prevBestTime {
+					isGlobalRecord = true
+				}
+			} else if !isTimeGame && req.Score > 0 {
+				var prevBestScore int
+				db.DB.Table("gm_user_game_stats AS s").
+					Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
+					Where("s.game_id = ? AND s.difficulty = ? AND s.best_score > 0 AND s.user_id != ?", gameID, req.Difficulty, userID).
+					Select("COALESCE(MAX(s.best_score), 0)").
+					Scan(&prevBestScore)
+
+				if prevBestScore == 0 || req.Score > prevBestScore {
+					isGlobalRecord = true
+				}
+			}
+
+			if isGlobalRecord {
+				rankType := "score"
+				if isTimeGame {
+					rankType = "time"
+				}
+				go ws.Lobby.BroadcastMessage(map[string]interface{}{
+					"type":       "global_record_broken",
+					"game_id":    gameID,
+					"difficulty": req.Difficulty,
+					"user_id":    userID,
+					"username":   user.Username,
+					"avatar":     user.Avatar,
+					"level":      user.Level,
+					"best_time":  req.Time,
+					"best_score": req.Score,
+					"rank_type":  rankType,
+				})
+			}
+		}
+	}
+
 	return c.JSON(fiber.Map{
 		"message":          "Stat submitted successfully",
 		"stat":             stat,
 		"isNewRecord":      isNewRecord,
+		"is_global_record": isGlobalRecord,
 		"xp_result":        xpResult,
 		"coins_earned":     coinsEarned,
 		"bounty_prize":     bountyPrize,
