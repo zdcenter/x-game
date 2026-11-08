@@ -11,12 +11,23 @@ import { I18nService } from '../../../core/i18n/i18n.service';
     <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3 w-full max-w-full">
       
       <!-- 1. 当前局得分 (Current Score) - 手机端靠左第一行 -->
-      <div class="order-1 flex items-center gap-1.5 sm:gap-2.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-xl sm:rounded-2xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 shadow-[inset_0_1px_2px_rgba(245,158,11,0.15)] transition-all min-w-0 shrink-0">
-        <span class="text-base sm:text-2xl drop-shadow-sm select-none shrink-0">{{ scoreIcon }}</span>
+      <div class="order-1 flex items-center gap-1.5 sm:gap-2.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border rounded-xl sm:rounded-2xl px-2.5 sm:px-3.5 py-1 sm:py-1.5 transition-all min-w-0 shrink-0"
+           [ngClass]="isPersonalBestBeaten
+             ? 'border-amber-400 ring-2 ring-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.35)] animate-pulse'
+             : 'border-amber-500/30 shadow-[inset_0_1px_2px_rgba(245,158,11,0.15)]'">
+        <span class="text-base sm:text-2xl drop-shadow-sm select-none shrink-0"
+              [class.animate-bounce]="isPersonalBestBeaten">{{ isPersonalBestBeaten ? '🔥' : scoreIcon }}</span>
         <div class="flex flex-col min-w-0">
-          <span class="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-none truncate">
-            {{ scoreLabel || t('game.score')() }}
-          </span>
+          <div class="flex items-center gap-1">
+            <span class="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 leading-none truncate">
+              {{ scoreLabel || t('game.score')() }}
+            </span>
+            @if (isPersonalBestBeaten) {
+              <span class="text-[8px] font-black uppercase px-1 py-0.2 rounded bg-amber-500 text-slate-950 shadow-2xs leading-none animate-bounce">
+                NEW!
+              </span>
+            }
+          </div>
           <span class="font-extrabold text-base sm:text-2xl tracking-tight text-[var(--color-text-main)] leading-none mt-0.5 truncate tabular-nums">
             {{ score | number:'1.0-0' }}
           </span>
@@ -97,6 +108,10 @@ export class GameScoreCapsuleComponent {
 
   get t() {
     return this.i18n.t.bind(this.i18n);
+  }
+
+  get isPersonalBestBeaten(): boolean {
+    return this.bestScore > 0 && this.score > this.bestScore;
   }
 
   get displayPersonalBest(): number {

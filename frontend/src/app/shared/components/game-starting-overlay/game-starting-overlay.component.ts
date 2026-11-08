@@ -2,6 +2,7 @@ import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AudioService } from '../../../core/services/audio.service';
+import { HapticService } from '../../../core/services/haptic.service';
 
 @Component({
   selector: 'app-game-starting-overlay',
@@ -99,6 +100,7 @@ import { AudioService } from '../../../core/services/audio.service';
 export class GameStartingOverlayComponent implements OnChanges {
   i18n = inject(I18nService);
   private audio = inject(AudioService);
+  private haptic = inject(HapticService);
 
   @Input({ required: true }) countdown!: string | number;
 
@@ -123,11 +125,13 @@ export class GameStartingOverlayComponent implements OnChanges {
         this.pulseTrigger.set(false);
         setTimeout(() => this.pulseTrigger.set(true), 10);
 
-        // Sound feedback
+        // Sound & Haptic micro-feedback
         if (this.isGoState) {
           this.audio.playCountdownGo();
+          this.haptic.vibrateSuccess();
         } else {
           this.audio.playCountdown();
+          this.haptic.vibrateLight();
         }
       }
     }

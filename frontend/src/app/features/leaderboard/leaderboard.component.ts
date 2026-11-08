@@ -276,22 +276,37 @@ import { LevelBadgeComponent } from '../../shared/components/level-badge/level-b
           </div>
         </div>
 
-        <!-- My Rank Highlight -->
-        @if (authStore.isAuthenticated() && data()?.my_rank) {
-          <div class="flex items-center justify-between px-4 py-3 rounded-2xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 shadow-xs">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl font-black text-[var(--color-accent-from)] font-mono">#{{ data()!.my_rank }}</span>
-              <div>
-                <p class="text-xs sm:text-sm font-bold text-[var(--color-text-main)]">{{ i18n.t('leaderboard.my_rank')() || '我的排名' }}</p>
-                <p class="text-xs text-[var(--color-text-muted)]">{{ authStore.currentUser()?.username }}</p>
+        <!-- My Rank Highlight & Jump -->
+        @if (authStore.isAuthenticated() && data()) {
+          @if (data()?.my_rank && data()!.my_rank > 0) {
+            <div class="flex items-center justify-between px-4 py-3 rounded-2xl border border-[var(--color-accent-from)]/30 bg-[var(--color-accent-from)]/10 shadow-xs">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl font-black text-[var(--color-accent-from)] font-mono">#{{ data()!.my_rank }}</span>
+                <div>
+                  <p class="text-xs sm:text-sm font-bold text-[var(--color-text-main)]">{{ i18n.t('leaderboard.my_rank')() || '我的排名' }}</p>
+                  <p class="text-xs text-[var(--color-text-muted)]">{{ authStore.currentUser()?.username }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button (click)="scrollToMyRank()"
+                        class="px-3 py-1.5 rounded-xl bg-[var(--color-accent-from)] hover:brightness-110 text-white font-bold text-xs flex items-center gap-1.5 active:scale-95 transition-all shadow-xs cursor-pointer">
+                  <span>🎯</span>
+                  <span>定位我的席位</span>
+                </button>
               </div>
             </div>
-            <div class="text-xs text-[var(--color-text-muted)] font-mono">
-              @if (selectedGameId() !== 'global' && selectedDifficulty() !== 'all') {
-                {{ getDifficultyName(selectedGameId(), selectedDifficulty()) }}
-              }
+          } @else if (selectedGameId() !== 'global') {
+            <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 shadow-xs">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🚀</span>
+                <span class="text-xs sm:text-sm font-bold text-[var(--color-text-main)]">当前难度暂未上榜 · 开启挑战即可冲入天梯！</span>
+              </div>
+              <button (click)="challengeRecord(selectedDifficulty() === 'all' ? '' : selectedDifficulty())"
+                      class="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-bold text-xs flex items-center gap-1 active:scale-95 transition-all shadow-xs cursor-pointer">
+                <span>即刻冲榜 →</span>
+              </button>
             </div>
-          </div>
+          }
         }
 
         <!-- Section 3: Ranking Table -->
@@ -350,8 +365,11 @@ import { LevelBadgeComponent } from '../../shared/components/level-badge/level-b
 
             <!-- Table Rows -->
             @for (entry of data()!.entries; track entry.user_id) {
-              <div class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-[var(--color-border-card)]/50 last:border-0 transition-colors hover:bg-[var(--color-bg-main)]/50 items-center"
-                   [class.bg-[var(--color-accent-from)]/5]="entry.is_current_user">
+              <div [id]="'entry-row-' + entry.user_id"
+                   class="grid grid-cols-12 gap-2 px-4 py-3 border-b border-[var(--color-border-card)]/50 last:border-0 transition-all hover:bg-[var(--color-bg-main)]/50 items-center rounded-xl"
+                   [class.bg-[var(--color-accent-from)]/10]="entry.is_current_user"
+                   [class.ring-1]="entry.is_current_user"
+                   [class.ring-[var(--color-accent-from)]/40]="entry.is_current_user">
                 <!-- Rank -->
                 <div class="col-span-1 text-center font-mono font-black"
                      [ngClass]="rankColor(entry.rank)">
@@ -720,5 +738,34 @@ export class LeaderboardComponent implements OnInit {
     this.friendService.sendRequest(userId).subscribe(() => {
       this.toast.success(this.i18n.t('game.friend_request_sent')() || '好友请求已发送');
     });
+  }
+
+  scrollToMyRank(): void {
+    const myRank = this.data()?.my_rank;
+    if (!myRank || myRank <= 0) return;
+
+    const limit = this.data()?.limit || 20;
+    const targetPage = Math.ceil(myRank / limit);
+
+    if (this.currentPage() !== targetPage) {
+      this.currentPage.set(targetPage);
+      this.loadTable();
+      setTimeout(() => this.highlightMyRow(), 350);
+    } else {
+      this.highlightMyRow();
+    }
+  }
+
+  private highlightMyRow(): void {
+    const currentUserId = this.authStore.currentUser()?.id;
+    if (!currentUserId || typeof document === 'undefined') return;
+    const el = document.getElementById('entry-row-' + currentUserId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-amber-400', 'bg-amber-500/20');
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-500/20');
+      }, 2500);
+    }
   }
 }
