@@ -9,6 +9,7 @@ import { GameRegistryService } from './game-registry.service';
 import { C2SAction, S2CEvent, WSErrorCode, WsQueryParam, WSActionMessage } from '../models/websocket.model';
 import { createWebSocket, isBrowser } from '../utils/browser.util';
 import { LobbyActivity } from '../models/activity.model';
+import { NotificationService } from './notification.service';
 
 export interface WSMessage {
   type: string;
@@ -25,6 +26,7 @@ export class WebSocketService {
   private toastService = inject(ToastService);
   private i18n = inject(I18nService);
   private gameRegistry = inject(GameRegistryService);
+  private notificationService = inject(NotificationService);
   
   private socket: WebSocket | null = null;
   private lobbySocket: WebSocket | null = null;
@@ -449,6 +451,8 @@ export class WebSocketService {
         if (msg.targetId === playerId || msg.targetId === username) {
           this.cheerReceivedEvent.set({ senderName: msg.senderName, gameId: msg.gameId });
         }
+      } else if (msg.type === 'record_broken') {
+        this.notificationService.handleRealtimeRecordBroken(msg);
       } else if (msg.type === 'global_record_broken') {
         this.globalRecordBrokenEvent.set(msg);
         const gameConfig = this.gameRegistry.getConfig(msg.game_id);

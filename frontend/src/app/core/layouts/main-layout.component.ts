@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild, ElementRef, computed } from '@angular/core';
+import { Component, inject, signal, ViewChild, ElementRef, computed, HostListener } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,6 +20,7 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
 import { FriendService } from '../services/friend.service';
 import { DeviceService } from '../services/device.service';
 import { OfflineBannerComponent } from '../../shared/components/offline-banner/offline-banner.component';
+import { NotificationService, NotificationItem } from '../services/notification.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -124,6 +125,106 @@ import { OfflineBannerComponent } from '../../shared/components/offline-banner/o
                   </span>
                 }
               </button>
+
+              <!-- Notifications Bell & Dropdown (Protected) -->
+              <div class="relative notification-dropdown-container">
+                <button (click)="toggleNotificationDropdown($event)"
+                        class="relative flex items-center justify-center p-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 font-bold text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                        [title]="i18n.t('notification.title')() || '通知与复仇战帖'">
+                  <span class="text-sm">🔔</span>
+                  @if (notificationService.unreadCount() > 0) {
+                    <span class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-rose-600 text-white rounded-full text-[9px] font-black flex items-center justify-center border border-white animate-pulse">
+                      {{ notificationService.unreadCount() > 99 ? '99+' : notificationService.unreadCount() }}
+                    </span>
+                  }
+                </button>
+
+                <!-- Dropdown Card -->
+                @if (isNotificationDropdownOpen()) {
+                  <div class="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl z-50 overflow-hidden flex flex-col animate-scale-up backdrop-blur-xl"
+                       (click)="$event.stopPropagation()">
+                    
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-card)] bg-[var(--color-bg-main)]/50">
+                      <div class="flex items-center gap-1.5 font-black text-xs sm:text-sm text-[var(--color-text-main)]">
+                        <span>🔔</span>
+                        <span>{{ i18n.t('notification.title')() || '通知中心' }}</span>
+                        @if (notificationService.unreadCount() > 0) {
+                          <span class="px-1.5 py-0.2 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-mono border border-rose-500/20">
+                            {{ notificationService.unreadCount() }} 未读
+                          </span>
+                        }
+                      </div>
+                      @if (notificationService.unreadCount() > 0) {
+                        <button (click)="notificationService.markAllAsRead()"
+                                class="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-from)] font-bold transition-colors cursor-pointer">
+                          {{ i18n.t('notification.mark_all_read')() || '全部已读' }}
+                        </button>
+                      }
+                    </div>
+
+                    <!-- Notification List -->
+                    <div class="max-h-80 overflow-y-auto divide-y divide-[var(--color-border-card)]/40">
+                      @if (notificationService.notifications().length === 0) {
+                        <div class="py-8 px-4 flex flex-col items-center justify-center text-center gap-2 text-[var(--color-text-muted)]">
+                          <span class="text-3xl opacity-40">👑</span>
+                          <p class="text-xs font-bold">{{ i18n.t('notification.empty')() || '暂无新通知，你的王座固若金汤！' }}</p>
+                        </div>
+                      } @else {
+                        @for (item of notificationService.notifications(); track item.id) {
+                          <div class="p-3 sm:p-3.5 flex flex-col gap-2 transition-colors hover:bg-[var(--color-bg-main)]/60"
+                               [class.bg-rose-500/5]="!item.is_read">
+                            <div class="flex items-start justify-between gap-2">
+                              <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-base shrink-0">⚔️</span>
+                                <div class="min-w-0 leading-tight">
+                                  <p class="text-xs font-black text-[var(--color-text-main)] truncate">
+                                    {{ item.sender_name }} 刷新了纪录！
+                                  </p>
+                                  <p class="text-[11px] text-[var(--color-text-muted)] mt-0.5 truncate">
+                                    {{ item.title }} · {{ item.created_at | date:'MM-dd HH:mm' }}
+                                  </p>
+                                </div>
+                              </div>
+                              @if (!item.is_read) {
+                                <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1"></span>
+                              }
+                            </div>
+
+                            <!-- VS Details -->
+                            <div class="p-2 rounded-xl bg-[var(--color-bg-main)]/80 border border-[var(--color-border-card)] flex items-center justify-between text-xs font-mono">
+                              <div class="flex items-center gap-1.5 text-[var(--color-text-muted)]">
+                                <span>原纪录:</span>
+                                <span class="line-through">{{ formatRecord(item.old_record, item.rank_type) }}</span>
+                              </div>
+                              <div class="flex items-center gap-1 text-amber-500 font-bold">
+                                <span>新纪录:</span>
+                                <span>{{ formatRecord(item.new_record, item.rank_type) }}</span>
+                              </div>
+                            </div>
+
+                            <!-- Action CTA -->
+                            <div class="flex items-center justify-end gap-2 pt-0.5">
+                              @if (!item.is_read) {
+                                <button (click)="notificationService.markAsRead(item.id)"
+                                        class="px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] font-semibold cursor-pointer">
+                                  标为已读
+                                </button>
+                              }
+                              <button (click)="openRevengeFromDropdown(item)"
+                                      class="px-3 py-1 rounded-lg bg-gradient-to-r from-rose-600 to-amber-600 hover:brightness-110 text-white text-xs font-black flex items-center gap-1 shadow-xs active:scale-95 transition-all cursor-pointer">
+                                <span>🔥</span>
+                                <span>立即复仇</span>
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      }
+                    </div>
+
+                  </div>
+                }
+              </div>
 
               <!-- Avatar + username → profile link (hidden on < sm to prevent header overflow) -->
               <a [routerLink]="['/', i18n.currentLang(), 'profile']"
@@ -513,6 +614,43 @@ export class MainLayoutComponent {
   coinGuideService = inject(CoinGuideService);
   friendService = inject(FriendService);
   deviceService = inject(DeviceService);
+  notificationService = inject(NotificationService);
+
+  isNotificationDropdownOpen = signal(false);
+
+  toggleNotificationDropdown(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.isNotificationDropdownOpen.update(v => !v);
+  }
+
+  openRevengeFromDropdown(item: NotificationItem): void {
+    this.isNotificationDropdownOpen.set(false);
+    this.notificationService.openRevenge(item);
+  }
+
+  formatRecord(val: number, type: 'time' | 'score'): string {
+    if (type === 'time') {
+      const mins = Math.floor(val / 60);
+      const secs = val % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${val.toLocaleString()} 分`;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (this.isNotificationDropdownOpen() && !target.closest('.notification-dropdown-container')) {
+      this.isNotificationDropdownOpen.set(false);
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isNotificationDropdownOpen()) {
+      this.isNotificationDropdownOpen.set(false);
+    }
+  }
 
   /**
    * 全屏沉浸判定：

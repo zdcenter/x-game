@@ -194,6 +194,21 @@ func (l *GlobalLobby) SendInviteToPlayer(senderID, senderName, targetID string, 
 	}
 }
 
+// SendToUser sends a direct websocket message to a specific user ID if they are connected
+func (l *GlobalLobby) SendToUser(targetUserID string, message interface{}) {
+	msgData, err := json.Marshal(message)
+	if err != nil {
+		return
+	}
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	for _, p := range l.Players {
+		if p.PlayerID == targetUserID {
+			p.WriteMessage(websocket.TextMessage, msgData)
+		}
+	}
+}
+
 // UpdatePlayerGameStatus updates the current status and game metadata of a player
 func (l *GlobalLobby) UpdatePlayerGameStatus(playerID, status, game, mode, diff, opponent, roomID string) {
 	l.mu.Lock()

@@ -151,6 +151,13 @@ func main() {
 	// Feedback & Bug Reporting (public with optional auth)
 	v1.Post("/feedback", middleware.OptionalProtected(), rest.SubmitFeedback)
 
+	// Notifications routes (Protected)
+	notifications := v1.Group("/notifications")
+	notifications.Use(middleware.Protected())
+	notifications.Get("/", rest.GetNotifications)
+	notifications.Post("/read", rest.MarkNotificationRead)
+	notifications.Post("/read-all", rest.MarkAllNotificationsRead)
+
 	// Stats routes (Protected)
 	stats := v1.Group("/stats")
 	stats.Use(middleware.Protected())

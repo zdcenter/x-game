@@ -19,6 +19,7 @@ import { FriendListComponent } from './shared/components/friend-list/friend-list
 import { InGameChallengeBannerComponent } from './shared/components/in-game-challenge-banner/in-game-challenge-banner.component';
 import { AuthModalOverlayComponent } from './shared/components/auth-modal-overlay/auth-modal-overlay.component';
 import { PwaUpdatePromptComponent } from './shared/components/pwa-update-prompt/pwa-update-prompt.component';
+import { RevengeModalComponent } from './shared/components/revenge-modal/revenge-modal.component';
 import { IdlePrefetchService } from './core/services/idle-prefetch.service';
 
 @Component({
@@ -36,7 +37,8 @@ import { IdlePrefetchService } from './core/services/idle-prefetch.service';
     FriendListComponent,
     InGameChallengeBannerComponent,
     AuthModalOverlayComponent,
-    PwaUpdatePromptComponent
+    PwaUpdatePromptComponent,
+    RevengeModalComponent
   ],
   template: `
     @if (settingsService.settings().site_maintenance === 'true' && !canBypassMaintenance()) {
@@ -63,6 +65,7 @@ import { IdlePrefetchService } from './core/services/idle-prefetch.service';
       <app-in-game-challenge-banner></app-in-game-challenge-banner>
       <app-auth-modal-overlay></app-auth-modal-overlay>
       <app-pwa-update-prompt></app-pwa-update-prompt>
+      <app-revenge-modal></app-revenge-modal>
     }
   `
 })

@@ -79,6 +79,8 @@ func InitPostgres() {
 		&domain.PKBattle{},
 		// Player Feedback & Bug Reporting
 		&domain.Feedback{},
+		// Notifications System
+		&domain.Notification{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)

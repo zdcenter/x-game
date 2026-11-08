@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/service"
@@ -199,35 +201,85 @@ func SubmitStat(c fiber.Ctx) error {
 			}
 			isTimeGame := timeGames[gameID]
 
+			type ChampionRecord struct {
+				UserID    uint   `gorm:"column:user_id"`
+				Username  string `gorm:"column:username"`
+				Avatar    string `gorm:"column:avatar"`
+				BestTime  int    `gorm:"column:best_time"`
+				BestScore int    `gorm:"column:best_score"`
+			}
+			var prevChampion ChampionRecord
+
 			if isTimeGame && req.Time > 0 && req.Won {
-				var prevBestTime int
 				db.DB.Table("gm_user_game_stats AS s").
 					Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
 					Where("s.game_id = ? AND s.difficulty = ? AND s.best_time > 0 AND s.user_id != ?", gameID, req.Difficulty, userID).
-					Select("COALESCE(MIN(s.best_time), 0)").
-					Scan(&prevBestTime)
+					Order("s.best_time ASC").
+					Select("s.user_id, u.username, u.avatar, s.best_time, s.best_score").
+					Limit(1).
+					Scan(&prevChampion)
 
-				if prevBestTime == 0 || req.Time < prevBestTime {
+				if prevChampion.UserID == 0 || req.Time < prevChampion.BestTime {
 					isGlobalRecord = true
 				}
 			} else if !isTimeGame && req.Score > 0 {
-				var prevBestScore int
 				db.DB.Table("gm_user_game_stats AS s").
 					Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
 					Where("s.game_id = ? AND s.difficulty = ? AND s.best_score > 0 AND s.user_id != ?", gameID, req.Difficulty, userID).
-					Select("COALESCE(MAX(s.best_score), 0)").
-					Scan(&prevBestScore)
+					Order("s.best_score DESC").
+					Select("s.user_id, u.username, u.avatar, s.best_time, s.best_score").
+					Limit(1).
+					Scan(&prevChampion)
 
-				if prevBestScore == 0 || req.Score > prevBestScore {
+				if prevChampion.UserID == 0 || req.Score > prevChampion.BestScore {
 					isGlobalRecord = true
 				}
 			}
 
 			if isGlobalRecord {
 				rankType := "score"
+				oldVal := prevChampion.BestScore
+				newVal := req.Score
 				if isTimeGame {
 					rankType = "time"
+					oldVal = prevChampion.BestTime
+					newVal = req.Time
 				}
+
+				// If there was a previous champion and it's a different player, notify them!
+				if prevChampion.UserID > 0 && prevChampion.UserID != userID {
+					notif := domain.Notification{
+						UserID:       prevChampion.UserID,
+						SenderID:     userID,
+						SenderName:   user.Username,
+						SenderAvatar: user.Avatar,
+						Type:         domain.NotificationRecordBroken,
+						GameID:       gameID,
+						Difficulty:   req.Difficulty,
+						OldRecord:    oldVal,
+						NewRecord:    newVal,
+						RankType:     rankType,
+						Title:        "王座失守警告！",
+						Content:      fmt.Sprintf("你的纪录被 %s 破了！", user.Username),
+						IsRead:       false,
+					}
+					if err := db.DB.Create(&notif).Error; err == nil {
+						// Real-time direct WebSocket notification to User A
+						go ws.Lobby.SendToUser(fmt.Sprintf("%d", prevChampion.UserID), map[string]interface{}{
+							"type":           "record_broken",
+							"notification":   notif,
+							"breaker_id":     userID,
+							"breaker_name":   user.Username,
+							"breaker_avatar": user.Avatar,
+							"game_id":        gameID,
+							"difficulty":     req.Difficulty,
+							"old_record":     oldVal,
+							"new_record":     newVal,
+							"rank_type":      rankType,
+						})
+					}
+				}
+
 				go ws.Lobby.BroadcastMessage(map[string]interface{}{
 					"type":       "global_record_broken",
 					"game_id":    gameID,
