@@ -34,35 +34,61 @@ import { LevelBadgeComponent } from '../../shared/components/level-badge/level-b
           </div>
         </div>
 
-        <!-- Horizontal Capsule Navigation Bar (Replaces Dropdown) -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-          <!-- Global Capsule -->
-          <button (click)="selectGame('global')"
-                  class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0 flex items-center gap-2 cursor-pointer border active:scale-95 shadow-xs"
-                  [class.bg-[var(--color-accent-from)]]="selectedGameId() === 'global'"
-                  [class.text-white]="selectedGameId() === 'global'"
-                  [class.border-transparent]="selectedGameId() === 'global'"
-                  [class.bg-[var(--color-bg-card)]]="selectedGameId() !== 'global'"
-                  [class.text-[var(--color-text-secondary)]]="selectedGameId() !== 'global'"
-                  [class.border-[var(--color-border-card)]]="selectedGameId() !== 'global'">
-            <span>🌍</span>
-            <span>{{ i18n.t('leaderboard.global')() || '全服总榜' }}</span>
-          </button>
+        <!-- Capsule Navigation Bar (20 Games + Global) -->
+        <div class="bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col gap-2.5">
+          <div class="flex items-center justify-between text-xs font-bold text-[var(--color-text-secondary)] border-b border-[var(--color-border-card)]/60 pb-2">
+            <span class="flex items-center gap-1.5">
+              <span>🎯</span>
+              <span>{{ i18n.t('leaderboard.select_game_filter')() || '选择游戏天梯' }}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-bg-main)] text-[var(--color-text-muted)] font-mono">
+                {{ games.length }} 款游戏
+              </span>
+            </span>
 
-          <!-- Individual Games Capsules -->
-          @for (g of games; track g.id) {
-            <button (click)="selectGame(g.id)"
-                    class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer border active:scale-95 shadow-xs"
-                    [class.bg-[var(--color-accent-from)]]="selectedGameId() === g.id"
-                    [class.text-white]="selectedGameId() === g.id"
-                    [class.border-transparent]="selectedGameId() === g.id"
-                    [class.bg-[var(--color-bg-card)]]="selectedGameId() !== g.id"
-                    [class.text-[var(--color-text-secondary)]]="selectedGameId() !== g.id"
-                    [class.border-[var(--color-border-card)]]="selectedGameId() !== g.id">
-              <span>{{ g.iconEmoji }}</span>
-              <span>{{ i18n.t(g.titleKey)() || g.id }}</span>
+            <!-- Mobile Expand / Collapse toggle -->
+            <button (click)="isExpanded.set(!isExpanded())"
+                    class="md:hidden flex items-center gap-1 text-xs font-bold text-[var(--color-accent-from)] hover:underline cursor-pointer active:scale-95">
+              <span>{{ isExpanded() ? (i18n.t('common.collapse')() || '收起') : (i18n.t('common.expand_all')() || '展开全部 20款') }}</span>
+              <span>{{ isExpanded() ? '▴' : '▾' }}</span>
             </button>
-          }
+          </div>
+
+          <!-- Capsule Buttons Grid / Row -->
+          <div class="flex items-center gap-1.5 sm:gap-2 pb-1 md:flex-wrap transition-all"
+               [class.flex-wrap]="isExpanded()"
+               [class.overflow-x-auto]="!isExpanded()"
+               [class.scrollbar-none]="!isExpanded()"
+               [class.no-scrollbar]="!isExpanded()">
+            
+            <!-- Global Capsule -->
+            <button (click)="selectGame('global')"
+                    class="px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-xs"
+                    [class.bg-[var(--color-accent-from)]]="selectedGameId() === 'global'"
+                    [class.text-white]="selectedGameId() === 'global'"
+                    [class.border-transparent]="selectedGameId() === 'global'"
+                    [class.bg-[var(--color-bg-main)]]="selectedGameId() !== 'global'"
+                    [class.text-[var(--color-text-secondary)]]="selectedGameId() !== 'global'"
+                    [class.border-[var(--color-border-card)]]="selectedGameId() !== 'global'">
+              <span>🌍</span>
+              <span>{{ i18n.t('leaderboard.global')() || '全服总榜' }}</span>
+            </button>
+
+            <!-- Individual Games Capsules -->
+            @for (g of games; track g.id) {
+              <button (click)="selectGame(g.id)"
+                      [id]="'capsule-' + g.id"
+                      class="px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer border active:scale-95 shadow-xs hover:border-[var(--color-accent-from)]/40"
+                      [class.bg-[var(--color-accent-from)]]="selectedGameId() === g.id"
+                      [class.text-white]="selectedGameId() === g.id"
+                      [class.border-transparent]="selectedGameId() === g.id"
+                      [class.bg-[var(--color-bg-main)]]="selectedGameId() !== g.id"
+                      [class.text-[var(--color-text-secondary)]]="selectedGameId() !== g.id"
+                      [class.border-[var(--color-border-card)]]="selectedGameId() !== g.id">
+                <span>{{ g.iconEmoji }}</span>
+                <span>{{ i18n.t(g.titleKey)() || g.id }}</span>
+              </button>
+            }
+          </div>
         </div>
 
         <!-- Section 1: Pinnacle Milestones Hall (Only when a specific game is selected) -->
@@ -429,6 +455,7 @@ export class LeaderboardComponent implements OnInit {
   selectedDifficulty = signal<string>('all');
   selectedPeriod = signal<string>('all');
   readonly currentTime = signal<number>(Date.now());
+  readonly isExpanded = signal<boolean>(false);
   currentPage = signal<number>(1);
 
   isLoading = signal(false);
@@ -470,7 +497,11 @@ export class LeaderboardComponent implements OnInit {
   });
 
   isTimeType = computed(() => {
-    const timeGames = ['nonogram', 'minesweeper', 'sudoku', 'sliding', 'codebreaker', 'math24', 'watersort', 'sokoban', 'lightsout'];
+    const timeGames = [
+      'nonogram', 'minesweeper', 'sudoku', 'sliding', 'codebreaker',
+      'math24', 'watersort', 'sokoban', 'lightsout', 'connect',
+      'hashi', 'idiom', 'tents'
+    ];
     return timeGames.includes(this.selectedGameId());
   });
 
@@ -493,6 +524,12 @@ export class LeaderboardComponent implements OnInit {
     this.selectedDifficulty.set('all');
     this.currentPage.set(1);
     this.reloadAll();
+    if (typeof document !== 'undefined') {
+      setTimeout(() => {
+        const el = document.getElementById('capsule-' + gameId);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }, 50);
+    }
   }
 
   setDifficulty(diffId: string): void {

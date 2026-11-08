@@ -44,7 +44,8 @@ func GetLeaderboard(c fiber.Ctx) error {
 	timeGames := map[string]bool{
 		"nonogram": true, "minesweeper": true, "sudoku": true, "sliding": true,
 		"codebreaker": true, "math24": true, "watersort": true,
-		"sokoban": true, "lightsout": true,
+		"sokoban": true, "lightsout": true, "connect": true,
+		"hashi": true, "idiom": true, "tents": true,
 	}
 	if rankType == "" {
 		if timeGames[gameID] {
