@@ -53,57 +53,74 @@ import { GameRegistryService } from '../../../../core/services/game-registry.ser
           </div>
         } @else {
           @for (b of battles().slice(0, 5); track b.id) {
-            <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-emerald-500/30 p-2.5 flex flex-col gap-1.5 transition-all hover:shadow-2xs">
+            <div class="rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-main)]/70 hover:border-emerald-500/40 p-2.5 flex flex-col gap-2 transition-all hover:shadow-2xs">
               
               <!-- Match Subheader: Game & Time -->
-              <div class="flex items-center justify-between text-[11px]">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs">{{ getGameEmoji(b.game_id) }}</span>
-                  <span class="font-bold text-[var(--color-text-main)]">{{ getGameTitle(b.game_id) }}</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    {{ b.difficulty }}
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-sm">{{ getGameEmoji(b.game_id) }}</span>
+                  <span class="font-black text-[var(--color-text-main)]">{{ getGameTitle(b.game_id) }}</span>
+                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
+                    {{ getDifficultyLabel(b.game_id, b.difficulty) }}
                   </span>
+                  @if (b.bounty_coins > 0) {
+                    <span class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                      🪙 {{ b.bounty_coins }}
+                    </span>
+                  }
                 </div>
-                <span class="text-[10px] text-[var(--color-text-muted)] font-mono">{{ formatTimeAgo(b.played_at) }}</span>
+                <span class="text-[10px] text-[var(--color-text-muted)] font-mono shrink-0">{{ formatTimeAgo(b.played_at) }}</span>
               </div>
 
-              <!-- Head-to-Head Clash Bar -->
-              <div class="flex items-center justify-between gap-2 py-0.5">
-                <!-- Winner -->
-                <div class="flex items-center gap-1.5 min-w-0 flex-1">
-                  <span class="text-sm shrink-0">👑</span>
+              <!-- Head-to-Head Clash Bar with Win / Loss Visual Contrast -->
+              <div class="flex items-center justify-between gap-1.5 p-2 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)]">
+                
+                <!-- Winner Side -->
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <span class="text-base shrink-0">👑</span>
                   <div class="min-w-0">
-                    <span class="text-xs font-black text-amber-500 truncate block">
-                      {{ b.winner?.username || 'Winner' }}
-                    </span>
-                    <span class="text-[10px] text-emerald-500 font-mono font-bold">
-                      @if (b.winner_time > 0) { {{ formatSeconds(b.winner_time) }} } @else { {{ b.winner_score }}分 }
+                    <div class="flex items-center gap-1">
+                      <span class="text-xs font-black text-amber-500 truncate max-w-[70px] sm:max-w-[90px]">
+                        {{ b.winner?.username || 'Winner' }}
+                      </span>
+                      <span class="px-1 py-0.1 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-500 shrink-0">
+                        胜
+                      </span>
+                    </div>
+                    <span class="text-[11px] font-mono font-black text-emerald-500 block truncate">
+                      {{ formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true) }}
                     </span>
                   </div>
                 </div>
 
                 <!-- Clash VS Indicator -->
-                <div class="flex flex-col items-center shrink-0 px-2">
+                <div class="flex flex-col items-center shrink-0 px-1.5">
                   <span class="text-[10px] font-black text-[var(--color-text-muted)] italic">VS</span>
                   @if (b.margin > 0) {
-                    <span class="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded-sm whitespace-nowrap">
-                      +{{ b.margin }}s
+                    <span class="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded-sm whitespace-nowrap">
+                      +{{ b.margin }}{{ isTimeGame(b.game_id) ? 's' : '' }}
                     </span>
                   }
                 </div>
 
-                <!-- Loser -->
-                <div class="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
+                <!-- Loser Side -->
+                <div class="flex items-center justify-end gap-2 min-w-0 flex-1 text-right">
                   <div class="min-w-0">
-                    <span class="text-xs font-medium text-[var(--color-text-secondary)] truncate block opacity-85">
-                      {{ b.loser?.username || 'Opponent' }}
-                    </span>
-                    <span class="text-[10px] text-[var(--color-text-muted)] font-mono">
-                      @if (b.loser_time > 0) { {{ formatSeconds(b.loser_time) }} } @else { {{ b.loser_score }}分 }
+                    <div class="flex items-center justify-end gap-1">
+                      <span class="px-1 py-0.1 rounded text-[9px] font-semibold bg-zinc-500/15 text-[var(--color-text-muted)] shrink-0">
+                        负
+                      </span>
+                      <span class="text-xs font-medium text-[var(--color-text-secondary)] truncate max-w-[70px] sm:max-w-[90px]">
+                        {{ b.loser?.username || 'Opponent' }}
+                      </span>
+                    </div>
+                    <span class="text-[11px] font-mono text-[var(--color-text-muted)] block truncate">
+                      {{ formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
                     </span>
                   </div>
-                  <span class="text-sm shrink-0 opacity-60">🛡️</span>
+                  <span class="text-sm shrink-0 opacity-40">🛡️</span>
                 </div>
+
               </div>
 
             </div>
@@ -187,6 +204,59 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
     return config?.iconEmoji || '🎮';
   }
 
+  isTimeGame(gameId: string): boolean {
+    const timeGames = ['nonogram', 'minesweeper', 'sudoku', 'sliding', 'codebreaker', 'math24', 'watersort', 'sokoban', 'lightsout'];
+    return timeGames.includes(gameId);
+  }
+
+  formatScoreOrTime(gameId: string, time: number, score: number, isWinner: boolean): string {
+    if (this.isTimeGame(gameId)) {
+      if (time > 0) {
+        return `⚡ ${this.formatSeconds(time)}`;
+      }
+      return isWinner ? '⚡ 极速通关' : '🛡️ 未完成';
+    }
+    if (score > 0) {
+      return `🏆 ${score}分`;
+    }
+    return isWinner ? '胜出' : '0分';
+  }
+
+  getDifficultyLabel(gameId: string, diffId: string): string {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config?.difficulties) {
+      const match = config.difficulties.find(d => d.id === diffId);
+      if (match) {
+        return match.labelKey ? (this.i18n.t(match.labelKey)() || match.id) : match.id;
+      }
+    }
+    const dict: Record<string, string> = {
+      easy: '简单',
+      medium: '中等',
+      hard: '困难',
+      expert: '专家',
+      master: '大师'
+    };
+    return dict[diffId] || diffId;
+  }
+
+  getDifficultyBadgeClass(diff: string): string {
+    switch (diff?.toLowerCase()) {
+      case 'easy':
+        return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+      case 'medium':
+        return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+      case 'hard':
+        return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
+      case 'expert':
+        return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+      case 'master':
+        return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+      default:
+        return 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20';
+    }
+  }
+
   formatSeconds(sec: number): string {
     if (!sec || sec <= 0) return '0s';
     if (sec < 60) return `${sec}s`;
@@ -215,4 +285,3 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
     this.router.navigate([`/${lang}/games/pk-arena`]);
   }
 }
-

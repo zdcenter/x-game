@@ -199,6 +199,14 @@ export class NonogramStore extends BaseGameStore {
     return Math.floor((end - state.startAt) / 1000);
   });
 
+  override extractPKStatPayload(): { score: number; time: number } {
+    const t = this.timeSpent();
+    return {
+      score: 0,
+      time: t > 0 ? t : 0,
+    };
+  }
+
   constructor() {
     super();
     effect(() => {

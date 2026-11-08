@@ -38,6 +38,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
   // PK stat auto-submit tracking (plain properties, not signals)
   private _pkPrevStatus = '';
   private _pkStatSubmitted = false;
+  private _pkRoundStartTime = 0;
+  readonly pkRoundSeq = signal<number>(1);
   
   protected readonly audioService = inject(AudioService);
 
@@ -74,6 +76,10 @@ export abstract class BaseGameStore implements GameStoreInterface {
         return;
       }
 
+      if (cur === GameStatus.Playing && this._pkPrevStatus !== GameStatus.Playing) {
+        this._pkRoundStartTime = Date.now();
+      }
+
       if (
         cur === GameStatus.Finished &&
         this._pkPrevStatus === GameStatus.Playing &&
@@ -84,8 +90,10 @@ export abstract class BaseGameStore implements GameStoreInterface {
         untracked(() => this._submitPKStat());
       }
       // Reset for each new round when host restarts mid-series
-      if (cur === GameStatus.Waiting && this._pkPrevStatus === GameStatus.Finished) {
+      if ((cur === GameStatus.Waiting || cur === GameStatus.Starting) && this._pkPrevStatus === GameStatus.Finished) {
         this._pkStatSubmitted = false;
+        this.pkRoundSeq.update(seq => seq + 1);
+        this._pkRoundStartTime = 0;
       }
       this._pkPrevStatus = cur as string;
     });
@@ -649,17 +657,27 @@ export abstract class BaseGameStore implements GameStoreInterface {
    */
   protected extractPKStatPayload(): { score: number; time: number } {
     const playerState = (this.rawState() as any)?.players?.[this.playerId()];
-    return {
-      score: playerState?.score ?? 0,
-      time:  playerState?.time  ?? playerState?.time_taken ?? 0,
-    };
+    const score = playerState?.score ?? 0;
+    let time = playerState?.time ?? playerState?.time_taken ?? 0;
+    if (time <= 0 && this._pkRoundStartTime > 0) {
+      time = Math.max(1, Math.round((Date.now() - this._pkRoundStartTime) / 1000));
+    }
+    return { score, time };
   }
 
   /** PK 对战结束时由 effect 自动调用，外部不应直接调用。 */
   private _submitPKStat(): void {
     const won = this.winners().includes(this.playerId());
-    const { score, time } = this.extractPKStatPayload();
+    let { score, time } = this.extractPKStatPayload();
     const bounty = this.bountyCoins();
+
+    const elapsedSec = this._pkRoundStartTime > 0
+      ? Math.max(1, Math.round((Date.now() - this._pkRoundStartTime) / 1000))
+      : 0;
+
+    if (time <= 0 && elapsedSec > 0) {
+      time = elapsedSec;
+    }
 
     // Report PK game outcome to 全服动态
     this.liveActivity.reportGameResult(
@@ -678,7 +696,15 @@ export abstract class BaseGameStore implements GameStoreInterface {
     const rawState = this.rawState() as any;
     const opponentState = rawState?.players?.[opponentId];
     const opponentScore = opponentState?.score ?? 0;
-    const opponentTime = opponentState?.time ?? opponentState?.time_taken ?? 0;
+    let opponentTime = opponentState?.time ?? opponentState?.time_taken ?? 0;
+
+    // If opponent finished first (I lost) and their time was not set, infer from elapsedSec
+    if (!won && opponentTime <= 0 && elapsedSec > 0) {
+      opponentTime = elapsedSec;
+    }
+
+    // Assign unique round-specific room ID so rematches/consecutive rounds in the same room are never dropped
+    const uniqueRoundRoomId = this.roomId() ? `${this.roomId()}#r${this.pkRoundSeq()}` : undefined;
 
     this.stats.submitStat(this.gameId, {
       mode:              this.currentRoomMode() as string,
@@ -687,7 +713,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
       time,
       won,
       bounty_coins:      bounty > 0 ? bounty : undefined,
-      room_id:           this.roomId() || undefined,
+      room_id:           uniqueRoundRoomId,
       opponent_username: opponentId || undefined,
       opponent_score:    opponentScore,
       opponent_time:     opponentTime,

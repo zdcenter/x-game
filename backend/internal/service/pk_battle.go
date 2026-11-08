@@ -53,12 +53,12 @@ func TryRecordPKBattle(
 		return false
 	}
 
-	// 3. Idempotency check: Ensure we don't insert duplicate battles if both players submit
+	// 3. Idempotency check: Ensure we don't insert duplicate battles if both players submit for the same round
 	if roomID != "" {
 		var existingCount int64
-		twoMinsAgo := time.Now().Add(-2 * time.Minute)
+		dedupWindow := time.Now().Add(-15 * time.Second)
 		db.DB.Model(&domain.PKBattle{}).
-			Where("room_id = ? AND played_at > ?", roomID, twoMinsAgo).
+			Where("room_id = ? AND played_at > ?", roomID, dedupWindow).
 			Count(&existingCount)
 		if existingCount > 0 {
 			return true // Already recorded

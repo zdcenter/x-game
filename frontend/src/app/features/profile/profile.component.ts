@@ -17,6 +17,7 @@ import { ShopService, ShopResponse, ShopItem } from '../../core/services/shop.se
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 import { ShareService } from '../../core/services/share.service';
 import { ShareImageService, ProfileCardData } from '../../core/services/share-image.service';
+import { GameRegistryService } from '../../core/services/game-registry.service';
 import { getOrigin, isBrowser } from '../../core/utils/browser.util';
 
 import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
@@ -534,68 +535,131 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
                 } @else {
                   <div class="flex flex-col gap-3">
                     @for (b of pkBattles(); track b.id) {
-                      <div class="p-4 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-amber-500/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs transition-all">
+                      <div class="p-3.5 sm:p-4 rounded-2xl bg-[var(--color-bg-card)] border flex flex-col gap-3 shadow-xs transition-all border-l-4"
+                           [class.border-emerald-500/40]="isCurrentUserWinner(b)"
+                           [class.border-l-emerald-500]="isCurrentUserWinner(b)"
+                           [class.border-rose-500/30]="!isCurrentUserWinner(b)"
+                           [class.border-l-rose-500]="!isCurrentUserWinner(b)">
                         
-                        <!-- Left: Game, Mode, Difficulty -->
-                        <div class="flex items-center gap-3">
-                          <span class="text-2xl sm:text-3xl shrink-0">{{ getGameEmoji(b.game_id) }}</span>
-                          <div>
-                            <div class="flex items-center gap-2">
-                              <span class="font-black text-sm text-[var(--color-text-main)]">{{ getGameNameById(b.game_id) }}</span>
-                              <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                {{ b.difficulty }}
-                              </span>
-                            </div>
+                        <!-- Top Bar: Game, Mode, Difficulty & Status Badge -->
+                        <div class="flex items-center justify-between gap-2 text-xs">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xl sm:text-2xl shrink-0">{{ getGameEmoji(b.game_id) }}</span>
+                            <span class="font-black text-sm sm:text-base text-[var(--color-text-main)]">{{ getGameNameById(b.game_id) }}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold" [ngClass]="getDifficultyBadgeClass(b.difficulty)">
+                              {{ getDifficultyLabel(b.game_id, b.difficulty) }}
+                            </span>
                             <span class="text-[11px] text-[var(--color-text-muted)] font-mono">
                               {{ formatDate(b.played_at) }}
                             </span>
                           </div>
-                        </div>
 
-                        <!-- Center: Head-to-Head Clash Details -->
-                        <div class="flex items-center justify-between sm:justify-center gap-4 bg-[var(--color-bg-main)] px-4 py-2 rounded-xl border border-[var(--color-border-card)]">
-                          <!-- Current User -->
-                          <div class="flex items-center gap-2">
-                            <div class="text-right">
-                              <span class="text-xs font-bold block" [class.text-emerald-500]="isCurrentUserWinner(b)" [class.text-[var(--color-text-muted)]]="!isCurrentUserWinner(b)">
-                                {{ isCurrentUserWinner(b) ? '👑 ' + (b.winner?.username || '我') : (b.loser?.username || '我') }}
+                          <!-- Outcome Pill & Bounty -->
+                          <div class="flex items-center gap-2 shrink-0">
+                            @if (b.bounty_coins > 0) {
+                              <span class="px-2 py-0.5 rounded-lg text-xs font-mono font-bold"
+                                    [class.bg-emerald-500/15]="isCurrentUserWinner(b)"
+                                    [class.text-emerald-500]="isCurrentUserWinner(b)"
+                                    [class.bg-rose-500/15]="!isCurrentUserWinner(b)"
+                                    [class.text-rose-500]="!isCurrentUserWinner(b)">
+                                🪙 {{ isCurrentUserWinner(b) ? '+' : '-' }}{{ b.bounty_coins }}
                               </span>
-                              <span class="text-[10px] font-mono font-bold">
-                                {{ isCurrentUserWinner(b) ? (b.winner_time > 0 ? formatSeconds(b.winner_time) : b.winner_score + '分') : (b.loser_time > 0 ? formatSeconds(b.loser_time) : b.loser_score + '分') }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- Divider -->
-                          <span class="text-xs font-black text-[var(--color-text-muted)] italic">VS</span>
-
-                          <!-- Opponent -->
-                          <div class="flex items-center gap-2">
-                            <div class="text-left">
-                              <span class="text-xs font-bold block" [class.text-emerald-500]="!isCurrentUserWinner(b)" [class.text-[var(--color-text-muted)]]="isCurrentUserWinner(b)">
-                                {{ isCurrentUserWinner(b) ? (b.loser?.username || '对手') : '👑 ' + (b.winner?.username || '对手') }}
-                              </span>
-                              <span class="text-[10px] font-mono font-bold">
-                                {{ isCurrentUserWinner(b) ? (b.loser_time > 0 ? formatSeconds(b.loser_time) : b.loser_score + '分') : (b.winner_time > 0 ? formatSeconds(b.winner_time) : b.winner_score + '分') }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Right: Outcome & Margin Badge -->
-                        <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                          @if (b.margin > 0) {
-                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              领先 {{ b.margin }}s
+                            }
+                            <span class="text-xs font-black px-3 py-1 rounded-xl border flex items-center gap-1 shadow-xs"
+                                  [class]="isCurrentUserWinner(b)
+                                    ? 'text-emerald-500 border-emerald-500/40 bg-emerald-500/15'
+                                    : 'text-rose-500 border-rose-500/40 bg-rose-500/15'">
+                              <span>{{ isCurrentUserWinner(b) ? '👑' : '🛡️' }}</span>
+                              <span>{{ isCurrentUserWinner(b) ? '胜利 WIN' : '惜败 LOSS' }}</span>
                             </span>
-                          }
+                          </div>
+                        </div>
 
-                          <span class="text-xs font-black px-3 py-1 rounded-xl border"
-                                [class]="isCurrentUserWinner(b)
-                                  ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/15'
-                                  : 'text-rose-400 border-rose-500/40 bg-rose-500/15'">
-                            {{ isCurrentUserWinner(b) ? '👑 WIN 获胜' : '🛡️ LOSS 惜败' }}
-                          </span>
+                        <!-- Direct Head-to-Head Comparison Grid: 我 (Me) VS 对手 (Opponent) -->
+                        <div class="grid grid-cols-11 items-center bg-[var(--color-bg-main)]/80 rounded-xl p-2.5 sm:p-3 border border-[var(--color-border-card)]">
+                          
+                          <!-- My Side (5 cols) -->
+                          <div class="col-span-5 flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0"
+                                 [class.bg-emerald-500/20]="isCurrentUserWinner(b)"
+                                 [class.text-emerald-500]="isCurrentUserWinner(b)"
+                                 [class.bg-rose-500/20]="!isCurrentUserWinner(b)"
+                                 [class.text-rose-500]="!isCurrentUserWinner(b)">
+                              {{ isCurrentUserWinner(b) ? '👑' : '我' }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                              <div class="flex items-center gap-1.5">
+                                <span class="text-xs sm:text-sm font-black truncate"
+                                      [class.text-emerald-500]="isCurrentUserWinner(b)"
+                                      [class.text-[var(--color-text-main)]]="!isCurrentUserWinner(b)">
+                                  {{ isCurrentUserWinner(b) ? (b.winner?.username || '我') : (b.loser?.username || '我') }}
+                                </span>
+                                <span class="text-[9px] px-1 py-0.1 rounded font-black shrink-0"
+                                      [class.bg-emerald-500/20]="isCurrentUserWinner(b)"
+                                      [class.text-emerald-500]="isCurrentUserWinner(b)"
+                                      [class.bg-zinc-500/20]="!isCurrentUserWinner(b)"
+                                      [class.text-[var(--color-text-muted)]]="!isCurrentUserWinner(b)">
+                                  {{ isCurrentUserWinner(b) ? '胜' : '负' }}
+                                </span>
+                              </div>
+                              <div class="text-xs sm:text-sm font-mono font-black mt-0.5"
+                                   [class.text-emerald-500]="isCurrentUserWinner(b)"
+                                   [class.text-[var(--color-text-muted)]]="!isCurrentUserWinner(b)">
+                                {{ isCurrentUserWinner(b)
+                                    ? formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true)
+                                    : formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false) }}
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Center VS & Margin (1 col) -->
+                          <div class="col-span-1 flex flex-col items-center justify-center shrink-0">
+                            <span class="text-xs font-black italic text-[var(--color-text-muted)]">VS</span>
+                            @if (b.margin > 0) {
+                              <span class="text-[9px] font-mono font-bold px-1 rounded whitespace-nowrap mt-0.5"
+                                    [class.text-emerald-500]="isCurrentUserWinner(b)"
+                                    [class.bg-emerald-500/10]="isCurrentUserWinner(b)"
+                                    [class.text-rose-400]="!isCurrentUserWinner(b)"
+                                    [class.bg-rose-500/10]="!isCurrentUserWinner(b)">
+                                {{ isCurrentUserWinner(b) ? '+' : '-' }}{{ b.margin }}{{ isTimeGame(b.game_id) ? 's' : '' }}
+                              </span>
+                            }
+                          </div>
+
+                          <!-- Opponent Side (5 cols) -->
+                          <div class="col-span-5 flex items-center justify-end gap-2.5 min-w-0 text-right">
+                            <div class="min-w-0 flex-1">
+                              <div class="flex items-center justify-end gap-1.5">
+                                <span class="text-[9px] px-1 py-0.1 rounded font-black shrink-0"
+                                      [class.bg-emerald-500/20]="!isCurrentUserWinner(b)"
+                                      [class.text-emerald-500]="!isCurrentUserWinner(b)"
+                                      [class.bg-zinc-500/20]="isCurrentUserWinner(b)"
+                                      [class.text-[var(--color-text-muted)]]="isCurrentUserWinner(b)">
+                                  {{ isCurrentUserWinner(b) ? '负' : '胜' }}
+                                </span>
+                                <span class="text-xs sm:text-sm font-bold truncate"
+                                      [class.text-emerald-500]="!isCurrentUserWinner(b)"
+                                      [class.text-[var(--color-text-secondary)]]="isCurrentUserWinner(b)">
+                                  {{ isCurrentUserWinner(b) ? (b.loser?.username || '对手') : (b.winner?.username || '对手') }}
+                                </span>
+                              </div>
+                              <div class="text-xs sm:text-sm font-mono mt-0.5"
+                                   [class.text-emerald-500]="!isCurrentUserWinner(b)"
+                                   [class.text-[var(--color-text-muted)]]="isCurrentUserWinner(b)">
+                                {{ isCurrentUserWinner(b)
+                                    ? formatScoreOrTime(b.game_id, b.loser_time, b.loser_score, false)
+                                    : formatScoreOrTime(b.game_id, b.winner_time, b.winner_score, true) }}
+                              </div>
+                            </div>
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 opacity-80"
+                                 [class.bg-emerald-500/20]="!isCurrentUserWinner(b)"
+                                 [class.text-emerald-500]="!isCurrentUserWinner(b)"
+                                 [class.bg-zinc-500/20]="isCurrentUserWinner(b)"
+                                 [class.text-[var(--color-text-muted)]]="isCurrentUserWinner(b)">
+                              {{ isCurrentUserWinner(b) ? '敌' : '👑' }}
+                            </div>
+                          </div>
+
                         </div>
 
                       </div>
@@ -669,6 +733,7 @@ export class ProfileComponent implements OnInit {
   private shopService = inject(ShopService);
   private shareService = inject(ShareService);
   private shareImageService = inject(ShareImageService);
+  private gameRegistry = inject(GameRegistryService);
 
   activeTab = signal<Tab>('overview');
 
@@ -846,8 +911,56 @@ export class ProfileComponent implements OnInit {
   }
 
   isTimeGame(gameId: string): boolean {
-    const timeGames = ['minesweeper','sudoku','sliding','codebreaker','math24','watersort','sokoban','lightsout'];
+    const timeGames = ['nonogram', 'minesweeper', 'sudoku', 'sliding', 'codebreaker', 'math24', 'watersort', 'sokoban', 'lightsout'];
     return timeGames.includes(gameId);
+  }
+
+  formatScoreOrTime(gameId: string, time: number, score: number, isWinner: boolean): string {
+    if (this.isTimeGame(gameId)) {
+      if (time > 0) {
+        return `⚡ ${this.formatSeconds(time)}`;
+      }
+      return isWinner ? '⚡ 极速通关' : '🛡️ 未完成';
+    }
+    if (score > 0) {
+      return `🏆 ${score}分`;
+    }
+    return isWinner ? '胜出' : '0分';
+  }
+
+  getDifficultyLabel(gameId: string, diffId: string): string {
+    const config = this.gameRegistry.getConfig(gameId);
+    if (config?.difficulties) {
+      const match = config.difficulties.find(d => d.id === diffId);
+      if (match) {
+        return match.labelKey ? (this.i18n.t(match.labelKey)() || match.id) : match.id;
+      }
+    }
+    const dict: Record<string, string> = {
+      easy: '简单',
+      medium: '中等',
+      hard: '困难',
+      expert: '专家',
+      master: '大师'
+    };
+    return dict[diffId] || diffId;
+  }
+
+  getDifficultyBadgeClass(diff: string): string {
+    switch (diff?.toLowerCase()) {
+      case 'easy':
+        return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+      case 'medium':
+        return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+      case 'hard':
+        return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
+      case 'expert':
+        return 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+      case 'master':
+        return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+      default:
+        return 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20';
+    }
   }
 
   formatTime(seconds: number): string {
