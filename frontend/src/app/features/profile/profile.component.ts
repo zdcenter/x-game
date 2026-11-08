@@ -527,7 +527,7 @@ type Tab = 'overview' | 'shop' | 'achievements' | 'rankings' | 'history';
                   <div class="flex flex-col items-center gap-3 py-16 text-[var(--color-text-muted)] bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border-card)]">
                     <span class="text-5xl opacity-40">⚔️</span>
                     <p class="font-bold text-sm">{{ i18n.t('profile.no_pk_history')() || '暂无会员对战记录，快去多人竞技场开房对战吧！' }}</p>
-                    <a [routerLink]="['/', i18n.currentLang(), 'games', 'pk-arena']"
+                    <a [routerLink]="['/', i18n.currentLang(), 'pk-arena']"
                        class="mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md active:scale-95 transition-all">
                       ⚡ 发起联机对决
                     </a>
