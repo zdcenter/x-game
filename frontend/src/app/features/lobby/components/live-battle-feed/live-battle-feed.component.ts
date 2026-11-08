@@ -13,6 +13,21 @@ import { GameMode } from '../../../../core/models/game.model';
   selector: 'app-live-battle-feed',
   standalone: true,
   imports: [CommonModule],
+  styles: [`
+    @keyframes battleGlow {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.45), 0 0 0 0 rgba(245, 158, 11, 0.5);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 22px rgba(249, 115, 22, 0.75), 0 0 0 3px rgba(245, 158, 11, 0.25);
+        transform: scale(1.03);
+      }
+    }
+    .animate-battle-glow {
+      animation: battleGlow 1.6s ease-in-out infinite;
+    }
+  `],
   template: `
     <div class="w-full bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between gap-3 h-full">
       
@@ -273,11 +288,15 @@ import { GameMode } from '../../../../core/models/game.model';
                           <span>返回我的房间</span>
                         </button>
                       } @else if (!isRoomFull(room)) {
-                        <!-- 立即参战 -->
+                        <!-- 立即迎战 (高能金橙渐变 + 呼吸微震光晕 + 雷达脉冲) -->
                         <button (click)="joinRoom(room)"
-                                class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
-                          <span>⚡</span>
-                          <span>{{ i18n.t('lobby.join_duel_btn')() || '立即参战' }}</span>
+                                class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:via-orange-400 hover:to-amber-400 text-white text-xs font-black flex items-center gap-1.5 transition-all duration-300 active:scale-95 cursor-pointer shadow-md shadow-orange-500/35 ring-2 ring-amber-400/60 animate-battle-glow shrink-0">
+                          <span class="relative flex h-2 w-2 shrink-0">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                          </span>
+                          <span>⚔️</span>
+                          <span class="tracking-wide">{{ i18n.t('lobby.join_duel_btn')() || '立即迎战' }}</span>
                         </button>
                         <!-- 旁观入口 (带文字表达) -->
                         <button (click)="spectateRoom(room)"
