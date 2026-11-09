@@ -739,6 +739,8 @@
   "game.back": "Back",
   "game.back_to_lobby": "Back to Rooms",
   "game.battle_arena_seats": "Battle Arena Stage",
+  "game.solo_mode": "Solo",
+  "game.pk_mode": "Multiplayer PK",
   "game.speed_race_mode": "Multiplayer Speed Race",
   "game.score_battle_mode": "Multiplayer Score Clash",
   "game.multiplayer_arena": "Multiplayer Battle",

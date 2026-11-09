@@ -437,7 +437,7 @@
                   <button (click)="playSoloGame($event, game.id)"
                           class="flex-1 py-1.5 sm:py-2 px-3 rounded-xl text-xs sm:text-sm font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
                     <span>🕹️</span>
-                    <span>{{ hasMultiplayer(game.id) ? (i18n.t('game.solo_mode') || '单人') : (i18n.t('lobby.play_instant')() || '开始游戏') }}</span>
+                    <span>{{ hasMultiplayer(game.id) ? (i18n.t('game.solo_mode')() || '单人') : (i18n.t('lobby.play_instant')() || '开始游戏') }}</span>
                   </button>
 
                   <!-- Secondary PK Capsule (If multiplayer supported) -->
@@ -456,7 +456,7 @@
                         <span>⚡ {{ i18n.t('lobby.quick_join')() || '迎战' }}</span>
                       } @else {
                         <span>⚔️</span>
-                        <span>{{ i18n.t('game.pk_mode') || '联机对战' }}</span>
+                        <span>{{ i18n.t('game.pk_mode')() || '联机对战' }}</span>
                       }
                     </button>
                   }

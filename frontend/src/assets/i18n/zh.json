@@ -739,6 +739,8 @@
   "game.back": "返回",
   "game.back_to_lobby": "返回对战列表",
   "game.battle_arena_seats": "竞技对决擂台",
+  "game.solo_mode": "单人",
+  "game.pk_mode": "联机对战",
   "game.speed_race_mode": "多人极速竞速",
   "game.score_battle_mode": "多人积分对抗",
   "game.multiplayer_arena": "多人竞技对决",
