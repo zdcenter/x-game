@@ -189,15 +189,24 @@ export class NonogramStore extends BaseGameStore {
     return Math.min(100, Math.round((filled / total) * 100));
   });
 
-  private tick = signal(0);
+  readonly timeSpent = signal<number>(0);
+  private timerInterval: any = null;
 
-  readonly timeSpent = computed(() => {
-    this.tick(); // subscribe to tick updates
-    const state = this.localState();
-    if (!state || !state.startAt) return 0;
-    const end = state.endAt || Date.now();
-    return Math.floor((end - state.startAt) / 1000);
-  });
+  startTimer() {
+    this.stopTimer();
+    this.timerInterval = setInterval(() => {
+      if (this.status() === GameStatus.Playing) {
+        this.timeSpent.update(t => t + 1);
+      }
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
 
   override extractPKStatPayload(): { score: number; time: number } {
     const t = this.timeSpent();
@@ -212,18 +221,12 @@ export class NonogramStore extends BaseGameStore {
     effect(() => {
       const s = this.status();
       if (s === GameStatus.Finished) {
+        this.stopTimer();
         this.audio.playPuzzle('success');
       } else if (s === GameStatus.Starting) {
         this.audio.playPuzzle('move');
-      }
-    });
-
-    // Timer tick for timeSpent updates
-    effect((onCleanup) => {
-      const s = this.status();
-      if (s === GameStatus.Playing) {
-        const interval = setInterval(() => this.tick.update(v => v + 1), 1000);
-        onCleanup(() => clearInterval(interval));
+      } else if (s === GameStatus.Playing && !this.timerInterval) {
+        this.startTimer();
       }
     });
 
@@ -335,6 +338,8 @@ export class NonogramStore extends BaseGameStore {
   }
 
   override onResetLocalGameState(): void {
+    this.stopTimer();
+    this.timeSpent.set(0);
     this.localState.set(null);
     this.history.set([]);
   }
@@ -494,6 +499,7 @@ export class NonogramStore extends BaseGameStore {
   private checkProgressAndWin(newGrid: CellState[][], state: LocalNonogramState) {
     if (this.currentRoomMode() === GameMode.Single) {
       if (NonogramEngine.checkWin(newGrid, state.answerGrid)) {
+        this.stopTimer();
         this.resumeService.clearSession('nonogram');
         if (typeof localStorage !== 'undefined') {
           localStorage.removeItem('nonogram_saved_game');
@@ -568,6 +574,8 @@ export class NonogramStore extends BaseGameStore {
       restoredState.startAt = Date.now() - (data.timeSpent * 1000);
     }
     this.localState.set(restoredState);
+    this.timeSpent.set(data.timeSpent || 0);
+    this.startTimer();
   }
 
   undo() {
@@ -723,5 +731,7 @@ export class NonogramStore extends BaseGameStore {
       startAt: Date.now()
     });
     this.history.set([]);
+    this.timeSpent.set(0);
+    this.startTimer();
   }
 }
