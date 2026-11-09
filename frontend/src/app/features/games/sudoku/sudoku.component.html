@@ -63,16 +63,13 @@
               (difficultyChange)="changeSingleDifficulty($event)">
             </app-difficulty-selector>
 
-            <!-- HUD 统计指标: ⏱️ 计时 + 📝 进度 -->
+            <!-- HUD 统计指标: ⏱️ 计时 + 冲榜状态 + 📝 进度 -->
             <div class="flex items-center gap-1.5 sm:gap-2.5">
-              <!-- ⏱️ 耗时 -->
-              <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                   [title]="i18n.t('game.time')() || '耗时'">
-                <span class="text-xs sm:text-sm opacity-80 select-none">⏱️</span>
-                <span class="font-digital text-cyan-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                  {{ gameTimer.formatTime(store.timeSpent()) }}
-                </span>
-              </div>
+              <app-game-status-hud
+                [hintsUsed]="store.hintsUsed()"
+                [timeSpent]="store.timeSpent()"
+                [compact]="isHandheld()">
+              </app-game-status-hud>
 
               <!-- 📝 填入数 -->
               <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"

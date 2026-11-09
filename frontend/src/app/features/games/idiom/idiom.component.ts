@@ -456,6 +456,7 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     }
 
     this.hintsRemaining.update(h => h - 1);
+    this.pkStore.recordHintUsed();
     const hintChars = Array.from(hintIdiom.w).slice(1); // Chars 1, 2, 3
     this.clearSlots();
 

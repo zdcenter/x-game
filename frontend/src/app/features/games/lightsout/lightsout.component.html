@@ -77,6 +77,13 @@
             <span>⚡</span>
             <span>{{ store.clearedPercentage() }}%</span>
           </div>
+
+          <!-- 🏆/💡 冲榜资格徽章 -->
+          <app-game-status-hud
+            [hintsUsed]="store.hintsUsed()"
+            [showTimer]="false"
+            [compact]="true">
+          </app-game-status-hud>
         } @else {
           <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
             <span>⚔️ PK 模式</span>

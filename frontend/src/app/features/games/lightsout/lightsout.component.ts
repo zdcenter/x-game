@@ -19,6 +19,7 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 
 @Component({
   selector: 'app-lightsout',
@@ -29,7 +30,8 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
     GamePkHudComponent,
     GameScoreCapsuleComponent,
     GameToolbarComponent,
-    GameHandheldHeaderComponent
+    GameHandheldHeaderComponent,
+    GameStatusHudComponent
   ],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html',
@@ -363,6 +365,7 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         if (sol[r] && sol[r][c]) {
+          this.store.recordHintUsed();
           this.hintCell.set({ r, c });
           this.haptic.vibrateSnap();
           return;

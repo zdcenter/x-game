@@ -89,7 +89,13 @@ export class HintButtonComponent {
   protected i18n = inject(I18nService);
 
   readonly hintLabel = computed(() => this.i18n.t('game.hint')());
-  readonly tooltipText = computed(() => this.i18n.t('game.hint')());
+  readonly tooltipText = computed(() => {
+    const base = this.i18n.t('game.hint')() || '提示';
+    const note = this.i18n.currentLang() === 'zh'
+      ? '（使用提示本局将标记为娱乐辅助，不计入个人最佳与全网极限纪录）'
+      : ' (Assisted mode: will not count towards personal best or records)';
+    return `${base} ${note}`;
+  });
 
   onClick(event: MouseEvent) {
     this.hintApplied.emit();

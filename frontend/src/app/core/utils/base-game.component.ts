@@ -554,13 +554,20 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     // H: Hint
     if ((event.key === 'h' || event.key === 'H') && !event.ctrlKey && !event.metaKey && !event.altKey) {
       const compAny = this as any;
+      const storeAny = this.store as any;
       if (typeof compAny.applyHint === 'function') {
         this.vibrateLight();
+        if (typeof storeAny?.recordHintUsed === 'function') {
+          storeAny.recordHintUsed();
+        }
         compAny.applyHint();
         event.preventDefault();
         return;
       } else if (typeof compAny.useHint === 'function') {
         this.vibrateLight();
+        if (typeof storeAny?.recordHintUsed === 'function') {
+          storeAny.recordHintUsed();
+        }
         compAny.useHint();
         event.preventDefault();
         return;

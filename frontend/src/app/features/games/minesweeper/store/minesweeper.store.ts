@@ -425,6 +425,7 @@ export class MinesweeperStore extends BaseGameStore {
     if (this.currentRoomMode() !== GameMode.Single || this.status() !== GameStatus.Playing) {
       return;
     }
+    this.recordHintUsed();
     this.dispatch({ type: MinesweeperActionType.Hint });
   }
 }

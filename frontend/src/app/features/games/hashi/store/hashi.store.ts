@@ -215,6 +215,7 @@ export class HashiStore extends BaseGameStore {
     for (let i = 0; i < clicks; i++) {
       this.toggleBridge(move.r1, move.c1, move.r2, move.c2);
     }
+    this.recordHintUsed();
     this.toast.show(this.i18n.t('game.hint_applied')() || 'Hint applied!', 'success');
   }
 

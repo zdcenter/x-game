@@ -39,11 +39,12 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
+import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
+  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent, GameStatusHudComponent],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',

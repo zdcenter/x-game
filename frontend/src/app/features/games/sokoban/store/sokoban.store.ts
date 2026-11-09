@@ -412,7 +412,13 @@ export class SokobanStore extends BaseGameStore {
   applyHint(): { success: boolean; message: string } {
     if (this.currentRoomMode() === GameMode.Single) {
       const engine = this.localEngine();
-      if (engine) return engine.applyHint();
+      if (engine) {
+        const res = engine.applyHint();
+        if (res.success) {
+          this.recordHintUsed();
+        }
+        return res;
+      }
     }
     return { success: false, message: 'game.no_hint_available' };
   }

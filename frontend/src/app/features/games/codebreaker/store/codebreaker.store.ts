@@ -206,7 +206,13 @@ export class CodebreakerStore extends BaseGameStore {
   applyHint(): { success: boolean; pos?: number; val?: string; message?: string } {
     if (this.currentRoomMode() === GameMode.Single) {
       const eng = this.localEngine();
-      if (eng) return eng.applyHint();
+      if (eng) {
+        const res = eng.applyHint();
+        if (res.success) {
+          this.recordHintUsed();
+        }
+        return res;
+      }
     }
     return { success: false, message: 'game.hint_unavailable' };
   }

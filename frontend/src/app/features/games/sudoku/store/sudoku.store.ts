@@ -414,6 +414,7 @@ export class SudokuStore extends BaseGameStore {
     if (!solution || solution.length !== 81) return;
 
     const targetVal = parseInt(solution[sel.r * 9 + sel.c], 10);
+    this.recordHintUsed();
     
     this.audio.playSudoku('success');
     this.haptic.vibrateSuccess();

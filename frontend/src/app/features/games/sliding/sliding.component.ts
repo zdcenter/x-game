@@ -38,11 +38,12 @@ import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-ico
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
+import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 
 @Component({
   selector: 'app-sliding',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
+  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent, GameStatusHudComponent],
   providers: [SlidingStore],
   templateUrl: './sliding.component.html',
   styleUrls: ['./sliding.component.scss']
@@ -566,6 +567,7 @@ export class SlidingComponent extends BaseGameComponent {
     const total = board.size * board.size;
     for (let val = 1; val < total; val++) {
       if (cells.indexOf(val) !== val - 1) {
+        this.store.recordHintUsed();
         this.hintTarget.set(val);
         return;
       }

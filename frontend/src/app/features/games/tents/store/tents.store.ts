@@ -290,6 +290,7 @@ export class TentsStore extends BaseGameStore {
   hint() {
     const eng = this.localEngine();
     if (!eng) return;
+    this.recordHintUsed();
     eng.handleAction({ type: 'hint' });
     this.tick.set(this.tick() + 1);
   }

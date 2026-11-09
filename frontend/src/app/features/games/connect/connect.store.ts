@@ -355,6 +355,7 @@ export class ConnectStore extends BaseGameStore {
     if (!engine) return;
     const applied = engine.applyHint();
     if (applied) {
+      this.recordHintUsed();
       this.checkSolution();
     }
   }

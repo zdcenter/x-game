@@ -509,6 +509,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
 
     const move = bestMove || fallbackMove;
     if (move) {
+      this._store.recordHintUsed();
       this.triggerPourAnimation(move.from, move.to);
       // this._store.pour(move.from, move.to); // Handled in triggerPourAnimation
     } else {

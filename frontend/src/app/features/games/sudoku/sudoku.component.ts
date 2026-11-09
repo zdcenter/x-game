@@ -38,6 +38,7 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
+import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 
 @Component({
   selector: 'app-sudoku',
@@ -52,7 +53,8 @@ import { DifficultySelectorComponent } from '../../../shared/components/difficul
     SudokuPkSpeedComponent,
     GameLayoutComponent,
     GameHandheldHeaderComponent,
-    DifficultySelectorComponent
+    DifficultySelectorComponent,
+    GameStatusHudComponent
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -36,6 +36,14 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly isPersonalBest = signal<boolean>(false);
   readonly hintsUsed = signal<number>(0);
 
+  /**
+   * 记录使用提示次数（辅助模式标记）
+   * 一旦使用提示，当前单局将视为娱乐探索模式，不再计入个人最佳或全网极限纪录。
+   */
+  recordHintUsed(): void {
+    this.hintsUsed.update(h => h + 1);
+  }
+
   // PK stat auto-submit tracking (plain properties, not signals)
   private _pkPrevStatus = '';
   private _pkStatSubmitted = false;

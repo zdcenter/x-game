@@ -33,6 +33,7 @@ import { GameStartingOverlayComponent } from '../../../shared/components/game-st
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 
 @Component({
   selector: 'app-connect',
@@ -44,7 +45,8 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
     GameLayoutComponent,
     GamePkHudComponent,
     GameToolbarComponent,
-    GameHandheldHeaderComponent
+    GameHandheldHeaderComponent,
+    GameStatusHudComponent
   ],
   providers: [ConnectStore],
   changeDetection: ChangeDetectionStrategy.OnPush,

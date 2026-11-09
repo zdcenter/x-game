@@ -79,6 +79,13 @@
               </span>
               <span class="text-xs sm:text-sm opacity-80 select-none">⏱️</span>
             </div>
+
+            <!-- 🏆/💡 冲榜资格徽章 -->
+            <app-game-status-hud
+              [hintsUsed]="store.hintsUsed()"
+              [showTimer]="false"
+              [compact]="true">
+            </app-game-status-hud>
           </div>
         </div>
       } @else {
@@ -121,6 +128,12 @@
         </div>
         <span class="text-lg sm:text-xl md:text-2xl opacity-80 drop-shadow-sm transition-opacity" title="Elapsed Time">⏱️</span>
       </div>
+
+      <!-- 🏆/💡 冲榜资格徽章 -->
+      <app-game-status-hud
+        [hintsUsed]="store.hintsUsed()"
+        [showTimer]="false">
+      </app-game-status-hud>
     </div>
   } @else if (currentRoomMode() !== GameMode.Single) {
     <!-- Universal PK Battle HUD (Sliding Puzzle) -->

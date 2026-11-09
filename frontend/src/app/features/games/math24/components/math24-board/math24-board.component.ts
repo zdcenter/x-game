@@ -290,6 +290,7 @@ export class Math24BoardComponent {
     const cards = this.store.currentBoardCards();
     const solution = Math24Solver.solve(cards);
     if (solution) {
+      this.store.recordHintUsed();
       this.hintSolution.set(solution);
     } else {
       this.toastService.show(this.i18n.t('game.no_solution')() || 'No solution', 'error');
