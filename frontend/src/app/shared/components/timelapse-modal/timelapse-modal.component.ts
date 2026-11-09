@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import fixWebmDuration from 'fix-webm-duration';
 import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -552,10 +553,17 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
           <div class="flex items-center gap-2 min-w-0">
             <span class="text-base sm:text-lg shrink-0">✨</span>
             <span class="leading-relaxed text-[11px] sm:text-xs">
-              <strong>真实棋盘 100% 还原保障</strong>：回放界面、导出的视频和 GIF 动图均严格遵循原版数织棋盘规范（边框、提示数字及完成划线），所看即所得！
+              <strong>真实棋盘 100% 还原保障</strong>：回放界面、导出的视频 (MP4/WebM) 和 GIF 动图均严格遵循原版数织棋盘规范（边框、提示数字及完成划线），所看即所得！
             </span>
           </div>
         </div>
+
+        @if (lastExportMsg()) {
+          <div class="p-2 sm:p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-400 flex items-center justify-between gap-2 animate-fade-in">
+            <span class="leading-relaxed font-medium">{{ lastExportMsg() }}</span>
+            <button (click)="lastExportMsg.set(null)" class="text-emerald-400 hover:text-emerald-200 font-bold px-1 cursor-pointer">✕</button>
+          </div>
+        }
 
       </div>
     </div>
@@ -578,6 +586,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   isExporting = signal(false);
   exportType = signal<'video' | 'gif'>('video');
   exportProgress = signal(0);
+  lastExportMsg = signal<string | null>(null);
 
   readonly width = computed(() => this.replayData?.width || 5);
   readonly height = computed(() => this.replayData?.height || 5);
@@ -1058,7 +1067,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 导出 10秒真实棋盘视频 (WebM / MP4)
+   * 导出 10秒真实棋盘视频 (MP4 / WebM)
    */
   async exportVideo() {
     if (this.isExporting() || !this.hasReplayMoves()) return;
@@ -1066,60 +1075,96 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     this.isExporting.set(true);
     this.exportType.set('video');
     this.exportProgress.set(5);
+    this.lastExportMsg.set(null);
     this.haptic.vibrateLight();
     this.pausePlayback();
 
-    try {
-      const size = 720;
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas 2D context unavailable');
+    let offscreenCanvas: HTMLCanvasElement | null = null;
 
+    try {
       if (typeof MediaRecorder === 'undefined') {
         alert('当前浏览器环境暂未开放 MediaRecorder 视频录制 API，已为您自动转为导出超清 GIF 动图！');
         await this.exportGif();
         return;
       }
 
-      const stream = canvas.captureStream(30);
-      let mimeType = 'video/webm;codecs=vp9';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = MediaRecorder.isTypeSupported('video/webm')
-          ? 'video/webm'
-          : MediaRecorder.isTypeSupported('video/mp4')
-          ? 'video/mp4'
-          : '';
+      // 1. 优选 MP4（原生兼容 Windows Media Player、Mac QuickTime、iOS、Android、微信及常见播放器）
+      //    如不支持 MP4 则降级为 WebM (VP8/VP9)，并使用 fixWebmDuration 补齐缺失的 EBML 时长元数据
+      const candidateTypes = [
+        { mime: 'video/mp4;codecs=avc1', ext: 'mp4' },
+        { mime: 'video/mp4;codecs=h264', ext: 'mp4' },
+        { mime: 'video/mp4', ext: 'mp4' },
+        { mime: 'video/webm;codecs=h264', ext: 'webm' },
+        { mime: 'video/webm;codecs=vp8', ext: 'webm' },
+        { mime: 'video/webm;codecs=vp9', ext: 'webm' },
+        { mime: 'video/webm', ext: 'webm' }
+      ];
+
+      let selectedMime = '';
+      let fileExt = 'webm';
+
+      for (const item of candidateTypes) {
+        if (MediaRecorder.isTypeSupported(item.mime)) {
+          selectedMime = item.mime;
+          fileExt = item.ext;
+          break;
+        }
       }
 
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 3500000 } : undefined);
+      if (!selectedMime && MediaRecorder.isTypeSupported('video/mp4')) {
+        selectedMime = 'video/mp4';
+        fileExt = 'mp4';
+      } else if (!selectedMime && MediaRecorder.isTypeSupported('video/webm')) {
+        selectedMime = 'video/webm';
+        fileExt = 'webm';
+      }
+
+      const size = 720;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+
+      // 关键修复：Chromium 在 Canvas 脱离 DOM 时，captureStream 会被节流或丢弃帧包
+      // 将其固定在屏幕外，确保合成器（Compositor）持续为其分配渲染时序
+      canvas.style.position = 'fixed';
+      canvas.style.left = '-9999px';
+      canvas.style.top = '-9999px';
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      canvas.style.opacity = '0';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '-9999';
+      document.body.appendChild(canvas);
+      offscreenCanvas = canvas;
+
+      const ctx = canvas.getContext('2d', { willReadFrequently: false });
+      if (!ctx) throw new Error('Canvas 2D context unavailable');
+
+      // 2. 先渲染第 0 帧，确保 Track 获得初始画面缓冲
+      const initialGrid = this.buildGridForMoveCount(0, false);
+      this.renderRealBoardFrame(ctx, size, initialGrid, 0, 0, undefined);
+
+      const stream = canvas.captureStream(30);
+      const track = stream.getVideoTracks()[0] as any;
+      if (track?.requestFrame) {
+        track.requestFrame();
+      }
+
+      const recorder = new MediaRecorder(
+        stream,
+        selectedMime ? { mimeType: selectedMime, videoBitsPerSecond: 3500000 } : undefined
+      );
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) chunks.push(e.data);
       };
 
-      const recordPromise = new Promise<void>((resolve) => {
-        recorder.onstop = () => {
-          const finalMime = mimeType || 'video/webm';
-          const blob = new Blob(chunks, { type: finalMime });
-          const ext = finalMime.includes('mp4') ? 'mp4' : 'webm';
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `puzzlepk-nonogram-${Date.now()}.${ext}`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          resolve();
-        };
-      });
+      const recordStartTime = Date.now();
+      // 使用 100ms 切片，确保 Cluster 容器索引与时序完整，避免单一大块写入损坏
+      recorder.start(100);
 
-      recorder.start();
-
-      const frameCount = 38;
+      const frameCount = 40;
       for (let i = 0; i <= frameCount; i++) {
         const stepPct = Math.round((i / frameCount) * 100);
         const moveIdx = Math.min(this.totalMoves(), Math.floor((stepPct / 100) * this.totalMoves()));
@@ -1127,22 +1172,70 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         const lastM = moveIdx > 0 ? this.replayData.moves[moveIdx - 1] : undefined;
 
         this.renderRealBoardFrame(ctx, size, frameGrid, stepPct, moveIdx, lastM);
-        this.exportProgress.set(Math.round((i / frameCount) * 90));
+        if (track?.requestFrame) {
+          track.requestFrame();
+        }
+        this.exportProgress.set(Math.round((i / frameCount) * 88));
         await new Promise(r => setTimeout(r, 65));
       }
 
-      await new Promise(r => setTimeout(r, 1000));
-      this.exportProgress.set(98);
+      // 终局完整大图与胜利勋章画面停留 1.2 秒，确保观众看清终局杰作
+      for (let j = 0; j < 12; j++) {
+        if (track?.requestFrame) {
+          track.requestFrame();
+        }
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      this.exportProgress.set(95);
+      const recordDuration = Math.max(1000, Date.now() - recordStartTime);
+
+      const recordPromise = new Promise<Blob>((resolve) => {
+        recorder.onstop = () => {
+          const finalMime = selectedMime || (fileExt === 'mp4' ? 'video/mp4' : 'video/webm');
+          const rawBlob = new Blob(chunks, { type: finalMime });
+          resolve(rawBlob);
+        };
+      });
+
       recorder.stop();
-      await recordPromise;
+      let finalBlob = await recordPromise;
+
+      // 3. 如果导出的是 WebM，使用 fixWebmDuration 补全 EBML Segment Info 时长元数据，解决播放器打不开/无法拖进度条的问题
+      if (fileExt === 'webm' || (finalBlob.type && finalBlob.type.includes('webm'))) {
+        try {
+          finalBlob = await fixWebmDuration(finalBlob, recordDuration, { logger: false });
+        } catch (err) {
+          console.warn('fixWebmDuration error, fallback to raw blob:', err);
+        }
+      }
+
+      const url = URL.createObjectURL(finalBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `puzzlepk-nonogram-${Date.now()}.${fileExt}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
 
       this.exportProgress.set(100);
       this.audio.playWin();
       this.haptic.vibrateSuccess();
+      this.lastExportMsg.set('✅ 真实棋盘 GIF 动画导出成功！所见即所得。');
+
+      if (fileExt === 'mp4') {
+        this.lastExportMsg.set('✅ MP4 视频导出成功！通用格式兼容 Windows/Mac/手机及微信直接播放。');
+      } else {
+        this.lastExportMsg.set('✅ WebM 视频导出成功（已自动补全时长索引）！如系统老旧播放器未装解码器，可直接拖入任意现代浏览器观看或导出 GIF 动图。');
+      }
     } catch (e) {
       console.error('Failed to export video:', e);
       alert('导出视频失败，请尝试导出 GIF 动图。');
     } finally {
+      if (offscreenCanvas && offscreenCanvas.parentNode) {
+        offscreenCanvas.parentNode.removeChild(offscreenCanvas);
+      }
       setTimeout(() => this.isExporting.set(false), 500);
     }
   }
@@ -1156,6 +1249,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     this.isExporting.set(true);
     this.exportType.set('gif');
     this.exportProgress.set(5);
+    this.lastExportMsg.set(null);
     this.haptic.vibrateLight();
     this.pausePlayback();
 
@@ -1219,6 +1313,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       this.exportProgress.set(100);
       this.audio.playWin();
       this.haptic.vibrateSuccess();
+      this.lastExportMsg.set('✅ 真实棋盘 GIF 动画导出成功！所见即所得。');
     } catch (e) {
       console.error('Failed to export GIF:', e);
       alert('导出 GIF 失败，请重试。');

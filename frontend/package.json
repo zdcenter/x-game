@@ -30,6 +30,7 @@
     "canvas-confetti": "^1.9.4",
     "driver.js": "^1.6.0",
     "express": "^5.1.0",
+    "fix-webm-duration": "^1.0.6",
     "marked": "^18.0.4",
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
