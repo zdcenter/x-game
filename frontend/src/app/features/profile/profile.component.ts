@@ -918,12 +918,12 @@ export class ProfileComponent implements OnInit {
   formatScoreOrTime(gameId: string, time: number, score: number, isWinner: boolean): string {
     if (this.isTimeGame(gameId)) {
       if (time > 0) {
-        return `⚡ ${this.formatSeconds(time)}`;
+        return this.formatSeconds(time);
       }
-      return isWinner ? '⚡ 极速通关' : '🛡️ 未完成';
+      return isWinner ? '极速通关' : '未完成';
     }
     if (score > 0) {
-      return `🏆 ${score}分`;
+      return `${score}分`;
     }
     return isWinner ? '胜出' : '0分';
   }

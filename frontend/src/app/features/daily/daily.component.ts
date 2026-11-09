@@ -246,11 +246,12 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
                   type="button"
                   (click)="claimAll()"
                   [disabled]="isClaimingAll()"
-                  class="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white font-black text-xs shadow-md shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse">
-                  <span>⚡</span>
-                  <span>{{ i18n.t('quests.claim_all')() }}</span>
-                  <span class="px-1.5 py-0.2 rounded-full bg-white/20 text-[10px] font-mono">
-                    +{{ claimableTotal() }}
+                  class="flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white font-black text-xs shadow-md shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer animate-pulse">
+                  <span class="text-sm">⚡</span>
+                  <span>{{ i18n.t('quests.claim_all')() || '一键全领' }}</span>
+                  <span class="px-1.5 py-0.5 rounded-lg bg-black/20 text-[11px] font-mono font-bold flex items-center gap-1 border border-white/20">
+                    <span>+{{ claimableCoinsTotal() }}</span>
+                    <app-coin-icon size="xs" />
                   </span>
                 </button>
               }
@@ -365,6 +366,17 @@ export class DailyComponent implements OnInit, OnDestroy {
   claimableQuests = computed(() => this.data()?.quests.filter(q => q.completed && !q.claimed) || []);
   canClaimChest = computed(() => !!this.data()?.chest.completed && !this.data()?.chest.claimed);
   claimableTotal = computed(() => this.claimableQuests().length + (this.canClaimChest() ? 1 : 0));
+  claimableCoinsTotal = computed(() => {
+    const quests = this.claimableQuests();
+    let coins = 0;
+    for (const q of quests) {
+      coins += (q.coins || 20);
+    }
+    if (this.canClaimChest()) {
+      coins += (this.data()?.chest.coins || 100);
+    }
+    return coins;
+  });
 
   private timer?: ReturnType<typeof setInterval>;
 

@@ -285,6 +285,11 @@ import { NotificationService, NotificationItem } from '../services/notification.
                               VIP 玩家
                             </span>
                           }
+                          <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                [title]="(i18n.t('game.coins_balance')() || '脑力金币') + ': ' + coinService.coins()">
+                            <app-coin-icon size="xs" />
+                            <span>{{ coinService.coins() }}</span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -299,6 +304,14 @@ import { NotificationService, NotificationItem } from '../services/notification.
                         <span>{{ i18n.t('nav.profile')() || '个人中心' }}</span>
                       </a>
 
+                      <!-- 全服天梯榜 (Leaderboard) -->
+                      <a [routerLink]="['/', i18n.currentLang(), 'leaderboard']"
+                         (click)="isUserMenuOpen.set(false)"
+                         class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer">
+                        <span class="text-sm">🏆</span>
+                        <span>{{ i18n.t('nav.leaderboard')() || '全网天梯榜' }}</span>
+                      </a>
+
                       <!-- 管理员后台 (Admin Dashboard) -->
                       @if (authStore.isAdmin()) {
                         <a routerLink="/admin"
@@ -308,16 +321,6 @@ import { NotificationService, NotificationItem } from '../services/notification.
                           <span>{{ i18n.t('nav.admin')() || '管理后台' }}</span>
                         </a>
                       }
-
-                      <!-- 金币明细/规则 (Coin Economy Guide) -->
-                      <button (click)="coinGuideService.open(); isUserMenuOpen.set(false)"
-                              class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors cursor-pointer text-left">
-                        <span class="flex items-center gap-2.5">
-                          <app-coin-icon size="xs" />
-                          <span>{{ i18n.t('game.coins_balance')() || '脑力金币' }}</span>
-                        </span>
-                        <span class="font-mono font-bold text-amber-500">{{ coinService.coins() }}</span>
-                      </button>
 
                       <div class="my-1 border-t border-[var(--color-border-card)]"></div>
 

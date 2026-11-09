@@ -433,17 +433,17 @@
 
                 <!-- Direct Launch Action Group -->
                 <div class="pt-2 border-t border-[var(--color-border-card)] flex items-center gap-2">
-                  <!-- Main Play Button (Primary CTA) -->
+                  <!-- Solo Play Action -->
                   <button (click)="playSoloGame($event, game.id)"
                           class="flex-1 py-1.5 sm:py-2 px-3 rounded-xl text-xs sm:text-sm font-bold border border-[var(--color-border-card)] bg-[var(--color-bg-main)] text-[var(--color-text-main)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] hover:bg-[var(--color-accent-from)]/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
                     <span>🕹️</span>
-                    <span>{{ i18n.t('lobby.play_instant')() || '开始游戏' }}</span>
+                    <span>{{ hasMultiplayer(game.id) ? (i18n.t('game.solo_mode') || '单人') : (i18n.t('lobby.play_instant')() || '开始游戏') }}</span>
                   </button>
 
                   <!-- Secondary PK Capsule (If multiplayer supported) -->
                   @if (hasMultiplayer(game.id)) {
                     <button (click)="playPkGame($event, game.id)"
-                            class="py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold text-white active:scale-95 transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer shadow-sm hover:brightness-110"
+                            class="py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold text-white active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer shadow-sm hover:brightness-110"
                             [class.animate-pulse]="getWaitingRoomCount(game.id) > 0"
                             [style.background]="getWaitingRoomCount(game.id) > 0 ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : getPkButtonInfo(game.id).gradient"
                             [style.box-shadow]="getWaitingRoomCount(game.id) > 0 ? '0 0 12px rgba(245, 158, 11, 0.5)' : getPkButtonInfo(game.id).shadow"
@@ -456,7 +456,7 @@
                         <span>⚡ {{ i18n.t('lobby.quick_join')() || '迎战' }}</span>
                       } @else {
                         <span>⚔️</span>
-                        <span>PK</span>
+                        <span>{{ i18n.t('game.pk_mode') || '联机对战' }}</span>
                       }
                     </button>
                   }
