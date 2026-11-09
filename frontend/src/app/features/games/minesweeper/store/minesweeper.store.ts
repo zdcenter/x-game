@@ -313,15 +313,26 @@ export class MinesweeperStore extends BaseGameStore {
   override startGame() {
     this.optimisticFlags.set({});
     if (this.currentRoomMode() === GameMode.Single) {
-       const engine = this.localEngine();
-       if (engine && engine.width > 0 && engine.height > 0) {
-          if (this.currentDifficulty() === 'tutorial') {
-            engine.initTutorialBoard();
-          } else {
-            engine.initGame({ width: engine.width, height: engine.height, mines: engine.mines });
-          }
-          this.tick.set(this.tick() + 1);
+       let engine = this.localEngine();
+       if (!engine || engine.width === 0 || engine.height === 0) {
+         const diff = this.currentDifficulty() || 'medium';
+         let width = 16, height = 16, mines = 40;
+         switch (diff) {
+           case 'easy': width = 9; height = 9; mines = 10; break;
+           case 'medium': width = 16; height = 16; mines = 40; break;
+           case 'hard': width = 30; height = 16; mines = 99; break;
+           case 'expert': width = 30; height = 20; mines = 160; break;
+           case 'master': width = 30; height = 24; mines = 230; break;
+         }
+         this.startLocalGame(width, height, mines, diff);
+         return;
        }
+       if (this.currentDifficulty() === 'tutorial') {
+         engine.initTutorialBoard();
+       } else {
+         engine.initGame({ width: engine.width, height: engine.height, mines: engine.mines });
+       }
+       this.tick.set(this.tick() + 1);
     } else {
       super.startGame();
     }
@@ -348,6 +359,27 @@ export class MinesweeperStore extends BaseGameStore {
   ) {
     this.optimisticFlags.set({});
     super.joinRoom(roomId, mode, difficulty, hostId, target, password, bountyCoins, isSpectator);
+
+    if (mode === GameMode.Single && !isSpectator) {
+      this.currentDifficulty.set(difficulty);
+      let width = 16, height = 16, mines = 40;
+      switch (difficulty) {
+        case 'easy': width = 9; height = 9; mines = 10; break;
+        case 'medium': width = 16; height = 16; mines = 40; break;
+        case 'hard': width = 30; height = 16; mines = 99; break;
+        case 'expert': width = 30; height = 20; mines = 160; break;
+        case 'master': width = 30; height = 24; mines = 230; break;
+        default:
+          if (difficulty && difficulty.startsWith('custom_')) {
+            const parts = difficulty.split('_');
+            width = parseInt(parts[1], 10) || 16;
+            height = parseInt(parts[2], 10) || 16;
+            mines = parseInt(parts[3], 10) || 40;
+          }
+          break;
+      }
+      this.startLocalGame(width, height, mines, difficulty);
+    }
   }
 
   override leaveRoom() {

@@ -99,4 +99,14 @@ describe('LocalMinesweeperEngine', () => {
     expect(engine.cells[0][1].state).toBe(CellState.Revealed);
     expect(engine.cells[1][0].state).toBe(CellState.Revealed);
   });
+
+  it('generates high quality solve replay for any difficulty', () => {
+    const replay = LocalMinesweeperEngine.generateReplay(9, 9, 10);
+    expect(replay).toBeDefined();
+    expect(replay.width).toBe(9);
+    expect(replay.height).toBe(9);
+    expect(replay.mines).toBe(10);
+    expect(replay.moves.length).toBeGreaterThan(0);
+    expect(replay.isWin).toBe(true);
+  });
 });

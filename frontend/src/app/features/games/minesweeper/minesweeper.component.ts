@@ -420,8 +420,11 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
     effect(() => {
       const storeDiff = this.store.currentDifficulty();
-      if (storeDiff && this.currentRoomMode() !== GameMode.Single) {
-        untracked(() => this.currentDifficulty.set(storeDiff));
+      if (storeDiff && storeDiff !== this.currentDifficulty()) {
+        untracked(() => {
+          this.currentDifficulty.set(storeDiff);
+          this.updateAdaptiveCellSize(true);
+        });
       }
     });
 
@@ -476,10 +479,12 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         );
       }
     } else {
-      // Check if there is an unfinished single player minesweeper session
-      const hasResume = this.checkAndPromptResumeSession('minesweeper');
+      // Check if query params specify difficulty (e.g. from Hall of Fame 破纪录挑战)
+      const q = this._baseRoute?.snapshot?.queryParams || {};
+      const requestedDiff = q['difficulty'] || q['diff'];
+      const hasResume = requestedDiff ? false : this.checkAndPromptResumeSession('minesweeper');
       if (!hasResume) {
-        const savedDiff = getSavedDifficulty('minesweeper', 'easy');
+        const savedDiff = requestedDiff || getSavedDifficulty('minesweeper', 'easy');
         this.changeSingleDifficulty(savedDiff);
       }
     }
