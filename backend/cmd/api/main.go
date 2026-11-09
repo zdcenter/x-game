@@ -227,9 +227,14 @@ func main() {
 	admin.Put("/daily-challenges/:id", rest.AdminUpdateDailyChallenge)
 	admin.Delete("/daily-challenges/:id", rest.AdminDeleteDailyChallenge)
 
-	// Leaderboard management
+	// Leaderboard & Record Hall Management
+	admin.Get("/leaderboard/game-records", rest.GetGameDifficultyRecords)
+	admin.Get("/leaderboard/:gameId", rest.AdminGetLeaderboard)
 	admin.Get("/leaderboard", rest.AdminGetLeaderboard)
 	admin.Delete("/leaderboard/stat/:statId", rest.AdminDeleteLeaderboardEntry)
+	admin.Delete("/leaderboard/records/:gameId/:difficulty", rest.AdminClearDifficultyRecord)
+	admin.Delete("/leaderboard/records/:gameId", rest.AdminResetGameRecords)
+	admin.Post("/leaderboard/purge-suspicious", rest.AdminPurgeCheatingRecords)
 
 	// Legacy simulator endpoints (can be removed later or kept for backwards compatibility)
 	// Blog admin CRUD

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 )
 
 type LeaderboardEntry struct {
+	StatID        uint   `json:"stat_id"`
 	Rank          int    `json:"rank"`
 	UserID        uint   `json:"user_id"`
 	Username      string `json:"username"`
@@ -26,6 +28,9 @@ type LeaderboardEntry struct {
 // Query params: mode, difficulty, type (time|score), period (all|weekly), limit (max 100)
 func GetLeaderboard(c fiber.Ctx) error {
 	gameID := c.Params("gameId")
+	if gameID == "" {
+		gameID = c.Query("gameId", "nonogram")
+	}
 	mode := c.Query("mode", "")
 	difficulty := c.Query("difficulty", "")
 	rankType := c.Query("type", "")
@@ -62,6 +67,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 	}
 
 	type rawRow struct {
+		StatID     uint   `gorm:"column:stat_id"`
 		UserID     uint   `gorm:"column:user_id"`
 		Username   string `gorm:"column:username"`
 		BestTime   int    `gorm:"column:best_time"`
@@ -100,7 +106,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 		}
 
 		q.Count(&total)
-		q.Select("s.user_id, u.username, s.best_time, s.best_score, s.play_count, s.win_count, s.rating, COALESCE(u.brain_coins, 0) AS brain_coins").
+		q.Select("s.id AS stat_id, s.user_id, u.username, s.best_time, s.best_score, s.play_count, s.win_count, s.rating, COALESCE(u.brain_coins, 0) AS brain_coins").
 			Offset(offset).Limit(limit).Scan(&rows)
 	} else {
 		// Unified game ranking: aggregate all modes and difficulties per user
@@ -139,7 +145,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 				Order("best_score DESC")
 		}
 
-		q.Select("s.user_id, u.username, " +
+		q.Select("MAX(s.id) AS stat_id, s.user_id, u.username, " +
 			"COALESCE(MIN(CASE WHEN s.best_time >= 3 THEN s.best_time ELSE NULL END), 0) AS best_time, " +
 			"COALESCE(MAX(s.best_score), 0) AS best_score, " +
 			"COALESCE(SUM(s.play_count), 0) AS play_count, " +
@@ -154,6 +160,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 	for i, r := range rows {
 		rankNumber := offset + i + 1
 		e := LeaderboardEntry{
+			StatID:        r.StatID,
 			Rank:          rankNumber,
 			UserID:        r.UserID,
 			Username:      r.Username,
@@ -423,6 +430,7 @@ func GetGlobalLeaderboard(c fiber.Ctx) error {
 
 // GameDifficultyRecord represents the all-time #1 champion for a specific game and difficulty.
 type GameDifficultyRecord struct {
+	StatID     uint      `json:"stat_id"`
 	Difficulty string    `json:"difficulty"`
 	UserID     uint      `json:"user_id"`
 	Username   string    `json:"username"`
@@ -503,6 +511,7 @@ func GetGameDifficultyRecords(c fiber.Ctx) error {
 	}
 
 	type topRow struct {
+		StatID     uint      `gorm:"column:stat_id"`
 		UserID     uint      `gorm:"column:user_id"`
 		Username   string    `gorm:"column:username"`
 		Avatar     string    `gorm:"column:avatar"`
@@ -527,12 +536,13 @@ func GetGameDifficultyRecords(c fiber.Ctx) error {
 		}
 
 		var row topRow
-		err := q.Select("s.user_id, u.username, u.avatar, u.level, s.best_time, s.best_score, s.rating, s.updated_at").
+		err := q.Select("s.id AS stat_id, s.user_id, u.username, u.avatar, u.level, s.best_time, s.best_score, s.rating, s.updated_at").
 			Limit(1).
 			Scan(&row).Error
 
 		if err == nil && row.UserID > 0 {
 			records = append(records, GameDifficultyRecord{
+				StatID:     row.StatID,
 				Difficulty: diff,
 				UserID:     row.UserID,
 				Username:   row.Username,
@@ -547,6 +557,7 @@ func GetGameDifficultyRecords(c fiber.Ctx) error {
 		} else {
 			// Unclaimed difficulty milestone
 			records = append(records, GameDifficultyRecord{
+				StatID:     0,
 				Difficulty: diff,
 				UserID:     0,
 				Username:   "",
@@ -559,6 +570,105 @@ func GetGameDifficultyRecords(c fiber.Ctx) error {
 		"game_id":   gameID,
 		"rank_type": rankType,
 		"records":   records,
+	})
+}
+
+// AdminClearDifficultyRecord clears the #1 all-time record (or all records with ?all=true) for a specific game and difficulty.
+func AdminClearDifficultyRecord(c fiber.Ctx) error {
+	gameID := c.Params("gameId")
+	difficulty := c.Params("difficulty")
+	if gameID == "" || difficulty == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "gameId and difficulty are required"})
+	}
+
+	clearAll := c.Query("all") == "true"
+
+	if clearAll {
+		res := db.DB.Where("game_id = ? AND difficulty = ?", gameID, difficulty).
+			Delete(&domain.UserGameStat{})
+		if res.Error != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to clear records: " + res.Error.Error()})
+		}
+		return c.JSON(fiber.Map{
+			"status":        "ok",
+			"message":       fmt.Sprintf("已彻底清空【%s】难度【%s】的所有记录 (共 %d 条)", gameID, difficulty, res.RowsAffected),
+			"deleted_count": res.RowsAffected,
+			"game_id":       gameID,
+			"difficulty":    difficulty,
+		})
+	}
+
+	timeGames := map[string]bool{
+		"minesweeper": true, "sudoku": true, "sliding": true,
+		"codebreaker": true, "math24": true, "watersort": true,
+		"sokoban": true, "lightsout": true, "nonogram": true,
+		"connect": true, "hashi": true, "idiom": true, "tents": true,
+	}
+
+	q := db.DB.Model(&domain.UserGameStat{}).Where("game_id = ? AND difficulty = ?", gameID, difficulty)
+	if timeGames[gameID] {
+		q = q.Where("best_time > 0").Order("best_time ASC")
+	} else {
+		q = q.Where("best_score > 0").Order("best_score DESC")
+	}
+
+	var topStat domain.UserGameStat
+	if err := q.First(&topStat).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "该难度下暂无可清除的记录"})
+	}
+
+	if err := db.DB.Delete(&topStat).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "删除最高记录失败"})
+	}
+
+	return c.JSON(fiber.Map{
+		"status":          "ok",
+		"message":         fmt.Sprintf("已成功清除【%s】难度【%s】的最高记录", gameID, difficulty),
+		"cleared_stat_id": topStat.ID,
+		"user_id":         topStat.UserID,
+		"game_id":         gameID,
+		"difficulty":      difficulty,
+	})
+}
+
+// AdminResetGameRecords deletes all records for a specific game across all difficulties.
+func AdminResetGameRecords(c fiber.Ctx) error {
+	gameID := c.Params("gameId")
+	if gameID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "gameId is required"})
+	}
+
+	result := db.DB.Where("game_id = ?", gameID).Delete(&domain.UserGameStat{})
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "重置游戏记录失败"})
+	}
+
+	return c.JSON(fiber.Map{
+		"status":        "ok",
+		"message":       fmt.Sprintf("已成功重置游戏【%s】的全网记录 (共清空 %d 条)", gameID, result.RowsAffected),
+		"game_id":       gameID,
+		"deleted_count": result.RowsAffected,
+	})
+}
+
+// AdminPurgeCheatingRecords deletes all records where best_time < 3s across time-based puzzle games.
+func AdminPurgeCheatingRecords(c fiber.Ctx) error {
+	timeGames := []string{
+		"minesweeper", "sudoku", "sliding", "codebreaker", "math24", "watersort",
+		"sokoban", "lightsout", "nonogram", "connect", "hashi", "idiom", "tents",
+	}
+
+	result := db.DB.Where("game_id IN ? AND best_time > 0 AND best_time < 3", timeGames).
+		Delete(&domain.UserGameStat{})
+
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "清除可疑秒杀记录失败: " + result.Error.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"status":        "ok",
+		"deleted_count": result.RowsAffected,
+		"message":       fmt.Sprintf("成功清除 %d 条历史异常秒杀记录 (<3秒)", result.RowsAffected),
 	})
 }
 
