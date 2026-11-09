@@ -1313,55 +1313,104 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.fillText('Brain Games & Logic Arena', 360, titleY + 28);
 
     // 5. 优雅游戏胶囊（表明这是什么游戏）
-    const gamePillW = 240;
-    const gamePillH = 34;
+    const gamePillW = 230;
+    const gamePillH = 32;
     const gamePillX = (baseSize - gamePillW) / 2;
-    const gamePillY = titleY + 44; // 365
-    this.safeRoundRect(ctx, gamePillX, gamePillY, gamePillW, gamePillH, 17);
+    const gamePillY = titleY + 42; // 363
+    this.safeRoundRect(ctx, gamePillX, gamePillY, gamePillW, gamePillH, 16);
     ctx.fillStyle = '#f8fafc';
     ctx.fill();
-    ctx.strokeStyle = '#cbd5e1';
+    ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🎮 数织 · NONOGRAM', 360, gamePillY + 22);
+    ctx.fillText('🎮 数织 · NONOGRAM', 360, gamePillY + 21);
 
-    // 6. 极简高对比黑曜石官方网址胶囊（突出 puzzlepk.com 官方网站）
-    const urlPillW = 340;
-    const urlPillH = 46;
+    // 6. 水晶轻奢官方网址与站名胶囊（高端、大气、大方，与 PWA 极简纯白光感一体化）
+    const urlPillW = 440;
+    const urlPillH = 48;
     const urlPillX = (baseSize - urlPillW) / 2;
-    const urlPillY = gamePillY + 50; // 415
-    this.safeRoundRect(ctx, urlPillX, urlPillY, urlPillW, urlPillH, 23);
-    ctx.fillStyle = '#0f172a';
-    ctx.fill();
+    const urlPillY = gamePillY + 46; // 409
+    const urlPillR = 24;
 
-    // 网址胶囊微光渐变边框
+    // 胶囊外围超柔弥散微光投影
+    ctx.save();
+    ctx.shadowColor = 'rgba(99, 102, 241, 0.10)';
+    ctx.shadowBlur = 16;
+    ctx.shadowOffsetY = 4;
+
+    // 纯白微蓝渐变磨砂质感底色
+    const pillBgGrad = ctx.createLinearGradient(urlPillX, urlPillY, urlPillX + urlPillW, urlPillY + urlPillH);
+    pillBgGrad.addColorStop(0, '#ffffff');
+    pillBgGrad.addColorStop(0.5, '#f8fafc');
+    pillBgGrad.addColorStop(1, '#f1f5f9');
+    this.safeRoundRect(ctx, urlPillX, urlPillY, urlPillW, urlPillH, urlPillR);
+    ctx.fillStyle = pillBgGrad;
+    ctx.fill();
+    ctx.restore();
+
+    // 胶囊水晶微光渐变边框 (青 -> 蓝 -> 紫)
     const urlBorder = ctx.createLinearGradient(urlPillX, urlPillY, urlPillX + urlPillW, urlPillY);
-    urlBorder.addColorStop(0, '#06b6d4');
-    urlBorder.addColorStop(0.5, '#3b82f6');
-    urlBorder.addColorStop(1, '#a855f7');
+    urlBorder.addColorStop(0, 'rgba(34, 211, 238, 0.7)');
+    urlBorder.addColorStop(0.5, 'rgba(59, 130, 246, 0.55)');
+    urlBorder.addColorStop(1, 'rgba(168, 85, 247, 0.7)');
+    this.safeRoundRect(ctx, urlPillX, urlPillY, urlPillW, urlPillH, urlPillR);
     ctx.strokeStyle = urlBorder;
     ctx.lineWidth = 1.6;
     ctx.stroke();
 
-    // 网址内容（精准居中排版）
-    ctx.textAlign = 'left';
-    ctx.font = '900 18px monospace';
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText('🌐 puzzlepk.com', 242, urlPillY + 29);
+    // 网址与站名内容排版：“puzzlepk.com 益智游戏PK网”
+    const globeStr = '🌐 ';
+    const domainStr = 'puzzlepk.com';
+    const divStr = '  |  ';
+    const siteNameStr = '益智游戏PK网';
 
-    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('· 免费免下载', 412, urlPillY + 28);
+    ctx.font = '900 19px monospace';
+    const domainW = ctx.measureText(domainStr).width;
+
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const globeW = ctx.measureText(globeStr).width;
+    const divW = ctx.measureText(divStr).width;
+    const nameW = ctx.measureText(siteNameStr).width;
+
+    const totalContentW = globeW + domainW + divW + nameW;
+    let curX = 360 - totalContentW / 2;
+    const contentY = urlPillY + 30;
+
+    // 绘制地球仪图标
+    ctx.textAlign = 'left';
+    ctx.font = '16px -apple-system, sans-serif';
+    ctx.fillText('🌐', curX, contentY - 1);
+    curX += globeW;
+
+    // 绘制官网域名（采用官方品牌电光青至靛蓝渐变高奢质感）
+    const domainGrad = ctx.createLinearGradient(curX, contentY, curX + domainW, contentY);
+    domainGrad.addColorStop(0, '#0284c7');
+    domainGrad.addColorStop(1, '#4f46e5');
+    ctx.fillStyle = domainGrad;
+    ctx.font = '900 19px monospace';
+    ctx.fillText(domainStr, curX, contentY);
+    curX += domainW;
+
+    // 绘制精致竖直分割线
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '300 14px sans-serif';
+    ctx.fillText(divStr, curX, contentY - 1);
+    curX += divW;
+
+    // 绘制官方中文站名（沉稳大方深曜石灰）
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(siteNameStr, curX, contentY);
 
     // 7. PWA 启动加载轨道 (1:1 还原 Image 2 的 pwa-splash-track 浅灰底 + 青蓝紫激光条)
     const trackW = 250;
     const trackH = 5;
     const trackX = (baseSize - trackW) / 2;
-    const trackY = urlPillY + 76; // 491
+    const trackY = urlPillY + 70; // 479
 
     // 浅灰底色轨道
     this.safeRoundRect(ctx, trackX, trackY, trackW, trackH, 2.5);
