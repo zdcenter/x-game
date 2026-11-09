@@ -5,6 +5,8 @@ import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { NonogramEngine } from '../../../features/games/nonogram/store/nonogram-engine';
+import { LocalMinesweeperEngine, MinesweeperReplayData, MinesweeperReplayStep, MinesweeperCellSnapshot } from '../../../features/games/minesweeper/store/minesweeper-engine';
+import { CellState } from '../../../features/games/minesweeper/store/minesweeper.store';
 
 /**
  * 极简、高性能的纯客户端 GIF89a 动图编码器。
@@ -341,6 +343,31 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
     .cell.no-border-b {
       border-bottom: none;
     }
+
+    /* 扫雷真实复盘棋盘规范 */
+    .ms-replay-plate {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+    }
+    .ms-cell-btn {
+      box-sizing: border-box;
+      transition: background-color 0.1s ease;
+    }
+    .ms-cell-unrevealed {
+      background-color: var(--color-ms-cell-bg, #e2e8f0);
+      border: 1.5px solid var(--color-ms-bevel-light, #ffffff);
+      border-right-color: var(--color-ms-bevel-dark, #94a3b8);
+      border-bottom-color: var(--color-ms-bevel-dark, #94a3b8);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+    .ms-cell-revealed {
+      background-color: var(--color-ms-revealed-bg, #f8fafc);
+      border: 1px solid var(--color-ms-revealed-border, #cbd5e1);
+      box-shadow: inset 0.5px 1px 2px var(--color-ms-sunken-shadow, rgba(0, 0, 0, 0.1));
+    }
+    .ms-cell-exploded {
+      background-color: #ef4444 !important;
+      border: 1px solid #b91c1c !important;
+    }
   `],
   template: `
     <div class="fixed inset-0 z-[130] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md select-none animate-fade-in"
@@ -369,6 +396,35 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
             ✕
           </button>
         </div>
+
+        <!-- Minesweeper Multi-Difficulty Switcher -->
+        @if (isMinesweeperGame()) {
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 -mt-1 scrollbar-none flex-wrap sm:flex-nowrap">
+            <span class="text-[11px] sm:text-xs font-bold text-[var(--color-text-muted)] shrink-0 mr-1 flex items-center gap-1">
+              <span>💣</span>
+              <span>切换排雷难度:</span>
+            </span>
+            <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+              @for (diff of minesweeperDiffList; track diff.id) {
+                <button (click)="selectDifficulty(diff.id)"
+                        class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 border"
+                        [class.bg-gradient-to-r]="activeDiffId() === diff.id"
+                        [class.from-rose-600]="activeDiffId() === diff.id"
+                        [class.to-amber-600]="activeDiffId() === diff.id"
+                        [class.text-white]="activeDiffId() === diff.id"
+                        [class.border-rose-500/50]="activeDiffId() === diff.id"
+                        [class.shadow-md]="activeDiffId() === diff.id"
+                        [class.shadow-rose-500/25]="activeDiffId() === diff.id"
+                        [class.bg-[var(--color-bg-card)]]="activeDiffId() !== diff.id"
+                        [class.text-[var(--color-text-muted)]]="activeDiffId() !== diff.id"
+                        [class.border-[var(--color-border-card)]]="activeDiffId() !== diff.id"
+                        [class.hover:text-[var(--color-text-main)]]="activeDiffId() !== diff.id">
+                  <span>{{ diff.name }}</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
 
         <!-- Nonogram Multi-Difficulty Switcher -->
         @if (isNonogramGame()) {
@@ -420,95 +476,151 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
             </div>
           </div>
 
-          <!-- Real Nonogram Board (100% Identical DOM & Styling as in-game) -->
+          <!-- Real Game Board Theater -->
           @if (hasReplayMoves()) {
-            <div class="relative flex items-center justify-center w-full h-full my-auto z-10 overflow-hidden py-2">
-              <div class="flex items-center justify-center transition-transform duration-100"
-                   [style.transform]="'scale(' + boardScale() + ')'"
-                   style="transform-origin: center center;">
-                
-                <div class="nonogram-board select-none shadow-2xl rounded-xl border border-[var(--color-border-card)]"
-                     [style.--cell-size.px]="replayCellSize()"
-                     [style.grid-template-columns]="'max-content max-content'"
-                     [style.grid-template-rows]="'max-content max-content'">
+            @if (isMinesweeperGame()) {
+              <!-- Real Minesweeper Board (100% Identical DOM & Styling as in-game) -->
+              <div class="relative flex items-center justify-center w-full h-full my-auto z-10 overflow-hidden py-2">
+                <div class="flex items-center justify-center transition-transform duration-100"
+                     [style.transform]="'scale(' + boardScale() + ')'"
+                     style="transform-origin: center center;">
                   
-                  <!-- Top-Left blank corner -->
-                  <div class="top-left"></div>
-
-                  <!-- Col Hints (Top) -->
-                  <div class="col-hints"
-                       [style.grid-template-columns]="'repeat(' + width() + ', ' + replayCellSize() + 'px)'">
-                    <div *ngFor="let col of colHints(); let x = index"
-                         class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none"
-                         [class.thick-r]="(x + 1) % 5 === 0 && x !== width() - 1"
-                         [class.no-border-r]="x === width() - 1"
-                         [class.col-completed]="completedCols()[x]">
-                      <span *ngFor="let hint of col"
-                            class="font-mono font-black leading-none py-0.5"
-                            [class.line-through]="completedCols()[x]"
-                            [class.opacity-35]="completedCols()[x]">{{ hint }}</span>
-                    </div>
+                  <div class="ms-replay-plate select-none shadow-2xl rounded-xl p-1 sm:p-1.5 bg-[var(--color-ms-board-bg,#cbd5e1)] dark:bg-[#0f172a] border-2 border-[var(--color-ms-bevel-dark,#94a3b8)] dark:border-[#334155] inline-flex flex-col">
+                    @for (row of currentMinesweeperGrid(); track $index; let y = $index) {
+                      <div class="flex">
+                        @for (cell of row; track cell.x + '-' + cell.y; let x = $index) {
+                          <div class="ms-cell-btn flex items-center justify-center font-black select-none relative m-[0.5px] rounded-[3px]"
+                               [style.width.px]="replayCellSize() - 1"
+                               [style.height.px]="replayCellSize() - 1"
+                               [style.font-size.px]="replayCellSize() * 0.58"
+                               [class.ms-cell-revealed]="cell.state === 1"
+                               [class.ms-cell-unrevealed]="cell.state === 0 || cell.state === 2"
+                               [class.ms-cell-exploded]="cell.state === 3"
+                               [class.ring-2]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
+                               [class.ring-sky-400]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
+                               [class.z-10]="lastMove()?.x === x && lastMove()?.y === y">
+                            @if (cell.state === 1) {
+                              @if (cell.neighbors > 0) {
+                                <span class="pointer-events-none select-none font-sans font-black leading-none drop-shadow-xs"
+                                      [style.color]="getMinesweeperNumColor(cell.neighbors)">
+                                  {{ cell.neighbors }}
+                                </span>
+                              }
+                            } @else if (cell.state === 2) {
+                              <span class="drop-shadow-md z-10 pointer-events-none select-none leading-none">🚩</span>
+                            } @else if (cell.state === 3) {
+                              <span class="animate-bounce pointer-events-none select-none leading-none drop-shadow-md">💣</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
+                </div>
 
-                  <!-- Row Hints (Left) -->
-                  <div class="row-hints"
-                       [style.grid-template-rows]="'repeat(' + height() + ', ' + replayCellSize() + 'px)'">
-                    <div *ngFor="let row of rowHints(); let y = index"
-                         class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none"
-                         [class.thick-b]="(y + 1) % 5 === 0 && y !== height() - 1"
-                         [class.no-border-b]="y === height() - 1"
-                         [class.row-completed]="completedRows()[y]">
-                      <span *ngFor="let hint of row; let last = last"
-                            class="font-mono font-black leading-none"
-                            [class.mr-1]="width() < 20 && !last"
-                            [class.mr-0.5]="width() >= 20 && !last"
-                            [class.line-through]="completedRows()[y]"
-                            [class.opacity-35]="completedRows()[y]">{{ hint }}</span>
+                <!-- Completed Clear Celebration Stamp -->
+                @if (currentStep() >= 100) {
+                  <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px] rounded-xl animate-fade-in pointer-events-none z-30">
+                    <div class="animate-scale-up px-5 py-2 rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-emerald-500 text-slate-950 font-black text-sm sm:text-base shadow-2xl flex items-center gap-2">
+                      <span>💣</span>
+                      <span>CLEARED! 排雷全部通关</span>
                     </div>
+                    <span class="mt-1.5 text-xs sm:text-sm font-mono font-bold text-amber-300 drop-shadow">
+                      全部 {{ totalMoves() }} 步还原完毕 · 完美拆解所有地雷
+                    </span>
                   </div>
+                }
+              </div>
+            } @else {
+              <!-- Real Nonogram Board (100% Identical DOM & Styling as in-game) -->
+              <div class="relative flex items-center justify-center w-full h-full my-auto z-10 overflow-hidden py-2">
+                <div class="flex items-center justify-center transition-transform duration-100"
+                     [style.transform]="'scale(' + boardScale() + ')'"
+                     style="transform-origin: center center;">
+                  
+                  <div class="nonogram-board select-none shadow-2xl rounded-xl border border-[var(--color-border-card)]"
+                       [style.--cell-size.px]="replayCellSize()"
+                       [style.grid-template-columns]="'max-content max-content'"
+                       [style.grid-template-rows]="'max-content max-content'">
+                    
+                    <!-- Top-Left blank corner -->
+                    <div class="top-left"></div>
 
-                  <!-- Main Grid Cells -->
-                  <div class="cells-grid select-none relative"
-                       [style.grid-template-columns]="'repeat(' + width() + ', ' + replayCellSize() + 'px)'"
-                       [style.grid-template-rows]="'repeat(' + height() + ', ' + replayCellSize() + 'px)'">
-                    <ng-container *ngFor="let row of currentReplayGrid(); let y = index">
-                      <div *ngFor="let cell of row; let x = index"
-                           class="cell flex items-center justify-center relative overflow-hidden transition-colors duration-75"
-                           [class.thick-b]="(y + 1) % 5 === 0 && y !== height() - 1"
+                    <!-- Col Hints (Top) -->
+                    <div class="col-hints"
+                         [style.grid-template-columns]="'repeat(' + width() + ', ' + replayCellSize() + 'px)'">
+                      <div *ngFor="let col of colHints(); let x = index"
+                           class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none"
                            [class.thick-r]="(x + 1) % 5 === 0 && x !== width() - 1"
                            [class.no-border-r]="x === width() - 1"
-                           [class.no-border-b]="y === height() - 1"
-                           [class.bg-[var(--color-text-main)]]="cell === 1"
-                           [class.ring-2]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
-                           [class.ring-sky-400]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
-                           [class.z-10]="lastMove()?.x === x && lastMove()?.y === y">
-                        
-                        <!-- Crossed (2) -->
-                        <div *ngIf="cell === 2"
-                             class="text-rose-500 dark:text-rose-400 font-bold pointer-events-none select-none flex items-center justify-center leading-none"
-                             [style.font-size.px]="replayCellSize() * 0.72">✕</div>
+                           [class.col-completed]="completedCols()[x]">
+                        <span *ngFor="let hint of col"
+                              class="font-mono font-black leading-none py-0.5"
+                              [class.line-through]="completedCols()[x]"
+                              [class.opacity-35]="completedCols()[x]">{{ hint }}</span>
                       </div>
-                    </ng-container>
+                    </div>
+
+                    <!-- Row Hints (Left) -->
+                    <div class="row-hints"
+                         [style.grid-template-rows]="'repeat(' + height() + ', ' + replayCellSize() + 'px)'">
+                      <div *ngFor="let row of rowHints(); let y = index"
+                           class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none"
+                           [class.thick-b]="(y + 1) % 5 === 0 && y !== height() - 1"
+                           [class.no-border-b]="y === height() - 1"
+                           [class.row-completed]="completedRows()[y]">
+                        <span *ngFor="let hint of row; let last = last"
+                              class="font-mono font-black leading-none"
+                              [class.mr-1]="width() < 20 && !last"
+                              [class.mr-0.5]="width() >= 20 && !last"
+                              [class.line-through]="completedRows()[y]"
+                              [class.opacity-35]="completedRows()[y]">{{ hint }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Main Grid Cells -->
+                    <div class="cells-grid select-none relative"
+                         [style.grid-template-columns]="'repeat(' + width() + ', ' + replayCellSize() + 'px)'"
+                         [style.grid-template-rows]="'repeat(' + height() + ', ' + replayCellSize() + 'px)'">
+                      <ng-container *ngFor="let row of currentReplayGrid(); let y = index">
+                        <div *ngFor="let cell of row; let x = index"
+                             class="cell flex items-center justify-center relative overflow-hidden transition-colors duration-75"
+                             [class.thick-b]="(y + 1) % 5 === 0 && y !== height() - 1"
+                             [class.thick-r]="(x + 1) % 5 === 0 && x !== width() - 1"
+                             [class.no-border-r]="x === width() - 1"
+                             [class.no-border-b]="y === height() - 1"
+                             [class.bg-[var(--color-text-main)]]="cell === 1"
+                             [class.ring-2]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
+                             [class.ring-sky-400]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
+                             [class.z-10]="lastMove()?.x === x && lastMove()?.y === y">
+                          
+                          <!-- Crossed (2) -->
+                          <div *ngIf="cell === 2"
+                               class="text-rose-500 dark:text-rose-400 font-bold pointer-events-none select-none flex items-center justify-center leading-none"
+                               [style.font-size.px]="replayCellSize() * 0.72">✕</div>
+                        </div>
+                      </ng-container>
+                    </div>
+
                   </div>
 
                 </div>
+
+                <!-- Completed Art Celebration Stamp -->
+                @if (currentStep() >= 100) {
+                  <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px] rounded-xl animate-fade-in pointer-events-none z-30">
+                    <div class="animate-scale-up px-5 py-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-purple-500 text-slate-950 font-black text-sm sm:text-base shadow-2xl flex items-center gap-2">
+                      <span>🏆</span>
+                      <span>PERFECT CLEAR!</span>
+                    </div>
+                    <span class="mt-1.5 text-xs sm:text-sm font-mono font-bold text-amber-300 drop-shadow">
+                      全部 {{ totalMoves() }} 步还原完毕 · 谜面完全解开
+                    </span>
+                  </div>
+                }
 
               </div>
-
-              <!-- Completed Art Celebration Stamp -->
-              @if (currentStep() >= 100) {
-                <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/45 backdrop-blur-[2px] rounded-xl animate-fade-in pointer-events-none z-30">
-                  <div class="animate-scale-up px-5 py-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-purple-500 text-slate-950 font-black text-sm sm:text-base shadow-2xl flex items-center gap-2">
-                    <span>🏆</span>
-                    <span>PERFECT CLEAR!</span>
-                  </div>
-                  <span class="mt-1.5 text-xs sm:text-sm font-mono font-bold text-amber-300 drop-shadow">
-                    全部 {{ totalMoves() }} 步还原完毕 · 谜面完全解开
-                  </span>
-                </div>
-              }
-
-            </div>
+            }
           } @else {
             <!-- Fallback Step Visualizer -->
             <div class="flex flex-col items-center justify-center gap-3 my-auto text-center z-10">
@@ -653,13 +765,15 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
                 <span>导出 GIF</span>
               </button>
 
-              <!-- 保存高清图片 (PNG) -->
-              <button (click)="downloadArtwork()"
-                      class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] font-bold text-xs sm:text-sm flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
-                      title="保存终局像素画为 PNG 图片">
-                <span>📸</span>
-                <span class="hidden md:inline">画作 PNG</span>
-              </button>
+              <!-- 保存高清图片 (PNG，仅限数织像素画) -->
+              @if (isNonogramGame()) {
+                <button (click)="downloadArtwork()"
+                        class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] font-bold text-xs sm:text-sm flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+                        title="保存终局像素画为 PNG 图片">
+                  <span>📸</span>
+                  <span class="hidden md:inline">画作 PNG</span>
+                </button>
+              }
             }
           </div>
 
@@ -682,7 +796,7 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
           <div class="flex items-center gap-2 min-w-0">
             <span class="text-base sm:text-lg shrink-0">✨</span>
             <span class="leading-relaxed text-[11px] sm:text-xs">
-              <strong>真实棋盘 100% 还原保障</strong>：回放界面、导出的视频 (MP4/WebM) 和 GIF 动图均严格遵循原版数织棋盘规范（边框、提示数字及完成划线），所看即所得！
+              <strong>真实棋盘 100% 还原保障</strong>：回放界面、导出的视频 (MP4/WebM) 和 GIF 动图均严格遵循原版游戏棋盘规范与视效，所看即所得！
             </span>
           </div>
         </div>
@@ -738,9 +852,21 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     { id: 'master', name: '大师 25×25', size: 25 },
   ];
 
+  readonly minesweeperDiffList = [
+    { id: 'easy', name: '简单 9×9 (10雷)', w: 9, h: 9, mines: 10 },
+    { id: 'medium', name: '中等 16×16 (40雷)', w: 16, h: 16, mines: 40 },
+    { id: 'hard', name: '困难 30×16 (99雷)', w: 30, h: 16, mines: 99 },
+    { id: 'expert', name: '专家 30×20 (160雷)', w: 30, h: 20, mines: 160 },
+    { id: 'master', name: '大师 30×24 (230雷)', w: 30, h: 24, mines: 230 },
+  ];
+
   activeDiffId = signal<string>('easy');
   private replayDataMap = new Map<string, any>();
   activeReplayData = signal<any>(null);
+
+  readonly isMinesweeperGame = computed(() => {
+    return this.gameId === 'minesweeper';
+  });
 
   readonly isNonogramGame = computed(() => {
     return !this.gameId || this.gameId === 'nonogram';
@@ -750,8 +876,8 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     return this.activeReplayData() || this.replayData;
   });
 
-  readonly width = computed(() => this.effectiveReplayData()?.width || 5);
-  readonly height = computed(() => this.effectiveReplayData()?.height || 5);
+  readonly width = computed(() => this.effectiveReplayData()?.width || (this.isMinesweeperGame() ? 9 : 5));
+  readonly height = computed(() => this.effectiveReplayData()?.height || (this.isMinesweeperGame() ? 9 : 5));
   readonly rowHints = computed<number[][]>(() => this.effectiveReplayData()?.rowHints || []);
   readonly colHints = computed<number[][]>(() => this.effectiveReplayData()?.colHints || []);
 
@@ -777,6 +903,14 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
 
   readonly replayCellSize = computed(() => {
     const w = this.width();
+    const h = this.height();
+    if (this.isMinesweeperGame()) {
+      if (w <= 9) return 32;
+      if (w <= 16) return 24;
+      if (w <= 30 && h <= 16) return 18;
+      if (w <= 30 && h <= 20) return 15;
+      return 13;
+    }
     if (w <= 5) return 40;
     if (w <= 10) return 28;
     if (w <= 15) return 20;
@@ -788,10 +922,18 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const w = this.width();
     const h = this.height();
     const cellSize = this.replayCellSize();
-    const maxRowHints = Math.max(1, ...(this.rowHints().map(r => r.length)));
-    const maxColHints = Math.max(1, ...(this.colHints().map(c => c.length)));
-    const approxW = maxRowHints * 18 + w * cellSize + 32;
-    const approxH = maxColHints * 20 + h * cellSize + 32;
+    
+    let approxW = 0;
+    let approxH = 0;
+    if (this.isMinesweeperGame()) {
+      approxW = w * cellSize + 24;
+      approxH = h * cellSize + 24;
+    } else {
+      const maxRowHints = Math.max(1, ...(this.rowHints().map(r => r.length)));
+      const maxColHints = Math.max(1, ...(this.colHints().map(c => c.length)));
+      approxW = maxRowHints * 18 + w * cellSize + 32;
+      approxH = maxColHints * 20 + h * cellSize + 32;
+    }
     
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
     const targetW = isMobile ? Math.min(340, window.innerWidth - 48) : 680;
@@ -801,8 +943,9 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     return Math.min(1.2, Math.min(scaleX, scaleY));
   });
 
-  // Reconstructed board grid at current playback step
+  // Reconstructed board grid at current playback step for Nonogram
   readonly currentReplayGrid = computed<number[][]>(() => {
+    if (this.isMinesweeperGame()) return [];
     const W = this.width();
     const H = this.height();
     const moves = this.effectiveReplayData()?.moves || [];
@@ -826,6 +969,64 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
 
     return grid;
   });
+
+  // Reconstructed board grid at current playback step for Minesweeper
+  readonly currentMinesweeperGrid = computed<MinesweeperCellSnapshot[][]>(() => {
+    if (!this.isMinesweeperGame()) return [];
+    const W = this.width();
+    const H = this.height();
+    const moves: MinesweeperReplayStep[] = this.effectiveReplayData()?.moves || [];
+    const moveIdx = this.currentMoveIndex();
+
+    const grid: MinesweeperCellSnapshot[][] = Array.from({ length: H }, (_, y) =>
+      Array.from({ length: W }, (_, x) => ({
+        x,
+        y,
+        state: CellState.Hidden,
+        neighbors: 0,
+        isMine: false
+      }))
+    );
+
+    for (let i = 0; i < moveIdx; i++) {
+      const m = moves[i];
+      if (m && m.changes) {
+        for (const ch of m.changes) {
+          if (ch.y < H && ch.x < W) {
+            grid[ch.y][ch.x] = { ...ch };
+          }
+        }
+      }
+    }
+
+    if (this.currentStep() >= 100 && this.effectiveReplayData()?.finalGrid) {
+      const fg = this.effectiveReplayData().finalGrid;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (fg[y]?.[x]) {
+            grid[y][x] = { ...fg[y][x] };
+          }
+        }
+      }
+    }
+
+    return grid;
+  });
+
+  getMinesweeperNumColor(num: number): string {
+    const colors = [
+      '',
+      '#2563eb', // 1 Blue
+      '#059669', // 2 Green
+      '#dc2626', // 3 Red
+      '#7c3aed', // 4 Purple
+      '#d97706', // 5 Amber
+      '#0891b2', // 6 Cyan
+      '#334155', // 7 Slate
+      '#9333ea'  // 8 Fuchsia
+    ];
+    return colors[num] || '#2563eb';
+  }
 
   readonly lastMove = computed(() => {
     const moves = this.effectiveReplayData()?.moves || [];
@@ -867,18 +1068,28 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     if (this.replayData) {
-      const w = this.replayData.width || 5;
       let diffId = 'easy';
-      if (w <= 5) diffId = 'easy';
-      else if (w <= 10) diffId = 'medium';
-      else if (w <= 15) diffId = 'hard';
-      else if (w <= 20) diffId = 'expert';
-      else diffId = 'master';
+      if (this.isMinesweeperGame()) {
+        const w = this.replayData.width || 9;
+        const h = this.replayData.height || 9;
+        if (w <= 9) diffId = 'easy';
+        else if (w <= 16) diffId = 'medium';
+        else if (w <= 30 && h <= 16) diffId = 'hard';
+        else if (w <= 30 && h <= 20) diffId = 'expert';
+        else diffId = 'master';
+      } else {
+        const w = this.replayData.width || 5;
+        if (w <= 5) diffId = 'easy';
+        else if (w <= 10) diffId = 'medium';
+        else if (w <= 15) diffId = 'hard';
+        else if (w <= 20) diffId = 'expert';
+        else diffId = 'master';
+      }
 
       this.activeDiffId.set(diffId);
       this.replayDataMap.set(diffId, this.replayData);
       this.activeReplayData.set(this.replayData);
-    } else if (this.isNonogramGame()) {
+    } else {
       this.selectDifficulty('easy');
     }
     this.startPlayback();
@@ -888,32 +1099,38 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     this.activeDiffId.set(diffId);
     let replay = this.replayDataMap.get(diffId);
     if (!replay) {
-      const opt = this.nonogramDiffList.find(d => d.id === diffId) || this.nonogramDiffList[0];
-      const N = opt.size;
-      const { grid: answerGrid, rowHints, colHints } = NonogramEngine.generate(N, N);
-      const moves: { x: number; y: number; state: number; time: number }[] = [];
-      let t = 0;
-      for (let y = 0; y < N; y++) {
-        for (let x = 0; x < N; x++) {
-          const val = answerGrid[y][x];
-          if (val === 1) {
-            t += 40;
-            moves.push({ x, y, state: 1, time: t });
+      if (this.isMinesweeperGame()) {
+        const opt = this.minesweeperDiffList.find(d => d.id === diffId) || this.minesweeperDiffList[0];
+        replay = LocalMinesweeperEngine.generateReplay(opt.w, opt.h, opt.mines);
+        this.replayDataMap.set(diffId, replay);
+      } else {
+        const opt = this.nonogramDiffList.find(d => d.id === diffId) || this.nonogramDiffList[0];
+        const N = opt.size;
+        const { grid: answerGrid, rowHints, colHints } = NonogramEngine.generate(N, N);
+        const moves: { x: number; y: number; state: number; time: number }[] = [];
+        let t = 0;
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            const val = answerGrid[y][x];
+            if (val === 1) {
+              t += 40;
+              moves.push({ x, y, state: 1, time: t });
+            }
           }
         }
+        replay = {
+          gameId: 'nonogram',
+          width: N,
+          height: N,
+          rowHints,
+          colHints,
+          answerGrid,
+          moves,
+          durationMs: Math.max(10000, moves.length * 60),
+          finalGrid: answerGrid.map(row => [...row])
+        };
+        this.replayDataMap.set(diffId, replay);
       }
-      replay = {
-        gameId: 'nonogram',
-        width: N,
-        height: N,
-        rowHints,
-        colHints,
-        answerGrid,
-        moves,
-        durationMs: Math.max(10000, moves.length * 60),
-        finalGrid: answerGrid.map(row => [...row])
-      };
-      this.replayDataMap.set(diffId, replay);
     }
     this.activeReplayData.set(replay);
     this.restartReplay();
@@ -969,7 +1186,8 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         bgMain: '#0f172a',
         borderThick: '#334155',
         textMuted: '#64748b',
-        roseCross: '#f43f5e'
+        roseCross: '#f43f5e',
+        isDark: true
       };
     }
     const root = document.documentElement;
@@ -979,13 +1197,15 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const bgMain = style.getPropertyValue('--color-bg-main').trim() || '#0f172a';
     const borderThick = style.getPropertyValue('--color-border-thick').trim() || '#334155';
     const textMuted = style.getPropertyValue('--color-text-muted').trim() || '#64748b';
+    const isDark = root.classList.contains('dark') || document.body.classList.contains('dark') || bgMain.includes('0f172a');
     return {
       textMain,
       bgCard,
       bgMain,
       borderThick,
       textMuted,
-      roseCross: '#f43f5e'
+      roseCross: '#f43f5e',
+      isDark
     };
   }
 
@@ -993,6 +1213,161 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
    * 100% 严格复刻真实棋盘规约绘制 Canvas 帧（供视频录制与 GIF 导出共用）
    */
   private renderRealBoardFrame(
+    ctx: CanvasRenderingContext2D,
+    size: number,
+    grid: any[][],
+    stepPct: number,
+    moveIdx: number,
+    lastMove?: any
+  ) {
+    if (this.isMinesweeperGame()) {
+      this.renderMinesweeperBoardFrame(ctx, size, grid as MinesweeperCellSnapshot[][], stepPct, moveIdx, lastMove);
+    } else {
+      this.renderNonogramBoardFrame(ctx, size, grid as number[][], stepPct, moveIdx, lastMove);
+    }
+  }
+
+  private renderMinesweeperBoardFrame(
+    ctx: CanvasRenderingContext2D,
+    size: number,
+    grid: MinesweeperCellSnapshot[][],
+    stepPct: number,
+    moveIdx: number,
+    lastMove?: any
+  ) {
+    const W = this.width();
+    const H = this.height();
+    const colors = this.getThemeColors();
+
+    // 1. Stage Background
+    ctx.fillStyle = colors.bgMain;
+    ctx.fillRect(0, 0, size, size);
+
+    // 2. Top Watermark Header
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(36, 36, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = colors.textMuted;
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('REC • PUZZLE PK', 48, 41);
+
+    ctx.fillStyle = colors.textMain;
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('扫雷高光时光倒流 · 10秒推演', size / 2, 41);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = colors.textMuted;
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText(`步数: ${moveIdx}/${this.totalMoves()}`, size - 36, 41);
+
+    // 3. Board Geometry Calculation
+    const availW = size - 48;
+    const availH = size - 110;
+    const cellSize = Math.floor(Math.min(availW / W, availH / H));
+    const boardW = W * cellSize;
+    const boardH = H * cellSize;
+    const startX = Math.floor((size - boardW) / 2);
+    const startY = Math.floor(65 + (availH - boardH) / 2);
+
+    // Board plate background with soft shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    ctx.shadowBlur = 16;
+    ctx.shadowOffsetY = 6;
+    ctx.fillStyle = colors.isDark ? '#090d16' : '#cbd5e1';
+    this.safeRoundRect(ctx, startX - 4, startY - 4, boardW + 8, boardH + 8, 8);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = colors.isDark ? '#334155' : '#94a3b8';
+    ctx.lineWidth = 1.5;
+    this.safeRoundRect(ctx, startX - 4, startY - 4, boardW + 8, boardH + 8, 8);
+    ctx.stroke();
+
+    // 4. Draw each cell
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const c = grid[y]?.[x];
+        const cx = startX + x * cellSize;
+        const cy = startY + y * cellSize;
+        const state = c ? c.state : 0;
+        const neighbors = c ? c.neighbors : 0;
+
+        if (state === CellState.Revealed) {
+          // Revealed cell (sunken flat)
+          ctx.fillStyle = colors.isDark ? '#0b1120' : '#f8fafc';
+          ctx.fillRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
+          ctx.strokeStyle = colors.isDark ? '#1e293b' : '#cbd5e1';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
+
+          if (neighbors > 0) {
+            ctx.fillStyle = this.getMinesweeperNumColor(neighbors);
+            const fs = Math.max(9, Math.floor(cellSize * 0.62));
+            ctx.font = `900 ${fs}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(String(neighbors), cx + cellSize / 2, cy + cellSize / 2 + fs * 0.35);
+          }
+        } else if (state === CellState.Exploded) {
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
+          const fs = Math.max(10, Math.floor(cellSize * 0.65));
+          ctx.font = `${fs}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText('💣', cx + cellSize / 2, cy + cellSize / 2 + fs * 0.35);
+        } else {
+          // Unrevealed (3D soft-beveled button)
+          const baseColor = colors.isDark ? '#1e293b' : '#e2e8f0';
+          ctx.fillStyle = baseColor;
+          ctx.fillRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
+
+          // Top/Left highlight
+          ctx.strokeStyle = colors.isDark ? 'rgba(255,255,255,0.18)' : '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(cx + 1, cy + cellSize - 1);
+          ctx.lineTo(cx + 1, cy + 1);
+          ctx.lineTo(cx + cellSize - 1, cy + 1);
+          ctx.stroke();
+
+          // Bottom/Right shadow
+          ctx.strokeStyle = colors.isDark ? 'rgba(0,0,0,0.5)' : '#94a3b8';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(cx + cellSize - 1, cy + 1);
+          ctx.lineTo(cx + cellSize - 1, cy + cellSize - 1);
+          ctx.lineTo(cx + 1, cy + cellSize - 1);
+          ctx.stroke();
+
+          if (state === CellState.Flagged) {
+            const fs = Math.max(10, Math.floor(cellSize * 0.62));
+            ctx.font = `${fs}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('🚩', cx + cellSize / 2, cy + cellSize / 2 + fs * 0.35);
+          }
+        }
+      }
+    }
+
+    // 5. Active Click Ripple Ring
+    if (lastMove && stepPct < 100) {
+      const lx = startX + lastMove.x * cellSize + cellSize / 2;
+      const ly = startY + lastMove.y * cellSize + cellSize / 2;
+      ctx.save();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(lx, ly, Math.max(cellSize * 0.6, 6), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  private renderNonogramBoardFrame(
     ctx: CanvasRenderingContext2D,
     size: number,
     grid: number[][],
@@ -1413,7 +1788,10 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.fillText('Brain Games & Logic Arena', 360, titleY + 28);
 
     // 5. 优雅游戏胶囊（表明这是什么游戏）
-    const gamePillW = 230;
+    const gameLabel = this.isMinesweeperGame()
+      ? `💣 扫雷 · MINESWEEPER (${this.width()}×${this.height()})`
+      : `🎮 数织 · NONOGRAM (${this.width()}×${this.height()})`;
+    const gamePillW = this.isMinesweeperGame() ? 260 : 230;
     const gamePillH = 32;
     const gamePillX = (baseSize - gamePillW) / 2;
     const gamePillY = titleY + 42; // 363
@@ -1427,7 +1805,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.fillStyle = '#475569';
     ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🎮 数织 · NONOGRAM', 360, gamePillY + 21);
+    ctx.fillText(gameLabel, 360, gamePillY + 21);
 
     // 6. 水晶轻奢官方网址与站名胶囊（高端、大气、大方，与 PWA 极简纯白光感一体化）
     const urlPillW = 440;
@@ -1581,14 +1959,18 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
 
     ctx.fillStyle = '#64748b';
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('数织 NONOGRAM · 官方高光复盘认证', 360, headerTitleY + 22);
+    ctx.fillText(
+      this.isMinesweeperGame() ? '扫雷 MINESWEEPER · 官方高光复盘认证' : '数织 NONOGRAM · 官方高光复盘认证',
+      360,
+      headerTitleY + 22
+    );
 
     // 3. 舞台区：左右双展台卡片布局 (Y = 82 ~ 452, Height = 370px)
     const W = this.width();
     const H = this.height();
     const finalGrid = this.effectiveReplayData()?.finalGrid || this.buildGridForMoveCount(this.totalMoves(), true);
 
-    // === 左侧卡片：终局像素杰作原图展台 (Width: 290px, Height: 370px) ===
+    // === 左侧卡片：终局盘面/像素成果展台 (Width: 290px, Height: 370px) ===
     const leftX = 35;
     const leftY = 82;
     const leftW = 290;
@@ -1634,12 +2016,12 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.fillStyle = '#0284c7';
     ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🎨 终局像素画作 · 完整呈现', leftX + leftW / 2, lpy + 19);
+    ctx.fillText(this.isMinesweeperGame() ? '💣 终局排雷盘面 · 完整呈现' : '🎨 终局像素画作 · 完整呈现', leftX + leftW / 2, lpy + 19);
 
-    // 绘制像素画作真实缩略图（在纯白画框中呈现黑曜石般锐利的数织墨迹真容）
+    // 绘制真实缩略图
     const maxArtW = 210;
     const maxArtH = 210;
-    const cellSize = Math.max(4, Math.floor(Math.min(maxArtW / W, maxArtH / H)));
+    const cellSize = Math.max(3, Math.floor(Math.min(maxArtW / W, maxArtH / H)));
     const artW = W * cellSize;
     const artH = H * cellSize;
     const artX = Math.round(leftX + (leftW - artW) / 2);
@@ -1652,21 +2034,57 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const val = finalGrid[y]?.[x];
-        const cx = artX + x * cellSize;
-        const cy = artY + y * cellSize;
-        if (val === 1) {
-          ctx.fillStyle = '#0f172a'; // 饱满深曜石墨迹，画作轮廓极具冲击力
-          ctx.fillRect(cx, cy, cellSize, cellSize);
-        } else {
-          ctx.fillStyle = '#f8fafc';
-          ctx.fillRect(cx, cy, cellSize, cellSize);
+    if (this.isMinesweeperGame()) {
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const c = finalGrid[y]?.[x];
+          const cx = artX + x * cellSize;
+          const cy = artY + y * cellSize;
+          const state = c ? c.state : 0;
+          const neighbors = c ? c.neighbors : 0;
+
+          if (state === CellState.Revealed) {
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(cx, cy, cellSize, cellSize);
+            if (neighbors > 0) {
+              ctx.fillStyle = this.getMinesweeperNumColor(neighbors);
+              const fs = Math.max(6, Math.floor(cellSize * 0.65));
+              ctx.font = `900 ${fs}px sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.fillText(String(neighbors), cx + cellSize / 2, cy + cellSize / 2 + fs * 0.35);
+            }
+          } else {
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(cx, cy, cellSize, cellSize);
+            if (state === CellState.Flagged || c?.isMine) {
+              const fs = Math.max(7, Math.floor(cellSize * 0.65));
+              ctx.font = `${fs}px sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.fillText('🚩', cx + cellSize / 2, cy + cellSize / 2 + fs * 0.35);
+            }
+          }
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(cx, cy, cellSize, cellSize);
         }
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(cx, cy, cellSize, cellSize);
+      }
+    } else {
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const val = finalGrid[y]?.[x];
+          const cx = artX + x * cellSize;
+          const cy = artY + y * cellSize;
+          if (val === 1) {
+            ctx.fillStyle = '#0f172a'; // 饱满深曜石墨迹，画作轮廓极具冲击力
+            ctx.fillRect(cx, cy, cellSize, cellSize);
+          } else {
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(cx, cy, cellSize, cellSize);
+          }
+          ctx.strokeStyle = '#e2e8f0';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(cx, cy, cellSize, cellSize);
+        }
       }
     }
 
@@ -1682,7 +2100,13 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.fillStyle = '#059669';
     ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`✨ 全部 ${this.totalMoves()} 步推演无误 · 完美通关`, leftX + leftW / 2, artBadgeY + 21);
+    ctx.fillText(
+      this.isMinesweeperGame()
+        ? `✨ 全部 ${this.totalMoves()} 步推演无误 · 成功排除所有地雷`
+        : `✨ 全部 ${this.totalMoves()} 步推演无误 · 完美通关`,
+      leftX + leftW / 2,
+      artBadgeY + 21
+    );
 
     // === 右侧卡片：赛事级高光认证与对局数据统计 (Width: 350px, Height: 370px) ===
     const rightX = 335;
@@ -1739,18 +2163,24 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     rTitleGrad.addColorStop(0, '#0284c7');
     rTitleGrad.addColorStop(1, '#4f46e5');
     ctx.fillStyle = rTitleGrad;
-    ctx.fillText('数织 NONOGRAM', rightX + rightW / 2, gameTitleY);
+    ctx.fillText(this.isMinesweeperGame() ? '扫雷 MINESWEEPER' : '数织 NONOGRAM', rightX + rightW / 2, gameTitleY);
 
     ctx.fillStyle = '#64748b';
     ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText('高光破局 · 极限时光倒流推演', rightX + rightW / 2, gameTitleY + 22);
 
     // 3 条赛事级对局规格指标条 (Chips)
-    const chips = [
-      { icon: '📐', label: '谜盘规格', value: `${W} × ${H} 网格` },
-      { icon: '⏱️', label: '破局用时', value: this.statSummary || '01:19' },
-      { icon: '🎯', label: '推演步数', value: `${this.totalMoves()} 步零失误` }
-    ];
+    const chips = this.isMinesweeperGame()
+      ? [
+          { icon: '📐', label: '盘面规格', value: `${W} × ${H} (${this.effectiveReplayData()?.mines || 10} 雷)` },
+          { icon: '⏱️', label: '破局用时', value: this.statSummary || '00:45' },
+          { icon: '🎯', label: '推演步数', value: `${this.totalMoves()} 步极速还原` }
+        ]
+      : [
+          { icon: '📐', label: '谜盘规格', value: `${W} × ${H} 网格` },
+          { icon: '⏱️', label: '破局用时', value: this.statSummary || '01:19' },
+          { icon: '🎯', label: '推演步数', value: `${this.totalMoves()} 步零失误` }
+        ];
 
     const chipYStart = rightY + 114;
     const chipH = 42;
@@ -2084,7 +2514,8 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       const url = URL.createObjectURL(finalBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `puzzlepk-nonogram-${Date.now()}.${fileExt}`;
+      const filePrefix = this.gameId ? `puzzlepk-${this.gameId}` : 'puzzlepk-replay';
+      a.download = `${filePrefix}-${Date.now()}.${fileExt}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -2192,7 +2623,8 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       const url = URL.createObjectURL(gifBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `puzzlepk-nonogram-${Date.now()}.gif`;
+      const filePrefix = this.gameId ? `puzzlepk-${this.gameId}` : 'puzzlepk-replay';
+      a.download = `${filePrefix}-${Date.now()}.gif`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

@@ -15,6 +15,7 @@
   [currentDifficulty]="currentDifficulty()"
   [availableDifficulties]="predefinedDifficulties"
   (difficultyChange)="changeSingleDifficulty($event)"
+  [replayData]="store.getReplayData()"
   [overlayStats]="getOverlayStats()"
   [customResultTitle]="getOverlayTitle()"
   [customResultSubtitle]="getOverlaySubtitle()"
@@ -347,18 +348,27 @@
             </div>
 
             <!-- Actions Toolbar -->
-            <div class="flex-none w-full max-w-[600px] mx-auto relative z-10 shrink-0 pb-0.5 sm:pb-1">
-              <app-game-toolbar
-                [layoutStyle]="'compact'"
-                [showPrev]="false"
-                [showNext]="false"
-                [showUndo]="false"
-                [showRestart]="currentRoomMode() === GameMode.Single"
-                [showHint]="currentRoomMode() === GameMode.Single"
-                hintLayout="sudoku"
-                (restart)="changeSingleDifficulty(currentDifficulty())"
-                (hintApplied)="store.applyHint()"
-              ></app-game-toolbar>
+            <div class="flex-none w-full max-w-[600px] mx-auto relative z-10 shrink-0 pb-0.5 sm:pb-1 flex items-center gap-2">
+              <div class="flex-1 min-w-0">
+                <app-game-toolbar
+                  [layoutStyle]="'compact'"
+                  [showPrev]="false"
+                  [showNext]="false"
+                  [showUndo]="false"
+                  [showRestart]="currentRoomMode() === GameMode.Single"
+                  [showHint]="currentRoomMode() === GameMode.Single"
+                  hintLayout="sudoku"
+                  (restart)="changeSingleDifficulty(currentDifficulty())"
+                  (hintApplied)="store.applyHint()"
+                ></app-game-toolbar>
+              </div>
+              <button 
+                (click)="openReplayModal()"
+                class="px-3 py-1.5 sm:py-2 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 transition-all active:scale-95 shadow-xs cursor-pointer flex flex-col items-center justify-center shrink-0 min-w-[54px] h-[52px]"
+                title="回放复盘 (极速排雷时光倒流 & 视频/GIF导出)">
+                <span class="text-base sm:text-lg leading-none mb-0.5">🎬</span>
+                <span class="text-[10px] md:text-xs font-bold">复盘</span>
+              </button>
             </div>
           </div>
 
@@ -408,3 +418,12 @@
     </div>
   }
 </app-game-layout>
+
+@if (showInGameReplayModal()) {
+  <app-timelapse-modal
+    [gameTitle]="i18n.t('lobby.minesweeper')() || '扫雷'"
+    [gameId]="'minesweeper'"
+    [statSummary]="'雷数: ' + store.totalMines() + '颗'"
+    [replayData]="store.getReplayData()"
+    (close)="closeReplayModal()" />
+}

@@ -3,7 +3,7 @@ import { Injectable, computed, inject, effect, signal, untracked } from '@angula
 import { WebSocketService } from '../../../../core/services/websocket.service';
 import { AudioService } from '../../../../core/services/audio.service';
 import { AuthStore } from '../../../../core/auth/auth.store';
-import { LocalMinesweeperEngine, MinesweeperActionType } from './minesweeper-engine';
+import { LocalMinesweeperEngine, MinesweeperActionType, MinesweeperReplayData } from './minesweeper-engine';
 import { AdService } from '../../../../core/services/ad.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
@@ -427,6 +427,34 @@ export class MinesweeperStore extends BaseGameStore {
     }
     this.recordHintUsed();
     this.dispatch({ type: MinesweeperActionType.Hint });
+  }
+
+  getReplayData(): MinesweeperReplayData | null {
+    const engine = this.localEngine();
+    if (!engine || engine.width <= 0 || engine.height <= 0) return null;
+    const moves = engine.moveHistory;
+    const isWin = engine.status === GameStatus.Finished && !engine.cells.some(row => row.some(c => c.state === CellState.Exploded));
+
+    if (!moves || moves.length === 0) {
+      return LocalMinesweeperEngine.generateReplay(engine.width, engine.height, engine.mines);
+    }
+
+    return {
+      gameId: 'minesweeper',
+      width: engine.width,
+      height: engine.height,
+      mines: engine.mines,
+      moves: [...moves],
+      durationMs: Math.max(1000, (engine.endAt || Date.now()) - (engine.startAt || Date.now())),
+      isWin,
+      finalGrid: engine.cells.map(row => row.map(c => ({
+        x: c.x,
+        y: c.y,
+        state: c.state,
+        neighbors: c.neighbors,
+        isMine: (c as any).isMine
+      })))
+    };
   }
 }
 

@@ -40,11 +40,24 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
+import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
 
 @Component({
   selector: 'app-minesweeper',
   standalone: true,
-  imports: [CommonModule, FormsModule, CellComponent, GameToolbarComponent, GameFrozenOverlayComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent, GameStatusHudComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CellComponent,
+    GameToolbarComponent,
+    GameFrozenOverlayComponent,
+    GameLayoutComponent,
+    GamePkHudComponent,
+    GameHandheldHeaderComponent,
+    DifficultySelectorComponent,
+    GameStatusHudComponent,
+    TimelapseModalComponent
+  ],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './minesweeper.component.html',
@@ -52,6 +65,16 @@ import { GameStatusHudComponent } from '../../../shared/components/game-status-h
 })
 export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(MinesweeperStore);
+  showInGameReplayModal = signal(false);
+
+  openReplayModal() {
+    this.haptic.vibrateLight();
+    this.showInGameReplayModal.set(true);
+  }
+
+  closeReplayModal() {
+    this.showInGameReplayModal.set(false);
+  }
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
   pwaService = inject(PwaService);

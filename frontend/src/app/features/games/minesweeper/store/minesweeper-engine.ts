@@ -13,6 +13,33 @@ export type MinesweeperAction =
   | { type: MinesweeperActionType.Flag, x: number, y: number }
   | { type: MinesweeperActionType.Hint };
 
+export interface MinesweeperCellSnapshot {
+  x: number;
+  y: number;
+  state: CellState;
+  neighbors: number;
+  isMine?: boolean;
+}
+
+export interface MinesweeperReplayStep {
+  type: 'reveal' | 'flag' | 'chord' | 'win' | 'explode';
+  x: number;
+  y: number;
+  time: number;
+  changes: MinesweeperCellSnapshot[];
+}
+
+export interface MinesweeperReplayData {
+  gameId: 'minesweeper';
+  width: number;
+  height: number;
+  mines: number;
+  moves: MinesweeperReplayStep[];
+  durationMs: number;
+  isWin: boolean;
+  finalGrid: MinesweeperCellSnapshot[][];
+}
+
 export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperAction> {
   width: number = 0;
   height: number = 0;
@@ -21,8 +48,23 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
   status: GameStatusType = GameStatus.Waiting;
   revealedCnt: number = 0;
   startAt: number = 0;
+  endAt: number = 0;
   isMinesPlaced: boolean = false;
   lastFailedCell: {x: number, y: number} | null = null;
+  moveHistory: MinesweeperReplayStep[] = [];
+  private currentActionChanges: MinesweeperCellSnapshot[] = [];
+
+  private recordCellChange(x: number, y: number) {
+    const c = this.cells[y]?.[x];
+    if (!c) return;
+    this.currentActionChanges.push({
+      x,
+      y,
+      state: c.state,
+      neighbors: c.neighbors,
+      isMine: (c as any).isMine
+    });
+  }
 
   initGame(config: { width: number, height: number, mines: number }) {
     this.width = config.width;
@@ -31,8 +73,11 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     this.status = GameStatus.Playing;
     this.revealedCnt = 0;
     this.startAt = Date.now();
+    this.endAt = 0;
     this.isMinesPlaced = false;
     this.lastFailedCell = null;
+    this.moveHistory = [];
+    this.currentActionChanges = [];
     this.cells = Array.from({ length: this.height }, (_, y) =>
       Array.from({ length: this.width }, (_, x) => ({
         x,
@@ -51,6 +96,9 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     this.status = GameStatus.Playing;
     this.revealedCnt = 0;
     this.startAt = Date.now();
+    this.endAt = 0;
+    this.moveHistory = [];
+    this.currentActionChanges = [];
     this.isMinesPlaced = true; // Pre-placed
 
     this.cells = Array.from({ length: this.height }, (_, y) =>
@@ -84,6 +132,19 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     }
   }
 
+  private commitMove(type: 'reveal' | 'flag' | 'chord' | 'win' | 'explode', x: number, y: number) {
+    if (this.currentActionChanges.length > 0) {
+      this.moveHistory.push({
+        type,
+        x,
+        y,
+        time: Math.max(0, Date.now() - this.startAt),
+        changes: [...this.currentActionChanges]
+      });
+      this.currentActionChanges = [];
+    }
+  }
+
   revealCell(x: number, y: number) {
     if (this.status === GameStatus.Finished || !this.isValid(x, y)) {
       return;
@@ -98,6 +159,8 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
       return;
     }
 
+    this.currentActionChanges = [];
+
     // First click logic
     if (!this.isMinesPlaced) {
       this.placeMines(x, y);
@@ -108,12 +171,16 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
       this.lastFailedCell = { x, y };
       cell.state = CellState.Exploded;
       this.status = GameStatus.Finished;
+      this.endAt = Date.now();
+      this.recordCellChange(x, y);
       this.revealAllMines();
+      this.commitMove('explode', x, y);
       return;
     }
 
     this.floodFillReveal(x, y);
     this.checkWinCondition();
+    this.commitMove('reveal', x, y);
   }
 
   chordCell(x: number, y: number) {
@@ -147,12 +214,14 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
 
     // Only chord if flagged count matches neighbor number and there are hidden cells to sweep
     if (flaggedCount === cell.neighbors && hiddenNeighbors.length > 0) {
+      this.currentActionChanges = [];
       let exploded = false;
       for (const pos of hiddenNeighbors) {
         const neighbor = this.cells[pos.y][pos.x] as any;
         if (neighbor.isMine) {
           neighbor.state = CellState.Exploded;
           this.lastFailedCell = { x: pos.x, y: pos.y };
+          this.recordCellChange(pos.x, pos.y);
           exploded = true;
         } else {
           this.floodFillReveal(pos.x, pos.y);
@@ -161,11 +230,14 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
 
       if (exploded) {
         this.status = GameStatus.Finished;
+        this.endAt = Date.now();
         this.revealAllMines();
+        this.commitMove('explode', x, y);
         return;
       }
 
       this.checkWinCondition();
+      this.commitMove('chord', x, y);
     }
   }
 
@@ -174,11 +246,16 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
       return;
     }
 
+    this.currentActionChanges = [];
     const cell = this.cells[y][x];
     if (cell.state === CellState.Hidden) {
       cell.state = CellState.Flagged;
+      this.recordCellChange(x, y);
+      this.commitMove('flag', x, y);
     } else if (cell.state === CellState.Flagged) {
       cell.state = CellState.Hidden;
+      this.recordCellChange(x, y);
+      this.commitMove('flag', x, y);
     }
   }
 
@@ -250,6 +327,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
 
     cell.state = CellState.Revealed;
     this.revealedCnt++;
+    this.recordCellChange(x, y);
 
     if (cell.neighbors === 0) {
       const dirs = [
@@ -275,12 +353,14 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     // In strict single player, winning is just revealing all safe cells
     if (this.revealedCnt === totalSafeCells) {
       this.status = GameStatus.Finished;
+      this.endAt = Date.now();
       // Auto-flag remaining mines
       for (let y = 0; y < this.height; y++) {
         for (let x = 0; x < this.width; x++) {
           const cell = this.cells[y][x] as any;
           if (cell.isMine && cell.state === CellState.Hidden) {
             cell.state = CellState.Flagged;
+            this.recordCellChange(x, y);
           }
         }
       }
@@ -293,12 +373,127 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
         const cell = this.cells[y][x] as any;
         if (cell.isMine && cell.state === CellState.Hidden) {
           cell.state = CellState.Revealed; // Just reveal them as neutral
+          this.recordCellChange(x, y);
         } else if (!cell.isMine && cell.state === CellState.Flagged) {
           // Incorrectly flagged
-          cell.state = CellState.Exploded; 
+          cell.state = CellState.Exploded;
+          this.recordCellChange(x, y);
         }
       }
     }
+  }
+
+  static generateReplay(w: number, h: number, mines: number): MinesweeperReplayData {
+    const engine = new LocalMinesweeperEngine();
+    engine.initGame({ width: w, height: h, mines });
+    
+    // First, pick center or random safe cell to start
+    const cx = Math.floor(w / 2);
+    const cy = Math.floor(h / 2);
+    engine.revealCell(cx, cy);
+
+    let iterations = 0;
+    while (engine.status === GameStatus.Playing && iterations < 500) {
+      iterations++;
+      let madeProgress = false;
+
+      // 1. Look for obvious flags: revealed cell with unrevealed hidden neighbors == cell.neighbors - flaggedCount
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const c = engine.cells[y][x];
+          if (c.state !== CellState.Revealed || c.neighbors <= 0) continue;
+
+          const hiddenNeighbors: { x: number; y: number }[] = [];
+          let flagged = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = x + dx, ny = y + dy;
+              if (engine.isValid(nx, ny)) {
+                if (engine.cells[ny][nx].state === CellState.Hidden) hiddenNeighbors.push({ x: nx, y: ny });
+                else if (engine.cells[ny][nx].state === CellState.Flagged) flagged++;
+              }
+            }
+          }
+
+          if (hiddenNeighbors.length > 0 && hiddenNeighbors.length === c.neighbors - flagged) {
+            for (const n of hiddenNeighbors) {
+              engine.toggleFlag(n.x, n.y);
+            }
+            madeProgress = true;
+          }
+        }
+      }
+
+      // 2. Look for chords: flagged == c.neighbors, reveal all other hidden neighbors
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const c = engine.cells[y][x];
+          if (c.state !== CellState.Revealed || c.neighbors <= 0) continue;
+
+          let flagged = 0;
+          const hidden: { x: number; y: number }[] = [];
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = x + dx, ny = y + dy;
+              if (engine.isValid(nx, ny)) {
+                if (engine.cells[ny][nx].state === CellState.Flagged) flagged++;
+                else if (engine.cells[ny][nx].state === CellState.Hidden) hidden.push({ x: nx, y: ny });
+              }
+            }
+          }
+
+          if (flagged === c.neighbors && hidden.length > 0) {
+            engine.chordCell(x, y);
+            madeProgress = true;
+          }
+        }
+      }
+
+      // 3. Fallback: if human-like deduction is stuck, pick any safe unrevealed cell
+      if (!madeProgress && engine.status === GameStatus.Playing) {
+        const safeCandidates: { x: number; y: number }[] = [];
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const cell = engine.cells[y][x] as any;
+            if (cell.state === CellState.Hidden && !cell.isMine) {
+              safeCandidates.push({ x, y });
+            }
+          }
+        }
+        if (safeCandidates.length > 0) {
+          const pick = safeCandidates[Math.floor(Math.random() * safeCandidates.length)];
+          engine.revealCell(pick.x, pick.y);
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Assign realistic monotonic timestamps
+    let curTime = 0;
+    for (const move of engine.moveHistory) {
+      curTime += 65;
+      move.time = curTime;
+    }
+
+    return {
+      gameId: 'minesweeper',
+      width: w,
+      height: h,
+      mines,
+      moves: engine.moveHistory,
+      durationMs: Math.max(10000, curTime + 500),
+      isWin: engine.status === GameStatus.Finished && !engine.cells.some(row => row.some(c => c.state === CellState.Exploded)),
+      finalGrid: engine.cells.map(row => row.map(c => ({
+        x: c.x,
+        y: c.y,
+        state: c.state,
+        neighbors: c.neighbors,
+        isMine: (c as any).isMine
+      })))
+    };
   }
 
   private isValid(x: number, y: number): boolean {
