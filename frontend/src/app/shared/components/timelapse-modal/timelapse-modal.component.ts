@@ -1185,10 +1185,10 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     h: number,
     r: number
   ) {
+    ctx.beginPath();
     if (typeof (ctx as any).roundRect === 'function') {
       (ctx as any).roundRect(x, y, w, h, r);
     } else {
-      ctx.beginPath();
       ctx.moveTo(x + r, y);
       ctx.lineTo(x + w - r, y);
       ctx.quadraticCurveTo(x + w, y, x + w, y + r);
@@ -1259,12 +1259,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const leftW = 290;
     const leftH = 370;
 
-    ctx.fillStyle = '#0f172a';
     this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.strokeStyle = '#a855f7';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
     ctx.stroke();
 
     // 左卡片顶部小徽章
@@ -1272,12 +1271,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const lPillH = 26;
     const lpx = leftX + (leftW - lPillW) / 2;
     const lpy = leftY + 14;
-    ctx.fillStyle = '#1e1b4b';
     this.safeRoundRect(ctx, lpx, lpy, lPillW, lPillH, 13);
+    ctx.fillStyle = '#1e1b4b';
     ctx.fill();
     ctx.strokeStyle = '#a855f7';
     ctx.lineWidth = 1;
-    this.safeRoundRect(ctx, lpx, lpy, lPillW, lPillH, 13);
     ctx.stroke();
 
     ctx.fillStyle = '#e9d5ff';
@@ -1294,12 +1292,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const artX = Math.round(leftX + (leftW - artW) / 2);
     const artY = Math.round(leftY + 48 + (maxArtH - artH) / 2);
 
-    ctx.fillStyle = '#1e293b';
     this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
+    ctx.fillStyle = '#1e293b';
     ctx.fill();
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 1.5;
-    this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
     ctx.stroke();
 
     for (let y = 0; y < H; y++) {
@@ -1322,12 +1319,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
 
     // 左卡片底部金标
     const artBadgeY = leftY + leftH - 46;
-    ctx.fillStyle = '#1e293b';
     this.safeRoundRect(ctx, leftX + 18, artBadgeY, leftW - 36, 32, 16);
+    ctx.fillStyle = '#1e293b';
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 1.2;
-    this.safeRoundRect(ctx, leftX + 18, artBadgeY, leftW - 36, 32, 16);
     ctx.stroke();
 
     ctx.fillStyle = '#fbbf24';
@@ -1341,12 +1337,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const rightW = 350;
     const rightH = 370;
 
-    ctx.fillStyle = '#0f172a';
     this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
     ctx.stroke();
 
     // 右卡片顶部官方胶囊
@@ -1354,12 +1349,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const rBadgeH = 30;
     const rbx = rightX + (rightW - rBadgeW) / 2;
     const rby = rightY + 16;
-    ctx.fillStyle = '#1e1b4b';
     this.safeRoundRect(ctx, rbx, rby, rBadgeW, rBadgeH, 15);
+    ctx.fillStyle = '#1e1b4b';
     ctx.fill();
     ctx.strokeStyle = '#818cf8';
     ctx.lineWidth = 1;
-    this.safeRoundRect(ctx, rbx, rby, rBadgeW, rBadgeH, 15);
     ctx.stroke();
 
     ctx.fillStyle = '#c7d2fe';
@@ -1389,12 +1383,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       const cy = chipYStart + i * (chipH + 8);
       const chip = chips[i];
 
-      ctx.fillStyle = '#1e293b';
       this.safeRoundRect(ctx, rightX + 16, cy, rightW - 32, chipH, 12);
+      ctx.fillStyle = '#1e293b';
       ctx.fill();
       ctx.strokeStyle = '#334155';
       ctx.lineWidth = 1;
-      this.safeRoundRect(ctx, rightX + 16, cy, rightW - 32, chipH, 12);
       ctx.stroke();
 
       ctx.textAlign = 'left';
@@ -1423,12 +1416,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const bottomW = 650;
     const bottomH = 130;
 
-    ctx.fillStyle = '#0f172a';
     this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
     ctx.stroke();
 
     ctx.textAlign = 'center';
@@ -1521,12 +1513,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const leftW = 290;
     const leftH = 370;
 
-    ctx.fillStyle = '#0f172a';
     this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
     ctx.stroke();
 
     // 顶部荣耀金条
@@ -1534,8 +1525,8 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const lPillH = 30;
     const lpx = leftX + (leftW - lPillW) / 2;
     const lpy = leftY + 14;
-    ctx.fillStyle = '#f59e0b';
     this.safeRoundRect(ctx, lpx, lpy, lPillW, lPillH, 15);
+    ctx.fillStyle = '#f59e0b';
     ctx.fill();
 
     ctx.fillStyle = '#0f172a';
@@ -1552,12 +1543,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const artX = Math.round(leftX + (leftW - artW) / 2);
     const artY = Math.round(leftY + 50 + (maxArtH - artH) / 2);
 
-    ctx.fillStyle = '#1e293b';
     this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
+    ctx.fillStyle = '#1e293b';
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 1.5;
-    this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
     ctx.stroke();
 
     for (let y = 0; y < H; y++) {
@@ -1580,12 +1570,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
 
     // 左卡片底部战绩
     const artBadgeY = leftY + leftH - 46;
-    ctx.fillStyle = '#1e293b';
     this.safeRoundRect(ctx, leftX + 16, artBadgeY, leftW - 32, 32, 16);
+    ctx.fillStyle = '#1e293b';
     ctx.fill();
     ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 1.2;
-    this.safeRoundRect(ctx, leftX + 16, artBadgeY, leftW - 32, 32, 16);
     ctx.stroke();
 
     ctx.fillStyle = '#34d399';
@@ -1599,12 +1588,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const rightW = 350;
     const rightH = 370;
 
-    ctx.fillStyle = '#0f172a';
     this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.strokeStyle = '#a855f7';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
     ctx.stroke();
 
     // 标语
@@ -1626,8 +1614,8 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const btnH = 54;
     const bx = rightX + (rightW - btnW) / 2;
     const by = rightY + 126;
-    ctx.fillStyle = '#f59e0b';
     this.safeRoundRect(ctx, bx, by, btnW, btnH, 16);
+    ctx.fillStyle = '#f59e0b';
     ctx.fill();
 
     ctx.fillStyle = '#090d16';
@@ -1658,12 +1646,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     const bottomW = 650;
     const bottomH = 130;
 
-    ctx.fillStyle = '#0f172a';
     this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
+    ctx.fillStyle = '#0f172a';
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
     ctx.stroke();
 
     ctx.textAlign = 'center';
