@@ -461,11 +461,11 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
               <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full border-4 border-purple-500/20 border-t-purple-400 animate-spin"></div>
               <div class="text-center px-4">
                 <h4 class="text-sm sm:text-base font-black text-white flex items-center justify-center gap-2">
-                  <span>{{ exportType() === 'video' ? '🎬 正在导出 10秒真实棋盘视频' : '🎞️ 正在合成真实棋盘 GIF' }}</span>
+                  <span>{{ exportType() === 'video' ? '🎬 正在导出官方推广视频' : '🎞️ 正在合成真实棋盘 GIF' }}</span>
                   <span class="font-mono text-amber-300">{{ exportProgress() }}%</span>
                 </h4>
                 <p class="text-xs text-slate-400 mt-1">
-                  100% 还原真实棋盘边框与提示数字，马上为您下载...
+                  {{ exportType() === 'video' ? (includePromoTrailer() ? '正在合成官网片头、1:1 真实棋盘推演与推广片尾...' : '正在导出真实棋盘推演视频...') : '100% 还原真实棋盘边框与提示数字，马上为您下载...' }}
                 </p>
               </div>
               <div class="w-48 sm:w-64 h-2 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
@@ -491,6 +491,65 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
             </div>
           </div>
         </div>
+
+        <!-- Promotion & Duration Options Toolbar -->
+        @if (hasReplayMoves()) {
+          <div class="flex items-center justify-between gap-2.5 px-3 py-2 rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-xs flex-wrap">
+            <!-- Include Promo Trailer Toggle -->
+            <label class="flex items-center gap-2 cursor-pointer select-none text-[var(--color-text-main)] font-bold">
+              <input type="checkbox"
+                     [checked]="includePromoTrailer()"
+                     (change)="togglePromoTrailer()"
+                     class="w-4 h-4 accent-purple-600 rounded cursor-pointer">
+              <span class="flex items-center gap-1.5">
+                <span>📣</span>
+                <span>包含官方宣传片头+片尾</span>
+              </span>
+              <span class="px-1.5 py-0.2 rounded text-[10px] bg-purple-500/20 text-purple-400 font-mono font-bold border border-purple-500/30">
+                推广引流
+              </span>
+            </label>
+
+            <!-- Video Duration Mode Selector -->
+            <div class="flex items-center gap-1.5 ml-auto">
+              <span class="text-[var(--color-text-muted)] text-[11px] font-medium hidden sm:inline">推演时长:</span>
+              <div class="flex items-center gap-1 bg-[var(--color-bg-card)] p-0.5 rounded-xl border border-[var(--color-border-card)]">
+                <button (click)="setDurationMode('10s')"
+                        class="px-2 py-0.5 sm:py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+                        [class.bg-purple-600]="durationMode() === '10s'"
+                        [class.text-white]="durationMode() === '10s'"
+                        [class.text-[var(--color-text-muted)]]="durationMode() !== '10s'"
+                        title="10秒极速快节奏高光">
+                  10s极速
+                </button>
+                <button (click)="setDurationMode('15s')"
+                        class="px-2 py-0.5 sm:py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+                        [class.bg-purple-600]="durationMode() === '15s'"
+                        [class.text-white]="durationMode() === '15s'"
+                        [class.text-[var(--color-text-muted)]]="durationMode() !== '15s'"
+                        title="15秒短视频推荐时长（抖音/B站/视频号最佳）">
+                  15s短视频
+                </button>
+                <button (click)="setDurationMode('25s')"
+                        class="px-2 py-0.5 sm:py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+                        [class.bg-purple-600]="durationMode() === '25s'"
+                        [class.text-white]="durationMode() === '25s'"
+                        [class.text-[var(--color-text-muted)]]="durationMode() !== '25s'"
+                        title="25秒深度推演，慢节奏看清每步">
+                  25s深度
+                </button>
+                <button (click)="setDurationMode('auto')"
+                        class="px-2 py-0.5 sm:py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+                        [class.bg-purple-600]="durationMode() === 'auto'"
+                        [class.text-white]="durationMode() === 'auto'"
+                        [class.text-[var(--color-text-muted)]]="durationMode() !== 'auto'"
+                        title="根据真实下棋时长智能自动延长推演">
+                  ⚡自适应实际
+                </button>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Playback & Export Controls -->
         <div class="flex items-center justify-between gap-2 px-1 flex-wrap">
@@ -587,6 +646,19 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   exportType = signal<'video' | 'gif'>('video');
   exportProgress = signal(0);
   lastExportMsg = signal<string | null>(null);
+
+  includePromoTrailer = signal(true);
+  durationMode = signal<'10s' | '15s' | '25s' | 'auto'>('15s');
+
+  togglePromoTrailer() {
+    this.includePromoTrailer.update(v => !v);
+    this.haptic.vibrateLight();
+  }
+
+  setDurationMode(mode: '10s' | '15s' | '25s' | 'auto') {
+    this.durationMode.set(mode);
+    this.haptic.vibrateLight();
+  }
 
   readonly width = computed(() => this.replayData?.width || 5);
   readonly height = computed(() => this.replayData?.height || 5);
@@ -1066,15 +1138,328 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.fillText('puzzlepk.com', size - 36, size - 24);
   }
 
+  private safeRoundRect(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) {
+    if (typeof (ctx as any).roundRect === 'function') {
+      (ctx as any).roundRect(x, y, w, h, r);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+  }
+
   /**
-   * 导出 10秒真实棋盘视频 (MP4 / WebM)
+   * 渲染官方品牌片头（100% 契合网站暗黑竞技霓虹视觉规范）
+   */
+  private renderIntroFrame(ctx: CanvasRenderingContext2D, size: number, progress: number) {
+    // 1. 官网级深邃星空底色 + 径向紫色霓虹氛围光
+    ctx.fillStyle = '#080d1a';
+    ctx.fillRect(0, 0, size, size);
+
+    const grad = ctx.createRadialGradient(size / 2, size / 2 - 30, 40, size / 2, size / 2 - 30, size * 0.65);
+    grad.addColorStop(0, 'rgba(147, 51, 234, 0.32)');
+    grad.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
+    grad.addColorStop(1, 'rgba(8, 13, 26, 0.95)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    // 点阵暗纹装饰
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    for (let gx = 36; gx < size; gx += 36) {
+      for (let gy = 36; gy < size; gy += 36) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 2. 顶部 HUD
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(36, 36, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('REC • PUZZLE PK', 48, 41);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('puzzlepk.com', size - 36, 41);
+
+    // 3. 中央官方卡片
+    const cardW = 620;
+    const cardH = 470;
+    const cardX = (size - cardW) / 2;
+    const cardY = (size - cardH) / 2;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(168, 85, 247, 0.35)';
+    ctx.shadowBlur = 32;
+    ctx.fillStyle = '#0f172a';
+    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+    ctx.lineWidth = 2;
+    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    ctx.stroke();
+
+    // 顶部紫色光刃线条
+    const accentGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY);
+    accentGrad.addColorStop(0, 'transparent');
+    accentGrad.addColorStop(0.5, '#c084fc');
+    accentGrad.addColorStop(1, 'transparent');
+    ctx.strokeStyle = accentGrad;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cardX + 40, cardY);
+    ctx.lineTo(cardX + cardW - 40, cardY);
+    ctx.stroke();
+
+    // 官方竞技大厅徽章胶囊
+    const badgeW = 340;
+    const badgeH = 36;
+    const bx = (size - badgeW) / 2;
+    const by = cardY + 36;
+    ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
+    this.safeRoundRect(ctx, bx, by, badgeW, badgeH, 18);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#d8b4fe';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚔️ PUZZLE PK · 全球益智竞技大厅', size / 2, by + 23);
+
+    // 主标题
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('高光破局 · 极限时光倒流', size / 2, cardY + 120);
+
+    // 游戏详情与难度
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    const subText = `${this.gameTitle || '数织对决'} · ${this.statSummary || '巅峰对局推演'}`;
+    ctx.fillText(subText, size / 2, cardY + 160);
+
+    // 推广引流核心通告栏
+    const boxW = 540;
+    const boxH = 130;
+    const boxX = (size - boxW) / 2;
+    const boxY = cardY + 195;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    this.safeRoundRect(ctx, boxX, boxY, boxW, boxH, 16);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('🔥 浏览器直接输入 puzzlepk.com 即开即玩', size / 2, boxY + 40);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('⚡ 扫雷 · 数织 · 数独 · 俄罗斯方块 · 推箱子 · 24点', size / 2, boxY + 74);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('零下载安装 · 零广告打扰 · 全网玩家在线排位对战', size / 2, boxY + 104);
+
+    // 底部即将开始提示
+    ctx.fillStyle = '#c084fc';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('🎬 精彩推演示意即将开始...', size / 2, cardY + 375);
+
+    // 倒计时进度条
+    const pbarW = 380;
+    const pbarH = 6;
+    const px = (size - pbarW) / 2;
+    const py = cardY + 400;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    this.safeRoundRect(ctx, px, py, pbarW, pbarH, 3);
+    ctx.fill();
+
+    const pFill = Math.min(1, Math.max(0, progress));
+    ctx.fillStyle = '#a855f7';
+    this.safeRoundRect(ctx, px, py, Math.max(4, pbarW * pFill), pbarH, 3);
+    ctx.fill();
+
+    // 底部版权
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px monospace';
+    ctx.fillText('Official Game Replay · puzzlepk.com', size / 2, size - 24);
+  }
+
+  /**
+   * 渲染官方品牌片尾（高转化引流 Call-To-Action）
+   */
+  private renderOutroFrame(ctx: CanvasRenderingContext2D, size: number, progress: number) {
+    // 1. 官网级深邃底色 + 暖金/紫色庆贺光晕
+    ctx.fillStyle = '#080d1a';
+    ctx.fillRect(0, 0, size, size);
+
+    const grad = ctx.createRadialGradient(size / 2, size / 2 - 20, 50, size / 2, size / 2 - 20, size * 0.7);
+    grad.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
+    grad.addColorStop(0.4, 'rgba(147, 51, 234, 0.2)');
+    grad.addColorStop(1, 'rgba(8, 13, 26, 0.95)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    // 点阵暗纹
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    for (let gx = 36; gx < size; gx += 36) {
+      for (let gy = 36; gy < size; gy += 36) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 2. 顶部 HUD
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('PUZZLE PK • REPLAY COMPLETE', 36, 41);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('puzzlepk.com', size - 36, 41);
+
+    // 3. 中央高光转化卡片
+    const cardW = 630;
+    const cardH = 500;
+    const cardX = (size - cardW) / 2;
+    const cardY = (size - cardH) / 2;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(245, 158, 11, 0.35)';
+    ctx.shadowBlur = 36;
+    ctx.fillStyle = '#0f172a';
+    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+    ctx.lineWidth = 2.5;
+    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    ctx.stroke();
+
+    // 通关荣耀横幅
+    const trophyW = 380;
+    const trophyH = 48;
+    const tx = (size - trophyW) / 2;
+    const ty = cardY + 28;
+
+    const goldGrad = ctx.createLinearGradient(tx, ty, tx + trophyW, ty);
+    goldGrad.addColorStop(0, '#f59e0b');
+    goldGrad.addColorStop(0.5, '#fbbf24');
+    goldGrad.addColorStop(1, '#f59e0b');
+    ctx.fillStyle = goldGrad;
+    this.safeRoundRect(ctx, tx, ty, trophyW, trophyH, 24);
+    ctx.fill();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 21px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 100% PERFECT CLEAR!', size / 2, ty + 31);
+
+    // 步数与战绩
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`谜面已完全解开 · 全程 ${this.totalMoves()} 步推演无误`, size / 2, cardY + 112);
+
+    // 推广转化大卡片 (CTA)
+    const promoW = 550;
+    const promoH = 225;
+    const px = (size - promoW) / 2;
+    const py = cardY + 140;
+
+    const promoGrad = ctx.createLinearGradient(px, py, px, py + promoH);
+    promoGrad.addColorStop(0, 'rgba(147, 51, 234, 0.28)');
+    promoGrad.addColorStop(1, 'rgba(99, 102, 241, 0.28)');
+    ctx.fillStyle = promoGrad;
+    this.safeRoundRect(ctx, px, py, promoW, promoH, 18);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.55)';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // 引导标语
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('⚔️ 挑战全网极限记录 · 与好友真人实时对决', size / 2, py + 38);
+
+    // 醒目网站域名大胶囊按钮
+    const pillW = 440;
+    const pillH = 54;
+    const pillX = (size - pillW) / 2;
+    const pillY = py + 58;
+
+    ctx.fillStyle = '#f59e0b';
+    this.safeRoundRect(ctx, pillX, pillY, pillW, pillH, 14);
+    ctx.fill();
+
+    ctx.fillStyle = '#090d16';
+    ctx.font = '900 25px monospace';
+    ctx.fillText('👉 puzzlepk.com 👈', size / 2, pillY + 36);
+
+    // 核心卖点
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('📱 手机 / 电脑浏览器打开即玩 · 零下载 · 零广告', size / 2, py + 152);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('数织 · 扫雷 · 数独 · 俄罗斯方块 · 24点 · 天梯排位榜', size / 2, py + 184);
+
+    // 底部提示
+    ctx.fillStyle = '#c084fc';
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('🔍 搜索「Puzzle PK」或保存视频分享给好友挑战！', size / 2, cardY + 415);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px monospace';
+    ctx.fillText('Puzzle PK · 极限记录殿堂收录', size / 2, cardY + 450);
+
+    // 底脚
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px monospace';
+    ctx.fillText('puzzlepk.com · Play Online Anytime', size / 2, size - 24);
+  }
+
+  /**
+   * 导出官方推广视频 (MP4 / WebM，可选择包含网站宣传片头与片尾，并支持时长定制)
    */
   async exportVideo() {
     if (this.isExporting() || !this.hasReplayMoves()) return;
 
     this.isExporting.set(true);
     this.exportType.set('video');
-    this.exportProgress.set(5);
+    this.exportProgress.set(3);
     this.lastExportMsg.set(null);
     this.haptic.vibrateLight();
     this.pausePlayback();
@@ -1088,8 +1473,10 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         return;
       }
 
+      const hasPromo = this.includePromoTrailer();
+      const mode = this.durationMode();
+
       // 1. 优选 MP4（原生兼容 Windows Media Player、Mac QuickTime、iOS、Android、微信及常见播放器）
-      //    如不支持 MP4 则降级为 WebM (VP8/VP9)，并使用 fixWebmDuration 补齐缺失的 EBML 时长元数据
       const candidateTypes = [
         { mime: 'video/mp4;codecs=avc1', ext: 'mp4' },
         { mime: 'video/mp4;codecs=h264', ext: 'mp4' },
@@ -1124,8 +1511,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       canvas.width = size;
       canvas.height = size;
 
-      // 关键修复：Chromium 在 Canvas 脱离 DOM 时，captureStream 会被节流或丢弃帧包
-      // 将其固定在屏幕外，确保合成器（Compositor）持续为其分配渲染时序
+      // 挂载至屏幕外，确保合成器为 captureStream 稳定提供时钟
       canvas.style.position = 'fixed';
       canvas.style.left = '-9999px';
       canvas.style.top = '-9999px';
@@ -1140,9 +1526,30 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       const ctx = canvas.getContext('2d', { willReadFrequently: false });
       if (!ctx) throw new Error('Canvas 2D context unavailable');
 
-      // 2. 先渲染第 0 帧，确保 Track 获得初始画面缓冲
-      const initialGrid = this.buildGridForMoveCount(0, false);
-      this.renderRealBoardFrame(ctx, size, initialGrid, 0, 0, undefined);
+      // 计算不同时长模式下的推演帧数
+      let boardCount = 55; // 15s 推荐模式
+      if (mode === '10s') {
+        boardCount = 36;
+      } else if (mode === '25s') {
+        boardCount = 90;
+      } else if (mode === 'auto') {
+        // 根据实际游戏用时 durationMs 动态自适应延长推演帧数
+        const realSec = Math.round((this.replayData?.durationMs || 30000) / 1000);
+        boardCount = Math.max(35, Math.min(100, Math.round(realSec * 0.75 + this.totalMoves() * 0.35)));
+      }
+
+      const introCount = hasPromo ? 22 : 0; // 约 1.8s 片头
+      const outroCount = hasPromo ? 28 : 0; // 约 2.3s 片尾
+      const holdCount = hasPromo ? 8 : 14;   // 棋盘解开定格
+      const totalFrames = introCount + boardCount + holdCount + outroCount;
+
+      // 预先渲染第 0 帧缓冲
+      if (hasPromo) {
+        this.renderIntroFrame(ctx, size, 0);
+      } else {
+        const initialGrid = this.buildGridForMoveCount(0, false);
+        this.renderRealBoardFrame(ctx, size, initialGrid, 0, 0, undefined);
+      }
 
       const stream = canvas.captureStream(30);
       const track = stream.getVideoTracks()[0] as any;
@@ -1161,30 +1568,54 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       };
 
       const recordStartTime = Date.now();
-      // 使用 100ms 切片，确保 Cluster 容器索引与时序完整，避免单一大块写入损坏
       recorder.start(100);
 
-      const frameCount = 40;
-      for (let i = 0; i <= frameCount; i++) {
-        const stepPct = Math.round((i / frameCount) * 100);
+      let currentRecordedFrame = 0;
+
+      // 1. 录制官方宣传片头
+      if (hasPromo) {
+        for (let i = 0; i < introCount; i++) {
+          const p = i / (introCount - 1);
+          this.renderIntroFrame(ctx, size, p);
+          if (track?.requestFrame) track.requestFrame();
+          currentRecordedFrame++;
+          this.exportProgress.set(Math.round((currentRecordedFrame / totalFrames) * 92));
+          await new Promise(r => setTimeout(r, 65));
+        }
+      }
+
+      // 2. 录制 1:1 真实数织棋盘步数还原推演
+      for (let i = 0; i <= boardCount; i++) {
+        const stepPct = Math.round((i / boardCount) * 100);
         const moveIdx = Math.min(this.totalMoves(), Math.floor((stepPct / 100) * this.totalMoves()));
         const frameGrid = this.buildGridForMoveCount(moveIdx, stepPct >= 100);
         const lastM = moveIdx > 0 ? this.replayData.moves[moveIdx - 1] : undefined;
 
         this.renderRealBoardFrame(ctx, size, frameGrid, stepPct, moveIdx, lastM);
-        if (track?.requestFrame) {
-          track.requestFrame();
-        }
-        this.exportProgress.set(Math.round((i / frameCount) * 88));
+        if (track?.requestFrame) track.requestFrame();
+        currentRecordedFrame++;
+        this.exportProgress.set(Math.round((currentRecordedFrame / totalFrames) * 92));
         await new Promise(r => setTimeout(r, 65));
       }
 
-      // 终局完整大图与胜利勋章画面停留 1.2 秒，确保观众看清终局杰作
-      for (let j = 0; j < 12; j++) {
-        if (track?.requestFrame) {
-          track.requestFrame();
+      // 3. 终局棋盘与胜利大标定格
+      for (let j = 0; j < holdCount; j++) {
+        if (track?.requestFrame) track.requestFrame();
+        currentRecordedFrame++;
+        this.exportProgress.set(Math.round((currentRecordedFrame / totalFrames) * 92));
+        await new Promise(r => setTimeout(r, 80));
+      }
+
+      // 4. 录制官方宣传片尾（高转化引流）
+      if (hasPromo) {
+        for (let i = 0; i < outroCount; i++) {
+          const p = i / (outroCount - 1);
+          this.renderOutroFrame(ctx, size, p);
+          if (track?.requestFrame) track.requestFrame();
+          currentRecordedFrame++;
+          this.exportProgress.set(Math.round((currentRecordedFrame / totalFrames) * 92));
+          await new Promise(r => setTimeout(r, 65));
         }
-        await new Promise(r => setTimeout(r, 100));
       }
 
       this.exportProgress.set(95);
@@ -1201,7 +1632,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       recorder.stop();
       let finalBlob = await recordPromise;
 
-      // 3. 如果导出的是 WebM，使用 fixWebmDuration 补全 EBML Segment Info 时长元数据，解决播放器打不开/无法拖进度条的问题
+      // 5. 若为 WebM，补全 EBML Segment Info 时长元数据
       if (fileExt === 'webm' || (finalBlob.type && finalBlob.type.includes('webm'))) {
         try {
           finalBlob = await fixWebmDuration(finalBlob, recordDuration, { logger: false });
@@ -1222,12 +1653,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       this.exportProgress.set(100);
       this.audio.playWin();
       this.haptic.vibrateSuccess();
-      this.lastExportMsg.set('✅ 真实棋盘 GIF 动画导出成功！所见即所得。');
 
-      if (fileExt === 'mp4') {
-        this.lastExportMsg.set('✅ MP4 视频导出成功！通用格式兼容 Windows/Mac/手机及微信直接播放。');
+      if (hasPromo) {
+        this.lastExportMsg.set(`✅ 包含官方片头片尾的推广视频导出成功！格式为 .${fileExt}，可直接分享至短视频平台或群聊！`);
       } else {
-        this.lastExportMsg.set('✅ WebM 视频导出成功（已自动补全时长索引）！如系统老旧播放器未装解码器，可直接拖入任意现代浏览器观看或导出 GIF 动图。');
+        this.lastExportMsg.set(`✅ 纯棋盘推演视频导出成功！格式为 .${fileExt}。`);
       }
     } catch (e) {
       console.error('Failed to export video:', e);
@@ -1241,7 +1671,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 导出 100% 真实棋盘动图 (GIF)
+   * 导出 100% 真实棋盘动图 (GIF)，支持选择是否包含官方片头片尾
    */
   async exportGif() {
     if (this.isExporting() || !this.hasReplayMoves()) return;
@@ -1281,9 +1711,19 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         [2, 6, 23]
       ];
 
+      const hasPromo = this.includePromoTrailer();
       const encoder = new MiniGifEncoder(size, size, customPalette);
-      const totalSteps = 18;
 
+      // 片头（2帧，适度停留展示品牌）
+      if (hasPromo) {
+        this.renderIntroFrame(ctx, size, 0.4);
+        encoder.addFrame(ctx.getImageData(0, 0, size, size).data, 60);
+        this.renderIntroFrame(ctx, size, 1.0);
+        encoder.addFrame(ctx.getImageData(0, 0, size, size).data, 60);
+      }
+
+      // 棋盘推演（18帧，流畅还原）
+      const totalSteps = 18;
       for (let i = 0; i < totalSteps; i++) {
         const stepPct = Math.round((i / (totalSteps - 1)) * 100);
         const moveIdx = Math.min(this.totalMoves(), Math.floor((stepPct / 100) * this.totalMoves()));
@@ -1293,11 +1733,19 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         this.renderRealBoardFrame(ctx, size, frameGrid, stepPct, moveIdx, lastM);
 
         const imageData = ctx.getImageData(0, 0, size, size);
-        const delay = (i === totalSteps - 1) ? 100 : 16;
+        const delay = (i === totalSteps - 1 && !hasPromo) ? 100 : 16;
         encoder.addFrame(imageData.data, delay);
 
-        this.exportProgress.set(Math.round(((i + 1) / totalSteps) * 95));
+        this.exportProgress.set(Math.round(20 + ((i + 1) / totalSteps) * 60));
         await new Promise(r => setTimeout(r, 15));
+      }
+
+      // 片尾（2帧，适度停留展示推广网址）
+      if (hasPromo) {
+        this.renderOutroFrame(ctx, size, 0.4);
+        encoder.addFrame(ctx.getImageData(0, 0, size, size).data, 70);
+        this.renderOutroFrame(ctx, size, 1.0);
+        encoder.addFrame(ctx.getImageData(0, 0, size, size).data, 90);
       }
 
       const gifBlob = encoder.finish();
@@ -1313,7 +1761,11 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       this.exportProgress.set(100);
       this.audio.playWin();
       this.haptic.vibrateSuccess();
-      this.lastExportMsg.set('✅ 真实棋盘 GIF 动画导出成功！所见即所得。');
+      if (hasPromo) {
+        this.lastExportMsg.set('✅ 包含官方推广片头片尾的 GIF 动图导出成功！所见即所得。');
+      } else {
+        this.lastExportMsg.set('✅ 真实棋盘 GIF 动画导出成功！所见即所得。');
+      }
     } catch (e) {
       console.error('Failed to export GIF:', e);
       alert('导出 GIF 失败，请重试。');
