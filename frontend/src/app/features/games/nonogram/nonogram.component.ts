@@ -32,11 +32,22 @@ import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-ico
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
+import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
 
 @Component({
   selector: 'app-nonogram',
   standalone: true,
-  imports: [CommonModule, FormsModule, GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameHandheldHeaderComponent, DifficultySelectorComponent, GameStatusHudComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    GameToolbarComponent,
+    GameLayoutComponent,
+    GamePkHudComponent,
+    GameHandheldHeaderComponent,
+    DifficultySelectorComponent,
+    GameStatusHudComponent,
+    TimelapseModalComponent
+  ],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
   providers: [NonogramStore],
@@ -100,6 +111,17 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.store.currentDifficulty.set(diff);
     setSavedDifficulty('nonogram', diff);
     this.store.playAgain();
+  }
+
+  showInGameReplayModal = signal(false);
+
+  openReplayModal() {
+    this.haptic.vibrateLight();
+    this.showInGameReplayModal.set(true);
+  }
+
+  closeReplayModal() {
+    this.showInGameReplayModal.set(false);
   }
 
   constructor() {

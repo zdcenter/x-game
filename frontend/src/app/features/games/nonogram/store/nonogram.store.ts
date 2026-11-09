@@ -378,9 +378,13 @@ export class NonogramStore extends BaseGameStore {
     isSpectator?: boolean
   ) {
     if (mode === GameMode.Single && !isSpectator) {
-      const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
-      if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
-        difficulty = savedDiff;
+      if (!difficulty) {
+        const savedDiff = typeof localStorage !== 'undefined'
+          ? (localStorage.getItem('game_difficulty_nonogram') || localStorage.getItem('nonogram_difficulty'))
+          : null;
+        if (savedDiff) {
+          difficulty = savedDiff;
+        }
       }
     }
     const finalDiff = difficulty || GameDifficulty.Easy;
@@ -758,19 +762,28 @@ export class NonogramStore extends BaseGameStore {
     this.startNewSingleGame(this.currentDifficulty() as string);
   }
 
-  private initSinglePlayer(difficulty: string) {
+  private initSinglePlayer(difficulty?: string) {
     this.hintsUsed.set(0);
-    const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
-    if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
-      difficulty = savedDiff;
-      this.currentDifficulty.set(difficulty);
+    if (!difficulty) {
+      const savedDiff = typeof localStorage !== 'undefined'
+        ? (localStorage.getItem('game_difficulty_nonogram') || localStorage.getItem('nonogram_difficulty'))
+        : null;
+      if (savedDiff) {
+        difficulty = savedDiff;
+      }
+    }
+    const finalDiff = difficulty || GameDifficulty.Easy;
+    this.currentDifficulty.set(finalDiff);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('game_difficulty_nonogram', finalDiff);
+      localStorage.setItem('nonogram_difficulty', finalDiff);
     }
 
     let w = 5, h = 5;
-    if (difficulty === GameDifficulty.Medium) { w = 10; h = 10; }
-    else if (difficulty === GameDifficulty.Hard) { w = 15; h = 15; }
-    else if (difficulty === GameDifficulty.Expert) { w = 20; h = 20; }
-    else if (difficulty === GameDifficulty.Master) { w = 25; h = 25; }
+    if (finalDiff === 'medium' || finalDiff === GameDifficulty.Medium) { w = 10; h = 10; }
+    else if (finalDiff === 'hard' || finalDiff === GameDifficulty.Hard) { w = 15; h = 15; }
+    else if (finalDiff === 'expert' || finalDiff === GameDifficulty.Expert) { w = 20; h = 20; }
+    else if (finalDiff === 'master' || finalDiff === GameDifficulty.Master) { w = 25; h = 25; }
 
     const { grid: answerGrid, rowHints, colHints } = NonogramEngine.generate(w, h);
     const grid: CellState[][] = Array(h).fill(0).map(() => Array(w).fill(0));

@@ -370,6 +370,35 @@ function parseHexRgb(hex: string, fallback: [number, number, number]): [number, 
           </button>
         </div>
 
+        <!-- Nonogram Multi-Difficulty Switcher -->
+        @if (isNonogramGame()) {
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 -mt-1 scrollbar-none flex-wrap sm:flex-nowrap">
+            <span class="text-[11px] sm:text-xs font-bold text-[var(--color-text-muted)] shrink-0 mr-1 flex items-center gap-1">
+              <span>🎯</span>
+              <span>切换回放难度:</span>
+            </span>
+            <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+              @for (diff of nonogramDiffList; track diff.id) {
+                <button (click)="selectDifficulty(diff.id)"
+                        class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 border"
+                        [class.bg-gradient-to-r]="activeDiffId() === diff.id"
+                        [class.from-purple-600]="activeDiffId() === diff.id"
+                        [class.to-indigo-600]="activeDiffId() === diff.id"
+                        [class.text-white]="activeDiffId() === diff.id"
+                        [class.border-purple-500/50]="activeDiffId() === diff.id"
+                        [class.shadow-md]="activeDiffId() === diff.id"
+                        [class.shadow-purple-500/25]="activeDiffId() === diff.id"
+                        [class.bg-[var(--color-bg-card)]]="activeDiffId() !== diff.id"
+                        [class.text-[var(--color-text-muted)]]="activeDiffId() !== diff.id"
+                        [class.border-[var(--color-border-card)]]="activeDiffId() !== diff.id"
+                        [class.hover:text-[var(--color-text-main)]]="activeDiffId() !== diff.id">
+                  <span>{{ diff.name }}</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Replay Theater Stage (Authentic Game Board Display) -->
         <div class="relative w-full h-[380px] sm:h-[460px] md:h-[530px] rounded-2xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-inner flex flex-col items-center justify-center overflow-hidden p-2 sm:p-4 group">
           
@@ -701,17 +730,37 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     this.haptic.vibrateLight();
   }
 
-  readonly width = computed(() => this.replayData?.width || 5);
-  readonly height = computed(() => this.replayData?.height || 5);
-  readonly rowHints = computed<number[][]>(() => this.replayData?.rowHints || []);
-  readonly colHints = computed<number[][]>(() => this.replayData?.colHints || []);
+  readonly nonogramDiffList = [
+    { id: 'easy', name: '简单 5×5', size: 5 },
+    { id: 'medium', name: '中等 10×10', size: 10 },
+    { id: 'hard', name: '困难 15×15', size: 15 },
+    { id: 'expert', name: '专家 20×20', size: 20 },
+    { id: 'master', name: '大师 25×25', size: 25 },
+  ];
+
+  activeDiffId = signal<string>('easy');
+  private replayDataMap = new Map<string, any>();
+  activeReplayData = signal<any>(null);
+
+  readonly isNonogramGame = computed(() => {
+    return !this.gameId || this.gameId === 'nonogram';
+  });
+
+  readonly effectiveReplayData = computed(() => {
+    return this.activeReplayData() || this.replayData;
+  });
+
+  readonly width = computed(() => this.effectiveReplayData()?.width || 5);
+  readonly height = computed(() => this.effectiveReplayData()?.height || 5);
+  readonly rowHints = computed<number[][]>(() => this.effectiveReplayData()?.rowHints || []);
+  readonly colHints = computed<number[][]>(() => this.effectiveReplayData()?.colHints || []);
 
   readonly totalMoves = computed(() => {
-    return this.replayData?.moves?.length || 0;
+    return this.effectiveReplayData()?.moves?.length || 0;
   });
 
   readonly hasReplayMoves = computed(() => {
-    return !!(this.replayData && (this.replayData.moves?.length > 0 || this.replayData.finalGrid));
+    return !!(this.effectiveReplayData() && (this.effectiveReplayData().moves?.length > 0 || this.effectiveReplayData().finalGrid));
   });
 
   readonly currentMoveIndex = computed(() => {
@@ -756,7 +805,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   readonly currentReplayGrid = computed<number[][]>(() => {
     const W = this.width();
     const H = this.height();
-    const moves = this.replayData?.moves || [];
+    const moves = this.effectiveReplayData()?.moves || [];
     const moveIdx = this.currentMoveIndex();
 
     const grid: number[][] = Array(H).fill(0).map(() => Array(W).fill(0));
@@ -767,10 +816,10 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (this.currentStep() >= 100 && this.replayData?.finalGrid) {
+    if (this.currentStep() >= 100 && this.effectiveReplayData()?.finalGrid) {
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
-          grid[y][x] = this.replayData.finalGrid[y]?.[x] ?? grid[y][x];
+          grid[y][x] = this.effectiveReplayData().finalGrid[y]?.[x] ?? grid[y][x];
         }
       }
     }
@@ -779,7 +828,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   });
 
   readonly lastMove = computed(() => {
-    const moves = this.replayData?.moves || [];
+    const moves = this.effectiveReplayData()?.moves || [];
     const moveIdx = this.currentMoveIndex();
     return moveIdx > 0 ? moves[moveIdx - 1] : undefined;
   });
@@ -817,7 +866,58 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   private readonly totalDurationMs: number = 10000;
 
   ngOnInit() {
+    if (this.replayData) {
+      const w = this.replayData.width || 5;
+      let diffId = 'easy';
+      if (w <= 5) diffId = 'easy';
+      else if (w <= 10) diffId = 'medium';
+      else if (w <= 15) diffId = 'hard';
+      else if (w <= 20) diffId = 'expert';
+      else diffId = 'master';
+
+      this.activeDiffId.set(diffId);
+      this.replayDataMap.set(diffId, this.replayData);
+      this.activeReplayData.set(this.replayData);
+    } else if (this.isNonogramGame()) {
+      this.selectDifficulty('easy');
+    }
     this.startPlayback();
+  }
+
+  selectDifficulty(diffId: string) {
+    this.activeDiffId.set(diffId);
+    let replay = this.replayDataMap.get(diffId);
+    if (!replay) {
+      const opt = this.nonogramDiffList.find(d => d.id === diffId) || this.nonogramDiffList[0];
+      const N = opt.size;
+      const { grid: answerGrid, rowHints, colHints } = NonogramEngine.generate(N, N);
+      const moves: { x: number; y: number; state: number; time: number }[] = [];
+      let t = 0;
+      for (let y = 0; y < N; y++) {
+        for (let x = 0; x < N; x++) {
+          const val = answerGrid[y][x];
+          if (val === 1) {
+            t += 40;
+            moves.push({ x, y, state: 1, time: t });
+          }
+        }
+      }
+      replay = {
+        gameId: 'nonogram',
+        width: N,
+        height: N,
+        rowHints,
+        colHints,
+        answerGrid,
+        moves,
+        durationMs: Math.max(10000, moves.length * 60),
+        finalGrid: answerGrid.map(row => [...row])
+      };
+      this.replayDataMap.set(diffId, replay);
+    }
+    this.activeReplayData.set(replay);
+    this.restartReplay();
+    this.haptic.vibrateLight();
   }
 
   ngOnDestroy() {
@@ -1486,7 +1586,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     // 3. 舞台区：左右双展台卡片布局 (Y = 82 ~ 452, Height = 370px)
     const W = this.width();
     const H = this.height();
-    const finalGrid = this.replayData?.finalGrid || this.buildGridForMoveCount(this.totalMoves(), true);
+    const finalGrid = this.effectiveReplayData()?.finalGrid || this.buildGridForMoveCount(this.totalMoves(), true);
 
     // === 左侧卡片：终局像素杰作原图展台 (Width: 290px, Height: 370px) ===
     const leftX = 35;
@@ -1874,7 +1974,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         boardCount = 90;
       } else if (mode === 'auto') {
         // 根据实际游戏用时 durationMs 动态自适应延长推演帧数
-        const realSec = Math.round((this.replayData?.durationMs || 30000) / 1000);
+        const realSec = Math.round((this.effectiveReplayData()?.durationMs || 30000) / 1000);
         boardCount = Math.max(35, Math.min(100, Math.round(realSec * 0.75 + this.totalMoves() * 0.35)));
       }
 
@@ -1929,7 +2029,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         const stepPct = Math.round((i / boardCount) * 100);
         const moveIdx = Math.min(this.totalMoves(), Math.floor((stepPct / 100) * this.totalMoves()));
         const frameGrid = this.buildGridForMoveCount(moveIdx, stepPct >= 100);
-        const lastM = moveIdx > 0 ? this.replayData.moves[moveIdx - 1] : undefined;
+        const lastM = moveIdx > 0 ? this.effectiveReplayData()?.moves?.[moveIdx - 1] : undefined;
 
         this.renderRealBoardFrame(ctx, size, frameGrid, stepPct, moveIdx, lastM);
         if (track?.requestFrame) track.requestFrame();
@@ -2068,7 +2168,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
         const stepPct = Math.round((i / (totalSteps - 1)) * 100);
         const moveIdx = Math.min(this.totalMoves(), Math.floor((stepPct / 100) * this.totalMoves()));
         const frameGrid = this.buildGridForMoveCount(moveIdx, stepPct >= 100);
-        const lastM = moveIdx > 0 ? this.replayData.moves[moveIdx - 1] : undefined;
+        const lastM = moveIdx > 0 ? this.effectiveReplayData()?.moves?.[moveIdx - 1] : undefined;
 
         this.renderRealBoardFrame(ctx, size, frameGrid, stepPct, moveIdx, lastM);
 
@@ -2159,7 +2259,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   private buildGridForMoveCount(targetMoves: number, isFinal: boolean): number[][] {
     const W = this.width();
     const H = this.height();
-    const moves = this.replayData?.moves || [];
+    const moves = this.effectiveReplayData()?.moves || [];
     const grid: number[][] = Array(H).fill(0).map(() => Array(W).fill(0));
 
     for (let i = 0; i < targetMoves; i++) {
@@ -2169,10 +2269,10 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (isFinal && this.replayData?.finalGrid) {
+    if (isFinal && this.effectiveReplayData()?.finalGrid) {
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
-          grid[y][x] = this.replayData.finalGrid[y]?.[x] ?? grid[y][x];
+          grid[y][x] = this.effectiveReplayData().finalGrid[y]?.[x] ?? grid[y][x];
         }
       }
     }

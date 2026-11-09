@@ -324,6 +324,14 @@
                     <span class="text-base sm:text-lg mb-0.5 drop-shadow-md">❌</span>
                     <span class="text-[10px] md:text-xs font-bold">{{ t('tutorial.nonogram.cross')() || '打叉' }}</span>
                   </button>
+
+                  <button 
+                    (click)="openReplayModal()"
+                    class="flex-1 flex flex-col items-center justify-start p-1.5 sm:p-2 md:p-2.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 transition-all active:scale-95 shadow-xs cursor-pointer"
+                    title="回放复盘 (支持全难度推演与视频/GIF导出)">
+                    <span class="text-base sm:text-lg mb-0.5 drop-shadow-md">🎬</span>
+                    <span class="text-[10px] md:text-xs font-bold">复盘</span>
+                  </button>
                 </div>
               }
 
@@ -345,3 +353,12 @@
           </div>
       </div>
 </app-game-layout>
+
+@if (showInGameReplayModal()) {
+  <app-timelapse-modal
+    [gameTitle]="t('lobby.nonogram')() || '数织'"
+    [gameId]="'nonogram'"
+    [statSummary]="'耗时: ' + gameTimer.formatTime(store.timeSpent())"
+    [replayData]="store.getReplayData()"
+    (close)="closeReplayModal()" />
+}
