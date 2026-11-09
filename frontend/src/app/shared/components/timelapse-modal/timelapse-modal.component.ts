@@ -973,44 +973,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   // Reconstructed board grid at current playback step for Minesweeper
   readonly currentMinesweeperGrid = computed<MinesweeperCellSnapshot[][]>(() => {
     if (!this.isMinesweeperGame()) return [];
-    const W = this.width();
-    const H = this.height();
-    const moves: MinesweeperReplayStep[] = this.effectiveReplayData()?.moves || [];
-    const moveIdx = this.currentMoveIndex();
-
-    const grid: MinesweeperCellSnapshot[][] = Array.from({ length: H }, (_, y) =>
-      Array.from({ length: W }, (_, x) => ({
-        x,
-        y,
-        state: CellState.Hidden,
-        neighbors: 0,
-        isMine: false
-      }))
-    );
-
-    for (let i = 0; i < moveIdx; i++) {
-      const m = moves[i];
-      if (m && m.changes) {
-        for (const ch of m.changes) {
-          if (ch.y < H && ch.x < W) {
-            grid[ch.y][ch.x] = { ...ch };
-          }
-        }
-      }
-    }
-
-    if (this.currentStep() >= 100 && this.effectiveReplayData()?.finalGrid) {
-      const fg = this.effectiveReplayData().finalGrid;
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          if (fg[y]?.[x]) {
-            grid[y][x] = { ...fg[y][x] };
-          }
-        }
-      }
-    }
-
-    return grid;
+    return this.buildMinesweeperGridForMoveCount(this.currentMoveIndex(), this.currentStep() >= 100);
   });
 
   getMinesweeperNumColor(num: number): string {
@@ -2688,7 +2651,50 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  private buildGridForMoveCount(targetMoves: number, isFinal: boolean): number[][] {
+  private buildMinesweeperGridForMoveCount(targetMoves: number, isFinal: boolean): MinesweeperCellSnapshot[][] {
+    const W = this.width();
+    const H = this.height();
+    const moves: MinesweeperReplayStep[] = this.effectiveReplayData()?.moves || [];
+
+    const grid: MinesweeperCellSnapshot[][] = Array.from({ length: H }, (_, y) =>
+      Array.from({ length: W }, (_, x) => ({
+        x,
+        y,
+        state: CellState.Hidden,
+        neighbors: 0,
+        isMine: false
+      }))
+    );
+
+    for (let i = 0; i < targetMoves; i++) {
+      const m = moves[i];
+      if (m && m.changes) {
+        for (const ch of m.changes) {
+          if (ch.y < H && ch.x < W) {
+            grid[ch.y][ch.x] = { ...ch };
+          }
+        }
+      }
+    }
+
+    if (isFinal && this.effectiveReplayData()?.finalGrid) {
+      const fg = this.effectiveReplayData().finalGrid;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (fg[y]?.[x]) {
+            grid[y][x] = { ...fg[y][x] };
+          }
+        }
+      }
+    }
+
+    return grid;
+  }
+
+  private buildGridForMoveCount(targetMoves: number, isFinal: boolean): any[][] {
+    if (this.isMinesweeperGame()) {
+      return this.buildMinesweeperGridForMoveCount(targetMoves, isFinal);
+    }
     const W = this.width();
     const H = this.height();
     const moves = this.effectiveReplayData()?.moves || [];
